@@ -10,28 +10,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <sys/types.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <conio.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifdef HAVE_STDIO_EXT_H
-#include <stdio_ext.h>
-#endif
-
 #include <afs/procmgmt.h>
-#include <rx/xdr.h>
+#include <roken.h>
+
+#ifdef AFS_NT40_ENV
+#include <conio.h>
+#endif
+
+#include <afs/opr.h>
 #include <rx/rx.h>
-#include <time.h>
 #include <lwp.h>
 #include <lock.h>
 #include <afs/tcdata.h>
@@ -39,12 +26,13 @@
 #include <afs/budb_client.h>
 #include <afs/bucoord_prototypes.h>
 #include <afs/butm_prototypes.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
 #include <afs/volser_prototypes.h>
 #include <afs/com_err.h>
-#include "error_macros.h"
 #include <afs/afsutil.h>
-#include <errno.h>
+
+#include "error_macros.h"
 #include "butc_xbsa.h"
 #include "butc_internal.h"
 
@@ -129,7 +117,6 @@ extern struct tapeConfig globalTapeConfig;
 extern struct deviceSyncNode *deviceLatch;
 extern char globalCellName[];
 struct timeval tp;
-struct timezone tzp;
 
 /* forward declaration */
 afs_int32 readVolumeHeader(char *, afs_int32, struct volumeHeader *);
@@ -208,19 +195,20 @@ TapeLogStr(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
 	   char *str)
 {
     time_t now;
-    char tbuffer[32], *timestr;
+    char tbuffer[32];
+    struct tm tm;
 
     now = time(0);
-    timestr = afs_ctime(&now, tbuffer, sizeof(tbuffer));
-    timestr[24] = '\0';
+    if (strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
+		 localtime_r(&now, &tm)) != 0)
+	fprintf(logIO, "%s: ", tbuffer);
 
-    fprintf(logIO, "%s: ", timestr);
     if (task)
 	fprintf(logIO, "Task %u: ", task);
     PrintLogStr(logIO, error1, error2, str);
 
     if (lastPass && lastLogIO) {
-	fprintf(lastLogIO, "%s: ", timestr);
+	fprintf(lastLogIO, "%s: ", tbuffer);
 	if (task)
 	    fprintf(lastLogIO, "Task %u: ", task);
 	PrintLogStr(lastLogIO, error1, error2, str);
@@ -239,7 +227,7 @@ TapeLog(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
     va_list ap;
 
     va_start(ap, fmt);
-    afs_vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    vsnprintf(tmp, sizeof(tmp), fmt, ap);
     va_end(ap);
 
     TapeLogStr(debug, task, error1, error2, tmp);
@@ -252,7 +240,7 @@ TLog(afs_int32 task, char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    afs_vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    vsnprintf(tmp, sizeof(tmp), fmt, ap);
     va_end(ap);
 
     /* Sends message to TapeLog and stdout */
@@ -264,12 +252,13 @@ ErrorLogStr(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
 	    char *errStr)
 {
     time_t now;
-    char tbuffer[32], *timestr;
+    char tbuffer[32];
+    struct tm tm;
 
     now = time(0);
-    timestr = afs_ctime(&now, tbuffer, sizeof(tbuffer));
-    timestr[24] = '\0';
-    fprintf(ErrorlogIO, "%s: ", timestr);
+    if (strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y",
+		 localtime_r(&now, &tm)) != 0)
+	fprintf(ErrorlogIO, "%s: ", tbuffer);
 
     /* Print the time and task number */
     if (task)
@@ -287,7 +276,7 @@ ErrorLog(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
     va_list ap;
 
     va_start(ap, fmt);
-    afs_vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    vsnprintf(tmp, sizeof(tmp), fmt, ap);
     va_end(ap);
 
     ErrorLogStr(debug, task, error1, error2, tmp);
@@ -301,7 +290,7 @@ ELog(afs_int32 task, char *fmt, ...)
     va_list ap;
 
     va_start(ap, fmt);
-    afs_vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    vsnprintf(tmp, sizeof(tmp), fmt, ap);
     va_end(ap);
 
     /* Sends message to ErrorLog, TapeLog and stdout */
@@ -327,125 +316,6 @@ LeaveDeviceQueue(struct deviceSyncNode *devLatch)
 #define BELLTIME 60		/* 60 seconds before a bell rings */
 #define BELLCHAR 7		/* ascii for bell */
 
-
-#ifdef AFS_PTHREAD_ENV
-#ifdef AFS_NT40_ENV
-/* WaitForKeystroke : Wait until a key has been struck or time (secconds)
- * runs out and return to caller. The NT version of this function will return
- * immediately after a key has been pressed (doesn't wait for cr).
- * Input:
- *   seconds: wait for <seconds> seconds before returning. If seconds < 0,
- *            wait infinitely.
- * Return Value:
- *    1:  Keyboard input available
- *    0:  seconds elapsed. Timeout.
- *
- * STOLEN FROM LWP_WaitForKeystroke()
- */
-int
-WaitForKeystroke(int seconds)
-{
-    time_t startTime, nowTime;
-    double timeleft = 1;
-    struct timeval twait;
-
-    time(&startTime);
-    twait.tv_sec = 0;
-    twait.tv_usec = 250;
-    if (seconds >= 0)
-	timeleft = seconds;
-
-    do {
-	/* check if we have a keystroke */
-	if (_kbhit())
-	    return 1;
-	if (timeleft == 0)
-	    break;
-
-	/* sleep for  LWP_KEYSTROKE_DELAY ms and let other
-	 * process run some*/
-	select(0, 0, 0, 0, &twait);
-
-	if (seconds > 0) {	/* we only worry about elapsed time if
-				 * not looping forever (seconds < 0) */
-	    time(&nowTime);
-	    timeleft = seconds - difftime(nowTime, startTime);
-	}
-    } while (timeleft > 0);
-    return 0;
-}
-#else /* AFS_NT40)ENV */
-extern int WaitForKeystroke(int);
-/*
- *      STOLEN FROM LWP_WaitForKeystroke()
- */
-int
-WaitForKeystroke(int seconds)
-{
-    fd_set rdfds;
-    int code;
-    struct timeval twait;
-    struct timeval *tp = NULL;
-
-#ifdef AFS_LINUX20_ENV
-    if (stdin->_IO_read_ptr < stdin->_IO_read_end)
-	return 1;
-#elif defined(HAVE_STDIO_EXT_H)
-    if (__fbufsize(stdin) > 0)
-	return 1;
-#else
-    if (stdin->_cnt > 0)
-	return 1;
-#endif
-    FD_ZERO(&rdfds);
-    FD_SET(fileno(stdin), &rdfds);
-
-    if (seconds >= 0) {
-	twait.tv_sec = seconds;
-	twait.tv_usec = 0;
-	tp = &twait;
-    }
-    code = select(1 + fileno(stdin), &rdfds, NULL, NULL, tp);
-    return (code == 1) ? 1 : 0;
-}
-#endif
-
-/* GetResponseKey() - Waits for a specified period of time and
- * returns a char when one has been typed by the user.
- * Input:
- *    seconds - how long to wait for a key press.
- *    *key    - char entered by user
- * Return Values:
- *    0 - Time ran out before the user typed a key.
- *    1 - Valid char is being returned.
- *
- *    STOLEN FROM LWP_GetResponseKey();
- */
-int
-GetResponseKey(int seconds, char *key)
-{
-    int rc;
-
-    if (key == NULL)
-	return 0;		/* need space to store char */
-    fflush(stdin);		/* flush all existing data and start anew */
-
-    rc = WaitForKeystroke(seconds);
-    if (rc == 0) {		/* time ran out */
-	*key = 0;
-	return rc;
-    }
-
-    /* now read the char. */
-#ifdef AFS_NT40_ENV
-    *key = getche();		/* get char and echo it to screen */
-#else
-    *key = getchar();
-#endif
-    return rc;
-}
-#endif /* AFS_PTHREAD_ENV */
-
 /*
  * FFlushInput
  *     flush all input
@@ -460,12 +330,7 @@ FFlushInput(void)
     fflush(stdin);
 
     while (1) {
-#ifdef AFS_PTHREAD_ENV
-	w = WaitForKeystroke(0);
-#else
 	w = LWP_WaitForKeystroke(0);
-#endif /* AFS_PTHREAD_ENV */
-
 	if (w) {
 #ifdef AFS_NT40_ENV
 	    getche();
@@ -700,7 +565,7 @@ PrintPrompt(int flag, char *name, int dumpid)
 	break;
 
     case SAVEDBOPCODE:		/* Mount for savedb */
-	printf("Please insert a writeable tape %s for the database dump",
+	printf("Please insert a writable tape %s for the database dump",
 	       tapename);
 	break;
 
@@ -813,11 +678,7 @@ PromptForTape(int flag, char *name, afs_uint32 dbDumpId, afs_uint32 taskId,
 		putchar(BELLCHAR);
 		fflush(stdout);
 	    }
-#ifdef AFS_PTHREAD_ENV
-	    wcode = GetResponseKey(5, &inchr);	/* inchr stores key read */
-#else
 	    wcode = LWP_GetResponseKey(5, &inchr);	/* inchr stores key read */
-#endif
 	    if (wcode == 1) {	/* keyboard input is available */
 
 		if ((inchr == 'a') || (inchr == 'A')) {
@@ -1775,6 +1636,7 @@ Restorer(void *param) {
     time_t startTime, endTime;
     afs_int32 goodrestore = 0;
 
+    afs_pthread_setname_self("restorer");
     taskId = newNode->taskID;
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);
@@ -1814,10 +1676,9 @@ Restorer(void *param) {
 	allocbufferSize = tapeblocks * BUTM_BLOCKSIZE;	/* This many full tapeblocks */
     }
     bufferBlock = NULL;
-    bufferBlock = (struct TapeBlock *)malloc(allocbufferSize);
+    bufferBlock = calloc(1, allocbufferSize);
     if (!bufferBlock)
 	ERROR_EXIT(TC_NOMEMORY);
-    memset(bufferBlock, 0, allocbufferSize);
 
     for (rparams.frag = 0; (rparams.frag < newNode->arraySize);
 	 rparams.frag++) {
@@ -1947,7 +1808,6 @@ GetNewLabel(struct butm_tapeInfo *tapeInfoPtr, char *pName, char *AFSName,
 	    struct butm_tapeLabel *tapeLabel)
 {
     struct timeval tp;
-    struct timezone tzp;
     afs_uint32 size;
 
     memset(tapeLabel, 0, sizeof(struct butm_tapeLabel));
@@ -1959,7 +1819,7 @@ GetNewLabel(struct butm_tapeInfo *tapeInfoPtr, char *pName, char *AFSName,
     } else {
 	size = 0;		/* no tape size */
     }
-    gettimeofday(&tp, &tzp);
+    gettimeofday(&tp, NULL);
 
     tapeLabel->structVersion = CUR_TAPE_VERSION;
     tapeLabel->creationTime = tp.tv_sec;
@@ -2107,13 +1967,12 @@ tapeExpired(struct butm_tapeLabel *tapeLabelPtr)
 {
     Date expiration;
     struct timeval tp;
-    struct timezone tzp;
 
     expiration = ExpirationDate(tapeLabelPtr->dumpid);
     if (!expiration)
 	expiration = tapeLabelPtr->expirationDate;
 
-    gettimeofday(&tp, &tzp);
+    gettimeofday(&tp, NULL);
     return ((expiration < tp.tv_sec) ? 1 : 0);
 }
 
@@ -2243,6 +2102,7 @@ Labeller(void *param)
     afs_uint32 taskId;
     afs_int32 code = 0;
 
+    afs_pthread_setname_self("labeller");
     taskId = labelIfPtr->taskId;
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);

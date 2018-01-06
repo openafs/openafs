@@ -10,27 +10,25 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+#include <afs/opr.h>
 
 #include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include <limits.h>
-#include <errno.h>
-#include <stdio.h>
-#include "afs_assert.h"
+
 #include "afsutil.h"
 #include "fileutil.h"
+
+#include <afs/opr.h>
+
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 static pthread_once_t dirInit_once = PTHREAD_ONCE_INIT;
 #endif
+
 #ifdef AFS_NT40_ENV
-#include <windows.h>
 #include <WINNT\afssw.h>
-#endif
-#ifdef AFS_DARWIN_ENV
-#include <unistd.h>
 #endif
 
 /* local vars */
@@ -60,16 +58,16 @@ static void initDirPathArray(void);
 /* Additional macros for ease of use */
 /* buf is expected to be atleast AFS_PATH_MAX bytes long */
 #define AFSDIR_SERVER_DIRPATH(buf, dir)  \
-            (void) strcompose(buf, AFSDIR_PATH_MAX, serverPrefix, dir, NULL)
+            (void) strcompose(buf, AFSDIR_PATH_MAX, serverPrefix, dir, (char *)NULL)
 
 #define AFSDIR_SERVER_FILEPATH(buf, dir, file)  \
-            (void) strcompose(buf, AFSDIR_PATH_MAX, serverPrefix, dir, "/", file,  NULL)
+            (void) strcompose(buf, AFSDIR_PATH_MAX, serverPrefix, dir, "/", file,  (char *)NULL)
 
 #define AFSDIR_CLIENT_DIRPATH(buf, dir)  \
-            (void) strcompose(buf, AFSDIR_PATH_MAX, clientPrefix, dir, NULL)
+            (void) strcompose(buf, AFSDIR_PATH_MAX, clientPrefix, dir, (char *)NULL)
 
 #define AFSDIR_CLIENT_FILEPATH(buf, dir, file)  \
-            (void) strcompose(buf, AFSDIR_PATH_MAX,  clientPrefix, dir, "/", file,  NULL)
+            (void) strcompose(buf, AFSDIR_PATH_MAX,  clientPrefix, dir, "/", file,  (char *)NULL)
 
 
 /* initAFSDirPath() -- External users call this function to initialize
@@ -105,7 +103,7 @@ initAFSDirPath(void)
 static void
 initDirPathArray(void)
 {
-    char *pathp;
+    char *pathp, *clntEtcDir;
     const char *clientPrefix = "";
     const char *serverPrefix = "";
 
@@ -227,10 +225,12 @@ initDirPathArray(void)
 	   "/NoUsrViceDirectoryOnWindows");
     strcpy(dirPathArray[AFSDIR_CLIENT_ETC_DIRPATH_ID],
 	   ntClientConfigDirShort);
+
+    clntEtcDir = pathp = dirPathArray[AFSDIR_CLIENT_ETC_DIRPATH_ID];
 #else
     strcpy(dirPathArray[AFSDIR_CLIENT_VICE_DIRPATH_ID], afsClntDirPath);
 
-    pathp = dirPathArray[AFSDIR_CLIENT_ETC_DIRPATH_ID];
+    clntEtcDir = pathp = dirPathArray[AFSDIR_CLIENT_ETC_DIRPATH_ID];
 #ifdef AFS_DARWIN_ENV
     if (access(AFSDIR_ALTERNATE_CLIENT_ETC_DIR, F_OK) == 0)
 	AFSDIR_CLIENT_DIRPATH(pathp, AFSDIR_ALTERNATE_CLIENT_ETC_DIR);
@@ -366,6 +366,10 @@ initDirPathArray(void)
     pathp = dirPathArray[AFSDIR_SERVER_AUDIT_FILEPATH_ID];
     AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOCAL_DIR, AFSDIR_AUDIT_FILE);
 
+    pathp = dirPathArray[AFSDIR_SERVER_CONFIG_FILE_FILEPATH_ID];
+    AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_SERVER_ETC_DIR,
+			   AFSDIR_SERVER_CONFIG_FILE);
+
     pathp = dirPathArray[AFSDIR_SERVER_NETINFO_FILEPATH_ID];
     AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOCAL_DIR, AFSDIR_NETINFO_FILE);
 
@@ -402,24 +406,23 @@ initDirPathArray(void)
 	   "/NoCellAliasOnWindows");
 #else
     pathp = dirPathArray[AFSDIR_CLIENT_THISCELL_FILEPATH_ID];
-    AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR,
-			   AFSDIR_THISCELL_FILE);
+    AFSDIR_CLIENT_FILEPATH(pathp, clntEtcDir, AFSDIR_THISCELL_FILE);
 
     pathp = dirPathArray[AFSDIR_CLIENT_CELLSERVDB_FILEPATH_ID];
-    AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR,
-			   AFSDIR_CELLSERVDB_FILE);
+    AFSDIR_CLIENT_FILEPATH(pathp, clntEtcDir, AFSDIR_CELLSERVDB_FILE);
 
     pathp = dirPathArray[AFSDIR_CLIENT_CELLALIAS_FILEPATH_ID];
-    AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR,
-			   AFSDIR_CELLALIAS_FILE);
+    AFSDIR_CLIENT_FILEPATH(pathp, clntEtcDir, AFSDIR_CELLALIAS_FILE);
 #endif /* AFS_NT40_ENV */
 
+    pathp = dirPathArray[AFSDIR_CLIENT_CONFIG_FILE_FILEPATH_ID];
+    AFSDIR_CLIENT_FILEPATH(pathp, clntEtcDir, AFSDIR_CLIENT_CONFIG_FILE);
+
     pathp = dirPathArray[AFSDIR_CLIENT_NETINFO_FILEPATH_ID];
-    AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR, AFSDIR_NETINFO_FILE);
+    AFSDIR_CLIENT_FILEPATH(pathp, clntEtcDir, AFSDIR_NETINFO_FILE);
 
     pathp = dirPathArray[AFSDIR_CLIENT_NETRESTRICT_FILEPATH_ID];
-    AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR,
-			   AFSDIR_NETRESTRICT_FILE);
+    AFSDIR_CLIENT_FILEPATH(pathp, clntEtcDir, AFSDIR_NETRESTRICT_FILE);
 
     initFlag = 1;		/* finished dirpath initialization */
     return;
@@ -561,12 +564,9 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
 	    status = EINVAL;
 	} else {
 	    /* fully qualified path; just make a copy */
-	    newPath = (char *)malloc(strlen(cpath) + 1);
-	    if (!newPath) {
+	    newPath = strdup(cpath);
+	    if (!newPath)
 		status = ENOMEM;
-	    } else {
-		(void)strcpy(newPath, cpath);
-	    }
 	}
 
     } else {
@@ -577,7 +577,7 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
 	    /* construct path relative to install directory only */
 	    pathSize += strlen(cpath);
 
-	    newPath = (char *)malloc(pathSize);
+	    newPath = malloc(pathSize);
 	    if (!newPath) {
 		status = ENOMEM;
 	    } else {
@@ -587,7 +587,7 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
 	    /* construct path relative to 'relativeTo' (and install dir) */
 	    pathSize += strlen(relativeTo) + 1 + strlen(cpath);
 
-	    newPath = (char *)malloc(pathSize);
+	    newPath = malloc(pathSize);
 	    if (!newPath) {
 		status = ENOMEM;
 	    } else {
@@ -650,20 +650,13 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
 
     LocalizePathHead(&cpath, &relativeTo);
     if (*cpath == '/') {
-	newPath = (char *)malloc(strlen(cpath) + 1);
-	if (!newPath) {
-	    status = ENOMEM;
-	} else {
-	    strcpy(newPath, cpath);
-	}
+	newPath = strdup(cpath);
     } else {
-	newPath = (char *)malloc(strlen(relativeTo) + 1 + strlen(cpath) + 1);
-	if (!newPath) {
-	    status = ENOMEM;
-	} else {
-	    sprintf(newPath, "%s/%s", relativeTo, cpath);
-	}
+	if (asprintf(&newPath, "%s/%s", relativeTo, cpath) < 0)
+	    newPath = NULL;
     }
+    if (newPath == NULL)
+	status = ENOMEM;
 
     if (status == 0) {
 	FilepathNormalize(newPath);

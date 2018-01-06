@@ -122,7 +122,7 @@ spaces:
 =item *
 
 The first member of the pair is the fully-qualified hostname (for example,
-C<fs1.abc.com>), or the IP address in dotted decimal format, of a file
+C<fs1.example.com>), or the IP address in dotted decimal format, of a file
 server machine interface or VL Server machine
 
 =item *
@@ -256,21 +256,21 @@ ignored.
 =head1 EXAMPLES
 
 The following command sets the Cache Manager's preference ranks for the
-file server machines named C<fs3.abc.com> and C<fs4.abc.com>, the latter
-of which is specified by its IP address, 192.12.105.100. The machines
+file server machines named C<fs3.example.com> and C<fs4.example.com>, the
+latter of which is specified by its IP address, 192.12.105.100. The machines
 reside in another subnetwork of the local machine's network, so their
 default base rank is 30,000. To increase the Cache Manager's preference
 for these machines, the issuer assigns a rank of C<25000>, to which the
 Cache Manager adds an integer in the range from 0 to 15.
 
-   # fs setserverprefs -servers fs3.abc.com 25000 192.12.105.100 25000
+   # fs setserverprefs -servers fs3.example.com 25000 192.12.105.100 25000
 
 The following command uses the B<-servers> argument to set the Cache
 Manager's preference ranks for the same two file server machines, but it
 also uses the B<-file> argument to read a collection of preference ranks
 from a file that resides in the local file F</etc/fs.prefs>:
 
-   # fs setserverprefs -servers fs3.abc.com 25000 192.12.105.100 25000 \
+   # fs setserverprefs -servers fs3.example.com 25000 192.12.105.100 25000 \
        -file /etc/fs.prefs
 
 The /etc/fs.prefs file has the following contents and format:
@@ -290,12 +290,12 @@ preferences based on values significant to the local cell.
    # calc_prefs | fs setserverprefs -stdin
 
 The following command uses the B<-vlservers> argument to set the Cache
-Manager's preferences for the VL server machines named C<fs1.abc.com>,
-C<fs3.abc.com>, and C<fs4.abc.com> to base ranks of 1, 11000, and 65521,
-respectively:
+Manager's preferences for the VL server machines named C<fs1.example.com>,
+C<fs3.example.com>, and C<fs4.example.com> to base ranks of 1, 11000, and
+65521, respectively:
 
-   # fs setserverprefs -vlservers fs1.abc.com 1 fs3.abc.com 11000 \
-       fs4.abc.com 65521
+   # fs setserverprefs -vlservers fs1.example.com 1 fs3.example.com 11000 \
+       fs4.example.com 65521
 
 =head1 PRIVILEGE REQUIRED
 

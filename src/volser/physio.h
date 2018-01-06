@@ -11,7 +11,7 @@
 #define _VOLSER_PHYSIO_H
 
 /* physio.c */
-extern void SetSalvageDirHandle(DirHandle *, afs_uint32, afs_int32, Inode);
+extern void SetSalvageDirHandle(DirHandle *, VolumeId, afs_int32, Inode);
 extern void FidZap(DirHandle *);
 
 #endif

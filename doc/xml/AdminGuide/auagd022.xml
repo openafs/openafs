@@ -2,6 +2,7 @@
 <appendix id="HDRWQ595">
   <title>Managing the NFS/AFS Translator</title>
 
+  <para>
   <indexterm>
     <primary>NFS/AFS Translator</primary>
   </indexterm>
@@ -12,7 +13,7 @@
     <secondary>NFS/AFS</secondary>
   </indexterm>
 
-  <para>The NFS(R)/AFS(R) Translator enables users working on NFS client machines to access, create and remove files stored in AFS.
+  The NFS(R)/AFS(R) Translator enables users working on NFS client machines to access, create and remove files stored in AFS.
   This chapter assumes familiarity with both NFS and AFS.</para>
 
   <sect1 id="HDRWQ596">
@@ -470,8 +471,8 @@
             cell.</para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LITRANS-MOUNTFILE" />Modify the file that controls mounting of directories on the machine by remote
+          <listitem id="LITRANS-MOUNTFILE">
+            <para>Modify the file that controls mounting of directories on the machine by remote
             NFS clients. <itemizedlist>
                 <indexterm>
                   <primary>etc/exports file</primary>
@@ -535,8 +536,8 @@
             for the entire AFS filespace; before, it is a local directory like any other.</para>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ605" />Modify the <emphasis role="bold">afsd</emphasis> command in the AFS initialization file to
+          <listitem id="LIWQ605">
+            <para>Modify the <emphasis role="bold">afsd</emphasis> command in the AFS initialization file to
             include the <emphasis role="bold">-rmtsys</emphasis> flag.</para>
 
             <para>For system types other than IRIX, the instructions in the <emphasis>OpenAFS Quick Beginnings</emphasis> for
@@ -750,8 +751,8 @@
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ607" />Modify the machine's file systems registry file (<emphasis role="bold">/etc/fstab</emphasis>
+        <listitem id="LIWQ607">
+          <para>Modify the machine's file systems registry file (<emphasis role="bold">/etc/fstab</emphasis>
           or equivalent) to include a command that mounts a translator machine's <emphasis role="bold">/afs</emphasis> directory. To
           verify the correct syntax of the <emphasis role="bold">mount</emphasis> command, see the operating system's <emphasis
           role="bold">mount(5)</emphasis> manual page. The following example includes options that are appropriate on many system
@@ -815,8 +816,8 @@
           </note>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ608" /><emphasis role="bold">(Optional)</emphasis> If appropriate, create the <emphasis
+        <listitem id="LIWQ608">
+          <para><emphasis role="bold">(Optional)</emphasis> If appropriate, create the <emphasis
           role="bold">/.AFSSERVER</emphasis> file to set the AFSSERVER environment variable for all of the machine's users. For a
           discussion, see <link linkend="HDRWQ600">Setting the AFSSERVER and AFSCONF Environment Variables</link>. Place a single
           line in the file, specifying the fully-qualified hostname of the translator machine that is to serve as the remote
@@ -824,8 +825,8 @@
           <link linkend="LIWQ607">4</link>.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ609" /><emphasis role="bold">(Optional)</emphasis> If appropriate, create the <emphasis
+        <listitem id="LIWQ609">
+          <para><emphasis role="bold">(Optional)</emphasis> If appropriate, create the <emphasis
           role="bold">/.AFSCONF</emphasis> file to set the AFSCONF environment variable for all of the machine's users. For a
           discussion, see <link linkend="HDRWQ600">Setting the AFSSERVER and AFSCONF Environment Variables</link>. Place a single
           line in the file, specifying the name of the directory where the <emphasis role="bold">CellServDB</emphasis> and <emphasis
@@ -895,8 +896,8 @@
           Suite</link> or <link linkend="HDRWQ491">Administering User Accounts</link>.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ611" />Modify the user's PATH environment variable to include the pathname of AFS binaries, such as
+        <listitem id="LIWQ611">
+          <para>Modify the user's PATH environment variable to include the pathname of AFS binaries, such as
           <emphasis role="bold">/afs/</emphasis>cellname<emphasis role="bold">/</emphasis>sysname<emphasis
           role="bold">/usr/afsws/bin</emphasis>. If the user works on NFS client machines of different system types, considering
           replacing the specific sysname value with the <emphasis role="bold">@sys</emphasis> variable. The PATH variable is

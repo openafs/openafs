@@ -84,12 +84,12 @@ interface that allows users to do this.)
 =head1 EXAMPLES
 
 The following two examples are for a user with AFS UID 1020 in the
-C<abc.com> cell and AFS UID 35 in the C<test.abc.com> cell. He is working
+C<example.com> cell and AFS UID 35 in the C<test.example.com> cell. He is working
 on a machine in the first cell and is authenticated in both cells.
 
    % kas listtickets
    User's (AFS ID 1020) tokens for afs [Expires Wed Mar 31 9:30:54 1999]
-   User's (AFS ID 35@test.abc.com) tokens for afs@test.abc.com \
+   User's (AFS ID 35@test.example.com) tokens for afs@test.example.com \
              [Expires Wed Mar 31 13:54:26 1999]
 
    % kas listtickets -name afs -long

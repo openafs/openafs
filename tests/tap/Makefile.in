@@ -1,14 +1,25 @@
 # Build rules for the OpenAFS test suite.
 
 srcdir=@srcdir@
+tapdir=$(srcdir)/../../src/external/c-tap-harness/tests/tap
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 objects = basic.o
 
-all check test tests: libtap.a
+all check test tests: libtap.a basic.h macros.h libtap.sh
 
-basic.o: $(srcdir)/basic.c $(srcdir)/basic.h
-	$(CCOBJ) $(CFLAGS) -I$(srcdir)/.. -c $(srcdir)/basic.c
+basic.o: $(tapdir)/basic.c $(tapdir)/basic.h
+	$(CC) $(AFS_CFLAGS) @CFLAGS_NOERROR@ -I$(tapdir)/../.. -c $(tapdir)/basic.c
+
+basic.h: $(tapdir)/basic.h
+	cp $(tapdir)/basic.h basic.h
+
+macros.h: $(tapdir)/macros.h
+	cp $(tapdir)/macros.h macros.h
+
+libtap.sh: $(tapdir)/libtap.sh
+	cp $(tapdir)/libtap.sh libtap.sh
 
 libtap.a: $(objects)
 	$(RM) -f libtap.a
@@ -18,4 +29,4 @@ libtap.a: $(objects)
 install:
 
 clean distclean:
-	$(RM) -f *.o *.a core
+	$(RM) -f *.o *.a core basic.h macros.h libtap.sh

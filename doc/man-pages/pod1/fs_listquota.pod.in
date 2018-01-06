@@ -105,7 +105,7 @@ has less than 2 terabytes (2^41 bytes) free, but is larger than 2 terabytes
 
 The following example shows the output for the volume C<user.smith>:
 
-   % fs listquota -path /afs/abc.com/usr/smith
+   % fs listquota -path /afs/example.com/usr/smith
    Volume Name     Quota    Used    % Used   Partition
    user.smith      15000    5071       34%         86%
 

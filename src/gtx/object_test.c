@@ -14,6 +14,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
+#include <afs/cmd.h>		/*Command interpretation library */
 
 #include "gtxscreenobj.h"	/*Gator screen object interface */
 #include "gtxtextobj.h"		/*Gator text object interface */
@@ -22,9 +25,6 @@
 #include "gtxcurseswin.h"	/*Gator curses window package */
 #include "gtxdumbwin.h"		/*Gator dumb terminal window package */
 #include "gtxX11win.h"		/*Gator X11 window package */
-#include <errno.h>
-#include <stdio.h>		/*Standard I/O stuff */
-#include <cmd.h>		/*Command interpretation library */
 
 
 /*
@@ -437,7 +437,7 @@ main(argc, argv)
     /*
      * Set up the commands we understand.
      */
-    ts = cmd_CreateSyntax("initcmd", object_testInit, NULL,
+    ts = cmd_CreateSyntax("initcmd", object_testInit, NULL, 0,
 			  "Initialize the program");
     cmd_AddParm(ts, "-package", CMD_SINGLE, CMD_REQUIRED,
 		"Graphics package to use");

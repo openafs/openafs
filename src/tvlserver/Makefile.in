@@ -7,26 +7,12 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
 HELPER_SPLINT=@HELPER_SPLINT@
 ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
-CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} 
-CCRULE=${CC} ${CFLAGS} -c
-
-RX=../rx
-UTIL=../util
-VLSERVER=../vlserver
-
-RXOBJS= rx_pthread.o rxkad_errs.o
-
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
-     volparse.o flipbase64.o softsig.o hostparse.o snprintf.o \
-     pthread_glock.o get_krbrlm.o
+VLSERVER=$(srcdir)/../vlserver
 
 INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/lwp.h \
@@ -37,175 +23,128 @@ INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/afs/cellconfig.h \
 	vlserver.h vldbint.h
 
-LIBS=	${TOP_LIBDIR}/libubik_pthread.a \
-	${TOP_LIBDIR}/libafsauthent.a \
-	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/libafsrpc.a \
-	${TOP_LIBDIR}/libafsutil.a 
+LIBS_common = \
+	$(top_builddir)/src/ubik/liboafs_ubik.la \
+	$(top_builddir)/src/sys/liboafs_sys.la \
+	$(top_builddir)/src/rx/liboafs_rx.la \
+	$(top_builddir)/src/rxstat/liboafs_rxstat.la \
+	$(top_builddir)/src/rxkad/liboafs_rxkad.la \
+	$(top_builddir)/src/lwp/liboafs_lwpcompat.la \
+	$(top_builddir)/src/cmd/liboafs_cmd.la \
+	$(top_builddir)/src/util/liboafs_util.la \
+	$(top_builddir)/src/opr/liboafs_opr.la
 
-OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o ${RXOBJS} ${UTILOBJS} 
+LIBS_server= \
+	$(top_builddir)/src/rxstat/liboafs_rxstat.la \
+	$(top_builddir)/src/audit/liboafs_audit.la \
+	$(LIBS_common)
 
+LIBS_client= \
+	$(top_builddir)/src/vlserver/liboafs_vldb.la \
+	$(LIBS_common)
 
 all: \
-	vlserver vlclient vlserver cnvldb vldb_check \
-	Kvldbint.cs.c Kvldbint.xdr.c vldbint.h 
+	vlserver vlclient vlserver cnvldb vldb_check vldbint.h
 
 depinstall:
-
-rx_pthread.o: ${RX}/rx_pthread.c
-	${CCRULE} ${srcdir}/${RX}/rx_pthread.c
-
-rxkad_errs.o: ../rxkad/rxkad_errs.c
-	${CCRULE} ../rxkad/rxkad_errs.c
-
-#
-# get the pthreaded util stuff compiled here.  we do this instead of
-# using the non-pthreaded libutil.a.  There probably should be a
-# pthreaded version of this library, as we are doing with ubik itself, but...
-#
-
-assert.o: ${UTIL}/assert.c
-	${CCRULE} ${srcdir}/${UTIL}/assert.c
-
-uuid.o: ${UTIL}/uuid.c
-	${CCRULE} ${srcdir}/${UTIL}/uuid.c
-
-serverLog.o: ${UTIL}/serverLog.c
-	${CCRULE} ${srcdir}/${UTIL}/serverLog.c
-
-fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE} ${srcdir}/${UTIL}/fileutil.c
-
-volparse.o: ${UTIL}/volparse.c
-	${CCRULE} ${srcdir}/${UTIL}/volparse.c
-
-flipbase64.o: ${UTIL}/flipbase64.c
-	${CCRULE} ${srcdir}/${UTIL}/flipbase64.c
-
-netutils.o: ${UTIL}/netutils.c
-	${CCRULE} ${srcdir}/${UTIL}/netutils.c
-
-dirpath.o: ${UTIL}/dirpath.c
-	${CCRULE} ${srcdir}/${UTIL}/dirpath.c
-
-softsig.o: ${UTIL}/softsig.c
-	${CCRULE} ${srcdir}/${UTIL}/softsig.c
-
-hostparse.o: ${UTIL}/hostparse.c
-	${CCRULE} ${srcdir}/${UTIL}/hostparse.c
-
-snprintf.o: ${UTIL}/snprintf.c
-	${CCRULE} ${srcdir}/${UTIL}/snprintf.c
-
-pthread_glock.o: ${UTIL}/pthread_glock.c
-	${CCRULE} ${srcdir}/${UTIL}/pthread_glock.c
-
-get_krbrlm.o: ${UTIL}/get_krbrlm.c
-	${CCRULE} ${srcdir}/${UTIL}/get_krbrlm.c
 
 #
 # Other stuff
 #
 
+vldb_check: vldb_check.o AFS_component_version_number.o $(LIBS_client)
+	$(LT_LDRULE_static) vldb_check.o AFS_component_version_number.o \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
-vldb_check: vldb_check.o ${LIBS} AFS_component_version_number.o
-	$(CC) ${LDFLAGS} -o vldb_check vldb_check.o AFS_component_version_number.o ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
+vldb_check.o: ${VLSERVER}/vldb_check.c
+	$(AFS_CCRULE) $(VLSERVER)/vldb_check.c
 
-vldb_check.o: ${VLSERVER}/vldb_check.c 
-	${CCRULE} ${srcdir}/${VLSERVER}/vldb_check.c
-
-cnvldb: cnvldb.o ${LIBS} 
-	$(CC) ${LDFLAGS} -o cnvldb cnvldb.o ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
+cnvldb: cnvldb.o $(LIBS_client)
+	$(LT_LDRULE_static) cnvldb.o \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 cnvldb.o: ${VLSERVER}/cnvldb.c
-	${CCRULE} ${srcdir}/${VLSERVER}/cnvldb.c
+	$(AFS_CCRULE) $(VLSERVER)/cnvldb.c
 
-sascnvldb: sascnvldb.o ${LIBS} 
-	$(CC) ${LDFLAGS} -o sascnvldb sascnvldb.o ${LIBS} ${MT_LIBS} ${XLIBS} ${KRB5_LIBS}
+sascnvldb: sascnvldb.o $(LIBS_client)
+	$(LT_LDRULE_static) sascnvldb.o \
+		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 sascnvldb.o: ${VLSERVER}/sascnvldb.c
-	${CCRULE} ${srcdir}/${VLSERVER}/sascnvldb.c
+	$(AFS_CCRULE) $(VLSERVER)/sascnvldb.c
 
-vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS)
-	$(CC) ${LDFLAGS} -o vlserver vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
-		vldbint.xdr.o $(LIBS) ${MT_LIBS} ${XLIBS} ${TOP_LIBDIR}/libaudit.a ${KRB5_LIBS}
+vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS_server)
+	$(LT_LDRULE_static) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
+		vldbint.xdr.o \
+		$(LIBS_server) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 vlserver.o: ${VLSERVER}/vlserver.c ${INCLS} AFS_component_version_number.o
-	${CCRULE} ${srcdir}/${VLSERVER}/vlserver.c
+	$(AFS_CCRULE) $(VLSERVER)/vlserver.c
 
 vlutils.o: ${VLSERVER}/vlutils.c ${INCLS}
-	${CCRULE} ${srcdir}/${VLSERVER}/vlutils.c
+	$(AFS_CCRULE) $(VLSERVER)/vlutils.c
 
 vlprocs.o: ${VLSERVER}/vlprocs.c ${INCLS}
-	${CCRULE} ${srcdir}/${VLSERVER}/vlprocs.c
+	$(AFS_CCRULE) $(VLSERVER)/vlprocs.c
 
-vldbint.ss.o: vldbint.ss.c 
-	${CCRULE} vldbint.ss.c
+vldbint.ss.o: vldbint.ss.c
+vldbint.xdr.o: vldbint.xdr.c
 
-vldbint.cs.o: vldbint.cs.c 
-	${CCRULE} vldbint.cs.c
-
-vldbint.xdr.o: vldbint.xdr.c 
-	${CCRULE} vldbint.xdr.c
-
-vldbint.cs.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -u -x -C -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
 
 vldbint.ss.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -x -S -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
+	${RXGEN} -A -x -S -o $@ ${VLSERVER}/vldbint.xg
 
 vldbint.xdr.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -x -c -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
+	${RXGEN} -A -x -c -o $@ ${VLSERVER}/vldbint.xg
 
 vldbint.h: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -u -x -h -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
+	${RXGEN} -A -u -x -h -o $@ ${VLSERVER}/vldbint.xg
 
-vldbint.cs.c: vldbint.h
 vldbint.ss.c: vldbint.h
 vldbint.xdr.c: vldbint.h
 
-Kvldbint.cs.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -x -k -C -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
-
-Kvldbint.xdr.c: ${VLSERVER}/vldbint.xg
-	${RXGEN} -A -x -k -c -o $@ ${srcdir}/${VLSERVER}/vldbint.xg
-
-vlclient: vlclient.o $(OBJS) $(LIBS) ${INCLS}
-	$(CC) ${LDFLAGS} -o vlclient vlclient.o $(OBJS) $(LIBS) ${MT_LIBS} ${XLIBS} ${TOP_LIBDIR}/libcmd.a ${KRB5_LIBS}
+vlclient: vlclient.o $(LIBS_client)
+	$(LT_LDRULE_static) vlclient.o $(LIBS_client) \
+		$(LIB_roken) ${MT_LIBS}
 
 vlclient.o: ${VLSERVER}/vlclient.c
-	${CCRULE} ${srcdir}/${VLSERVER}/vlclient.c
+	$(AFS_CCRULE) $(VLSERVER)/vlclient.c
 
 vl_errors.o: vl_errors.c
-	${CCRULE} vl_errors.c
 
 vl_errors.c: ${VLSERVER}/vl_errors.et
-	${COMPILE_ET_C} -p ${srcdir}/${VLSERVER} vl_errors
+	${COMPILE_ET_C} -p ${VLSERVER} vl_errors
 
 vlserver.h: ${VLSERVER}/vl_errors.et ${VLSERVER}/vlserver.p.h
-	${COMPILE_ET_H} -p ${srcdir}/${VLSERVER} vl_errors -h vlserver
+	${COMPILE_ET_H} -p ${VLSERVER} vl_errors -h vlserver
 
-cnvldb.o: vlserver.h
-vlclient.o: vlserver.h
-vldb_check.o: vlserver.h
-vlprocs.o: vlserver.h
-vlserver.o: vlserver.h
-vlutils.o: vlserver.h
+cnvldb.o cnvldb.lo: vlserver.h
+vlclient.o vlclient.lo: vlserver.h
+vldb_check.o vldb_check.lo: vlserver.h
+vlprocs.o vlprocs.lo: vlserver.h
+vlserver.o vlserver.lo: vlserver.h
+vlutils.o vlutils.lo: vlserver.h
 
 system: install
 
 install: vlserver cnvldb vldb_check
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
-		${INSTALL_PROGRAM} vlserver ${DESTDIR}${afssrvlibexecdir}/vlserver; \
-		${INSTALL_PROGRAM} cnvldb ${DESTDIR}${afssrvsbindir}/vldb_convert; \
-		${INSTALL_PROGRAM} vldb_check ${DESTDIR}${afssrvsbindir}/vldb_check; \
+		$(LT_INSTALL_PROGRAM) vlserver \
+			${DESTDIR}${afssrvlibexecdir}/vlserver; \
+		$(LT_INSTALL_PROGRAM) cnvldb \
+			${DESTDIR}${afssrvsbindir}/vldb_convert; \
+		$(LT_INSTALL_PROGRAM) vldb_check \
+			${DESTDIR}${afssrvsbindir}/vldb_check; \
 	fi
 
 dest: vlserver cnvldb vldb_check
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
-		${INSTALL_PROGRAM} vlserver ${DEST}/root.server/usr/afs/bin/vlserver; \
-		${INSTALL_PROGRAM} cnvldb ${DEST}/etc/vldb_convert; \
-		${INSTALL_PROGRAM} vldb_check ${DEST}/etc/vldb_check; \
+		$(LT_INSTALL_PROGRAM) vlserver \
+			${DEST}/root.server/usr/afs/bin/vlserver; \
+		$(LT_INSTALL_PROGRAM) cnvldb \
+			${DEST}/etc/vldb_convert; \
+		$(LT_INSTALL_PROGRAM) vldb_check \
+			${DEST}/etc/vldb_check; \
 	fi
 
 #
@@ -214,6 +153,7 @@ dest: vlserver cnvldb vldb_check
 include ../config/Makefile.version
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.a *.otl *.xdr.c *.cs.c *.ss.c core \
 		vlserver vlclient cnvldb vldbint.h vlserver.h vldb_check \
 		vl_errors.c AFS_component_version_number.c

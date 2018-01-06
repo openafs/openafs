@@ -28,7 +28,7 @@ and C<125>. The default value of C<0> produces only a few messages.
 
 =item B<-p> <I<number of processes>>
 
-Sets the number of threads (or LWPs) to run. Provide a positive integer. 
+Sets the number of threads to run. Provide a positive integer.
 The File Server creates and uses five threads for special purposes, 
 in addition to the number specified (but if this argument specifies 
 the maximum possible number, the File Server automatically uses five 
@@ -93,6 +93,25 @@ Prevents the File Server from breaking the callbacks that Cache Managers
 hold on a volume that the File Server is reattaching after the volume was
 offline (as a result of the B<vos restore> command, for example). Use of
 this flag is strongly discouraged.
+
+=item B<-nobusy>
+
+This option slightly changes the error codes reported to clients when an
+unattached volume is accessed by a client during fileserver startup.
+
+Normally, non-DAFS fileservers start accepting requests immediately on startup,
+but attachment of volumes can take a while. So if a client tries to access a
+volume that is not attached simply because the fileserver hasn't attached it
+yet, that client will get an error. With the B<-nobusy> option present, the
+fileserver will immediately respond with an error code that indicates the
+server is starting up. However, some older clients (before OpenAFS 1.0) don't
+understand this error code, and may not function optimally. So the default
+behavior, without the B<-nobusy> option, is to at first respond with a
+different error code that is understood by more clients, but is
+indistinguishable from other scenarios where the volume is busy and not
+attached for other reasons.
+
+There is usually no reason to use this option under normal operation.
 
 =item B<-implicit> <I<admin mode bits>>
 
@@ -187,11 +206,6 @@ server machine. Combine this flag with any option except the B<-L> flag;
 omit both flags to set values suitable for a medium-sized file server
 machine.
 
-=item B<-k> <I<stack size>>
-
-Sets the LWP stack size in units of 1 kilobyte. Do not use this argument,
-and in particular do not specify a value less than the default of C<24>.
-
 =item B<-realm> <I<Kerberos realm name>>
 
 Defines the Kerberos realm name for the File Server to use. If this
@@ -241,7 +255,7 @@ GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring API.
 
-=item B<-syslog [<loglevel>]
+=item B<-syslog> [<loglevel>]
 
 Use syslog instead of the normal logging location for the fileserver
 process.  If provided, log messages are at <loglevel> instead of the
@@ -250,6 +264,12 @@ default LOG_USER.
 =item B<-mrafslogs>
 
 Use MR-AFS (Multi-Resident) style logging.  This option is deprecated.
+
+=item B<-transarc-logs>
+
+Use Transarc style logging features. Rename the existing log file
+F</usr/afs/logs/FileLog> to F</usr/afs/logs/FileLog.old> when the fileserver is
+restarted.  This option is provided for compatibility with older versions.
 
 =item B<-saneacls>
 
@@ -297,112 +317,6 @@ Prevents any portion of the fileserver binary from being paged (swapped)
 out of memory on a file server machine running the IRIX operating system.
 This option is not supported on platforms other than IRIX.
 
-=item B<-sync> <always | delayed | onclose | never>
-
-This option changes how hard the fileserver tries to ensure that data written
-to volumes actually hits the physical disk.
-
-Normally, when the fileserver writes to disk, the underlying filesystem or
-Operating System may delay writes from actually going to disk, and reorder
-which writes hit the disk first. So, during an unclean shutdown of the machine
-(if the power goes out, or the machine crashes, etc), or if the physical disk
-backing store becomes unavailable, file data may become lost that the server
-previously told clients was already successfully written.
-
-To try to mitigate this, the fileserver will try to "sync" file data to the
-physical disk at numerous points during various I/O. However, this can result
-in significantly reduced performance. Depending on the usage patterns, this may
-or may not be acceptable. This option dictates specifically what the fileserver
-does when it wants to perform a "sync".
-
-There are several options; pass one of these as the argument to -sync. The
-default is C<onclose>.
-
-=over 4
-
-=item always
-
-This causes a sync operation to always sync immediately and synchronously.
-This is the slowest option that provides the greatest protection against data
-loss in the event of a crash or backing store unavailability.
-
-Note that this is still not a 100% guarantee that data will not be lost or
-corrupted during a crash. The underlying filesystem itself may cause data to
-be lost or corrupt in such a situation. And OpenAFS itself does not (yet) even
-guarantee that all data is consistent at any point in time; so even if the
-filesystem and OS do not buffer or reorder any writes, you are not guaranteed
-that all data will be okay after a crash.
-
-This option may be appropriate if you have reason to believe a server is prone
-to data loss failures, such as if the server encounters frequent power failures
-or connectivity issues with network attached storage. Or if the backend storage
-is temporarily degraded in some way (for example, a battery on a caching
-controller fails), it may make sense to temporarily use the C<always> option
-until the situation is fixed. Some servers may also allow for sync operations
-to occur very quickly, such that the C<always> option is not noticeably slower
-than any other option. In such a case, there is no downside to specifying
-C<always>.
-
-This was the only behavior allowed in OpenAFS releases prior to 1.4.5.
-
-=item delayed
-
-This causes a sync to do nothing immediately, but the sync will happen sometime
-in the background, within approximately the next 10 seconds. This works by
-having a separate thread that goes through all open file handles every 10
-seconds, and it syncs the ones that have been marked as needing a sync. File
-handles flagged for sync may also get synced on volume detachment, according to
-the same behavior as with the C<onclose> option.
-
-This option is currently not recommended, since in the past the code
-implementing this option has caused rare data corruption during normal
-operation.
-
-This was the only behavior allowed in OpenAFS releases starting from 1.4.5 up
-to and including 1.6.2. It was the default starting from OpenAFS 1.6.3 up to
-and including OpenAFS 1.6.7. This option will be removed in a future version of
-OpenAFS.
-
-=item onclose
-
-This causes a sync to do nothing immediately, but causes the relevant file to
-be flagged as potentially needing a sync. When a volume is detached, flagged
-volume metadata files are synced, as well as data files that have been accessed
-recently. Events that cause a volume to detach include: performing certain
-volume operations (restore, salvage, offline, et al), detection of volume
-consistency errors, a clean shutdown of the fileserver, or during DAFS "soft
-detachment".
-
-Effectively this option is the same as C<never> while a volume is attached and
-actively being used, but if a volume is detached, there is an additional
-guarantee for the data's consistency.
-
-This option is the default starting with OpenAFS 1.6.8.
-
-=item never
-
-This causes all syncs to never do anything. This is the fastest option, with
-the weakest guarantees for data consistency.
-
-Depending on the underlying filesystem and Operating System, there may be
-guarantees that any data written to disk will hit the physical media after a
-certain amount of time. For example, Linux's pdflush process usually makes this
-guarantee, and ext3 can make certain various consistency guarantees according
-to the options given. ZFS on Solaris can also provide similar guarantees, as
-can various other platforms and filesystems. Consult the documentation for
-your platform if you are unsure.
-
-=back
-
-Which option you choose is not an easy decision to make. Various developers and
-experts sometimes disagree on which option is the most reasonable, and it may
-depend on the specific scenario and workload involved. Some argue that the
-C<always> option does not provide significantly greater guarantees over any
-other option, whereas others argue that choosing anything besides the C<always>
-option allows for an unacceptable risk of data loss. This may depend on your
-usage patterns, your hardware, your platform and filesystem, and who you talk
-to about this topic.
-
 =item B<-offline-timeout> <I<timeout in seconds>>
 
 Setting this option to I<N> means that if any clients are reading from a
@@ -423,8 +337,6 @@ Setting this option to C<0> means to interrupt clients immediately if a
 volume is waiting to go offline. Setting this option to C<-1> means to
 wait forever for client requests to finish. The default value is C<-1>.
 
-For the LWP fileserver, the only valid value for this option is C<-1>.
-
 =item B<-offline-shutdown-timeout> <I<timeout in seconds>>
 
 This option behaves similarly to B<-offline-timeout> but applies to
@@ -442,4 +354,114 @@ If B<-offline-timeout> is specified, the default value of
 B<-offline-shutdown-timeout> is the value specified for
 B<-offline-timeout>. Otherwise, the default value is C<-1>.
 
-For the LWP fileserver, the only valid value for this option is C<-1>.
+=item B<-sync> <always | onclose | none>
+
+This option changes how hard the fileserver tries to ensure that data written
+to volumes actually hits the physical disk.
+
+Normally, when the fileserver writes to disk, the underlying filesystem or
+Operating System may delay writes from actually going to disk, and reorder
+which writes hit the disk first. So, during an unclean shutdown of the machine
+(if the power goes out, or the machine crashes, etc), file data may become lost
+that the server previously told clients was already successfully written.
+
+To try to mitigate this, the fileserver will try to "sync" file data to the
+physical disk at numerous points during various I/O. However, this can result
+in significantly reduced performance. Depending on the usage patterns, this may
+or may not be acceptable. This option dictates specifically what the fileserver
+does when it wants to perform a "sync".
+
+There are several options; pass one of these as the argument to -sync. The
+default is C<onclose>.
+
+=over 4
+
+=item always
+
+This causes a sync operation to always sync immediately and synchronously.
+This is the slowest option that provides the greatest protection against data
+loss in the event of a crash.
+
+Note that this is still not a 100% guarantee that data will not be lost or
+corrupted during a crash. The underlying filesystem itself may cause data to
+be lost or corrupt in such a situation. And OpenAFS itself does not (yet) even
+guarantee that all data is consistent at any point in time; so even if the
+filesystem and OS do not buffer or reorder any writes, you are not guaranteed
+that all data will be okay after a crash.
+
+This was the only behavior allowed in OpenAFS releases prior to 1.4.5.
+
+=item onclose
+
+This causes a sync to do nothing immediately, but causes the relevant file to
+be flagged as potentially needing a sync. When a volume is detached, volume
+metadata files flaged for synced are synced, as well as data files that have
+been accessed recently. Events that cause a volume to detach include:
+performing volume operations (dump, restore, clone, etc), a clean shutdown
+of the fileserver, or during DAFS "soft detachment".
+
+Effectively this option is the same as C<never> while a volume is attached and
+actively being used, but if a volume is detached, there is an additional
+guarantee for the data's consistency.
+
+After the removal of the C<delayed> option after the OpenAFS 1.6 series, this
+option became the default.
+
+=item never
+
+This causes all syncs to never do anything. This is the fastest option, with
+the weakest guarantees for data consistency.
+
+Depending on the underlying filesystem and Operating System, there may be
+guarantees that any data written to disk will hit the physical media after a
+certain amount of time. For example, Linux's pdflush process usually makes this
+guarantee, and ext3 can make certain various consistency guarantees according
+to the options given. ZFS on Solaris can also provide similar guarantees, as
+can various other platforms and filesystems. Consult the documentation for
+your platform if you are unsure.
+
+=item delayed
+
+This option used to exist in OpenAFS 1.6, but was later removed due to issues
+encountered with data corruption during normal operation. Outside of the
+OpenAFS 1.6 series, it is not a valid option, and the fileserver will fail to
+start if you specify this (or any other unknown option). It caused syncs to
+occur in a background thread, executing every 10 seconds.
+
+This was the only behavior allowed in OpenAFS releases starting from 1.4.5 up
+to and including 1.6.2. It was also the default for the 1.6 series starting in
+OpenAFS 1.6.3.
+
+=back
+
+Which option you choose is not an easy decision to make. Various developers
+and experts sometimes disagree on which option is the most reasonable, and it
+may depend on the specific scenario and workload involved. Some argue that
+the C<always> option does not provide significantly greater guarantees over
+any other option, whereas others argue that choosing anything besides the
+C<always> option allows for an unacceptable risk of data loss. This may
+depend on your usage patterns, your platform and filesystem, and who you talk
+to about this topic.
+
+=item B<-logfile> <I<log file>>
+
+Sets the file to use for server logging.  If logfile is not specified and
+no other logging options are supplied, this will be F</usr/afs/logs/FileLog>.
+Note that this option is intended for debugging and testing purposes.
+Changing the location of the log file from the command line may result
+in undesirable interactions with tools such as B<bos>.
+
+=item B<-vhashsize <I<size>>
+
+The log(2) of the number of volume hash buckets.  Default is 8 (i.e., by
+default, there are 2^8 = 256 volume hash buckets). The minimum that can
+be specified is 6 (64 hash buckets). In OpenAFS 1.5.77 and earlier, the
+maximum that can be specified is 14 (16384 buckets). After 1.5.77, the
+maximum that can be specified is 28 (268435456 buckets).
+
+=item B<-config> <I<configuration directory>>
+
+Set the location of the configuration directory used to configure this
+service.  In a typical configuration this will be F</usr/afs/etc> - this
+option allows the use of alternative configuration locations for testing
+purposes.

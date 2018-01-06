@@ -9,23 +9,18 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <sys/types.h>
 #include <afs/stds.h>
+
+#include <roken.h>
+
 #include <ubik.h>
 #include <afs/bubasics.h>
+#include <afs/audit.h>
+
 #include "budb_errs.h"
 #include "database.h"
 #include "error_macros.h"
 #include "budb_internal.h"
-#include "afs/audit.h"
-#include <string.h>
 
 int pollCount;
 struct memoryDB db;		/* really allocate it here */

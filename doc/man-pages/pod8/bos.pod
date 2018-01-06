@@ -78,6 +78,14 @@ commands: B<bos addkey>, B<bos listkeys>, and B<bos removekey>.
 
 =item *
 
+The F</usr/afs/etc/KeyFileExt> file lists additional server encryption
+keys that the server processes can use to decrypt tickets presented by
+client processes and one another. These keys are strong encryption
+keys used by the rxkad-k5 extension; use L<asetkey(8)> to manage the
+F<KeyFileExt>.
+
+=item *
+
 The F</usr/afs/etc/ThisCell> file defines the cell to which the server
 machine belongs for the purposes of server-to-server communication.
 Administer it with the B<bos setcellname> command. There is also a
@@ -157,12 +165,14 @@ prints the help message.
 =item B<-localauth>
 
 Constructs a server ticket using the server encryption key with the
-highest key version number in the local F</usr/afs/etc/KeyFile> file. The
+highest key version number in the local F</usr/afs/etc/KeyFile> or
+F</usr/afs/etc/KeyFileExt> file. The
 B<bos> command interpreter presents the ticket, which never expires, to
 the BOS Server during mutual authentication.
 
 Use this flag only when issuing a command on a server machine; client
-machines do not usually have a F</usr/afs/etc/KeyFile> file.  The issuer
+machines do not usually have a F</usr/afs/etc/KeyFile> or
+F</usr/afs/etc/KeyFileExt> file.  The issuer
 of a command that includes this flag must be logged on to the server
 machine as the local superuser C<root>. The flag is useful for commands
 invoked by an unattended application program, such as a process controlled
@@ -194,7 +204,7 @@ provided. Do not combine the B<-noauth> and B<-localauth> flags.
 
 Indicates the AFS server machine on which to run the command.  Identify
 the machine by its IP address in dotted decimal format, its
-fully-qualified host name (for example, C<fs1.abc.com>), or by an
+fully-qualified host name (for example, C<fs1.example.com>), or by an
 abbreviated form of its host name that distinguishes it from other
 machines. Successful use of an abbreviated form depends on the
 availability of a name service (such as the Domain Name Service or a local
@@ -245,6 +255,7 @@ B<bos listkeys> command), no privilege is required.
 L<BosConfig(5)>,
 L<CellServDB(5)>,
 L<KeyFile(5)>,
+L<KeyFileExt(5)>,
 L<ThisCell(5)>,
 L<UserList(5)>,
 L<bos_addhost(8)>,

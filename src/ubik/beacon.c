@@ -10,58 +10,63 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#include <string.h>
-#include <stdarg.h>
-#include <errno.h>
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <time.h>
+#include <afs/opr.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
 #else
-#include <sys/file.h>
-#include <sys/time.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
+# include <opr/lockstub.h>
 #endif
 
 #include <lock.h>
-#include <rx/xdr.h>
 #include <rx/rx.h>
+#include <rx/rxkad.h>
 #include <rx/rx_multi.h>
 #include <afs/cellconfig.h>
 #ifndef AFS_NT40_ENV
 #include <afs/afsutil.h>
-#include <afs/netutils.h>
 #endif
 
 #define UBIK_INTERNALS
 #include "ubik.h"
 #include "ubik_int.h"
 
+/* These global variables were used to set the function to use to initialise
+ * the client security layer. They are retained for backwards compatiblity with
+ * legacy callers - the ubik_SetClientSecurityProcs() interface should be used
+ * instead
+ */
+int (*ubik_CRXSecurityProc) (void *rock, struct rx_securityClass **,
+                             afs_int32 *);
+void *ubik_CRXSecurityRock;
+
 /*! \name statics used to determine if we're the sync site */
-static afs_int32 syncSiteUntil = 0;	/*!< valid only if amSyncSite */
-int ubik_amSyncSite = 0;	/*!< flag telling if I'm sync site */
 static int nServers;		/*!< total number of servers */
 static char amIMagic = 0;	/*!< is this host the magic host */
 char amIClone = 0;		/*!< is this a clone which doesn't vote */
 static char ubik_singleServer = 0;
 /*\}*/
-int (*ubik_CRXSecurityProc) (void *rock, struct rx_securityClass **,
-			     afs_int32 *);
-void *ubik_CRXSecurityRock;
+static int (*secLayerProc) (void *rock, struct rx_securityClass **,
+			    afs_int32 *) = NULL;
+static int (*tokenCheckProc) (void *rock) = NULL;
+static void * securityRock = NULL;
+
 afs_int32 ubikSecIndex;
 struct rx_securityClass *ubikSecClass;
+
+/* Values protected by the address lock */
+struct addr_data addr_globals;
+
+/* Values protected by the beacon lock */
+struct beacon_data beacon_globals;
+
 static int ubeacon_InitServerListCommon(afs_uint32 ame,
 					struct afsconf_cell *info,
 					char clones[],
 					afs_uint32 aservers[]);
 static int verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 				  afs_uint32 aservers[]);
-static int updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR]);
-
 
 /*! \file
  * Module responsible for both deciding if we're currently the sync site,
@@ -91,8 +96,38 @@ void
 ubeacon_Debug(struct ubik_debug *aparm)
 {
     /* fill in beacon's state fields in the ubik_debug structure */
-    aparm->syncSiteUntil = syncSiteUntil;
+    aparm->syncSiteUntil = beacon_globals.syncSiteUntil;
     aparm->nServers = nServers;
+}
+
+static int
+amSyncSite(void)
+{
+    afs_int32 now;
+    afs_int32 rcode;
+
+    /* special case for fast startup */
+    if (nServers == 1 && !amIClone)
+	return 1;		/* one guy is always the sync site */
+
+    UBIK_BEACON_LOCK;
+    if (beacon_globals.ubik_amSyncSite == 0 || amIClone)
+	rcode = 0;		/* if I don't think I'm the sync site, say so */
+    else {
+	now = FT_ApproxTime();
+	if (beacon_globals.syncSiteUntil <= now) {	/* if my votes have expired, say so */
+	    if (beacon_globals.ubik_amSyncSite)
+		ubik_dprint("Ubik: I am no longer the sync site\n");
+	    beacon_globals.ubik_amSyncSite = 0;
+	    beacon_globals.ubik_syncSiteAdvertised = 0;
+	    rcode = 0;
+	} else {
+	    rcode = 1;		/* otherwise still have the required votes */
+	}
+    }
+    UBIK_BEACON_UNLOCK;
+    ubik_dprint("beacon: amSyncSite is %d\n", rcode);
+    return rcode;
 }
 
 /*!
@@ -114,30 +149,39 @@ ubeacon_Debug(struct ubik_debug *aparm)
 int
 ubeacon_AmSyncSite(void)
 {
-    afs_int32 now;
     afs_int32 rcode;
 
-    /* special case for fast startup */
-    if (nServers == 1 && !amIClone) {
-	return 1;		/* one guy is always the sync site */
-    }
+    rcode = amSyncSite();
 
-    if (ubik_amSyncSite == 0 || amIClone)
-	rcode = 0;		/* if I don't think I'm the sync site, say so */
-    else {
-	now = FT_ApproxTime();
-	if (syncSiteUntil <= now) {	/* if my votes have expired, say so */
-	    if (ubik_amSyncSite)
-		ubik_dprint("Ubik: I am no longer the sync site\n");
-	    ubik_amSyncSite = 0;
-	    rcode = 0;
-	} else {
-	    rcode = 1;		/* otherwise still have the required votes */
-	}
-    }
-    if (rcode == 0)
-	urecovery_ResetState();	/* force recovery to re-execute */
-    ubik_dprint("beacon: amSyncSite is %d\n", rcode);
+    if (!rcode)
+	urecovery_ResetState();
+
+    return rcode;
+}
+
+/*!
+ * \brief Determine whether at least quorum are aware we have a sync-site.
+ *
+ * Called from higher-level modules.
+ *
+ * There is a gap between the time when a new sync-site is elected and the time
+ * when the remotes are aware of that. Therefore, any write transaction between
+ * this gap will fail. This will force a new re-election which might be time
+ * consuming. This procedure determines whether the remotes (quorum) are aware
+ * we have a sync-site.
+ *
+ * \return 1 if remotes are aware we have a sync-site
+ * \return 0 if remotes are not aware we have a sync-site
+ */
+int
+ubeacon_SyncSiteAdvertised(void)
+{
+    afs_int32 rcode;
+
+    UBIK_BEACON_LOCK;
+    rcode = beacon_globals.ubik_syncSiteAdvertised;
+    UBIK_BEACON_UNLOCK;
+
     return rcode;
 }
 
@@ -169,6 +213,57 @@ ubeacon_InitServerList(afs_uint32 ame, afs_uint32 aservers[])
 	ubeacon_InitServerListCommon(ame, (struct afsconf_cell *)0, 0,
 				     aservers);
     return code;
+}
+
+/* Must be called with address lock held */
+void
+ubeacon_InitSecurityClass(void)
+{
+    int i;
+    /* get the security index to use, if we can */
+    if (secLayerProc) {
+	i = (*secLayerProc) (securityRock, &addr_globals.ubikSecClass, &addr_globals.ubikSecIndex);
+    } else if (ubik_CRXSecurityProc) {
+	i = (*ubik_CRXSecurityProc) (ubik_CRXSecurityRock, &addr_globals.ubikSecClass,
+				     &addr_globals.ubikSecIndex);
+    } else
+	i = 1;
+    if (i) {
+	/* don't have sec module yet */
+	addr_globals.ubikSecIndex = 0;
+	addr_globals.ubikSecClass = rxnull_NewClientSecurityObject();
+    }
+}
+
+void
+ubeacon_ReinitServer(struct ubik_server *ts)
+{
+    if (tokenCheckProc && !(*tokenCheckProc) (securityRock)) {
+	struct rx_connection *disk_rxcid;
+	struct rx_connection *vote_rxcid;
+	struct rx_connection *tmp;
+	UBIK_ADDR_LOCK;
+	ubeacon_InitSecurityClass();
+	disk_rxcid =
+	    rx_NewConnection(rx_HostOf(rx_PeerOf(ts->disk_rxcid)),
+			     ubik_callPortal, DISK_SERVICE_ID,
+			     addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
+	if (disk_rxcid) {
+	    tmp = ts->disk_rxcid;
+	    ts->disk_rxcid = disk_rxcid;
+	    rx_PutConnection(tmp);
+	}
+	vote_rxcid =
+	    rx_NewConnection(rx_HostOf(rx_PeerOf(ts->vote_rxcid)),
+			     ubik_callPortal, VOTE_SERVICE_ID,
+			     addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
+	if (vote_rxcid) {
+	    tmp = ts->vote_rxcid;
+	    ts->vote_rxcid = vote_rxcid;
+	    rx_PutConnection(tmp);
+	}
+	UBIK_ADDR_UNLOCK;
+    }
 }
 
 /*!
@@ -211,17 +306,8 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
     if ((code = verifyInterfaceAddress(&ame, info, aservers)))
 	return code;
 
-    /* get the security index to use, if we can */
-    if (ubik_CRXSecurityProc) {
-	i = (*ubik_CRXSecurityProc) (ubik_CRXSecurityRock, &ubikSecClass,
-				     &ubikSecIndex);
-    } else
-	i = 1;
-    if (i) {
-	/* don't have sec module yet */
-	ubikSecIndex = 0;
-	ubikSecClass = rxnull_NewClientSecurityObject();
-    }
+    ubeacon_InitSecurityClass();
+
     magicHost = ntohl(ame);	/* do comparisons in host order */
     magicServer = (struct ubik_server *)0;
 
@@ -240,8 +326,7 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	for (i = 0; i < info->numServers; i++) {
 	    if (i == me)
 		continue;
-	    ts = (struct ubik_server *)malloc(sizeof(struct ubik_server));
-	    memset(ts, 0, sizeof(struct ubik_server));
+	    ts = calloc(1, sizeof(struct ubik_server));
 	    ts->next = ubik_servers;
 	    ubik_servers = ts;
 	    ts->addr[0] = info->hostAddr[i].sin_addr.s_addr;
@@ -260,12 +345,12 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	    ts->vote_rxcid =
 		rx_NewConnection(info->hostAddr[i].sin_addr.s_addr,
 				 ubik_callPortal, VOTE_SERVICE_ID,
-				 ubikSecClass, ubikSecIndex);
+				 addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
 	    /* for disk reqs */
 	    ts->disk_rxcid =
 		rx_NewConnection(info->hostAddr[i].sin_addr.s_addr,
 				 ubik_callPortal, DISK_SERVICE_ID,
-				 ubikSecClass, ubikSecIndex);
+				 addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
 	    ts->up = 1;
 	}
     } else {
@@ -273,13 +358,14 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	while ((servAddr = *aservers++)) {
 	    if (i >= MAXSERVERS)
 		return UNHOSTS;	/* too many hosts */
-	    ts = (struct ubik_server *)malloc(sizeof(struct ubik_server));
-	    memset(ts, 0, sizeof(struct ubik_server));
+	    ts = calloc(1, sizeof(struct ubik_server));
 	    ts->next = ubik_servers;
 	    ubik_servers = ts;
 	    ts->addr[0] = servAddr;	/* primary address in  net byte order */
-	    ts->vote_rxcid = rx_NewConnection(servAddr, ubik_callPortal, VOTE_SERVICE_ID, ubikSecClass, ubikSecIndex);	/* for vote reqs */
-	    ts->disk_rxcid = rx_NewConnection(servAddr, ubik_callPortal, DISK_SERVICE_ID, ubikSecClass, ubikSecIndex);	/* for disk reqs */
+	    ts->vote_rxcid = rx_NewConnection(servAddr, ubik_callPortal, VOTE_SERVICE_ID,
+			addr_globals.ubikSecClass, addr_globals.ubikSecIndex);	/* for vote reqs */
+	    ts->disk_rxcid = rx_NewConnection(servAddr, ubik_callPortal, DISK_SERVICE_ID,
+			addr_globals.ubikSecClass, addr_globals.ubikSecIndex);	/* for disk reqs */
 	    ts->isClone = 0;	/* don't know about clones */
 	    ts->up = 1;
 	    if (ntohl((afs_uint32) servAddr) < (afs_uint32) magicHost) {
@@ -301,10 +387,6 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	nServers = i + 1;	/* count this server as well as the remotes */
 
     ubik_quorum = (nServers >> 1) + 1;	/* compute the majority figure */
-    /* send addrs to all other servers */
-    code = updateUbikNetworkAddress(ubik_host);
-    if (code)
-	return code;
 
 /* Shoud we set some defaults for RX??
     r_retryInterval = 2;
@@ -314,8 +396,14 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	if (!ubik_servers)	/* special case 1 server */
 	    ubik_singleServer = 1;
 	if (nServers == 1 && !amIClone) {
-	    ubik_amSyncSite = 1;	/* let's start as sync site */
-	    syncSiteUntil = 0x7fffffff;	/* and be it quite a while */
+	    beacon_globals.ubik_amSyncSite = 1;	/* let's start as sync site */
+	    beacon_globals.syncSiteUntil = 0x7fffffff;	/* and be it quite a while */
+	    beacon_globals.ubik_syncSiteAdvertised = 1;
+	    DBHOLD(ubik_dbase);
+	    UBIK_VERSION_LOCK;
+	    version_globals.ubik_epochTime = FT_ApproxTime();
+	    UBIK_VERSION_UNLOCK;
+	    DBRELE(ubik_dbase);
 	}
     } else {
 	if (nServers == 1)	/* special case 1 server */
@@ -323,10 +411,17 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
     }
 
     if (ubik_singleServer) {
-	if (!ubik_amSyncSite)
+	if (!beacon_globals.ubik_amSyncSite) {
 	    ubik_dprint("Ubik: I am the sync site - 1 server\n");
-	ubik_amSyncSite = 1;
-	syncSiteUntil = 0x7fffffff;	/* quite a while */
+	    DBHOLD(ubik_dbase);
+	    UBIK_VERSION_LOCK;
+	    version_globals.ubik_epochTime = FT_ApproxTime();
+	    UBIK_VERSION_UNLOCK;
+	    DBRELE(ubik_dbase);
+	}
+	beacon_globals.ubik_amSyncSite = 1;
+	beacon_globals.syncSiteUntil = 0x7fffffff;	/* quite a while */
+	beacon_globals.ubik_syncSiteAdvertised = 1;
     }
     return 0;
 }
@@ -347,8 +442,12 @@ ubeacon_Interact(void *dummy)
     afs_int32 i;
     struct ubik_server *ts;
     afs_int32 temp, yesVotes, lastWakeupTime, oldestYesVote, syncsite;
+    int becameSyncSite;
     struct ubik_tid ttid;
+    struct ubik_version tversion;
     afs_int32 startTime;
+
+    afs_pthread_setname_self("beacon");
 
     /* loop forever getting votes */
     lastWakeupTime = 0;		/* keep track of time we last started a vote collection */
@@ -363,12 +462,11 @@ ubeacon_Interact(void *dummy)
 	    tt.tv_sec = temp;
 	    tt.tv_usec = 0;
 #ifdef AFS_PTHREAD_ENV
-	    code = select(0, 0, 0, 0, &tt);
+	    select(0, 0, 0, 0, &tt);
 #else
-	    code = IOMGR_Select(0, 0, 0, 0, &tt);
+	    IOMGR_Select(0, 0, 0, 0, &tt);
 #endif
-	} else
-	    code = 0;
+	}
 
 	lastWakeupTime = FT_ApproxTime();	/* started a new collection phase */
 
@@ -384,19 +482,24 @@ ubeacon_Interact(void *dummy)
 	 * is a task for the recovery module, not the beacon module), and
 	 * prepare to send them an r multi-call containing the beacon message */
 	i = 0;			/* collect connections */
+	UBIK_BEACON_LOCK;
+	UBIK_ADDR_LOCK;
 	for (ts = ubik_servers; ts; ts = ts->next) {
 	    if (ts->up && ts->addr[0] != ubik_host[0]) {
 		servers[i] = ts;
 		connections[i++] = ts->vote_rxcid;
 	    }
 	}
+	UBIK_ADDR_UNLOCK;
+	UBIK_BEACON_UNLOCK;
 	servers[i] = (struct ubik_server *)0;	/* end of list */
 	/* note that we assume in the vote module that we'll always get at least BIGTIME
 	 * seconds of vote from anyone who votes for us, which means we can conservatively
 	 * assume we'll be fine until SMALLTIME seconds after we start collecting votes */
 	/* this next is essentially an expansion of rgen's ServBeacon routine */
 
-	ttid.epoch = ubik_epochTime;
+	UBIK_VERSION_LOCK;
+	ttid.epoch = version_globals.ubik_epochTime;
 	if (ubik_dbase->flags & DBWRITING) {
 	    /*
 	     * if a write is in progress, we have to send the writeTidCounter
@@ -407,14 +510,20 @@ ubeacon_Interact(void *dummy)
 	    ttid.counter = ubik_dbase->writeTidCounter;
 	} else
 	    ttid.counter = ubik_dbase->tidCounter + 1;
-#if defined(UBIK_PAUSE)
-	ubik_dbase->flags |= DBVOTING;
-#endif /* UBIK_PAUSE */
+	tversion.epoch = ubik_dbase->version.epoch;
+	tversion.counter = ubik_dbase->version.counter;
+	UBIK_VERSION_UNLOCK;
 
 	/* now analyze return codes, counting up our votes */
 	yesVotes = 0;		/* count how many to ensure we have quorum */
 	oldestYesVote = 0x7fffffff;	/* time quorum expires */
-	syncsite = ubeacon_AmSyncSite();
+	syncsite = amSyncSite();
+	if (!syncsite) {
+	    /* Ok to use the DB lock here since we aren't sync site */
+	    DBHOLD(ubik_dbase);
+	    urecovery_ResetState();
+	    DBRELE(ubik_dbase);
+	}
 	startTime = FT_ApproxTime();
 	/*
 	 * Don't waste time using mult Rx calls if there are no connections out there
@@ -422,10 +531,11 @@ ubeacon_Interact(void *dummy)
 	if (i > 0) {
 	    char hoststr[16];
 	    multi_Rx(connections, i) {
-		multi_VOTE_Beacon(syncsite, startTime, &ubik_dbase->version,
+		multi_VOTE_Beacon(syncsite, startTime, &tversion,
 				  &ttid);
 		temp = FT_ApproxTime();	/* now, more or less */
 		ts = servers[multi_i];
+		UBIK_BEACON_LOCK;
 		ts->lastBeaconSent = temp;
 		code = multi_error;
 
@@ -454,18 +564,26 @@ ubeacon_Interact(void *dummy)
 		 * the vote was computed, *not* the time the vote expires.  We compute
 		 * the latter down below if we got enough votes to go with */
 		if (code > 0) {
-		    ts->lastVoteTime = code;
-		    if (code < oldestYesVote)
-			oldestYesVote = code;
-		    ts->lastVote = 1;
-		    if (!ts->isClone)
-			yesVotes += 2;
-		    if (ts->magic)
-			yesVotes++;	/* the extra epsilon */
-		    ts->up = 1;	/* server is up (not really necessary: recovery does this for real) */
-		    ts->beaconSinceDown = 1;
-		    ubik_dprint("yes vote from host %s\n",
-				afs_inet_ntoa_r(ts->addr[0], hoststr));
+		    if ((code & ~0xff) == ERROR_TABLE_BASE_RXK) {
+			ubik_dprint("token error %d from host %s\n",
+				    code, afs_inet_ntoa_r(ts->addr[0], hoststr));
+			ts->up = 0;
+			ts->beaconSinceDown = 0;
+			urecovery_LostServer(ts);
+		    } else {
+			ts->lastVoteTime = code;
+			if (code < oldestYesVote)
+			    oldestYesVote = code;
+			ts->lastVote = 1;
+			if (!ts->isClone)
+			    yesVotes += 2;
+			if (ts->magic)
+			    yesVotes++;	/* the extra epsilon */
+			ts->up = 1;	/* server is up (not really necessary: recovery does this for real) */
+			ts->beaconSinceDown = 1;
+			ubik_dprint("yes vote from host %s\n",
+				    afs_inet_ntoa_r(ts->addr[0], hoststr));
+		    }
 		} else if (code == 0) {
 		    ts->lastVoteTime = temp;
 		    ts->lastVote = 0;
@@ -475,10 +593,11 @@ ubeacon_Interact(void *dummy)
 		} else if (code < 0) {
 		    ts->up = 0;
 		    ts->beaconSinceDown = 0;
-		    urecovery_LostServer();
+		    urecovery_LostServer(ts);
 		    ubik_dprint("time out from %s\n",
 				afs_inet_ntoa_r(ts->addr[0], hoststr));
 		}
+		UBIK_BEACON_UNLOCK;
 	    }
 	    multi_End;
 	}
@@ -486,7 +605,7 @@ ubeacon_Interact(void *dummy)
 	 * the same restrictions apply for our voting for ourself as for our voting
 	 * for anyone else. */
 	i = SVOTE_Beacon((struct rx_call *)0, ubeacon_AmSyncSite(), startTime,
-			 &ubik_dbase->version, &ttid);
+			 &tversion, &ttid);
 	if (i) {
 	    yesVotes += 2;
 	    if (amIMagic)
@@ -494,27 +613,53 @@ ubeacon_Interact(void *dummy)
 	    if (i < oldestYesVote)
 		oldestYesVote = i;
 	}
-#if defined(UBIK_PAUSE)
-	ubik_dbase->flags &= ~DBVOTING;
-#endif /* UBIK_PAUSE */
 
 	/* now decide if we have enough votes to become sync site.
 	 * Note that we can still get enough votes even if we didn't for ourself. */
+	becameSyncSite = 0;
 	if (yesVotes > nServers) {	/* yesVotes is bumped by 2 or 3 for each site */
-	    if (!ubik_amSyncSite)
+	    UBIK_BEACON_LOCK;
+	    if (!beacon_globals.ubik_amSyncSite) {
 		ubik_dprint("Ubik: I am the sync site\n");
-	    ubik_amSyncSite = 1;
-	    syncSiteUntil = oldestYesVote + SMALLTIME;
-#ifndef AFS_PTHREAD_ENV
-		/* I did not find a corresponding LWP_WaitProcess(&ubik_amSyncSite) --
-		   this may be a spurious signal call -- sjenkins */
-		LWP_NoYieldSignal(&ubik_amSyncSite);
-#endif
+		/* Defer actually changing any variables until we can take the
+		 * DB lock (which is before the beacon lock in the lock order). */
+		becameSyncSite = 1;
+	    } else {
+		beacon_globals.syncSiteUntil = oldestYesVote + SMALLTIME;
+		/* at this point, we have the guarantee that at least quorum
+		 * received a beacon packet informing we have a sync-site. */
+		beacon_globals.ubik_syncSiteAdvertised = 1;
+	    }
+	    UBIK_BEACON_UNLOCK;
 	} else {
-	    if (ubik_amSyncSite)
+	    UBIK_BEACON_LOCK;
+	    if (beacon_globals.ubik_amSyncSite)
 		ubik_dprint("Ubik: I am no longer the sync site\n");
-	    ubik_amSyncSite = 0;
+	    beacon_globals.ubik_amSyncSite = 0;
+	    beacon_globals.ubik_syncSiteAdvertised = 0;
+	    UBIK_BEACON_UNLOCK;
+	    DBHOLD(ubik_dbase);
 	    urecovery_ResetState();	/* tell recovery we're no longer the sync site */
+	    DBRELE(ubik_dbase);
+	}
+	/* We cannot take the DB lock around the entire preceding conditional,
+	 * because if we are currently the sync site and this election serves
+	 * to confirm that status, the DB lock may already be held for a long-running
+	 * write transaction.  In such a case, attempting to acquire the DB lock
+	 * would cause the beacon thread to block and disrupt election processing.
+	 * However, if we are transitioning from not-sync-site to sync-site, there
+	 * can be no outstanding transactions and acquiring the DB lock should be
+	 * safe without extended blocking. */
+	if (becameSyncSite) {
+	    DBHOLD(ubik_dbase);
+	    UBIK_BEACON_LOCK;
+	    UBIK_VERSION_LOCK;
+	    version_globals.ubik_epochTime = FT_ApproxTime();
+	    beacon_globals.ubik_amSyncSite = 1;
+	    beacon_globals.syncSiteUntil = oldestYesVote + SMALLTIME;
+	    UBIK_VERSION_UNLOCK;
+	    UBIK_BEACON_UNLOCK;
+	    DBRELE(ubik_dbase);
 	}
 
     }				/* while loop */
@@ -561,10 +706,10 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 	 * host as returned by rx_getAllAddr (in NBO)
 	 */
 	char reason[1024];
-	count =
-	    parseNetFiles(myAddr, NULL, NULL, UBIK_MAX_INTERFACE_ADDR, reason,
-			  AFSDIR_SERVER_NETINFO_FILEPATH,
-			  AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+	count = afsconf_ParseNetFiles(myAddr, NULL, NULL,
+				      UBIK_MAX_INTERFACE_ADDR, reason,
+				      AFSDIR_SERVER_NETINFO_FILEPATH,
+				      AFSDIR_SERVER_NETRESTRICT_FILEPATH);
 	if (count < 0) {
 	    ubik_print("ubik: Can't register any valid addresses:%s\n",
 		       reason);
@@ -677,14 +822,14 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
  *
  * \param ubik_host an array containing all my IP addresses.
  *
- * Algorithm     : Do an RPC to all remote ubik servers infroming them
+ * Algorithm     : Do an RPC to all remote ubik servers informing them
  *                 about my IP addresses. Get their IP addresses and
  *                 update my linked list of ubik servers \p ubik_servers
  *
  * \return 0 on success, non-zero on failure
  */
-static int
-updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
+int
+ubeacon_updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 {
     int j, count, code = 0;
     UbikInterfaceAddr inAddr, outAddr;
@@ -693,10 +838,12 @@ updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
     char buffer[32];
     char hoststr[16];
 
+    UBIK_ADDR_LOCK;
     for (count = 0, ts = ubik_servers; ts; count++, ts = ts->next) {
 	conns[count] = ts->disk_rxcid;
 	server[count] = ts;
     }
+    UBIK_ADDR_UNLOCK;
 
 
     /* inform all other servers only if there are more than one
@@ -713,6 +860,7 @@ updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 	    multi_DISK_UpdateInterfaceAddr(&inAddr, &outAddr);
 	    ts = server[multi_i];	/* reply received from this server */
 	    if (!multi_error) {
+		UBIK_ADDR_LOCK;
 		if (ts->addr[0] != htonl(outAddr.hostAddr[0])) {
 		    code = UBADHOST;
 		    strcpy(buffer, afs_inet_ntoa_r(ts->addr[0], hoststr));
@@ -723,20 +871,39 @@ updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 		    for (j = 1; j < UBIK_MAX_INTERFACE_ADDR; j++)
 			ts->addr[j] = htonl(outAddr.hostAddr[j]);
 		}
+		UBIK_ADDR_UNLOCK;
 	    } else if (multi_error == RXGEN_OPCODE) {	/* pre 3.5 remote server */
+		UBIK_ADDR_LOCK;
 		ubik_print
 		    ("ubik server %s does not support UpdateInterfaceAddr RPC\n",
 		     afs_inet_ntoa_r(ts->addr[0], hoststr));
+		UBIK_ADDR_UNLOCK;
 	    } else if (multi_error == UBADHOST) {
 		code = UBADHOST;	/* remote CellServDB inconsistency */
 		ubik_print("Inconsistent Cell Info on server:\n");
+		UBIK_ADDR_LOCK;
 		for (j = 0; j < UBIK_MAX_INTERFACE_ADDR && ts->addr[j]; j++)
 		    ubik_print("... %s\n", afs_inet_ntoa_r(ts->addr[j], hoststr));
+		UBIK_ADDR_UNLOCK;
 	    } else {
+		UBIK_BEACON_LOCK;
 		ts->up = 0;	/* mark the remote server as down */
+		UBIK_BEACON_UNLOCK;
 	    }
 	}
 	multi_End;
     }
     return code;
+}
+
+void
+ubik_SetClientSecurityProcs(int (*secproc) (void *,
+					    struct rx_securityClass **,
+					    afs_int32 *),
+			    int (*checkproc) (void *),
+			    void *rock)
+{
+    secLayerProc = secproc;
+    tokenCheckProc = checkproc;
+    securityRock = rock;
 }

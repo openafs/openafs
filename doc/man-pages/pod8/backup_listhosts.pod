@@ -73,15 +73,15 @@ Backup Database.
 
 =head1 EXAMPLES
 
-The following example shows the result of the command in the ABC
+The following example shows the result of the command in the Example
 Corporation cell:
 
    % backup listhosts
    Tape hosts:
-       Host backup1.abc.com, port offset 0
-       Host backup1.abc.com, port offset 1
-       Host backup3.abc.com, port offset 4
-       Host backup2.abc.com, port offset 3
+       Host backup1.example.com, port offset 0
+       Host backup1.example.com, port offset 1
+       Host backup3.example.com, port offset 4
+       Host backup2.example.com, port offset 3
 
 =head1 PRIVILEGE REQUIRED
 

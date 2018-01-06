@@ -7,14 +7,8 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-CC = ${MT_CC}
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
-CCRULE = ${CC} ${CFLAGS} -c $?
 
 VLSERVER = ../../vlserver
 VOLSER = ../../volser
@@ -70,22 +64,22 @@ libvosadmin.a: ${LIBOBJS}
 afs_vosAdmin.o: afs_vosAdmin.h
 
 vldbint.cs.o: ${VLSERVER}/vldbint.cs.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VLSERVER)/vldbint.cs.c
 
 vldbint.xdr.o: ${VLSERVER}/vldbint.xdr.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VLSERVER)/vldbint.xdr.c
 
 volint.xdr.o: ${VOLSER}/volint.xdr.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOLSER)/volint.xdr.c
 
 volint.cs.o: ${VOLSER}/volint.cs.c
-	${CCRULE}
+	$(AFS_CCRULE) $(VOLSER)/volint.cs.c
 
 afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
-	${CCRULE}
+	$(AFS_CCRULE) $(FSINT)/afscbint.xdr.c
 
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CCRULE}
+	$(AFS_CCRULE) $(FSINT)/afsint.xdr.c
 
 clean:
 	$(RM) -f *.o libvosadmin*

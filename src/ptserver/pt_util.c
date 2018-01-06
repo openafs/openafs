@@ -14,35 +14,24 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <sys/types.h>
+#include <roken.h>
+
 #ifndef _WIN32
-#include <sys/time.h>
 #include <sys/file.h>
 #else
-#include <fcntl.h>
-#include <io.h>
 #define L_SET SEEK_SET
 #endif
-#include <stdio.h>
 #include <ctype.h>
-#include <string.h>
-#include <errno.h>
 
 #include <afs/com_err.h>
-
-
 #include <afs/cmd.h>		/*Command line parsing */
 #include <afs/afsutil.h>
-#include <errno.h>
 #include <lock.h>
-#ifndef _WIN32
-#include <netinet/in.h>
-#endif
 #define UBIK_INTERNALS
 #include <ubik.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <afs/com_err.h>
+
 #include "ptint.h"
 #include "ptserver.h"
 #include "pterror.h"
@@ -54,6 +43,8 @@
 
 extern char *optarg;
 extern int optind;
+
+extern int pr_noAuth;
 
 int restricted = 0;
 
@@ -117,7 +108,7 @@ main(int argc, char **argv)
     struct cmd_syndesc *cs;	/*Command line syntax descriptor */
     afs_int32 code;	/*Return code */
 
-    cs = cmd_CreateSyntax(NULL, CommandProc, NULL,
+    cs = cmd_CreateSyntax(NULL, CommandProc, NULL, 0,
 			  "access protection database");
     cmd_AddParm(cs, "-w", CMD_FLAG, CMD_OPTIONAL,
 		"update prdb with contents of data file");
@@ -158,6 +149,9 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 
     if (tparm[0].items) {
 	wflag++;
+	/* so we are treated as admin and can create "mis"owned
+	   groups */
+	pr_noAuth = 1;
     }
     if (tparm[1].items) {
 	flags |= DO_USR;
@@ -185,7 +179,7 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
     }
 
     if (pfile == NULL) {
-        afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0", pbase);
+        snprintf(pbuffer, sizeof(pbuffer), "%s.DB0", pbase);
         pfile = pbuffer;
     }
     if ((dbase_fd = open(pfile, (wflag ? O_RDWR : O_RDONLY) | O_CREAT, 0600))
@@ -242,8 +236,7 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 
     if (wflag) {
 	struct usr_list *u;
-	int id = 0, flags = 0;
-	int seenGroup = 0;
+	int seenGroup = 0, id = 0, flags = 0;
 
 	while (fgets(buffer, sizeof(buffer), dfp)) {
 	    int oid, cid, quota, uid;
@@ -328,7 +321,7 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 		    code = CreateEntry(0, name, &id, 1 /*idflag */ ,
 				       flags & PRGRP, oid, cid);
 		if (code == PRBADNAM) {
-		    u = (struct usr_list *)malloc(sizeof(struct usr_list));
+		    u = malloc(sizeof(struct usr_list));
 		    u->next = usr_head;
 		    u->uid = id;
 		    strcpy(u->name, name);
@@ -431,7 +424,7 @@ add_group(long id)
 
     i = grp_count++ % 1024;
     if (i == 0) {
-	g = (struct grp_list *)malloc(sizeof(struct grp_list));
+	g = malloc(sizeof(struct grp_list));
 	g->next = grp_head;
 	grp_head = g;
     }
@@ -602,7 +595,7 @@ checkin(struct prentry *pre)
 	last = he;
 	he = he->next;
     }
-    he = (struct hash_entry *)malloc(sizeof(struct hash_entry));
+    he = malloc(sizeof(struct hash_entry));
     if (he == 0) {
 	fprintf(stderr, "pt_util: No Memory for internal hash table.\n");
 	exit(1);

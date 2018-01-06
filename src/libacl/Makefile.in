@@ -7,21 +7,24 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.lwptool
+
+LT_objs = aclprocs.lo netprocs.lo AFS_component_version_number.lo
+LT_deps = $(top_builddir)/src/ptserver/liboafs_prot.la
+LT_libs =
 
 #
 # Main targets
 #
 all: \
+	liboafs_acl.la \
 	${TOP_LIBDIR}/libacl.a \
 	depinstall
 
 depinstall: \
 	${TOP_INCDIR}/afs/acl.h \
-	${TOP_INCDIR}/afs/prs_fs.h 
+	${TOP_INCDIR}/afs/prs_fs.h
 
 ${TOP_LIBDIR}/libacl.a: libacl.a
 	${INSTALL_DATA} $? $@
@@ -32,14 +35,14 @@ ${TOP_INCDIR}/afs/acl.h: acl.h
 ${TOP_INCDIR}/afs/prs_fs.h: prs_fs.h
 	${INSTALL_DATA} $? $@
 
-libacl.a: aclprocs.o netprocs.o AFS_component_version_number.o
-	$(RM) -f $@
-	$(AR) crv $@ aclprocs.o netprocs.o AFS_component_version_number.o
-	$(RANLIB) $@
+libacl.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
 
-aclprocs.o: aclprocs.c acl.h
+liboafs_acl.la: liboafs_acl.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
-netprocs.o: netprocs.c acl.h
+aclprocs.lo: aclprocs.c acl.h
+netprocs.lo: netprocs.c acl.h
 
 #
 # Installation targets
@@ -64,7 +67,8 @@ dest: libacl.a acl.h prs_fs.h
 test:
 	cd test; $(MAKE)
 
-clean: 
+clean:
+	$(LT_CLEAN)
 	$(RM) -f acltest *.o *.a core AFS_component_version_number.c
 
 include ../config/Makefile.version

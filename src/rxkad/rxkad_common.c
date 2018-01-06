@@ -10,11 +10,8 @@
 /* The rxkad security object.  Routines used by both client and servers. */
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
+#include <afs/stds.h>
 
 #ifdef AFS_SUN59_ENV
 #include <sys/time_impl.h>
@@ -22,10 +19,8 @@
 
 #define INCLUDE_RXKAD_PRIVATE_DECLS
 
-
 #ifdef KERNEL
 #ifndef UKERNEL
-#include "afs/stds.h"
 #include "afs/afs_osi.h"
 #if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
 #include "h/systm.h"
@@ -35,35 +30,23 @@
 #endif
 #include "h/types.h"
 #include "h/time.h"
-#ifndef AFS_LINUX22_ENV
-#include "rpc/types.h"
-#include "rx/xdr.h"
-#endif /* AFS_LINUX22_ENV */
 #else /* !UKERNEL */
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #endif /* !UKERNEL */
-#include "rx/rx.h"
-
 #else /* KERNEL */
-#include <afs/stds.h>
-#include <sys/types.h>
-#include <string.h>
-#include <time.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#ifdef AFS_PTHREAD_ENV
+#include <roken.h>
+#include <afs/opr.h>
+#if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
 #define RXKAD_STATS_DECLSPEC __declspec(dllexport)
 #endif
-#else
-#include <netinet/in.h>
-#endif
-#include <rx/rx.h>
-#include <rx/xdr.h>
-#include <afs/afsutil.h>
 #endif /* KERNEL */
 
-#include <des/stats.h>
+#include <rx/rx.h>
+#include <rx/rx_packet.h>
+#include <rx/xdr.h>
+
+#include "stats.h"
 #include "private_data.h"
 #define XPRT_RXKAD_COMMON
 
@@ -76,19 +59,39 @@
 #endif
 /* variable initialization for the benefit of darwin compiler; if it causes
    problems elsewhere, conditionalize for darwin or fc_test compile breaks */
-#ifdef AFS_PTHREAD_ENV
-struct rxkad_global_stats rxkad_global_stats = { 0 };
+#if defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
+struct rxkad_global_stats rxkad_global_stats;
 pthread_mutex_t rxkad_global_stats_lock;
 pthread_key_t rxkad_stats_key;
-#else /* AFS_PTHREAD_ENV */
-#if defined(KERNEL) && !defined(UKERNEL)
-struct rxkad_stats rxkad_stats = { { 0 } };
-#else
-/* Move delaration of this to des/key_sched.c */
-#endif
-#endif /* AFS_PTHREAD_ENV */
+#else /* AFS_PTHREAD_ENV && !KERNEL */
+struct rxkad_stats rxkad_stats;
+#endif /* AFS_PTHREAD_ENV && !KERNEL */
 
-#ifdef AFS_PTHREAD_ENV
+#if defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
+/* Pthread initialisation */
+static pthread_once_t rxkad_once_init = PTHREAD_ONCE_INIT;
+extern pthread_mutex_t rxkad_random_mutex;
+
+static void
+rxkad_global_stats_init(void)
+{
+    osi_Assert(pthread_mutex_init(&rxkad_global_stats_lock, (const pthread_mutexattr_t *)0) == 0);
+    osi_Assert(pthread_key_create(&rxkad_stats_key, NULL) == 0);
+    memset(&rxkad_global_stats, 0, sizeof(rxkad_global_stats));
+}
+
+static void
+rxkad_InitPthread(void) {
+    MUTEX_INIT(&rxkad_random_mutex, "rxkad random", MUTEX_DEFAULT, 0);
+
+    rxkad_global_stats_init();
+}
+
+void
+rxkad_Init(void) {
+    osi_Assert(pthread_once(&rxkad_once_init, rxkad_InitPthread) == 0);
+}
+
 /* rxkad_stats related stuff */
 
 /*
@@ -106,18 +109,11 @@ struct rxkad_stats rxkad_stats = { { 0 } };
 	osi_Assert((head) && ((head)->prev == NULL)); \
     } while(0)
 
-void rxkad_global_stats_init(void) {
-    osi_Assert(pthread_mutex_init(&rxkad_global_stats_lock, (const pthread_mutexattr_t *)0) == 0);
-    osi_Assert(pthread_key_create(&rxkad_stats_key, NULL) == 0);
-    memset(&rxkad_global_stats, 0, sizeof(rxkad_global_stats));
-}
-
 rxkad_stats_t *
 rxkad_thr_stats_init(void) {
     rxkad_stats_t * rxkad_stats;
-    rxkad_stats = (rxkad_stats_t *)malloc(sizeof(rxkad_stats_t));
+    rxkad_stats = calloc(1, sizeof(rxkad_stats_t));
     osi_Assert(rxkad_stats != NULL && pthread_setspecific(rxkad_stats_key,rxkad_stats) == 0);
-    memset(rxkad_stats,0,sizeof(rxkad_stats_t));
     RXKAD_GLOBAL_STATS_LOCK;
     DLL_INSERT_TAIL(rxkad_stats, rxkad_global_stats.first, rxkad_global_stats.last, next, prev);
     RXKAD_GLOBAL_STATS_UNLOCK;
@@ -185,7 +181,13 @@ int rxkad_stats_agg(rxkad_stats_t * rxkad_stats) {
     RXKAD_GLOBAL_STATS_UNLOCK;
     return 0;
 }
-#endif /* AFS_PTHREAD_ENV */
+#else /* AFS_PTHREAD_ENV && !KERNEL */
+void
+rxkad_Init(void)
+{
+    return;
+}
+#endif /* AFS_PTHREAD_ENV && !KERNEL */
 
 /* static prototypes */
 static afs_int32 ComputeSum(struct rx_packet *apacket,
@@ -201,11 +203,11 @@ rxkad_SetupEndpoint(struct rx_connection *aconnp,
 {
     afs_int32 i;
 
-    aendpointp->cuid[0] = htonl(aconnp->epoch);
-    i = aconnp->cid & RX_CIDMASK;
+    aendpointp->cuid[0] = htonl(rx_GetConnectionEpoch(aconnp));
+    i = rx_GetConnectionId(aconnp) & RX_CIDMASK;
     aendpointp->cuid[1] = htonl(i);
     aendpointp->cksum = 0;	/* used as cksum only in chal resp. */
-    aendpointp->securityIndex = htonl(aconnp->securityIndex);
+    aendpointp->securityIndex = htonl(rx_SecurityClassOf(aconnp));
     return 0;
 }
 
@@ -332,26 +334,27 @@ int
 rxkad_NewConnection(struct rx_securityClass *aobj,
 		    struct rx_connection *aconn)
 {
-    if (aconn->securityData)
+    if (rx_GetSecurityData(aconn) != NULL)
 	return RXKADINCONSISTENCY;	/* already allocated??? */
 
     if (rx_IsServerConn(aconn)) {
-	int size = sizeof(struct rxkad_sconn);
-	aconn->securityData = (char *)rxi_Alloc(size);
-	memset(aconn->securityData, 0, size);	/* initialize it conveniently */
+	struct rxkad_sconn *data;
+	data = rxi_Alloc(sizeof(struct rxkad_sconn));
+	memset(data, 0, sizeof(struct rxkad_sconn));
+	rx_SetSecurityData(aconn, data);
     } else {			/* client */
 	struct rxkad_cprivate *tcp;
-	struct rxkad_cconn *tccp;
-	int size = sizeof(struct rxkad_cconn);
-	tccp = (struct rxkad_cconn *)rxi_Alloc(size);
-	aconn->securityData = (char *)tccp;
-	memset(aconn->securityData, 0, size);	/* initialize it conveniently */
+	struct rxkad_cconn *data;
+
+	data = rxi_Alloc(sizeof(struct rxkad_cconn));
+	memset(data, 0, sizeof(struct rxkad_cconn));
+	rx_SetSecurityData(aconn, data);
+
 	tcp = (struct rxkad_cprivate *)aobj->privateData;
 	if (!(tcp->type & rxkad_client))
 	    return RXKADINCONSISTENCY;
 	rxkad_SetLevel(aconn, tcp->level);	/* set header and trailer sizes */
-	rxkad_AllocCID(aobj, aconn);	/* CHANGES cid AND epoch!!!! */
-	rxkad_DeriveXORInfo(aconn, (fc_KeySchedule *)tcp->keysched, (char *)tcp->ivec, (char *)tccp->preSeq);
+	rxkad_DeriveXORInfo(aconn, (fc_KeySchedule *)tcp->keysched, (char *)tcp->ivec, (char *)data->preSeq);
 	INC_RXKAD_STATS(connections[rxkad_LevelIndex(tcp->level)]);
     }
 
@@ -368,9 +371,9 @@ rxkad_DestroyConnection(struct rx_securityClass *aobj,
     if (rx_IsServerConn(aconn)) {
 	struct rxkad_sconn *sconn;
 	struct rxkad_serverinfo *rock;
-	sconn = (struct rxkad_sconn *)aconn->securityData;
+	sconn = rx_GetSecurityData(aconn);
 	if (sconn) {
-	    aconn->securityData = 0;
+	    rx_SetSecurityData(aconn, NULL);
 	    if (sconn->authenticated)
 		INC_RXKAD_STATS(destroyConn[rxkad_LevelIndex(sconn->level)]);
 	    else
@@ -385,12 +388,12 @@ rxkad_DestroyConnection(struct rx_securityClass *aobj,
     } else {			/* client */
 	struct rxkad_cconn *cconn;
 	struct rxkad_cprivate *tcp;
-	cconn = (struct rxkad_cconn *)aconn->securityData;
+	cconn = rx_GetSecurityData(aconn);
 	tcp = (struct rxkad_cprivate *)aobj->privateData;
 	if (!(tcp->type & rxkad_client))
 	    return RXKADINCONSISTENCY;
 	if (cconn) {
-	    aconn->securityData = 0;
+	    rx_SetSecurityData(aconn, NULL);
 	    rxi_Free(cconn, sizeof(struct rxkad_cconn));
 	}
 	INC_RXKAD_STATS(destroyClient);
@@ -424,10 +427,9 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 
     tconn = rx_ConnectionOf(acall);
     len = rx_GetDataSize(apacket);
-    checkCksum = 0;		/* init */
     if (rx_IsServerConn(tconn)) {
 	struct rxkad_sconn *sconn;
-	sconn = (struct rxkad_sconn *)tconn->securityData;
+	sconn = rx_GetSecurityData(tconn);
 	if (rx_GetPacketCksum(apacket) != 0)
 	    sconn->cksumSeen = 1;
 	checkCksum = sconn->cksumSeen;
@@ -447,7 +449,7 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
     } else {			/* client connection */
 	struct rxkad_cconn *cconn;
 	struct rxkad_cprivate *tcp;
-	cconn = (struct rxkad_cconn *)tconn->securityData;
+	cconn = rx_GetSecurityData(tconn);
 	if (rx_GetPacketCksum(apacket) != 0)
 	    cconn->cksumSeen = 1;
 	checkCksum = cconn->cksumSeen;
@@ -517,7 +519,7 @@ rxkad_PreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
     len = rx_GetDataSize(apacket);
     if (rx_IsServerConn(tconn)) {
 	struct rxkad_sconn *sconn;
-	sconn = (struct rxkad_sconn *)tconn->securityData;
+	sconn = rx_GetSecurityData(tconn);
 	if (sconn && sconn->authenticated
 	    && (osi_Time() < sconn->expirationTime)) {
 	    level = sconn->level;
@@ -534,7 +536,7 @@ rxkad_PreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
     } else {			/* client connection */
 	struct rxkad_cconn *cconn;
 	struct rxkad_cprivate *tcp;
-	cconn = (struct rxkad_cconn *)tconn->securityData;
+	cconn = rx_GetSecurityData(tconn);
 	tcp = (struct rxkad_cprivate *)aobj->privateData;
 	if (!(tcp->type & rxkad_client))
 	    return RXKADINCONSISTENCY;
@@ -593,15 +595,20 @@ int
 rxkad_GetStats(struct rx_securityClass *aobj, struct rx_connection *aconn,
 	       struct rx_securityObjectStats *astats)
 {
-    astats->type = 3;
+    void *securityData;
+
+    astats->type = RX_SECTYPE_KAD;
     astats->level = ((struct rxkad_cprivate *)aobj->privateData)->level;
-    if (!aconn->securityData) {
+
+    securityData = rx_GetSecurityData(aconn);
+
+    if (!securityData) {
 	astats->flags |= 1;
 	return 0;
     }
     if (rx_IsServerConn(aconn)) {
-	struct rxkad_sconn *sconn;
-	sconn = (struct rxkad_sconn *)aconn->securityData;
+	struct rxkad_sconn *sconn = securityData;
+
 	astats->level = sconn->level;
 	if (sconn->authenticated)
 	    astats->flags |= 2;
@@ -613,8 +620,8 @@ rxkad_GetStats(struct rx_securityClass *aobj, struct rx_connection *aconn,
 	astats->bytesSent = sconn->stats.bytesSent;
 	astats->packetsSent = sconn->stats.packetsSent;
     } else {			/* client connection */
-	struct rxkad_cconn *cconn;
-	cconn = (struct rxkad_cconn *)aconn->securityData;
+	struct rxkad_cconn *cconn = securityData;
+
 	if (cconn->cksumSeen)
 	    astats->flags |= 8;
 	astats->bytesReceived = cconn->stats.bytesReceived;

@@ -9,328 +9,62 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 
-CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
-CCRULE = ${CC} ${CFLAGS} -c $?
+# Increment these according to libtool's versioning rules (look them up!)
+# The output library looks like libafsauthen.<current - age>.<revision>
+LT_current = 2
+LT_revision = 0
+LT_age = 0
 
-AUDIT= ../audit
-AUTH = ../auth
-KAUTH = ../kauth
-UBIK = ../ubik
-UTIL = ../util
-RXKAD = ../rxkad
-PTSERVER = ../ptserver
-VOLSER = ../volser
-VLSERVER = ../vlserver
-SYS = ../sys
+LT_objs = \
+	$(top_builddir)/src/audit/libaudit_pic.la \
+	$(top_builddir)/src/auth/libauth_pic.la   \
+	$(top_builddir)/src/kauth/libkauth_pic.la \
+	$(top_builddir)/src/ubik/libauthent_ubik.la \
+	$(top_builddir)/src/sys/libsys_pic.la \
+	$(top_builddir)/src/ptserver/libprot_pic.la \
+	$(top_builddir)/src/volser/libvolser_pic.la \
+	$(top_builddir)/src/vlserver/libvlserver_pic.la \
+	$(top_builddir)/src/opr/libopr_pic.la \
+	$(top_builddir)/src/util/libafsutil_pic.la
 
-AUDITOBJS = audit.o audit-file.o audit-sysvmq.o
+LT_deps = \
+	$(top_builddir)/src/libafsrpc/libafsrpc.la
 
-AUTHOBJS = \
-	cellconfig.o \
-	ktc.o \
-	userok.o \
-	writeconfig.o \
-	authcon.o \
-	ktc_errors.o \
-	acfg_errors.o @MAKE_KRB5@ akimpersonate.o akimpersonate_v5gen.o
+LT_libs = $(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(LIB_AFSDB) $(MT_LIBS)
 
-KAUTHOBJS = \
-	kauth.xdr.o \
-	kauth.cs.o \
-	kaaux.o \
-	client.o \
-	authclient.o \
-	token.o \
-	kautils.o \
-	kalocalcell.o \
-	kaerrors.o \
-	user.o \
-	read_passwd.o
+all: libafsauthent.la libafsauthent_pic.la \
+	$(TOP_LIBDIR)/libafsauthent.a \
+	$(TOP_LIBDIR)/libafsauthent_pic.a
 
-UBIKOBJS = \
-	uinit.o \
-	ubikclient.o \
-	uerrors.o \
-	ubik_int.cs.o \
-	ubik_int.xdr.o
+libafsauthent.la: libafsauthent.la.sym $(LT_objs) $(LT_deps) libafsauthent_pic.la
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
-UTILOBJS = \
-	pthread_glock.o \
-	get_krbrlm.o \
-	dirpath.o \
-	serverLog.o \
-	snprintf.o \
-	strlcat.o \
-	strlcpy.o \
-	fileutil.o
+libafsauthent_pic.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
 
-RXKADOBJS = \
-	rxkad_errs.o @MAKE_KRB5@ ticket5_keytab.o
-
-SYSOBJS = \
-	rmtsysc.o \
-	rmtsys.xdr.o \
-	rmtsys.cs.o \
-	afssyscalls.o \
-	rmtsysnet.o \
-	glue.o \
-	setpag.o \
-	pioctl.o
-
-PTSERVEROBJS = \
-	ptclient.o \
-	ptint.cs.o \
-	ptint.xdr.o \
-	ptuser.o \
-	display.o \
-	pterror.o
-
-VOLSEROBJS = \
-	vsprocs.o \
-	vsutils.o \
-	lockprocs.o \
-	volint.xdr.o \
-	volint.cs.o \
-	volerr.o
-
-VLDBOBJS = \
-	vldbint.xdr.o \
-	vldbint.cs.o \
-	vl_errors.o
-
-LIBOBJS = \
-	${AUDITOBJS} \
-	${AUTHOBJS} \
-	${KAUTHOBJS} \
-	${UBIKOBJS} \
-	${UTILOBJS} \
-	${RXKADOBJS} \
-	${PTSERVEROBJS} \
-	${SYSOBJS} \
-	${VOLSEROBJS} \
-	${VLDBOBJS}
-
-all: ${TOP_LIBDIR}/libafsauthent.a
+# On AIX, libtool can only produce one of shared and static libraries in a
+# given invocation, so we need separate rules.
+libafsauthent.a: $(LT_objs) libafsauthent.la
+	$(LT_LDLIB_static) $(LT_objs)
 
 ${TOP_LIBDIR}/libafsauthent.a: libafsauthent.a
 	${INSTALL_DATA} $? $@
 
-libafsauthent.a: ${LIBOBJS}
-	$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS}
-	$(RANLIB) $@
-
-audit.o: ${AUDIT}/audit.c
-	${CCRULE}
-
-audit-file.o: ${AUDIT}/audit-file.c
-	${CCRULE}
-
-audit-sysvmq.o: ${AUDIT}/audit-sysvmq.c
-	${CCRULE}
-
-cellconfig.o: ${AUTH}/cellconfig.c
-	${CCRULE} -I../auth
-
-ktc.o: ${AUTH}/ktc.c
-	${CCRULE} -I../auth
-
-userok.o: ${AUTH}/userok.c
-	${CCRULE} -I../auth
-
-writeconfig.o: ${AUTH}/writeconfig.c
-	${CCRULE} -I../auth
-
-authcon.o: ${AUTH}/authcon.c
-	${CCRULE} -I../auth @KRB5_CPPFLAGS@
-
-akimpersonate.o: ${AUTH}/akimpersonate.c
-	${CCRULE} -I../auth @KRB5_CPPFLAGS@
-
-akimpersonate_v5gen.o: ${AUTH}/akimpersonate_v5gen.c
-	${CCRULE} -I../auth @KRB5_CPPFLAGS@ -I${srcdir}/../rxkad -I../rxkad
-
-ktc_errors.o: ${AUTH}/ktc_errors.c
-	${CCRULE}
-
-acfg_errors.o: ${AUTH}/acfg_errors.c
-	${CCRULE}
-
-kauth.xdr.o: ${KAUTH}/kauth.xdr.c
-	${CCRULE}
-
-kauth.cs.o: ${KAUTH}/kauth.cs.c
-	${CCRULE}
-
-kaaux.o: ${KAUTH}/kaaux.c
-	${CCRULE} -I../kauth
-
-client.o: ${KAUTH}/client.c
-	${CCRULE} -I../kauth
-
-authclient.o: ${KAUTH}/authclient.c
-	${CCRULE} -I../kauth
-
-token.o: ${KAUTH}/token.c
-	${CCRULE} -I../kauth
-
-kautils.o: ${KAUTH}/kautils.c
-	${CCRULE} -I../kauth
-
-kalocalcell.o: ${KAUTH}/kalocalcell.c
-	${CCRULE} -I ../kauth
-
-kaerrors.o: ${KAUTH}/kaerrors.c
-	${CCRULE}
-
-user.o: ${KAUTH}/user.c
-	${CCRULE} -I ../kauth
-
-read_passwd.o: ${KAUTH}/read_passwd.c
-	${CCRULE}
-
-ubikclient.o: ${UBIK}/ubikclient.c
-	${CCRULE}
-
-uinit.o: ${UBIK}/uinit.c
-	${CCRULE}
-
-uerrors.o: ${UBIK}/uerrors.c
-	${CCRULE}
-
-ubik_int.cs.o: ${UBIK}/ubik_int.cs.c
-	${CCRULE}
-
-ubik_int.xdr.o: ${UBIK}/ubik_int.xdr.c
-	${CCRULE}
-
-get_krbrlm.o: ${UTIL}/get_krbrlm.c
-	${CCRULE}
-
-dirpath.o: ${UTIL}/dirpath.c
-	${CCRULE}
-
-serverLog.o: ${UTIL}/serverLog.c
-	${CCRULE}
-
-snprintf.o: ${UTIL}/snprintf.c
-	${CCRULE}
-
-strlcat.o: ${UTIL}/strlcat.c
-	${CCRULE}
-
-strlcpy.o: ${UTIL}/strlcpy.c
-	${CCRULE}
-
-fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE}
-
-pthread_glock.o: ${UTIL}/pthread_glock.c
-	${CCRULE}
-
-rxkad_errs.o: ${RXKAD}/rxkad_errs.c
-	${CCRULE}
-
-ticket5_keytab.o: ${RXKAD}/ticket5_keytab.c
-	${CCRULE} -I../rxkad @KRB5_CPPFLAGS@
-
-ptclient.o: ${PTSERVER}/ptclient.c
-	${CCRULE} -I../ptserver
-
-# The special treatment of this file for hp_ux110 is because of a bug
-# in version A.11.01.00 of the HP C compiler.  This bug appears to be
-# fixed in version A.11.01.02 of the HP C compiler, however this version
-# of the compiler is not installed on all of our build machines.
-# The symptom of the problem is an error when linking the pthread fileserver:
-# /usr/ccs/bin/ld: TP override with DATA_ONE_SYM fixup for non thread local
-# storage symbol pr_Initialize in file DEST/lib/libafsauthent.a(ptuser.o)
-ptuser.o: ${PTSERVER}/ptuser.c
-	set -x; \
-	case ${SYS_NAME} in \
-	hp_ux11*) \
-		set X `echo ${CCRULE} -I../ptserver | sed s/-g//`; shift; \
-		"$$@" \
-		;; \
-	*) \
-		${CCRULE} -I../ptserver\
-		;; \
-	esac
-
-display.o: ${PTSERVER}/display.c
-	${CCRULE} -I../ptserver
-
-ptint.cs.o: ${PTSERVER}/ptint.cs.c
-	${CCRULE}
-
-ptint.xdr.o: ${PTSERVER}/ptint.xdr.c
-	${CCRULE}
-
-pterror.o: ${PTSERVER}/pterror.c
-	${CCRULE}
-
-rmtsysc.o: ${SYS}/rmtsysc.c
-	${CCRULE} -I../sys
-
-rmtsys.xdr.o: ${SYS}/rmtsys.xdr.c
-	${CCRULE}
-
-rmtsys.cs.o: ${SYS}/rmtsys.cs.c
-	${CCRULE}
-
-afssyscalls.o: ${SYS}/afssyscalls.c
-	${CCRULE}
-
-rmtsysnet.o: ${SYS}/rmtsysnet.c
-	${CCRULE} -I../sys
-
-glue.o: ${SYS}/glue.c
-	${CCRULE}
-
-setpag.o: ${SYS}/setpag.c
-	${CCRULE}
-
-pioctl.o: ${SYS}/pioctl.c
-	${CCRULE}
-
-vsprocs.o: $(VOLSER)/vsprocs.c
-	$(CCRULE) -I../volser
-
-vsutils.o: $(VOLSER)/vsutils.c
-	$(CCRULE) -I../volser
-
-lockprocs.o: $(VOLSER)/lockprocs.c
-	$(CCRULE) -I../volser
-
-volint.xdr.o: ../volser/volint.xdr.c
-	$(CCRULE)
-
-volint.cs.o: ../volser/volint.cs.c
-	$(CCRULE)
-
-volerr.o: $(VOLSER)/volerr.c
-	$(CCRULE)
-
-vldbint.xdr.o: ../vlserver/vldbint.xdr.c
-	$(CCRULE)
-
-vldbint.cs.o: ../vlserver/vldbint.cs.c
-	$(CCRULE)
-
-vl_errors.o: $(VLSERVER)/vl_errors.c
-	$(CCRULE)
+${TOP_LIBDIR}/libafsauthent_pic.a: libafsauthent_pic.la
+	${INSTALL_DATA} .libs/libafsauthent_pic.a $@
 
 clean:
-	$(RM) -f *.o *.a libafsauthent*
+	$(LT_CLEAN)
+	$(RM) -f *.o libafsauthent.a
 
-install: libafsauthent.a
+install: libafsauthent.la libafsauthent.a libafsauthent_pic.la
 	${INSTALL} -d ${DESTDIR}${libdir}
-	${INSTALL_DATA} libafsauthent.a ${DESTDIR}${libdir}/libafsauthent.a
+	${LT_INSTALL_DATA} libafsauthent.la ${DESTDIR}${libdir}/libafsauthent.la
+	${RM} ${DESTDIR}${libdir}/libafsauthent.la
+	${INSTALL_DATA}  libafsauthent.a ${DESTDIR}${libdir}/libafsauthent.a
+	${INSTALL_DATA}  .libs/libafsauthent_pic.a ${DESTDIR}${libdir}/libafsauthent_pic.a
 
 dest: libafsauthent.a
 	${INSTALL} -d ${DEST}/lib

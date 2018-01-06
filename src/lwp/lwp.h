@@ -72,118 +72,6 @@ extern unsigned int FT_ApproxTime(void);
 #define LWP_ENOROCKS	-15	/* all rocks are in use */
 #define LWP_EBADROCK	-16	/* the specified rock does not exist */
 
-# if	defined(USE_PTHREADS) || defined(USE_SOLARIS_THREADS)
-#  ifdef	USE_SOLARIS_THREADS
-#   include <thread.h>
-typedef int pthread_t;
-typedef void *pthread_addr_t;
-typedef void *pthread_condattr_t;
-typedef void (*pthread_destructor_t) (void *);
-typedef pthread_addr_t(*pthread_startroutine_t) (pthread_addr_t);
-#define	pthread_mutex_lock	mutex_lock
-#define	pthread_mutex_unlock	mutex_unlock
-#define	pthread_getspecific	thr_getspecific
-#define	pthread_setspecific	thr_setspecific
-#define	pthread_yield		thr_yield
-/*typedef mutex_t pthread_mutex_t;*/
-typedef thread_key_t pthread_key_t;
-typedef cond_t PTHREAD_COND, *pthread_cond_t;
-
-#define PTHREAD_DEFAULT_SCHED 1
-#define SCHED_FIFO  2
-#define MUTEX_FAST_NP              0
-#define PTHREAD_DEFAULT_STACK           65536	/* 64 K */
-#define PRI_OTHER_MIN   1
-#define PRI_OTHER_MAX   127
-#define PRI_OTHER_MID   ((PRI_OTHER_MIN + PRI_OTHER_MAX)/2)
-#define DESTRUCTOR_TAB_CHUNK 20
-#define maskAllSignals(o) thr_sigsetmask(SIG_BLOCK,&pthread_allSignals,&o)
-#define restoreAllSignals(o) thr_sigsetmask(SIG_SETMASK,&o,NULL)
-
-typedef struct PTHREAD_MUTEX {
-    int kind;
-    pthread_t ownerId;
-    mutex_t fastMutex;
-    int timesInside;
-} PTHREAD_MUTEX, *pthread_mutex_t;
-
-
-typedef struct PTHREAD_ATTR {
-    long stackSize;
-    int prio;
-} PTHREAD_ATTR, *pthread_attr_t;
-
-typedef struct {
-    void (*destructor) (void *);
-    thread_key_t key;
-} dest_slot_t;
-
-typedef struct {
-    int nentries;		/* size allocated (in terms of number of slots) */
-    int next_free;		/* next free slot */
-    dest_slot_t slot[1];
-} pthread_destructor_tab_t;
-define DTAB_SIZE(size) (sizeof(pthread_destructor_tab_t) +
-			(size) * sizeof(dest_slot_t))
-# else
-#  include "pthread.h"
-# endif
-# include <assert.h>
-
-#define LWP_MAX_PRIORITY	0
-#define LWP_NORMAL_PRIORITY	0
-#define LWP_NO_PRIORITIES
-/*
- * We define PROCESS as a pointer to this struct, rather than simply as
- * a pthread_t  since some applications test for a process handle being
- * non-zero. This can't be done on a pthread_t.
- */
-typedef struct lwp_process {
-    pthread_t handle;		/* The pthreads handle */
-    struct lwp_process *next;	/* Next LWP process */
-    char *name;			/* LWP name of the process */
-    pthread_startroutine_t ep;	/* Process entry point */
-    pthread_addr_t arg;		/* Initial parameter */
-} *PROCESS;
-
-struct rock {			/* to hide things associated with this LWP under */
-    int tag;			/* unique identifier for this rock */
-    char *value;		/* pointer to some arbitrary data structure */
-};
-
-#define MAXROCKS	4	/* max no. of rocks per LWP */
-
-#define DEBUGF 		0
-
-# ifndef BDE_THREADS
-/*#define CMA_DEBUG 1*/
-# endif
-
-# ifdef CMA_DEBUG
-#  define LWP_CHECKSTUFF(msg)	lwp_checkstuff(msg)
-# else
-#  define LWP_CHECKSTUFF(msg)
-# endif
-
-# if DEBUGF
-#  define debugf(m) printf m
-# else
-#  define debugf(m)
-# endif
-
-# define IOMGR_Poll() LWP_DispatchProcess()
-
-/*
- * These two macros can be used to enter/exit the LWP context in a CMA
- * program. They simply acquire/release the global LWP mutex .
- */
-extern pthread_mutex_t lwp_mutex;
-#define LWP_EXIT_LWP_CONTEXT() MUTEX_EXIT(&lwp_mutex)
-#define LWP_ENTER_LWP_CONTEXT() MUTEX_ENTER(&lwp_mutex)
-#else
-#ifndef AFS_NT40_ENV
-#define lwp_abort() abort()
-#endif
 /* Maximum priority permissible (minimum is always 0) */
 #define LWP_MAX_PRIORITY 4	/* changed from 1 */
 
@@ -345,8 +233,6 @@ extern int lwp_MaxStackSeen;
 	LWP_CreateProcess((a), (b), (c), (d), (e), (f))
 #endif
 
-#endif /* USE_PTHREADS */
-
 /* iomgr.c */
 extern fd_set *IOMGR_AllocFDSet(void);
 extern int IOMGR_Select(int nfds, fd_set * rfds, fd_set * wfds, fd_set * efds,
@@ -358,9 +244,6 @@ extern int IOMGR_Initialize(void);
 extern void IOMGR_FreeFDSet(fd_set * fds);
 extern int IOMGR_SoftSig(void *(*aproc) (void *), void *arock);
 
-extern int LWP_WaitForKeystroke(int seconds);	/* -1 => forever */
-extern int LWP_GetResponseKey(int seconds, char *key);
-extern int LWP_GetLine(char *linebuf, int len);
 #ifdef AFS_NT40_ENV
 /* lwp.c */
 extern int LWP_InitializeProcessSupport(int priority, PROCESS * pid);
@@ -402,7 +285,11 @@ extern void returnto(struct lwp_context *savearea);
 /* max time we spend on a select in a Win95 DOS box */
 #define IOMGR_WIN95WAITTIME 5000	/* microseconds */
 
-#endif
-#endif /* __LWP_INCLUDE_ */
+#endif /* !AFS_PTHREAD_ENV */
+
+extern int LWP_WaitForKeystroke(int seconds);	/* -1 => forever */
+extern int LWP_GetResponseKey(int seconds, char *key);
+extern int LWP_GetLine(char *linebuf, int len);
 
 #endif /* !KERNEL && !_KMEMUSER */
+#endif /* __LWP_INCLUDE_ */

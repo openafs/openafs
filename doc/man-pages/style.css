@@ -25,7 +25,8 @@
   a.u { color: #000 !important; text-decoration: none; }
 
   body.pod {
-    margin:           0 5px;
+    font-family:      Georgia, "Times New Roman", serif;
+    margin:           10px 30px;
     color:            #000;
     background-color: #fff;
   }
@@ -59,6 +60,8 @@
   body.pod .synopsis { padding-left: 2em; text-indent: -2em; }
 
   body.contentspage {
+    font-family:      Georgia, "Times New Roman", serif;
+    margin:           10px 30px;
     color:            #000;
     background-color: #fff;
   }

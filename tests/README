@@ -3,7 +3,7 @@ intended to become the primary OpenAFS test suite.  The tests in this
 directory are run when "make check" is run at the top level of the OpenAFS
 tree.
 
-runtests.c is the test harness, and TESTS is the list of tests that it
+runtests is the test harness, and TESTS is the list of tests that it
 will run.  If you add a new test, add it to TESTS as well.  All tests must
 be executables (possibly shell scripts or Perl scripts) that end in either
 ".t" or "-t", but should be listed in TESTS without that suffix.
@@ -19,8 +19,9 @@ level.   The Makefile.in in this directory will also need to be modified
 to recurse into any new directories.  See util/Makefile.in for an example
 of how to write a Makefile.in for a new test directory.
 
-runtests.c, tap/basic.c, tap/basic.h, tap/libtap.sh, and HOWTO come from
-the C TAP Harness distribution at:
+The files comprising the test harness are sourced from the C TAP Harness
+distribution using the src/external mechanism. The upstream site for that
+distribution is at:
 
     http://www.eyrie.org/~eagle/software/c-tap-harness/
 
@@ -28,5 +29,9 @@ but feel free to propose modifications directly through OpenAFS Gerrit.
 Russ Allbery will take care of merging modifications upstream.  However,
 OpenAFS-specific modifications should not be made to those files.  To add
 additional OpenAFS-specific code to the TAP library, add additional *.c
-and *.h (or *.sh) files to the tap directory rather than modifying
-basic.c, basic.h, or libtap.sh.
+and *.h (or *.sh) files to the tests/tap directory rather than modifying files
+in src/external.
+
+More information can be found in the HOWTO contained in
+src/external/c-tap-harness/HOWTO
+

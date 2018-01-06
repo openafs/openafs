@@ -10,22 +10,10 @@
 #undef MEMORYLEAK
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <afs/afsutil.h>
 
+#include <roken.h>
+#include <afs/opr.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#ifndef AFS_NT40_ENV
-#include <sys/file.h>
-#include <sys/param.h>
-#endif
-
-#include <errno.h>
-#include <string.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
 #include "mit-sipb-cr.h"
 #include "internal.h"
 #include "compiler.h"
@@ -33,7 +21,7 @@
 extern char *current_token;
 extern int table_number, current;
 char buffer[BUFSIZ];
-char *table_name = (char *)NULL;
+char *table_name = NULL;
 FILE *hfile = NULL, *cfile = NULL, *msfile = NULL;
 int version = 1;
 int use_msf = 0;
@@ -52,7 +40,7 @@ extern int yylineno;
 char *
 xmalloc(unsigned int size)
 {
-    char *p = (char *)malloc(size);
+    char *p = malloc(size);
     if (!p) {
 	perror(whoami);
 	exit(1);
@@ -101,8 +89,6 @@ static const char *const language_names[] = {
 };
 
 static const char *const c_src_prolog[] = {
-    "#include <afsconfig.h>\n",
-    "#include <afs/param.h>\n",
     "#include <afs/error_table.h>\n",
     "static const char * const text[] = {\n",
     0,
@@ -131,7 +117,6 @@ static const char msf_warning[] =
 char c_file[MAXPATHLEN];	/* output file */
 char h_file[MAXPATHLEN];	/* output */
 char msf_file[MAXPATHLEN];
-char et_file[MAXPATHLEN];	/* full path to input file */
 
 static void
 usage(void)
@@ -156,6 +141,7 @@ int
 main(int argc, char **argv)
 {
     char *p, *ename;
+    char *et_file;
     char const *const *cpp;
     int got_language = 0;
     char *got_include = 0;
@@ -293,7 +279,7 @@ main(int argc, char **argv)
     }
 
     p = strrchr(filename, '/');
-    if (p == (char *)NULL)
+    if (p == NULL)
 	p = filename;
     else
 	p++;
@@ -328,13 +314,18 @@ main(int argc, char **argv)
 	filename = p;
     }
 
-    sprintf(et_file, "%s/%s", got_prefix, filename);
+    if (asprintf(&et_file, "%s/%s", got_prefix, filename) < 0) {
+	fprintf(stderr, "Couldn't allocate memory for filename\n");
+	exit(1);
+    }
 
     yyin = fopen(et_file, "r");
     if (!yyin) {
 	perror(et_file);
 	exit(1);
     }
+
+    free(et_file);
 
     /* on NT, yyout is not initialized to stdout */
     if (!yyout) {
@@ -385,14 +376,14 @@ main(int argc, char **argv)
 
     if (emit_source && use_msf) {
 	msfile = fopen(msf_file, "w");
-	if (msfile == (FILE *) NULL) {
+	if (msfile == NULL) {
 	    perror(msf_file);
 	    exit(1);
 	}
 	fprintf(msfile, msf_warning, msf_file);
     } else if (emit_source) {
 	cfile = fopen(c_file, "w");
-	if (cfile == (FILE *) NULL) {
+	if (cfile == NULL) {
 	    perror(c_file);
 	    exit(1);
 	}

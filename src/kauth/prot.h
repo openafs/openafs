@@ -9,10 +9,6 @@
  * Include file with authentication protocol information.
  */
 
-#include <mit-cpyright.h>
-
-																	/* #include <krb_conf.h> *//* removed 890221 */
-
 #ifndef PROT_DEFS
 #define PROT_DEFS
 

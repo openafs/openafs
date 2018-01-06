@@ -34,7 +34,10 @@
 				 * not created or not online */
 #define VVOLEXISTS	104	/* Volume already exists */
 #define VNOSERVICE	105	/* Volume is not in service (i.e. it's
-				 * is out of funds, is obsolete, or somesuch) */
+				 * is out of funds, is obsolete, or somesuch). This
+				 * error code is no longer used, but was previously
+				 * used by the OpenAFS fileserver to kill "idle" calls,
+				 * and OpenAFS clients may interpret it that way. */
 #define VOFFLINE	106	/* Volume is off line, for the reason
 				 * given in the offline message */
 #define VONLINE		107	/* Volume is already on line */

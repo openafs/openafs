@@ -1,3 +1,11 @@
+openafs (1.8.0~pre4-1) unstable; urgency=low
+
+    - Client time management support (afsd -settime and afsd -nosettime)
+      has been removed.
+    - Linux versions prior to 2.6 are no longer supported by the client.
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 13 Dec 2016 01:49:46 -0500
+
 openafs (1.5.73.3-1) experimental; urgency=low
 
   This version of the OpenAFS client is built with experimental

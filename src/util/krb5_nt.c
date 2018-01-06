@@ -24,32 +24,28 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- #include <afsconfig.h>
+#include <afsconfig.h>
 #include <afs/param.h>
+#include <roken.h>
 
 #include <windows.h>
 #include "krb5_nt.h"
 
-static krb5_error_code (KRB5_CALLCONV *pkrb5_init_context)(krb5_context *context) = NULL;
-static krb5_error_code (KRB5_CALLCONV *pkrb5_free_context)(krb5_context context) = NULL;
-static char * (KRB5_CALLCONV *pkrb5_get_error_message)(krb5_context context, krb5_error_code code) = NULL;
-static void (KRB5_CALLCONV *pkrb5_free_error_message)(krb5_context context, char *s) = NULL;
+# include <krb5\krb5.h>
+# include <com_err.h>
 
-# ifndef _WIN64
-#  define KRB5LIB "krb5_32.dll"
-# else
-#  define KRB5LIB "krb5_64.dll"
-# endif
-
+static int krb5_initialized = 0;
 
 void
 initialize_krb5(void)
 {
     /*
      * On Windows, the error table will be initialized when the
-     * krb5 library is loaded into the process.  Since not all
-     * versions of krb5 contain krb5_{get,free}_error_message()
-     * we load them conditionally by function pointer.
+     * krb5 library is loaded into the process for MIT KFW but
+     * for Heimdal the error table is initialized when the
+     * krb5_init_context() call is issued.  We always build
+     * against the Kerberos Compat SDK now so we do not have
+     * load by function pointer.  Use DelayLoadHeimd
      *
      * On Unix, the MIT krb5 error table will be initialized
      * by the library on first use.
@@ -57,41 +53,29 @@ initialize_krb5(void)
      * initialize_krb5_error_table is a macro substitution to
      * nothing.
      */
-    HINSTANCE h = LoadLibrary(KRB5LIB);
-    if (h) {
-        (FARPROC)pkrb5_init_context = GetProcAddress(h, "krb5_init_context");
-        (FARPROC)pkrb5_free_context = GetProcAddress(h, "krb5_free_context");
-        (FARPROC)pkrb5_get_error_message = GetProcAddress(h, "krb5_get_error_message");
-        (FARPROC)pkrb5_free_error_message = GetProcAddress(h, "krb5_free_error_message");
+    if (!DelayLoadHeimdal()) {
+        fprintf(stderr, "Kerberos for Windows or Heimdal is not available.\n");
+    } else {
+        krb5_initialized = 1;
     }
 }
 
 const char *
-fetch_krb5_error_message(krb5_context context, krb5_error_code code)
+fetch_krb5_error_message(afs_uint32 code)
 {
     static char errorText[1024];
     char *msg = NULL;
-    int free_context = 0;
+    krb5_context context;
 
-    if (pkrb5_init_context && pkrb5_get_error_message) {
-
-        if (context == NULL) {
-            if (krb5_init_context(&context) != 0)
-                goto done;
-            free_context = 1;
-        }
-
-        msg = pkrb5_get_error_message(context, code);
+    if (krb5_initialized && krb5_init_context(&context) == 0) {
+        msg = krb5_get_error_message(context, code);
         if (msg) {
             strncpy(errorText, msg, sizeof(errorText));
             errorText[sizeof(errorText)-1]='\0';
-            pkrb5_free_error_message(context, msg);
+            krb5_free_error_message(context, msg);
             msg = errorText;
         }
-
-        if (free_context)
-            pkrb5_free_context(context);
+        krb5_free_context(context);
     }
-  done:
     return msg;
 }

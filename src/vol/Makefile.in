@@ -9,19 +9,18 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
-HELPER_SPLINT=@HELPER_SPLINT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
 
+HELPER_SPLINT=@HELPER_SPLINT@
 
 LIBS=${TOP_LIBDIR}/libcmd.a vlib.a ${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libdir.a ${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libacl.a
+	${TOP_LIBDIR}/libacl.a ${TOP_LIBDIR}/libopr.a
 
-CFLAGS = ${COMMON_CFLAGS} -D${SYS_NAME} ${FSINCLUDES} ${XCFLAGS} ${ARCHFLAGS} -DFSSYNC_BUILD_SERVER -DFSSYNC_BUILD_CLIENT
+MODULE_CFLAGS= -D${SYS_NAME} ${FSINCLUDES} \
+	       -DFSSYNC_BUILD_SERVER -DFSSYNC_BUILD_CLIENT
 
 PUBLICHEADERS=nfs.h vnode.h viceinode.h volume.h volume_inline.h voldefs.h partition.h \
 	fssync.h ihandle.h namei_ops.h salvsync.h daemon_com.h vnode_inline.h
@@ -179,9 +178,6 @@ vol-salvage.o vutil.o: volinodes.h
 vol-salvage.o salvager.o: vol-salvage.h
 vol-salvage.o: salvsync.h daemon_com.h
 
-salvager.o: salvager.c
-	$(CC) $(CFLAGS) -c ${srcdir}/salvager.c
-
 vlib.a:	${VLIBOBJS} AFS_component_version_number.o
 	$(RM) -f $@
 	$(AR) crv $@ ${VLIBOBJS} AFS_component_version_number.o
@@ -189,9 +185,10 @@ vlib.a:	${VLIBOBJS} AFS_component_version_number.o
 
 # new salvager:  remove references to /vice by linking with novice.o
 salvager: vol-salvage.o physio.o vlib.a salvager.o ${LIBS}
-	${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o salvager.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) vol-salvage.o physio.o salvager.o \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
-salvager.o: AFS_component_version_number.c
+salvager.o: salvager.c AFS_component_version_number.c
 
 vol-salvage: vol-salvage.o
 vol-info: vol-info.o physio.o ihandle.o
@@ -199,43 +196,47 @@ vol-info: vol-info.o physio.o ihandle.o
 listinodes.o: listinodes.c AFS_component_version_number.c
 	case ${SYS_NAME} in				\
 		hp?00_ux101 | hp_ux10? )		\
-			${CC} ${CFLAGS} -D_FILE64 -c ${srcdir}/listinodes.c \
+			${CC} ${AFS_CFLAGS} -D_FILE64 -c ${srcdir}/listinodes.c \
 				;;			\
 		hp_ux11* )		\
-			${CC} ${CFLAGS} -D_FILE_OFFSET_BITS=64 -c ${srcdir}/listinodes.c \
+			${CC} ${AFS_CFLAGS} -D_FILE_OFFSET_BITS=64 -c ${srcdir}/listinodes.c \
 				;;			\
-		* )	${CC} ${CFLAGS} -c ${srcdir}/listinodes.c \
+		* )	${CC} ${AFS_CFLAGS} -c ${srcdir}/listinodes.c \
 				;;			\
 	esac
 
-gi: ${TOP_LIBDIR}/libsys.a 
-	case ${SYS_NAME} in \
-                *linux* | sgi_* | *fbsd* ) \
+gi: ${TOP_LIBDIR}/libsys.a
+	$(Q)case ${SYS_NAME} in \
+	        *linux* | sgi_* | *fbsd* ) \
 			echo "Don't build gi on ${SYS_NAME}";; \
-                *) \
-			${CC} ${CFLAGS} -c ${srcdir}/gi.c ; \
-			${CC} ${LDFLAGS} -o gi gi.o ${TOP_LIBDIR}/libsys.a;; \
-        esac
+	        *) \
+			${CC} $(AFS_CPPFLAGS) $(AFS_CFLAGS) \
+				-c ${srcdir}/gi.c ; \
+			$(AFS_LDRULE_NOQ) gi.o ${TOP_LIBDIR}/libsys.a;; \
+	esac
 
 namei_map: ${TOP_LIBDIR}/libsys.a namei_map.o
-	${CC} ${CFLAGS} -o namei_map namei_map.o ${TOP_LIBDIR}/libafsutil.a ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) namei_map.o ${TOP_LIBDIR}/libafsutil.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 volinfo: volinfo-main.o vol-info.o physio.o ihandle.o ${LIBS}
-	${CC} ${CFLAGS} -o volinfo volinfo-main.o vol-info.o physio.o \
-		ihandle.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) volinfo-main.o vol-info.o physio.o ihandle.o \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 volscan: volscan-main.o vol-info.o physio.o ihandle.o ${LIBS}
-	${CC} ${CFLAGS} -o volscan volscan-main.o vol-info.o physio.o \
-		ihandle.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) volscan-main.o vol-info.o physio.o ihandle.o \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 fssync-debug: fssync-debug.o physio.o AFS_component_version_number.c ${LIBS}
-	${CC} ${LDFLAGS} -o fssync-debug fssync-debug.o physio.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) fssync-debug.o physio.o \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 vol-bless: vol-bless.o physio.o ihandle.o ${LIBS}
-	${CC} ${CFLAGS} -o vol-bless vol-bless.o physio.o ${LIBS} ${XLIBS}
+	$(AFS_LDRULE) vol-bless.o physio.o \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
-xfs_size_check: xfs_size_check.c
-	${CC} ${CFLAGS} -o xfs_size_check ${srcdir}/xfs_size_check.c
+xfs_size_check: xfs_size_check.o
+	$(AFS_LDRULE) xfs_size_check.o
 
 #
 # Misc. targets

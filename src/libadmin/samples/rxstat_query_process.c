@@ -16,22 +16,18 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <pthread.h>
 #endif
+
+#include <rx/rx.h>
+#include <rx/rxstat.h>
 #include <afs/afs_Admin.h>
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>
-#include <rx/rx.h>
-#include <rx/rxstat.h>
 
-#ifdef AFS_DARWIN_ENV
-pthread_mutex_t des_init_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
-#endif /* AFS_DARWIN_ENV */
 
 void
 Usage(void)

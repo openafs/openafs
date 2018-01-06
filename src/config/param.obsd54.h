@@ -13,7 +13,6 @@
 #define AFS_XBSD_ENV		1	/* {Free,Open,Net}BSD */
 
 #define AFS_NAMEI_ENV		1	/* User space interface to file system */
-#define AFS_64BIT_ENV		1
 #define AFS_64BIT_CLIENT	1
 #define AFS_64BIT_IOPS_ENV	1	/* Needed for NAMEI */
 
@@ -44,7 +43,6 @@
 #define AFS_OBSD54_ENV          1
 #undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS		1
-#define AFS_VM_RDWR_ENV		1
 #define AFS_VFS_ENV		1
 #define AFS_VFSINCL_ENV		1
 
@@ -70,7 +68,6 @@
 #ifdef MULTIPROCESSOR
 #define AFS_GLOBAL_SUNLOCK	1
 #endif
-#define	AFS_SHORTGID		0	/* are group id's short? */
 
 #if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__)
 enum vcexcl { NONEXCL, EXCL };

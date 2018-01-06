@@ -10,22 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <rx/xdr.h>
+#include <afs/opr.h>
 #include <afs/afsint.h>
-#include <stdio.h>
-#include <afs/afs_assert.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-#ifndef AFS_NT40_ENV
-#include <unistd.h>
-#endif
+#include <rx/rx_queue.h>
 
 #include <afs/afsutil.h>
 
@@ -42,12 +31,6 @@
 #include "daemon_com.h"
 #include "fssync.h"
 #include "common.h"
-
-#ifdef O_LARGEFILE
-#define afs_stat	stat64
-#else /* !O_LARGEFILE */
-#define afs_stat	stat
-#endif /* !O_LARGEFILE */
 
 struct Lock localLock;
 
@@ -67,7 +50,7 @@ struct ilist {
  * is the volume ID.  Returns true if we should keep this inode, otherwise false.
  */
 static int
-NukeProc(struct ViceInodeInfo *ainfo, afs_uint32 avolid, void *arock)
+NukeProc(struct ViceInodeInfo *ainfo, VolumeId avolid, void *arock)
 {
     struct ilist **allInodes = (struct ilist **)arock;
     struct ilist *ti;
@@ -95,8 +78,7 @@ NukeProc(struct ViceInodeInfo *ainfo, afs_uint32 avolid, void *arock)
 
     /* record the info */
     if (!*allInodes || (*allInodes)->freePtr >= MAXATONCE) {
-	ti = (struct ilist *)malloc(sizeof(struct ilist));
-	memset(ti, 0, sizeof(*ti));
+	ti = calloc(1, sizeof(struct ilist));
 	ti->next = *allInodes;
 	*allInodes = ti;
     } else
@@ -118,10 +100,10 @@ NukeProc(struct ViceInodeInfo *ainfo, afs_uint32 avolid, void *arock)
  * indices will be gone.
  */
 int
-nuke(char *aname, afs_int32 avolid)
+nuke(char *aname, VolumeId avolid)
 {
     /* first process the partition containing this junk */
-    struct afs_stat tstat;
+    struct afs_stat_st tstat;
     struct ilist *ti, *ni, *li=NULL;
     afs_int32 code;
     int i, forceSal;
@@ -181,7 +163,7 @@ nuke(char *aname, afs_int32 avolid)
      * volume we're nuking.
      */
     code =
-	ListViceInodes(lastDevComp, aname, NULL, NukeProc, avolid, &forceSal,
+	ListViceInodes(lastDevComp, aname, INVALID_FD, NukeProc, avolid, &forceSal,
 		       0, wpath, &allInodes);
     if (code == 0) {
 	/* actually do the idecs now */
@@ -216,12 +198,11 @@ nuke(char *aname, afs_int32 avolid)
 		IH_RELEASE(fileH);
 #endif /* AFS_NAMEI_ENV */
 	    }
-	    ni = ti->next;
 	    if (li) free(li);
 	    li = ti;
 	}
 	if (li) free(li);
-	code = 0;		/* we really don't care about it except for debugging */
+
 	allInodes = NULL;
 
 	/* at this point, we should try to remove the volume header file itself.

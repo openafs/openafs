@@ -16,11 +16,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "xstat_fs.h"		/*Interface for xstat_fs module */
 #include <afs/cmd.h>		/*Command line interpreter */
-#include <time.h>
-#include <string.h>
 #include <afs/afsutil.h>
 
 /*
@@ -727,7 +726,12 @@ RunTheTest(struct cmd_syndesc *a_s, void *dummy)
      */
     if (debugging_on)
 	printf("Allocating %d long(s) for coll ID\n", numCollIDs);
-    collIDP = (afs_int32 *) (malloc(numCollIDs * sizeof(afs_int32)));
+
+    if (numCollIDs > 0)
+	collIDP = calloc(numCollIDs, sizeof(afs_int32));
+    else
+	collIDP = NULL;
+
     currCollIDP = collIDP;
     curr_item = a_s->parms[P_COLL_IDS].items;
     for (currCollIDIdx = 0; currCollIDIdx < numCollIDs; currCollIDIdx++) {
@@ -817,7 +821,7 @@ RunTheTest(struct cmd_syndesc *a_s, void *dummy)
     if (debugging_on)
 	printf("\nYawn, main thread just woke up.  Cleaning things out...\n");
 
-    code = xstat_fs_Cleanup(1);	/*Get rid of malloc'ed data */
+    xstat_fs_Cleanup(1);	/*Get rid of malloc'ed data */
     rx_Finalize();
     return (0);
 }
@@ -835,7 +839,7 @@ main(int argc, char **argv)
     /*
      * Set up the commands we understand.
      */
-    ts = cmd_CreateSyntax("initcmd", RunTheTest, 0, "initialize the program");
+    ts = cmd_CreateSyntax("initcmd", RunTheTest, 0, 0, "initialize the program");
     cmd_AddParm(ts, "-fsname", CMD_LIST, CMD_REQUIRED,
 		"File Server name(s) to monitor");
     cmd_AddParm(ts, "-collID", CMD_LIST, CMD_REQUIRED,

@@ -17,12 +17,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "xstat_cm.h"		/*Interface for this module */
 #include <lwp.h>		/*Lightweight process package */
 
 #include <afs/afsutil.h>
-#include <string.h>
 
 #define LWP_STACK_SIZE	(16 * 1024)
 
@@ -448,7 +448,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
     xstat_cm_ProbeFreqInSecs = a_ProbeFreqInSecs;
     xstat_cm_numCollections = a_numCollections;
     collIDBytes = xstat_cm_numCollections * sizeof(afs_int32);
-    xstat_cm_collIDP = (afs_int32 *) (malloc(collIDBytes));
+    xstat_cm_collIDP = malloc(collIDBytes);
     memcpy(xstat_cm_collIDP, a_collIDP, collIDBytes);
     if (xstat_cm_debug) {
 	printf("[%s] Asking for %d collection(s): ", rn,
@@ -470,8 +470,8 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
      * Allocate the necessary data structures and initialize everything
      * else.
      */
-    xstat_cm_ConnInfo = (struct xstat_cm_ConnectionInfo *)
-	malloc(a_numServers * sizeof(struct xstat_cm_ConnectionInfo));
+    xstat_cm_ConnInfo = malloc(a_numServers
+			       * sizeof(struct xstat_cm_ConnectionInfo));
     if (xstat_cm_ConnInfo == (struct xstat_cm_ConnectionInfo *)0) {
 	fprintf(stderr,
 		"[%s] Can't allocate %d connection info structs (%" AFS_SIZET_FMT " bytes)\n",

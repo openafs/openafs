@@ -1,12 +1,9 @@
 # After changing this file, please run
 #     git ls-files -i --exclude-standard
 # to check that you haven't inadvertently ignored any tracked files.
-
-/pagsh
-/pagsh.krb
-/picobj
 /rmtsys.h
 /rmtsysd
+/syscall.c
 /afs.exp
 /afsl.exp
 /Krmtsys.h

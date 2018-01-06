@@ -11,15 +11,16 @@ RELDIR=kauth\test
 
 EXELIBS = \
 	$(DESTDIR)\afslwp.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\afs\afsauth.lib \
 	$(DESTDIR)\afs\afscmd.lib \
 	$(DESTDIR)\afsubik.lib \
 	$(DESTDIR)\afs\afsprot.lib \
 	$(DESTDIR)\afsrx.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\afs\afscom_err.lib \
-	$(DESTDIR)\afs\afskauth.lib
+	$(DESTDIR)\afs\afskauth.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
 
 $(OUT)\multiklog.exe: $(OUT)\multiklog.obj
@@ -52,7 +53,7 @@ $(OUT)\test_interim_ktc.exe: $(OUT)\test_interim_ktc.obj
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
-$(OUT)\test_rxkad_free: test_rxkad_free.o 
+$(OUT)\test_rxkad_free: test_rxkad_free.o
 	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
@@ -115,4 +116,4 @@ runtest: background multiklog test_badtix test_interim_ktc test_rxkad_free
 clean::
 
 mkdir:
-	
+

@@ -10,6 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include <rx/xdr.h>
 #include <afs/kauth.h>
@@ -34,7 +35,7 @@ xdr_ka_CBS(XDR * x, struct ka_CBS *abbs)
 	if (len < 0 || len > MAXBS)
 	    return FALSE;
 	if (!abbs->SeqBody)
-	    abbs->SeqBody = (char *)malloc(len);
+	    abbs->SeqBody = malloc(len);
 	abbs->SeqLen = len;
 	xdr_opaque(x, abbs->SeqBody, len);
 	return TRUE;
@@ -61,7 +62,7 @@ xdr_ka_BBS(XDR * x, struct ka_BBS *abbs)
 	    || (len > MAXBS) || (len > maxLen))
 	    return FALSE;
 	if (!abbs->SeqBody)
-	    abbs->SeqBody = (char *)malloc(maxLen);
+	    abbs->SeqBody = malloc(maxLen);
 	abbs->MaxSeqLen = maxLen;
 	abbs->SeqLen = len;
 	if (!xdr_opaque(x, abbs->SeqBody, len))

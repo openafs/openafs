@@ -309,10 +309,6 @@
     the local superuser <emphasis role="bold">root</emphasis> to issue some commands, whereas others require no privilege. All files
     mentioned in this chapter must actually reside on the local disk of each AFS client machine (they cannot, for example, be
     symbolic links to files in AFS).</para>
-
-    <para>AFS's <emphasis role="bold">package</emphasis> program can simplify other aspects of client machine configuration,
-    including those normally set in the machine's AFS initialization file. See <link linkend="HDRWQ419">Configuring Client Machines
-    with the package Program</link>.</para>
   </sect1>
 
   <sect1 id="HDRWQ391">
@@ -502,8 +498,8 @@
 
             <listitem>
               <para>This ASCII file contains a single line that specifies the complete domain-style name of the cell to which the
-              machine belongs. Examples are <computeroutput>abc.com</computeroutput> and
-              <computeroutput>stateu.edu</computeroutput>. This value defines the default cell in which the machine's users become
+              machine belongs. Examples are <computeroutput>example.com</computeroutput> and
+              <computeroutput>example.org</computeroutput>. This value defines the default cell in which the machine's users become
               authenticated, and in which the command interpreters (for example, the <emphasis role="bold">bos</emphasis> command)
               contact server processes.</para>
 
@@ -1133,7 +1129,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ400" />Issue the <emphasis role="bold">fs setcachesize</emphasis> command to set a new disk cache
+          <para>Issue the <emphasis role="bold">fs setcachesize</emphasis> command to set a new disk cache
           size.</para>
 
           <note>
@@ -1794,9 +1790,9 @@
    &gt;cell_name      #organization
 </programlisting>
 
-      <para>where cell_name is the cell's complete Internet domain name (for example, <emphasis role="bold">abc.com</emphasis>) and
+      <para>where cell_name is the cell's complete Internet domain name (for example, <emphasis role="bold">example.com</emphasis>) and
       organization is an optional field that follows any number of spaces and the number sign (<computeroutput>#</computeroutput>)
-      and can name the organization to which the cell corresponds (for example, the ABC Corporation). After the first line comes a
+      and can name the organization to which the cell corresponds (for example, the Example Corporation). After the first line comes a
       separate line for each database server machine. Each line has the following format:</para>
 
       <programlisting>
@@ -1805,7 +1801,7 @@
 
       <para>where IP_address is the machine's IP address in dotted decimal format (for example, 192.12.105.3). Following any number
       of spaces and the number sign (<computeroutput>#</computeroutput>) is machine_name, the machine's fully-qualified hostname
-      (for example, <emphasis role="bold">db1.abc.com</emphasis>). In this case, the number sign does not indicate a comment:
+      (for example, <emphasis role="bold">db1.example.com</emphasis>). In this case, the number sign does not indicate a comment:
       machine_name is a required field.</para>
 
       <para>The order in which the cells appear is not important, but it is convenient to put the client machine's home cell first.
@@ -1814,14 +1810,14 @@
       <para>The following example shows entries for two cells, each of which has three database server machines:</para>
 
       <programlisting>
-   &gt;abc.com       #ABC Corporation (home cell)
-   192.12.105.3      #db1.abc.com
-   192.12.105.4      #db2.abc.com
-   192.12.105.55     #db3.abc.com
-   &gt;stateu.edu    #State University cell
-   138.255.68.93     #serverA.stateu.edu
-   138.255.68.72     #serverB.stateu.edu
-   138.255.33.154    #serverC.stateu.edu
+   &gt;example.com   #Example Corporation (home cell)
+   192.12.105.3      #db1.example.com
+   192.12.105.4      #db2.example.com
+   192.12.105.55     #db3.example.com
+   &gt;example.org    #Example Organization cell
+   138.255.68.93     #serverA.example.org
+   138.255.68.72     #serverB.example.org
+   138.255.33.154    #serverC.example.org
 </programlisting>
     </sect2>
 
@@ -1843,19 +1839,7 @@
       <para>Because a correct entry in the <emphasis role="bold">CellServDB</emphasis> file is vital for consistent client
       performance, you must also update the file on each client machine whenever a cell's list of database server machines changes
       (for instance, when you follow the instructions in the <emphasis>OpenAFS Quick Beginnings</emphasis> to add or remove a
-      database server machine). To facilitate the client updates, you can use the <emphasis role="bold">package</emphasis> program,
-      which copies files from a central source in AFS to the local disk of client machines. It is conventional to invoke the
-      <emphasis role="bold">package</emphasis> program in a client machine's AFS initialization file so that it runs as the machine
-      reboots, but you can also issue the <emphasis role="bold">package</emphasis> command at any time. For instructions, see <link
-      linkend="HDRWQ448">Running the package program</link>.</para>
-
-      <para>If you use the <emphasis role="bold">package</emphasis> program, the conventional location for your cell's central
-      source <emphasis role="bold">CellServDB</emphasis> file is <emphasis role="bold">/afs/</emphasis>cell_name<emphasis
-      role="bold">/common/etc/CellServDB</emphasis>, where cell_name is your cell name. <indexterm>
-          <primary>CellServDB file (client)</primary>
-
-          <secondary>central update source for clients</secondary>
-        </indexterm></para>
+      database server machine).</para>
 
       <para>Creating a symbolic or hard link from <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> to a central source file
       in AFS is not a viable option. The <emphasis role="bold">afsd</emphasis> program reads the file into kernel memory before the
@@ -1977,10 +1961,10 @@
    % <emphasis role="bold">fs listcells</emphasis>
       .
       .
-   Cell abc.com on hosts db1.abc.com db2.abc.com db3.abc.com
-   Cell stateu.edu on hosts SERVERA.STATEU.EDU SERVERB.STATEU.EDU 
-                            SERVERC.STATEU.EDU
-   Cell ghi.org on hosts 191.255.64.111 191.255.64.112
+   Cell example.com on hosts db1.example.com db2.example.com db3.example.com
+   Cell example.org on hosts SERVERA.EXAMPLE.ORG SERVERB.EXAMPLE.ORG 
+                            SERVERC.EXAMPLE.ORG
+   Cell example.net on hosts 191.255.64.111 191.255.64.112
       .
       .
 </programlisting>
@@ -2044,21 +2028,15 @@
       </indexterm>
 
       <indexterm>
-        <primary>package</primary>
-
-        <secondary>to update client</secondary>
-      </indexterm>
-
-      <indexterm>
         <primary>CellServDB file (client)</primary>
 
-        <secondary>updating with or without package</secondary>
+        <secondary>updating</secondary>
       </indexterm>
 
       <indexterm>
         <primary>updating</primary>
 
-        <secondary>CellServDB file (client) with or without package</secondary>
+        <secondary>CellServDB file (client)</secondary>
       </indexterm>
     </sect2>
 
@@ -2095,7 +2073,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LINEWCELL" />Issue the <emphasis role="bold">fs newcell</emphasis> command to add or change a cell's
+          <para>Issue the <emphasis role="bold">fs newcell</emphasis> command to add or change a cell's
           entry in kernel memory. Repeat the command for each cell.</para>
 
           <note>
@@ -2154,18 +2132,8 @@
           of the following three methods. In each case, be sure to obey the formatting requirements described in <link
           linkend="HDRWQ407">The Format of the CellServDB file</link>. <itemizedlist>
               <listitem>
-                <para>If you maintain a central source version of the <emphasis role="bold">CellServDB</emphasis> file and use the
-                <emphasis role="bold">package</emphasis> program, first use a text editor to alter the central copy of the file.
-                Then issue the <emphasis role="bold">package</emphasis> command to transfer the contents of the file to the local
-                machine. For complete instructions, see <link linkend="HDRWQ448">Running the package program</link>.
-                <programlisting>
-   # <emphasis role="bold">/etc/package -v -c</emphasis> &lt;<replaceable>name of package file</replaceable>&gt;
-</programlisting></para>
-              </listitem>
-
-              <listitem>
-                <para>If you maintain a central source <emphasis role="bold">CellServDB</emphasis> file but do not use the <emphasis
-                role="bold">package</emphasis> program, first use a text editor to alter the central copy of the file. Then use a
+                <para>If you maintain a central source <emphasis role="bold">CellServDB</emphasis> file,
+                first use a text editor to alter the central copy of the file. Then use a
                 copying command such as the <emphasis role="bold">cp</emphasis> command to copy it to the local <emphasis
                 role="bold">/usr/vice/etc/CellServDB</emphasis> file.</para>
               </listitem>
@@ -3078,11 +3046,11 @@
 
           <programlisting>
    % <emphasis role="bold">fs gp</emphasis>
-   fs5.abc.com         20000
-   fs1.abc.com         30014
-   server1.stateu.edu  40011
-   fs3.abc.com         20001
-   fs4.abc.com         30001
+   fs5.example.com     20000
+   fs1.example.com     30014
+   server1.example.org 40011
+   fs3.example.com     20001
+   fs4.example.com     30001
    192.12.106.120      40002
    192.12.106.119      40001
       .   .   .   .   .     . .
@@ -3398,9 +3366,9 @@
 
         <listitem>
           <para>Using a text editor, open the <emphasis role="bold">/usr/vice/etc/NetRestrict</emphasis> file. Place one IP address
-          in dotted decimal format on each line. The order of the addresses is not significant. Use the value <emphasis
-          role="bold">255</emphasis> as a wildcard that represents all possible addresses in that field. For example, the entry
-          <computeroutput>192.12.105.255</computeroutput> indicates that the Cache Manager does not register any of the addresses in
+          in dotted decimal format on each line. The order of the addresses is not significant. Use a slash (<emphasis
+          role="bold">/</emphasis>) followed by a subnet length to represent all possible addresses in a range. For example, the entry
+          <computeroutput>192.12.105.0/24</computeroutput> indicates that the Cache Manager does not register any of the addresses in
           the 192.12.105 subnet.</para>
         </listitem>
 
@@ -3631,8 +3599,8 @@
     <para>The Cache Manager uses the system name as a substitute for the @sys variable in AFS pathnames. The variable is useful when
     creating a symbolic link from the local disk to an AFS directory that houses binaries for the client machine's system type.
     Because the @sys variable automatically steers the Cache Manager to the appropriate directory, you can create the same symbolic
-    link on client machines of different system types. (You can even automate the creation operation by using the package utility
-    described in <link linkend="HDRWQ419">Configuring Client Machines with the package Program</link>.) The link also remains valid
+    link on client machines of different system types.
+    The link also remains valid
     when you upgrade the machine to a new system type.</para>
 
     <para>Configuration is simplest if you use the system type names that AFS assigns. For a list, see the <emphasis>OpenAFS Release

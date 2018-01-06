@@ -10,17 +10,18 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdio.h>
 #ifdef AFS_NT40_ENV
 #include <WINNT/afsevent.h>
 #endif
-#include <string.h>
+
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
+
 #include "ptclient.h"
 #include "ptuser.h"
 #include "ptprototypes.h"
@@ -52,7 +53,7 @@ main(afs_int32 argc, char **argv)
     char uid[8];
     afs_int32 i;
     afs_int32 verbose = 0;
-    char *cellname;
+    char *cellname = NULL;
 
     buf[0] = '\0';
 
@@ -60,13 +61,13 @@ main(afs_int32 argc, char **argv)
 	fprintf(stderr, "Usage: readpwd [-v] [-c cellname] passwdfile.\n");
 	exit(1);
     }
-    cellname = 0;
     for (i = 1; i < argc; i++) {
 	if (!strcmp(argv[i], "-v"))
 	    verbose = 1;
 	else {
 	    if (!strcmp(argv[i], "-c")) {
-		cellname = (char *)malloc(100);
+		if (!cellname)
+		    cellname = malloc(100);
 		strncpy(cellname, argv[++i], 100);
 	    } else
 		strncpy(buf, argv[i], 150);
@@ -79,7 +80,8 @@ main(afs_int32 argc, char **argv)
     }
 
     code = pr_Initialize(2, AFSDIR_CLIENT_ETC_DIRPATH, cellname);
-    free(cellname);
+    if (cellname)
+	free(cellname);
     if (code) {
 	fprintf(stderr, "pr_Initialize failed, code %d.\n", code);
 	exit(1);

@@ -10,14 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
 #include <ctype.h>
-#include "cmd.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <assert.h>
+
+#include "cmd.h"
 
 /* declaration of private token type */
 struct cmd_token {
@@ -30,8 +28,12 @@ static struct cmd_syndesc *allSyntax = 0;
 static int noOpcodes = 0;
 static int (*beforeProc) (struct cmd_syndesc * ts, void *beforeRock) = NULL;
 static int (*afterProc) (struct cmd_syndesc * ts, void *afterRock) = NULL;
+static int enablePositional = 1;
+static int enableAbbreviation = 1;
 static void *beforeRock, *afterRock;
 static char initcmd_opcode[] = "initcmd";	/*Name of initcmd opcode */
+static cmd_config_section *globalConfig = NULL;
+static const char *commandName = NULL;
 
 /* take name and string, and return null string if name is empty, otherwise return
    the concatenation of the two strings */
@@ -42,8 +44,8 @@ NName(char *a1, char *a2)
     if (strlen(a1) == 0) {
         return "";
     } else {
-        strncpy(tbuffer, a1, sizeof(tbuffer));
-        strncat(tbuffer, a2, sizeof(tbuffer) - strlen(tbuffer) - 1);
+        strlcpy(tbuffer, a1, sizeof(tbuffer));
+        strlcat(tbuffer, a2, sizeof(tbuffer));
         return tbuffer;
     }
 }
@@ -74,6 +76,7 @@ FindType(struct cmd_syndesc *as, char *aname)
     size_t cmdlen;
     int ambig;
     int best;
+    struct cmd_item *alias;
 
     /* Allow --long-style options. */
     if (aname[0] == '-' && aname[1] == '-' && aname[2] && aname[3]) {
@@ -90,8 +93,20 @@ FindType(struct cmd_syndesc *as, char *aname)
 	    return i;
 	if (strlen(as->parms[i].name) < cmdlen)
 	    continue;
-	/* A hidden option must be a full match (no best matches) */
-	if (as->parms[i].flags & CMD_HIDE)
+
+	/* Check for aliases, which must be full matches */
+	alias = as->parms[i].aliases;
+	while (alias != NULL) {
+	    if (strcmp(alias->data, aname) == 0)
+		return i;
+	    alias = alias->next;
+	}
+
+	/* A hidden option, or one which cannot be abbreviated,
+	 * must be a full match (no best matches) */
+	if (as->parms[i].flags & CMD_HIDE ||
+	    as->parms[i].flags & CMD_NOABBRV ||
+	    !enableAbbreviation)
 	    continue;
 
 	if (strncmp(as->parms[i].name, aname, cmdlen) == 0) {
@@ -149,23 +164,21 @@ FindSyntax(char *aname, int *aambig)
 }
 
 /* print the help for a single parameter */
-static void
-PrintParmHelp(struct cmd_parmdesc *aparm)
+static char *
+ParmHelpString(struct cmd_parmdesc *aparm)
 {
+    char *str;
     if (aparm->type == CMD_FLAG) {
-#ifdef notdef
-	/* doc people don't like seeing this information */
-	if (aparm->help)
-	    printf(" (%s)", aparm->help);
-#endif
-    } else if (aparm->help) {
-	printf(" <%s>", aparm->help);
-	if (aparm->type == CMD_LIST)
-	    printf("+");
-    } else if (aparm->type == CMD_SINGLE)
-	printf(" <arg>");
-    else if (aparm->type == CMD_LIST)
-	printf(" <arg>+");
+	return strdup("");
+    } else {
+	if (asprintf(&str, " %s<%s>%s%s",
+		     aparm->type == CMD_SINGLE_OR_FLAG?"[":"",
+		     aparm->help?aparm->help:"arg",
+		     aparm->type == CMD_LIST?"+":"",
+		     aparm->type == CMD_SINGLE_OR_FLAG?"]":"") < 0)
+	    return "<< OUT OF MEMORY >>";
+	return str;
+    }
 }
 
 extern char *AFSVersion;
@@ -182,15 +195,19 @@ PrintSyntax(struct cmd_syndesc *as)
 {
     int i;
     struct cmd_parmdesc *tp;
+    char *str;
+    char *name;
+    size_t len;
+    size_t xtralen;
 
     /* now print usage, from syntax table */
     if (noOpcodes)
-	printf("Usage: %s", as->a0name);
+	len = printf("Usage: %s", as->a0name);
     else {
 	if (!strcmp(as->name, initcmd_opcode))
-	    printf("Usage: %s[%s]", NName(as->a0name, " "), as->name);
+	    len = printf("Usage: %s[%s]", NName(as->a0name, " "), as->name);
 	else
-	    printf("Usage: %s%s", NName(as->a0name, " "), as->name);
+	    len = printf("Usage: %s%s", NName(as->a0name, " "), as->name);
     }
 
     for (i = 0; i < CMD_MAXPARMS; i++) {
@@ -199,13 +216,45 @@ PrintSyntax(struct cmd_syndesc *as)
 	    continue;		/* seeked over slot */
 	if (tp->flags & CMD_HIDE)
 	    continue;		/* skip hidden options */
-	printf(" ");
-	if (tp->flags & CMD_OPTIONAL)
-	    printf("[");
-	printf("%s", tp->name);
-	PrintParmHelp(tp);
-	if (tp->flags & CMD_OPTIONAL)
-	    printf("]");
+
+	/* The parameter name is the real name, plus any aliases */
+	if (!tp->aliases) {
+	    name = strdup(tp->name);
+	} else {
+	    size_t namelen;
+	    struct cmd_item *alias;
+	    namelen = strlen(tp->name) + 1;
+	    for (alias = tp->aliases; alias != NULL; alias = alias->next)
+		namelen+=strlen(alias->data) + 3;
+
+	    name = malloc(namelen);
+	    strlcpy(name, tp->name, namelen);
+
+	    for (alias = tp->aliases; alias != NULL; alias = alias->next) {
+		strlcat(name, " | ", namelen);
+		strlcat(name, alias->data, namelen);
+	    }
+	}
+
+	/* Work out if we can fit what we want to on this line, or if we need to
+	 * start a new one */
+	str = ParmHelpString(tp);
+	xtralen = 1 + strlen(name) + strlen(str) +
+		  ((tp->flags & CMD_OPTIONAL)? 2: 0);
+
+	if (len + xtralen > 78) {
+	    printf("\n        ");
+	    len = 8;
+	}
+
+	printf(" %s%s%s%s",
+	       tp->flags & CMD_OPTIONAL?"[":"",
+	       name,
+	       str,
+	       tp->flags & CMD_OPTIONAL?"]":"");
+	free(str);
+	free(name);
+	len+=xtralen;
     }
     printf("\n");
 }
@@ -381,39 +430,52 @@ SortSyntax(struct cmd_syndesc *as)
     return 0;
 }
 
+/*!
+ * Create a command syntax.
+ *
+ * \note Use cmd_AddParm() or cmd_AddParmAtOffset() to set the
+ *       parameters for the new command.
+ *
+ * \param[in] aname  name used to invoke the command
+ * \param[in] aproc  procedure to be called when command is invoked
+ * \param[in] arock  opaque data pointer to be passed to aproc
+ * \param[in] aflags command option flags (CMD_HIDDEN)
+ * \param[in] ahelp  help string to display for this command
+ *
+ * \return a pointer to the cmd_syndesc or NULL if error.
+ */
 struct cmd_syndesc *
 cmd_CreateSyntax(char *aname,
 		 int (*aproc) (struct cmd_syndesc * ts, void *arock),
-		 void *arock, char *ahelp)
+		 void *arock, afs_uint32 aflags, char *ahelp)
 {
     struct cmd_syndesc *td;
 
     /* can't have two cmds in no opcode mode */
     if (noOpcodes)
-	return (struct cmd_syndesc *)0;
+	return NULL;
 
-    td = (struct cmd_syndesc *)calloc(1, sizeof(struct cmd_syndesc));
+    /* Allow only valid cmd flags. */
+    if (aflags & ~CMD_HIDDEN) {
+	return NULL;
+    }
+
+    td = calloc(1, sizeof(struct cmd_syndesc));
     assert(td);
     td->aliasOf = td;		/* treat aliasOf as pointer to real command, no matter what */
+    td->flags = aflags;
 
     /* copy in name, etc */
     if (aname) {
-	td->name = (char *)malloc(strlen(aname) + 1);
+	td->name = strdup(aname);
 	assert(td->name);
-	strcpy(td->name, aname);
     } else {
 	td->name = NULL;
 	noOpcodes = 1;
     }
     if (ahelp) {
-	/* Piggy-back the hidden option onto the help string */
-	if (ahelp == (char *)CMD_HIDDEN) {
-	    td->flags |= CMD_HIDDEN;
-	} else {
-	    td->help = (char *)malloc(strlen(ahelp) + 1);
-	    assert(td->help);
-	    strcpy(td->help, ahelp);
-	}
+	td->help = strdup(ahelp);
+	assert(td->help);
     } else
 	td->help = NULL;
     td->proc = aproc;
@@ -433,12 +495,11 @@ cmd_CreateAlias(struct cmd_syndesc *as, char *aname)
 {
     struct cmd_syndesc *td;
 
-    td = (struct cmd_syndesc *)malloc(sizeof(struct cmd_syndesc));
+    td = malloc(sizeof(struct cmd_syndesc));
     assert(td);
     memcpy(td, as, sizeof(struct cmd_syndesc));
-    td->name = (char *)malloc(strlen(aname) + 1);
+    td->name = strdup(aname);
     assert(td->name);
-    strcpy(td->name, aname);
     td->flags |= CMD_ALIAS;
     /* if ever free things, make copy of help string, too */
 
@@ -453,11 +514,16 @@ cmd_CreateAlias(struct cmd_syndesc *as, char *aname)
     return 0;			/* all done */
 }
 
-int
-cmd_IsAdministratorCommand(struct cmd_syndesc *as)
+void
+cmd_DisablePositionalCommands(void)
 {
-    as->flags |= CMD_ADMIN;
-    return 0;
+    enablePositional = 0;
+}
+
+void
+cmd_DisableAbbreviations(void)
+{
+    enableAbbreviation = 0;
 }
 
 int
@@ -470,40 +536,79 @@ cmd_Seek(struct cmd_syndesc *as, int apos)
 }
 
 int
-cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype,
-	    afs_int32 aflags, char *ahelp)
+cmd_AddParmAtOffset(struct cmd_syndesc *as, int ref, char *aname, int atype,
+		    afs_int32 aflags, char *ahelp)
 {
     struct cmd_parmdesc *tp;
 
-    if (as->nParms >= CMD_MAXPARMS)
+    if (ref >= CMD_MAXPARMS)
 	return CMD_EXCESSPARMS;
-    tp = &as->parms[as->nParms++];
+    tp = &as->parms[ref];
 
-    tp->name = (char *)malloc(strlen(aname) + 1);
+    tp->name = strdup(aname);
     assert(tp->name);
-    strcpy(tp->name, aname);
     tp->type = atype;
     tp->flags = aflags;
     tp->items = NULL;
     if (ahelp) {
-	tp->help = (char *)malloc(strlen(ahelp) + 1);
+	tp->help = strdup(ahelp);
 	assert(tp->help);
-	strcpy(tp->help, ahelp);
     } else
 	tp->help = NULL;
+
+    tp->aliases = NULL;
+
+    if (as->nParms <= ref)
+	as->nParms = ref+1;
+
+    return 0;
+}
+
+int
+cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype,
+	    afs_int32 aflags, char *ahelp)
+{
+    if (as->nParms >= CMD_MAXPARMS)
+	return CMD_EXCESSPARMS;
+
+    return cmd_AddParmAtOffset(as, as->nParms++, aname, atype, aflags, ahelp);
+}
+
+int
+cmd_AddParmAlias(struct cmd_syndesc *as, int pos, char *alias)
+{
+    struct cmd_item *item;
+
+    if (pos > as->nParms)
+	return CMD_EXCESSPARMS;
+
+    item = calloc(1, sizeof(struct cmd_item));
+    item->data = strdup(alias);
+    item->next = as->parms[pos].aliases;
+    as->parms[pos].aliases = item;
+
     return 0;
 }
 
 /* add a text item to the end of the parameter list */
 static int
-AddItem(struct cmd_parmdesc *aparm, char *aval)
+AddItem(struct cmd_parmdesc *aparm, char *aval, char *pname)
 {
     struct cmd_item *ti, *ni;
-    ti = (struct cmd_item *)calloc(1, sizeof(struct cmd_item));
+
+    if (aparm->type == CMD_SINGLE ||
+	aparm->type == CMD_SINGLE_OR_FLAG) {
+	if (aparm->items) {
+	    fprintf(stderr, "%sToo many values after switch %s\n",
+		    NName(pname, ": "), aparm->name);
+	    return CMD_NOTLIST;
+	}
+    }
+
+    ti = calloc(1, sizeof(struct cmd_item));
     assert(ti);
-    ti->data = (char *)malloc(strlen(aval) + 1);
+    ti->data = strdup(aval);
     assert(ti->data);
-    strcpy(ti->data, aval);
     /* now put ti at the *end* of the list */
     if ((ni = aparm->items)) {
 	for (; ni; ni = ni->next)
@@ -546,6 +651,10 @@ ResetSyntax(struct cmd_syndesc *as)
     tp = as->parms;
     for (i = 0; i < CMD_MAXPARMS; i++, tp++) {
 	switch (tp->type) {
+	case CMD_SINGLE_OR_FLAG:
+	    if (tp->items == &dummy)
+		break;
+	    /* Deliberately fall through here */
 	case CMD_SINGLE:
 	case CMD_LIST:
 	    /* free whole list in both cases, just for fun */
@@ -586,7 +695,9 @@ SetupExpandsFlag(struct cmd_syndesc *as)
     return 0;
 }
 
-/*Take the current argv & argc and alter them so that the initialization opcode is made to appear.  This is used in cases where the initialization opcode is implicitly invoked.*/
+/* Take the current argv & argc and alter them so that the initialization
+ * opcode is made to appear.  This is used in cases where the initialization
+ * opcode is implicitly invoked.*/
 static char **
 InsertInitOpcode(int *aargc, char **aargv)
 {
@@ -594,34 +705,36 @@ InsertInitOpcode(int *aargc, char **aargv)
     char *pinitopcode;		/*Ptr to space for name of init opcode */
     int i;			/*Loop counter */
 
-    /*Allocate the new argv array, plus one for the new opcode, plus one more for the trailing null pointer */
-    newargv = (char **)malloc(((*aargc) + 2) * sizeof(char *));
+    /* Allocate the new argv array, plus one for the new opcode, plus one
+     * more for the trailing null pointer */
+    newargv = malloc(((*aargc) + 2) * sizeof(char *));
     if (!newargv) {
 	fprintf(stderr, "%s: Can't create new argv array with %d+2 slots\n",
 		aargv[0], *aargc);
 	return (NULL);
     }
 
-    /*Create space for the initial opcode & fill it in */
-    pinitopcode = (char *)malloc(sizeof(initcmd_opcode));
+    /* Create space for the initial opcode & fill it in */
+    pinitopcode = strdup(initcmd_opcode);
     if (!pinitopcode) {
 	fprintf(stderr, "%s: Can't malloc initial opcode space\n", aargv[0]);
 	free(newargv);
 	return (NULL);
     }
-    strcpy(pinitopcode, initcmd_opcode);
 
-    /*Move all the items in the old argv into the new argv, in their proper places */
+    /* Move all the items in the old argv into the new argv, in their
+     * proper places */
     for (i = *aargc; i > 1; i--)
 	newargv[i] = aargv[i - 1];
 
-    /*Slip in the opcode and the trailing null pointer, and bump the argument count up by one for the new opcode */
+    /* Slip in the opcode and the trailing null pointer, and bump the
+     * argument count up by one for the new opcode */
     newargv[0] = aargv[0];
     newargv[1] = pinitopcode;
     (*aargc)++;
     newargv[*aargc] = NULL;
 
-    /*Return the happy news */
+    /* Return the happy news */
     return (newargv);
 
 }				/*InsertInitOpcode */
@@ -643,44 +756,55 @@ NoParmsOK(struct cmd_syndesc *as)
     return 1;
 }
 
-/* Call the appropriate function, or return syntax error code.  Note: if no opcode is specified, an initialization routine exists, and it has NOT been called before, we invoke the special initialization opcode*/
+/* Add help, apropos commands once */
+static void
+initSyntax(void)
+{
+    struct cmd_syndesc *ts;
+
+    if (!noOpcodes) {
+	ts = cmd_CreateSyntax("help", HelpProc, NULL, 0,
+			      "get help on commands");
+	cmd_AddParm(ts, "-topic", CMD_LIST, CMD_OPTIONAL, "help string");
+
+	ts = cmd_CreateSyntax("apropos", AproposProc, NULL, 0,
+			      "search by help text");
+	cmd_AddParm(ts, "-topic", CMD_SINGLE, CMD_REQUIRED, "help string");
+
+	cmd_CreateSyntax("version", VersionProc, NULL, 0,
+			 "show version");
+	cmd_CreateSyntax("-version", VersionProc, NULL, CMD_HIDDEN, NULL);
+	cmd_CreateSyntax("-help", HelpProc, NULL, CMD_HIDDEN, NULL);
+	cmd_CreateSyntax("--version", VersionProc, NULL, CMD_HIDDEN, NULL);
+	cmd_CreateSyntax("--help", HelpProc, NULL, CMD_HIDDEN, NULL);
+    }
+}
+
+/* Call the appropriate function, or return syntax error code.  Note: if
+ * no opcode is specified, an initialization routine exists, and it has
+ * NOT been called before, we invoke the special initialization opcode
+ */
 int
-cmd_Dispatch(int argc, char **argv)
+cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax)
 {
     char *pname;
-    struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts = NULL;
     struct cmd_parmdesc *tparm;
-    afs_int32 i, j;
+    int i;
     int curType;
     int positional;
     int ambig;
+    int code = 0;
+    char *param = NULL;
+    char *embeddedvalue = NULL;
     static int initd = 0;	/*Is this the first time this routine has been called? */
     static int initcmdpossible = 1;	/*Should be consider parsing the initial command? */
 
+    *outsyntax = NULL;
+
     if (!initd) {
 	initd = 1;
-	/* Add help, apropos commands once */
-	if (!noOpcodes) {
-	    ts = cmd_CreateSyntax("help", HelpProc, (char *)0,
-				  "get help on commands");
-	    cmd_AddParm(ts, "-topic", CMD_LIST, CMD_OPTIONAL, "help string");
-	    cmd_AddParm(ts, "-admin", CMD_FLAG, CMD_OPTIONAL, NULL);
-
-	    ts = cmd_CreateSyntax("apropos", AproposProc, (char *)0,
-				  "search by help text");
-	    cmd_AddParm(ts, "-topic", CMD_SINGLE, CMD_REQUIRED,
-			"help string");
-	    ts = cmd_CreateSyntax("version", VersionProc, (char *)0,
-				  "show version");
-	    ts = cmd_CreateSyntax("-version", VersionProc, (char *)0,
-				  (char *)CMD_HIDDEN);
-	    ts = cmd_CreateSyntax("-help", HelpProc, (char *)0,
-				  (char *)CMD_HIDDEN);
-	    ts = cmd_CreateSyntax("--version", VersionProc, (char *)0,
-				  (char *)CMD_HIDDEN);
-	    ts = cmd_CreateSyntax("--help", HelpProc, (char *)0,
-				  (char *)CMD_HIDDEN);
-	}
+	initSyntax();
     }
 
     /*Remember the program name */
@@ -690,17 +814,19 @@ cmd_Dispatch(int argc, char **argv)
 	if (argc == 1) {
 	    if (!NoParmsOK(allSyntax)) {
 		printf("%s: Type '%s -help' for help\n", pname, pname);
-		return (CMD_USAGE);
+		code = CMD_USAGE;
+		goto out;
 	    }
 	}
     } else {
 	if (argc < 2) {
 	    /* if there is an initcmd, don't print an error message, just
 	     * setup to use the initcmd below. */
-	    if (!(initcmdpossible && FindSyntax(initcmd_opcode, (int *)0))) {
+	    if (!(initcmdpossible && FindSyntax(initcmd_opcode, NULL))) {
 		printf("%s: Type '%s help' or '%s help <topic>' for help\n",
 		       pname, pname, pname);
-		return (CMD_USAGE);
+		code = CMD_USAGE;
+		goto out;
 	    }
 	}
     }
@@ -717,7 +843,7 @@ cmd_Dispatch(int argc, char **argv)
 		 * see if there is a descriptor for the initialization opcode.
 		 * Only try this once. */
 		initcmdpossible = 0;
-		ts = FindSyntax(initcmd_opcode, (int *)0);
+		ts = FindSyntax(initcmd_opcode, NULL);
 		if (!ts) {
 		    /*There is no initialization opcode available, so we declare
 		     * an error */
@@ -732,7 +858,8 @@ cmd_Dispatch(int argc, char **argv)
 				"Unrecognized operation '%s'; type '%shelp' for list\n",
 				argv[1], NName(pname, " "));
 		    }
-		    return (CMD_UNKNOWNCMD);
+		    code = CMD_UNKNOWNCMD;
+		    goto out;
 		} else {
 		    /*Found syntax structure for an initialization opcode.  Fix
 		     * up argv and argc to relect what the user
@@ -741,7 +868,8 @@ cmd_Dispatch(int argc, char **argv)
 			fprintf(stderr,
 				"%sCan't insert implicit init opcode into command line\n",
 				NName(pname, ": "));
-			return (CMD_INTERNALERROR);
+			code = CMD_INTERNALERROR;
+			goto out;
 		    }
 		}
 	    } /*Initial opcode not yet attempted */
@@ -758,27 +886,48 @@ cmd_Dispatch(int argc, char **argv)
 			    "Unrecognized operation '%s'; type '%shelp' for list\n",
 			    argv[1], NName(pname, " "));
 		}
-		return CMD_UNKNOWNCMD;
+		code = CMD_UNKNOWNCMD;
+		goto out;
 	    }
 	}			/*Argv[1] is not a valid opcode */
     }				/*Opcodes are defined */
 
-    /* Found the descriptor; start parsing.  curType is the type we're trying to parse */
+    /* Found the descriptor; start parsing.  curType is the type we're
+     * trying to parse */
     curType = 0;
 
     /* We start off parsing in "positional" mode, where tokens are put in
      * slots positionally.  If we find a name that takes args, we go
      * out of positional mode, and from that point on, expect a switch
      * before any particular token. */
-    positional = 1;		/* Are we still in the positional region of the cmd line? */
+
+    positional = enablePositional;	/* Accepting positional cmds ? */
     i = noOpcodes ? 1 : 2;
     SetupExpandsFlag(ts);
     for (; i < argc; i++) {
+	if (param) {
+	    free(param);
+	    param = NULL;
+	    embeddedvalue = NULL;
+	}
+
 	/* Only tokens that start with a hyphen and are not followed by a digit
 	 * are considered switches.  This allow negative numbers. */
+
 	if ((argv[i][0] == '-') && !isdigit(argv[i][1])) {
+	    int j;
+
 	    /* Find switch */
-	    j = FindType(ts, argv[i]);
+	    if (strrchr(argv[i], '=') != NULL) {
+		param = strdup(argv[i]);
+		embeddedvalue = strrchr(param, '=');
+		*embeddedvalue = '\0';
+		embeddedvalue ++;
+	        j = FindType(ts, param);
+	    } else {
+	        j = FindType(ts, argv[i]);
+	    }
+
 	    if (j < 0) {
 		fprintf(stderr,
 			"%sUnrecognized or ambiguous switch '%s'; type ",
@@ -789,28 +938,39 @@ cmd_Dispatch(int argc, char **argv)
 		else
 		    fprintf(stderr, "'%shelp %s' for detailed help\n",
 			    NName(argv[0], " "), ts->name);
-		ResetSyntax(ts);
-		return (CMD_UNKNOWNSWITCH);
+		code = CMD_UNKNOWNSWITCH;
+		goto out;
 	    }
 	    if (j >= CMD_MAXPARMS) {
 		fprintf(stderr, "%sInternal parsing error\n",
 			NName(pname, ": "));
-		ResetSyntax(ts);
-		return (CMD_INTERNALERROR);
+		code = CMD_INTERNALERROR;
+		goto out;
 	    }
 	    if (ts->parms[j].type == CMD_FLAG) {
 		ts->parms[j].items = &dummy;
+
+		if (embeddedvalue) {
+		    fprintf(stderr, "%sSwitch '%s' doesn't take an argument\n",
+			    NName(pname, ": "), ts->parms[j].name);
+		    code = CMD_TOOMANY;
+		    goto out;
+		}
 	    } else {
 		positional = 0;
 		curType = j;
 		ts->parms[j].flags |= CMD_PROCESSED;
+
+		if (embeddedvalue) {
+		    AddItem(&ts->parms[curType], embeddedvalue, pname);
+		}
 	    }
 	} else {
 	    /* Try to fit in this descr */
 	    if (curType >= CMD_MAXPARMS) {
 		fprintf(stderr, "%sToo many arguments\n", NName(pname, ": "));
-		ResetSyntax(ts);
-		return (CMD_TOOMANY);
+		code = CMD_TOOMANY;
+		goto out;
 	    }
 	    tparm = &ts->parms[curType];
 
@@ -828,17 +988,19 @@ cmd_Dispatch(int argc, char **argv)
 		continue;
 	    }
 
-	    if (tparm->type == CMD_SINGLE) {
+	    if (tparm->type == CMD_SINGLE ||
+	        tparm->type == CMD_SINGLE_OR_FLAG) {
 		if (tparm->items) {
 		    fprintf(stderr, "%sToo many values after switch %s\n",
-			    NName(pname, ": "), tparm->name);
-		    ResetSyntax(ts);
-		    return (CMD_NOTLIST);
+		            NName(pname, ": "), tparm->name);
+		    code = CMD_NOTLIST;
+		    goto out;
 		}
-		AddItem(tparm, argv[i]);	/* Add to end of list */
+		AddItem(tparm, argv[i], pname);        /* Add to end of list */
 	    } else if (tparm->type == CMD_LIST) {
-		AddItem(tparm, argv[i]);	/* Add to end of list */
+		AddItem(tparm, argv[i], pname);        /* Add to end of list */
 	    }
+
 	    /* Now, if we're in positional mode, advance to the next item */
 	    if (positional)
 		curType = AdvanceType(ts, curType);
@@ -848,16 +1010,16 @@ cmd_Dispatch(int argc, char **argv)
     /* keep track of this for messages */
     ts->a0name = argv[0];
 
-    /* If we make it here, all the parameters are filled in.  Check to see if this
-     * is a -help version.  Must do this before checking for all required parms,
-     * otherwise it is a real nuisance */
+    /* If we make it here, all the parameters are filled in.  Check to see if
+     * this is a -help version.  Must do this before checking for all
+     * required parms, otherwise it is a real nuisance */
     if (ts->parms[CMD_HELPPARM].items) {
 	PrintSyntax(ts);
 	/* Display full help syntax if we don't have subcommands */
 	if (noOpcodes)
 	    PrintFlagHelp(ts);
-	ResetSyntax(ts);
-	return 0;
+	code = CMD_HELP;
+	goto out;
     }
 
     /* Parsing done, see if we have all of our required parameters */
@@ -866,46 +1028,79 @@ cmd_Dispatch(int argc, char **argv)
 	if (tparm->type == 0)
 	    continue;		/* Skipped parm slot */
 	if ((tparm->flags & CMD_PROCESSED) && tparm->items == 0) {
-	    fprintf(stderr, "%s The field '%s' isn't completed properly\n",
+	    if (tparm->type == CMD_SINGLE_OR_FLAG) {
+		tparm->items = &dummy;
+	    } else {
+	        fprintf(stderr, "%s The field '%s' isn't completed properly\n",
 		    NName(pname, ": "), tparm->name);
-	    ResetSyntax(ts);
-	    tparm->flags &= ~CMD_PROCESSED;
-	    return (CMD_TOOFEW);
+	        code = CMD_TOOFEW;
+	        goto out;
+	    }
 	}
 	if (!(tparm->flags & CMD_OPTIONAL) && tparm->items == 0) {
 	    fprintf(stderr, "%sMissing required parameter '%s'\n",
 		    NName(pname, ": "), tparm->name);
-	    ResetSyntax(ts);
-	    tparm->flags &= ~CMD_PROCESSED;
-	    return (CMD_TOOFEW);
+	    code = CMD_TOOFEW;
+	    goto out;
 	}
 	tparm->flags &= ~CMD_PROCESSED;
+    }
+    *outsyntax = ts;
+
+out:
+    if (code && ts != NULL)
+	ResetSyntax(ts);
+
+    return code;
+}
+
+int
+cmd_Dispatch(int argc, char **argv)
+{
+    struct cmd_syndesc *ts = NULL;
+    int code;
+
+    code = cmd_Parse(argc, argv, &ts);
+    if (code) {
+	if (code == CMD_HELP) {
+	    code = 0; /* displaying help is not an error */
+	}
+	return code;
     }
 
     /*
      * Before calling the beforeProc and afterProc and all the implications
-     * from those calls, check if the help procedure was called and call it now.
+     * from those calls, check if the help procedure was called and call it
+     * now.
      */
     if ((ts->proc == HelpProc) || (ts->proc == AproposProc)) {
-	i = (*ts->proc) (ts, ts->rock);
-	ResetSyntax(ts);
-	return (i);
+	code = (*ts->proc) (ts, ts->rock);
+	goto out;
     }
 
     /* Now, we just call the procedure and return */
     if (beforeProc)
-	i = (*beforeProc) (ts, beforeRock);
-    else
-	i = 0;
-    if (i) {
-	ResetSyntax(ts);
-	return (i);
-    }
-    i = (*ts->proc) (ts, ts->rock);
+	code = (*beforeProc) (ts, beforeRock);
+
+    if (code)
+	goto out;
+
+    code = (*ts->proc) (ts, ts->rock);
+
     if (afterProc)
 	(*afterProc) (ts, afterRock);
-    ResetSyntax(ts);		/* Reset and free things */
-    return (i);
+out:
+    cmd_FreeOptions(&ts);
+    return code;
+}
+
+void
+cmd_FreeOptions(struct cmd_syndesc **ts)
+{
+    if (*ts != NULL) {
+	ResetSyntax(*ts);
+        *ts = NULL;
+    }
 }
 
 /* free token list returned by parseLine */
@@ -931,9 +1126,10 @@ cmd_FreeArgv(char **argv)
     return 0;
 }
 
-/* copy back the arg list to the argv array, freeing the cmd_tokens as you go; the actual
-    data is still malloc'd, and will be freed when the caller calls cmd_FreeArgv
-    later on */
+/* copy back the arg list to the argv array, freeing the cmd_tokens as you go;
+ * the actual data is still malloc'd, and will be freed when the caller calls
+ * cmd_FreeArgv later on
+ */
 #define INITSTR ""
 static int
 CopyBackArgs(struct cmd_token *alist, char **argv,
@@ -945,9 +1141,8 @@ CopyBackArgs(struct cmd_token *alist, char **argv,
     count = 0;
     if (amaxn <= 1)
 	return CMD_TOOMANY;
-    *argv = (char *)malloc(strlen(INITSTR) + 1);
+    *argv = strdup(INITSTR);
     assert(*argv);
-    strcpy(*argv, INITSTR);
     amaxn--;
     argv++;
     count++;
@@ -962,7 +1157,7 @@ CopyBackArgs(struct cmd_token *alist, char **argv,
 	argv++;
 	count++;
     }
-    *(argv++) = 0;		/* use last slot for terminating null */
+    *argv = NULL;		/* use last slot for terminating null */
     /* don't count terminating null */
     *an = count;
     return 0;
@@ -997,8 +1192,8 @@ cmd_ParseLine(char *aline, char **argv, afs_int32 * an, afs_int32 amaxn)
     int tc;
 
     inToken = 0;		/* not copying token chars at start */
-    first = (struct cmd_token *)0;
-    last = (struct cmd_token *)0;
+    first = NULL;
+    last = NULL;
     inQuote = 0;		/* not in a quoted string */
     while (1) {
 	tc = *aline++;
@@ -1009,12 +1204,11 @@ cmd_ParseLine(char *aline, char **argv, afs_int32 * an, afs_int32 amaxn)
 		    return -1;	/* should never get here */
 		else
 		    *tptr++ = 0;
-		ttok = (struct cmd_token *)malloc(sizeof(struct cmd_token));
+		ttok = malloc(sizeof(struct cmd_token));
 		assert(ttok);
-		ttok->next = (struct cmd_token *)0;
-		ttok->key = (char *)malloc(strlen(tbuffer) + 1);
+		ttok->next = NULL;
+		ttok->key = strdup(tbuffer);
 		assert(ttok->key);
-		strcpy(ttok->key, tbuffer);
 		if (last) {
 		    last->next = ttok;
 		    last = ttok;
@@ -1044,8 +1238,260 @@ cmd_ParseLine(char *aline, char **argv, afs_int32 * an, afs_int32 amaxn)
 	if (tc == 0) {
 	    /* last token flushed 'cause space(0) --> true */
 	    if (last)
-		last->next = (struct cmd_token *)0;
+		last->next = NULL;
 	    return CopyBackArgs(first, argv, an, amaxn);
 	}
     }
+}
+
+/* Read a string in from our configuration file. This checks in
+ * multiple places within this file - firstly in the section
+ * [command_subcommand], then in [command], then in [subcommand]
+ *
+ * Returns CMD_MISSING if there is no configuration file configured,
+ * or if the file doesn't contain information for the specified option
+ * in any of these sections.
+ */
+
+static int
+_get_file_string(struct cmd_syndesc *syn, int pos, const char **str)
+{
+    char *section;
+    char *optionName;
+
+    /* Nothing on the command line, try the config file if we have one */
+    if (globalConfig == NULL)
+	return CMD_MISSING;
+
+    /* March past any leading -'s */
+    for (optionName = syn->parms[pos].name;
+	 *optionName == '-'; optionName++);
+
+    /* First, try the command_subcommand form */
+    if (syn->name != NULL && commandName != NULL) {
+	if (asprintf(&section, "%s_%s", commandName, syn->name) < 0)
+	    return ENOMEM;
+	*str = cmd_RawConfigGetString(globalConfig, NULL, section,
+				      optionName, NULL);
+	free(section);
+	if (*str)
+	    return 0;
+    }
+
+    /* Then, try the command form */
+    if (commandName != NULL) {
+	*str = cmd_RawConfigGetString(globalConfig, NULL, commandName,
+				      optionName, NULL);
+	if (*str)
+	    return 0;
+    }
+
+    /* Then, the defaults section */
+    *str = cmd_RawConfigGetString(globalConfig, NULL, "defaults",
+				  optionName, NULL);
+    if (*str)
+	return 0;
+
+    /* Nothing there, return MISSING */
+    return CMD_MISSING;
+}
+
+static int
+_get_config_string(struct cmd_syndesc *syn, int pos, const char **str)
+{
+    *str = NULL;
+
+    if (pos > syn->nParms)
+	return CMD_EXCESSPARMS;
+
+    /* It's a flag, they probably shouldn't be using this interface to access
+     * it, but don't blow up for now */
+    if (syn->parms[pos].items == &dummy)
+        return 0;
+
+    /* We have a value on the command line - this overrides anything in the
+     * configuration file */
+    if (syn->parms[pos].items != NULL &&
+	syn->parms[pos].items->data != NULL) {
+	*str = syn->parms[pos].items->data;
+	return 0;
+    }
+
+    return _get_file_string(syn, pos, str);
+}
+
+int
+cmd_OptionAsInt(struct cmd_syndesc *syn, int pos, int *value)
+{
+    const char *str;
+    int code;
+
+    code =_get_config_string(syn, pos, &str);
+    if (code)
+	return code;
+
+    if (str == NULL)
+	return CMD_MISSING;
+
+    *value = strtol(str, NULL, 10);
+
+    return 0;
+}
+
+int
+cmd_OptionAsUint(struct cmd_syndesc *syn, int pos,
+		 unsigned int *value)
+{
+    const char *str;
+    int code;
+
+    code = _get_config_string(syn, pos, &str);
+    if (code)
+	return code;
+
+    if (str == NULL)
+	return CMD_MISSING;
+
+    *value = strtoul(str, NULL, 10);
+
+    return 0;
+}
+
+int
+cmd_OptionAsString(struct cmd_syndesc *syn, int pos, char **value)
+{
+    const char *str;
+    int code;
+
+    code = _get_config_string(syn, pos, &str);
+    if (code)
+	return code;
+
+    if (str == NULL)
+	return CMD_MISSING;
+
+    if (*value)
+	free(*value);
+    *value = strdup(str);
+
+    return 0;
+}
+
+int
+cmd_OptionAsList(struct cmd_syndesc *syn, int pos, struct cmd_item **value)
+{
+    const char *str;
+    struct cmd_item *item, **last;
+    const char *start, *end;
+    size_t len;
+    int code;
+
+    if (pos > syn->nParms)
+	return CMD_EXCESSPARMS;
+
+    /* If we have a list already, just return the existing list */
+    if (syn->parms[pos].items != NULL) {
+	*value = syn->parms[pos].items;
+	return 0;
+    }
+
+    code = _get_file_string(syn, pos, &str);
+    if (code)
+	return code;
+
+    /* Use strchr to split str into elements, and build a recursive list
+     * from them. Hang this list off the configuration structure, so that
+     * it is returned by any future calls to this function, and is freed
+     * along with everything else when the syntax description is freed
+     */
+    last = &syn->parms[pos].items;
+    start = str;
+    while ((end = strchr(start, ' '))) {
+	item = calloc(1, sizeof(struct cmd_item));
+	len = end - start + 1;
+	item->data = malloc(len);
+	strlcpy(item->data, start, len);
+	*last = item;
+	last = &item->next;
+	for (start = end; *start == ' '; start++); /* skip any whitespace */
+    }
+
+    /* Catch the final element */
+    if (*start != '\0') {
+	item = calloc(1, sizeof(struct cmd_item));
+	len = strlen(start) + 1;
+	item->data = malloc(len);
+	strlcpy(item->data, start, len);
+	*last = item;
+    }
+
+    *value = syn->parms[pos].items;
+
+    return 0;
+}
+
+int
+cmd_OptionAsFlag(struct cmd_syndesc *syn, int pos, int *value)
+{
+    const char *str = NULL;
+    int code;
+
+    code = _get_config_string(syn, pos, &str);
+    if (code)
+	return code;
+
+    if (str == NULL ||
+	strcasecmp(str, "yes") == 0 ||
+	strcasecmp(str, "true") == 0 ||
+	atoi(str))
+	*value = 1;
+    else
+	*value = 0;
+
+    return 0;
+}
+
+int
+cmd_OptionPresent(struct cmd_syndesc *syn, int pos)
+{
+    const char *str;
+    int code;
+
+    code = _get_config_string(syn, pos, &str);
+    if (code == 0)
+	return 1;
+
+    return 0;
+}
+
+int
+cmd_OpenConfigFile(const char *file)
+{
+    if (globalConfig) {
+	cmd_RawConfigFileFree(globalConfig);
+	globalConfig = NULL;
+    }
+
+    return cmd_RawConfigParseFile(file, &globalConfig);
+}
+
+void
+cmd_SetCommandName(const char *command)
+{
+    commandName = command;
+}
+
+const cmd_config_section *
+cmd_RawFile(void)
+{
+    return globalConfig;
+}
+
+const cmd_config_section *
+cmd_RawSection(void)
+{
+    if (globalConfig == NULL || commandName == NULL)
+	return NULL;
+
+    return cmd_RawConfigGetList(globalConfig, commandName, NULL);
 }

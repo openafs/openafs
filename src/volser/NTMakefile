@@ -43,7 +43,7 @@ LIBOBJS =\
 	$(OUT)\volint.xdr.obj \
 	$(OUT)\vsprocs.obj \
 	$(OUT)\vsutils.obj \
-	$(OUT)\AFS_component_version_number.obj 
+	$(OUT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -66,14 +66,17 @@ EXEC_LIBS = \
 	$(DESTDIR)\lib\afs\afsusd.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afsrxstat.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\afs\afsacl.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
-        $(DESTDIR)\lib\afs\afspioctl.lib
+        $(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\opr.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
 
 ############################################################################
@@ -94,16 +97,15 @@ VOLSERVER_EXEOBJS = \
 	$(OUT)\voltrans.obj \
 	$(OUT)\vol_split.obj \
 	$(OUT)\volserver.res
-	
 
 VOLSERVER_EXELIBS = \
 	$(DESTDIR)\lib\afs\afsdir.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib
 
-$(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS) $(EXEC_LIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
+$(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS) $(EXEC_LIBS) $(HEIMDEPS)
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib $(HEIMLINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -128,10 +130,10 @@ VOS_EXELIBS = \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib
 
-$(RS_VOS_EXEFILE): $(VOS_EXEOBJS) $(VOS_EXELIBS) $(EXEC_LIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
+$(RS_VOS_EXEFILE): $(VOS_EXEOBJS) $(VOS_EXELIBS) $(EXEC_LIBS) $(HEIMDEPS)
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib $(HEIMLINKOPTS)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -187,4 +189,4 @@ clean::
 	$(DEL) volint.cs.c volint.h volint.ss.c volint.xdr.c volser.h
 
 mkdir:
-	
+

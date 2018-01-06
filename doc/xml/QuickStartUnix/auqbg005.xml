@@ -2,6 +2,7 @@
 <chapter id="HDRWQ17">
   <title>Installing the First AFS Machine</title>
 
+  <para>
   <indexterm>
     <primary>file server machine</primary>
 
@@ -22,7 +23,7 @@
     <secondary>first AFS machine</secondary>
   </indexterm>
 
-  <para>This chapter describes how to install the first AFS machine in your cell, configuring it as both a file server machine and a
+  This chapter describes how to install the first AFS machine in your cell, configuring it as both a file server machine and a
   client machine. After completing all procedures in this chapter, you can remove the client functionality if you wish, as described
   in <link linkend="HDRWQ98">Removing Client Functionality</link>.</para>
 
@@ -58,7 +59,7 @@
 
         <listitem>
           <para>You have a Kerberos v5 realm running for your site. If you are
-          working with an existing cell which uses 
+          working with an existing cell which uses legacy
           <emphasis role="bold">kaserver</emphasis> or Kerberos v4 for
           authentication, please see 
           <link linkend="KAS001">kaserver and Legacy Kerberos v4 Authentication</link>
@@ -66,11 +67,8 @@
         </listitem>
 
         <listitem>
-          <para>You have a NTP, or similar, time service deployed to ensure 
-          rough clock syncronistation between your clients and servers. If you
-          wish to use AFS's built in timeservice (which is deprecated) please
-          see Appendix B for the necessary modifications to this installation
-          procedure.</para>
+          <para>You have NTP or a similar time service deployed to ensure
+          rough clock syncronistation between your clients and servers.</para>
         </listitem>
       </itemizedlist></para>
 
@@ -174,7 +172,8 @@
         </listitem>
 
         <listitem>
-          <para>On some system types, install and configure an AFS-modified version of the <emphasis role="bold">fsck</emphasis>
+          <para>On some system types (very rare), install and configure
+          an AFS-modified version of the <emphasis role="bold">fsck</emphasis>
           program</para>
         </listitem>
 
@@ -214,12 +213,12 @@
   <sect1 id="HDRWQ19">
     <title>Choosing the First AFS Machine</title>
 
-    <para>The first AFS machine you install must have sufficient disk space to store AFS volumes. To take best advantage of AFS's
-    capabilities, store client-side binaries as well as user files in volumes. When you later install additional file server
+    <para>The first AFS machine you install must have sufficient disk space to store AFS volumes.
+    When you later install additional file server
     machines in your cell, you can distribute these volumes among the different machines as you see fit.</para>
 
-    <para>These instructions configure the first AFS machine as a <emphasis>database server machine</emphasis>, the <emphasis>binary
-    distribution machine</emphasis> for its system type, and the cell's <emphasis>system control machine</emphasis>. For a
+    <para>These instructions configure the first AFS machine as a <emphasis>database server machine</emphasis>, and optionally as the <emphasis>binary
+    distribution machine</emphasis> for its system type and the cell's <emphasis>system control machine</emphasis>. For a
     description of these roles, see the <emphasis>OpenAFS Administration Guide</emphasis>.</para>
 
     <para>Installation of additional machines is simplest if the first machine has the lowest IP address of any database server
@@ -283,7 +282,10 @@
     packages for client and server functionality, and a seperate package 
     containing a suitable kernel module for your running kernel. Consult 
     the package lists on the OpenAFS website to determine the packages 
-    appropriate for your system.</para>
+    appropriate for your system.  The preparer of such packages may
+    have included some helper scripts to partially automate the
+    creation of a new cell; such scripts can supersede much of the
+    procedures described in the rest of this document.</para>
 
     <para>If you are installing from a tarfile, or from a locally compiled 
     source tree you should create the <emphasis role="bold">/usr/afs</emphasis>
@@ -329,7 +331,10 @@
           the AFS fileservers, must incorporate AFS extensions. On machines 
           that use a dynamic kernel module loader, it is conventional to 
           alter the machine's initialization script to load the AFS extensions
-          at each reboot. <indexterm>
+          at each reboot.  The preparer of OS-format binary packages
+          may have included an init script which automates the loading
+          of the needed kernel module, eliminating a need to manually
+          configure this step. <indexterm>
               <primary>AFS server partition</primary>
 
               <secondary>mounted on /vicep directory</secondary>
@@ -363,7 +368,7 @@
         <listitem>
           <para>Configure server partitions or logical volumes to house AFS volumes.</para>
 
-          <para>Every AFS file server machine must have at least one partition or logical volume dedicated to storing AFS volumes
+          <para>Every AFS file server machine should have at least one partition or logical volume dedicated to storing AFS volumes
           (for convenience, the documentation hereafter refers to partitions only). Each server partition is mounted at a directory
           named <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>, where <replaceable>xx</replaceable> is one or
           two lowercase letters. By convention, the first 26 partitions are mounted on the directories called <emphasis
@@ -379,7 +384,8 @@
           The <emphasis role="bold">fileserver</emphasis> will refuse to
           mount
           any <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>
-          folders that are not separate partitions. </para>
+          folders that are not separate partitions without additional
+          configuration. </para>
 
           <warning>
             <para>The separate partition requirement may be overridden by
@@ -408,7 +414,7 @@
         </listitem>
 
         <listitem>
-          <para>On system types using the <emphasis role="bold">inode</emphasis> storage format, install and configure a modified <emphasis role="bold">fsck</emphasis> program which
+          <para>On (rare) system types using the <emphasis role="bold">inode</emphasis> storage format, install and configure a modified <emphasis role="bold">fsck</emphasis> program which
           recognizes the structures that the File Server uses to organize volume data on AFS server partitions. The <emphasis
           role="bold">fsck</emphasis> program provided with the operating system does not understand the AFS data structures, and so
           removes them to the <emphasis role="bold">lost+found</emphasis> directory.</para>
@@ -426,18 +432,6 @@
 
     <para>To continue, proceed to the appropriate section: <itemizedlist>
         <listitem>
-          <para><link linkend="HDRWQ21">Getting Started on AIX Systems</link></para>
-        </listitem>
-
-        <listitem>
-          <para><link linkend="HDRWQ31">Getting Started on HP-UX Systems</link></para>
-        </listitem>
-
-        <listitem>
-          <para><link linkend="HDRWQ36">Getting Started on IRIX Systems</link></para>
-        </listitem>
-
-        <listitem>
           <para><link linkend="HDRWQ41">Getting Started on Linux Systems</link></para>
         </listitem>
 
@@ -445,1221 +439,6 @@
           <para><link linkend="HDRWQ45">Getting Started on Solaris Systems</link></para>
         </listitem>
       </itemizedlist></para>
-  </sect1>
-
-  <sect1 id="HDRWQ21">
-    <title>Getting Started on AIX Systems</title>
-
-    <para>Begin by running the AFS initialization script to call the AIX kernel extension facility, which dynamically loads AFS
-    modifications into the kernel. Then use the <emphasis role="bold">SMIT</emphasis> program to configure partitions for storing
-    AFS volumes, and replace the AIX <emphasis role="bold">fsck</emphasis> program helper with a version that correctly handles AFS
-    volumes. If the machine is to remain an AFS client machine, incorporate AFS into the AIX secondary authentication system.
-    <indexterm>
-        <primary>incorporating AFS kernel extensions</primary>
-
-        <secondary>first AFS machine</secondary>
-
-        <tertiary>AIX</tertiary>
-      </indexterm> <indexterm>
-        <primary>AFS kernel extensions</primary>
-
-        <secondary>on first AFS machine</secondary>
-
-        <tertiary>AIX</tertiary>
-      </indexterm> <indexterm>
-        <primary>first AFS machine</primary>
-
-        <secondary>AFS kernel extensions</secondary>
-
-        <tertiary>on AIX</tertiary>
-      </indexterm> <indexterm>
-        <primary>AIX</primary>
-
-        <secondary>AFS kernel extensions</secondary>
-
-        <tertiary>on first AFS machine</tertiary>
-      </indexterm></para>
-
-    <sect2 id="HDRWQ22">
-      <title>Loading AFS into the AIX Kernel</title>
-
-      <para>The AIX kernel extension facility is the dynamic kernel loader
-      provided by IBM Corporation.  AIX does not support incorporation of
-      AFS modifications during a kernel build.</para>
-
-      <para>For AFS to function correctly, the kernel extension facility must run each time the machine reboots, so the AFS
-      initialization script (included in the AFS distribution) invokes it automatically. In this section you copy the script to the
-      conventional location and edit it to select the appropriate options depending on whether NFS is also to run.</para>
-
-      <para>After editing the script, you run it to incorporate AFS into the kernel. In later sections you verify that the script
-      correctly initializes all AFS components, then configure the AIX <emphasis role="bold">inittab</emphasis> file so that the
-      script runs automatically at reboot. <orderedlist>
-          <listitem>
-            <para>Unpack the distribution tarball. The examples below assume 
-            that you have unpacked the files into the 
-            <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you 
-            pick a different location, substitute this in all of the following 
-            examples. Once you have unpacked the distribution, 
-            change directory as indicated.
-<programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/rs_aix42/dest/root.client/usr/vice/etc</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Copy the AFS kernel library files to the local <emphasis role="bold">/usr/vice/etc/dkload</emphasis> directory,
-            and the AFS initialization script to the <emphasis role="bold">/etc</emphasis> directory. <programlisting>
-   # <emphasis role="bold">cp -rp  dkload  /usr/vice/etc</emphasis>
-   # <emphasis role="bold">cp -p  rc.afs  /etc/rc.afs</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Edit the <emphasis role="bold">/etc/rc.afs</emphasis> script, setting the <computeroutput>NFS</computeroutput>
-            variable as indicated.</para>
-
-            <para>If the machine is not to function as an NFS/AFS Translator, set the <computeroutput>NFS</computeroutput> variable
-            as follows.</para>
-
-            <programlisting>
-   NFS=$NFS_NONE
-</programlisting>
-
-            <para>If the machine is to function as an NFS/AFS Translator and is running AIX 4.2.1 or higher, set the
-            <computeroutput>NFS</computeroutput> variable as follows. Note that NFS must already be loaded into the kernel, which
-            happens automatically on systems running AIX 4.1.1 and later, as long as the file <emphasis
-            role="bold">/etc/exports</emphasis> exists.</para>
-
-            <programlisting>
-   NFS=$NFS_IAUTH
-</programlisting>
-          </listitem>
-
-          <listitem>
-            <para>Invoke the <emphasis role="bold">/etc/rc.afs</emphasis> script to load AFS modifications into the kernel. You can
-            ignore any error messages about the inability to start the BOS Server or the Cache Manager or AFS client.
-            <programlisting>
-   # <emphasis role="bold">/etc/rc.afs</emphasis>
-</programlisting></para>
-          </listitem>
-        </orderedlist></para>
-
-      <indexterm>
-        <primary>configuring</primary>
-
-        <secondary>AFS server partition on first AFS machine</secondary>
-
-        <tertiary>AIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>AFS server partition</primary>
-
-        <secondary>configuring on first AFS machine</secondary>
-
-        <tertiary>AIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>first AFS machine</primary>
-
-        <secondary>AFS server partition</secondary>
-
-        <tertiary>on AIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>AIX</primary>
-
-        <secondary>AFS server partition</secondary>
-
-        <tertiary>on first AFS machine</tertiary>
-      </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ23">
-      <title>Configuring Server Partitions on AIX Systems</title>
-
-      <para>Every AFS file server machine must have at least one partition or logical volume dedicated to storing AFS volumes. Each
-      server partition is mounted at a directory named <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>, where
-      <replaceable>xx</replaceable> is one or two lowercase letters. The <emphasis
-      role="bold">/vicep</emphasis><replaceable>xx</replaceable> directories must reside in the file server machine's root
-      directory, not in one of its subdirectories (for example, <emphasis role="bold">/usr/vicepa</emphasis> is not an acceptable
-      directory location). For additional information, see <link linkend="HDRWQ20">Performing Platform-Specific
-      Procedures</link>.</para>
-
-      <para>To configure server partitions on an AIX system, perform the following procedures: <orderedlist>
-          <listitem>
-            <para>Create a directory called <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable> for each AFS server
-            partition you are configuring (there must be at least one). Repeat the command for each partition. <programlisting>
-   # <emphasis role="bold">mkdir /vicep</emphasis><replaceable>xx</replaceable>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Use the <emphasis role="bold">SMIT</emphasis> program to create a journaling file system on each partition to be
-            configured as an AFS server partition.</para>
-          </listitem>
-
-          <listitem>
-            <para>Mount each partition at one of the <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>
-            directories. Choose one of the following three methods: <itemizedlist>
-                <listitem>
-                  <para>Use the <emphasis role="bold">SMIT</emphasis> program</para>
-                </listitem>
-
-                <listitem>
-                  <para>Use the <emphasis role="bold">mount -a</emphasis> command to mount all partitions at once</para>
-                </listitem>
-
-                <listitem>
-                  <para>Use the <emphasis role="bold">mount</emphasis> command on each partition in turn</para>
-                </listitem>
-              </itemizedlist></para>
-
-            <para>Also configure the partitions so that they are mounted automatically at each reboot. For more information, refer
-            to the AIX documentation.</para>
-          </listitem>
-        </orderedlist></para>
-
-      <indexterm>
-        <primary>replacing fsck program</primary>
-
-        <secondary>first AFS machine</secondary>
-
-        <tertiary>AIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>fsck program</primary>
-
-        <secondary>on first AFS machine</secondary>
-
-        <tertiary>AIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>first AFS machine</primary>
-
-        <secondary>fsck program</secondary>
-
-        <tertiary>on AIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>AIX</primary>
-
-        <secondary>fsck program</secondary>
-
-        <tertiary>on first AFS machine</tertiary>
-      </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ24">
-      <title>Replacing the fsck Program Helper on AIX Systems</title>
-
-      <note><para>The AFS modified fsck program is not required on AIX 5.1 
-      systems, and the <emphasis role="bold">v3fshelper</emphasis> program
-      refered to below is not shipped for these systems.</para></note>
-      
-      <para>In this section, you make modifications to guarantee that the appropriate <emphasis role="bold">fsck</emphasis> program
-      runs on AFS server partitions. The <emphasis role="bold">fsck</emphasis> program provided with the operating system must never
-      run on AFS server partitions. Because it does not recognize the structures that the File Server uses to organize volume data,
-      it removes all of the data. To repeat:</para>
-
-      <para><emphasis role="bold">Never run the standard fsck program on AFS server partitions. It discards AFS
-      volumes.</emphasis></para>
-
-      <para>On AIX systems, you do not replace the <emphasis role="bold">fsck</emphasis> binary itself, but rather the
-      <emphasis>program helper</emphasis> file included in the AIX distribution as <emphasis
-      role="bold">/sbin/helpers/v3fshelper</emphasis>. <orderedlist>
-          <listitem>
-            <para>Move the AIX <emphasis role="bold">fsck</emphasis> program helper to a safe location and install the version from
-            the AFS distribution in its place. 
-<programlisting>
-   # <emphasis role="bold">cd /sbin/helpers</emphasis>
-   # <emphasis role="bold">mv v3fshelper v3fshelper.noafs</emphasis>
-   # <emphasis role="bold">cp -p /tmp/afsdist/rs_aix42/dest/root.server/etc/v3fshelper v3fshelper</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>If you plan to retain client functionality on this machine after completing the installation, proceed to <link
-            linkend="HDRWQ25">Enabling AFS Login on AIX Systems</link>. Otherwise, proceed to <link linkend="HDRWQ50">Starting the
-            BOS Server</link>.</para>
-          </listitem>
-        </orderedlist></para>
-
-      <indexterm>
-        <primary>enabling AFS login</primary>
-
-        <secondary>file server machine</secondary>
-
-        <tertiary>AIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>AFS login</primary>
-
-        <secondary>on file server machine</secondary>
-
-        <tertiary>AIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>first AFS machine</primary>
-
-        <secondary>AFS login</secondary>
-
-        <tertiary>on AIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>AIX</primary>
-
-        <secondary>AFS login</secondary>
-
-        <tertiary>on file server machine</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>secondary authentication system (AIX)</primary>
-
-        <secondary>server machine</secondary>
-      </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ25">
-      <title>Enabling AFS Login on AIX Systems</title>
-
-      <note>
-        <para>If you plan to remove client functionality from this machine after completing the installation, skip this section and
-        proceed to <link linkend="HDRWQ50">Starting the BOS Server</link>.</para>
-      </note>
-
-      <para>In modern AFS installations, you should be using Kerberos v5
-      for user login, and obtaining AFS tokens following this authentication
-      step.</para>
-      
-      <para>There are currently no instructions available on configuring AIX to
-      automatically obtain AFS tokens at login. Following login, users can 
-      obtain tokens by running the <emphasis role="bold">aklog</emphasis> 
-      command</para>
-     
-      <para>Sites which still require <emphasis role="bold">kaserver</emphasis>
-      or external Kerberos v4 authentication should consult 
-      <link linkend="KAS012">Enabling kaserver based AFS login on AIX systems</link>
-      for details of how to enable AIX login.</para>
-      
-      <para>Proceed to <link linkend="HDRWQ50">Starting the BOS Server</link> 
-      (or if referring to these instructions while installing an additional 
-      file server machine, return to <link linkend="HDRWQ108">Starting Server
-      Programs</link>).</para>
-    </sect2>
-  </sect1>
-
-  <sect1 id="HDRWQ31">
-    <title>Getting Started on HP-UX Systems</title>
-
-    <para>Begin by building AFS modifications into a new kernel; HP-UX
-    does not support dynamic loading. Then create partitions for storing
-    AFS volumes, and install and configure the AFS-modified <emphasis
-    role="bold">fsck</emphasis> program to run on AFS server
-    partitions. If the machine is to remain an AFS client machine,
-    incorporate AFS into the machine's Pluggable Authentication Module
-    (PAM) scheme. <indexterm>
-        <primary>incorporating AFS kernel extensions</primary>
-
-        <secondary>first AFS machine</secondary>
-
-        <tertiary>HP-UX</tertiary>
-      </indexterm> <indexterm>
-        <primary>AFS kernel extensions</primary>
-
-        <secondary>on first AFS machine</secondary>
-
-        <tertiary>HP-UX</tertiary>
-      </indexterm> <indexterm>
-        <primary>first AFS machine</primary>
-
-        <secondary>AFS kernel extensions</secondary>
-
-        <tertiary>on HP-UX</tertiary>
-      </indexterm> <indexterm>
-        <primary>HP-UX</primary>
-
-        <secondary>AFS-modified kernel</secondary>
-
-        <tertiary>on first AFS machine</tertiary>
-      </indexterm></para>
-
-    <sect2 id="HDRWQ32">
-      <title>Building AFS into the HP-UX Kernel</title>
-
-      <para>Use the following instructions to build AFS modifications into the kernel on an HP-UX system. <orderedlist>
-          <listitem>
-            <para>Move the existing kernel-related files to a safe location. <programlisting>
-   # <emphasis role="bold">cp /stand/vmunix /stand/vmunix.noafs</emphasis>
-   # <emphasis role="bold">cp /stand/system /stand/system.noafs</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Unpack the OpenAFS HP-UX distribution tarball. The examples 
-            below assume that you have unpacked the files into the 
-            <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you 
-            pick a different location, substitute this in all of the following 
-            examples. Once you have unpacked the distribution, change directory 
-            as indicated.
-            <programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/hp_ux110/dest/root.client</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Copy the AFS initialization file to the local directory for initialization files (by convention, <emphasis
-            role="bold">/sbin/init.d</emphasis> on HP-UX machines). Note the removal of the <emphasis role="bold">.rc</emphasis>
-            extension as you copy the file. <programlisting>
-   # <emphasis role="bold">cp usr/vice/etc/afs.rc  /sbin/init.d/afs</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Copy the file <emphasis role="bold">afs.driver</emphasis> to the local <emphasis
-            role="bold">/usr/conf/master.d</emphasis> directory, changing its name to <emphasis role="bold">afs</emphasis> as you
-            do. <programlisting>
-   # <emphasis role="bold">cp  usr/vice/etc/afs.driver  /usr/conf/master.d/afs</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Copy the AFS kernel module to the local <emphasis role="bold">/usr/conf/lib</emphasis> directory.</para>
-
-            <para>If the machine's kernel supports NFS server functionality:</para>
-
-            <programlisting>
-   # <emphasis role="bold">cp bin/libafs.a /usr/conf/lib</emphasis>   
-</programlisting>
-
-            <para>If the machine's kernel does not support NFS server functionality, change the file's name as you copy it:</para>
-
-            <programlisting>
-   # <emphasis role="bold">cp bin/libafs.nonfs.a /usr/conf/lib/libafs.a</emphasis>
-</programlisting>
-          </listitem>
-
-          <listitem>
-            <para>Incorporate the AFS driver into the kernel, either using the <emphasis role="bold">SAM</emphasis> program or a
-            series of individual commands. <itemizedlist>
-                <listitem>
-                  <para>To use the <emphasis role="bold">SAM</emphasis> program: <orderedlist>
-                      <listitem>
-                        <para>Invoke the <emphasis role="bold">SAM</emphasis> program, specifying the hostname of the local machine
-                        as <replaceable>local_hostname</replaceable>. The <emphasis role="bold">SAM</emphasis> graphical user
-                        interface pops up. <programlisting>
-   # <emphasis role="bold">sam -display</emphasis> <replaceable>local_hostname</replaceable><emphasis role="bold">:0</emphasis> 
-</programlisting></para>
-                      </listitem>
-
-                      <listitem>
-                        <para>Choose the <emphasis role="bold">Kernel Configuration</emphasis> icon, then the <emphasis
-                        role="bold">Drivers</emphasis> icon. From the list of drivers, select <emphasis
-                        role="bold">afs</emphasis>.</para>
-                      </listitem>
-
-                      <listitem>
-                        <para>Open the pull-down <emphasis role="bold">Actions</emphasis> menu and choose the <emphasis
-                        role="bold">Add Driver to Kernel</emphasis> option.</para>
-                      </listitem>
-
-                      <listitem>
-                        <para>Open the <emphasis role="bold">Actions</emphasis> menu again and choose the <emphasis
-                        role="bold">Create a New Kernel</emphasis> option.</para>
-                      </listitem>
-
-                      <listitem>
-                        <para>Confirm your choices by choosing <emphasis role="bold">Yes</emphasis> and <emphasis
-                        role="bold">OK</emphasis> when prompted by subsequent pop-up windows. The <emphasis
-                        role="bold">SAM</emphasis> program builds the kernel and reboots the system.</para>
-                      </listitem>
-
-                      <listitem>
-                        <para>Login again as the superuser <emphasis role="bold">root</emphasis>. <programlisting>
-   login: <emphasis role="bold">root</emphasis>
-   Password: <replaceable>root_password</replaceable>
-</programlisting></para>
-                      </listitem>
-                    </orderedlist></para>
-                </listitem>
-
-                <listitem>
-                  <para>To use individual commands: <orderedlist>
-                      <listitem>
-                        <para>Edit the file <emphasis role="bold">/stand/system</emphasis>, adding an entry for <emphasis
-                        role="bold">afs</emphasis> to the <computeroutput>Subsystems</computeroutput> section.</para>
-                      </listitem>
-
-                      <listitem>
-                        <para>Change to the <emphasis role="bold">/stand/build</emphasis> directory and issue the <emphasis
-                        role="bold">mk_kernel</emphasis> command to build the kernel. <programlisting>
-   # <emphasis role="bold">cd /stand/build</emphasis>
-   # <emphasis role="bold">mk_kernel</emphasis>
-</programlisting></para>
-                      </listitem>
-
-                      <listitem>
-                        <para>Move the new kernel to the standard location (<emphasis role="bold">/stand/vmunix</emphasis>), reboot
-                        the machine to start using it, and login again as the superuser <emphasis role="bold">root</emphasis>.
-                        <programlisting>
-   # <emphasis role="bold">mv /stand/build/vmunix_test /stand/vmunix</emphasis>
-   # <emphasis role="bold">cd /</emphasis>
-   # <emphasis role="bold">shutdown -r now</emphasis>             
-   login: <emphasis role="bold">root</emphasis>
-   Password: <replaceable>root_password</replaceable>
-</programlisting></para>
-                      </listitem>
-                    </orderedlist></para>
-                </listitem>
-              </itemizedlist></para>
-          </listitem>
-        </orderedlist></para>
-
-      <indexterm>
-        <primary>configuring</primary>
-
-        <secondary>AFS server partition on first AFS machine</secondary>
-
-        <tertiary>HP-UX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>AFS server partition</primary>
-
-        <secondary>configuring on first AFS machine</secondary>
-
-        <tertiary>HP-UX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>first AFS machine</primary>
-
-        <secondary>AFS server partition</secondary>
-
-        <tertiary>on HP-UX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>HP-UX</primary>
-
-        <secondary>AFS server partition</secondary>
-
-        <tertiary>on first AFS machine</tertiary>
-      </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ33">
-      <title>Configuring Server Partitions on HP-UX Systems</title>
-
-      <para>Every AFS file server machine must have at least one partition or logical volume dedicated to storing AFS volumes. Each
-      server partition is mounted at a directory named <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>, where
-      <replaceable>xx</replaceable> is one or two lowercase letters. The <emphasis
-      role="bold">/vicep</emphasis><replaceable>xx</replaceable> directories must reside in the file server machine's root
-      directory, not in one of its subdirectories (for example, <emphasis role="bold">/usr/vicepa</emphasis> is not an acceptable
-      directory location). For additional information, see <link linkend="HDRWQ20">Performing Platform-Specific Procedures</link>.
-      <orderedlist>
-          <listitem>
-            <para>Create a directory called <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable> for each AFS server
-            partition you are configuring (there must be at least one). Repeat the command for each partition. <programlisting>
-   # <emphasis role="bold">mkdir /vicep</emphasis><replaceable>xx</replaceable>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Use the <emphasis role="bold">SAM</emphasis> program to create a file system on each partition. For instructions,
-            consult the HP-UX documentation.</para>
-          </listitem>
-
-          <listitem>
-            <para>On some HP-UX systems that use logical volumes, the <emphasis role="bold">SAM</emphasis> program automatically
-            mounts the partitions. If it has not, mount each partition by issuing either the <emphasis role="bold">mount
-            -a</emphasis> command to mount all partitions at once or the <emphasis role="bold">mount</emphasis> command to mount
-            each partition in turn.</para>
-          </listitem>
-        </orderedlist></para>
-
-      <indexterm>
-        <primary>replacing fsck program</primary>
-
-        <secondary>first AFS machine</secondary>
-
-        <tertiary>HP-UX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>fsck program</primary>
-
-        <secondary>on first AFS machine</secondary>
-
-        <tertiary>HP-UX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>first AFS machine</primary>
-
-        <secondary>fsck program</secondary>
-
-        <tertiary>on HP-UX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>HP-UX</primary>
-
-        <secondary>fsck program</secondary>
-
-        <tertiary>on first AFS machine</tertiary>
-      </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ34">
-      <title>Configuring the AFS-modified fsck Program on HP-UX Systems</title>
-
-      <para>In this section, you make modifications to guarantee that the appropriate <emphasis role="bold">fsck</emphasis> program
-      runs on AFS server partitions. The <emphasis role="bold">fsck</emphasis> program provided with the operating system must never
-      run on AFS server partitions. Because it does not recognize the structures that the File Server uses to organize volume data,
-      it removes all of the data. To repeat:</para>
-
-      <para><emphasis role="bold">Never run the standard fsck program on AFS server partitions. It discards AFS
-      volumes.</emphasis></para>
-
-      <para>On HP-UX systems, there are several configuration files to install in addition to the AFS-modified <emphasis
-      role="bold">fsck</emphasis> program (the <emphasis role="bold">vfsck</emphasis> binary). <orderedlist>
-          <listitem>
-            <para>Create the command configuration file <emphasis role="bold">/sbin/lib/mfsconfig.d/afs</emphasis>. Use a text
-            editor to place the indicated two lines in it: <programlisting>
-   format_revision 1
-   fsck            0        m,P,p,d,f,b:c:y,n,Y,N,q,
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Create and change directory to an AFS-specific command directory called <emphasis
-            role="bold">/sbin/fs/afs</emphasis>. <programlisting>
-   # <emphasis role="bold">mkdir /sbin/fs/afs</emphasis>
-   # <emphasis role="bold">cd  /sbin/fs/afs</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Copy the AFS-modified version of the <emphasis role="bold">fsck</emphasis> program (the <emphasis
-            role="bold">vfsck</emphasis> binary) and related files from the distribution directory to the new AFS-specific command
-            directory. <programlisting>
-   # <emphasis role="bold">cp -p /tmp/afsdist/hp_ux110/dest/root.server/etc/*  .</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Change the <emphasis role="bold">vfsck</emphasis> binary's name to <emphasis role="bold">fsck</emphasis> and set
-            the mode bits appropriately on all of the files in the <emphasis role="bold">/sbin/fs/afs</emphasis> directory.
-            <programlisting>
-   # <emphasis role="bold">mv  vfsck  fsck</emphasis>
-   # <emphasis role="bold">chmod  755  *</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Edit the <emphasis role="bold">/etc/fstab</emphasis> file, changing the file system type for each AFS server
-            partition from <computeroutput>hfs</computeroutput> to <computeroutput>afs</computeroutput>. This ensures that the
-            AFS-modified <emphasis role="bold">fsck</emphasis> program runs on the appropriate partitions.</para>
-
-            <para>The sixth line in the following example of an edited file shows an AFS server partition, <emphasis
-            role="bold">/vicepa</emphasis>.</para>
-
-            <programlisting>
-   /dev/vg00/lvol1 / hfs defaults 0 1
-   /dev/vg00/lvol4 /opt hfs defaults 0 2
-   /dev/vg00/lvol5 /tmp hfs defaults 0 2
-   /dev/vg00/lvol6 /usr hfs defaults 0 2
-   /dev/vg00/lvol8 /var hfs defaults 0 2
-   /dev/vg00/lvol9 /vicepa afs defaults 0 2
-   /dev/vg00/lvol7 /usr/vice/cache hfs defaults 0 2
-</programlisting>
-          </listitem>
-
-          <listitem>
-            <para>If you plan to retain client functionality on this machine after completing the installation, proceed to <link
-            linkend="HDRWQ35">Enabling AFS Login on HP-UX Systems</link>. Otherwise, proceed to <link linkend="HDRWQ50">Starting the
-            BOS Server</link>.</para>
-          </listitem>
-        </orderedlist></para>
-
-      <indexterm>
-        <primary>enabling AFS login</primary>
-
-        <secondary>file server machine</secondary>
-
-        <tertiary>HP-UX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>AFS login</primary>
-
-        <secondary>on file server machine</secondary>
-
-        <tertiary>HP-UX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>first AFS machine</primary>
-
-        <secondary>AFS login</secondary>
-
-        <tertiary>on HP-UX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>HP-UX</primary>
-
-        <secondary>AFS login</secondary>
-
-        <tertiary>on file server machine</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>PAM</primary>
-
-        <secondary>on HP-UX</secondary>
-
-        <tertiary>file server machine</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>Pluggable Authentication Module</primary>
-
-        <see>PAM</see>
-      </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ35">
-      <title>Enabling AFS Login on HP-UX Systems</title>
-
-      <note><para>If you plan to remove client functionality from this machine after completing the installation, skip this section and proceed to <link linkend="HDRWQ50">Starting the BOS Server</link>.</para></note>
-
-      <para>At this point you incorporate AFS into the operating system's
-      Pluggable Authentication Module (PAM) scheme. PAM integrates all
-      authentication mechanisms on the machine, including login, to
-      provide the security infrastructure for authenticated access to and
-      from the machine.</para>
-
-      <para>In modern AFS installations, you should be using Kerberos v5
-      for user login, and obtaining AFS tokens subsequent to this
-      authentication step. OpenAFS does not currently distribute a PAM
-      module allowing AFS tokens to be automatically gained at
-      login. Whilst there are a number of third party modules providing
-      this functionality, it is not know if these have been tested with
-      HP/UX.</para>
-      
-      <para>Following login, users can obtain tokens by running the
-      <emphasis role="bold">aklog</emphasis> command</para>
-
-      <para>Sites which still require <emphasis
-      role="bold">kaserver</emphasis> or external Kerberos v4
-      authentication should consult <link linkend="KAS013">Enabling
-      kaserver based AFS login on HP-UX systems</link> for details of how
-      to enable HP-UX login.</para>
-
-      <para>Proceed to <link linkend="HDRWQ50">Starting the BOS
-      Server</link> (or if referring to these instructions while
-      installing an additional file server machine, return to <link
-      linkend="HDRWQ108">Starting Server Programs</link>).</para>
-    </sect2>
-  </sect1>
-
-  <sect1 id="HDRWQ36">
-    <title>Getting Started on IRIX Systems</title>
-
-    <indexterm>
-      <primary>incorporating AFS kernel extensions</primary>
-
-      <secondary>first AFS machine</secondary>
-
-      <tertiary>IRIX</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>AFS kernel extensions</primary>
-
-      <secondary>on first AFS machine</secondary>
-
-      <tertiary>IRIX</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>first AFS machine</primary>
-
-      <secondary>AFS kernel extensions</secondary>
-
-      <tertiary>on IRIX</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>replacing fsck program</primary>
-
-      <secondary>not necessary on IRIX</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>fsck program</primary>
-
-      <secondary>on first AFS machine</secondary>
-
-      <tertiary>IRIX</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>first AFS machine</primary>
-
-      <secondary>fsck program</secondary>
-
-      <tertiary>on IRIX</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>IRIX</primary>
-
-      <secondary>fsck program replacement not necessary</secondary>
-    </indexterm>
-
-    <para>To incorporate AFS into the kernel on IRIX systems, choose one of two methods: <itemizedlist>
-        <listitem>
-          <para>Run the AFS initialization script to invoke the <emphasis role="bold">ml</emphasis> program distributed by Silicon
-          Graphics, Incorporated (SGI), which dynamically loads AFS modifications into the kernel</para>
-        </listitem>
-
-        <listitem>
-          <para>Build a new static kernel</para>
-        </listitem>
-      </itemizedlist></para>
-
-    <para>Then create partitions for storing AFS volumes. You do not need to replace the IRIX <emphasis role="bold">fsck</emphasis>
-    program because SGI has already modified it to handle AFS volumes properly. If the machine is to remain an AFS client machine,
-    verify that the IRIX login utility installed on the machine grants an AFS token.</para>
-
-    <para>In preparation for either dynamic loading or kernel building, perform the following procedures: <orderedlist>
-        <listitem>
-          <para>Unpack the OpenAFS IRIX distribution tarball. The examples
-          below assume that you have unpacked the files into the 
-          <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you
-          pick a different location, substitue this in all of the following
-          examples. Once you have unpacked the distribution, change directory
-          as indicated.
-<programlisting>
-   # <emphasis role="bold">cd  /tmp/afsdist/sgi_65/dest/root.client</emphasis>
-</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para>Copy the AFS initialization script to the local directory for initialization files (by convention, <emphasis
-          role="bold">/etc/init.d</emphasis> on IRIX machines). Note the removal of the <emphasis role="bold">.rc</emphasis>
-          extension as you copy the script. <programlisting>
-   # <emphasis role="bold">cp -p   usr/vice/etc/afs.rc  /etc/init.d/afs</emphasis>
-</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para>Issue the <emphasis role="bold">uname -m</emphasis> command to determine the machine's CPU board type. The <emphasis
-          role="bold">IP</emphasis><replaceable>xx</replaceable> value in the output must match one of the supported CPU board types
-          listed in the <emphasis>OpenAFS Release Notes</emphasis> for the current version of AFS. <programlisting>
-   # <emphasis role="bold">uname -m</emphasis>
-</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para>Proceed to either <link linkend="HDRWQ37">Loading AFS into the IRIX Kernel</link> or <link
-          linkend="HDRWQ38">Building AFS into the IRIX Kernel</link>.</para>
-        </listitem>
-      </orderedlist></para>
-
-    <indexterm>
-      <primary>IRIX</primary>
-
-      <secondary>AFS kernel extensions</secondary>
-
-      <tertiary>on first AFS machine</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>afsml variable (IRIX)</primary>
-
-      <secondary>first AFS machine</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>variables</primary>
-
-      <secondary>afsml (IRIX)</secondary>
-
-      <tertiary>first AFS machine</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>IRIX</primary>
-
-      <secondary>afsml variable</secondary>
-
-      <tertiary>first AFS machine</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>afsxnfs variable (IRIX)</primary>
-
-      <secondary>first AFS machine</secondary>
-    </indexterm>
-
-    <indexterm>
-      <primary>variables</primary>
-
-      <secondary>afsxnfs (IRIX)</secondary>
-
-      <tertiary>first AFS machine</tertiary>
-    </indexterm>
-
-    <indexterm>
-      <primary>IRIX</primary>
-
-      <secondary>afsxnfs variable</secondary>
-
-      <tertiary>first AFS machine</tertiary>
-    </indexterm>
-
-    <sect2 id="HDRWQ37">
-      <title>Loading AFS into the IRIX Kernel</title>
-
-      <para>The <emphasis role="bold">ml</emphasis> program is the dynamic kernel loader provided by SGI for IRIX systems. If you
-      use it rather than building AFS modifications into a static kernel, then for AFS to function correctly the <emphasis
-      role="bold">ml</emphasis> program must run each time the machine reboots. Therefore, the AFS initialization script (included
-      on the AFS CD-ROM) invokes it automatically when the <emphasis role="bold">afsml</emphasis> configuration variable is
-      activated. In this section you activate the variable and run the script.</para>
-
-      <para>In later sections you verify that the script correctly initializes all AFS components, then create the links that
-      incorporate AFS into the IRIX startup and shutdown sequence. <orderedlist>
-          <listitem>
-            <para>Create the local <emphasis role="bold">/usr/vice/etc/sgiload</emphasis> directory to house the AFS kernel library
-            file. <programlisting>
-   # <emphasis role="bold">mkdir /usr/vice/etc/sgiload</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Copy the appropriate AFS kernel library file to the <emphasis role="bold">/usr/vice/etc/sgiload</emphasis>
-            directory. The <emphasis role="bold">IP</emphasis><replaceable>xx</replaceable> portion of the library file name must
-            match the value previously returned by the <emphasis role="bold">uname -m</emphasis> command. Also choose the file
-            appropriate to whether the machine's kernel supports NFS server functionality (NFS must be supported for the machine to
-            act as an NFS/AFS Translator). Single- and multiprocessor machines use the same library file.</para>
-
-            <para>(You can choose to copy all of the kernel library files into the <emphasis
-            role="bold">/usr/vice/etc/sgiload</emphasis> directory, but they require a significant amount of space.)</para>
-
-            <para>If the machine's kernel supports NFS server functionality:</para>
-
-            <programlisting>
-   # <emphasis role="bold">cp -p  usr/vice/etc/sgiload/libafs.IP</emphasis><replaceable>xx</replaceable><emphasis role="bold">.o  /usr/vice/etc/sgiload</emphasis>   
-</programlisting>
-
-            <para>If the machine's kernel does not support NFS server functionality:</para>
-
-            <programlisting>
-   # <emphasis role="bold">cp -p  usr/vice/etc/sgiload/libafs.IP</emphasis><replaceable>xx</replaceable><emphasis role="bold">.nonfs.o</emphasis>   \
-                   <emphasis role="bold">/usr/vice/etc/sgiload</emphasis>
-</programlisting>
-          </listitem>
-
-          <listitem>
-            <para>Issue the <emphasis role="bold">chkconfig</emphasis> command to activate the <emphasis
-            role="bold">afsml</emphasis> configuration variable. <programlisting>
-   # <emphasis role="bold">/etc/chkconfig -f afsml on</emphasis>   
-</programlisting></para>
-
-            <para>If the machine is to function as an NFS/AFS Translator and the kernel supports NFS server functionality, activate
-            the <emphasis role="bold">afsxnfs</emphasis> variable.</para>
-
-            <programlisting>
-   # <emphasis role="bold">/etc/chkconfig -f afsxnfs on</emphasis>
-</programlisting>
-          </listitem>
-
-          <listitem>
-            <para>Run the <emphasis role="bold">/etc/init.d/afs</emphasis> script to load AFS extensions into the kernel. The script
-            invokes the <emphasis role="bold">ml</emphasis> command, automatically determining which kernel library file to use
-            based on this machine's CPU type and the activation state of the <emphasis role="bold">afsxnfs</emphasis>
-            variable.</para>
-
-            <para>You can ignore any error messages about the inability to start the BOS Server or the Cache Manager or AFS
-            client.</para>
-
-            <programlisting>
-   # <emphasis role="bold">/etc/init.d/afs start</emphasis>
-</programlisting>
-          </listitem>
-
-          <listitem>
-            <para>Proceed to <link linkend="HDRWQ39">Configuring Server Partitions on IRIX Systems</link>.</para>
-          </listitem>
-        </orderedlist></para>
-
-      <indexterm>
-        <primary>IRIX</primary>
-
-        <secondary>AFS-modified kernel</secondary>
-
-        <tertiary>on first AFS machine</tertiary>
-      </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ38">
-      <title>Building AFS into the IRIX Kernel</title>
-
-      <para>Use the following instructions to build AFS modifications into the kernel on an IRIX system. <orderedlist>
-          <listitem>
-            <para>Copy the kernel initialization file <emphasis role="bold">afs.sm</emphasis> to the local <emphasis
-            role="bold">/var/sysgen/system</emphasis> directory, and the kernel master file <emphasis role="bold">afs</emphasis> to
-            the local <emphasis role="bold">/var/sysgen/master.d</emphasis> directory. <programlisting>
-   # <emphasis role="bold">cp -p  bin/afs.sm  /var/sysgen/system</emphasis>
-   # <emphasis role="bold">cp -p  bin/afs  /var/sysgen/master.d</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Copy the appropriate AFS kernel library file to the local file <emphasis
-            role="bold">/var/sysgen/boot/afs.a</emphasis>; the <emphasis role="bold">IP</emphasis><replaceable>xx</replaceable>
-            portion of the library file name must match the value previously returned by the <emphasis role="bold">uname
-            -m</emphasis> command. Also choose the file appropriate to whether the machine's kernel supports NFS server
-            functionality (NFS must be supported for the machine to act as an NFS/AFS Translator). Single- and multiprocessor
-            machines use the same library file.</para>
-
-            <para>If the machine's kernel supports NFS server functionality:</para>
-
-            <programlisting>
-   # <emphasis role="bold">cp -p   bin/libafs.IP</emphasis><replaceable>xx</replaceable><emphasis role="bold">.a   /var/sysgen/boot/afs.a</emphasis>   
-</programlisting>
-
-            <para>If the machine's kernel does not support NFS server functionality:</para>
-
-            <programlisting>
-   # <emphasis role="bold">cp -p  bin/libafs.IP</emphasis><replaceable>xx</replaceable><emphasis role="bold">.nonfs.a  /var/sysgen/boot/afs.a</emphasis>
-</programlisting>
-          </listitem>
-
-          <listitem>
-            <para>Issue the <emphasis role="bold">chkconfig</emphasis> command to deactivate the <emphasis
-            role="bold">afsml</emphasis> configuration variable. <programlisting>
-   # <emphasis role="bold">/etc/chkconfig -f afsml off</emphasis>   
-</programlisting></para>
-
-            <para>If the machine is to function as an NFS/AFS Translator and the kernel supports NFS server functionality, activate
-            the <emphasis role="bold">afsxnfs</emphasis> variable.</para>
-
-            <programlisting>
-   # <emphasis role="bold">/etc/chkconfig -f afsxnfs on</emphasis>
-</programlisting>
-          </listitem>
-
-          <listitem>
-            <para>Copy the existing kernel file, <emphasis role="bold">/unix</emphasis>, to a safe location. Compile the new kernel,
-            which is created in the file <emphasis role="bold">/unix.install</emphasis>. It overwrites the existing <emphasis
-            role="bold">/unix</emphasis> file when the machine reboots in the next step. <programlisting>
-   # <emphasis role="bold">cp /unix /unix_noafs</emphasis>
-   # <emphasis role="bold">autoconfig</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Reboot the machine to start using the new kernel, and login again as the superuser <emphasis
-            role="bold">root</emphasis>. <programlisting>
-   # <emphasis role="bold">cd /</emphasis>
-   # <emphasis role="bold">shutdown -i6 -g0 -y</emphasis>
-   login: <emphasis role="bold">root</emphasis>
-   Password: <replaceable>root_password</replaceable>
-</programlisting></para>
-          </listitem>
-        </orderedlist></para>
-
-      <indexterm>
-        <primary>configuring</primary>
-
-        <secondary>AFS server partition on first AFS machine</secondary>
-
-        <tertiary>IRIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>AFS server partition</primary>
-
-        <secondary>configuring on first AFS machine</secondary>
-
-        <tertiary>IRIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>first AFS machine</primary>
-
-        <secondary>AFS server partition</secondary>
-
-        <tertiary>on IRIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>IRIX</primary>
-
-        <secondary>AFS server partition</secondary>
-
-        <tertiary>on first AFS machine</tertiary>
-      </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ39">
-      <title>Configuring Server Partitions on IRIX Systems</title>
-
-      <para>Every AFS file server machine must have at least one partition or logical volume dedicated to storing AFS volumes. Each
-      server partition is mounted at a directory named <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>, where
-      <replaceable>xx</replaceable> is one or two lowercase letters. The <emphasis
-      role="bold">/vicep</emphasis><replaceable>xx</replaceable> directories must reside in the file server machine's root
-      directory, not in one of its subdirectories (for example, <emphasis role="bold">/usr/vicepa</emphasis> is not an acceptable
-      directory location). For additional information, see <link linkend="HDRWQ20">Performing Platform-Specific
-      Procedures</link>.</para>
-
-      <para>AFS supports use of both EFS and XFS partitions for housing AFS volumes. SGI encourages use of XFS partitions.
-      <orderedlist>
-          <listitem>
-            <para>Create a directory called <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable> for each AFS server
-            partition you are configuring (there must be at least one). Repeat the command for each partition. <programlisting>
-   # <emphasis role="bold">mkdir /vicep</emphasis><replaceable>xx</replaceable>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Add a line with the following format to the file systems registry file, <emphasis
-            role="bold">/etc/fstab</emphasis>, for each partition (or logical volume created with the XLV volume manager) to be
-            mounted on one of the directories created in the previous step.</para>
-
-            <para>For an XFS partition or logical volume:</para>
-
-            <programlisting>
-   /dev/dsk/<replaceable>disk</replaceable>  /vicep<replaceable>xx</replaceable>  xfs  rw,raw=/dev/rdsk/<replaceable>disk</replaceable>  0  0   
-</programlisting>
-
-            <para>For an EFS partition:</para>
-
-            <programlisting>
-   /dev/dsk/<replaceable>disk</replaceable>  /vicep<replaceable>xx</replaceable>  efs  rw,raw=/dev/rdsk/<replaceable>disk</replaceable>  0  0   
-</programlisting>
-
-            <para>The following are examples of an entry for each file system type:</para>
-
-            <programlisting>
-   /dev/dsk/dks0d2s6 /vicepa  xfs rw,raw=/dev/rdsk/dks0d2s6  0 0
-   /dev/dsk/dks0d3s1 /vicepb  efs rw,raw=/dev/rdsk/dks0d3s1  0 0
-</programlisting>
-          </listitem>
-
-          <listitem>
-            <para>Create a file system on each partition that is to be mounted on a <emphasis
-            role="bold">/vicep</emphasis><replaceable>xx</replaceable> directory. The following commands are probably appropriate,
-            but consult the IRIX documentation for more information. In both cases, <replaceable>raw_device</replaceable> is a raw
-            device name like <emphasis role="bold">/dev/rdsk/dks0d0s0</emphasis> for a single disk partition or <emphasis
-            role="bold">/dev/rxlv/xlv0</emphasis> for a logical volume.</para>
-
-            <para>For XFS file systems, include the indicated options to configure the partition or logical volume with inodes large
-            enough to accommodate AFS-specific information:</para>
-
-            <programlisting>
-   # <emphasis role="bold">mkfs -t xfs -i size=512 -l size=4000b</emphasis> <replaceable>raw_device</replaceable>   
-</programlisting>
-
-            <para>For EFS file systems:</para>
-
-            <programlisting>
-   # <emphasis role="bold">mkfs -t efs</emphasis> <replaceable>raw_device</replaceable>
-</programlisting>
-          </listitem>
-
-          <listitem>
-            <para>Mount each partition by issuing either the <emphasis role="bold">mount -a</emphasis> command to mount all
-            partitions at once or the <emphasis role="bold">mount</emphasis> command to mount each partition in turn.</para>
-          </listitem>
-
-          <listitem>
-            <para><emphasis role="bold">(Optional)</emphasis> If you have configured partitions or logical volumes to use XFS, issue
-            the following command to verify that the inodes are configured properly (are large enough to accommodate AFS-specific
-            information). If the configuration is correct, the command returns no output. Otherwise, it specifies the command to run
-            in order to configure each partition or logical volume properly. <programlisting>
-   # <emphasis role="bold">/usr/afs/bin/xfs_size_check</emphasis>
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>If you plan to retain client functionality on this machine after completing the installation, proceed to <link
-            linkend="HDRWQ40">Enabling AFS Login on IRIX Systems</link>. Otherwise, proceed to <link linkend="HDRWQ50">Starting the
-            BOS Server</link>.</para>
-          </listitem>
-        </orderedlist></para>
-
-      <indexterm>
-        <primary>enabling AFS login</primary>
-
-        <secondary>file server machine</secondary>
-
-        <tertiary>IRIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>AFS login</primary>
-
-        <secondary>on file server machine</secondary>
-
-        <tertiary>IRIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>first AFS machine</primary>
-
-        <secondary>AFS login</secondary>
-
-        <tertiary>on IRIX</tertiary>
-      </indexterm>
-
-      <indexterm>
-        <primary>IRIX</primary>
-
-        <secondary>AFS login</secondary>
-      </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ40">
-      <title>Enabling AFS Login on IRIX Systems</title>
-
-      <note>
-        <para>If you plan to remove client functionality from this machine after completing the installation, skip this section and
-        proceed to <link linkend="HDRWQ50">Starting the BOS Server</link>.</para>
-      </note>
-
-      <para>Whilst the standard IRIX command-line 
-      <emphasis role="bold">login</emphasis> program and the 
-      graphical <emphasis role="bold">xdm</emphasis> login program both have
-      the ability to grant AFS tokens, this ability relies upon the deprecated
-      kaserver authentication system.</para>
-        
-      <para>Users who have been successfully authenticated via Kerberos 5
-      authentication may obtain AFS tokens following login by running the
-      <emphasis role="bold">aklog</emphasis> command.</para>
-
-      <para>Sites which still require <emphasis role="bold">kaserver</emphasis>
-      or external Kerberos v4 authentication should consult 
-      <link linkend="KAS014">Enabling kaserver based AFS Login on IRIX Systems</link>
-      for details of how to enable IRIX login.</para>       
-
-      <para>After taking any necessary action, proceed to 
-      <link linkend="HDRWQ50">Starting the BOS Server</link>.</para>
-    </sect2>
   </sect1>
 
   <sect1 id="HDRWQ41">
@@ -1747,13 +526,15 @@
       <para>The procedure for starting up OpenAFS depends upon your distribution</para>
       <sect3>
         <title>Fedora and RedHat Enterprise Linux</title>
-        <para>OpenAFS provides RPMS for all current Fedora and RedHat Enterprise Linux (RHEL) releases on the OpenAFS web site and the OpenAFS yum repository.
+        <para>OpenAFS provides RPMS for all current Fedora and
+          RedHat Enterprise Linux (RHEL) releases prior to EL7 on the
+          OpenAFS web site and the OpenAFS yum repository.
         <orderedlist>
           <listitem>
             <para>Browse to
             http://dl.openafs.org/dl/openafs/<replaceable>VERSION</replaceable>,
             where VERSION is the latest stable release of
-            OpenAFS. Download the
+            OpenAFS for Unix. Download the
             openafs-repository-<replaceable>VERSION</replaceable>.noarch.rpm
             file for Fedora systems or the
             openafs-repository-rhel-<replaceable>VERSION</replaceable>.noarch.rpm
@@ -1763,14 +544,14 @@
           <listitem>
             <para>Install the downloaded RPM file using the following command:
               <programlisting>
-                # rpm -U openafs-repository*.rpm
+# rpm -U openafs-repository*.rpm
               </programlisting>
             </para>
           </listitem>
           <listitem>
             <para>Install the RPM set for your operating system using the yum command as follows:
               <programlisting>
-                # yum -y install openafs-client openafs-server openafs-krb5 kmod-openafs
+# yum -y install openafs-client openafs-server openafs-krb5 kmod-openafs
               </programlisting>
 
             </para>
@@ -1782,7 +563,7 @@
             </para>
             <para>To use dynamically-compiled kernel modules instead of statically compiled modules, use the following command instead of the kmod-openafs as shown above:
               <programlisting>
-                # yum install openafs-client openafs-server openafs-krb5 dkms-openafs
+# yum install openafs-client openafs-server openafs-krb5 dkms-openafs
               </programlisting>
             </para>
           </listitem>
@@ -1802,22 +583,44 @@
       </para>
       </sect3>
       <sect3>
-         <title>Systems packaged as tar files</title>
-         <para>If you are running a system where the OpenAFS Binary Distribution
-         is provided as a tar file, or where you have built the system from
-         source yourself, you need to install the relevant components by hand
+        <title>Debian and Ubuntu Linux</title>
+        <para>OpenAFS is available as binary packages from the Debian
+          linux distribution and its derivatives such as Ubuntu.
+        <orderedlist>
+          <listitem>
+            <para>Install the client and server packages using the following command:
+              <programlisting>
+# apt-get install openafs-client openafs-modules-dkms openafs-krb5 \
+  openafs-fileserver openafs-dbserver
+              </programlisting>
+              You will be prompted by debconf to select your cell name and
+              the size of your local cache.
+            </para>
+          </listitem>
+        </orderedlist>
+      </para>
+      <para>The Debian package also includes helper scripts
+        <literal>afs-newcell</literal> and <literal>afs-rootvol</literal>,
+        which can automate much of the remainder of this document.
+      </para>
+      </sect3>
+      <sect3>
+         <title>Systems built from source</title>
+         <para>If you are running a system where
+         you have built the system from
+         source yourself, you need to install the relevant components by hand:
          </para>
          <orderedlist>
            
           <listitem>
             <para>Unpack the distribution tarball. The examples below assume
-            that you have unpacked the files into the
+            that you have extracted and built OpenAFS in the
             <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you
             pick a different location, substitute this in all of the following
-            examples. Once you have unpacked the distribution,
-            change directory as indicated.
+            examples. Once you have compiled the distribution,
+            change to the source directory as indicated.
 <programlisting>
-  # <emphasis role="bold">cd /tmp/afsdist/linux/dest/root.client/usr/vice/etc</emphasis>
+  # <emphasis role="bold">cd /tmp/afsdist</emphasis>
 </programlisting></para>
           </listitem>
           
@@ -1828,7 +631,8 @@
             <replaceable>version</replaceable> indicates the kernel build level. The string <emphasis role="bold">.mp</emphasis> in
             the <replaceable>version</replaceable> indicates that the file is appropriate for machines running a multiprocessor
             kernel. <programlisting>
-   # <emphasis role="bold">cp -rp  modload  /usr/vice/etc</emphasis>
+   # <emphasis role="bold">mkdir -p /usr/vice/etc/modload</emphasis>
+   # <emphasis role="bold">cp -rp src/libafs/*.ko  /usr/vice/etc/modload</emphasis>
 </programlisting></para>
           </listitem>
 
@@ -1836,20 +640,10 @@
             <para>Copy the AFS initialization script to the local directory for initialization files (by convention, <emphasis
             role="bold">/etc/rc.d/init.d</emphasis> on Linux machines). Note the removal of the <emphasis role="bold">.rc</emphasis>
             extension as you copy the script. <programlisting>
-   # <emphasis role="bold">cp -p   afs.rc  /etc/rc.d/init.d/afs</emphasis> 
+   # <emphasis role="bold">cp -p src/afsd/afs.rc.linux /etc/rc.d/init.d/afs</emphasis>
 </programlisting></para>
           </listitem>
 
-<!-- I don't think we need to do this for Linux, and it complicates things if
-     dynroot is enabled ...
-          <listitem>
-            <para>Run the AFS initialization script to load AFS extensions into the kernel. You can ignore any error messages about
-            the inability to start the BOS Server or the Cache Manager or AFS client.</para>
-<programlisting>
-   # <emphasis role="bold">/etc/rc.d/init.d/afs start</emphasis>
-</programlisting>
-          </listitem>
--->
         </orderedlist>
 
       <indexterm>
@@ -2059,7 +853,8 @@ auth  required                pam_unix.so try_first_pass</literallayout>
       details on the available options for the PAM configuration, see the
       Linux PAM documentation.</para>
 
-      <para>Sites which still require <command>kaserver</command> or
+      <para>Sites which still require the deprecated
+      <command>kaserver</command> or
       external Kerberos v4 authentication should consult <link
       linkend="KAS015">Enabling kaserver based AFS Login on Linux
       Systems</link> for details of how to enable AFS login on Linux.</para>
@@ -2532,7 +1327,7 @@ auth  required                pam_unix.so try_first_pass</literallayout>
 
       <para>Sites which still require <emphasis
       role="bold">kaserver</emphasis> or external Kerberos v4 authentication
-      should consult <link linkend="KAS016">Enabling kaserver based AFS
+      should consult <link linkend="KAS016">"Enabling kaserver based AFS
       Login on Solaris Systems"</link> for details of how to enable AFS
       login on Solaris.</para>
 
@@ -2649,26 +1444,31 @@ auth  required                pam_unix.so try_first_pass</literallayout>
       </indexterm>
     </sect2>
   </sect1>
+
   <sect1 id="HDRWQ50">
     <title>Starting the BOS Server</title>
 
     <para>You are now ready to start the AFS server processes on this machine. 
-    If you are not working from a packaged distribution, begin by copying the 
-    AFS server binaries from the distribution to the conventional local disk
+    If you are not working from a packaged distribution, begin by installing the
+    AFS server binaries to the conventional local disk
     location, the <emphasis role="bold">/usr/afs/bin</emphasis> directory. The 
     following instructions also create files in other subdirectories of the 
     <emphasis role="bold">/usr/afs</emphasis> directory.</para>
 
-    <para>Then issue the <emphasis role="bold">bosserver</emphasis> command to initialize the Basic OverSeer (BOS) Server, which
-    monitors and controls other AFS server processes on its server machine. Include the <emphasis role="bold">-noauth</emphasis>
-    flag to disable authorization checking. Because you have not yet configured your cell's AFS authentication and authorization
-    mechanisms, the BOS Server cannot perform authorization checking as it does during normal operation. In no-authorization mode,
-    it does not verify the identity or privilege of the issuer of a <emphasis role="bold">bos</emphasis> command, and so performs
-    any operation for anyone.</para>
-
-    <para>Disabling authorization checking gravely compromises cell security. You must complete all subsequent steps in one
-    uninterrupted pass and must not leave the machine unattended until you restart the BOS Server with authorization checking
-    enabled, in <link linkend="HDRWQ72">Verifying the AFS Initialization Script</link>.</para>
+    <para>Then obtain a krb5 keytab for use by the servers in the cell.
+    Once the keytab is in place, issue the
+    <emphasis role="bold">bosserver</emphasis> command to initialize
+    the Basic OverSeer (BOS) Server, which
+    monitors and controls other AFS server processes on its server machine.
+    Because you have not yet configured your cell's AFS authentication and authorization
+    mechanisms, you must always use the
+    <emphasis role="bold">-localauth</emphasis> flag to commands, to use a
+    printed token that does not correspond to a normal krb5 identity.</para>
+    <para>Older versions of these instructions used the
+    <emphasis role="bold">-noauth</emphasis> flag, which completely disables
+    all authentication and authorization checking, allowing anyone at all
+    to control the system.  Do not use this flag!  It is highly insecure,
+    and is no longer needed.</para>
 
     <para>As it initializes for the first time, the BOS Server creates the following directories and files, setting the owner to the
     local superuser <emphasis role="bold">root</emphasis> and the mode bits to limit the ability to write (and in some cases, read)
@@ -2750,13 +1550,153 @@ auth  required                pam_unix.so try_first_pass</literallayout>
     role="bold">ThisCell</emphasis> files in the <emphasis role="bold">/usr/vice/etc</emphasis> directory because they generally run
     on client machines. On machines that are AFS servers only (as this machine currently is), the files reside only in the <emphasis
     role="bold">/usr/afs/etc</emphasis> directory; the links enable the command interpreters to retrieve the information they need.
-    Later instructions for installing the client functionality replace the links with actual files. <orderedlist>
+    Later instructions for installing the client functionality replace the links with actual files.</para>
+    <sect2>
+      <title>Generating the Cell's Kerberos V5 Keys</title>
+
+      <para>This guide uses krb5 for authentication; do not use the
+        legacy <emphasis role="bold">kaserver</emphasis> for new
+        installations.</para>
+      <para>This section creates only the cell-wide shared secret key;
+        administrative users will be created later in the procedure.
+        This cell-wide key has the principal name
+        <emphasis role="bold">afs/<replaceable>cell</replaceable></emphasis>. 
+        No user logs in under this identity, but it is used to encrypt the
+        server tickets that the KDC grants to AFS clients for presentation
+        to server processes during mutual authentication.  (The
+        chapter in the <emphasis>OpenAFS Administration Guide</emphasis>
+        about cell configuration and administration describes the
+        role of server encryption keys in mutual authentication.)</para>
+      <para>The OpenAFS 1.8.x series stores the cell-wide shared keys in
+        the file <emphasis role="bold">/usr/afs/etc/KeyFileExt</emphasis>,
+        whereas the 1.6.x series uses a krb5 keytab format file in
+        <emphasis role="bold">/usr/afs/etc/rxkad.keytab</emphasis>.
+        These instructions create both files, but populating the
+        <emphasis role="bold">KeyFileExt</emphasis> file will only succeed
+        using the version of <emphasis role="bold">asetkey</emphasis>
+        from OpenAFS 1.8.x.</para>
+      <para>The examples below assume you are using MIT Kerberos. Please refer 
+      to the documentation for your KDC's administrative interface if you are 
+      using a different vendor</para>
+
+      <orderedlist>
+          <listitem>
+            <para>Enter <emphasis role="bold">kadmin</emphasis> interactive mode.
+  <programlisting>
+     # <emphasis role="bold">kadmin</emphasis>
+  Authenticating as principal <replaceable>you</replaceable>/admin@<replaceable>YOUR REALM</replaceable> with password
+  Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_password</replaceable>
+  </programlisting> <indexterm>
+                <primary>server encryption key</primary>
+
+                <secondary>in Kerberos Database</secondary>
+              </indexterm> <indexterm>
+                <primary>creating</primary>
+
+                <secondary>server encryption key</secondary>
+
+                <tertiary>Kerberos Database</tertiary>
+              </indexterm></para>
+          </listitem>
+
+          <listitem>
+            <para>Issue the 
+            <emphasis role="bold">add_principal</emphasis> command to create 
+            a Kerberos Database entry for
+            <emphasis role="bold">afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis>.</para>
+
+            <para>Note that when creating the 
+            <emphasis role="bold">afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis> 
+            entry, the encryption type list does not include any single-DES
+            encryption types.  If such encryption types are included,
+            additional <emphasis role="bold">asetkey</emphasis> commands
+            will be needed to place those keys in the legacy
+            <emphasis role="bold">KeyFile</emphasis> and ensure proper
+            operation of the cell.
+            For more details regarding encryption types, see the documentation 
+            for your Kerberos installation.
+
+  <programlisting>
+     kadmin: <emphasis role="bold">add_principal -randkey -e aes256-cts-hmac-sha1-96:normal,aes128-cts-hmac-sha1-96:normal afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
+     Principal "afs/<replaceable>cell name</replaceable>@<replaceable>REALM</replaceable>" created.
+  </programlisting>
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>Extract the newly created key for
+            <emphasis role="bold">afs/<replaceable>cell</replaceable></emphasis>
+            to a keytab on the local machine.</para>
+
+            <para>The keytab contains the key material that ensures the security of your AFS cell. You should ensure that it is kept in a secure location at all times.</para>
+
+  <programlisting>
+    kadmin: <emphasis role="bold">ktadd -k /usr/afs/etc/rxkad.keytab -e aes256-cts-hmac-sha1-96:normal,aes128-cts-hmac-sha1-96:normal afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis>
+  Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 2, encryption type aes256-cts-hmac-sha1-96 added to keytab WRFILE:/usr/afs/etc/rxkad.keytab
+  Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 2, encryption type aes128-cts-hmac-sha1-96 added to keytab WRFILE:/usr/afs/etc/rxkad.keytab
+  </programlisting>
+            <para>Make a note of the key version number (kvno) given in the
+            response, as you will need it to load the key into
+            the <emphasis role="bold">KeyFileExt</emphasis> in a later
+            step</para>
+
+            <note><para>Note that each time you run 
+            <emphasis role="bold">ktadd</emphasis> a new key is generated
+            for the item being extracted. This means that you cannot run ktadd
+            multiple times and end up with the same key material each time.
+            </para></note>
+
+          </listitem>
+          <listitem>
+            <para>Issue the <emphasis role="bold">quit</emphasis> command to leave <emphasis role="bold">kadmin</emphasis>
+            interactive mode. <programlisting>
+     kadmin: <emphasis role="bold">quit</emphasis>
+  </programlisting></para>
+          </listitem>
+
+          <listitem id="LIWQ58">
+            <para>Issue the 
+            <emphasis role="bold">asetkey</emphasis> command to set the AFS 
+            server encryption key in the 
+            <emphasis role="bold">/usr/afs/etc/KeyFileExt</emphasis> file.
+            This key 
+            is created from the <emphasis role="bold">rxkad.keytab</emphasis> 
+            file created earlier.</para>
+
+            <para>asetkey requires the key version number (or kvno) of the 
+            <emphasis role="bold">afs/</emphasis><replaceable>cell</replaceable>
+            key, as well as the encryption type number of the key.
+            You should have made note of the kvno when creating the key
+            earlier.  The key version number can also be found by running the 
+            <emphasis role="bold">kvno</emphasis> command</para>
+  <programlisting>
+     # <emphasis role="bold">kvno -kt /usr/afs/etc/rxkad.keytab</emphasis>
+  </programlisting>
+            <para>The encryption type numbers can be found in the local krb5
+            headers or the IANA registry.  The most common numbers are
+            18 for <emphasis role="bold">aes256-cts-hmac-sha1-96</emphasis> and
+            17 for <emphasis role="bold">aes128-cts-hmac-sha1-96</emphasis>.
+            </para>
+
+            <para>Once the kvno and enctypes are known, the keys
+            can then be extracted using asetkey</para>
+  <programlisting>
+     # <emphasis role="bold">asetkey add rxkad_krb5</emphasis> &lt;<replaceable>kvno</replaceable>&gt;  <emphasis role="bold">18 /usr/afs/etc/rxkad.keytab afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
+     # <emphasis role="bold">asetkey add rxkad_krb5</emphasis> &lt;<replaceable>kvno</replaceable>&gt;  <emphasis role="bold">17 /usr/afs/etc/rxkad.keytab afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
+  </programlisting>
+          </listitem>
+        </orderedlist>
+    </sect2>
+    <sect2>
+      <title>Starting the Server Processes</title>
+
+      <para>Now that the keys are in place, proceed to start the server
+      processes:
+      <orderedlist>
         <listitem>
-	  <para>If you are not working from a packaged distribution, you may need to copy files from the distribution media to the local <emphasis role="bold">/usr/afs</emphasis> directory. 
-<programlisting>
-   # <emphasis role="bold">cd /tmp/afsdist/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/root.server/usr/afs</emphasis>
-   # <emphasis role="bold">cp -rp  *  /usr/afs</emphasis>
-</programlisting> <indexterm>
+	  <para>If you are building from source, you need to install the
+          compiled files to the local
+          <emphasis role="bold">/usr/afs</emphasis> directory. <indexterm>
               <primary>commands</primary>
 
               <secondary>bosserver</secondary>
@@ -2766,9 +1706,9 @@ auth  required                pam_unix.so try_first_pass</literallayout>
         </listitem>
 
         <listitem>
-          <para>Issue the <emphasis role="bold">bosserver</emphasis> command. Include the <emphasis role="bold">-noauth</emphasis>
-          flag to disable authorization checking. <programlisting>
-   # <emphasis role="bold">/usr/afs/bin/bosserver -noauth &amp;</emphasis>
+          <para>Issue the <emphasis role="bold">bosserver</emphasis> command.
+          <programlisting>
+   # <emphasis role="bold">/usr/afs/bin/bosserver</emphasis>
 </programlisting></para>
         </listitem>
 
@@ -2905,6 +1845,7 @@ auth  required                pam_unix.so try_first_pass</literallayout>
 
       <secondary>first AFS machine as database server</secondary>
     </indexterm>
+    </sect2>
   </sect1>
 
   <sect1 id="HDRWQ51">
@@ -2956,12 +1897,8 @@ auth  required                pam_unix.so try_first_pass</literallayout>
       <listitem>
         <para>Issue the <emphasis role="bold">bos setcellname</emphasis> command to set the cell name. <programlisting>
    # <emphasis role="bold">bos setcellname</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>cell name</replaceable>&gt; <emphasis
-              role="bold">-noauth</emphasis>
-</programlisting></para>
-
-        <para>Because you are not authenticated and authorization checking is disabled, the <emphasis role="bold">bos</emphasis>
-        command interpreter possibly produces error messages about being unable to obtain tickets and running unauthenticated. You
-        can safely ignore the messages. <indexterm>
+              role="bold">-localauth</emphasis>
+</programlisting></para> <indexterm>
             <primary>commands</primary>
 
             <secondary>bos listhosts</secondary>
@@ -2977,13 +1914,13 @@ auth  required                pam_unix.so try_first_pass</literallayout>
             <primary>displaying</primary>
 
             <secondary>CellServDB file (server) entries</secondary>
-          </indexterm></para>
+          </indexterm>
       </listitem>
 
       <listitem>
         <para>Issue the <emphasis role="bold">bos listhosts</emphasis> command to verify that the machine you are installing is now
         registered as the cell's first database server machine. <programlisting>
-   # <emphasis role="bold">bos listhosts</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">bos listhosts</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-localauth</emphasis>
    Cell name is <replaceable>cell_name</replaceable>
        Host 1 is <replaceable>machine_name</replaceable>
 </programlisting></para>
@@ -3147,10 +2084,6 @@ auth  required                pam_unix.so try_first_pass</literallayout>
     server machines only: <itemizedlist>
 
         <listitem>
-          <para>The Backup Server (the <emphasis role="bold">buserver</emphasis> process) maintains the Backup Database</para>
-        </listitem>
-
-        <listitem>
           <para>The Protection Server (the <emphasis role="bold">ptserver</emphasis> process) maintains the Protection
           Database</para>
         </listitem>
@@ -3158,6 +2091,10 @@ auth  required                pam_unix.so try_first_pass</literallayout>
         <listitem>
           <para>The Volume Location (VL) Server (the <emphasis role="bold">vlserver</emphasis> process) maintains the Volume
           Location Database (VLDB)</para>
+        </listitem>
+
+        <listitem>
+          <para>The optional Backup Server (the <emphasis role="bold">buserver</emphasis> process) maintains the Backup Database</para>
         </listitem>
       </itemizedlist></para>
 
@@ -3190,20 +2127,20 @@ auth  required                pam_unix.so try_first_pass</literallayout>
         <secondary>create</secondary>
       </indexterm> <orderedlist>
         <listitem>
-          <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the Backup Server. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">buserver simple /usr/afs/bin/buserver</emphasis>  <emphasis role="bold">-noauth</emphasis>
-</programlisting></para>
-        </listitem>
-
-        <listitem>
           <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the Protection Server. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">ptserver simple /usr/afs/bin/ptserver</emphasis> <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">ptserver simple /usr/afs/bin/ptserver</emphasis> <emphasis role="bold">-localauth</emphasis>
 </programlisting></para>
         </listitem>
 
         <listitem>
           <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the VL Server. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">vlserver simple /usr/afs/bin/vlserver</emphasis> <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">vlserver simple /usr/afs/bin/vlserver</emphasis> <emphasis role="bold">-localauth</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Optionally, issue the <emphasis role="bold">bos create</emphasis> command to start the Backup Server. <programlisting>
+   # <emphasis role="bold">./bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">buserver simple /usr/afs/bin/buserver</emphasis>  <emphasis role="bold">-localauth</emphasis>
 </programlisting></para>
         </listitem>
       </orderedlist></para>
@@ -3292,7 +2229,7 @@ auth  required                pam_unix.so try_first_pass</literallayout>
     <link linkend="HDRWQ53">Initializing Cell Security with kaserver</link>
     for installation instructions which replace this section.</para>
     
-    <para>Now initialize the cell's security mechanisms. Begin by creating the following two entires in your site's Kerberos database: <itemizedlist>
+    <para>Now finish initializing the cell's security mechanisms. Begin by creating the following entry in your site's Kerberos database: <itemizedlist>
         <listitem>
           <para>A generic administrative account, called <emphasis role="bold">admin</emphasis> by convention. If you choose to
           assign a different name, substitute it throughout the remainder of this document.</para>
@@ -3301,24 +2238,6 @@ auth  required                pam_unix.so try_first_pass</literallayout>
           <emphasis role="bold">admin</emphasis> account, or you can create a separate administrative account for each of them. The
           latter scheme implies somewhat more overhead, but provides a more informative audit trail for administrative
           operations.</para>
-        </listitem>
-
-        <listitem>
-          <para>The entry for AFS server processes, called either 
-          <emphasis role="bold">afs</emphasis> or 
-          <emphasis role="bold">afs/<replaceable>cell</replaceable></emphasis>. 
-          The latter form is preferred since it works regardless of whether
-          your cell name matches your Kerberos realm name and allows multiple
-	  AFS cells to be served from a single Kerberos realm.  
-          No user logs in under this identity, but it is used to encrypt the
-          server tickets that granted to AFS clients for presentation to 
-          server processes during mutual authentication. (The
-          chapter in the <emphasis>OpenAFS Administration Guide</emphasis> about cell configuration and administration describes the
-          role of server encryption keys in mutual authentication.)</para>
-
-          <para>In Step <link linkend="LIWQ58">7</link>, you also place the initial AFS server encryption key into the <emphasis
-          role="bold">/usr/afs/etc/KeyFile</emphasis> file. The AFS server processes refer to this file to learn the server
-          encryption key when they need to decrypt server tickets.</para>
         </listitem>
       </itemizedlist></para>
 
@@ -3339,55 +2258,24 @@ auth  required                pam_unix.so try_first_pass</literallayout>
    # <emphasis role="bold">kadmin</emphasis>
 Authenticating as principal <replaceable>you</replaceable>/admin@<replaceable>YOUR REALM</replaceable> with password
 Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_password</replaceable>
-</programlisting> <indexterm>
-              <primary>server encryption key</primary>
-
-              <secondary>in Kerberos Database</secondary>
-            </indexterm> <indexterm>
-              <primary>creating</primary>
-
-              <secondary>server encryption key</secondary>
-
-              <tertiary>Kerberos Database</tertiary>
-            </indexterm></para>
+</programlisting> </para>
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ54" />Issue the 
+          <para>Issue the 
           <emphasis role="bold">add_principal</emphasis> command to create 
-          Kerberos Database entries called 
-          <emphasis role="bold">admin</emphasis> and 
-          <emphasis role="bold">afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis>.</para>
+          the Kerberos Database entry for
+          <emphasis role="bold">admin</emphasis>.</para>
 
           <para>You should make the <replaceable>admin_passwd</replaceable> as
           long and complex as possible, but keep in mind that administrators 
-          need to enter it often. It must be at least six characters long.</para>
-          <para>Note that when creating the 
-          <emphasis role="bold">afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis> 
-          entry, the encryption types should be restricted to des-cbc-crc:v4. 
-          For more details regarding encryption types, see the documentation 
-          for your Kerberos installation.
-
+          need to enter it often. It must be at least six characters long.
 <programlisting>
-   kadmin: <emphasis role="bold">add_principal -randkey -e des-cbc-crc:v4 afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
-   Principal "afs/<replaceable>cell name</replaceable>@<replaceable>REALM</replaceable>" created.
    kadmin:  <emphasis role="bold">add_principal admin</emphasis>
    Enter password for principal "admin@<replaceable>REALM</replaceable>": <emphasis role="bold"><replaceable>admin_password</replaceable></emphasis>
    Principal "admin@<replaceable>REALM</replaceable>" created.
 </programlisting>
           </para>
-
-          <indexterm>
-            <primary>commands</primary>
-
-            <secondary>kas examine</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>kas commands</primary>
-
-            <secondary>examine</secondary>
-          </indexterm>
 
           <indexterm>
             <primary>displaying</primary>
@@ -3398,39 +2286,6 @@ Password for <replaceable>you/admin@REALM</replaceable>: <replaceable>your_passw
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ55" />Issue the <emphasis role="bold">kadmin 
-	  get_principal</emphasis> command to display the <emphasis
-          role="bold">afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt; entry. 
-<programlisting>
-  kadmin: <emphasis role="bold">get_principal afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis>
-  Principal: afs/<replaceable>cell</replaceable>
-  [ ... ]
-  Key: vno 2, DES cbc mode with CRC-32, no salt
-  [ ... ]
-</programlisting>
-</para>
-        </listitem>
-        <listitem>
-          <para>Extract the newly created key for <emphasis role="bold">afs/<replaceable>cell</replaceable></emphasis> to a keytab on the local machine. We will use <emphasis role="bold">/etc/afs.keytab</emphasis> as the location for this keytab.</para>
-
-          <para>The keytab contains the key material that ensures the security of your AFS cell. You should ensure that it is kept in a secure location at all times.</para>
-
-<programlisting>
-  kadmin: <emphasis role="bold">ktadd -k /etc/afs.keytab -e des-cbc-crc:v4 afs/&lt;<replaceable>cell name</replaceable>&gt;</emphasis>
-Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3, encryption type DES cbc mode with CRC-32 added to keytab WRFILE:/etc/afs.keytab
-</programlisting>
-          <para>Make a note of the key version number (kvno) given in the
-          response, as you will need it to load the key into bos in a later
-          step</para>
-
-          <note><para>Note that each time you run 
-          <emphasis role="bold">ktadd</emphasis> a new key is generated
-          for the item being extracted. This means that you cannot run ktadd
-          multiple times and end up with the same key material each time.
-          </para></note>
-
-        </listitem>
         <listitem>
           <para>Issue the <emphasis role="bold">quit</emphasis> command to leave <emphasis role="bold">kadmin</emphasis>
           interactive mode. <programlisting>
@@ -3468,12 +2323,12 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ57" />Issue the <emphasis role="bold">bos adduser</emphasis> command to add the <emphasis
+        <listitem id="LIWQ57">
+          <para>Issue the <emphasis role="bold">bos adduser</emphasis> command to add the <emphasis
           role="bold">admin</emphasis> user to the <emphasis role="bold">/usr/afs/etc/UserList</emphasis> file. This enables the
           <emphasis role="bold">admin</emphasis> user to issue privileged <emphasis role="bold">bos</emphasis> and <emphasis
           role="bold">vos</emphasis> commands. <programlisting>
-   # <emphasis role="bold">./bos adduser</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">admin -noauth</emphasis>
+   # <emphasis role="bold">./bos adduser</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">admin -localauth</emphasis>
 </programlisting> 
             <indexterm>
               <primary>commands</primary>
@@ -3489,63 +2344,6 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
               <secondary>in KeyFile file</secondary>
             </indexterm></para>
         </listitem>
-
-        <listitem>
-          <para><anchor id="LIWQ58" />Issue the 
-          <emphasis role="bold">asetkey</emphasis> command to set the AFS 
-          server encryption key in the 
-          <emphasis role="bold">/usr/afs/etc/KeyFile</emphasis> file. This key 
-          is created from the <emphasis role="bold">/etc/afs.keytab</emphasis> 
-          file created earlier.</para>
-
-          <para>asetkey requires the key version number (or kvno) of the 
-          <emphasis role="bold">afs/</emphasis><replaceable>cell</replaceable>
-          key. You should have made note of the kvno when creating the key
-          earlier.  The key version number can also be found by running the 
-          <emphasis role="bold">kvno</emphasis> command</para>
-<programlisting>
-   # <emphasis role="bold">kvno -k /etc/afs.keytab afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
-</programlisting>
-
-          <para>Once the kvno is known, the key can then be extracted using 
-          asetkey</para>
-<programlisting>
-   # <emphasis role="bold">asetkey add</emphasis> &lt;<replaceable>kvno</replaceable>&gt;  <emphasis role="bold">/etc/afs.keytab afs/</emphasis>&lt;<replaceable>cell name</replaceable>&gt;
-</programlisting>
-
-          <indexterm>
-            <primary>commands</primary>
-            <secondary>bos listkeys</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>bos commands</primary>
-            <secondary>listkeys</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>displaying</primary>
-            <secondary>server encryption key</secondary>
-            <tertiary>KeyFile file</tertiary>
-          </indexterm>
-        </listitem>
-
-        <listitem>
-          <para><anchor id="LIWQ59" />Issue the 
-          <emphasis role="bold">bos listkeys</emphasis> command to verify that 
-          the key version number for the new key in the 
-          <emphasis role="bold">KeyFile</emphasis> file is the same as the key 
-          version number in the Authentication Database's 
-          <emphasis role="bold">afs/<replaceable>cell name</replaceable></emphasis> 
-          entry, which you displayed in Step <link linkend="LIWQ55">3</link>. 
-<programlisting>
-   # <emphasis role="bold">./bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-noauth</emphasis>
-   key 0 has cksum <replaceable>checksum</replaceable>    
-</programlisting></para>
-
-          <para>You can safely ignore any error messages indicating that <emphasis role="bold">bos</emphasis> failed to get tickets
-          or that authentication failed.</para>
-        </listitem>
       </orderedlist>
     </sect1>
     <sect1 id="HDRWQ53a">
@@ -3554,10 +2352,16 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
       <para>Now continue to configure your cell's security systems by
       populating the Protection Database with the newly created
       <emphasis role="bold">admin</emphasis> user, and permitting it
-      to issue priviledged commands on the AFS filesystem.</para>
+      to issue priviledged commands on the AFS filesystem.
+      There is nothing special about the name "admin"; it is just a
+      convenient name for these instructions.  An other name could
+      be used throughout this document, or multiple privileged
+      accounts created.</para>
           
         <orderedlist>
           <listitem>
+          <para>Issue the <emphasis role="bold">pts createuser</emphasis> command to create a Protection Database entry for the
+          <emphasis role="bold">admin</emphasis> user.
           <indexterm>
             <primary>commands</primary>
             <secondary>pts createuser</secondary>
@@ -3570,9 +2374,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
 
           <indexterm>
             <primary>Protection Database</primary>
-          </indexterm>
-          <para>Issue the <emphasis role="bold">pts createuser</emphasis> command to create a Protection Database entry for the
-          <emphasis role="bold">admin</emphasis> user.</para>
+          </indexterm></para>
 
           <para>By default, the Protection Server assigns AFS UID 1 (one) to the <emphasis role="bold">admin</emphasis> user,
           because it is the first user entry you are creating. If the local password file (<emphasis
@@ -3583,7 +2385,7 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
 
           <programlisting>
    # <emphasis role="bold">pts createuser -name admin</emphasis> [<emphasis
-              role="bold">-id</emphasis> &lt;<replaceable>AFS UID</replaceable>&gt;]  <emphasis role="bold">-noauth</emphasis>
+              role="bold">-id</emphasis> &lt;<replaceable>AFS UID</replaceable>&gt;]  <emphasis role="bold">-localauth</emphasis>
    User admin has id <replaceable>AFS UID</replaceable>
 </programlisting>
 
@@ -3614,8 +2416,8 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
           membership</emphasis> command to verify the new membership. Membership in the group enables the <emphasis
           role="bold">admin</emphasis> user to issue privileged <emphasis role="bold">pts</emphasis> commands and some privileged
           <emphasis role="bold">fs</emphasis> commands. <programlisting>
-   # <emphasis role="bold">./pts adduser admin system:administrators</emphasis> <emphasis role="bold">-noauth</emphasis>
-   # <emphasis role="bold">./pts membership admin</emphasis> <emphasis role="bold">-noauth</emphasis>
+   # <emphasis role="bold">./pts adduser admin system:administrators</emphasis> <emphasis role="bold">-localauth</emphasis>
+   # <emphasis role="bold">./pts membership admin</emphasis> <emphasis role="bold">-localauth</emphasis>
    Groups admin (id: 1) is a member of:
      system:administrators
 </programlisting> <indexterm>
@@ -3634,14 +2436,6 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
               <secondary>restarting</secondary>
               <tertiary>on first AFS machine</tertiary>
             </indexterm></para>
-        </listitem>
-
-        <listitem>
-          <para>Issue the <emphasis role="bold">bos restart</emphasis> command with the <emphasis role="bold">-all</emphasis> flag
-          to restart the database server processes, so that they start using the new server encryption key. <programlisting>
-   # <emphasis role="bold">./bos restart</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-all</emphasis>
-   <emphasis role="bold">-noauth</emphasis>
-</programlisting></para>
         </listitem>
       </orderedlist>
 
@@ -3727,36 +2521,28 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
   <sect1 id="HDRWQ60">
     <title>Starting the File Server processes</title>
 
-    <para>Start either the <emphasis role="bold">fs</emphasis> process or, if you want to run the Demand-Attach File Server, the
-    <emphasis role="bold">dafs</emphasis> process. The <emphasis role="bold">fs</emphasis> process consists of the File Server,
-    Volume Server, and Salvager (<emphasis role="bold">fileserver</emphasis>, <emphasis role="bold">volserver</emphasis> and
-    <emphasis role="bold">salvager</emphasis> processes). The <emphasis role="bold">dafs</emphasis> process consists of the
+    <para>Start the
+    <emphasis role="bold">dafs</emphasis> process.
+    The <emphasis role="bold">dafs</emphasis> process consists of the
     Demand-Attach File Server, Volume Server, Salvage Server, and Salvager (<emphasis role="bold">dafileserver</emphasis>,
     <emphasis role="bold"> davolserver</emphasis>, <emphasis role="bold">salvageserver</emphasis>, and <emphasis
-    role="bold">dasalvager</emphasis> processes). For information about the Demand-Attach File Server and to see whether or not
-    you should run it, see <link linkend="DAFS">Appendix C, The Demand-Attach File Server</link>.
+    role="bold">dasalvager</emphasis> processes). Most sites should run the
+    Demand-Attach File Server, but the traditional/legacy File Server remains
+    an option.  If you are uncertain whether to run the legacy File Server,
+    see <link linkend="DAFS">Appendix C, The Demand-Attach File Server</link>.
      <orderedlist>
         <listitem>
-          <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the <emphasis role="bold">fs</emphasis>
-          process or the <emphasis role="bold">dafs</emphasis> process. The commands appear here on multiple lines only for legibility.
+          <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the 
+          <emphasis role="bold">dafs</emphasis> process. The commands appear here on multiple lines only for legibility.
 
 	    <itemizedlist>
-	      <listitem>
-	        <para>If you are not planning on running the Demand-Attach File Server, create the <emphasis role="bold">fs</emphasis>
-		process:
-	          <programlisting>
-   # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">fs fs /usr/afs/bin/fileserver</emphasis>   \
-                   <emphasis role="bold">/usr/afs/bin/volserver /usr/afs/bin/salvager</emphasis>  \
-                   <emphasis role="bold">-noauth</emphasis>   
-</programlisting></para>
-             </listitem>
 	     <listitem>
-	       <para>If you are planning on running the Demand-Attach File Server, create the <emphasis
+	       <para>Create the <emphasis
 	       role="bold">dafs</emphasis> process:
 	          <programlisting>
    # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">dafs dafs /usr/afs/bin/dafileserver</emphasis>   \
                    <emphasis role="bold">/usr/afs/bin/davolserver /usr/afs/bin/salvageserver</emphasis> \
-                   <emphasis role="bold">/usr/afs/bin/dasalvager</emphasis> <emphasis role="bold">-noauth</emphasis>   
+                   <emphasis role="bold">/usr/afs/bin/dasalvager</emphasis> <emphasis role="bold">-localauth</emphasis>   
 </programlisting></para>
              </listitem>
 	    </itemizedlist>
@@ -3781,25 +2567,14 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
               <secondary>status</secondary>
             </indexterm></para>
 
-          <para>You can verify that the <emphasis role="bold">fs</emphasis> or <emphasis role="bold">dafs</emphasis> process has started
+          <para>You can verify that the <emphasis role="bold">dafs</emphasis> process has started
 	  successfully by issuing the <emphasis role="bold">bos status</emphasis> command. Its output mentions two <computeroutput>proc
           starts</computeroutput>.</para>
 
-	  <itemizedlist>
-	    <listitem>
-	      <para>If you are not running the Demand-Attach File Server:
-
+	      <para>
           <programlisting>
-   # <emphasis role="bold">./bos status</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">fs -long -noauth</emphasis>
-</programlisting></para></listitem>
-
-            <listitem>
-	      <para>If you are running the Demand-Attach File Server:
-          <programlisting>
-   # <emphasis role="bold">./bos status</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">dafs -long -noauth</emphasis>
-</programlisting></para></listitem>
-          </itemizedlist>
-
+   # <emphasis role="bold">./bos status</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">dafs -long -localauth</emphasis>
+</programlisting></para>
         </listitem>
 
         <listitem>
@@ -3850,11 +2625,10 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
                 <programlisting>
    # <emphasis role="bold">./vos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; <emphasis
                     role="bold">root.afs</emphasis>   \
-                   <emphasis role="bold">-noauth</emphasis>   
+                   <emphasis role="bold">-localauth</emphasis>   
 </programlisting>
 
-                <para>The Volume Server produces a message confirming that it created the volume on the specified partition. You can
-                ignore error messages indicating that tokens are missing, or that authentication failed. <indexterm>
+                <para>The Volume Server produces a message confirming that it created the volume on the specified partition.  <indexterm>
                     <primary>commands</primary>
 
                     <secondary>vos syncvldb</secondary>
@@ -3871,20 +2645,6 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
 
                     <secondary>syncserv</secondary>
                   </indexterm></para>
-              </listitem>
-
-              <listitem>
-                <para>If there are existing AFS file server machines and volumes in the cell, issue the <emphasis role="bold">vos
-                syncvldb</emphasis> and <emphasis role="bold">vos syncserv</emphasis> commands to synchronize the VLDB with the
-                actual state of volumes on the local machine. To follow the progress of the synchronization operation, which can
-                take several minutes, use the <emphasis role="bold">-verbose</emphasis> flag. <programlisting>
-   # <emphasis role="bold">./vos syncvldb</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis
-                      role="bold">-verbose  -noauth</emphasis>
-   # <emphasis role="bold">./vos syncserv</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis
-                      role="bold">-verbose  -noauth</emphasis>   
-</programlisting></para>
-
-                <para>You can ignore error messages indicating that tokens are missing, or that authentication failed.</para>
               </listitem>
             </itemizedlist></para>
         </listitem>
@@ -3943,70 +2703,17 @@ Entry for principal afs/&lt;<replaceable>cell name</replaceable>&gt; with kvno 3
     </indexterm>
   </sect1>
 
-  <sect1 id="HDRWQ61">
-    <title>Starting the Server Portion of the Update Server</title>
-
-    <para>Start the server portion of the Update Server (the <emphasis role="bold">upserver</emphasis> process), to distribute the
-    contents of directories on this machine to other server machines in the cell. It becomes active when you configure the client
-    portion of the Update Server on additional server machines.</para>
-
-    <para>Distributing the contents of its <emphasis role="bold">/usr/afs/etc</emphasis> directory makes this machine the cell's
-    <emphasis>system control machine</emphasis>. The other server machines in the cell run the <emphasis
-    role="bold">upclientetc</emphasis> process (an instance of the client portion of the Update Server) to retrieve the
-    configuration files. Use the <emphasis role="bold">-crypt</emphasis> argument to the <emphasis role="bold">upserver</emphasis>
-    initialization command to specify that the Update Server distributes the contents of the <emphasis
-    role="bold">/usr/afs/etc</emphasis> directory only in encrypted form, as shown in the following instruction. Several of the
-    files in the directory, particularly the <emphasis role="bold">KeyFile</emphasis> file, are crucial to cell security and so must
-    never cross the network unencrypted.</para>
-
-    <para>(You can choose not to configure a system control machine, in which case you must update the configuration files in each
-    server machine's <emphasis role="bold">/usr/afs/etc</emphasis> directory individually. The <emphasis role="bold">bos</emphasis>
-    commands used for this purpose also encrypt data before sending it across the network.)</para>
-
-    <para>Distributing the contents of its <emphasis role="bold">/usr/afs/bin</emphasis> directory to other server machines of its
-    system type makes this machine a <emphasis>binary distribution machine</emphasis>. The other server machines of its system type
-    run the <emphasis role="bold">upclientbin</emphasis> process (an instance of the client portion of the Update Server) to
-    retrieve the binaries. If your platform has a package management system, 
-    such as 'rpm' or 'apt', running the Update Server to distribute binaries 
-    may interfere with this system.</para>
-
-    <para>The binaries in the <emphasis role="bold">/usr/afs/bin</emphasis> directory are not sensitive, so it is not necessary to
-    encrypt them before transfer across the network. Include the <emphasis role="bold">-clear</emphasis> argument to the <emphasis
-    role="bold">upserver</emphasis> initialization command to specify that the Update Server distributes the contents of the
-    <emphasis role="bold">/usr/afs/bin</emphasis> directory in unencrypted form unless an <emphasis
-    role="bold">upclientbin</emphasis> process requests encrypted transfer.</para>
-
-    <para>Note that the server and client portions of the Update Server always mutually authenticate with one another, regardless of
-    whether you use the <emphasis role="bold">-clear</emphasis> or <emphasis role="bold">-crypt</emphasis> arguments. This protects
-    their communications from eavesdropping to some degree.</para>
-
-    <para>For more information on the <emphasis role="bold">upclient</emphasis> and <emphasis role="bold">upserver</emphasis>
-    processes, see their reference pages in the <emphasis>OpenAFS Administration Reference</emphasis>. The commands appear on
-    multiple lines here only for legibility. <orderedlist>
-        <listitem>
-          <para>Issue the <emphasis role="bold">bos create</emphasis> command to start the <emphasis role="bold">upserver</emphasis>
-          process. <programlisting>
-   # <emphasis role="bold">./bos create</emphasis>  &lt;<replaceable>machine name&gt;</replaceable> <emphasis role="bold">upserver simple</emphasis>  \ 
-             <emphasis role="bold">"/usr/afs/bin/upserver  -crypt /usr/afs/etc</emphasis>    \
-             <emphasis role="bold">-clear /usr/afs/bin"</emphasis> <emphasis role="bold">-noauth</emphasis> 
-</programlisting></para>
-        </listitem>
-      </orderedlist></para>
-  </sect1>
-
   <sect1 id="HDRWQ62">
-    <title>Starting the Controller for NTPD</title>
+    <title>Clock Sync Considerations</title>
 
     <para>Keeping the clocks on all server and client machines in your cell synchronized is crucial to several functions, and in
     particular to the correct operation of AFS's distributed database technology, Ubik. The chapter in the <emphasis>OpenAFS
     Administration Guide</emphasis> about administering server machines explains how time skew can disturb Ubik's performance and
     cause service outages in your cell.</para>
 
-    <para>Historically, AFS used to distribute its own version of the Network 
-Time Protocol Daemon. Whilst this is still provided for existing sites, we 
-recommend that you configure and install your time service independently of 
-AFS. A reliable timeservice will also be required by your Kerberos realm, 
-and so may already be available at your site.</para>
+    <para>You should install and configure your time service independently of
+    AFS. Your Kerberos realm will also require a reliable time source, so your site
+    may already have one available.</para>
 
     <indexterm>
       <primary>overview</primary>
@@ -4034,9 +2741,9 @@ and so may already be available at your site.</para>
   <sect1 id="HDRWQ63">
     <title>Overview: Installing Client Functionality</title>
 
-    <para>The machine you are installing is now an AFS file server machine, 
-    database server machine, system control machine, and binary distribution 
-    machine. Now make it a client machine by completing the following tasks: 
+    <para>The machine you are installing is now an AFS file server machine
+    and database server machine.
+    Now make it a client machine by completing the following tasks: 
     <orderedlist>
         <listitem>
           <para>Define the machine's cell membership for client processes</para>
@@ -4360,10 +3067,10 @@ and so may already be available at your site.</para>
    192.12.105.3      #db1.example.com
    192.12.105.4      #db2.example.com
    192.12.105.55     #db3.example.com
-   &gt;stateu.edu    #State University cell
-   138.255.68.93     #serverA.stateu.edu
-   138.255.68.72     #serverB.stateu.edu
-   138.255.33.154    #serverC.stateu.edu
+   &gt;example.org    #Example Organization cell
+   138.255.68.93     #serverA.example.org
+   138.255.68.72     #serverB.example.org
+   138.255.33.154    #serverC.example.org
 </programlisting>
 
     <indexterm>
@@ -4443,7 +3150,7 @@ and so may already be available at your site.</para>
           <para>For a disk cache, you cannot specify a value in the third field that exceeds 95% of the space available on the
           partition mounted at the directory named in the second field. If you violate this restriction, the <emphasis
           role="bold">afsd</emphasis> program exits without starting the Cache Manager and prints an appropriate message on the
-          standard output stream. A value of 90% is more appropriate on most machines. Some operating systems (such as AIX) do not
+          standard output stream. A value of 90% is more appropriate on most machines. Some operating systems do not
           automatically reserve some space to prevent the partition from filling completely; for them, a smaller value (say, 80% to
           85% of the space available) is more appropriate.</para>
         </listitem>
@@ -4669,13 +3376,6 @@ and so may already be available at your site.</para>
         </listitem>
 
         <listitem>
-          <para>On AIX systems, add the following line to the <emphasis role="bold">/etc/vfs</emphasis> file. It enables AIX to
-          unmount AFS correctly during shutdown. <programlisting>
-   afs     4     none     none
-</programlisting></para>
-        </listitem>
-
-        <listitem>
           <para>On non-package based Linux systems, copy the <emphasis role="bold">afsd</emphasis> options file from the <emphasis
           role="bold">/usr/vice/etc</emphasis> directory to the <emphasis role="bold">/etc/sysconfig</emphasis> directory, removing
           the <emphasis role="bold">.conf</emphasis> extension as you do so. <programlisting>
@@ -4687,18 +3387,6 @@ and so may already be available at your site.</para>
           <para>Edit the machine's AFS initialization script or <emphasis role="bold">afsd</emphasis> options file to set
           appropriate values for <emphasis role="bold">afsd</emphasis> command parameters. The script resides in the indicated
           location on each system type: <itemizedlist>
-              <listitem>
-                <para>On AIX systems, <emphasis role="bold">/etc/rc.afs</emphasis></para>
-              </listitem>
-
-              <listitem>
-                <para>On HP-UX systems, <emphasis role="bold">/sbin/init.d/afs</emphasis></para>
-              </listitem>
-
-              <listitem>
-                <para>On IRIX systems, <emphasis role="bold">/etc/init.d/afs</emphasis></para>
-              </listitem>
-
 	          <listitem>
                 <para>On Fedora and RHEL systems, <emphasis role="bold">/etc/sysconfg/openafs</emphasis></para>
               </listitem>
@@ -4878,135 +3566,6 @@ and so may already be available at your site.</para>
         <listitem>
           <para>Issue the appropriate commands to run the AFS initialization script for this system type.</para>
 
-          <indexterm>
-            <primary>AIX</primary>
-
-            <secondary>AFS initialization script</secondary>
-
-            <tertiary>on first AFS machine</tertiary>
-          </indexterm>
-
-          <para><emphasis role="bold">On AIX systems:</emphasis> <orderedlist>
-              <listitem>
-                <para>Reboot the machine and log in again as the local superuser <emphasis role="bold">root</emphasis>.
-                <programlisting>
-   # <emphasis role="bold">cd /</emphasis>
-   # <emphasis role="bold">shutdown -r now</emphasis>
-   login: <emphasis role="bold">root</emphasis>
-   Password: <replaceable>root_password</replaceable>
-</programlisting></para>
-              </listitem>
-
-              <listitem>
-                <para>Run the AFS initialization script. <programlisting>
-   # <emphasis role="bold">/etc/rc.afs</emphasis>
-</programlisting></para>
-              </listitem>
-            </orderedlist></para>
-
-          <indexterm>
-            <primary>HP-UX</primary>
-
-            <secondary>AFS initialization script</secondary>
-
-            <tertiary>on first AFS machine</tertiary>
-          </indexterm>
-
-          <para><emphasis role="bold">On HP-UX systems:</emphasis> <orderedlist>
-              <listitem>
-                <para>Run the AFS initialization script. <programlisting>
-   # <emphasis role="bold">/sbin/init.d/afs  start</emphasis>
-</programlisting></para>
-              </listitem>
-            </orderedlist></para>
-
-          <indexterm>
-            <primary>IRIX</primary>
-
-            <secondary>AFS initialization script</secondary>
-
-            <tertiary>on first AFS machine</tertiary>
-          </indexterm>
-
-          <indexterm>
-            <primary>afsclient variable (IRIX)</primary>
-
-            <secondary>first AFS machine</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>variables</primary>
-
-            <secondary>afsclient (IRIX)</secondary>
-
-            <tertiary>first AFS machine</tertiary>
-          </indexterm>
-
-          <indexterm>
-            <primary>IRIX</primary>
-
-            <secondary>afsclient variable</secondary>
-
-            <tertiary>first AFS machine</tertiary>
-          </indexterm>
-
-          <indexterm>
-            <primary>afsserver variable (IRIX)</primary>
-
-            <secondary>first AFS machine</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>variables</primary>
-
-            <secondary>afsserver (IRIX)</secondary>
-
-            <tertiary>first AFS machine</tertiary>
-          </indexterm>
-
-          <indexterm>
-            <primary>IRIX</primary>
-
-            <secondary>afsserver variable</secondary>
-
-            <tertiary>first AFS machine</tertiary>
-          </indexterm>
-
-          <para><emphasis role="bold">On IRIX systems:</emphasis> <orderedlist>
-              <listitem>
-                <para>If you have configured the machine to use the <emphasis role="bold">ml</emphasis> dynamic loader program,
-                reboot the machine and log in again as the local superuser <emphasis role="bold">root</emphasis>. <programlisting>
-   # <emphasis role="bold">cd /</emphasis>
-   # <emphasis role="bold">shutdown -i6 -g0 -y</emphasis>
-   login: <emphasis role="bold">root</emphasis>
-   Password: <replaceable>root_password</replaceable>
-</programlisting></para>
-              </listitem>
-
-              <listitem>
-                <para>Issue the <emphasis role="bold">chkconfig</emphasis> command to activate the <emphasis
-                role="bold">afsserver</emphasis> and <emphasis role="bold">afsclient</emphasis> configuration variables.
-                <programlisting>
-   # <emphasis role="bold">/etc/chkconfig -f afsserver on</emphasis>
-   # <emphasis role="bold">/etc/chkconfig -f afsclient on</emphasis> 
-</programlisting></para>
-              </listitem>
-
-              <listitem>
-                <para>Run the AFS initialization script. <programlisting>
-   # <emphasis role="bold">/etc/init.d/afs  start</emphasis>
-</programlisting></para>
-              </listitem>
-            </orderedlist></para>
-
-          <indexterm>
-            <primary>Linux</primary>
-
-            <secondary>AFS initialization script</secondary>
-
-            <tertiary>on first AFS machine</tertiary>
-          </indexterm>
-
           <para><emphasis role="bold">On Linux systems:</emphasis> <orderedlist>
               <listitem>
                 <para>Reboot the machine and log in again as the local superuser <emphasis role="bold">root</emphasis>.
@@ -5180,18 +3739,6 @@ and so may already be available at your site.</para>
     <para>Now that you have confirmed that the AFS initialization script works correctly, take the action necessary to have it run
     automatically at each reboot. Proceed to the instructions for your system type: <itemizedlist>
         <listitem>
-          <para><link linkend="HDRWQ74">Activating the Script on AIX Systems</link></para>
-        </listitem>
-
-        <listitem>
-          <para><link linkend="HDRWQ76">Activating the Script on HP-UX Systems</link></para>
-        </listitem>
-
-        <listitem>
-          <para><link linkend="HDRWQ77">Activating the Script on IRIX Systems</link></para>
-        </listitem>
-
-        <listitem>
           <para><link linkend="HDRWQ78">Activating the Script on Linux Systems</link></para>
         </listitem>
 
@@ -5199,120 +3746,6 @@ and so may already be available at your site.</para>
           <para><link linkend="HDRWQ79">Activating the Script on Solaris Systems</link></para>
         </listitem>
       </itemizedlist></para>
-
-    <indexterm>
-      <primary>AIX</primary>
-
-      <secondary>AFS initialization script</secondary>
-
-      <tertiary>on first AFS machine</tertiary>
-    </indexterm>
-
-    <sect2 id="HDRWQ74">
-      <title>Activating the Script on AIX Systems</title>
-
-      <orderedlist>
-        <listitem>
-          <para>Edit the AIX initialization file, <emphasis role="bold">/etc/inittab</emphasis>, adding the following line to invoke
-          the AFS initialization script. Place it just after the line that starts NFS daemons. <programlisting>
-   rcafs:2:wait:/etc/rc.afs &gt; /dev/console 2&gt;&amp;1 # Start AFS services
-</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
-          <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/etc</emphasis> directories. If you want to avoid
-          potential confusion by guaranteeing that they are always the same, create a link between them. You can always retrieve the
-          original script from the AFS CD-ROM if necessary. <programlisting>
-   # <emphasis role="bold">cd  /usr/vice/etc</emphasis>
-   # <emphasis role="bold">rm  rc.afs</emphasis>
-   # <emphasis role="bold">ln -s  /etc/rc.afs</emphasis>
-</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para>Proceed to <link linkend="HDRWQ80">Configuring the Top Levels of the AFS Filespace</link>.</para>
-        </listitem>
-      </orderedlist>
-
-      <indexterm>
-        <primary>HP-UX</primary>
-
-        <secondary>AFS initialization script</secondary>
-
-        <tertiary>on first AFS machine</tertiary>
-      </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ76">
-      <title>Activating the Script on HP-UX Systems</title>
-
-      <orderedlist>
-        <listitem>
-          <para>Change to the <emphasis role="bold">/sbin/init.d</emphasis> directory and issue the <emphasis role="bold">ln
-          -s</emphasis> command to create symbolic links that incorporate the AFS initialization script into the HP-UX startup and
-          shutdown sequence. <programlisting>
-   # <emphasis role="bold">cd /sbin/init.d</emphasis>
-   # <emphasis role="bold">ln -s ../init.d/afs /sbin/rc2.d/S460afs</emphasis>
-   # <emphasis role="bold">ln -s ../init.d/afs /sbin/rc2.d/K800afs</emphasis>
-</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
-          <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/sbin/init.d</emphasis> directories. If you want
-          to avoid potential confusion by guaranteeing that they are always the same, create a link between them. You can always
-          retrieve the original script from the AFS CD-ROM if necessary. <programlisting>
-   # <emphasis role="bold">cd /usr/vice/etc</emphasis>
-   # <emphasis role="bold">rm afs.rc</emphasis>
-   # <emphasis role="bold">ln -s  /sbin/init.d/afs  afs.rc</emphasis>
-</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para>Proceed to <link linkend="HDRWQ80">Configuring the Top Levels of the AFS Filespace</link>.</para>
-        </listitem>
-      </orderedlist>
-
-      <indexterm>
-        <primary>IRIX</primary>
-
-        <secondary>AFS initialization script</secondary>
-
-        <tertiary>on first AFS machine</tertiary>
-      </indexterm>
-    </sect2>
-
-    <sect2 id="HDRWQ77">
-      <title>Activating the Script on IRIX Systems</title>
-
-      <orderedlist>
-        <listitem>
-          <para>Change to the <emphasis role="bold">/etc/init.d</emphasis> directory and issue the <emphasis role="bold">ln
-          -s</emphasis> command to create symbolic links that incorporate the AFS initialization script into the IRIX startup and
-          shutdown sequence. <programlisting>
-   # <emphasis role="bold">cd /etc/init.d</emphasis>
-   # <emphasis role="bold">ln -s ../init.d/afs /etc/rc2.d/S35afs</emphasis>
-   # <emphasis role="bold">ln -s ../init.d/afs /etc/rc0.d/K35afs</emphasis>
-</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
-          <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/etc/init.d</emphasis> directories. If you want
-          to avoid potential confusion by guaranteeing that they are always the same, create a link between them. You can always
-          retrieve the original script from the AFS CD-ROM if necessary. <programlisting>
-   # <emphasis role="bold">cd /usr/vice/etc</emphasis>
-   # <emphasis role="bold">rm afs.rc</emphasis>
-   # <emphasis role="bold">ln -s  /etc/init.d/afs  afs.rc</emphasis>
-</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para>Proceed to <link linkend="HDRWQ80">Configuring the Top Levels of the AFS Filespace</link>.</para>
-        </listitem>
-      </orderedlist>
-
       <indexterm>
         <primary>Linux</primary>
 
@@ -5320,7 +3753,6 @@ and so may already be available at your site.</para>
 
         <tertiary>on first AFS machine</tertiary>
       </indexterm>
-    </sect2>
 
     <sect2 id="HDRWQ78">
       <title>Activating the Script on Linux Systems</title>
@@ -5542,8 +3974,8 @@ and so may already be available at your site.</para>
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ81" />Issue the <emphasis role="bold">vos create</emphasis> command to create the <emphasis
+        <listitem id="LIWQ81">
+          <para>Issue the <emphasis role="bold">vos create</emphasis> command to create the <emphasis
           role="bold">root.cell</emphasis> volume. Then issue the <emphasis role="bold">fs mkmount</emphasis> command to mount it as
           a subdirectory of the <emphasis role="bold">/afs</emphasis> directory, where it serves as the root of your cell's local
           AFS filespace. Finally, issue the <emphasis role="bold">fs setacl</emphasis> command to create an ACL entry for the
@@ -5551,7 +3983,7 @@ and so may already be available at your site.</para>
 
           <para>For the <replaceable>partition name</replaceable> argument, substitute the name of one of the machine's AFS server
           partitions (such as <emphasis role="bold">/vicepa</emphasis>). For the <replaceable>cellname</replaceable> argument,
-          substitute your cell's fully-qualified Internet domain name (such as <emphasis role="bold">abc.com</emphasis>).</para>
+          substitute your cell's fully-qualified Internet domain name (such as <emphasis role="bold">example.com</emphasis>).</para>
 
           <programlisting>
    # <emphasis role="bold">/usr/afs/bin/vos create</emphasis>  &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>partition name</replaceable>&gt; <emphasis
@@ -5583,8 +4015,8 @@ and so may already be available at your site.</para>
 
         <listitem>
           <para><emphasis role="bold">(Optional)</emphasis> Create a symbolic link to a shortened cell name, to reduce the length of
-          pathnames for users in the local cell. For example, in the <emphasis role="bold">abc.com</emphasis> cell, <emphasis
-          role="bold">/afs/abc</emphasis> is a link to <emphasis role="bold">/afs/abc.com</emphasis>. <programlisting>
+          pathnames for users in the local cell. For example, in the <emphasis role="bold">example.com</emphasis> cell, <emphasis
+          role="bold">/afs/example</emphasis> is a link to <emphasis role="bold">/afs/example.com</emphasis>. <programlisting>
    # <emphasis role="bold">cd /afs</emphasis>
    # <emphasis role="bold">ln -s</emphasis>  <replaceable>full_cellname</replaceable>  <replaceable>short_cellname</replaceable>
 </programlisting> <indexterm>
@@ -5642,8 +4074,8 @@ and so may already be available at your site.</para>
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ82" />Issue the <emphasis role="bold">vos addsite</emphasis> command to define a replication site
+        <listitem id="LIWQ82">
+          <para>Issue the <emphasis role="bold">vos addsite</emphasis> command to define a replication site
           for both the <emphasis role="bold">root.afs</emphasis> and <emphasis role="bold">root.cell</emphasis> volumes. In each
           case, substitute for the <replaceable>partition name</replaceable> argument the partition where the volume's read/write
           version resides. When you install additional file server machines, it is a good idea to create replication sites on them
@@ -5800,8 +4232,8 @@ and so may already be available at your site.</para>
           <tertiary>volume for AFS binaries</tertiary>
         </indexterm>
 
-        <listitem>
-          <para><anchor id="LIWQ84" />Issue the <emphasis role="bold">vos create</emphasis> command to create volumes for storing
+        <listitem id="LIWQ84">
+          <para>Issue the <emphasis role="bold">vos create</emphasis> command to create volumes for storing
           the AFS client binaries for this system type. The following example instruction creates volumes called
           <replaceable>sysname</replaceable>, <replaceable>sysname</replaceable>.<emphasis role="bold">usr</emphasis>, and
           <replaceable>sysname</replaceable>.<emphasis role="bold">usr.afsws</emphasis>. Refer to the <emphasis>OpenAFS Release
@@ -5860,8 +4292,8 @@ and so may already be available at your site.</para>
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ85" />Issue the <emphasis role="bold">fs setquota</emphasis> command to set an unlimited quota on
+        <listitem id="LIWQ85">
+          <para>Issue the <emphasis role="bold">fs setquota</emphasis> command to set an unlimited quota on
           the volume mounted at the <emphasis role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
           role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/usr/afsws</emphasis> directory. This
           enables you to copy all of the appropriate files from the CD-ROM into the volume without exceeding the volume's
@@ -5922,8 +4354,8 @@ and so may already be available at your site.</para>
             </indexterm></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ86" />Create <emphasis role="bold">/usr/afsws</emphasis> on the local disk as a symbolic link to the
+        <listitem id="LIWQ86">
+          <para>Create <emphasis role="bold">/usr/afsws</emphasis> on the local disk as a symbolic link to the
           directory <emphasis role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
           role="bold">/@sys/usr/afsws</emphasis>. You can specify the actual system name instead of <emphasis
           role="bold">@sys</emphasis> if you wish, but the advantage of using <emphasis role="bold">@sys</emphasis> is that it
@@ -6486,8 +4918,8 @@ and so may already be available at your site.</para>
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ92" />If this machine is going to remain an AFS client after you complete the installation, verify
+        <listitem id="LIWQ92">
+          <para>If this machine is going to remain an AFS client after you complete the installation, verify
           that the local <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file includes an entry for each foreign
           cell.</para>
 
@@ -6806,13 +5238,6 @@ and so may already be available at your site.</para>
           role="bold">fs</emphasis>) on this machine. <programlisting>
    # <emphasis role="bold">ln -s /usr/afs/etc/ThisCell ThisCell</emphasis>
    # <emphasis role="bold">ln -s /usr/afs/etc/CellServDB CellServDB</emphasis>
-</programlisting></para>
-        </listitem>
-
-        <listitem>
-          <para>On IRIX systems, issue the <emphasis role="bold">chkconfig</emphasis> command to deactivate the <emphasis
-          role="bold">afsclient</emphasis> configuration variable. <programlisting>
-   # <emphasis role="bold">/etc/chkconfig -f afsclient off</emphasis>
 </programlisting></para>
         </listitem>
 

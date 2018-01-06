@@ -19,7 +19,7 @@ extern void afs_com_err_va(const char *whoami, afs_int32 code, const char *fmt,
 		       va_list args)
     AFS_ATTRIBUTE_FORMAT(__printf__, 3, 0);
 
-extern const char *afs_error_table_name(afs_int32);
+extern const char *afs_error_table_name(int);
 extern const char *afs_error_message(afs_int32);
 extern const char *afs_error_message_localize(afs_int32 code, char *str, size_t len);
 extern

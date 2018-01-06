@@ -281,7 +281,7 @@ again:
                     needref=1;
                 }
 	    } else
-		error = ENOENT;
+		error = EIO;
 	}
     }
     if (tvp) {
@@ -459,6 +459,7 @@ afs_sync(struct mount *mp, int waitfor, struct ucred *cred, struct proc *p)
 
 u_int32_t afs_darwin_realmodes = 0;
 u_int32_t afs_darwin_fsevents = 0;
+extern int AFSDOBULK;
 
 int
 afs_sysctl_int(int *name, u_int namelen, user_addr_t oldp, size_t *oldlenp,
@@ -515,6 +516,9 @@ afs_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 	    case AFS_SC_DARWIN_ALL_FSEVENTS:
 		return afs_sysctl_int(name, namelen, oldp, oldlenp,
 				      newp, newlen, &afs_darwin_fsevents);
+	    case AFS_SC_DARWIN_ALL_BULKSTAT:
+		return afs_sysctl_int(name, namelen, oldp, oldlenp,
+				      newp, newlen, &AFSDOBULK);
 	    }
 	    break;
 	    /* darwin version specific sysctl's goes here */

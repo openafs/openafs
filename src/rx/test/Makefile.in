@@ -7,31 +7,29 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 
-
-INCDIRS= -I${TOP_INCDIR} -I.. -I. -I${srcdir} -I${srcdir}/.. -I${TOP_OBJDIR}/src/config 
 LDIRS= -L.. -L${TOP_LIBDIR}
 LIBS= ${TOP_LIBDIR}/libcmd.a  ../librx.a ${TOP_LIBDIR}/liblwp.a \
 	 ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libsys.a ${XLIBS}
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} -DRXDEBUG ${LDIRS} ${XCFLAGS} ${ARCHFLAGS}
+MODULE_CFLAGS=-DRXDEBUG
 
 RXTESTOBJS = testclient.o testserver.o kstest.o kctest.o
 
 BASICINCLS =  ../rx_clock.h ../rx_queue.h ../rx_event.h
 
-LINK = ${CC} ${CFLAGS} -o $@ $@.o ${LIBS}
+LINK = $(AFS_LDRULE) $@.o ${LIBS}
+MT_LINK = $(CC) $(MT_CFLAGS) $(COMMON_CFLAGS) $(AFS_LDFLAGS) -o $@ \
+	  $@.o $(TOP_LIBDIR)/libafsrpc.a $(TOP_LIBDIR)/libopr.a \
+	  $(LIB_hcrypto) $(LIB_roken) \
+	  $(MT_LIBS)
 
 TESTS = testclient testserver kstest kctest testqueue tableGen generator
 
 TH_TESTS = th_testserver th_testclient
 
-.IGNORE: 
 
 all: test
 
@@ -40,47 +38,44 @@ test tests: ${TESTS}
 th_test th_tests: ${TH_TESTS}
 
 testclient: ../librx.a testclient.o
-	-${LINK}
+	${LINK}
 
 testserver: ../librx.a testserver.o
-	-${LINK}
+	${LINK}
 
 kstest: ../librx.a kstest.o
-	-${LINK}
+	${LINK}
 
 kctest: ../librx.a kctest.o
-	-${LINK}
+	${LINK}
 
 rxperf: rxperf.o ../librx.a
-	-${LINK}
+	${LINK}
 
 # th_ versions only have link lines for Solaris now.
-th_testclient: th_testclient.o ../../libafsrpc/libafsrpc.so 
-	${CC} ${CFLAGS} -mt -o th_testclient th_testclient.o \
-		../../libafsrpc/libafsrpc.so -lpthread
+th_testclient: th_testclient.o $(TOP_LIBDIR)/libafsrpc.a
+	$(MT_LINK)
 
 th_testclient.o: testclient.c
-	${CC} ${CFLAGS} -DAFS_PTHREAD_ENV -mt -c -o th_testclient.o \
+	$(MT_CC) $(COMMON_CFLAGS) $(MT_CFLAGS) -c -o th_testclient.o \
 		${srcdir}/testclient.c
 
-th_testserver: th_testserver.o ../../libafsrpc/libafsrpc.so 
-	${CC} ${CFLAGS} -mt -o th_testserver th_testserver.o \
-		../../libafsrpc/libafsrpc.so -lpthread
+th_testserver: th_testserver.o $(TOP_LIBDIR)/libafsrpc.a
+	$(MT_LINK)
 
 th_testserver.o: testserver.c
-	${CC} ${CFLAGS} -DAFS_PTHREAD_ENV -mt -c -o th_testserver.o \
+	$(MT_CC) $(COMMON_CFLAGS) $(MT_CFLAGS) -c -o th_testserver.o \
 		${srcdir}/testserver.c
 
-th_rxperf: th_rxperf.o ${TOP_LIBDIR}/libafsrpc.a
-	${MT_CC} ${MT_CFLAGS} -o th_rxperf th_rxperf.o \
-		${TOP_LIBDIR}/libafsrpc.a ${MT_LIBS} ${XLIBS}
+th_rxperf: th_rxperf.o ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/libopr.a
+	$(MT_LINK)
 
 th_rxperf.o: rxperf.c
-	${MT_CC} ${MT_CFLAGS} ${CFLAGS} -c $(srcdir)/rxperf.c \
+	$(MT_CC) $(COMMON_CFLAGS) $(MT_CFLAGS) -c $(srcdir)/rxperf.c \
 		-o th_rxperf.o
 
 testqueue: ../librx.a testqueue.o
-	-${LINK}
+	${LINK}
 
 ${RXTESTOBJS}: ${BASICINCLS} ../rx.h
 

@@ -105,7 +105,7 @@ nowms()
     struct timeval tv;
     long temp;
 
-    gettimeofday(&tv, 0);
+    gettimeofday(&tv, NULL);
     temp = ((tv.tv_sec & 0xffff) * 1000) + (tv.tv_usec / 1000);
     return temp;
 }

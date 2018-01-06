@@ -5,7 +5,6 @@
 #define AFS_PARAM_H
 
 #define AFS_ENV                 1
-#define AFS_64BIT_ENV           1	/* Defines afs_int32 as int, not long. */
 #define AFS_64BIT_CLIENT        1
 #define AFS_64BIT_IOPS_ENV	1
 #if defined(__ppc__)
@@ -30,6 +29,7 @@
 #define DARWIN_REFBASE 3
 #define AFS_WARNUSER_MARINER_ENV 1
 #define AFS_CACHE_VNODE_PATH
+#define AFS_NEW_BKG 1
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS    "afs"
@@ -104,7 +104,6 @@
 
 #define AFS_VFSINCL_ENV 1	/* NOBODY uses this.... */
 #define AFS_ENV                 1
-#define AFS_64BIT_ENV           1	/* Defines afs_int32 as int, not long. */
 #if defined(__ppc__)
 #define AFS_PPC_ENV		1
 #elif defined(__i386__) || defined(__x86_64__)

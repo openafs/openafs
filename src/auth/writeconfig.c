@@ -10,30 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+#include <afs/opr.h>
 
 #include <afs/pthread_glock.h>
 #include <afs/afsutil.h>
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <fcntl.h>
-#include <io.h>
-#else
-#include <sys/file.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <stdio.h>
-#include <errno.h>
-#include <string.h>
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #include <rx/rxkad.h>
+
 #include "cellconfig.h"
 #include "keys.h"
 
@@ -130,7 +113,7 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
 
     LOCK_GLOBAL_MUTEX;
     /* write ThisCell file */
-    strcompose(tbuffer, 1024, apath, "/", AFSDIR_THISCELL_FILE, NULL);
+    strcompose(tbuffer, 1024, apath, "/", AFSDIR_THISCELL_FILE, (char *)NULL);
 
     fd = open(tbuffer, O_RDWR | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
@@ -157,7 +140,7 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
     }
 
     /* write CellServDB */
-    strcompose(tbuffer, 1024, apath, "/", AFSDIR_CELLSERVDB_FILE, NULL);
+    strcompose(tbuffer, 1024, apath, "/", AFSDIR_CELLSERVDB_FILE, (char *)NULL);
     tf = fopen(tbuffer, "w");
     if (!tf) {
 	UNLOCK_GLOBAL_MUTEX;

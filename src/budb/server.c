@@ -9,24 +9,13 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
-#include <fcntl.h>
-#include <sys/stat.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#include <WINNT/afsevent.h>
-#else
-#include <netinet/in.h>
-#include <sys/file.h>
-#include <sys/time.h>
-#include <netdb.h>
-#endif
-#include <string.h>
 #include <afs/stds.h>
-#include <sys/types.h>
-#include <time.h>
-#include <stdio.h>
+
+#include <roken.h>
+
+#ifdef AFS_NT40_ENV
+#include <WINNT/afsevent.h>
+#endif
 #include <afs/cmd.h>
 #include <lwp.h>
 #include <ubik.h>
@@ -38,16 +27,13 @@
 #include <afs/bubasics.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
-#include <errno.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
+#include <afs/audit.h>
+
 #include "budb_errs.h"
 #include "database.h"
 #include "error_macros.h"
 #include "budb_internal.h"
 #include "globals.h"
-#include "afs/audit.h"
 
 struct ubik_dbase *BU_dbase;
 struct afsconf_dir *BU_conf;	/* for getting cell info */
@@ -59,6 +45,7 @@ int parseServerList(struct cmd_item *);
 char lcell[MAXKTCREALMLEN];
 afs_uint32 myHost = 0;
 int helpOption;
+static struct logOptions logopts;
 
 /* server's global configuration information. This is exported to other
  * files/routines
@@ -79,19 +66,29 @@ int lwps   = 3;
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
 
-#if defined(AFS_PTHREAD_ENV)
-static int
-threadNum(void)
-{
-    return (intptr_t)pthread_getspecific(rx_thread_id_key);
-}
-#endif
-
 /* check whether caller is authorized to manage RX statistics */
 int
 BU_rxstat_userok(struct rx_call *call)
 {
     return afsconf_SuperUser(BU_conf, call, NULL);
+}
+
+/**
+ * Return true if this name is a member of the local realm.
+ */
+int
+BU_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
+{
+    struct afsconf_dir *dir = (struct afsconf_dir *)rock;
+    afs_int32 islocal = 0;	/* default to no */
+    int code;
+
+    code = afsconf_IsLocalRealmMatch(dir, &islocal, name, inst, cell);
+    if (code) {
+	LogError(code, "Failed local realm check; name=%s, inst=%s, cell=%s\n",
+		 name, inst, cell);
+    }
+    return islocal;
 }
 
 int
@@ -143,7 +140,7 @@ initializeArgHandler(void)
 
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 
-    cptr = cmd_CreateSyntax(NULL, argHandler, NULL, "Backup database server");
+    cptr = cmd_CreateSyntax(NULL, argHandler, NULL, 0, "Backup database server");
 
     cmd_AddParm(cptr, "-database", CMD_SINGLE, CMD_OPTIONAL,
 		"database directory");
@@ -177,6 +174,9 @@ initializeArgHandler(void)
 
     cmd_AddParm(cptr, "-audit-interface", CMD_SINGLE, CMD_OPTIONAL,
 		"audit interface (file or sysvmq)");
+
+    cmd_AddParm(cptr, "-transarc-logs", CMD_FLAG, CMD_OPTIONAL,
+		"enable Transarc style logging");
 }
 
 int
@@ -187,21 +187,16 @@ argHandler(struct cmd_syndesc *as, void *arock)
 
     /* database directory */
     if (as->parms[0].items != 0) {
-	globalConfPtr->databaseDirectory =
-	    (char *)malloc(strlen(as->parms[0].items->data) + 1);
+	globalConfPtr->databaseDirectory = strdup(as->parms[0].items->data);
 	if (globalConfPtr->databaseDirectory == 0)
 	    BUDB_EXIT(-1);
-	strcpy(globalConfPtr->databaseDirectory, as->parms[0].items->data);
     }
 
     /* -cellservdb, cell configuration directory */
     if (as->parms[1].items != 0) {
-	globalConfPtr->cellConfigdir =
-	    (char *)malloc(strlen(as->parms[1].items->data) + 1);
+	globalConfPtr->cellConfigdir = strdup(as->parms[1].items->data);
 	if (globalConfPtr->cellConfigdir == 0)
 	    BUDB_EXIT(-1);
-
-	strcpy(globalConfPtr->cellConfigdir, as->parms[1].items->data);
 
 	globalConfPtr->debugFlags |= DF_RECHECKNOAUTH;
     }
@@ -259,6 +254,11 @@ argHandler(struct cmd_syndesc *as, void *arock)
 	    BUDB_EXIT(-1);
 	}
     }
+    /* -transarc-logs */
+    if (as->parms[11].items != 0) {
+	logopts.lopt_rotateOnOpen = 1;
+	logopts.lopt_rotateStyle = logRotate_old;
+    }
 
     /* -auditlog */
     /* needs to be after -audit-interface, so we osi_audit_interface
@@ -294,7 +294,7 @@ parseServerList(struct cmd_item *itemPtr)
     LogDebug(3, "%d servers\n", nservers);
 
     /* now can allocate the space for the server arguments */
-    serverArgs = (char **)malloc((nservers + 2) * sizeof(char *));
+    serverArgs = malloc((nservers + 2) * sizeof(char *));
     if (serverArgs == 0)
 	ERROR(-1);
 
@@ -316,7 +316,7 @@ parseServerList(struct cmd_item *itemPtr)
 	ERROR(code);
 
     /* free space for the server args */
-    free((char *)serverArgs);
+    free(serverArgs);
 
   error_exit:
     return (code);
@@ -331,19 +331,14 @@ truncateDatabase(void)
 {
     char *path;
     afs_int32 code = 0;
-    int fd;
+    int fd,r;
 
-    path =
-	(char *)malloc(strlen(globalConfPtr->databaseDirectory) +
-		       strlen(globalConfPtr->databaseName) +
-		       strlen(globalConfPtr->databaseExtension) + 1);
-    if (path == 0)
+    r = asprintf(&path, "%s%s%s",
+		 globalConfPtr->databaseDirectory,
+		 globalConfPtr->databaseName,
+		 globalConfPtr->databaseExtension);
+    if (r < 0 || path == NULL)
 	ERROR(-1);
-
-    /* construct the database name */
-    strcpy(path, globalConfPtr->databaseDirectory);
-    strcat(path, globalConfPtr->databaseName);
-    strcat(path, globalConfPtr->databaseExtension);
 
     fd = open(path, O_RDWR, 0755);
     if (!fd) {
@@ -354,6 +349,8 @@ truncateDatabase(void)
 	} else
 	    close(fd);
     }
+
+    free(path);
 
   error_exit:
     return (code);
@@ -374,6 +371,7 @@ main(int argc, char **argv)
     time_t currentTime;
     afs_int32 code = 0;
     afs_uint32 host = ntohl(INADDR_ANY);
+    int r;
 
     char  clones[MAXHOSTSPERCELL];
 
@@ -411,6 +409,10 @@ main(int argc, char **argv)
     memset(&cellinfo_s, 0, sizeof(cellinfo_s));
     memset(clones, 0, sizeof(clones));
 
+    memset(&logopts, 0, sizeof(logopts));
+    logopts.lopt_dest = logDest_file;
+    logopts.lopt_filename = AFSDIR_SERVER_BUDBLOG_FILEPATH;
+
     osi_audit_init();
     osi_audit(BUDB_StartEvent, 0, AUD_END);
 
@@ -436,20 +438,10 @@ main(int argc, char **argv)
     strcpy(cellConfDir, AFSDIR_SERVER_ETC_DIRPATH);
     globalConfPtr->cellConfigdir = cellConfDir;
 
-    /* open the log file */
-/*
-    globalConfPtr->log = fopen(DEFAULT_LOGNAME,"a");
-    if ( globalConfPtr->log == NULL )
-    {
-	printf("Can't open log file %s - aborting\n", DEFAULT_LOGNAME);
-	BUDB_EXIT(-1);
-    }
-*/
-
     srandom(1);
 
 #ifdef AFS_PTHREAD_ENV
-    SetLogThreadNumProgram( threadNum );
+    SetLogThreadNumProgram( rx_GetThreadNum );
 #endif
 
     /* process the user supplied args */
@@ -463,16 +455,7 @@ main(int argc, char **argv)
 	BUDB_EXIT(0);
 
     /* open the log file */
-    globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
-    if (globalConfPtr->log == NULL) {
-	printf("Can't open log file %s - aborting\n",
-	       AFSDIR_SERVER_BUDBLOG_FILEPATH);
-	BUDB_EXIT(-1);
-    }
-
-    /* keep log closed so can remove it */
-
-    fclose(globalConfPtr->log);
+    OpenLog(&logopts);
 
     /* open the cell's configuration directory */
     LogDebug(4, "opening %s\n", globalConfPtr->cellConfigdir);
@@ -513,30 +496,23 @@ main(int argc, char **argv)
 	    ERROR(code);
     }
 
+    /* initialize audit user check */
+    osi_audit_set_user_check(BU_conf, BU_IsLocalRealmMatch);
+
     /* initialize ubik */
-    ubik_CRXSecurityProc = afsconf_ClientAuth;
-    ubik_CRXSecurityRock = BU_conf;
-
-    ubik_SRXSecurityProc = afsconf_ServerAuth;
-    ubik_SRXSecurityRock = BU_conf;
-
-    ubik_CheckRXSecurityProc = afsconf_CheckAuth;
-    ubik_CheckRXSecurityRock = BU_conf;
+    ubik_SetClientSecurityProcs(afsconf_ClientAuth, afsconf_UpToDate, BU_conf);
+    ubik_SetServerSecurityProcs(afsconf_BuildServerSecurityObjects,
+				afsconf_CheckAuth, BU_conf);
 
     if (ubik_nBuffers == 0)
 	ubik_nBuffers = 400;
 
     LogError(0, "Will allocate %d ubik buffers\n", ubik_nBuffers);
 
-    dbNamePtr =
-	(char *)malloc(strlen(globalConfPtr->databaseDirectory) +
-		       strlen(globalConfPtr->databaseName) + 1);
-    if (dbNamePtr == 0)
+    r = asprintf(&dbNamePtr, "%s%s", globalConfPtr->databaseDirectory,
+		 globalConfPtr->databaseName);
+    if (r < 0 || dbNamePtr == 0)
 	ERROR(-1);
-
-    /* construct the database name */
-    strcpy(dbNamePtr, globalConfPtr->databaseDirectory);
-    strcat(dbNamePtr, globalConfPtr->databaseName);	/* name prefix */
 
     rx_SetRxDeadTime(60);	/* 60 seconds inactive before timeout */
 
@@ -545,10 +521,10 @@ main(int argc, char **argv)
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
-            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
-                                           ADDRSPERSITE, reason,
-                                           AFSDIR_SERVER_NETINFO_FILEPATH,
-                                           AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+            ccode = afsconf_ParseNetFiles(SHostAddrs, NULL, NULL,
+                                          ADDRSPERSITE, reason,
+                                          AFSDIR_SERVER_NETINFO_FILEPATH,
+                                          AFSDIR_SERVER_NETRESTRICT_FILEPATH);
         } else
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
@@ -582,8 +558,7 @@ main(int argc, char **argv)
 	ERROR(code);
     }
 
-    afsconf_BuildServerSecurityObjects(BU_conf, 0,
-				       &securityClasses, &numClasses);
+    afsconf_BuildServerSecurityObjects(BU_conf, &securityClasses, &numClasses);
 
     tservice =
 	rx_NewServiceHost(host, 0, BUDB_SERVICE, "BackupDatabase",
@@ -642,49 +617,21 @@ consistencyCheckDb(void)
 void
 LogDebug(int level, char *fmt, ... )
 {
-    va_list ap;
-
-    va_start(ap, fmt);
-
     if (debugging >= level) {
-	/* log normally closed so can remove it */
-	globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
-	if (globalConfPtr->log != NULL) {
-	    vfprintf(globalConfPtr->log, fmt, ap);
-	    fflush(globalConfPtr->log);
-	    fclose(globalConfPtr->log);
-	}
+	va_list ap;
+	va_start(ap, fmt);
+	vFSLog(fmt, ap);
+	va_end(ap);
     }
-    va_end(ap);
-}
-
-static char *
-TimeStamp(time_t t)
-{
-    struct tm *lt;
-    static char timestamp[20];
-
-    lt = localtime(&t);
-    strftime(timestamp, 20, "%m/%d/%Y %H:%M:%S", lt);
-    return timestamp;
 }
 
 void
 Log(char *fmt, ...)
 {
     va_list ap;
-    time_t now;
 
     va_start(ap, fmt);
-    globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
-    if (globalConfPtr->log != NULL) {
-	now = time(0);
-	fprintf(globalConfPtr->log, "%s ", TimeStamp(now));
-
-	vfprintf(globalConfPtr->log, fmt, ap);
-	fflush(globalConfPtr->log);
-	fclose(globalConfPtr->log);
-    }
+    vFSLog(fmt, ap);
     va_end(ap);
 }
 
@@ -692,42 +639,21 @@ void
 LogError(long code, char *fmt, ... )
 {
     va_list ap;
-    time_t now;
+    int len;
+    char buffer[1024];
 
     va_start(ap, fmt);
-    globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
-
-    if (globalConfPtr->log != NULL) {
-	now = time(0);
-	fprintf(globalConfPtr->log, "%s ", TimeStamp(now));
-
-	if (code)
-	    fprintf(globalConfPtr->log, "%s: %s\n", afs_error_table_name(code),
-		    afs_error_message(code));
-	vfprintf(globalConfPtr->log, fmt, ap );
-	fflush(globalConfPtr->log);
-	fclose(globalConfPtr->log);
+    len = vsnprintf(buffer, sizeof(buffer), fmt, ap);
+    va_end(ap);
+    if (len >= 1024) {
+	len = 1023;
+	buffer[1023] = '\0';
+    }
+    /* Be consistent with (unintentional?) historic behavior. */
+    if (code) {
+	FSLog("%s: %s\n", afs_error_table_name(code), afs_error_message(code));
+	WriteLogBuffer(buffer, len);
+    } else {
+	FSLog("%s", buffer);
     }
 }
-
-
-/*  ----------------
- * debug
- * ----------------
- */
-
-void
-LogNetDump(struct dump *dumpPtr)
-{
-    struct dump hostDump;
-    extern buServerConfP globalConfPtr;
-
-    dump_ntoh(dumpPtr, &hostDump);
-
-    globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
-    if (globalConfPtr->log != NULL) {
-	printDump(globalConfPtr->log, &hostDump);
-	fclose(globalConfPtr->log);
-    }
-}
-

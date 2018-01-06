@@ -27,6 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #include <afs/vlserver.h>
 #include <afs/vldbint.h>
 #include <afs/dir.h>

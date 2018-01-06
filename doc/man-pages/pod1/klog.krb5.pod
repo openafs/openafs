@@ -252,11 +252,11 @@ ticket's lifetime is calculated as described in L</DESCRIPTION>.
    % klog.krb5
    Password for user@EXAMPLE.ORG:
 
-The following example authenticates the user as admin in the ABC
+The following example authenticates the user as admin in the Example
 Corporation's test cell:
 
-   % klog.krb5 -principal admin -cell test.abc.com
-   Password for admin@ABC.COM:
+   % klog.krb5 -principal admin -cell test.example.com
+   Password for admin@EXAMPLE.COM:
 
 In the following, the issuer requests a ticket lifetime of 104 hours 30
 minutes (4 days 8 hours 30 minutes).

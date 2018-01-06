@@ -14,6 +14,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "pts.h"
 
@@ -571,61 +572,61 @@ SetupPtsAdminCmd(void)
 {
     struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("PtsGroupMemberAdd", DoPtsGroupMemberAdd, NULL,
+    ts = cmd_CreateSyntax("PtsGroupMemberAdd", DoPtsGroupMemberAdd, NULL, 0,
 			  "add a user to a group");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to add");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to modify");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupOwnerChange", DoPtsGroupOwnerChange, NULL,
+    ts = cmd_CreateSyntax("PtsGroupOwnerChange", DoPtsGroupOwnerChange, NULL, 0,
 			  "change the owner of a group");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, CMD_REQUIRED, "new owner");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to modify");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupCreate", DoPtsGroupCreate, NULL,
+    ts = cmd_CreateSyntax("PtsGroupCreate", DoPtsGroupCreate, NULL, 0,
 			  "create a new group");
     cmd_AddParm(ts, "-owner", CMD_SINGLE, CMD_REQUIRED, "owner of group");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to create");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupGet", DoPtsGroupGet, NULL,
+    ts = cmd_CreateSyntax("PtsGroupGet", DoPtsGroupGet, NULL, 0,
 			  "get information about a group");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupDelete", DoPtsGroupDelete, NULL,
+    ts = cmd_CreateSyntax("PtsGroupDelete", DoPtsGroupDelete, NULL, 0,
 			  "delete a group");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to delete");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupMaxGet", DoPtsGroupMaxGet, NULL,
+    ts = cmd_CreateSyntax("PtsGroupMaxGet", DoPtsGroupMaxGet, NULL, 0,
 			  "get the maximum group id");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupMaxSet", DoPtsGroupMaxSet, NULL,
+    ts = cmd_CreateSyntax("PtsGroupMaxSet", DoPtsGroupMaxSet, NULL, 0,
 			  "set the maximum group id");
     cmd_AddParm(ts, "-max", CMD_SINGLE, CMD_REQUIRED, "new max group id");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupMemberList", DoPtsGroupMemberList, NULL,
+    ts = cmd_CreateSyntax("PtsGroupMemberList", DoPtsGroupMemberList, NULL, 0,
 			  "list members of a group");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupMemberRemove", DoPtsGroupMemberRemove, NULL,
+    ts = cmd_CreateSyntax("PtsGroupMemberRemove", DoPtsGroupMemberRemove, NULL, 0,
 			  "remove a member from a group");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to remove");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to modify");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupRename", DoPtsGroupRename, NULL,
+    ts = cmd_CreateSyntax("PtsGroupRename", DoPtsGroupRename, NULL, 0,
 			  "rename a group");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to modify");
     cmd_AddParm(ts, "-newname", CMD_SINGLE, CMD_REQUIRED, "new group name");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsGroupModify", DoPtsGroupModify, NULL,
+    ts = cmd_CreateSyntax("PtsGroupModify", DoPtsGroupModify, NULL, 0,
 			  "modify a group");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_REQUIRED, "group to modify");
     cmd_AddParm(ts, "-liststatus", CMD_SINGLE, CMD_REQUIRED,
@@ -640,28 +641,28 @@ SetupPtsAdminCmd(void)
 		"list delete permission <owner | group>");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserCreate", DoPtsUserCreate, NULL,
+    ts = cmd_CreateSyntax("PtsUserCreate", DoPtsUserCreate, NULL, 0,
 			  "create a new user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to create");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserDelete", DoPtsUserDelete, NULL,
+    ts = cmd_CreateSyntax("PtsUserDelete", DoPtsUserDelete, NULL, 0,
 			  "delete a user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to delete");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserGet", DoPtsUserGet, NULL,
+    ts = cmd_CreateSyntax("PtsUserGet", DoPtsUserGet, NULL, 0,
 			  "get information about a user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserRename", DoPtsUserRename, NULL,
+    ts = cmd_CreateSyntax("PtsUserRename", DoPtsUserRename, NULL, 0,
 			  "rename a user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to modify");
     cmd_AddParm(ts, "-newname", CMD_SINGLE, CMD_REQUIRED, "new user name");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserModify", DoPtsUserModify, NULL,
+    ts = cmd_CreateSyntax("PtsUserModify", DoPtsUserModify, NULL, 0,
 			  "change a user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to modify");
     cmd_AddParm(ts, "-groupquota", CMD_SINGLE, CMD_OPTIONAL,
@@ -674,21 +675,21 @@ SetupPtsAdminCmd(void)
 		"list membership permission <owner | any>");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserMaxGet", DoPtsUserMaxGet, NULL,
+    ts = cmd_CreateSyntax("PtsUserMaxGet", DoPtsUserMaxGet, NULL, 0,
 			  "get the max user id");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserMaxSet", DoPtsUserMaxSet, NULL,
+    ts = cmd_CreateSyntax("PtsUserMaxSet", DoPtsUserMaxSet, NULL, 0,
 			  "set the max user id");
     cmd_AddParm(ts, "-max", CMD_SINGLE, CMD_REQUIRED, "max user id");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsUserMemberList", DoPtsUserMemberList, NULL,
+    ts = cmd_CreateSyntax("PtsUserMemberList", DoPtsUserMemberList, NULL, 0,
 			  "list group membership for a user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("PtsOwnedGroupList", DoPtsOwnedGroupList, NULL,
+    ts = cmd_CreateSyntax("PtsOwnedGroupList", DoPtsOwnedGroupList, NULL, 0,
 			  "list groups owned by a user");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_REQUIRED, "user to query");
     SetupCommonCmdArgs(ts);

@@ -15,32 +15,9 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 # System specific build commands and flags
 DEFINES= -D_REENTRANT -DKERNEL -DUKERNEL
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBG} $(XCFLAGS)
-OPTF=-O
-WEBOPTS = -KPIC -I../nsapi -DNETSCAPE_NSAPI -DSOLARIS -DNET_SSL -DXP_UNIX -DMCC_HTTPD
 
 TEST_CFLAGS=-mt -DAFS_PTHREAD_ENV -Dsolaris -DAFS_SUN5_ENV $(XCFLAGS)
 TEST_LDFLAGS=
 TEST_LIBS=-lsocket -lnsl -lthread -lm -ldl
 
-LIBUAFS = libuafs.a
-LIBJUAFS = libjuafs.a
-LIBAFSWEB = nsafs.so
-LIBAFSWEBKRB = nsafs.krb.so
-
 include Makefile.common
-
-$(LIBUAFS): $(UAFSOBJ)
-	-$(RM) -f $(LIBUAFS)
-	$(AR) $(ARFLAGS) $(LIBUAFS) $(UAFSOBJ)
-
-$(LIBJUAFS): $(JUAFSOBJ)
-	-$(RM) -f $(LIBJUAFS)
-	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ)
-
-$(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a
-	-$(RM) -f $(LIBAFSWEB)
-	${LD} -G -M../mapfile -o $(LIBAFSWEB) $(AFSWEBOBJ) ${DES}/libdes.a $(WEBLIBS)
-
-$(LIBAFSWEBKRB): $(AFSWEBOBJKRB) $(DES)/libdes.a
-	-$(RM) -f $(LIBAFSWEBKRB)
-	${LD} -G -M../mapfile -o $(LIBAFSWEBKRB) $(AFSWEBOBJKRB) ${DES}/libdes.a $(WEBLIBS)

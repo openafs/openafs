@@ -7,14 +7,9 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 
-CFLAGS=${OPTIMIZE} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
-CCRULE=${CC} ${CFLAGS} -c $? -o $@
 
 AFSLIBS = \
 		${TOP_LIBDIR}/libkauth.a \
@@ -23,13 +18,15 @@ AFSLIBS = \
 		${TOP_LIBDIR}/libauth.a \
 		${TOP_LIBDIR}/librxkad.a \
 		${TOP_LIBDIR}/libsys.a \
-		${TOP_LIBDIR}/libdes.a \
+		${TOP_LIBDIR}/libafsrfc3961.a \
+		${TOP_LIBDIR}/libafshcrypto_lwp.a \
 		${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/libcmd.a \
 		${TOP_LIBDIR}/libafscom_err.a \
+		${TOP_LIBDIR}/libaudit.a \
 		${TOP_LIBDIR}/util.a \
-		${TOP_LIBDIR}/libaudit.a
+		${TOP_LIBDIR}/libopr.a
 
 KAFSLIBS = \
 		${TOP_LIBDIR}/libkauth.krb.a \
@@ -38,13 +35,15 @@ KAFSLIBS = \
 		${TOP_LIBDIR}/libauth.krb.a \
 		${TOP_LIBDIR}/librxkad.a \
 		${TOP_LIBDIR}/libsys.a \
-		${TOP_LIBDIR}/libdes.a \
+		${TOP_LIBDIR}/libafsrfc3961.a \
+		${TOP_LIBDIR}/libafshcrypto_lwp.a \
 		${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/libcmd.a \
 		${TOP_LIBDIR}/libafscom_err.a \
+		${TOP_LIBDIR}/libaudit.a \
 		${TOP_LIBDIR}/util.a \
-		${TOP_LIBDIR}/libaudit.a
+		${TOP_LIBDIR}/libopr.a
 
 AUTH_OBJS = \
 		aix_auth.o \
@@ -53,7 +52,7 @@ AUTH_OBJS = \
 		aix_ktc_null.o
 
 AUTH_KRB5_OBJS = \
-		aix_aklog.o 
+		aix_aklog.o
 
 AUTH_KRB_OBJS = \
 		aix_auth.o \
@@ -64,7 +63,7 @@ AUTH_KRB_OBJS = \
 AUTHLIBS= \
 		afs_dynamic_auth afs_dynamic_kerbauth @MAKE_KRB5@ aklog_dynamic_auth
 
-IMPORTS = -bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp 
+IMPORTS = -bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp
 LDFLAGS = -eafs_initialize ${IMPORTS} -lsys -lcsys -lc
 AKLDFLAGS = -eaklog_initialize ${IMPORTS} -lsys -lcsys -lc
 
@@ -76,44 +75,48 @@ clean:
 	$(RM) -f *.o $(AUTHLIBS) $(AUTHFILES) so_locations
 
 aklog_dynamic_auth: ${AUTH_KRB5_OBJS} ${AFSLIBS} ${AUTHFILES}
-	$(LD) -o $@ ${AUTH_KRB5_OBJS} $(AFSLIBS) ${AUTHFILES} @KRB5_LIBS@ ${XLIBS} ${AKLDFLAGS}
+	$(LD) -o $@ ${AUTH_KRB5_OBJS} $(AFSLIBS) ${AUTHFILES} \
+		$(LDFLAGS_krb5) $(LIB_krb5) \
+		$(LDFLAGS_roken) $(LIB_roken) ${XLIBS} ${AKLDFLAGS}
 
 afs_dynamic_auth: ${AUTH_OBJS} ${AFSLIBS} ${AUTHFILES}
-	$(LD) -o $@ ${AUTH_OBJS} $(AFSLIBS) ${AUTHFILES} @KRB5_LIBS@ ${XLIBS} ${LDFLAGS}
+	$(LD) -o $@ ${AUTH_OBJS} $(AFSLIBS) ${AUTHFILES} \
+		$(LDFLAGS_roken) $(LIB_roken) ${XLIBS} ${LDFLAGS}
 
 afs_dynamic_kerbauth: ${AUTH_KRB_OBJS} ${KAFSLIBS} ${AUTHFILES}
-	$(LD) -o $@ ${AUTH_KRB_OBJS} $(KAFSLIBS) ${AUTHFILES} @KRB5_LIBS@ ${XLIBS} ${LDFLAGS}
+	$(LD) -o $@ ${AUTH_KRB_OBJS} $(KAFSLIBS) ${AUTHFILES} \
+		$(LDFLAGS_roken) $(LIB_roken) ${XLIBS} ${LDFLAGS}
 
 aix_auth_common.o: ${srcdir}/aix_auth_common.c
-	${CCRULE}
 
+CPPFLAGS_aix_aklog.o = @KRB5_CPPFLAGS@
 aix_aklog.o: ${srcdir}/aix_aklog.c
-	${CCRULE} @KRB5_CPPFLAGS@
 
+CFLAGS_aix_ktc_krb.o = -DAFS_KERBEROS_ENV
 aix_ktc_krb.o: ${srcdir}/aix_ktc.c
-	${CCRULE} -DAFS_KERBEROS_ENV
+	$(AFS_CCRULE) ${srcdir}/aix_ktc.c
 
 aix_ktc_null.o: ${srcdir}/aix_ktc.c
-	${CCRULE}
+	$(AFS_CCRULE) ${srcdir}/aix_ktc.c
 
 aix_auth.o:
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	rs_aix4*) \
-		${CC} ${CFLAGS} -c ${srcdir}/aix41_auth.c -o $@ ;; \
+		${CC} ${AFS_CFLAGS} -c ${srcdir}/aix41_auth.c -o $@ ;; \
 	rs_aix5*) \
-		${CC} ${CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
+		${CC} ${AFS_CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
 	rs_aix6*) \
-		${CC} ${CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
+		${CC} ${AFS_CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
 	*) \
 		echo "not building aix lam binary for ${SYS_NAME}" ;; \
 	esac
 
 # aix41_ident.c is a null source file for rs_aix5*
 aix_ident.o: ${srcdir}/aix41_ident.c
-	${CCRULE}
+	$(AFS_CCRULE) ${srcdir}/aix41_ident.c
 
 dest: afs_dynamic_auth afs_dynamic_kerbauth @MAKE_KRB5@ aklog_dynamic_auth
-	${INSTALL} -d ${DEST}/root.client/usr/vice/etc 
+	${INSTALL} -d ${DEST}/root.client/usr/vice/etc
 	${INSTALL_PROGRAM} afs_dynamic_auth \
 		${DEST}/root.client/usr/vice/etc/afs_dynamic_auth
 	${INSTALL_PROGRAM} afs_dynamic_kerbauth \

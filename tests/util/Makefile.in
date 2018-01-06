@@ -3,20 +3,23 @@
 srcdir=@srcdir@
 abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.lwp
 
-CFLAGS += -I$(srcdir)/..
+MODULE_CFLAGS = -I$(srcdir)/../..
+
+LIBS = ../tap/libtap.a \
+       $(abs_top_builddir)/lib/util.a \
+       $(abs_top_builddir)/lib/libopr.a
 
 tests = ktime-t exec-alt-t
 
 all check test tests: $(tests)
 
-ktime-t: ktime-t.o
-	$(CC) $(LDFLAGS) -o ktime-t ktime-t.o ../tap/libtap.a \
-	    $(abs_top_builddir)/lib/util.a $(XLIBS)
+ktime-t: ktime-t.o $(LIBS)
+	$(AFS_LDRULE) ktime-t.o $(LIBS) $(XLIBS)
 
-exec-alt-t: exec-alt-t.o
-	$(CC) $(LDFLAGS) -o exec-alt-t exec-alt-t.o ../tap/libtap.a \
-	    $(abs_top_builddir)/lib/util.a $(XLIBS)
+exec-alt-t: exec-alt-t.o $(LIBS)
+	$(AFS_LDRULE) exec-alt-t.o $(LIBS) $(XLIBS)
 
 install:
 

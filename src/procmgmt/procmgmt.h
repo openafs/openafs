@@ -58,6 +58,8 @@ PMGTEXPORT extern size_t pmgt_spawnDataLen;
     pmgt_ProcessSpawnVEB(spath, sargv, senvp, sdatap, sdatalen)
 #define spawnprocve(spath, sargv, senvp, estatus) \
     pmgt_ProcessSpawnVEB(spath, sargv, senvp, NULL, 0)
+#define spawnprocve_sig(spath, sargv, senvp, estatus, mask) \
+    pmgt_ProcessSpawnVEB(spath, sargv, senvp, NULL, 0)
 #define spawnprocv(spath, sargv, estatus) \
     pmgt_ProcessSpawnVEB(spath, sargv, NULL, NULL, 0)
 
@@ -177,12 +179,14 @@ extern int pmgt_SignalRaiseRemote(pid_t pid, int signo);
 /* -----------------  Processes  ---------------- */
 
 #define spawnprocve(spath, sargv, senvp, estatus) \
-    pmgt_ProcessSpawnVE(spath, sargv, senvp, estatus)
+    pmgt_ProcessSpawnVE(spath, sargv, senvp, estatus, NULL)
+#define spawnprocve_sig(spath, sargv, senvp, estatus, mask) \
+    pmgt_ProcessSpawnVE(spath, sargv, senvp, estatus, mask)
 #define spawnprocv(spath, sargv, estatus) \
-    pmgt_ProcessSpawnVE(spath, sargv, NULL, estatus)
+    pmgt_ProcessSpawnVE(spath, sargv, NULL, estatus, NULL)
 
 extern pid_t pmgt_ProcessSpawnVE(const char *spath, char **sargv,
-				 char **senvp, int estatus);
+				 char **senvp, int estatus, sigset_t *mask);
 
 
 #endif /* AFS_NT40_ENV */

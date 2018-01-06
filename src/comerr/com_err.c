@@ -7,10 +7,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "internal.h"
-#include <stdio.h>
-#include <stdarg.h>
 #include "error_table.h"
 #include "com_err.h"
 

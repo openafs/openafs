@@ -13,31 +13,51 @@
 # HTML_XSL is possibly specific to Debian and may need to be modified on other
 # systems.
 
-all: pdf html
+BOOK = auagd000
+
+all: $(BOOK).pdf index.html $(BOOK).epub $(BOOK).mobi
 
 include @TOP_OBJDIR@/src/config/Makefile.config
-VERSFILE=version
+VERSION=version
 include @TOP_OBJDIR@/src/config/Makefile.version
 
-BOOK     = auagd000.xml
-SRCS     = $(BOOK) auagd005.xml auagd006.xml auagd007.xml auagd008.xml \
+SRCS     = $(BOOK).xml auagd005.xml auagd006.xml auagd007.xml auagd008.xml \
 	   auagd009.xml auagd010.xml auagd011.xml auagd012.xml auagd013.xml \
-	   auagd014.xml auagd015.xml auagd016.xml auagd017.xml auagd018.xml \
+	   auagd014.xml auagd015.xml auagd017.xml auagd018.xml \
 	   auagd019.xml auagd020.xml auagd021.xml auagd022.xml auagd023.xml \
-	   auagd024.xml auagd025.xml
+	   auagd024.xml auagd025.xml $(VERSION).xml
 HTML_XSL = @HTML_XSL@
+DOCBOOK_STYLESHEETS = @DOCBOOK_STYLESHEETS@
 XSLTPROC = @XSLTPROC@
 DOCBOOK2PDF = @DOCBOOK2PDF@
+KINDLEGEN = @KINDLEGEN@
+DBTOEPUB = $(DOCBOOK_STYLESHEETS)/epub/bin/dbtoepub
 
-html: $(SRCS) $(VERSFILE).xml
+index.html: $(SRCS)
 	$(XSLTPROC) --param navig.graphics 1 \
-	    --stringparam navig.graphics.path ../ $(HTML_XSL) $(BOOK)
+	    --param use.id.as.filename 1 \
+	    --stringparam navig.graphics.path ../ $(DOCBOOK_STYLESHEETS)/$(HTML_XSL) $(BOOK).xml
 
-pdf: $(SRCS) $(VERSFILE).xml
-	$(DOCBOOK2PDF) $(BOOK)
+$(BOOK).pdf: $(SRCS)
+	if test "x$(DOCBOOK2PDF)" = "xfop"; then \
+		$(XSLTPROC) $(DOCBOOK_STYLESHEETS)/fo/docbook.xsl $(BOOK).xml > $(BOOK).fo; \
+		$(DOCBOOK2PDF) $(BOOK).fo $(BOOK).pdf; \
+	else \
+		$(DOCBOOK2PDF) $(BOOK).xml; \
+	fi
+
+$(BOOK).epub: $(SRCS)
+	if test -x "$(DBTOEPUB)" ; then \
+		$(DBTOEPUB) -s $(TOP_SRCDIR)/../doc/xml/mobi-fixup.xsl $(BOOK).xml; \
+	fi
+
+$(BOOK).mobi: $(BOOK).epub
+	if test -n "$(KINDLEGEN)" && test -x "$(DBTOEPUB)" ; then \
+		$(KINDLEGEN) $(BOOK).epub -o $(BOOK).mobi; \
+	fi
 
 check:
-	xmllint --noout --valid $(BOOK)
+	xmllint --noout --valid $(BOOK).xml
 
 clean:
-	rm -f *.html *.pdf
+	rm -f *.aux *.epub *.fo *.html *.log *.mobi *.out *.pdf

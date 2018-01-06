@@ -11,26 +11,19 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
-#include <string.h>
 #include <afs/stds.h>
-#include <sys/types.h>
+
+#include <roken.h>
+
 #include <lock.h>
 #include <ubik.h>
+#include <afs/cellconfig.h>
+#include <afs/audit.h>
+
 #include "database.h"
 #include "error_macros.h"
 #include "budb_errs.h"
 #include "budb_internal.h"
-#include <afs/cellconfig.h>
-#include "afs/audit.h"
 
 #undef min
 #undef max
@@ -136,10 +129,10 @@ int blockEntries[NBLOCKTYPES] = {
 
 int blockEntrySize[NBLOCKTYPES] = {
     0 /* free */ ,
-    sizeof(((struct vfBlock *) NULL)->a[0]),
-    sizeof(((struct viBlock *) NULL)->a[0]),
-    sizeof(((struct tBlock *) NULL)->a[0]),
-    sizeof(((struct dBlock *) NULL)->a[0]),
+    sizeof(struct vfBlock_frag),
+    sizeof(struct viBlock_info),
+    sizeof(struct tBlock_tape),
+    sizeof(struct dBlock_dump),
     0,
     0,
 };
@@ -706,10 +699,9 @@ verifyBlocks(struct ubik_trans *ut)
 	bmsize =
 	    sizeof(*ablockMap) + (blockEntries[blocktype] -
 				  1) * sizeof(ablockMap->entries[0]);
-	ablockMap = (struct blockMap *)malloc(bmsize);
+	ablockMap = calloc(1, bmsize);
 	if (!ablockMap)
 	    ERROR(BUDB_NOMEM);
-	memset(ablockMap, 0, bmsize);
 
 	ablockMap->nEntries = blockEntries[blocktype];
 
@@ -1024,7 +1016,6 @@ verifyFreeLists(void)
 		Log("     Skipping remainder of free chain\n");
 		if (BumpErrors())
 		    return (DBBAD);
-		code = 0;
 		break;
 	    }
 
@@ -1197,7 +1188,6 @@ verifyTextChain(struct ubik_trans *ut, struct textBlock *tbPtr)
 
     for (new = 0; new < 2; new++) {
 	size = 0;
-	blockAddr = ntohl(tbPtr->textAddr);
 
 	for (blockAddr =
 	     (new ? ntohl(tbPtr->newTextAddr) : ntohl(tbPtr->textAddr));
@@ -1289,10 +1279,9 @@ verifyDatabase(struct ubik_trans *ut,
 
     /* construct block map - first level is the array of pointers */
     bmsize = nBlocks * sizeof(struct blockMap *);
-    blockMap = (struct blockMap **)malloc(bmsize);
+    blockMap = calloc(1, bmsize);
     if (!blockMap)
 	ERROR(BUDB_NOMEM);
-    memset(blockMap, 0, bmsize);
 
     /* verify blocks and construct the block map */
     Log("Read header of every block\n");

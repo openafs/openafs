@@ -1,0 +1,98 @@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+include @TOP_OBJDIR@/src/config/Makefile.libtool
+
+LT_objs = assert.lo casestrcpy.lo dict.lo fmt.lo proc.lo rbtree.lo softsig.lo uuid.lo
+LT_libs = $(LIB_hcrypto) $(LIB_roken)
+
+HEADERS = $(TOP_INCDIR)/afs/opr.h \
+	  $(TOP_INCDIR)/afs/opr_assert.h \
+	  $(TOP_INCDIR)/opr/dict.h \
+	  $(TOP_INCDIR)/opr/ffs.h \
+	  $(TOP_INCDIR)/opr/fmt.h \
+	  $(TOP_INCDIR)/opr/jhash.h \
+	  $(TOP_INCDIR)/opr/lock.h \
+	  $(TOP_INCDIR)/opr/lockstub.h \
+	  $(TOP_INCDIR)/opr/proc.h \
+	  $(TOP_INCDIR)/opr/queue.h \
+	  $(TOP_INCDIR)/opr/rbtree.h \
+	  $(TOP_INCDIR)/opr/softsig.h \
+	  $(TOP_INCDIR)/opr/time.h \
+	  $(TOP_INCDIR)/opr/uuid.h
+
+all: $(HEADERS) liboafs_opr.la $(TOP_LIBDIR)/libopr_pic.a $(TOP_LIBDIR)/libopr.a
+
+liboafs_opr.la: liboafs_opr.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libopr.a: $(LT_objs)
+	$(LT_LDLIB_static) $(LT_objs)
+
+libopr_pic.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
+
+$(TOP_LIBDIR)/libopr.a: libopr.a
+	$(INSTALL_DATA) libopr.a $@
+
+$(TOP_LIBDIR)/libopr_pic.a: libopr_pic.la
+	$(INSTALL_DATA) .libs/libopr_pic.a $@
+
+$(TOP_INCDIR)/afs/opr.h: opr.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/afs/opr_assert.h: ${srcdir}/opr_assert.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/dict.h: ${srcdir}/dict.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/ffs.h: ${srcdir}/ffs.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/fmt.h: ${srcdir}/fmt.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/jhash.h: ${srcdir}/jhash.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/lockstub.h: ${srcdir}/lockstub.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/proc.h: ${srcdir}/proc.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/queue.h: ${srcdir}/queue.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/rbtree.h: ${srcdir}/rbtree.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/lock.h: ${srcdir}/opr_lock.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/time.h: ${srcdir}/opr_time.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/uuid.h: ${srcdir}/uuid.h
+	$(INSTALL_DATA) $? $@
+
+$(TOP_INCDIR)/opr/softsig.h: softsig.h
+	$(INSTALL_DATA) $? $@
+
+clean:
+	$(LT_CLEAN)
+	rm -f libopr.a *.o
+
+install: libopr.a
+	$(INSTALL_DATA) libopr.a $(DESTDIR)$(libdir)/libopr.a
+	$(INSTALL) -d $(DESTDIR)$(includedir)/opr
+	$(INSTALL_DATA) ${srcdir}/queue.h $(DESTDIR)$(includedir)/opr/queue.h
+
+dest: libopr.a
+	$(INSTALL_DATA) libopr.a $(DEST)/lib/libopr.a
+	$(INSTALL) -d $(DEST)/include/opr
+	$(INSTALL_DATA) ${srcdir}/queue.h $(DEST)/include/opr/queue.h
+
+buildtools: $(HEADERS) $(TOP_LIBDIR)/libopr.a
+

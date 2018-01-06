@@ -31,6 +31,7 @@
 /* AFS_SC_DARWIN_ALL sysctls */
 #define AFS_SC_DARWIN_ALL_REALMODES             1
 #define AFS_SC_DARWIN_ALL_FSEVENTS		2
+#define AFS_SC_DARWIN_ALL_BULKSTAT              3
 
 /* AFS_SC_AIX: aix platforms */
 #define AFS_SC_AIX_ALL				0

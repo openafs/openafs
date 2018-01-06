@@ -39,9 +39,8 @@ B<sys>.
 
 =head1 OUTPUT
 
-The machine's system type appears as a text string:
-
-   I<system_type>
+The machine's system type appears as a text string, by itself, on a single
+line.
 
 =head1 EXAMPLES
 

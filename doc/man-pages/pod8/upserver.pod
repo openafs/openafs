@@ -8,7 +8,8 @@ upserver - Initializes the server portion of the Update Server
 <div class="synopsis">
 
 B<upserver> [<I<directory>>+] S<<< [B<-crypt> <I<directory>>+] >>>
-    S<<< [B<-clear> <I<directory>>+] >>> S<<< [B<-auth> <I<directory>>+] >>> [B<-help>]
+    S<<< [B<-clear> <I<directory>>+] >>> S<<< [B<-auth> <I<directory>>+] >>>
+    [B<-rxbind>] [B<-help>]
 
 =for html
 </div>
@@ -84,6 +85,11 @@ B<-clear> and B<-crypt> arguments. Do not use this argument, because the
 B<upclient> process does not have a corresponding argument that it can use
 to request data transfer at this level.
 
+=item B<-rxbind>
+
+Bind the Rx socket to the primary interface only. (If not specified, the Rx
+socket will listen on all interfaces.)
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are
@@ -94,12 +100,12 @@ ignored.
 =head1 EXAMPLES
 
 The following example bos create command defines and starts an B<upserver>
-process on the host machine C<fs1.abc.com>. The last parameter (enclosed
+process on the host machine C<fs1.example.com>. The last parameter (enclosed
 in quotes) instructs the B<upserver> process to distribute the contents of
 the F</usr/afs/bin> directory in unencrypted form and the contents of the
 F</usr/afs/etc> directory in encrypted form.
 
-   % bos create  -server fs1.abc.com -instance upserver -type simple \
+   % bos create  -server fs1.example.com -instance upserver -type simple \
        -cmd "/usr/afs/bin/upserver /usr/afs/bin -crypt /usr/afs/etc"
 
 =head1 PRIVILEGE REQUIRED

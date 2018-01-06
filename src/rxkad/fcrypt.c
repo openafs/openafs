@@ -13,17 +13,12 @@
 
 
 #include <afsconfig.h>
-#ifdef KERNEL
-#include "afs/param.h"
-#else
 #include <afs/param.h>
-#endif
-
+#include <afs/stds.h>
 
 #define DEBUG 0
 #ifdef KERNEL
 #ifndef UKERNEL
-#include "afs/stds.h"
 #if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
 #include "h/systm.h"
 #endif
@@ -33,29 +28,22 @@
 #endif
 #else /* UKERNEL */
 #include "afs/sysincludes.h"
-#include "afs/stds.h"
 #endif /* UKERNEL */
 #ifdef AFS_LINUX22_ENV
 #include <asm/byteorder.h>
 #endif
 
 #else /* KERNEL */
+# include <roken.h>
+# include <afs/opr.h>
 
-#include <afs/stds.h>
-#include <sys/types.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <rx/rx.h>
+# include <rx/rx.h>
 #endif /* KERNEL */
 
 #include "sboxes.h"
 #include "fcrypt.h"
 #include "rxkad.h"
-#include <des/stats.h>
+#include <rx/rxkad_stats.h>
 
 #ifdef TCRYPT
 int ROUNDS = 16;

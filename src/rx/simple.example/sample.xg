@@ -23,9 +23,5 @@ prefix S
 /* Minimum number of requests that are guaranteed to be handled immediately */
 %#define	SAMPLE_MIN	1
 
-/* Index of the "null" security class in the sample service.  This must be 0 (there are N classes, numbered from 0.  In this case, N is 1) */
-%#define	SAMPLE_NULL	0
-
-
 Add(IN int a, int b, OUT int *result) = 1;
 Sub(IN int a, int b, OUT int *result) = 2;

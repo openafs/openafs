@@ -10,12 +10,12 @@ end		return END;
 
 [\t\n\r ]		;
 
-\"{PC}*\"	{ char *p; yylval.dynstr = ds((char *)yytext+1);
+\"{PC}*\"	{ char *p; yylval.dynstr = strdup((char *)yytext+1);
 		  if ((p=strrchr(yylval.dynstr, '"'))) *p='\0';
 		  return QUOTED_STRING;
 		}
 
-{AN}*	{ yylval.dynstr = ds((char *)yytext); return STRING; }
+{AN}*	{ yylval.dynstr = strdup((char *)yytext); return STRING; }
 
 #.*\n		;
 

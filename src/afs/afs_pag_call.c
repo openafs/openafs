@@ -18,12 +18,7 @@
 #include "rx/rxstat.h"
 #if !defined(UKERNEL) && !defined(AFS_LINUX20_ENV)
 #include "net/if.h"
-#ifdef AFS_SGI62_ENV
-#include "h/hashing.h"
-#endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN_ENV)
 #include "netinet/in_var.h"
-#endif
 #endif /* !defined(UKERNEL) */
 #include "rmtsys.h"
 #include "pagcb.h"
@@ -61,7 +56,7 @@ afs_Daemon(void)
 	now = osi_Time();
 
 	if (last10MinCheck + 600 < now) {
-	    afs_GCUserData(0);
+	    afs_GCUserData();
 	}
 
 	if (last60MinCheck + 3600 < now) {
@@ -73,7 +68,7 @@ afs_Daemon(void)
 	afs_osi_Wait(now, &AFS_WaitHandler, 0);
 
 	if (afs_termState == AFSOP_STOP_AFS) {
-#if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
+#if defined(RXK_LISTENER_ENV)
 	    afs_termState = AFSOP_STOP_RXEVENT;
 #else
 	    afs_termState = AFSOP_STOP_COMPLETE;
@@ -98,7 +93,6 @@ afspag_Init(afs_int32 nfs_server_addr)
     AFS_GLOCK();
 
     afs_InitStats();
-    rx_SetBusyChannelError(1);  /* turn on busy call error reporting */
     rx_Init(htons(7001));
 
     AFS_STATCNT(afs_ResourceInit);
@@ -106,10 +100,6 @@ afspag_Init(afs_int32 nfs_server_addr)
     AFS_RWLOCK_INIT(&afs_xpagcell, "afs_xpagcell");
     AFS_RWLOCK_INIT(&afs_xpagsys, "afs_xpagsys");
     AFS_RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
-#ifndef AFS_FBSD_ENV
-    LOCK_INIT(&osi_fsplock, "osi_fsplock");
-    LOCK_INIT(&osi_flplock, "osi_flplock");
-#endif
 
     afs_resourceinit_flag = 1;
     afs_nfs_server_addr = nfs_server_addr;
@@ -178,18 +168,16 @@ afspag_Shutdown(void)
     }
     /* afs_Daemon sets AFS_STOP_RXEVENT */
 
-#if defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
+#if defined(RXK_LISTENER_ENV)
     while (afs_termState == AFSOP_STOP_RXEVENT)
 	afs_osi_Sleep(&afs_termState);
     /* afs_rxevent_daemon sets AFSOP_STOP_RXK_LISTENER */
 
-#if defined(RXK_LISTENER_ENV)
     afs_osi_UnmaskRxkSignals();
     osi_StopListener();
     while (afs_termState == AFSOP_STOP_RXK_LISTENER)
 	afs_osi_Sleep(&afs_termState);
     /* rxk_Listener sets AFSOP_STOP_COMPLETE */
-#endif
 #endif
 }
 
@@ -367,29 +355,9 @@ outparam_conversion(int cmd, char *buffer, int buf_size, int in)
 
 /* called with the GLOCK held */
 int
-#ifdef	AFS_SUN5_ENV
-afs_syscall_pioctl(path, com, cmarg, follow, rvp, credp)
-     rval_t *rvp;
-     afs_ucred_t *credp;
-#else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_syscall_pioctl(path, com, cmarg, follow, credp)
-     afs_ucred_t *credp;
-#else
-afs_syscall_pioctl(path, com, cmarg, follow)
-#endif
-#endif
-     char *path;
-     unsigned int com;
-     caddr_t cmarg;
-     int follow;
+afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 {
-#ifdef	AFS_AIX41_ENV
-    struct ucred *credp = crref();	/* don't free until done! */
-#endif
-#ifdef AFS_LINUX22_ENV
     cred_t *credp = crref();	/* don't free until done! */
-#endif
     struct afs_ioctl data;
     struct clientcred ccred;
     struct rmtbulk idata, odata;
@@ -529,9 +497,7 @@ out_path:
 	osi_FreeLargeSpace(pathbuf);
 
 out:
-#if defined(AFS_LINUX22_ENV) || defined(AFS_AIX41_ENV)
     crfree(credp);
-#endif
 #if defined(KERNEL_HAVE_UERROR)
     if (!getuerror())
 	setuerror(code);
@@ -547,11 +513,7 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
      long parm, parm2, parm3, parm4, parm5, parm6;
 {
     /* Superusers may shut us down, such as with afsd -shutdown. */
-#ifdef AFS_SUN5_ENV
-    if (parm == AFSOP_SHUTDOWN && afs_suser(CRED()))
-#else
     if (parm == AFSOP_SHUTDOWN && afs_suser(NULL))
-#endif
     {
 	AFS_GLOCK();
 	afspag_Shutdown();

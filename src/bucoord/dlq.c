@@ -9,9 +9,8 @@
 
 #include <afsconfig.h>
 #include <afs/stds.h>
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
+
+#include <roken.h>
 
 #include "bc.h"
 #include <afs/bubasics.h>

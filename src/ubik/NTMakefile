@@ -12,11 +12,11 @@ RELDIR=ubik
 ############################################################################
 # Install header files
 
-INCFILEDIR = $(DESTDIR)\include 
+INCFILEDIR = $(DESTDIR)\include
 
 INCFILES =\
 	$(INCFILEDIR)\ubik.h \
-	$(INCFILEDIR)\ubik_int.h 
+	$(INCFILEDIR)\ubik_int.h
 
 install_headers: $(INCFILES)
 
@@ -45,7 +45,7 @@ LIBOBJS =\
 
 
 $(LIBFILE): $(LIBOBJS)
-	$(LIBARCH) 
+	$(LIBARCH)
 
 ############################################################################
 # build mtafsubik.lib
@@ -53,22 +53,49 @@ $(LIBFILE): $(LIBOBJS)
 MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsubik.lib
 
 MT_LIBOBJS =\
-	$(OUT)\disk.obj \
-	$(OUT)\remote.obj \
-	$(OUT)\beacon.obj \
-	$(OUT)\recovery.obj \
-	$(OUT)\ubik.obj \
-	$(OUT)\uinit.obj \
-	$(OUT)\vote.obj \
-	$(OUT)\lock.obj \
-	$(OUT)\phys.obj \
+	$(OUT)\disk_mt.obj \
+	$(OUT)\remote_mt.obj \
+	$(OUT)\beacon_mt.obj \
+	$(OUT)\recovery_mt.obj \
+	$(OUT)\ubik_mt.obj \
+	$(OUT)\uinit_mt.obj \
+	$(OUT)\vote_mt.obj \
+	$(OUT)\lock_mt.obj \
+	$(OUT)\phys_mt.obj \
 	$(OUT)\ubik_int_mt.cs.obj \
 	$(OUT)\ubik_int_mt.ss.obj \
 	$(OUT)\ubik_int_mt.xdr.obj \
-	$(OUT)\ubikcmd.obj \
-	$(OUT)\ubikclient.obj \
+	$(OUT)\ubikcmd_mt.obj \
+	$(OUT)\ubikclient_mt.obj \
 	$(OUT)\uerrors_mt.obj	\
 	$(OUT)\AFS_component_version_number.obj
+
+$(OUT)\disk_mt.obj:disk.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\remote_mt.obj:remote.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\beacon_mt.obj:beacon.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\recovery_mt.obj:recovery.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\ubik_mt.obj:ubik.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\uinit_mt.obj:uinit.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\vote_mt.obj:vote.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\lock_mt.obj:lock.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\phys_mt.obj:phys.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(OUT)\uerrors_mt.obj:uerrors.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
@@ -82,8 +109,14 @@ $(OUT)\ubik_int_mt.ss.obj:ubik_int.ss.c
 $(OUT)\ubik_int_mt.xdr.obj:ubik_int.xdr.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
-$(MT_LIBFILE): $(MT_LIBOBJS)  
-	$(LIBARCH) 
+$(OUT)\ubikcmd_mt.obj:ubikcmd.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\ubikclient_mt.obj:ubikclient.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(MT_LIBFILE): $(MT_LIBOBJS)
+	$(LIBARCH)
 
 ############################################################################
 # Definitions for building a EXE.
@@ -98,17 +131,20 @@ UDBG_EXEOBJS =\
 UDBG_EXELIBS =\
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afslwp.lib \
      	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
-     	$(DESTDIR)\lib\afs\afsutil.lib
+	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\opr.lib \
+	$(DESTDIR)\lib\afsroken.lib
 
 
-$(RS_UDBG_EXEFILE): $(UDBG_EXEOBJS) $(UDBG_EXELIBS)  
+$(RS_UDBG_EXEFILE): $(UDBG_EXEOBJS) $(UDBG_EXELIBS)
 	$(EXECONLINK) iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP)  
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -149,38 +185,35 @@ uerrors.c ubik.h: uerrors.et ubik.p.h
 ############################################################################
 # Install target; primary makefile target
 
-install9X: $(INCFILES) $(LIBFILE)
-
 install: $(INCFILES) $(LIBFILE) $(MT_LIBFILE) $(CL_UDBG_EXEFILE)
 
-
 clean::
-	$(DEL) ubik_int.ss.c ubik_int.cs.c ubik_int.xdr.c 
+	$(DEL) ubik_int.ss.c ubik_int.cs.c ubik_int.xdr.c
 	$(DEL) uerrors.c $(INCFILES)
 	$(DEL) ubik_int.h ubik.h
 
 ############################################################################
 # test ubik
 
-test tests: utst_server utst_client $(EXEFILE) 
+test tests: utst_server utst_client $(EXEFILE)
 
 utst_server: $(OUT)\utst_server.obj $(OUT)\utst_int.ss.obj $(OUT)\utst_int.xdr.obj  $(EXELIBS)
-	$(EXECONLINK) 
+	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
-	
+
 utst_client: $(OUT)\utst_client.obj $(OUT)\utst_int.cs.obj $(OUT)\utst_int.xdr.obj $(EXELIBS)
-	$(EXECONLINK) 
+	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
-	
+
 # rxgen on utst_int.xg
 utst_int.ss.c utst_int.cs.c utst_int.xdr.c utst_int.h: utst_int.xg
 	$(RXGEN)  utst_int.xg
 
-$(OUT)\utst_server.obj $(OUT)\utst_client.obj : utst_int.h 
+$(OUT)\utst_server.obj $(OUT)\utst_client.obj : utst_int.h
 
 mkdir:
-	
+

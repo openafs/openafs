@@ -16,7 +16,7 @@ libafsconf.dll                 0x61780000    0x00080000
 libafstokens.dll               0x61800000    0x00080000
 afslogon.dll                   0x61880000    0x00080000
 afslog95.dll                   0x61900000    0x00080000
-afs_shl_ext.dll                0x61980000    0x00080000
+afs_shl_ext.dll                0x61980000    0x000A0000
 afsserver.cpl                  0x61A00000    0x00080000
 afs_cpa.cpl                    0x61A80000    0x00080000
 

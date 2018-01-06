@@ -32,4 +32,6 @@ extern int afs_statfs(struct mount *mp, struct statfs *abp);
 extern int afs_statfs(struct mount *mp, struct statfs *abp, struct thread *td);
 #endif
 
+extern int osi_fbsd_checkinuse(struct vcache *avc);
+
 #endif /* _OSI_PROTO_H_ */

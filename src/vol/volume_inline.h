@@ -18,6 +18,9 @@
 #endif
 
 #ifdef AFS_PTHREAD_ENV
+
+#include <afs/opr_assert.h>
+
 /**
  * @param[in] cv cond var
  * @param[in] ts deadline, or NULL to wait forever
@@ -37,7 +40,7 @@ VOL_CV_TIMEDWAIT(pthread_cond_t *cv, const struct timespec *ts, int *timedout)
 	return;
     }
     VOL_LOCK_DBG_CV_WAIT_BEGIN;
-    code = CV_TIMEDWAIT(cv, &vol_glock_mutex, ts);
+    code = opr_cv_timedwait(cv, &vol_glock_mutex, ts);
     VOL_LOCK_DBG_CV_WAIT_END;
     if (code == ETIMEDOUT) {
 	code = 0;
@@ -45,7 +48,7 @@ VOL_CV_TIMEDWAIT(pthread_cond_t *cv, const struct timespec *ts, int *timedout)
 	    *timedout = 1;
 	}
     }
-    osi_Assert(code == 0);
+    opr_Assert(code == 0);
 }
 #endif /* AFS_PTHREAD_ENV */
 
@@ -234,7 +237,7 @@ VCanUnlockAttached(void)
  * read lock, or if we do not need to lock it at all, when attaching.
  *
  * @param[in]  mode  volume attachment mode
- * @param[in]  writeable  1 if the volume is writable, 0 if not
+ * @param[in]  writable  1 if the volume is writable, 0 if not
  *
  * @return how we need to lock the vol header
  *  @retval 0 do not lock the vol header at all
@@ -244,11 +247,11 @@ VCanUnlockAttached(void)
  * @note DAFS only (non-DAFS uses partition locks)
  */
 static_inline int
-VVolLockType(int mode, int writeable)
+VVolLockType(int mode, int writable)
 {
     switch (programType) {
     case fileServer:
-	if (writeable) {
+	if (writable) {
 	    return WRITE_LOCK;
 	}
 	return READ_LOCK;
@@ -271,7 +274,7 @@ VVolLockType(int mode, int writeable)
 
 	case V_CLONE:
 	case V_DUMP:
-	    if (writeable) {
+	    if (writable) {
 		return WRITE_LOCK;
 	    }
 	    return READ_LOCK;
@@ -280,7 +283,7 @@ VVolLockType(int mode, int writeable)
 	    return 0;
 
 	default:
-	    osi_Assert(0 /* unknown checkout mode */);
+	    opr_Assert(0 /* unknown checkout mode */);
 	    return 0;
 	}
     }
@@ -462,11 +465,11 @@ VWaitStateChange_r(Volume * vp)
 {
     VolState state_save = V_attachState(vp);
 
-    osi_Assert(vp->nWaiters || vp->nUsers);
+    opr_Assert(vp->nWaiters || vp->nUsers);
     do {
 	VOL_CV_WAIT(&V_attachCV(vp));
     } while (V_attachState(vp) == state_save);
-    osi_Assert(V_attachState(vp) != VOL_STATE_FREED);
+    opr_Assert(V_attachState(vp) != VOL_STATE_FREED);
 }
 
 /**
@@ -499,11 +502,11 @@ VTimedWaitStateChange_r(Volume * vp, const struct timespec *ts, int *atimedout)
 
     state_save = V_attachState(vp);
 
-    osi_Assert(vp->nWaiters || vp->nUsers);
+    opr_Assert(vp->nWaiters || vp->nUsers);
     do {
 	VOL_CV_TIMEDWAIT(&V_attachCV(vp), ts, &timeout);
     } while (V_attachState(vp) == state_save && !timeout);
-    osi_Assert(V_attachState(vp) != VOL_STATE_FREED);
+    opr_Assert(V_attachState(vp) != VOL_STATE_FREED);
 
     if (atimedout && timeout) {
 	*atimedout = 1;
@@ -524,11 +527,11 @@ VTimedWaitStateChange_r(Volume * vp, const struct timespec *ts, int *atimedout)
 static_inline void
 VWaitExclusiveState_r(Volume * vp)
 {
-    osi_Assert(vp->nWaiters || vp->nUsers);
+    opr_Assert(vp->nWaiters || vp->nUsers);
     while (VIsExclusiveState(V_attachState(vp))) {
 	VOL_CV_WAIT(&V_attachCV(vp));
     }
-    osi_Assert(V_attachState(vp) != VOL_STATE_FREED);
+    opr_Assert(V_attachState(vp) != VOL_STATE_FREED);
 }
 
 /**
@@ -556,7 +559,7 @@ VChangeState_r(Volume * vp, VolState new_state)
     VStats.state_levels[new_state]++;
 
     V_attachState(vp) = new_state;
-    CV_BROADCAST(&V_attachCV(vp));
+    opr_cv_broadcast(&V_attachCV(vp));
     return old_state;
 }
 

@@ -10,10 +10,6 @@
 #ifndef _BOSPROTOTYPES_H_
 #define _BOSPROTOTYPES_H_
 
-#ifdef AFS_NT40_ENV
-typedef int pid_t;
-#endif
-
 #include <rx/rxkad.h>
 
 /* bnode.c */
@@ -54,9 +50,6 @@ int GetRequiredDirPerm(const char *path);
 void *bozo_ShutdownAndExit(void *arock /* really int asignal */);
 int initBosEntryStats(void);
 int DirAccessOK(void);
-
-/* fsbnodeops.c */
-char *copystr(char *a);
 
 /* inline functions */
 static_inline struct bozo_key *

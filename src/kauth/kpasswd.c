@@ -10,39 +10,29 @@
 /* These two needed for rxgen output to work */
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
-#ifdef	AFS_AIX32_ENV
-#include <signal.h>
-#endif
+
+#include <roken.h>
+#include <afs/opr.h>
+
+#include <limits.h>
+
+#include <hcrypto/des.h>
+#include <hcrypto/ui.h>
 
 #include <rx/xdr.h>
-
+#include <rx/rxkad_convert.h>
 #include <lock.h>
 #include <ubik.h>
-
-#include <stdio.h>
-#ifndef AFS_NT40_ENV
-#include <pwd.h>
-#endif
-#include <string.h>
-#include <signal.h>
-#include <des.h>
-#include <des_prototypes.h>
 #include <afs/com_err.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
+
 #include "kauth.h"
 #include "kautils.h"
 #include "kkids.h"
 
-#ifndef AFS_NT40_ENV
-#include <unistd.h>
-#endif
-#include <limits.h>
 
 
 /* This code borrowed heavily from the log program.  Here is the intro comment
@@ -113,7 +103,7 @@ main(int argc, char *argv[], char **envp)
     zero_argv = argv;
 
     init_child(*argv);
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "change user's password");
+    ts = cmd_CreateSyntax(NULL, CommandProc, 0, 0, "change user's password");
 
 #define aXFLAG 0
 #define aPRINCIPAL 1
@@ -157,7 +147,7 @@ static afs_int32
 read_pass(char *passwd, int len, char *prompt, int verify)
 {
     afs_int32 code;
-    code = read_pw_string(passwd, len, prompt, verify);
+    code = UI_UTIL_read_pw_string(passwd, len, prompt, verify);
     if (code == -1) {
 	getpipepass(passwd, len);
 	return 0;
@@ -405,7 +395,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	}
     }
     ka_StringToKey(passwd, realm, &key);
-    des_string_to_key(passwd, ktc_to_cblockptr(&mitkey));
+    DES_string_to_key(passwd, ktc_to_cblockptr(&mitkey));
     give_to_child(passwd);
 
     /* Get new password if it wasn't provided. */
@@ -451,7 +441,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	npasswd[8] = 0;		/* in case the password was exactly 8 chars long */
 #endif
     ka_StringToKey(npasswd, realm, &newkey);
-    des_string_to_key(npasswd, ktc_to_cblockptr(&newmitkey));
+    DES_string_to_key(npasswd, ktc_to_cblockptr(&newmitkey));
     memset(npasswd, 0, sizeof(npasswd));
 
     if (lexplicit)

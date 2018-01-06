@@ -25,7 +25,7 @@
 #include <sys/lock.h>
 #include <ufs/ufs/dinode.h>
 #include <ufs/ufs/extattr.h>
-#include <ufs/ufsmount.h>
+#include <ufs/ufs/ufsmount.h>
 
 int
 getinode(fs, dev, inode, ipp, perror)

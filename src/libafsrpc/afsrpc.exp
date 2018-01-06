@@ -34,7 +34,6 @@ rx_ReleaseCachedConnection
 rx_ServerProc
 rx_StartServer
 rx_WriteProc
-rx_SetBusyChannelError
 rxevent_Init
 rxevent_Post
 rxkad_GetServerInfo

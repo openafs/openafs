@@ -15,7 +15,9 @@
 *.orig
 *.rej
 *.o
+*.lo
 *.a
+*.la
 *.so
 *.sl
 *.so.*
@@ -36,6 +38,7 @@ vc*.pdb
 rs_state.ini
 config.log
 
+!.mailmap
 !.gitignore
 !.cvsignore
 !.splintrc
@@ -46,8 +49,10 @@ config.log
 /config.status
 /configure
 /configure-libafs
+/cscope.out
 /include
 /lib
+/libtool
 /autom4te.cache
 /ID
 /TAGS

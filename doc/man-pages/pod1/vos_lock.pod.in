@@ -1,0 +1,82 @@
+=head1 NAME
+
+vos_lock - Locks a VLDB volume entry
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos lock> S<<< B<-id> <I<volume name or ID>> >>>
+    S<<< [B<-cell> <I<cell name>>] >>>
+    [B<-noauth>] [B<-localauth>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
+
+B<vos lo> S<<< B<-i> <I<volume name or ID>> >>>
+    S<<< [B<-c> <I<cell name>>] >>>
+    [B<-noa>] [B<-l>] [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<vos lock> command locks the Volume Location Database (VLDB) entry
+for the indicated volume, blocking any operation that requires a write to
+that entry. The lock applies to all of the volume versions associated with
+the entry, not just the one specified with the B<-id> argument.
+
+To unlock a single VLDB entry, use the B<vos unlock> command. To unlock
+several entries, or all locked entries in the VLDB, use the B<vos
+unlockvldb> command.
+
+=head1 CAUTIONS
+
+Do not use this command in normal circumstances. It is useful for
+guaranteeing that the volume stays unchanged when there is reason to
+believe that volume operations cannot properly lock VLDB volume entries as
+they normally do to synchronize with one another.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-id> <I<volume name or ID>>
+
+Specifies either the complete name or volume ID number of a volume of the
+any of the three types.
+
+=include fragments/vos-common.pod
+
+=back
+
+=head1 EXAMPLES
+
+The following command locks the VLDB entry for C<user.terry>.
+
+   % vos lock user.terry
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machine specified with the B<-server> argument and on each database server
+machine. If the B<-localauth> flag is included, the issuer must instead be
+logged on to a server machine as the local superuser C<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_unlock(1)>,
+L<vos_unlockvldb(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

@@ -36,9 +36,9 @@ typedef bit32 FileOffset;	/* Offset in this file */
 
 #ifdef VOL_LOCK_DEBUG
 #define VOL_LOCK_ASSERT_HELD \
-    osi_Assert(vol_glock_holder == pthread_self())
+    opr_Assert(vol_glock_holder == pthread_self())
 #define VOL_LOCK_ASSERT_UNHELD \
-    osi_Assert(vol_glock_holder == 0)
+    opr_Assert(vol_glock_holder == 0)
 #define _VOL_LOCK_SET_HELD \
     vol_glock_holder = pthread_self()
 #define _VOL_LOCK_SET_UNHELD \
@@ -74,7 +74,7 @@ extern int vol_attach_threads;
 extern pthread_t vol_glock_holder;
 #define VOL_LOCK \
     do { \
-	MUTEX_ENTER(&vol_glock_mutex); \
+	opr_mutex_enter(&vol_glock_mutex); \
 	VOL_LOCK_ASSERT_UNHELD; \
 	_VOL_LOCK_SET_HELD; \
     } while (0)
@@ -82,24 +82,24 @@ extern pthread_t vol_glock_holder;
     do { \
         VOL_LOCK_ASSERT_HELD; \
 	_VOL_LOCK_SET_UNHELD; \
-	MUTEX_EXIT(&vol_glock_mutex); \
+	opr_mutex_exit(&vol_glock_mutex); \
     } while (0)
 #define VOL_CV_WAIT(cv) \
     do { \
         VOL_LOCK_DBG_CV_WAIT_BEGIN; \
-	CV_WAIT((cv), &vol_glock_mutex); \
+	opr_cv_wait((cv), &vol_glock_mutex); \
         VOL_LOCK_DBG_CV_WAIT_END; \
     } while (0)
 #else /* !VOL_LOCK_DEBUG */
-#define VOL_LOCK MUTEX_ENTER(&vol_glock_mutex)
-#define VOL_UNLOCK MUTEX_EXIT(&vol_glock_mutex)
-#define VOL_CV_WAIT(cv) CV_WAIT((cv), &vol_glock_mutex)
+#define VOL_LOCK opr_mutex_enter(&vol_glock_mutex)
+#define VOL_UNLOCK opr_mutex_exit(&vol_glock_mutex)
+#define VOL_CV_WAIT(cv) opr_cv_wait((cv), &vol_glock_mutex)
 #endif /* !VOL_LOCK_DEBUG */
 
-#define VSALVSYNC_LOCK MUTEX_ENTER(&vol_salvsync_mutex)
-#define VSALVSYNC_UNLOCK MUTEX_EXIT(&vol_salvsync_mutex)
-#define VTRANS_LOCK MUTEX_ENTER(&vol_trans_mutex)
-#define VTRANS_UNLOCK MUTEX_EXIT(&vol_trans_mutex)
+#define VSALVSYNC_LOCK opr_mutex_enter(&vol_salvsync_mutex)
+#define VSALVSYNC_UNLOCK opr_mutex_exit(&vol_salvsync_mutex)
+#define VTRANS_LOCK opr_mutex_enter(&vol_trans_mutex)
+#define VTRANS_UNLOCK opr_mutex_exit(&vol_trans_mutex)
 #else /* AFS_PTHREAD_ENV */
 #define VOL_LOCK
 #define VOL_UNLOCK
@@ -293,12 +293,7 @@ typedef struct VolumePackageOptions {
 #define ACLVERSION		1
 #define LINKTABLEVERSION	1
 
-/*
- * Define whether we are keeping detailed statistics on volume dealings.
- */
-#define OPENAFS_VOL_STATS	1
 
-#if OPENAFS_VOL_STATS
 /*
  * Define various indices and counts used in keeping volume-level statistics.
  */
@@ -327,7 +322,6 @@ typedef struct VolumePackageOptions {
 #define VOL_STATS_TIME_IDX_3	3	/*1 hr to 24 hrs */
 #define VOL_STATS_TIME_IDX_4	4	/*1 day to 7 days */
 #define VOL_STATS_TIME_IDX_5	5	/*Greater than 1 week */
-#endif /* OPENAFS_VOL_STATS */
 
 /* Volume header.  This is the contents of the named file representing
  * the volume.  Read-only by the file server!
@@ -399,13 +393,13 @@ typedef struct VolumeDiskData {
 				 * occurred while the volume was on line. */
     bit32 uniquifier;		/* Next vnode uniquifier for this volume */
     int type;			/* */
-    VolId parentId;		/* Id of parent, if type==readonly */
-    VolId cloneId;		/* Latest read-only clone, if type==readwrite,
+    VolumeId parentId;		/* Id of parent, if type==readonly */
+    VolumeId cloneId;		/* Latest read-only clone, if type==readwrite,
 				 * 0 if the volume has never been cloned.  Note: the
 				 * indicated volume does not necessarily exist (it
 				 * may have been deleted since cloning). */
-    VolId backupId;		/* Latest backup copy of this read write volume */
-    VolId restoredFromId;	/* The id in the dump this volume was restored from--used simply
+    VolumeId backupId;	/* Latest backup copy of this read write volume */
+    VolumeId restoredFromId;	/* The id in the dump this volume was restored from--used simply
 				 * to make sure that an incremental dump is not restored on top
 				 * of something inappropriate:  Note:  this field itself is NEVER
 				 * dumped!!! */
@@ -465,17 +459,12 @@ typedef struct VolumeDiskData {
      * set when the copy is created */
     Date copyDate;
 
-#if OPENAFS_VOL_STATS
     bit32 stat_initialized;	/*Are the stat fields below set up? */
     bit32 reserved4[7];
-#else
-    bit32 reserved4[8];
-#endif				/* OPENAFS_VOL_STATS */
 
     /* messages */
 #define VMSGSIZE 128
     char offlineMessage[VMSGSIZE];	/* Why the volume is offline */
-#if OPENAFS_VOL_STATS
 #define VOL_STATS_BYTES 128
     /*
      * Keep per-volume aggregate statistics on type and distance of access,
@@ -487,9 +476,6 @@ typedef struct VolumeDiskData {
     bit32 stat_fileDiffAuthor[VOL_STATS_NUM_TIME_FIELDS];
     bit32 stat_dirSameAuthor[VOL_STATS_NUM_TIME_FIELDS];
     bit32 stat_dirDiffAuthor[VOL_STATS_NUM_TIME_FIELDS];
-#else
-    char motd[VMSGSIZE];	/* Volume "message of the day" */
-#endif				/* OPENAFS_VOL_STATS */
 
 } VolumeDiskData;
 
@@ -679,9 +665,6 @@ typedef struct Volume {
 				 * uniquifier should be rewritten with the
 				 * value nextVnodeVersion */
     IHandle_t *diskDataHandle;	/* Unix inode holding general volume info */
-    bit16 vnodeHashOffset;	/* Computed by HashOffset function in vnode.h.
-				 * Assigned to the volume when initialized.
-				 * Added to vnode number for hash table index */
     byte shuttingDown;		/* This volume is going to be detached */
     byte goingOffline;		/* This volume is going offline */
     bit32 cacheCheck;		/* Online sequence number to be used to invalidate vnode cache entries
@@ -782,7 +765,6 @@ struct volHeader {
 #define V_offlineMessage(vp)	((vp)->header->diskstuff.offlineMessage)
 #define V_disk(vp)		((vp)->header->diskstuff)
 #define V_motd(vp)		((vp)->header->diskstuff.motd)
-#if OPENAFS_VOL_STATS
 #define V_stat_initialized(vp)	((vp)->header->diskstuff.stat_initialized)
 #define V_stat_area(vp)		(((vp)->header->diskstuff.stat_reads))
 #define V_stat_reads(vp, idx)	(((vp)->header->diskstuff.stat_reads)[idx])
@@ -791,8 +773,7 @@ struct volHeader {
 #define V_stat_fileDiffAuthor(vp, idx) (((vp)->header->diskstuff.stat_fileDiffAuthor)[idx])
 #define V_stat_dirSameAuthor(vp, idx)  (((vp)->header->diskstuff.stat_dirSameAuthor)[idx])
 #define V_stat_dirDiffAuthor(vp, idx)  (((vp)->header->diskstuff.stat_dirDiffAuthor)[idx])
-#endif /* OPENAFS_VOL_STATS */
-#define V_volUpCounter(vp)		((vp)->header->diskstuff.volUpdateCounter)
+#define V_volUpdateCounter(vp)		((vp)->header->diskstuff.volUpdateCounter)
 
 /* File offset computations.  The offset values in the volume header are
    computed with these macros -- when the file is written only!! */
@@ -803,10 +784,10 @@ struct volHeader {
 
 extern char *VSalvageMessage;	/* Canonical message when a volume is forced
 				 * offline */
-extern Volume *VGetVolume(Error * ec, Error * client_ec, VolId volumeId);
-extern Volume *VGetVolumeWithCall(Error * ec, Error * client_ec, VolId volumeId,
+extern Volume *VGetVolume(Error * ec, Error * client_ec, VolumeId volumeId);
+extern Volume *VGetVolumeWithCall(Error * ec, Error * client_ec, VolumeId volumeId,
                                   const struct timespec *ts, struct VCallByVol *cbv);
-extern Volume *VGetVolume_r(Error * ec, VolId volumeId);
+extern Volume *VGetVolume_r(Error * ec, VolumeId volumeId);
 extern void VPutVolume(Volume *);
 extern void VPutVolumeWithCall(Volume *vp, struct VCallByVol *cbv);
 extern void VPutVolume_r(Volume *);
@@ -819,10 +800,11 @@ extern void VDisconnectFS_r(void);
 extern int VChildProcReconnectFS(void);
 extern Volume *VAttachVolume(Error * ec, VolumeId volumeId, int mode);
 extern Volume *VAttachVolume_r(Error * ec, VolumeId volumeId, int mode);
-extern Volume *VCreateVolume(Error * ec, char *partname, VolId volumeId,
-			     VolId parentId);
-extern Volume *VCreateVolume_r(Error * ec, char *partname, VolId volumeId,
-			       VolId parentId);
+extern Volume *VCreateVolume(Error * ec, char *partname, VolumeId volumeId,
+			     VolumeId parentId);
+extern Volume *VCreateVolume_r(Error * ec, char *partname, VolumeId volumeId,
+			       VolumeId parentId);
+extern void VGrowBitmap(struct vnodeIndex *index);
 extern int VAllocBitmapEntry(Error * ec, Volume * vp,
 			     struct vnodeIndex *index);
 extern int VAllocBitmapEntry_r(Error * ec, Volume * vp,
@@ -864,8 +846,8 @@ extern void VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h);
 extern void AssignVolumeName(VolumeDiskData * vol, char *name, char *ext);
 extern void VTakeOffline_r(Volume * vp);
 extern void VTakeOffline(Volume * vp);
-extern Volume * VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint);
-extern void VGetVolumePath(Error * ec, VolId volumeId, char **partitionp,
+extern Volume * VLookupVolume_r(Error * ec, VolumeId volumeId, Volume * hint);
+extern void VGetVolumePath(Error * ec, VolumeId volumeId, char **partitionp,
 			   char **namep);
 extern char *vol_DevName(dev_t adev, char *wpath);
 extern afs_int32 VIsGoingOffline(struct Volume *vp);
@@ -877,13 +859,15 @@ extern int VLockFileLock(struct VLockFile *lf, afs_uint32 offset,
                          int locktype, int nonblock);
 extern void VLockFileUnlock(struct VLockFile *lf, afs_uint32 offset);
 
+extern int VSetVolHashSize(int logsize);
+
 #ifdef AFS_DEMAND_ATTACH_FS
 extern Volume *VPreAttachVolumeByName(Error * ec, char *partition, char *name);
 extern Volume *VPreAttachVolumeByName_r(Error * ec, char *partition, char *name);
 extern Volume *VPreAttachVolumeById_r(Error * ec, char * partition,
-				      VolId volumeId);
+				      VolumeId volumeId);
 extern Volume *VPreAttachVolumeByVp_r(Error * ec, struct DiskPartition64 * partp,
-				      Volume * vp, VolId volume_id);
+				      Volume * vp, VolumeId volume_id);
 extern Volume *VGetVolumeByVp_r(Error * ec, Volume * vp);
 extern int VShutdownByPartition_r(struct DiskPartition64 * dp);
 extern int VShutdownVolume_r(Volume * vp);
@@ -896,7 +880,6 @@ extern int VDisconnectSALV_r(void);
 extern void VPrintExtendedCacheStats(int flags);
 extern void VPrintExtendedCacheStats_r(int flags);
 extern void VLRU_SetOptions(int option, afs_uint32 val);
-extern int VSetVolHashSize(int logsize);
 extern int VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags);
 extern int VUpdateSalvagePriority_r(Volume * vp);
 extern int VRegisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
@@ -1037,6 +1020,8 @@ extern int VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 #define VOL_SALVAGE_NO_OFFLINE        0x1 /* we do not need to wait to offline the volume; it has
                                            * not been fully attached */
 
+#define VOLUME_BITMAP_GROWSIZE  16	/* bytes, => 128vnodes */
+					/* Must be a multiple of 4 (1 word) !! */
 
 #if	defined(NEARINODE_HINT)
 #define V_pref(vp,nearInode)  nearInodeHash(V_id(vp),(nearInode)); (nearInode) %= V_partition(vp)->f_files
@@ -1044,8 +1029,8 @@ extern int VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 #define V_pref(vp,nearInode)   nearInode = 0
 #endif /* NEARINODE_HINT */
 
-hdr_static_inline(unsigned int)
-afs_printable_VolumeId_u(VolumeId d) { return (unsigned int) d; }
+hdr_static_inline(unsigned long)
+afs_printable_VolumeId_lu(VolumeId d) { return (unsigned long) (d); }
 
 hdr_static_inline(unsigned int)
 afs_printable_VnodeId_u(VnodeId d) { return (unsigned int) d; }

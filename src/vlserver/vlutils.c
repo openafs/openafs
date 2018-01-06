@@ -10,26 +10,23 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <sys/types.h>
-#include <string.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
+#include <roken.h>
 
 #include <lock.h>
 #include <rx/xdr.h>
 #include <ubik.h>
+
 #include "vlserver.h"
 #include "vlserver_internal.h"
 
 struct vlheader xheader;
 extern int maxnservers;
-struct extentaddr extentaddr;
+extern afs_uint32 rd_HostAddress[MAXSERVERID + 1];
+extern afs_uint32 wr_HostAddress[MAXSERVERID + 1];
 struct extentaddr *rd_ex_addr[VL_MAX_ADDREXTBLKS] = { 0, 0, 0, 0 };
+struct extentaddr *wr_ex_addr[VL_MAX_ADDREXTBLKS] = { 0, 0, 0, 0 };
 struct vlheader rd_cheader;	/* kept in network byte order */
+struct vlheader wr_cheader;
 int vldbversion = 0;
 
 static int index_OK(struct vl_ctx *ctx, afs_int32 blockindex);
@@ -223,7 +220,7 @@ readExtents(struct ubik_trans *trans)
 
     /* Read the first extension block */
     if (!rd_ex_addr[0]) {
-	rd_ex_addr[0] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
+	rd_ex_addr[0] = malloc(VL_ADDREXTBLK_SIZE);
 	if (!rd_ex_addr[0])
 	    ERROR_EXIT(VL_NOMEM);
     }
@@ -254,7 +251,7 @@ readExtents(struct ubik_trans *trans)
 
 	/* Read the continuation block */
 	if (!rd_ex_addr[i]) {
-	    rd_ex_addr[i] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
+	    rd_ex_addr[i] = malloc(VL_ADDREXTBLK_SIZE);
 	    if (!rd_ex_addr[i])
 		ERROR_EXIT(VL_NOMEM);
 	}
@@ -268,7 +265,7 @@ readExtents(struct ubik_trans *trans)
 	}
 
 	/* After reading it in, check to see if its a real continuation block */
-	if (ntohl(rd_ex_addr[i]->ex_flags) != VLCONTBLOCK) {
+	if (ntohl(rd_ex_addr[i]->ex_hdrflags) != VLCONTBLOCK) {
 	    extent_mod = 1;
 	    rd_ex_addr[0]->ex_contaddrs[i] = 0;
 	    free(rd_ex_addr[i]);	/* Not the place to create it */
@@ -309,7 +306,6 @@ UpdateCache(struct ubik_trans *trans, void *rock)
     int *builddb_rock = rock;
     int builddb = *builddb_rock;
     afs_int32 error = 0, i, code, ubcode;
-    extern afs_uint32 rd_HostAddress[];
 
     /* if version changed (or first call), read the header */
     ubcode = vlread(trans, 0, (char *)&rd_cheader, sizeof(rd_cheader));
@@ -332,23 +328,26 @@ UpdateCache(struct ubik_trans *trans, void *rock)
 	    VLog(0, ("Can't read VLDB header, re-initialising...\n"));
 
 	    /* try to write a good header */
-	    memset(&rd_cheader, 0, sizeof(rd_cheader));
-	    rd_cheader.vital_header.vldbversion = htonl(VLDBVERSION);
-	    rd_cheader.vital_header.headersize = htonl(sizeof(rd_cheader));
+	    /* The read cache will be sync'ed to this new header
+	     * when the ubik transaction is ended by vlsynccache(). */
+	    memset(&wr_cheader, 0, sizeof(wr_cheader));
+	    wr_cheader.vital_header.vldbversion = htonl(VLDBVERSION);
+	    wr_cheader.vital_header.headersize = htonl(sizeof(wr_cheader));
 	    /* DANGER: Must get this from a master place!! */
-	    rd_cheader.vital_header.MaxVolumeId = htonl(0x20000000);
-	    rd_cheader.vital_header.eofPtr = htonl(sizeof(rd_cheader));
+	    wr_cheader.vital_header.MaxVolumeId = htonl(0x20000000);
+	    wr_cheader.vital_header.eofPtr = htonl(sizeof(wr_cheader));
 	    for (i = 0; i < MAXSERVERID + 1; i++) {
-		rd_cheader.IpMappedAddr[i] = 0;
-		rd_HostAddress[i] = 0;
+		wr_cheader.IpMappedAddr[i] = 0;
+		wr_HostAddress[i] = 0;
 	    }
-	    code = vlwrite(trans, 0, (char *)&rd_cheader, sizeof(rd_cheader));
+	    code = vlwrite(trans, 0, (char *)&wr_cheader, sizeof(wr_cheader));
 	    if (code) {
 		VLog(0, ("Can't write VLDB header (error = %d)\n", code));
 		ERROR_EXIT(VL_IO);
 	    }
-	    vldbversion = ntohl(rd_cheader.vital_header.vldbversion);
+	    vldbversion = ntohl(wr_cheader.vital_header.vldbversion);
 	} else {
+	    VLog(1, ("Unable to read VLDB header.\n"));
 	    ERROR_EXIT(VL_EMPTY);
 	}
     }
@@ -358,7 +357,7 @@ UpdateCache(struct ubik_trans *trans, void *rock)
 	VLog(0,
 	    ("VLDB version %d doesn't match this software version(%d, %d or %d), quitting!\n",
 	     vldbversion, VLDBVERSION_4, VLDBVERSION, OVLDBVERSION));
-	return VL_BADVERSION;
+	ERROR_EXIT(VL_BADVERSION);
     }
 
     maxnservers = ((vldbversion == 3 || vldbversion == 4) ? 13 : 8);
@@ -405,14 +404,14 @@ GetExtentBlock(struct vl_ctx *ctx, register afs_int32 base)
     if (!ctx->ex_addr[0] || !ctx->ex_addr[0]->ex_contaddrs[base]) {
 	/* Create a new extension block */
 	if (!ctx->ex_addr[base]) {
-	    ctx->ex_addr[base] = (struct extentaddr *)malloc(VL_ADDREXTBLK_SIZE);
+	    ctx->ex_addr[base] = malloc(VL_ADDREXTBLK_SIZE);
 	    if (!ctx->ex_addr[base])
 		ERROR_EXIT(VL_NOMEM);
 	}
 	memset(ctx->ex_addr[base], 0, VL_ADDREXTBLK_SIZE);
 
 	/* Write the full extension block at end of vldb */
-	ctx->ex_addr[base]->ex_flags = htonl(VLCONTBLOCK);
+	ctx->ex_addr[base]->ex_hdrflags = htonl(VLCONTBLOCK);
 	blockindex = ntohl(ctx->cheader->vital_header.eofPtr);
 	code =
 	    vlwrite(ctx->trans, blockindex, (char *)ctx->ex_addr[base],
@@ -1067,13 +1066,55 @@ index_OK(struct vl_ctx *ctx, afs_int32 blockindex)
     return 1;
 }
 
+/* makes a deep copy of src_ex into dst_ex */
+static int
+vlexcpy(struct extentaddr **dst_ex, struct extentaddr **src_ex)
+{
+    int i;
+    for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
+	if (src_ex[i]) {
+	    if (!dst_ex[i]) {
+		dst_ex[i] = malloc(VL_ADDREXTBLK_SIZE);
+	    }
+	    if (!dst_ex[i]) {
+		return VL_NOMEM;
+	    }
+	    memcpy(dst_ex[i], src_ex[i], VL_ADDREXTBLK_SIZE);
+
+	} else if (dst_ex[i]) {
+	    /* we have no src, but we have a dst... meaning, this block
+	     * has gone away */
+	    free(dst_ex[i]);
+	    dst_ex[i] = NULL;
+	}
+    }
+    return 0;
+}
+
 int
 vlsetcache(struct vl_ctx *ctx, int locktype)
 {
-    extern afs_uint32 rd_HostAddress[];
+    if (locktype == LOCKREAD) {
+	ctx->hostaddress = rd_HostAddress;
+	ctx->ex_addr = rd_ex_addr;
+	ctx->cheader = &rd_cheader;
+	return 0;
+    } else {
+	memcpy(wr_HostAddress, rd_HostAddress, sizeof(wr_HostAddress));
+	memcpy(&wr_cheader, &rd_cheader, sizeof(wr_cheader));
 
-    ctx->hostaddress = rd_HostAddress;
-    ctx->ex_addr = rd_ex_addr;
-    ctx->cheader = &rd_cheader;
-    return 0;
+	ctx->hostaddress = wr_HostAddress;
+	ctx->ex_addr = wr_ex_addr;
+	ctx->cheader = &wr_cheader;
+
+	return vlexcpy(wr_ex_addr, rd_ex_addr);
+    }
+}
+
+int
+vlsynccache(void)
+{
+    memcpy(rd_HostAddress, wr_HostAddress, sizeof(rd_HostAddress));
+    memcpy(&rd_cheader, &wr_cheader, sizeof(rd_cheader));
+    return vlexcpy(rd_ex_addr, wr_ex_addr);
 }

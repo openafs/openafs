@@ -1,0 +1,103 @@
+#!/bin/sh
+
+# This is a little helper script to build LWP static, and pthread shared and static
+# objects from a single source file. We use libtool to do the heavy lifting for
+# the pthreaded builds, but build the LWP objects here ourselves.
+
+lwpcc=
+mtcc=
+linker=
+ranlib=
+mode=
+object=
+done=
+
+while [ -z "$done" ] && [ $# -gt 0 ] ; do
+    case "$1" in
+    --lwpcc)
+	shift
+	lwpcc="$1"
+	shift
+	;;
+    --mtcc)
+	shift
+	mtcc="$1"
+	shift
+	;;
+    --linker)
+	shift
+	linker="$1"
+	shift
+	;;
+    --mode)
+	shift
+	mode="$1"
+	shift
+	;;
+    --ranlib)
+	shift
+	ranlib="$1"
+	shift
+	;;
+    -o)
+	shift
+	object="$1"
+	shift
+	;;
+    --)
+	shift;
+	done=yes
+	;;
+    *)
+	echo "Usage: lwptool --mode compile|link -o <object> --lwpcc <lwp compiler> --mtcc <pthread compiler> -- ..." >&2;
+	exit 1;
+	;;
+    esac
+done
+
+case "$mode" in
+compile)
+    if [ -z "$object" ] || [ -z "$lwpcc" ] || \
+       [ -z "$mtcc" ] || [ -z "$mode" ] ; then
+	echo "Usage: lwptool --mode compile -o <object>" >&2;
+	echo "               --lwpcc <lwp compiler>" >&2;
+	echo "               --mtcc <pthread compiler> blah -- ..." >&2;
+        exit 1
+    fi
+
+    lwpobj=`echo $object | sed -e 's/.lo$/.o/'`
+    lwpobj=".lwp/$lwpobj"
+
+    mkdir .lwp 2>/dev/null
+    echo $lwpcc -o $lwpobj "$@"
+    $lwpcc -o $lwpobj "$@" || exit 1
+    echo $mtcc -o $object "$@"
+    $mtcc -o $object "$@" || exit 1
+    ;;
+link)
+    if [ -z "$object" ] || [ -z "$linker" ] || \
+       [ -z "$ranlib" ] ; then
+	echo "Usage: l§wptool --mode linker -o <object>" >&2;
+	echo "               --linker <linker and options>" >&2;
+	echo "               --ranlib <ranlib>" >&2;
+	exit 1
+    fi
+
+    # This will go horribly wrong if we ever have objects with shell
+    # special characters in their names
+
+    objects=
+    while [ $# -gt 0 ] ; do
+       arg=$1;
+       realobject=`echo $arg | sed -e 's/\(.*\).lo/.lwp\/\1.o/'`
+       objects="$objects $realobject"
+       shift
+    done
+
+    rm -f $object 2>/dev/null
+    echo $linker $object $objects
+    $linker $object $objects
+    echo $ranlib $object
+    $ranlib $object
+    ;;
+esac

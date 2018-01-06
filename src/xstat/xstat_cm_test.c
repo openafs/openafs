@@ -16,11 +16,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "xstat_cm.h"		/*Interface for xstat_cm module */
 #include <afs/cmd.h>		/*Command line interpreter */
-#include <time.h>
-#include <string.h>
 #include <afs/afsutil.h>
 
 /*
@@ -91,58 +90,6 @@ static char *xferOpNames[] = {
     "StoreData"
 };
 
-
-/*------------------------------------------------------------------------
- * PrintCallInfo
- *
- * Description:
- *	Print out the AFSCB_XSTATSCOLL_PERF_INFO collection we just
- *	received.
- *
- * Arguments:
- *	None.
- *
- * Returns:
- *	Nothing.
- *
- * Environment:
- *	All the info we need is nestled into xstat_cm_Results.
- *
- * Side Effects:
- *	As advertised.
- *------------------------------------------------------------------------*/
-
-void
-PrintCallInfo(void)
-{				/*PrintCallInfo */
-
-    int i;		/*Loop variable */
-    int numInt32s;		/*# int32words returned */
-    afs_int32 *currInt32;	/*Ptr to current afs_int32 value */
-    char *printableTime;	/*Ptr to printable time string */
-    time_t probeTime = xstat_cm_Results.probeTime;
-    /*
-     * Just print out the results of the particular probe.
-     */
-    numInt32s = xstat_cm_Results.data.AFSCB_CollData_len;
-    currInt32 = (afs_int32 *) (xstat_cm_Results.data.AFSCB_CollData_val);
-    printableTime = ctime(&probeTime);
-    printableTime[strlen(printableTime) - 1] = '\0';
-
-    printf
-	("AFSCB_XSTATSCOLL_CALL_INFO (coll %d) for CM %s\n[Poll %u, %s]\n\n",
-	 xstat_cm_Results.collectionNumber, xstat_cm_Results.connP->hostName,
-	 xstat_cm_Results.probeNum, printableTime);
-
-    if (debugging_on)
-	printf("\n[%u entries returned at %" AFS_PTR_FMT "]\n\n", numInt32s, currInt32);
-
-    for (i = 0; i < numInt32s; i++)
-	printf("%u ", *currInt32++);
-    printf("\n");
-
-
-}				/*PrintCallInfo */
 
 /* Print detailed functional call statistics */
 
@@ -691,8 +638,6 @@ CM_Handler(void)
 
     switch (xstat_cm_Results.collectionNumber) {
     case AFSCB_XSTATSCOLL_CALL_INFO:
-	/* Why was this commented out in 3.3 ? */
-	/* PrintCallInfo();  */
 	print_cmCallStats();
 	break;
 
@@ -846,12 +791,15 @@ RunTheTest(struct cmd_syndesc *a_s, void *arock)
     if (debugging_on)
 	printf("%s: Allocating socket array for %d Cache Manager(s)\n", rn,
 	       numCMs);
-    CMSktArray = (struct sockaddr_in *)
-	malloc(numCMs * sizeof(struct sockaddr_in));
-    if (CMSktArray == (struct sockaddr_in *)0) {
-	printf("%s: Can't allocate socket array for %d Cache Managers\n", rn,
-	       numCMs);
-	exit(1);
+    if (numCMs > 0) {
+	CMSktArray = calloc(numCMs, sizeof(struct sockaddr_in));
+	if (CMSktArray == NULL) {
+	    printf("%s: Can't allocate socket array for %d Cache Managers\n",
+		   rn, numCMs);
+	    exit(1);
+	}
+    } else {
+	CMSktArray = NULL;
     }
 
     /*
@@ -881,7 +829,12 @@ RunTheTest(struct cmd_syndesc *a_s, void *arock)
      */
     if (debugging_on)
 	printf("Allocating %d long(s) for coll ID\n", numCollIDs);
-    collIDP = (afs_int32 *) (malloc(numCollIDs * sizeof(afs_int32)));
+
+    if (numCollIDs > 0)
+	collIDP = calloc(numCollIDs, sizeof(afs_int32));
+    else
+	collIDP = NULL;
+
     currCollIDP = collIDP;
     curr_item = a_s->parms[P_COLL_IDS].items;
     for (currCollIDIdx = 0; currCollIDIdx < numCollIDs; currCollIDIdx++) {
@@ -970,7 +923,7 @@ RunTheTest(struct cmd_syndesc *a_s, void *arock)
      */
     if (debugging_on)
 	printf("\nYawn, main thread just woke up.  Cleaning things out...\n");
-    code = xstat_cm_Cleanup(1);	/*Get rid of malloc'ed data */
+    xstat_cm_Cleanup(1);	/*Get rid of malloc'ed data */
     rx_Finalize();
     return (0);
 
@@ -989,7 +942,7 @@ main(int argc, char **argv)
     /*
      * Set up the commands we understand.
      */
-    ts = cmd_CreateSyntax("initcmd", RunTheTest, NULL, "initialize the program");
+    ts = cmd_CreateSyntax("initcmd", RunTheTest, NULL, 0, "initialize the program");
     cmd_AddParm(ts, "-cmname", CMD_LIST, CMD_REQUIRED,
 		"Cache Manager name(s) to monitor");
     cmd_AddParm(ts, "-collID", CMD_LIST, CMD_REQUIRED,

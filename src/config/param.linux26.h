@@ -23,7 +23,6 @@
 #define AFS_MOUNT_AFS		"afs"	/* The name of the filesystem type */
 #define AFS_64BIT_IOPS_ENV	1
 #define AFS_NAMEI_ENV		1	/* User space interface to file system */
-#define AFS_64BIT_ENV		1
 #define AFS_64BIT_CLIENT	1
 #undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS		1
@@ -38,6 +37,8 @@
 #define AFS_VM_RDWR_ENV		1	/* read/write implemented via VM */
 #define AFS_USE_GETTIMEOFDAY	1	/* use gettimeofday to implement rx clock */
 #define AFS_MAXVCOUNT_ENV       1
+
+#define AFS_PRIVATE_OSI_ALLOCSPACES	1
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
 #define AFS_GLOBAL_SUNLOCK
@@ -74,7 +75,6 @@
 #define AFS_NONFSTRANS 		1
 #define AFS_MOUNT_AFS 		"afs"	/* The name of the filesystem type. */
 #define AFS_64BIT_IOPS_ENV	1
-#define AFS_64BIT_ENV		1
 #define AFS_NAMEI_ENV		1	/* User space interface to file system */
 #define AFS_USERSPACE_IP_ADDR 	1
 #define RXK_LISTENER_ENV 	1
@@ -103,6 +103,13 @@
 
 #if defined(UKERNEL) || !defined(KERNEL)
 #include <features.h>
+#endif
+
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(HAVE_SETSOCKOPT_IP_RECVERR)
+# define AFS_RXERRQ_ENV
+#endif
+#ifdef AFS_RXERRQ_ENV
+# define AFS_ADAPT_PMTU
 #endif
 
 #ifdef __GLIBC__

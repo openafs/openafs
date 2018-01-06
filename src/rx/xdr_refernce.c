@@ -28,6 +28,9 @@
  */
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
 #include "rx.h"
 
 
@@ -43,8 +46,6 @@
  */
 
 #include "xdr.h"
-#include <stdio.h>
-#include <string.h>
 #define LASTUNSIGNED	((u_int)0-1)
 
 /*

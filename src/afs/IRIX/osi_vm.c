@@ -25,15 +25,10 @@ extern struct vnodeops Afs_vnodeops;
  * We also do some non-VM-related chores, such as releasing the cred pointer
  * (for AIX and Solaris) and releasing the gnode (for AIX).
  *
- * Locking:  afs_xvcache lock is held.  If it is dropped and re-acquired,
- *   *slept should be set to warn the caller.
- *
- * Formerly, afs_xvcache was dropped and re-acquired for Solaris, but now it
- * is not dropped and re-acquired for any platform.  It may be that *slept is
- * therefore obsolescent.
+ * Locking:  afs_xvcache lock is held. It must not be dropped.
  */
 int
-osi_VM_FlushVCache(struct vcache *avc, int *slept)
+osi_VM_FlushVCache(struct vcache *avc)
 {
     int s, code;
     vnode_t *vp = &avc->v;

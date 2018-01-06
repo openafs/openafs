@@ -53,14 +53,18 @@
 # include "afs/param.h"
 #endif
 
+#include <linux/version.h>
 #if defined(ENABLE_LINUX_SYSCALL_PROBING)
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include <scsi/scsi.h> /* for scsi_command_size */
+#if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,26)
+/* Slightly kludgy, but too bad */
+#define scsi_command_size scsi_command_size_tbl
+#endif
 #ifndef OSI_PROBE_STANDALONE
 # include "afs/sysincludes.h"
 # include "afsincludes.h"
 #endif
-#include <linux/version.h>
 #include <linux/sched.h>
 #ifdef HAVE_LINUX_CONFIG_H
 # include <linux/config.h>

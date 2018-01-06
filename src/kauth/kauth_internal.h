@@ -9,6 +9,8 @@
 #ifndef AFS_SRC_KAUTH_INTERNAL_H
 #define AFS_SRC_KAUTH_INTERNAL_H
 
+#include <hcrypto/des.h>
+
 /* admin_tools.c */
 extern afs_int32 ka_AdminInteractive(int cmd_argc, char *cmd_argv[]);
 
@@ -54,9 +56,9 @@ extern afs_int32 krb_write_ticket_file(char *realm);
 /* krb_udp.c */
 extern afs_int32 init_krb_udp(void);
 
-static_inline unsigned char *
+static_inline DES_cblock *
 EncryptionKey_to_cblock(EncryptionKey *key) {
-    return (unsigned char *)key;
+    return (DES_cblock *)key;
 }
 
 static_inline struct ktc_encryptionKey *

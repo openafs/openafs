@@ -48,10 +48,10 @@ afs_SlowFindAxs(struct axscache **cachep, afs_int32 id)
 		return (j);
 	    }
 	} else
-	    return ((struct axscache *)NULL);
+	    return (NULL);
 	i = j->next;
     }
-    return ((struct axscache *)NULL);
+    return (NULL);
 }
 
 

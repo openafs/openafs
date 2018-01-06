@@ -16,7 +16,6 @@
 
 
 int afs_osicred_initialized;
-afs_ucred_t afs_osi_cred;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;
@@ -32,7 +31,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
 	osi_Panic("UFSOpen called for non-UFS cache\n");
-    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
     code = VFS_VGET(cacheDev.mp, (ino_t) ainode->ufs, &vp);
     AFS_GLOCK();
@@ -42,7 +41,11 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	osi_FreeSmallSpace(afile);
 	osi_Panic("UFSOpen: igetinode failed");
     }
+#if defined(AFS_NBSD60_ENV)
+    VOP_UNLOCK(vp);
+#else
     VOP_UNLOCK(vp, 0);
+#endif
     afile->vnode = vp;
     afile->size = VTOI(vp)->i_ffs1_size;
     afile->offset = 0;
@@ -57,17 +60,21 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
     struct vattr tvattr;
 
     AFS_STATCNT(osi_Stat);
-    MObtainWriteLock(&afs_xosi, 320);
+    ObtainWriteLock(&afs_xosi, 320);
     AFS_GUNLOCK();
+#ifdef AFS_NBSD50_ENV
+	code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp);
+#else
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp,
 		       osi_curproc());
+#endif
     AFS_GLOCK();
     if (code == 0) {
 	astat->size = afile->size = tvattr.va_size;
 	astat->mtime = tvattr.va_mtime.tv_sec;
 	astat->atime = tvattr.va_atime.tv_sec;
     }
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 
@@ -101,18 +108,26 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     if (code || tstat.size <= asize)
 	return code;
 
-    MObtainWriteLock(&afs_xosi, 321);
+    ObtainWriteLock(&afs_xosi, 321);
     VATTR_NULL(&tvattr);
     tvattr.va_size = asize;
     AFS_GUNLOCK();
     VOP_LOCK(afile->vnode, LK_EXCLUSIVE | LK_RETRY);
+#ifdef AFS_NBSD50_ENV
+    code = VOP_SETATTR(afile->vnode, &tvattr, afs_osi_credp);
+#else
     code = VOP_SETATTR(afile->vnode, &tvattr, afs_osi_credp,
 		       osi_curproc());
+#endif
+#ifdef AFS_NBSD60_ENV
+    VOP_UNLOCK(afile->vnode);
+#else
     VOP_UNLOCK(afile->vnode, 0);
+#endif
     AFS_GLOCK();
     if (code == 0)
 	afile->size = asize;
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 
@@ -129,7 +144,7 @@ osi_DisableAtimes(struct vnode *avp)
 int
 afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
 {
-    unsigned int resid;
+    size_t resid;
     afs_int32 code;
 
     AFS_STATCNT(osi_Read);
@@ -161,7 +176,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
 	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, resid,
 		   ICL_TYPE_INT32, code);
 	if (code > 0) {
-	    code *= -1;
+	    code = -code;
 	}
     }
     return code;
@@ -172,7 +187,7 @@ int
 afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
-    unsigned int resid;
+    size_t resid;
     afs_int32 code;
 
     AFS_STATCNT(osi_Write);
@@ -182,11 +197,9 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	afile->offset = offset;
 
     AFS_GUNLOCK();
-    VOP_LOCK(afile->vnode, LK_EXCLUSIVE | LK_RETRY);
     code =
-	vn_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize, afile->offset,
+	vn_rdwr(UIO_WRITE, afile->vnode, aptr, asize, afile->offset,
 		AFS_UIOSYS, IO_UNIT, afs_osi_credp, &resid, osi_curproc());
-    VOP_UNLOCK(afile->vnode, 0);
     AFS_GLOCK();
 
     if (code == 0) {
@@ -196,7 +209,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	    afile->size = afile->offset;
     } else {
 	if (code > 0) {
-	    code *= -1;
+	    code = -code;
 	}
     }
 
@@ -212,7 +225,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
  * bit, but should still be pretty clear.
  */
 int
-afs_osi_MapStrategy(int (*aproc) (), struct buf *bp)
+afs_osi_MapStrategy(int (*aproc)(struct buf *), struct buf *bp)
 {
     afs_int32 returnCode;
 

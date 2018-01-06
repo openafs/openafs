@@ -19,7 +19,7 @@ INCFILES =\
 	$(INCFILEDIR)\budb_errs.h \
 	$(INCFILEDIR)\budb_client.h \
 	$(INCFILEDIR)\budb_prototypes.h
-	
+
 
 
 ############################################################################
@@ -34,8 +34,8 @@ LIBOBJS =\
 	$(OUT)\struct_ops.obj \
 	$(OUT)\AFS_component_version_number.obj
 
-$(LIBFILE): $(LIBOBJS) 
-	$(LIBARCH) 
+$(LIBFILE): $(LIBOBJS)
+	$(LIBARCH)
 
 
 ############################################################################
@@ -68,7 +68,6 @@ EXELIBS =\
         $(DESTDIR)\lib\afslwp.lib \
         $(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afs\afsaudit.lib \
-	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afs\afskauth.lib \
 	$(DESTDIR)\lib\afs\afsauth.lib \
@@ -79,12 +78,16 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
-        $(DESTDIR)\lib\afs\afspioctl.lib
+        $(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\opr.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
+	$(DESTDIR)\lib\afsroken.lib \
+	$(DESTDIR)\lib\afsrfc3961.lib
 
 $(EXEFILE): $(EXEOBJS)  $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
@@ -97,19 +100,19 @@ $(OUT)\buserver.res: AFS_component_version_number.h
 # rxgen budb.rg
 
 budb.cs.c: budb.rg budb.h
-	$(RXGEN) -u -C -o $@ budb.rg
+	$(RXGEN) -A -u -C -o $@ budb.rg
 
 budb.ss.c: budb.rg budb.h
-	$(RXGEN) -S -o $@ budb.rg
+	$(RXGEN) -A -S -o $@ budb.rg
 
 budb.xdr.c: budb.rg budb.h
-	$(RXGEN) -c -o $@ budb.rg
+	$(RXGEN) -A -x -c -o $@ budb.rg
 
 budb.h: budb.rg
-	$(RXGEN) -u -h -o budb.h budb.rg
+	$(RXGEN) -A -u -h -o budb.h budb.rg
 
 $(INCFILEDIR)\budb.h: budb.h
-	$(COPY) budb.h $(INCFILEDIR)\budb.h 
+	$(COPY) budb.h $(INCFILEDIR)\budb.h
 
 ############################################################################
 # compile_et on budb_errs.et
@@ -122,7 +125,7 @@ budb_errs.c: budb_errs.et
 	$(COMPILE_ET) budb_errs
 
 ############################################################################
-# install 
+# install
 
 install: $(INCFILES) $(LIBFILE) $(EXEFILE)
 
@@ -136,4 +139,4 @@ clean::
 	$(DEL) budb.cs.c budb.ss.c budb.xdr.c
 
 mkdir:
-	
+

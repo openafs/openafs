@@ -15,14 +15,11 @@
 #define __XDR_INCLUDE__
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
-#if defined(AFS_SUN55_ENV) && !defined(AFS_NONFSTRANS)
+#if defined(AFS_SUN5_ENV) && !defined(AFS_NONFSTRANS)
 #include "rpc/types.h"
 #include "rpc/auth.h"
 #include "rpc/auth_unix.h"
 #include "rpc/auth_des.h"
-#if !defined(AFS_SUN58_ENV)
-#include "rpc/auth_kerb.h"
-#endif
 #include "sys/tiuser.h"
 #include "rpc/xdr.h"
 #include "rpc/svc.h"
@@ -326,7 +323,7 @@ afs_nfs2_smallfidder(struct nfsdiropres *dr)
     afs_int32 addr[2];
     struct vcache *vcp;
 
-#if defined(AFS_SUN57_64BIT_ENV)
+#if defined(AFS_SUN5_64BIT_ENV)
     /* See also afs_fid() */
     memcpy((char *)addr, fhp->fh_data, SIZEOF_SMALLFID);
     addr[1] = (addr[1] >> 48) & 0xffff;
@@ -828,11 +825,7 @@ nfs3_to_afs_call(int which, caddr_t * args, nfs_fh3 ** fhpp, nfs_fh3 ** fh2pp)
     case NFSPROC3_LOOKUP:
 	{
 	    LOOKUP3args *arg = (LOOKUP3args *) args;
-#ifdef AFS_SUN58_ENV
 	    fhp1 = (nfs_fh3 *) arg->what.dirp;
-#else
-	    fhp1 = (nfs_fh3 *) & arg->what.dir;
-#endif
 	    break;
 	}
     case NFSPROC3_ACCESS:
@@ -862,84 +855,51 @@ nfs3_to_afs_call(int which, caddr_t * args, nfs_fh3 ** fhpp, nfs_fh3 ** fh2pp)
     case NFSPROC3_CREATE:
 	{
 	    CREATE3args *arg = (CREATE3args *) args;
-#ifdef AFS_SUN58_ENV
 	    fhp1 = (nfs_fh3 *) arg->where.dirp;
-#else
-	    fhp1 = (nfs_fh3 *) & arg->where.dir;
-#endif
 	    break;
 	}
     case NFSPROC3_MKDIR:
 	{
 	    MKDIR3args *arg = (MKDIR3args *) args;
-#ifdef AFS_SUN58_ENV
 	    fhp1 = (nfs_fh3 *) arg->where.dirp;
-#else
-	    fhp1 = (nfs_fh3 *) & arg->where.dir;
-#endif
 	    break;
 	}
     case NFSPROC3_SYMLINK:
 	{
 	    SYMLINK3args *arg = (SYMLINK3args *) args;
-#ifdef AFS_SUN58_ENV
 	    fhp1 = (nfs_fh3 *) arg->where.dirp;
-#else
-	    fhp1 = (nfs_fh3 *) & arg->where.dir;
-#endif
 	    break;
 	}
     case NFSPROC3_MKNOD:
 	{
 	    MKNOD3args *arg = (MKNOD3args *) args;
-#ifdef AFS_SUN58_ENV
 	    fhp1 = (nfs_fh3 *) arg->where.dirp;
-#else
-	    fhp1 = (nfs_fh3 *) & arg->where.dir;
-#endif
 	    break;
 	}
     case NFSPROC3_REMOVE:
 	{
 	    REMOVE3args *arg = (REMOVE3args *) args;
-#ifdef AFS_SUN58_ENV
 	    fhp1 = (nfs_fh3 *) arg->object.dirp;
-#else
-	    fhp1 = (nfs_fh3 *) & arg->object.dir;
-#endif
 	    break;
 	}
     case NFSPROC3_RMDIR:
 	{
 	    RMDIR3args *arg = (RMDIR3args *) args;
-#ifdef AFS_SUN58_ENV
 	    fhp1 = (nfs_fh3 *) arg->object.dirp;
-#else
-	    fhp1 = (nfs_fh3 *) & arg->object.dir;
-#endif
 	    break;
 	}
     case NFSPROC3_RENAME:
 	{
 	    RENAME3args *arg = (RENAME3args *) args;
-#ifdef AFS_SUN58_ENV
 	    fhp1 = (nfs_fh3 *) arg->from.dirp;
 	    fhp2 = (nfs_fh3 *) arg->to.dirp;
-#else
-	    fhp1 = (nfs_fh3 *) & arg->from.dir;
-	    fhp2 = (nfs_fh3 *) & arg->to.dir;
-#endif
 	    break;
 	}
     case NFSPROC3_LINK:
 	{
 	    LINK3args *arg = (LINK3args *) args;
 	    fhp1 = (nfs_fh3 *) & arg->file;
-#ifdef AFS_SUN58_ENV
 	    fhp2 = (nfs_fh3 *) arg->link.dirp;
-#else
-	    fhp2 = (nfs_fh3 *) & arg->link.dir;
-#endif
 	    break;
 	}
     case NFSPROC3_READDIR:
@@ -1107,7 +1067,7 @@ afs_nfs3_smallfidder(struct nfs_fh3 *fhp, int status)
     afs_int32 addr[2];
     struct vcache *vcp;
 
-#if defined(AFS_SUN57_64BIT_ENV)
+#if defined(AFS_SUN5_64BIT_ENV)
     /* See also afs_fid() */
     memcpy((char *)addr, fhp->fh3_data, 10);
     addr[1] = (addr[1] >> 48) & 0xffff;

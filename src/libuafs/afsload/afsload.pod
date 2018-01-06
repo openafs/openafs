@@ -1,0 +1,114 @@
+=head1 NAME
+
+afsload - AFS client load simulator
+
+=head1 SYNOPSYS
+
+B<afsload> [B<-q>] B<-p> <I<processes>> B<-t> <I<test.conf>>
+
+=head1 DESCRIPTION
+
+afsload consists of a few scripts that can simulate several AFS clients
+accessing AFS, for the purposes of simulating load on a fileserver or
+general AFS cell infrastructure. The access to AFS is done via libuafs,
+and the synchronization between nodes is done via MPI.
+
+The actual AFS actions performed depends on the contents of the given test
+configuration file. See the documentation for L<AFS::Load::Config> for the
+format of the contents of that file.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-q>
+
+Enables "quiet" or "quick" mode. Normally the configuration file
+specified is checked for validity. If you don't like the extra output
+the checker gives, or you want to try to run a test configuration even
+if it specifies errors, give this option.
+
+=item B<-p> <I<processes>>
+
+This dictates how many client nodes to run as part of the test run. Note
+that the actual number of processes is a bit higher than this; this
+specifies how many clients to simulate.
+
+=item B<-t> <I<test.conf>>
+
+This specifies the test configuration to use. See the documentation for
+L<AFS::Load::Config> and L<AFS::Load::Action> for details on the
+contents of this file.
+
+=back
+
+=head1 OUTPUT
+
+The output is in TAP format. Each step defined in the test configuration
+is a single TAP test. If any node during that step fails, the test fails
+and diagnostic information is printed. Each step is just identified by
+the order it appears in the configuration file, unless the test
+configuration gives that step a name. In which case, the given name also
+identifies that step.
+
+Example output:
+
+  $ afsload -p 20 -t test.conf
+  # Checking if config test.conf is valid for 21 processes...
+  # Config file test.conf has no fatal errors
+  1..6
+  ok 1 - Step 1
+  ok 2 - Step 2
+  not ok 3 - Step 3: Read contents of foo
+  #   Failed test 'Step 3: Read contents of foo'
+  #   in /usr/local/lib/afsload/afsload_run.pl at line 127.
+  # node 2 failed: 
+  #       On action 2: read(foo)
+  #               errno: 2
+  #               error code: -1
+  #               error string: got: foo contents, expected: bad contents
+  ok 4 - Step 4
+  ok 5 - Step 5
+  ok 6 - Step 6
+  # Looks like you failed 1 test of 6.
+
+Each failure tells you which action failed, and the errno, error code,
+and error string the action failed with. The error code and error
+string provided are up to each individual action (see
+L<AFS::Load::Action>), but errno is always just the errno value
+immediately after the action failed.
+
+=head1 ENVIRONMENT
+
+B<afsload> makes use of these environment variables:
+
+=over 4
+
+=item MPIRUN
+
+Name or location of the B<mpirun> binary to run. This must match the MPI
+implementation that the Parallel::MPI::Simple Perl module was compiled
+against that afsload will use.
+
+Defaults to C<mpirun> if not specified.
+
+=item LIBMPI
+
+Location of the C<libmpi.so> library that we will be using. Due to
+limitations of some MPI implementations and Perl XS modules, this
+sometimes may need to be preloaded before running the MPI portion of
+B<afsload>.
+
+Defaults to C</usr/lib/libmpi.so> if not specified.
+
+=back
+
+=head1 AUTHORS
+
+Andrew Deason E<lt>adeason@sinenomine.netE<gt>, Sine Nomine Associates.
+
+=head1 COPYRIGHT
+
+Copyright 2010-2011 Sine Nomine Associates.
+
+=cut

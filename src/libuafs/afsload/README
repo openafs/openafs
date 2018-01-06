@@ -1,0 +1,69 @@
+afsload Prerequisites:
+
+- Text::ParseWords
+- Number::Format
+- Parallel::MPI::Simple (0.03)
+- AFS::ukernel
+
+Text::ParseWords
+--
+
+This comes with Perl on most systems I've tried. But if it's not on yours,
+you can get with from CPAN.
+
+Number::Format
+--
+
+This can be obtained from CPAN; nothing special required.
+
+Parallel::MPI::Simple
+--
+
+Before you install this, you must have some MPI implementation installed. Note
+that you must compile Parallel::MPI::Simple against the same MPI implementation
+that you run 'afsload' against.
+
+For OpenMPI, this involves installing the packages openmpi, openmpi-devel, and
+openmpi-libs on RHEL5. For Debian Lenny, install openmpi-bin, openmpi-common,
+libopenmpi1, libopenmpi-dev, and openmpi-doc if you want it.
+
+Now, Parallel::MPI::Simple itself you can get from CPAN, but the build process
+requires some massaging. Download and unpack the source tarball manually, and
+build like so.
+
+On RHEL5 with OpenMPI:
+
+$ perl Makefile.PL CCFLAGS=-I/usr/lib64/openmpi/1.4-gcc/include/ LIBS='-L/usr/lib64/openmpi/1.4-gcc/lib -Wl,-R/usr/lib64/openmpi/1.4-gcc/lib -lmpi'
+
+On Debian:
+
+$ perl Makefile.PL CCFLAGS=-I/usr/include/mpi
+
+then just 'make'/'make install' as normal.
+
+AFS::ukernel
+--
+
+To get this, you need to build OpenAFS on a machine that has SWiG
+installed. If you build as normal when SWiG is installed, the module
+will show up in $sysname/dest/root.perf/lib/perl for transarc paths. You
+just need to put that somewhere in perl's @INC so perl can find it. (A
+couple examples are /usr/lib/perl5/site_perl/5.8.8/ on RHEL5 and
+/usr/local/lib/perl/5.10.0/ on Debian Lenny).
+
+afsload itself
+--
+
+Copy the contents of lib/ to /usr/local/lib/afsload/perl/. The files
+afsload_run.pl and afsload_check.pl should go in /usr/local/lib/afsload/. The
+'afsload' script can be copied to somewhere in your PATH.
+
+Running afsload may require setting the MPIRUN and LIBMPI environment
+variables. On RHEL5 with OpenMPI, you probably want to run with the following
+environment variables set:
+
+MPIRUN=/usr/lib64/openmpi/1.4-gcc/bin/mpirun
+LIBMPI=/usr/lib64/openmpi/1.4-gcc/lib/libmpi.so.0
+
+or configure the box such that running 'mpirun' runs that mpirun, and
+/usr/lib/libmpi.so points to that libmpi.so.0.

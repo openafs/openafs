@@ -69,14 +69,14 @@ idbg_prafsnode(OSI_VC_DECL(avc))
 #ifdef AFS_SGI64_ENV
     qprintf("   mapcnt %llu, mvstat %d anyAcc 0x%x Access 0x%x\n",
 	    avc->mapcnt, avc->mvstat, avc->f.anyAccess, avc->Access);
-    qprintf("   mvid 0x%x &lock 0x%x cred 0x%x\n", avc->mvid, &avc->lock,
+    qprintf("   mvid 0x%x &lock 0x%x cred 0x%x\n", avc->mvid.target_root, &avc->lock,
 	    avc->cred);
     qprintf("   rwlock 0x%x (%d) id %llu trips %d\n", &avc->vc_rwlock,
 	    valusema(&avc->vc_rwlock), avc->vc_rwlockid, avc->vc_locktrips);
 #else
     qprintf("   mapcnt %d mvstat %d anyAcc 0x%x Access 0x%x\n", avc->mapcnt,
 	    avc->mvstat, avc->f.anyAccess, avc->Access);
-    qprintf("   mvid 0x%x &lock 0x%x cred 0x%x\n", avc->mvid, &avc->lock,
+    qprintf("   mvid 0x%x &lock 0x%x cred 0x%x\n", avc->mvid.target_root, &avc->lock,
 	    avc->cred);
     qprintf("   rwlock 0x%x (%d) id %d trips %d\n", &avc->vc_rwlock,
 	    valusema(&avc->vc_rwlock), avc->vc_rwlockid, avc->vc_locktrips);
@@ -112,13 +112,13 @@ idbg_afsvfslist()
     for (tq = VLRU.prev; tq != &VLRU; tq = uq) {
 	tvc = QTOV(tq);
 	uq = QPrev(tq);
-	nodeid = tvc->f.fid.Fid.Vnode + (tvc->f.fid.Fid.Volume << 16);
-	nodeid &= 0x7fffffff;
-	qprintf("avp 0x%x type %s cnt %d pg %d map %d nodeid %d(0x%x)\n", tvc,
+	nodeid = afs_calc_inum(tvc->f.fid.Cell, tvc->f.fid.Fid.Volume,
+	                       tvc->f.fid.Fid.Vnode);
+	qprintf("avp 0x%x type %s cnt %d pg %d map %d nodeid %lu(0x%lx)\n", tvc,
 		tab_vtypes[((vnode_t *) tvc)->v_type],
 		((vnode_t *) tvc)->v_count,
-		(int)VN_GET_PGCNT((vnode_t *) tvc), (int)tvc->mapcnt, nodeid,
-		nodeid);
+		(int)VN_GET_PGCNT((vnode_t *) tvc), (int)tvc->mapcnt,
+		(long unsigned)nodeid, (long unsigned)nodeid);
     }
     AFS_GUNLOCK();
     return 0;
@@ -136,15 +136,23 @@ static char *tab_userstates[] = {
 static void
 idbg_pruser(struct unixuser *tu)
 {
+    union tokenUnion *token;
+
+    token = afs_FindToken(tu->tokens, RX_SECIDX_KAD);
+
     qprintf("@0x%x nxt 0x%x uid %d (0x%x) cell 0x%x vid 0x%x ref %d\n", tu,
-	    tu->next, tu->uid, tu->uid, tu->cell, tu->vid, tu->refCount);
-    qprintf("time %d stLen %d stp 0x%x exp 0x%x ", tu->tokenTime, tu->stLen,
-	    tu->stp, tu->exporter);
+	    tu->next, tu->uid, tu->uid, tu->cell, tu->viceId, tu->refCount);
+    qprintf("time %dRX_SECIDX_KADstLen %d stp 0x%x exp 0x%x ", tu->tokenTime,
+	    (token != NULL)?token->rxkad.ticketLen:0,
+	    (token != NULL)?token->rxkad.ticket:NULL,
+	    tu->exporter);
     printflags(tu->states, tab_userstates);
     qprintf("\n");
     qprintf("ClearToken: handle 0x%x ViceID 0x%x Btime %d Etime %d\n",
-	    tu->ct.AuthHandle, tu->ct.ViceId, tu->ct.BeginTimestamp,
-	    tu->ct.EndTimestamp);
+	    (token != NULL)?token->rxkad.clearToken.AuthHandle:0,
+	    tu->viceId,
+	    (token != NULL)?token->rxkad.clearToken.BeginTimestamp:0,
+	    (token != NULL)?token->rxkad.clearToken.EndTimestamp:0);
 }
 
 extern struct unixuser *afs_users[NUSERS];

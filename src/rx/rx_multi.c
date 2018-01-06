@@ -10,13 +10,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #ifdef	KERNEL
-#include "afs/sysincludes.h"
-#include "rx/rx.h"
+# include "afs/sysincludes.h"
 #else /* KERNEL */
-# include "rx.h"
+# include <roken.h>
+# include <afs/opr.h>
 #endif /* KERNEL */
+
+#include "rx.h"
 
 /*
  * multi.c and multi.h, together with some rxgen hooks, provide a way of
@@ -37,9 +38,9 @@ multi_Init(struct rx_connection **conns, int nConns)
      * a process stack will not be accessible to other processes
      */
 
-    calls = (struct rx_call **)osi_Alloc(sizeof(struct rx_call *) * nConns);
-    ready = (short *)osi_Alloc(sizeof(short *) * nConns);
-    mh = (struct multi_handle *)osi_Alloc(sizeof(struct multi_handle));
+    calls = osi_Alloc(sizeof(struct rx_call *) * nConns);
+    ready = osi_Alloc(sizeof(short) * nConns);
+    mh = osi_Alloc(sizeof(struct multi_handle));
     if (!calls || !ready || !mh)
 	osi_Panic("multi_Rx: no mem\n");
     memset(mh, 0, sizeof(struct multi_handle));
@@ -48,10 +49,8 @@ multi_Init(struct rx_connection **conns, int nConns)
     mh->nReady = 0;
     mh->nConns = nConns;
 
-#ifdef RX_ENABLE_LOCKS
     MUTEX_INIT(&mh->lock, "rx_multi_lock", MUTEX_DEFAULT, 0);
     CV_INIT(&mh->cv, "rx_multi_cv", CV_DEFAULT, 0);
-#endif /* RX_ENABLE_LOCKS */
     for (i = 0; i < nConns; i++) {
 	struct rx_call *call;
 	call = mh->calls[i] = rx_NewCall(conns[i]);
@@ -67,14 +66,10 @@ multi_Select(struct multi_handle *mh)
     int index;
     SPLVAR;
     NETPRI;
-#ifdef RX_ENABLE_LOCKS
     MUTEX_ENTER(&mh->lock);
-#endif /* RX_ENABLE_LOCKS */
     while (mh->nextReady == mh->firstNotReady) {
 	if (mh->nReady == mh->nConns) {
-#ifdef RX_ENABLE_LOCKS
 	    MUTEX_EXIT(&mh->lock);
-#endif /* RX_ENABLE_LOCKS */
 	    USERPRI;
 	    return -1;
 	}
@@ -86,9 +81,7 @@ multi_Select(struct multi_handle *mh)
     }
     index = *(mh->nextReady);
     (mh->nextReady) += 1;
-#ifdef RX_ENABLE_LOCKS
     MUTEX_EXIT(&mh->lock);
-#endif /* RX_ENABLE_LOCKS */
     USERPRI;
     return index;
 }
@@ -99,17 +92,15 @@ multi_Ready(struct rx_call *call, void *amh,
 	    int index)
 {
     struct multi_handle *mh = (struct multi_handle *)amh;
-#ifdef RX_ENABLE_LOCKS
     MUTEX_ENTER(&mh->lock);
-#endif /* RX_ENABLE_LOCKS */
     *mh->firstNotReady++ = index;
     mh->nReady++;
 #ifdef RX_ENABLE_LOCKS
     CV_SIGNAL(&mh->cv);
-    MUTEX_EXIT(&mh->lock);
 #else /* RX_ENABLE_LOCKS */
     osi_rxWakeup(mh);
 #endif /* RX_ENABLE_LOCKS */
+    MUTEX_EXIT(&mh->lock);
 }
 
 /* Called when the multi rx call is over, or when the user aborts it (by using the macro multi_Abort) */
@@ -123,12 +114,10 @@ multi_Finalize(struct multi_handle *mh)
 	if (call)
 	    rx_EndCall(call, RX_USER_ABORT);
     }
-#ifdef RX_ENABLE_LOCKS
     MUTEX_DESTROY(&mh->lock);
     CV_DESTROY(&mh->cv);
-#endif /* RX_ENABLE_LOCKS */
     osi_Free(mh->calls, sizeof(struct rx_call *) * nCalls);
-    osi_Free(mh->ready, sizeof(short *) * nCalls);
+    osi_Free(mh->ready, sizeof(short) * nCalls);
     osi_Free(mh, sizeof(struct multi_handle));
 }
 
@@ -143,11 +132,9 @@ multi_Finalize_Ignore(struct multi_handle *mh)
 	if (call)
 	    rx_EndCall(call, 0);
     }
-#ifdef RX_ENABLE_LOCKS
     MUTEX_DESTROY(&mh->lock);
     CV_DESTROY(&mh->cv);
-#endif /* RX_ENABLE_LOCKS */
     osi_Free(mh->calls, sizeof(struct rx_call *) * nCalls);
-    osi_Free(mh->ready, sizeof(short *) * nCalls);
+    osi_Free(mh->ready, sizeof(short) * nCalls);
     osi_Free(mh, sizeof(struct multi_handle));
 }

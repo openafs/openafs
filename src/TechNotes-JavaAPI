@@ -26,12 +26,6 @@ occurs in this code or in another C library, a Java exception is
 constructed with the appropriate error code, and is thrown back to the 
 Java layer to be dealt with.
 
-In order to provide user-level functions such as ACL setting and mount
-point iteration, the shared library needs to be linked with a specialized
-version of libuafs called libjuafs.a. Please view the README file in the 
-src/libuafs directory for more information regarding libjuafs and how it 
-is built. 
-
 Java package
 ------------
 

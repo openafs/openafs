@@ -9,21 +9,11 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
 #include <afs/afsutil.h>
 
-#include <string.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#ifndef AFS_NT40_ENV
-#include <sys/param.h>
-#include <unistd.h>
-#else
-#include <io.h>
-#endif
 #include "audit-api.h"
 
 static FILE *auditout;
@@ -48,7 +38,7 @@ append_msg(const char *format, ...)
 static int
 open_file(const char *fileName)
 {
-    int tempfd, flags;
+    int tempfd, flags, r;
     char *oldName;
 
 #ifndef AFS_NT40_ENV
@@ -60,12 +50,12 @@ open_file(const char *fileName)
     } else
 #endif
     {
-	afs_asprintf(&oldName, "%s.old", fileName);
-	if (oldName == NULL) {
+	r = asprintf(&oldName, "%s.old", fileName);
+	if (r < 0 || oldName == NULL) {
 	    printf("Warning: Unable to create backup filename. Auditing ignored\n");
 	    return 1;
 	}
-        renamefile(fileName, oldName);
+        rk_rename(fileName, oldName);
         flags = O_WRONLY | O_TRUNC | O_CREAT;
 	free(oldName);
     }

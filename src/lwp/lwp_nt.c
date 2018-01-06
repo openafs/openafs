@@ -19,10 +19,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #ifdef AFS_NT40_ENV
-#include <stdio.h>
-#include <stdlib.h>
+#include <afs/opr.h>
 #include <afs/afsutil.h>
 #include "lwp.h"
 
@@ -55,7 +55,6 @@ char lwp_debug = 0;
 
 /* Forward declarations */
 static void Dispatcher(void);
-static void Exit_LWP(void);
 static void Abort_LWP(char *msg);
 static VOID WINAPI Enter_LWP(PVOID fiberData);
 static void Initialize_PCB(PROCESS pcb, int priority, int stacksize,
@@ -148,7 +147,7 @@ int LWP_InitializeProcessSupport(int priority, PROCESS *pid)
 
     if (priority >= MAX_PRIORITIES) return LWP_EBADPRI;
 
-    pcb = (PROCESS)malloc(sizeof(*pcb));
+    pcb = malloc(sizeof(*pcb));
     if (pcb == NULL)
 	Abort_LWP("Insufficient Storage to Initialize LWP PCB");
     (void) memset((void*)pcb, 0, sizeof(*pcb));
@@ -156,7 +155,7 @@ int LWP_InitializeProcessSupport(int priority, PROCESS *pid)
     if (pcb == NULL)
 	Abort_LWP("Cannot convert main thread to LWP fiber");
 
-    lwp_init = (struct lwp_ctl *) malloc(sizeof(struct lwp_ctl));
+    lwp_init = malloc(sizeof(struct lwp_ctl));
     if (lwp_init == NULL)
 	Abort_LWP("Insufficient Storage to Initialize LWP CTL");
     (void) memset((void*)lwp_init, 0, sizeof(struct lwp_ctl));
@@ -214,7 +213,7 @@ int LWP_CreateProcess(int (*funP)(), int stacksize, int priority, void *argP,
 
     purge_dead_pcbs();
 
-    pcb = (PROCESS)malloc(sizeof(*pcb));
+    pcb = malloc(sizeof(*pcb));
     if (pcb == NULL)
 	return LWP_ENOMEM;
     (void) memset((void*)pcb, 0, sizeof(*pcb));
@@ -232,7 +231,7 @@ int LWP_CreateProcess(int (*funP)(), int stacksize, int priority, void *argP,
 
     pcb->fiber = CreateFiber(stacksize, Enter_LWP, pcb);
     if (pcb->fiber == NULL) {
-	free((void*)pcb);
+	free(pcb);
 	return LWP_EINIT;
     }
     Debug(0, ("Create: pcb=0x%p, funP=0x%p, argP=0x%p\n", pcb, funP, argP))
@@ -434,8 +433,8 @@ int LWP_MwaitProcess(int wcount, void **evlist)
     if (ecount > lwp_cpptr->eventlistsize) {
 
 	void **save_eventlist = lwp_cpptr->eventlist;
-	lwp_cpptr->eventlist = (char **)realloc(lwp_cpptr->eventlist,
-						ecount*sizeof(char *));
+	lwp_cpptr->eventlist = realloc(lwp_cpptr->eventlist,
+				       ecount*sizeof(char *));
 	if (lwp_cpptr->eventlist == NULL) {
 	    lwp_cpptr->eventlist = save_eventlist;
 	    Dispatcher();
@@ -486,13 +485,13 @@ static void Initialize_PCB(PROCESS pcb, int priority, int stacksize,
     pcb->funP = funP;
     pcb->argP = argP;
     pcb->status = READY;
-    pcb->eventlist = (void**)malloc(EVINITSIZE*sizeof(void*));
+    pcb->eventlist = malloc(EVINITSIZE*sizeof(void*));
     pcb->eventlistsize =  pcb->eventlist ? EVINITSIZE : 0;
     pcb->eventcnt = 0;
     pcb->wakevent = 0;
     pcb->waitcnt = 0;
     pcb->next = pcb->prev = (PROCESS)NULL;
-    pcb->iomgrRequest = (struct IoRequest*)NULL;
+    pcb->iomgrRequest = NULL;
     pcb->index = lwp_nextindex ++;
 }
 
@@ -520,7 +519,7 @@ static void Abort_LWP(char *msg)
     printf("***LWP: Abort --- dumping PCBs ...\n");
     Dump_Processes();
 #endif
-    Exit_LWP();
+    opr_abort();
 }
 
 #ifdef DEBUG
@@ -607,17 +606,6 @@ static void Dispatcher(void)
     SwitchToFiber(lwp_cpptr->fiber);
 }
 
-void lwp_abort(void)
-{
-    afs_NTAbort();
-}
-
-static void Exit_LWP(void)
-{
-
-    lwp_abort();
-}
-
 static void Delete_PCB(PROCESS pid)
 {
     Debug(4, ("Entered Delete_PCB"))
@@ -634,8 +622,8 @@ static void Free_PCB(PROCESS pid)
     if (pid->fiber != NULL) {
 	DeleteFiber(pid->fiber);
     }
-    if (pid->eventlist != NULL)  free((void*)pid->eventlist);
-    free((void*)pid);
+    if (pid->eventlist != NULL)  free(pid->eventlist);
+    free(pid);
 }
 
 static void Dispose_of_Dead_PCB(PROCESS cur)

@@ -47,21 +47,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+#include <afs/opr.h>
 
-#ifdef HAVE_FCNTL_H
-#include <fcntl.h>
-#endif
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#else
-#include <sys/file.h>
-#endif
-#include <string.h>
-#include <sys/types.h>
 #include <rx/xdr.h>
-#include <errno.h>
 #include <afs/auth.h>
-#include <afs/afsutil.h>
+
 #include "kauth.h"
 #include "kautils.h"
 #include "kauth_internal.h"
@@ -93,8 +84,8 @@ krb_write_ticket_file(char *realm)
     if ((tf_name = (char *)getenv("KRBTKFILE")))
 	fd = open(tf_name, O_WRONLY | O_CREAT | O_TRUNC, 0700);
     else {
-	afs_asprintf(&tf_name, "%s/tkt%d", gettmpdir(), getuid());
-	if (tf_name == NULL)
+	count = asprintf(&tf_name, "%s/tkt%d", gettmpdir(), getuid());
+	if (count < 0 || tf_name == NULL)
 	    return ENOMEM;
 	fd = open(tf_name, O_WRONLY | O_CREAT | O_TRUNC, 0700);
 	free(tf_name);

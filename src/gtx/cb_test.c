@@ -14,9 +14,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
 #include "gtxtextcb.h"		/*Module interface */
-
 
 #include "AFS_component_version_number.c"
 

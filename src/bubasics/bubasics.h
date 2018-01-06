@@ -77,10 +77,6 @@
 #endif
 #define BUDB_SERVICE 22314	/* service id */
 
-#define RX_SCINDEX_NULL	0	/* No security */
-#define RX_SCINDEX_VAB 	1	/* vice tokens, with bcrypt */
-#define RX_SCINDEX_KAD	2	/* Kerberos/DES */
-
 /* maximums for various text strings
  * DON'T alter these values until all disk/tape structures can be handled
  * correctly. In particular, volume names are 64.

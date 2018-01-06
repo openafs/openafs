@@ -26,6 +26,7 @@ EXEOBJS =\
 EXELIBS =\
 	$(DESTDIR)\lib\afsrxkad.lib \
 	$(DESTDIR)\lib\afsrx.lib \
+	$(DESTDIR)\lib\afshcrypto.lib \
 	$(DESTDIR)\lib\afsdes.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
@@ -33,8 +34,8 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib
 
-$(EXEFILE): $(EXEOBJS) 
-	$(EXECONLINK) $(EXELIBS) 
+$(EXEFILE): $(EXEOBJS)
+	$(EXECONLINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
@@ -61,7 +62,7 @@ test tests: $(EXEFILE)
 
 clean::
 	 $(DEL) stress.cs.c stress.ss.c stress.xdr.c stress.h \
-		stress_errs.c stress_errs.h stress.EXE th_*	
+		stress_errs.c stress_errs.h stress.EXE th_*
 
 mkdir:
-	
+

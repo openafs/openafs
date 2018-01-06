@@ -21,13 +21,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/time.h>
-#endif
-#include <stdlib.h>
+#include <roken.h>
 
 #define _TIMER_IMPL_
 #include "timer.h"
@@ -43,7 +37,7 @@ typedef unsigned char bool;
 
 #define expiration TotalTime
 
-#define new_elem()	((struct TM_Elem *) malloc(sizeof(struct TM_Elem)))
+#define new_elem()	(malloc(sizeof(struct TM_Elem)))
 
 #define MILLION	1000000
 

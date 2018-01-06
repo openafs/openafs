@@ -9,31 +9,17 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-
-# impermanent build glue
-#@ENABLE_XCB@include @TOP_OBJDIR@/src/mcas/Makefile.osi
-
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 RTL=@TOP_OBJDIR@/tests/rpctestlib
-RX=@TOP_OBJDIR@/src/rx
+RX = ${srcdir}/../../src/rx
 VICED=@TOP_OBJDIR@/src/viced
-UTIL=@TOP_OBJDIR@/src/util
 FSINT=@TOP_OBJDIR@/src/fsint
-MCAS=@TOP_OBJDIR@/src/mcas
 OSI=@TOP_OBJDIR@/src/osi
 
-CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG \
-	-DFSSYNC_BUILD_SERVER -DSALVSYNC_BUILD_CLIENT \
-	-I${TOP_SRCDIR} -I${RX} -I${MCAS} ${OSI_XCFLAGS} ${MCAS_CFLAGS} \
-	-DSUBSYS_LOG_MACRO=RTLLog
-
-CCRULE=${CC} ${CFLAGS} -c $?
-CCRULE2=${CC} ${CFLAGS} -c $? -o $@
+MODULE_CFLAGS=-DNINTERFACE -DRXDEBUG -DFSSYNC_BUILD_SERVER \
+	      -DSALVSYNC_BUILD_CLIENT -I${RX} ${OSI_XCFLAGS} \
+	      -DSUBSYS_LOG_MACRO=RTLLog
 
 headers= ${RTL}/rpc_test_procs.h
 
@@ -46,43 +32,37 @@ RXOBJS = rx_pthread.o
 
 LIBOBJS= ${RTLOBJS} ${FSINTOBJS} ${RXOBJS}
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
+LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/libopr.a \
+     $(top_builddir)/src/util/liboafs_util.la
 
 all: xmpl_driver
 
+CFLAGS_rx_pthread.o = -DDPF_FSLOG
+
 rx_pthread.o: ${RX}/rx_pthread.c
-	${CCRULE} -DDPF_FSLOG
+	$(AFS_CCRULE) $(RX)/rx_pthread.c
 
 rpc_test_main.o: ${RTL}/rpc_test_main.c ${headers}
-	${CCRULE}
-
 rpc_test_procs.o: ${RTL}/rpc_test_procs.c ${headers}
-	${CCRULE}
-
 rpc_test_cb_procs.o: ${RTL}/rpc_test_cb_procs.c ${headers}
-	${CCRULE}
 
+CFLAGS_afsaux.o = -I{FSINT}
 afsaux.o: ${FSINT}/afsaux.c
-	${CCRULE} -I{FSINT}
-
+	$(AFS_CCRULE) ${FSINT}/afsaux.c
 afscbint.ss.o: ${FSINT}/afscbint.ss.c
-	${CCRULE}
-
+	$(AFS_CCRULE) ${FSINT}/afscbint.ss.c
 afsint.cs.o: ${FSINT}/afsint.cs.c
-	${CCRULE}
-
+	$(AFS_CCRULE) ${FSINT}/afsint.cs.c
 afsint.ss.o: ${FSINT}/afsint.ss.c
-	${CCRULE}
-
+	$(AFS_CCRULE) ${FSINT}/afsint.ss.c
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CCRULE}
-
+	$(AFS_CCRULE) ${FSINT}/afsint.xdr.c
 afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
-	${CCRULE}
+	$(AFS_CCRULE) ${FSINT}/afscbint.xdr.c
 
 xmpl_driver: librpc_test_lib.a rpc_test_main.o ${LIBS}
-	${CC} ${LDFLAGS} -o $@ rpc_test_main.o \
-	librpc_test_lib.a ${LIBS} ${MT_LIBS} ${XLIBS}
+	$(LT_LDRULE_static) rpc_test_main.o librpc_test_lib.a \
+		${LIBS} ${LIB_hcrypto} ${MT_LIBS}
 
 librpc_test_lib.a: ${LIBOBJS}
 	$(RM) -f $@
@@ -94,6 +74,7 @@ install:
 dest:
 
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.o *.a *.gch xmpl_driver core
 
 include @TOP_OBJDIR@/src/config/Makefile.version

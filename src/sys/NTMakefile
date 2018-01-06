@@ -5,8 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I..\WINNT\kfw\inc\loadfuncs -I..\WINNT\kfw\inc\krb5 \
-        -I$(DESTDIR)\include\afs -I$(DESTDIR)\include\rx
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -I$(DESTDIR)\include\afs -I$(DESTDIR)\include\rx
 RELDIR=sys
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
@@ -33,7 +32,6 @@ $(LIBFILE): $(LIBOBJS) $(DESTDIR)\lib\lanahelper.lib
 # Install target; primary makefile target
 
 install: $(INCFILES) $(LIBFILE)
-install9x: install
 
 ############################################################################
 # Local clean target; augments predefined clean target

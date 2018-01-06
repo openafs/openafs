@@ -16,8 +16,14 @@
   <bookinfo>
     <title>OpenAFS Quick Start Guide for UNIX</title>
 
+    <mediaobject role="cover">
+      <imageobject>
+        <imagedata fileref="auqbg000.png" />
+      </imageobject>
+    </mediaobject>
+
     <copyright>
-      <year>2000-2009</year>
+      <year>2000-2014</year>
       <holder>IBM Corporation and other contributors. All Rights Reserved</holder>
     </copyright>
 
@@ -33,7 +39,7 @@
     <abstract>
       <para>This document describes the initial setup of an OpenAFS cell
       and an OpenAFS client.  It is currently being updated for OpenAFS
-      1.4.10 and is still dated and incorrect in some details.  This
+      1.6.10 and is still dated and incorrect in many details.  This
       edition applies to OpenAFS for UNIX, Version 1.4.10, and to all
       subsequent releases and modifications until otherwise indicated in
       new editions.</para>

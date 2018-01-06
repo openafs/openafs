@@ -30,4 +30,6 @@ error_table PT
 	ec PRDBADDR, "bad database address"
 	ec PRTOOMANY, "too many elements in group"
 	ec PRNOMEM, "malloc failed to alloc enough memory"
+	ec PRINTERNAL, "Protection library internal error"
+	ec PRNAMETOOLONG, "name is too long (maximum 63 characters)"
 end

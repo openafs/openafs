@@ -22,9 +22,6 @@ package BULK_
 /* Minimum number of requests that are guaranteed to be handled immediately */
 %#define BULK_MIN	1
 
-/* Index of the "null" security class in the BULK service.  This must be 0 (there are N classes, numbered from 0.  In this case, N is 1) */
-%#define BULK_NULL	0
-
 %#define BULK_ERROR	1		/* Error used to abort a bulk transfer */
 
 

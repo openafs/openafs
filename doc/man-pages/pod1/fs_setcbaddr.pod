@@ -7,7 +7,7 @@ fs_setcbaddr - Configure IP address used for AFS callbacks
 =for html
 <div class="synopsis">
 
-B<fs setcbaddr> S<<< [B<-host> <I<address>>] >>>
+B<fs setcbaddr> S<<< [B<-addr> <I<address>>] >>> [B<-help>]
 
 =for html
 </div>
@@ -20,9 +20,14 @@ B<fs setcbaddr> changes the IP address used by the client for callbacks.
 
 =over 4
 
-=item B<-host> <I<address>>]
+=item B<-addr> <I<address>>]
 
 The new callback address.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
 
 =back
 

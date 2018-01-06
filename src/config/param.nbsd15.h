@@ -32,7 +32,6 @@
 
 #include <afs/afs_sysnames.h>
 
-#define AFS_VM_RDWR_ENV	1
 #define AFS_VFS_ENV	1
 #define AFS_VFSINCL_ENV 1
 #define AFS_GREEDY43_ENV	1
@@ -60,7 +59,6 @@
 #ifdef _KERNEL
 #define AFS_GLOBAL_SUNLOCK        1
 #define	AFS_VFS34	1	/* What is VFS34??? */
-#define	AFS_SHORTGID	1	/* are group id's short? */
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt
 #define	afsio_offset	uio_offset

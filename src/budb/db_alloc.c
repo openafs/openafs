@@ -9,18 +9,13 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-#include <string.h>
-#include <sys/types.h>
 #include <afs/stds.h>
+
+#include <roken.h>
+
 #include <ubik.h>
 #include <afs/bubasics.h>
+
 #include "budb_errs.h"
 #include "database.h"
 #include "budb_internal.h"
@@ -41,10 +36,10 @@ InitDBalloc(void)
     nEntries[tape_BLOCK] = NtapeS;
     nEntries[dump_BLOCK] = NdumpS;
 
-    sizeEntries[volFragment_BLOCK] = sizeof(((struct vfBlock *) NULL)->a[0]);
-    sizeEntries[volInfo_BLOCK] = sizeof(((struct viBlock *) NULL)->a[0]);
-    sizeEntries[tape_BLOCK] = sizeof(((struct tBlock *) NULL)->a[0]);
-    sizeEntries[dump_BLOCK] = sizeof(((struct dBlock *) NULL)->a[0]);
+    sizeEntries[volFragment_BLOCK] = sizeof(struct vfBlock_frag);
+    sizeEntries[volInfo_BLOCK] = sizeof(struct viBlock_info);
+    sizeEntries[tape_BLOCK] = sizeof(struct tBlock_tape);
+    sizeEntries[dump_BLOCK] = sizeof(struct dBlock_dump);
 
     return 0;
 }

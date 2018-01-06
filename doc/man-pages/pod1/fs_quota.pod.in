@@ -63,9 +63,9 @@ the current working directory:
 
 The following command lists the percent quota used of both the volume
 housing the current working directory's parent directory and the volume
-housing the directory F</afs/abc.com/usr/smith>:
+housing the directory F</afs/example.com/usr/smith>:
 
-   % fs quota -path .. /afs/abc.com/usr/smith
+   % fs quota -path .. /afs/example.com/usr/smith
    43% of quota used.
    92% of quota used.
 

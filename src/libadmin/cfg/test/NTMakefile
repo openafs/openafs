@@ -27,4 +27,4 @@ $(OUT)\cfgtest.exe: $(OUT)\cfgtest.obj $(CFGTEST_EXELIBS)
         $(SYMSTORE_IMPORT)
 
 mkdir:
-	
+

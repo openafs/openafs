@@ -472,7 +472,7 @@ Java_org_openafs_jafs_Group_getGroupMembersNextString
   (JNIEnv *env, jclass cls, jlong iterationId)
 {
   afs_status_t ast;
-  char *userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  char *userName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
   jstring juser;
 
   if( !userName ) {
@@ -516,7 +516,7 @@ Java_org_openafs_jafs_Group_getGroupMembersNext
   char *userName;
   jstring juser;
 
-  userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+  userName = malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
   if( !userName ) {
     throwAFSException( env, JAFSADMNOMEM );

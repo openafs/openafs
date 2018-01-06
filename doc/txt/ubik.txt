@@ -1,0 +1,1446 @@
+This file contains a threading analysis of Ubik prepared by
+Jeffrey Hutzelman and sent to the openafs-devel@openafs.org
+mailing list in February 2011, archived at:
+https://lists.openafs.org/pipermail/openafs-devel/2011-February/018329.html
+
+A while ago, Jeff Altman asked me to do an analysis of the Ubik code with
+repsect to threading, to try to determine how ready the code is to be moved
+from an LWP-based environment to one using preemptive POSIX threads, and
+what it will take to get it the rest of the way there.  Now that the work
+is complete, I'm posting the complete analysis and my recommendations for
+discussion and as a backdrop for changes I expect to see proposed in the
+near future.
+
+This work was funded by Your File System, Inc.
+
+-- Jeff
+
+INTRODUCTION
+
+   This document describes the structure of Ubik, with an eye toward
+   thread-safety and concurrency.  It begins by discussing the elements,
+   usage, and locking considerations of major shared data structures.  This
+   is followed by a discussion of each major subsystem.  The emphasis is on
+   deficiencies in thread-safety and the changes needed to correct them.
+
+   Most of this document focuses on the user-mode Ubik server code, which
+   comprises the bulk of the Ubik library code and also of the complexity.
+   A separate section near the end is dedicated to Ubik client code, which
+   itself is intended primarily for use in user-mode applications.  The
+   OpenAFS cache manager includes its own mechanisms for accessing
+   replicated services, including the Ubik-managed VLDB, and for tracking
+   the servers that provide them.
+
+   Occasionally, issues related to concurrency, performance, and modularity
+   (particularly as regards support for supporting multiple independent
+   databases in a single server process) are also discussed; however, these
+   discussions are peripheral and are included only to record data obtained
+   while examining the question of thread-safety and as a basis for future
+   work.  Similarly, throughout this document are detailed discussions of
+   some parts of the code and certain data structures which, while not
+   always directly relevant to thread-safety, were produced in the course
+   of analyzing the Ubik library code.  These are included to provide
+   additional background and as a basis for future work in documentation of
+   Ubik library internals and interfaces.
+
+
+MAJOR DATA STRUCTURES
+
+   This section calls out the major shared data structures used in the Ubik
+   server code and details what they are used for and how shared access to
+   them is protected.  Much of this text is probably suitable as a starting
+   point for expanding on the documentation found in comments in ubik.p.h.
+
+   struct ubik_dbase - database
+
+      This structure contains nearly everything Ubik knows about an open
+      database (for an explanation of "nearly", see the section below on
+      globals), including database-wide parameters and state and a list of
+      active transactions.
+
+      The following structure elements are set only when the database
+      structure is being initialized, after which they are never modified:
+
+         + pathName - The base path used to construct database filenames
+         + physical later method pointers (read, write, truncate, sync,
+           stat, open, setlabel, getlabel, getnfiles), used to manipulate
+           the physical database files on disk.  These currently always
+           point to the methods defined in phys.c, and in fact other
+           modules contain knowledge of the internal implementation of that
+           module.
+
+      The primary synchronization mechanism used to protect this structure
+      is the database lock (versionLock), which is manipulated via the
+      DBHOLD() and DBRELE() macros.  This lock protects the following
+      structure elements, as well as a number of globals as described
+      elsewhere in this document:
+
+         + activeTrans - list of active transactions
+         + version - database version (*)
+         + tidCounter - transaction ID of latest transaction (*)
+         + writeTidCounter - transaction ID of latest write transaction (*)
+         + flags (*)
+         + readers
+
+      (*) These fields are currently protected by the database lock, except
+      that the beacon thread does not hold that lock when examining them,
+      or the global 'ubik_epochTime', which holds the corresponding epoch.
+      The recommendation is for these fields, along with ubik_epochTime, to
+      be additionally protected by a second lock, allowing the beacon
+      thread to examine them without holding the database lock; see the
+      section on the BEACON package for details.
+
+      The condition variable 'version_cond' is used to signal to that the
+      database version may have changed; it is broadcast in udisk_commit(),
+      in SDISK_SendFile(), and from the recovery thread; it is monitored by
+      ubik_WaitVersion(), which can be called by an application to wait for
+      a database version change (this is not currently used in OpenAFS).
+      This CV is associated with the database lock.  When LWP is used, this
+      condition is signalled on &ubik_dbase->version.
+
+      The condition variable 'flags_cond' is used by udisk_end() to signal
+      that DBWRITING flag has been cleared.  This wakes threads waiting in
+      ubik.c:BeginTrans() to begin a new transaction.  This CV is
+      associated with the database lock.  When LWP is used, this condition
+      is signalled on &ubik_dbase->flags.
+
+      When LWP is used, signals are also sometimes sent on &urecovery_state
+      and on &ubik_amSyncSite.  However, nothing ever waits on these, and
+      no corresponding condition variables exist when pthreads is used.
+
+      The 'cachedVersion' field holds the database version represented by
+      the application's cache; this is compared against the current
+      database version to discover if the cache is up to date.  Both
+      cachedVersion and the application cache itself are protected by
+      cache_lock, an AFS reader/writer lock.
+
+      When the application wishes to use the cache, it calls
+      ubik_CacheUpdate(), which verifies that the cache is current,
+      updating it if necessary (under a write lock), and then returns with
+      the application cache read-locked.  The application can then rely on
+      the cache's contents not to change until it ends the transaction by
+      calling ubik_EndTrans() or ubik_AbortTrans().  When one of these
+      functions is called, the read lock is dropped, and a write lock may
+      be acquired temporarily to update both cachedVersion and the cache
+      (in the case of committing a write transaction) or to clear
+      cachedVersion, indicating the cache is invalid (in the case of
+      aborting a transaction).
+
+      In the case of ubik_EndTrans() on a write transaction, the cache is
+      held write-locked until udisk_commit() has completed; this is also
+      done in SDISK_Commit(), which insures that the contents of the
+      on-disk database and page cache cannot change while an active
+      transaction holds the cache lock.  Note that both the recovery thread
+      and SDISK_SendFile() may replace the database contents wholesale;
+      however, these operations first abort all outstanding transactions.
+
+      Prior to the introduction of ubik_BeginTransReadAnyWrite(), an
+      application could choose to manage its own cache, updating it during
+      write transactions and when, at the beginning of a read transaction,
+      it was discovered to be out of date (due to a write done by another
+      server).  Under this model, the application uses Ubik transaction
+      locks to protect not only the database but also its cache.  However,
+      the use of ubik_BeginTransReadAnyWrite() allows some transactions to
+      proceed and read the database without acquiring any locks, which
+      makes it unsafe to depend on Ubik transaction locks to protect the
+      application cache.  Applications which make use of this mode must set
+      ubik_SyncWriterCacheProc to point to a procedure to be called to
+      update the cache during ubik_EndTrans(), after udisk_commit() has
+      succeeded and before the cache_lock is released.  These applications
+      must then refrain from ever updating the cache other than during that
+      procedure or during the callback passed to ubik_CheckCache().
+
+
+   struct ubik_trans - active transaction
+
+      This structure represents the state of an active transaction,
+      including transaction metadata and state and a list of all changes
+      made as part of the transaction.
+
+      Transactions are organized into a linked list referenced by the
+      corresponding database structure, protected by the database lock.
+      Each transaction contains an upward pointer to the database,
+      a transaction type, and a transaction ID, all of which are immutable
+      for as long as the transaction exists.
+
+      A transaction created via the REMOTE interface exists until ended by
+      a call to SDISK_Abort() or SDISK_ReleaseLocks() or aborted in
+      urecovery_CheckTid() due to a transaction ID mismatch or creation of
+      a new transaction (note that in this last case, cleanup will be
+      deferred if SDISK_Lock() is blocked on this transaction).  In these
+      cases, ubik_currentTrans is cleared at the same time, under the
+      database lock, and further REMOTE calls will fail gracefully until
+      a new transaction is started.  Thus, REMOTE transactions may be
+      considered valid only for as long as the database lock is held.
+
+      Transactions created via ubik_BeginTrans(), ubik_BeginTransReadAny(),
+      or ubik_BeginTransReadAnyWrite() exist until ended by a call to
+      ubik_AbortTrans() or ubik_EndTrans().  They are never destroyed from
+      within the UBIK package.  Code which discovers a transaction by
+      traversing the database's active transaction list may access the
+      transaction only as long as the database lock is held, since once it
+      is released, an application thread may end the transaction.
+
+      Each transaction contains the following fields, which are protected
+      by the database lock:
+
+         + locktype - type of lock held by this transaction
+         + minCommitTime - unused
+         + seekFile - file number of database file pointer
+         + seekPos - position of database file pointer
+         + flags
+
+      File writes are represented by 'iovec_info', an XDR vector structure
+      (type iovec_wrt, a vector of struct ubik_iovec) containing the file,
+      position, and length of each write, and 'iovec_data', an XDR opaque
+      containing the corresponding data.  These vectors and their contents
+      are protected by the database lock.
+
+      File truncations are represented by a linked list of struct
+      ubik_trunc, each of which contains a file number and the new size of
+      that file.  This list, and the records contained in it, are protected
+      by the database lock.
+
+      While transactions are currently protected by the database lock, it
+      may be desirable in the future to introduce a per-transaction lock,
+      in order to facilitate increased concurrency.
+
+
+   struct ubik_server - server status
+
+      This structure is used to track the set of peer servers, including
+      state related to elections and recovery.  The global 'ubik_servers'
+      points to a linked list of these structures, which is constructed
+      during initialization.  Once the list has been constructed, no
+      entries are ever added or removed; in addition, the following fields
+      are not changed after startup:
+
+         + addr[0] - server's primary address
+         + magic - true if this is the magic server
+         + isClone - true if this server is a clone
+
+      The following fields are used by the BEACON package to track beacons
+      to this server and their results.  Currently, they are sometimes
+      accessed under the database lock, and sometimes without benefit of
+      any lock.  They should probably be protected by the same lock as
+      globals private to the BEACON package.
+
+         + lastVoteTime - last time this server voted yes for us
+         + lastBeaconSent - last time a beacon was sent to this server
+         + lastVote - true if its late vote response was yes
+         + up - true if this server is believed to be up
+         + beaconSinceDown - true if a beacon has successfully been sent to
+           this server since the last time it was down
+
+      The following fields are used by the RECOVERY package to track the
+      state of each server.  They are also examined and modified by the
+      various ContactQuorum_* functions.  Currently, they are sometimes
+      accessed under the database lock, and sometimes without benefit of
+      any lock.  They should be fully protected by the database lock.
+
+         + version - server's database version
+         + currentDB - true if server's database is up-to-date
+
+      The addr[] array is used to track all known addresses for the remote
+      server; this list is used when attempting to contact a down server
+      via an alternate address, and to identify the source of incoming
+      server-to-server RPCs.  The first element of this array is always the
+      primary address and does not change after initialization; other
+      elements are updated during initialization and when a remote server
+      calls DISK_UpdateInterfaceAddr().
+
+      The system normally maintains an active Rx connection to the VOTE and
+      DISK services on each server; pointers to these are kept in the
+      'vote_rxcid' and 'disk_rxcid' fields.
+
+      Currently, the addr[] array, 'vote_rxcid', and 'disk_rxcid' are not
+      protected by any lock.  Because these are shared among a number of
+      subsystems and it is usually desirable to avoid blocking on the
+      database lock when making RPCs, it is recommended to introduce a new
+      lock (the "server address lock") to protect these fields and the
+      globals 'ubikSecClass' and 'ubikSecIndex', which contain the security
+      classes used for setting up such connections.  The new lock would
+      need to be held in the following cases:
+      + Before beginning any RPC using 'vote_rxcid' or 'disk_rxcid', for
+        the time it takes to call rx_GetConnection() or rx_NewCall()
+      + For the duration of ubikGetPrimaryInterfaceAddr()
+      + In ubeacon_Interact(), when building the set of connections to be
+        used for multi_VOTE_Beacon().
+      + In updateUbikNetworkAddress(), first while constructing the set of
+        connections to be used for multi_DISK_UpdateInterfaceAddr(), and
+        then again each time a server's list of addresses is updated.
+        However, the lock must NOT be held while waiting for the RPC to
+        complete, to avoid deadlock when multiple servers are starting at
+        the same time.
+      + For the duration of SDISK_UpdateInterfaceAddr()
+      + For the duration of ubeacon_ReinitServer(), with the optional
+        exception of the call to afsconf_UpToDate().
+      + In src/ubik/recovery.c:DoProbe(), first while constructing the set
+        of connections to be used for multi_DISK_Probe() and, if the probe
+        is successful, again while destroying the old connections for the
+        server under test and replacing them with new ones.  See the
+        section on the RECOVERY package for additional notes.
+
+
+GLOBAL VARIABLES
+
+   The library has an unfortunate number of global variables which are not
+   part of any data structure.  Nonetheless, some of these are
+   database-specific; see MULTI-DATABASE SUPPORT, below.
+
+   Globals private to a particular subsystem are discussed in the
+   description of that subsystem.  This section discusses global variables
+   which are shared and/or part of external interfaces.
+
+   The following globals are used to convey configuration parameters from
+   the application to the Ubik library, and are intended to be set before
+   the first call to ubik_ServerInit().  They are not modified by Ubik, and
+   are not protected by locks:
+
+      + ubik_debugFlag - print debug messages (unused)
+      + ubikPrimaryAddrOnly - use only primary interface
+      + ubik_nBuffers - number of DISK package page cache buffers
+      + ubik_SRXSecurityProc - callback to create server security class
+      + ubik_SRXSecurityRock - argument for ubik_SRXSecurityProc
+      + ubik_CRXSecurityProc - callback to create client security class
+      + ubik_CRXSecurityRock - argument for ubik_CRXSecurityProc
+      + ubik_SyncWriterCacheProc - callback to update application cache
+      + ubik_CheckRXSecurityProc - callback to check if caller is OK
+      + ubik_CheckRXSecurityRock - argument for ubik_CheckRXSecurityProc
+
+   The following globals contain values which are computed during Ubik
+   initialization and not modified thereafter.  They are not protected by
+   any lock, which is safe so long as suitable memory barriers exist across
+   creation of threads and Rx services (see the notes on initialization in
+   the UBIK package section).  Note that some of these values are
+   database-specific and properly belong in the ubik_dbase structure:
+
+      + ubik_servers - linked list of servers (see above)
+      + amIClone - true if this server is a clone
+      + ubik_callPortal - UDP port used for server-to-server RPCs
+      + ubik_quorum - number of servers to make a quorum
+      + ubik_dbase - pointer to the (only) database (see above)
+      + ubik_host[] - array of local addresses
+      + ubik_sc[] - security classes for Ubik RPC services
+
+   The following globals are currently protected by the database lock,
+   though in most cases there are existing references which do not hold the
+   lock.  Later sections of this document contain recommendations in each
+   case to establish new locks to protect these or to correct cases where
+   they are accessed without the correct lock.
+
+      + ubik_currentTrans - pointer to REMOTE's current transaction
+      + ubik_epochTime - epoch for transaction IDs
+      + urecovery_state - recovery state bits
+      + ubik_dbVersion - sync site's database version
+      + ubik_dbTid - sync site's transaction ID
+      + ubikSecIndex - security class index for making Ubik RPCs
+      + ubikSecClass - security class for making Ubik RPCs
+
+   The global 'ubik_amSyncSite' belongs to the BEACON package, and should
+   be protected by the same lock as that package's private globals.  In
+   fact, it should probably be made private; the only references outside
+   BEACON are in SVOTE_Debug() and SVOTE_DebugOld() and can easily be moved
+   into ubeacon_Debug().
+
+
+MAJOR SUBSYSTEMS
+
+   This section describes each of the major Ubik server subsystems.  For
+   each subsystem, a brief overview is provided, along with a description
+   of that subsystem's handling of synchronization (or lack thereof).
+   Subsystems are described beginning with the lowest layer and working
+   toward the highest.
+
+   PHYS - Physical I/O
+
+      This package is responsible for handling I/O to database files.  It
+      maintains a private, global array of MAXFDCACHE(4) fdcache
+      structures, each representing an open file descriptor on a database
+      file, either presently in use or idle and available for use.  Entries
+      are indexed by database file ID, and each contain a file descriptor
+      number and a refcount.  There is also a global 'inited' flag, and
+      a buffer used to construct pathnames when opening database files.
+
+      The static function uphys_open() takes a database pointer and fileid
+      and attempts to open the corresponding file.  On success, it returns
+      a file descriptor; on failure, it returns the same as open(2) (with
+      errno set).  This prefers to reuse an already-open fd whose cache
+      refcount is 0; failing that, it opens a new fd and attempts to enter
+      it in the cache.  It prefers first to use an unused cache entry, then
+      to reclaim an idle one whose refcount is 0; if neither is possible,
+      the newly-opened fd is returned without caching.  Note that the
+      refcount on an active entry is always exactly 1; the same entry
+      cannot be referenced more than once.
+
+      The function uphys_close() releases a file descriptor opened by
+      uphys_open().  If the file descriptor was cached, the cache entry is
+      dereferenced but the file is left open for future use; 0 is returned.
+      If the file descriptor is not found in the cache, then the return
+      value is that of an immediate call to close(2).  This function also
+      handles cleanup when a cached fd is closed after the file to which it
+      refers is invalidated by uphys_invalidate().  This function is not
+      static, but may as well be -- it is used only by other functions in
+      the PHYS package.
+
+      Functions in this package are called via method pointers in the
+      database structure, which are set during initialization and not
+      changed thereafter.  These functions must be called with the database
+      lock held; this protects the file descriptor cache and other globals
+      mentioned above, and prevents conflicting access to database files.
+
+      The requirement that functions in this package be called with the
+      database lock held means that concurrent access to database files is
+      not possible.  This situation could be improved by the addition of
+      a new global lock, which would be held for most of the duration of
+      uphys_open(), uphys_close(), and uphys_invalidate(), but need _not_
+      be held during actual file accesses.  This would eliminate the
+      requirement that calls to this package be made with the database lock
+      held, allowing multiple calls to be active concurrently.  However, it
+      would still be necessary for higher layers to employ appropriate
+      synchronization as needed to maintain database consistency.
+
+
+   DISK - Logical Database I/O and Transaction Management
+
+      This package is responsible for logical database file I/O, logging,
+      and transaction management.  It maintains a private cache of database
+      file page buffers.  This entire cache, including buffer space, is
+      allocated and initialized the first time a transaction is started;
+      the global initd flag keeps track of whether or not this has been
+      done.  The size of this cache defaults to 20 pages, but may be
+      overridden by setting the global 'ubik_nBuffers' (all OpenAFS Ubik
+      services do this); this global is not protected by any lock, but is
+      read exactly once, when the cache is initialized.
+
+      Except for udisk_Debug() (see below), all udisk_* interfaces require
+      a pointer either to the database or to an active transaction, and
+      must be called with the database lock held.  This protects the DISK
+      package's accesses of the active transaction list and associated
+      state variables as well as its calls into the physical access layer,
+      including insuring that operations requiring multiple calls into that
+      layer are performed atomically.
+
+      In addition, the database lock protects the page cache hash table and
+      LRU queue, the buffer control structures, buffer contents, the
+      truncation record free list (freeTruncList), and global statistics.
+      However, it may be desirable in the future to introduce a separate
+      lock to protect these structures, in order to facilitate multiple
+      database support.
+
+      udisk_LogOpcode, udisk_LogEnd, udisk_LogTruncate, udisk_LogWriteData
+
+         These are internal interfaces for writing to the transaction log.
+         They each construct a log record and then directly call the
+         physical layer to append it to the log; the log file is _not_
+         cached by the page buffer cache, and these functions do not touch
+         the cache.  Each of these must be atomic with respect to other
+         writes to the log file, which is accomplished by insuring they are
+         called only with the database locked.
+
+      DInit, DRead, DTrunc, DRelease, DFlush, DAbort, DSync, DNew
+
+         These are internal interfaces for accessing the page buffer cache.
+         They must be called with the database lock held.
+
+         DRead() and DNew() return a pointer to the page data buffer, not
+         to the buffer control structure; this pointer is later passed to
+         DRelease() to release the buffer.  This mechanism depends on the
+         fact that buffer control structures are allocated in the same
+         order as the actual page data buffers.
+
+         DRead() guarantees that a read transaction will always see a clean
+         copy of the requested page, without any modifications made by an
+         in-progress write transaction.  However, this is true only if the
+         next layer insures that once DRead() is called with write intent
+         on a page, that no further calls to DRead() are made for that page
+         until the buffer is written and DRelease() is called with the
+         dirty flag.  Presently, this is the case because udisk_read() and
+         udisk_write(), which are the only callers of DRead(), are both
+         called with the database lock held.
+
+      udisk_read, udisk_truncate, udisk_write, udisk_begin, udisk_commit,
+      udisk_abort, udisk_end, udisk_Invalidate
+
+         These are external interfaces provided by the DISK package to
+         higher layers.  Presently, the locking requirements of these
+         functions and the lower-layer functions they call are satisfied by
+         the simple rule that these must always be called with the database
+         lock.  In the future, support for multiple databases and/or
+         a greater level of concurrency may require relaxing this rule
+         and/or acquiring additional locks within these functions.
+
+         In udisk_commit(), when committing the first write transaction
+         after becoming sync site, the database is relabelled.  In this
+         case, the UBIK_RECLABELDB recovery state bit should be set before
+         propagating the label change to other servers, rather than after.
+         This is because because ContactQuorum_DISK_Setversion() will
+         release the database lock, at which point the recovery state may
+         be cleared by urecovery_ResetState() running in another thread.
+         It is important that a relabelling which occurs before recovery
+         state is cleared not result in the UBIK_RECLABELDB recovery state
+         bit being set after; otherwise, the server may fail to correctly
+         relabel the database the next time it becomes sync site.
+
+      udisk_Debug
+
+         The udisk_Debug() interface is called as part of preparing the
+         response to Ubik debugging requests.  Unlike other udisk_* APIs,
+         this interface is not called on a specific database and does not
+         require the database lock to be held.  It reports the version data
+         of the single database identified by the global 'ubik_dbase' and
+         traverses the buffer cache collecting statistics, both without
+         benefit of holding any locks.  This may produce inconsistent data
+         but does not normally risk damaging data structures or accessing
+         invalid or uninitialized memory (but see below), and avoiding
+         locking may be of greater benefit than guaranteeing the return of
+         consistent data.
+
+         The global 'ubik_dbase' pointer is set when the first (only)
+         database is initialized, and the buffer cache data structures are
+         allocated the first time a transaction is started, either locally
+         or via the REMOTE package.  Once set, the pointers used by
+         udisk_Debug() are never changed, and the data structures they
+         point to remain valid and are never freed.  The buffer cache is
+         traversed by iterating over the array of buffer cache elements
+         (this is done in other places as well), not by following a linked
+         list or other data structure that may reordered, and so should not
+         be dangerous.
+
+         At a minimum, then, it should be arranged that udisk_Debug()
+         cannot be called before the database structure and page cache have
+         been initialized.  This means that both of these actions must be
+         taken before any incoming RPCs are accepted.  Practically, this
+         means that DInit() should be renamed udisk_init(), and called from
+         ubik_ServerInitCommon() during initialization.
+
+         Full correctness demands that udisk_Debug actually hold the
+         database lock while copying the database version and examining the
+         page cache.  However, it may be desirable to sacrifice this
+         correctness in order to reduce interaction between the debugging
+         interfaces and the rest of the system.
+
+      Helper functions:
+         + unthread - remove transaction from activeTrans
+         + Dlru, Dmru - move page to front/end of LRUQ
+         + MatchBuffer - check if a buffer's dbase/file/page match
+         + FixupBucket - move page to the right bucket
+         + newslot - find and allocate an unused buffer
+         + DedupBuffer - throw away stale copies after page is flushed
+         + GetTrunc, PutTrunc - trunc record allocation
+         + FindTrunc - find active trunc record for file
+         + DoTruncs - apply truncations
+
+
+   LOCK - Database Transaction Locking
+
+      This package is responsible for managing database locks held as part
+      of a transaction.  It supports a single read/write lock, which is
+      represented by the global variable 'rwlock', a struct Lock.  The
+      global 'rwlockinit' records whether Lock_Init() has been called on
+      this lock, and is protected by the database lock.  Properly, this
+      lock should be treated as belonging to the database.
+
+      ulock_getLock() expects to be called with the database lock held; it
+      depends on this to protect access to fields within the transaction
+      structure as well as to the global 'rwlockinit'.  However, note that
+      the database lock must be temporarily released while obtaining the
+      read/write lock, and so ulock_getLock() should not be called in the
+      middle of a critical section.  The 'await' parameter may in theory be
+      set to 0 to effect a non-blocking lock; however, this depends on
+      (incorrect) knowledge of the internals of struct Lock.  Fortunately,
+      existing Ubik code always sets await=1.  This feature should be fixed
+      or removed.
+
+      ulock_relLock() releases the read/write lock.  It expects to be
+      called with the database lock held.  Unlock ulock_getLock(), this
+      function does not release the database lock.
+
+      ulock_Debug() reports the state of the read/write lock, for debugging
+      purposes.  It depends on knowledge of the internals of struct Lock,
+      and accesses both the Lock structure and the global rwlockinit
+      without benefit of holding any lock.
+
+      It would probably be best to eliminate 'rwlockinit' in favor of
+      always initializing the global 'rwlock' during startup; ulock_Debug()
+      would then have no need to examine the flag.  Further, ulock_Debug()
+      should at a minimum use the appropriate locks when looking inside
+      struct Lock; ideally, knowledge of that structure's internals should
+      be abstracted into appropriate interfaces in src/lwp/lock.[ch].
+
+
+   VOTE - Voting Logic and VOTE_* RPCs
+
+      This package is responsible for keeping track of who is currently
+      sync site and deciding how to vote and whether this server should try
+      to become sync site.  It provides the VOTE RPC package, which is
+      primarily responsible for processing vote requests from peer servers
+      (VOTE_Beacon), but also provides debugging interfaces and an
+      interface (VOTE_GetSyncSite) to allow clients to discover the current
+      sync site.
+
+      Voting decisions are made using state tracked in a set of global
+      variables, listed below.  Currently there is no locking protecting
+      these variables; LWP-based Ubik depends on the cooperative nature of
+      LWP and on the fact that routines which examine and manipulate them
+      do not block.  Introduction of a new "vote lock" is recommended to
+      protect the following globals:
+
+      + ubik_lastYesTime - last time VOTE_Beacon voted "yes"
+      + lastYesHost - host voted for at ubik_lastYesTime
+      + lastYesClaim - time lastYesHost started its voting cycle
+      + lastYesState - whether lastYesHost claimed to be sync site
+      + lowestHost - lowest host seen
+      + lowestTime - last time lowestHost was updated/heard from
+      + syncHost - sync host, or 0 if none known
+      + syncTime - last time syncHost was updated
+      + ubik_dbVersion - sync site's database version
+      + ubik_dbTid - sync site's transaction ID
+
+      The vote lock should be initialized in uvote_Init() and held for the
+      remainder of that function and also during of uvote_ShouldIRun(),
+      uvote_GetSyncSite().  It should also be held for the bulk of
+      SVOTE_Beacon() -- specifically, it should be acquired just before
+      beginning the lowest-host calculation, and released just before
+      calling urecovery_CheckTid(), in the event of a yes vote or else just
+      before returning.
+
+      In addition, the vote lock would protect the globals 'ubik_dbVersion'
+      and 'ubik_dbTid', which represent this server's knowledge of the
+      state of the database on the sync site.  This variable is set in two
+      places in the REMOTE package, which change the local and sync site
+      database versions at the same time.  It is also examined in one place
+      in the REMOTE package, and compared to the database version in the
+      RECOVERY package.  It is imperative that when the local and remote
+      versions are changed at the same time, these changes become visible
+      to the RECOVERY package at the same time.  Thus, both the changes and
+      the comparison must be done under both locks.  For this purpose,
+      three new functions should be provided by the VOTE package:
+
+      + A function to safely set 'ubik_dbVersion'
+      + A function to compare 'ubik_dbVersion' to another value
+      + A function to check whether this is sync site and compare
+        'ubik_dbVersion' to another value, without releasing the vote lock
+        in between (to be used in recovery).
+
+      Existing accesses to 'ubik_dbVersion' in REMOTE and RECOVERY, all of
+      which are already made under the database lock, would be replaced
+      with calls to the new accessors.
+
+      The result of these changes will require in several places that the
+      vote lock be acquired while the database lock is already held.
+      Therefore, the vote lock MUST NOT be held while acquiring the
+      database lock.
+
+      SVOTE_Beacon() currently calls urecovery_CheckTid() without benefit
+      of the database lock, which must be held when calling that function.
+      This is fairly simple to fix; however, the vote lock must be released
+      first.  One simple approach would be to move the call to
+      urecovery_CheckTid() to after the point where the vote lock will be
+      released, wrapping it in DBHOLD/DBRELE, and conditionalizing the
+      whole thing on 'vote' being nonzero.
+
+      Separately, it may be worth examining whether it is appropriate to
+      call urecovery_CheckTid() only when voting yes, and not whenever
+      a beacon is received from a server claiming to be sync site.
+
+      As with the debug functions in other packages, SVOTE_Debug() and
+      SVOTE_DebugOld() access global variables belong to this and other
+      modules without benefit of the appropriate locks.  There is also very
+      little abstraction here.  It is probably desirable to introduce Debug
+      interfaces for the VOTE and RECOVERY packages, to be called from
+      these functions.  Full correctness requires...
+
+      + Holding the vote lock while accessing the VOTE package globals
+        described above.
+      + Holding the database lock while accessing the database flags and
+        tidCounter, ubik_epochTime, ubik_currentTrans, and urecovery_state
+
+
+   BEACON - elections, tracking whether this is sync site
+
+      This package is responsible for running elections, collecting votes,
+      and deciding whether and for how long this is the sync site.  It also
+      contains routines responsible for setting up the list of servers and
+      acquiring alternate addresses for other servers during startup.
+
+      For this purpose, it maintains a number of global variables and
+      ubik_server structure fields.  Currently, these variables and fields
+      are sometimes accessed under the database lock, and sometimes without
+      benefit of any lock.  In order to allow this package to operate with
+      a minimum of disruption due to database accesses, it is recommended
+      that a new lock be established to protect these.  It is particularly
+      desirable to prevent loss of sync due to the potentially long-lived
+      RPCs the RECOVERY package must make under the database lock when
+      transferring full database copies between servers; for this reason,
+      it is important that both the BEACON thread and SVOTE_Beacon() be
+      able to operate without acquiring the database lock.  The global
+      variables and ubik_server structure fields to be protected by the new
+      lock are the following:
+
+      + ubik_amSyncSite - true if this is the sync site
+      + syncSiteUntil - time until which this is the sync site
+      + ts->lastVoteTime - last time this server voted yes for us
+      + ts->lastBeaconSent - last time a beacon was sent to this server
+      + ts->lastVote - true if its late vote response was yes
+      + ts->up - true if this server is believed to be up
+      + ts->beaconSinceDown - true if a beacon has successfully been sent
+        to this server since the last time it was down
+
+      The new lock would need to be held in the following cases:
+      + In ubeacon_AmSyncSite(), from the first time 'ubik_amSyncSite' is
+        examined until after the potential call to urecovery_ResetState().
+      + In ubeacon_Interact(), when building the list of servers to which
+        to send beacons (to protect access to the 'up' flag).  Note that
+        the server address lock must also be held during this loop, and
+        must be acquired _after_ the beacon lock.
+      + In ubeacon_Interact(), when updating status associated with
+        a server after receiving its beacon response.
+      + In ubeacon_Interact(), when updating globals after an election.
+        However, it must be released before calling urecovery_ResetState().
+      + In updateUbikNetworkAddress(), when marking a server down.
+      + In the various ContactQuorum_* functions, when checking whether
+        a server is up before calling it, and again when marking a server
+        down after a call fails.
+      + In ubik_EndTrans, when examining a server's 'beaconSinceDown' flag
+        and 'lastBeaconSent' timestamp to determine whether it has recently
+        gone down, requiring a brief hold until it either comes back up or
+        times out.
+
+      The following global variables are set during initialization and do
+      not change thereafter:
+
+      + nServers - number of voting servers
+      + amIMagic - true if this server gets the extra half vote
+      + ubik_singleServer - true if this is the only server
+
+      Currently, all initialization of this module is done _after_ the Rx
+      services have been created and an Rx server thread started.  This is
+      done to avoid a situation in which all servers are blocked in
+      updateUbikNetworkAddress(), which is responsible for exchanging
+      addresses with peer servers, while none of them is prepared to
+      handled the DISK_UpdateInterfaceAddr call made by that function.
+
+      When using LWP, this early initialization of Rx is not a problem,
+      because the various initialization routines don't actually block until
+      updateUbikNetworkAddress() waits for RPCs to complete.  However, when
+      using pthreads, it is a problem, because it means that incoming RPCs
+      may be processed when initialization is not complete.
+
+      To address this problem and insure orderly initialization, it is
+      recommended to change the initialization sequence so that most work,
+      including the bulk of BEACON package initialization, happens before
+      Ubik's Rx services have been created.  The only work that should be
+      deferred until after that point is updateUbikNetworkAddress(),
+      followed by starting the long-running threads belonging to the BEACON
+      and RECOVERY packages.  This requires updateUbikNetworkAddress() to
+      be exported (and perhaps to undergo a name change).
+
+      The major part of the work of this package is done in the function
+      ubeacon_Interact(), which is the body of a long-running thread known
+      as the beacon thread.  This thread is responsible for periodically
+      sending "beacons" to other servers to request votes (when the sending
+      server is the sync site, these also include how long it will remain
+      so, the database version, and the active transaction ID).  Beacons
+      are sent only from servers that are already sync site or believe they
+      are the best candidate, as determined by uvote_ShouldIRun().
+
+      On the sync site, the beacon thread is responsible for insuring that
+      new votes are collected frequently enough to avoid loss of quorum.
+      This means it must not block for an extended time; therefore, it must
+      not acquire the database lock, which in other threads may sometimes
+      be held during long-running operations (most notably, database file
+      transfers done under this lock by the recovery thread).  Instead,
+      a new lock is proposed (the "version lock"), which is used to allow
+      the beacon thread to examine (but not modify) certain fields without
+      holding the database lock.
+
+      The version lock should be acquired _in addition to_ the database
+      lock when modifying 'ubik_epochTime' or the database 'version',
+      'flags', 'tidCounter', and 'writeTidCounter' fields; such
+      modifications occur at the following locations:
+      + in ubik.c:BeginTrans(), when beginning a new transaction
+      + in udisk_begin(), when setting DBWRITING
+      + in udisk_commit(), when updating the database version at the end of
+        a write transaction (note this includes the case of relabelling the
+        database on the first write transaction after becoming sync site)
+      + in udisk_end(), when clearing DBWRITING
+      + in recovery.c:InitializeDB(), when setting the initial version of
+        an empty database
+      + in urecovery_Interact(), when labelling a new database the first
+        time quorum is established
+      + in urecovery_Interact(), after fetching the latest database from
+        another server (whether successful or not; there are two cases)
+      + in SDISK_SendFile(), when updating the database version both before
+        and after receiving a new database from the sync site.  Note the
+        lock must _not_ be held during the transfer.
+      + in SDISK_SetVersion()
+
+      The version lock should be acquired by the beacon thread while
+      examining these fields, shortly before calling multi_VOTE_Beacon().
+      Since it must release the lock before making that call, the database
+      version will need to be explicitly copied into a local variable, as
+      is already done with the current transaction ID.
+
+      Note that if UBIK_PAUSE is defined, the DBVOTING flag poses an
+      additional problem, as it must be modified by the beacon thread.  If
+      it is desirable to continue to support this variant, then it becomes
+      necessary for all accesses to the database flags to be protected by
+      the version lock.  Other UBIK_PAUSE code may not have been reviewed
+      in depth and may pose additional problems.
+
+      The function ubeacon_AmSyncSite() is called both from the beacon
+      thread and from various other points to determine whether they are
+      running on the sync site, and thus whether various operations are
+      safe and appropriate.  Calls to this function from outside the beacon
+      thread (often, via urecovery_AllBetter()) must be made with the
+      database lock held, and for operations modifying the database or
+      relying on its contents to remain constant, this lock must not then
+      be released until the operation is complete.  The does not guarantee
+      that this will remain sync site for the duration of the operation,
+      but does insure that any operations done after or as a result of
+      losing sync will in fact occur after the operation holding the lock.
+
+      Of course, ubeacon_Interact() itself cannot call ubeacon_AmSyncSite()
+      with the database lock held, since it must not block on that lock
+      when running on the sync site (otherwise sync could be lost, as
+      described above).  So, that portion of ubeacon_AmSyncSite() other
+      than the call to urecovery_ResetState() should be abstracted out into
+      a new function, which presumably returns separate flags indicating
+      both whether it is in fact running on the sync site (which becomes
+      the return value of ubeacon_AmSyncSite()) and whether a call to
+      urecovery_ResetState() is indicated.  When the latter is set, the
+      beacon thread can acquire the database lock (since, if this is not
+      the sync site, blocking on this lock is not a problem) and call
+      urecovery_ResetState().
+
+      This difference in behavior is acceptable because the required
+      invariant is that when 'ubik_amSyncSite' is cleared, it cannot become
+      true again until urecovery_state has also cleared.  This insures that
+      once a server discovers it is not sync site, urecovery_AllBetter()
+      cannot succeed on the basis of being sync site until sync is regained
+      and recovery has run, insuring the database is up to date.  Since
+      only the beacon thread ever sets 'ubik_amSyncSite' true, that thread
+      can meet the invariant by calling urecovery_ResetState() before doing
+      anything else, while other threads must continue to hold the beacon
+      lock to prevent the beacon thread from setting 'ubik_amSyncSite'.
+
+      ubeacon_Debug() reports the value of syncSiteUntil, without benefit
+      of obtaining any locks.  It should also report the value of
+      'ubik_amSyncSite', allowing that global to be made private to the
+      BEACON package.  Full correctness requires that the beacon lock be
+      held while accessing these globals.
+
+
+   RECOVERY - Consistency, Down Server Recovery, Propagation, Log Replay
+
+      This package is responsible for tracking whether the local database
+      is current and usable and for discovering when a server comes back up
+      after having been marked down.  On the sync site, it is also
+      responsible for tracking the database versions on remote servers and
+      for recovering from inconsistencies.
+
+      To carry out these tasks, the RECOVERY package maintains a single
+      global, 'urecovery_state'.  This is not currently effectively
+      protected by any lock; however, it should be protected by the
+      database lock.  This is particularly important because high-level
+      routines that manipulate the database depend on a check against this
+      field to determine that the database is up-to-date and safe to
+      modify, and that it will remain so until the operation is complete.
+
+      The main work of this package is done by urecovery_Interact(), which
+      is the body of a long-running thread known as the recovery thread.
+      This thread wakes up periodically to discover if any down servers
+      have come back up and, on the sync site, to locate the latest
+      available database, fetch it if necessary, and make sure it has been
+      distributed to all servers.  This work is done in several steps,
+      taken on in sequence every few seconds:
+
+      + The first part of urecovery_Interact() is to identify servers which
+        are believed to be down, and determine whether any of them have
+        come back up.  This is done every 30 seconds, even when this is not
+        the sync site.  Currently, the database lock is held for the
+        duration of this loop, released only in DoProbe() while actually
+        waiting for the DISK_Probe() RPC to complete.  This is mostly
+        unnecessary; the server probe loop needs this lock only to examine
+        the database 'currentDB' flag and to clear the UBIK_RECFOUNDDB bit,
+        and DoProbe() doesn't need it at all.  However, the beacon lock is
+        needed to examine and update the database 'up' flag, and DoProbe()
+        needs to hold the server address lock when examining server
+        addresses and, if the server comes back up, to replace connections.
+        See the section on struct ubik_server for more details on this
+        lock.
+
+      + The next step is to determine whether this is the sync site, and
+        update the UBIK_RECSYNCSITE bit appropriately.  The database lock
+        should be held for the duration of this step, as
+        ubeacon_AmSyncSite() may end up calling urecovery_ResetState(),
+        which requires that lock be held.  If this is not the sync site,
+        the cycle ends here.
+
+      + Step three is to determine the location of the latest database.
+        This is done by making DISK_GetVersion() calls to all active
+        servers, keeping track of the newest version found and the server
+        which reported it.  Once this is done, the best version is compared
+        to the local version, update the UBIK_RECHAVEDB bit (so that it is
+        true if and only if the local version is the latest) set the
+        UBIK_RECFOUNDDB bit to indicate the latest database has been
+        located, and clear the UBIK_RECSENTDB bit to force any servers with
+        out-of-date databases to be updated.
+
+        In this section, it is not necessary to hold any locks while
+        collecting versions on remote servers, though as before, it is
+        necessary to hold the beacon lock while examining the server 'up'
+        flag, and the address lock to obtain a reference on each connection
+        as it is used (but this lock should not be held during the RPC!).
+        Once all remote versions have been fetched, the database lock is
+        needed while examining the local version and updating
+        'urecovery_state'.  Note that write transactions may happen while
+        versions are collected, resulting in some servers having newer
+        versions than were detected.  However, if this happens, the result
+        is always consistent and ends with the sync site having the latest,
+        canonical version:
+
+        + If the actual latest version X.N before the write was in an epoch
+          created by the current sync site, then that version must
+          necessarily already be present on the sync site, since writes are
+          always committed first on the sync site.  Thus, when the sync
+          site updates the version counter, it produces a new version X.N+1
+          which no other server can believe it already has; thus, there is
+          no possibility of inconsistency.
+
+        + If the actual latest version X.N before the write was in an epoch
+          not created by the sync site, then it is possible that after
+          quorum was established but before any writes happened, a new
+          server came online which had a newer version X.N+1 (that was
+          committed to less than a quorum of sites before a crash).  If
+          a write transaction begins before recovery detects this fact and
+          fetches the version X.N+1 database, then the new write will start
+          with the version X.N database, essentially creating a version
+          fork.  However, when this happens, the resulting database will be
+          version Y.1 (with Y>X), because the first write on a new sync
+          site always results in a new database.  Thus, the version X.N+1
+          database will no longer be latest (because the local version,
+          which is examined last, is Y.1), and will end up being discarded.
+          This is no worse than if the server with the version X.N+1
+          database had not come up until completely after the transaction
+          resulting in version Y.1.
+
+      + Step four is to fetch the latest database, if the sync site does
+        not already have it.  Since this step replaces the database
+        wholesale, there can be no active transactions while it runs, and
+        all other database activity must be locked out for the duration of
+        the transfer.  This means the database lock must be held for this
+        entire step, starting from the check that the UBIK_RECSYNCSITE
+        and/or UBIK_RECFOUNDDB bits are still set.  (Note that the existing
+        comment which claims that it is impossible for UBIK_RECFOUNDDB not
+        to be set at this point is true only if the database is not
+        released since checking or updating that bit in step three).  In
+        addition, the address lock must be held while setting up the call
+        to be used for DISK_GetFile().
+
+      + Step five, again after verifying that this is still the sync site
+        and that the UBIK_RECHAVEDB bit is set, is to distribute the new
+        database to any servers which do not already have it.  Before this
+        can be done, if the database was newly-initialized (with label
+        epoch 1), it is relabeled with version 2.1 before it is distributed
+        to other sites.  This allows readany transactions to run on such
+        a database (though probably not successfully, since the database is
+        empty); it is deferred until this point in recovery to insure that
+        if any server in the quorum contains a valid database, that version
+        is used rather than the empty one.
+
+        For this step, the database lock should be held starting at the
+        point at which the UBIK_RECSYNCSITE and/or UBIK_RECHAVEDB bits are
+        tested.  In the event the DBWRITING flag is set, the lock must be
+        released while waiting for the active write transaction to end.  In
+        this case, once the wait is completed, it is necessary to again
+        check urecovery_state to determine that this is still the sync site
+        and have an up-to-date database before proceeding.
+
+      It is probably simplest for urecovery_Interact() to acquire the
+      database lock at the start of step 2 described above, release it for
+      the duration of the version-collection part of step 3 and while
+      waiting for write transactions to terminate in step 5, and otherwise
+      hold it until the end of the cycle.  If no work is needed, this means
+      the lock will be held relatively briefly; if it is necessary to fetch
+      and or send full database versions, these operations themselves must
+      be done with the lock held, and there is little point in releasing it
+      between them.  However, it is acceptable to release the lock between
+      any steps described above, provided that each time the database lock
+      is released and reacquired, 'urecovery_state' is checked to verify
+      that no regression has occurred.  Note that outside of the recovery
+      thread, the only changes that may occur to 'urecovery_state' are that
+      it may be completely cleared by urecovery_ResetState(), and that the
+      UBIK_RECLABELDB bit may be set by udisk_commit(), on the sync site.
+
+      The function urecovery_AllBetter() is called under the database lock
+      by routines which need to know whether there is a usable database.
+      As noted in the discussion of ubeacon_AmSyncSite() above, callers
+      must then continue to hold the database lock until any database
+      operation is complete.  Further, callers which intend to write to the
+      database currently follow a call to urecovery_AllBetter() with a call
+      to ubeacon_AmSyncSite(), to determine whether a write is permissible.
+      Unfortunately, this is not safe, because it is possible (though
+      admittedly unlikely) for urecovery_AllBetter() to succeed on the
+      basis of being a non-sync-site with an up-to-date database, and then
+      for a subsequent call to ubeacon_AmSyncSite() to return a true result
+      (because the latter may block on acquiring the beacon lock, during
+      which time this may become the sync site).  To insure that no write
+      operation is performed without an up-to-date, writeable database,
+      urecovery_AllBetter() should be modified to indicate whether a write
+      operation is permitted, which is the case only when UBIK_RECHAVEDB is
+      tested and found to be set.
+
+      The functions urecovery_AbortAll(), urecovery_CheckTid(), and
+      urecovery_ResetState() all expect to be called with the database lock
+      held.
+
+      The function urecovery_LostServer() need not be called with any
+      locks; it is merely a wrapper for ubeacon_ReinitServer().
+
+      The RECOVERY package is also responsible at startup for replaying the
+      transaction log and initializing an empty database.  These tasks are
+      handled by urecovery_Initialize() and its helpers, ReplayLog() and
+      InitializeDB().  Because the helpers use PHYS package functions and
+      manipulate database structure fields, urecovery_Initialize() should
+      acquire the database lock before calling them.
+
+
+   REMOTE - remote database I/O (DISK) RPCs
+
+      This package provides the DISK RPC package, which mediates remote
+      access to the local database copy, when another server is sync site.
+      It also includes DISK_UpdateInterfaceAddr(), which is used during
+      initialization to verify consistency of configuration across servers,
+      and DISK_Probe(), which is used by the RECOVERY module to determine
+      whether the server is up.
+
+      As the functions in this package are RPC implementations, they may be
+      called at any time and are entirely responsible for their own
+      locking.  There can be at most one active remote write transaction at
+      a time; this rule is enforced by this package, which maintains the
+      global 'ubik_currentTrans' as a pointer to the active transaction.
+
+      For the most part, the RPCs in this module use a common prologue,
+      which includes acquiring the database lock, and do not release that
+      lock until just before returning.  However, the common prologue
+      examines both 'ubik_currentTrans' and the transaction flags without
+      benefit of the database lock.  This can be corrected fairly easily by
+      acquiring the database lock sooner; however, this requires referring
+      to the database via the ubik_dbase global rather than via the 'dbase'
+      pointer in 'ubik_currentTrans'.
+
+      Note that SDISK_GetVersion() and SDISK_SetVersion() contain a sanity
+      check to ensure they are not running on the sync site, since these
+      are called only from that portion of the recovery loop which runs
+      only on the sync site.  These calls to ubeacon_AmSyncSite() must be
+      made with the database lock held, for the results to be valid.  The
+      same holds true for a commented-out check in SDISK_GetFile() (which
+      really should remain that way -- there's no reason not to allow any
+      authorized caller to do this at any time).
+
+      Additionally, note that SDISK_Commit() acquires a write lock on the
+      application cache, to insure that no transactions are running which
+      depend on the application cache, page cache, or underlying database
+      to change.  The locking order requires that this lock be acquired
+      before taking the database lock; thus, both locks must be acquired
+      earlier.
+
+      SDISK_SendFile() is really quite bad in its handling of the database
+      lock under error conditions.  Presently, an error condition may cause
+      it to release the lock too early nor not at all.
+
+      SDISK_UpdateInterfaceAddr() is called by peer servers as part of
+      their startup process, to trade lists of additional addresses and
+      insure sufficient agreement on configuration to allow the new server
+      to start.  It will need to acquire the lock protecting the addr[]
+      array attached to each host.
+
+
+   UBIK (high-level API)
+
+      This package contains the high-level APIs exported by Ubik to
+      applications, including initialization, the APIs for creating and
+      using transactions, and various utilities.  It also contains a number
+      of internal utilities.
+
+      Initialization
+
+         Initialization of Ubik is handled in ubik_ServerInitCommon(),
+         which is called by two API functions, ubik_ServerInit() and
+         ubik_ServerInitByInfo(), which provide different interfaces for
+         passing configuration information.  This code handles
+         initialization of the database, locks, and various globals, calls
+         the initialization routines for each subsystem, makes sure Rx has
+         been initialized, and creates Ubik's Rx services and threads.
+
+         Most of this is done before any Ubik-specific threads are created
+         and before Ubik's RPCs can be called, and so takes place without
+         holding any lock.  However, since Rx may have been initialized and
+         started before Ubik, it is possible that some Rx worker threads
+         may have already been created.  In practice, locks internal to Rx
+         should insure that any memory writes made before an Rx service is
+         created become visible to any worker running on behalf of that
+         service; nonetheless, this should not be depended on, and proper
+         locking should be used during all phases of initialization.
+
+         Unfortunately, the current code actually starts Rx services before
+         initialization is complete, resulting in a number of possible
+         races.  The general THREAD SAFETY section below contains
+         recommendations for reordering the startup process to eliminate
+         this problem, while still avoiding potential deadlock if multiple
+         servers start at once.
+
+      ContactQuorum_*
+
+         Nearly a third of ubik.c consists of various ContactQuorum_*
+         functions, which are used to make a particular RPC to every server
+         in the quorum.  These used to be a single ContactQuorum()
+         function, but have been split into multiple functions to regain
+         type-safety.  These retain a common prologue and epilogue, some
+         small part of which has been abstracted out, but most of which
+         remains duplicated in each of these functions.  Indeed, the only
+         part unique to each function is the actual RPC call and, in the
+         case of ContactQuorum_DISK_WriteV(), code to fall back to multiple
+         calls to DISK_Write() on a per-server basis.
+
+         The code common to all ContactQuorum_* functions will need to
+         acquire the beacon lock when checking whether a server is up (no
+         calls are made to servers which are not marked up), and again when
+         marking a server down.  Note that when a server is marked down,
+         the 'up' and 'beaconSinceDown' flags must be cleared at the same
+         time, without releasing the beacon lock.  In addition, the helper
+         function Quorum_StartIO() must obtain the server address lock
+         while it obtains a reference on the Rx connection that will be
+         used.
+
+         All of the ContactQuorum_* functions must be called with the
+         database lock held; this is necessary to protect their access to
+         each server's 'version' and 'currentDB' fields and to the local
+         database version.  However, these functions release the lock while
+         actually making RPCs.  This behavior is new -- ContactQuorum() in
+         OpenAFS 1.4 did not release the database lock during RPCs -- but
+         it is safe, because no caller of ContactQuorum_*() depends on
+         state read under the database lock before the call to remain valid
+         after.
+
+      Transactions
+
+         The main Ubik transaction API consists of ubik_BeginTrans(),
+         ubik_BeginTransReadAny(), ubik_BeginTransReadAnyWrite(),
+         ubik_AbortTrans(), ubik_EndTrans(), ubik_Read(), ubik_Write(),
+         ubik_Flush(), ubik_Seek(), ubik_Tell(), ubik_Truncate(), and
+         ubik_SetLock().  The ubik_Begin* functions require a database
+         pointer; all others require an active transaction pointer.  These
+         functions are called directly by the application without any
+         locks, and are responsible for their own locking.  Note that many
+         of these examine the transaction type before acquiring any locks;
+         this is permissible because the transaction type is immutable once
+         the transaction is created (but it requires that the call be made
+         from the thread that created the transaction, or that the
+         application have used some mechanism to insure an appropriate
+         memory barrier exists; the same mechanism used to protect the
+         transaction pointer should suffice).
+
+         BeginTrans() contains the common code responsible for starting
+         a new transaction; this is made available to applications as
+         ubik_BeginTrans(), ubik_BeginTransReadAny(), and
+         ubik_BeginTransReadAnyWrite().  If a write transaction is in
+         progress, this function waits for it to complete.  However, since
+         doing so releases the database lock, it is necessary to call
+         urecovery_AllBetter() again once the lock has been reacquired.
+         Further, in the UBIK_PAUSE case, the DBVOTING flag may have been
+         set, so this also must be retested (see the BEACON package section
+         for more on the difficulties of UBIK_PAUSE and DBVOTING).
+
+         Both ubik_Flush() and ubik_Write() examine and manipulate the
+         transaction I/O vector without benefit of any lock.  These fields
+         ('iovec_info' and 'iovec_data') should be protected by the
+         database lock.  In the case of ubik_Write(), this may require
+         releasing the lock before calling ubik_Flush(), or the
+         introduction of a private ubik_Flush_r() which assumes the lock is
+         already held (but note that in either case, the lock is released,
+         because ubik_Flush() calls ContactQuorum_* functions).
+
+      Utilities
+
+         The functions ubik_GetVersion() and ubik_WaitVersion() provide the
+         application with a way to discover the current database version
+         and to wait for it to change.  These interfaces are not currently
+         used in OpenAFS.  ubik_GetVersion() needs to acquire the database
+         lock while copying the database version.
+
+         The internal function ubikGetPrimaryInterfaceAddr() is used by
+         Ubik RPCs to determine a peer server's primary address, given the
+         IP address from which a call arrived.  This needs to hold the
+         server address lock, as described in the section on struct
+         ubik_server.
+
+      Application Cache
+
+         The section on struct ubik_dbase describes the operation of the
+         application cache.  The function ubik_CheckCache() is provided to
+         allow an application to insure the cache is up to date and obtain
+         a read lock on the cache which lasts for the duration of the
+         transaction.
+
+         Note that ubik_AbortTrans() currently always invalidates the
+         application cache by clearing ubik_dbase->cachedVersion, for which
+         it requires a write lock on the cache_lock.  This means that
+         aborted transactions block waiting for completion of any
+         transactions which hold the cache_lock, which may well include all
+         outstanding transactions.  In the case of read transactions, which
+         cannot have modified the database, this is unnecessary and may
+         significantly reduce concurrency.
+
+
+THREAD SAFETY
+
+   This section discusses changes needed to insure thread safety.
+
+   The initialization sequence in ubik_ServerInitCommon() should be cleaned
+   up, to ensure that every subsystem is fully initialized before starting
+   any background threads or accepting RPCs.  The correct initialization
+   sequence should look something like this:
+
+      + Initialize error tables
+      + Allocate and initialize the database structure
+      + Initialize Rx
+      + Initialize the various subsystems:
+        + udisk_Init() (formerly disk.c:DInit)
+        + ulock_Init() (new, pulled out of ulock_getLock)
+        + uvote_Init()
+        + urecovery_Initialize()
+        + ubeacon_InitServerList*
+      + Create Rx services
+      + Start an Rx server thread
+      + updateUbikNetworkAddress() (rename and export from beacon.c)
+      + Start the beacon and recovery threads
+
+   Initialization functions may need to be added for some subsystems which
+   do not currently have them:
+
+      + src/ubik/disk.c:DInit() should be exported and renamed
+        udisk_Init(); it can then be called from ubik_ServerInitCommon()
+        instead of from udisk_begin().
+
+      + The lock initialization currently done in ulock_getLock() should
+        instead be done in a separate ulock_Init(), which should be called
+        from ubik_ServerInitCommon()
+
+   A new lock is needed to protect state belonging to the VOTE package,
+   including the globals 'ubik_dbVersion' and 'ubik_dbTid', which represent
+   the sync site's database state.  See the VOTE package section for
+   details on the use of the vote lock.
+
+   A new lock is needed to protect state belonging to the BEACON package,
+   including the globals 'ubik_amSyncSite' and 'syncSiteUntil' and several
+   fields in the ubik_server structure.  This lock also protects the
+   per-server 'up' flag, which is shared among several modules.  In
+   addition, some beacon-specific fields are accessed directly by other
+   modules.  Thus, this lock must be visible outside the BEACON module, or
+   else accessors must be provided for these items.  See the BEACON package
+   section for details on the use of the beacon lock.
+
+   A new lock is needed to provide additional protection for the database
+   version, transaction counter, and flags, so that these can safely be
+   examined (but not updated) by the beacon thread without the need to
+   acquire the database lock.  See the BEACON package section for details
+   on the use of the version lock.
+
+   A new lock is needed to protect per-server lists of non-primary
+   addresses, connections to the VOTE and DISK services on each server, and
+   the client-mode security class objects used to set up these connections.
+   See the section on struct ubik_server for details on the use of the
+   server address lock.
+
+   The required locking order is described by the following list.  Any of
+   these locks may be acquired singly; when acquiring multiple locks, they
+   should be acquired in the listed order:
+
+      + application cache lock (dbase->cache_lock)
+      + database lock (DBHOLD/DBRELE)
+      + beacon lock
+      + vote lock
+      + version lock
+      + server address lock
+
+   Some cleanup is required in various places where existing locking
+   conventions are not properly obeyed:
+
+      + SVOTE_Beacon() needs to hold the database lock when calling
+        urecovery_CheckTid()
+
+      + Management of the database lock in SDISK_SendFile() needs to be
+        cleaned up so that it is always released at the proper time.
+
+      + urecovery_Interact() is not consistent about holding the database
+        lock when it examines and updates 'urecovery_state'.  It also
+        examines the local database version at least once without benefit
+        of this lock.  See the RECOVERY package section for details on
+        which locks are needed when by urecovery_Interact().
+
+      + ubik_Flush() and ubik_Write() need to acquire the database lock
+        before accessing the 'iovec_info' and 'iovec_data' fields.
+
+      + ubik_GetVersion() needs to acquire the database lock before copying
+        the database version.
+
+   The various debugging RPCs in the VOTE packages, and the data collection
+   routines they call in other packages, generally operate without benefit
+   of any locks.  This is probably desirable, as it avoids any possibility
+   of debugging operations blocking on or interfering with the rest of the
+   system, and allows debugging data to be collected even in the event of
+   some unforeseen deadlock.  It is also "safe", in that it does not risk
+   damage to data structures or access to uninitialized memory, provided
+   that data structure initialization is complete before these functions
+   are called.  However, it does mean that these RPCs may return data that
+   is not entirely self-consistent.
+
+      + Correctness requires various locks be held during parts of
+        SVOTE_Debug() and SVOTE_DebugOld(); see the VOTE package section.
+
+      + SVOTE_Debug() also examines 'ubik_currentTrans' without benefit of
+        the database lock.  This usage is not "safe", as that transaction
+        may be freed by another thread while SVOTE_Debug() is examining it.
+
+      + SVOTE_XSDebug() should hold the server address lock while copying
+        out server addresses, and other locks while copying per-server
+        state.
+
+      + udisk_Debug() should hold the database lock while examining the
+        database version and collecting page cache statistics.
+
+      + ulock_Debug should use LOCK_LOCK/LOCK_UNLOCK when examining the
+        internals of struct Lock.  Ideally, knowledge of these internals
+        should be abstracted to src/lwp/lock.h.
+
+      + ubeacon_Debug() should hold the beacon lock while accessing the
+        value of 'syncSiteUntil' and, if the access is moved here from
+        SVOTE_Debug/SVOTE_DebugOld, 'ubik_amSyncSite'.
+
+CONCURRENCY THOUGHTS
+
+   This section collections information discussed previously about changes
+   that may be required or desirable in order to improve concurrency.  Note
+   that none of these changes are needed to insure thread safety, provided
+   the changes discussed in the previous section are made.
+
+   + PHYS could be made more concurrent by maintaining a separate lock for
+     the fdcache, avoiding the need to DBHOLD while calling these.
+     However, higher-layer consistency probably requires that certain calls
+     or groups of calls to this package be atomic and isolated.
+
+   + Could DISK be made more concurrent by maintaining a separate lock for
+     the page cache and or free truncation record list?
+
+   + Could concurrency be improved by maintaining separate per-transaction
+     locks?  If so, what is the locking hierarchy with respect to database
+     locks and the DISK and PHYS package locks?
+
+   + Could concurrency be improved by maintaining more reader/writer state
+     and/or separate write locks to insure consistency of database file
+     access without requiring so much DBHOLD?
+
+   + Alternately, could concurrency be improved by requiring that an active
+     transaction be accessed only by the thread that created it?
+
+
+MULTI-DATABASE SUPPORT
+
+   There isn't any.  Some of the Ubik interfaces and even the organization
+   of some internal data structures makes it appear as though multiple
+   databases can be supported.  However, this is not the case, for several
+   reasons:
+
+   + Only a single set of peer servers is tracked, via a global linked list
+     of server structures.  Each server structure includes state such as
+     the server's database version and whether it is up-to-date, so it is
+     not possible to track multiple databases even for a common set of
+     servers.
+   + The physical I/O package (phys.c) tracks cached open file descriptors
+     without regard to what database a file is part of; thus, it cannot
+     handle accessing multiple databases at the same time.
+   + There are a variety of globals containing state which needs to be
+     tracked on a per-database basis.
+   + There are a variety of globals which are effectively protected by
+     a per-database lock, or by no lock at all.
+   + The various RPCs used to communicate between servers assume a single
+     database and do not include a database identifier.  Thus, in the
+     presence of multiple databases, it would be impossible to determine,
+     for example, for which database a DISK RPC was intended.
+
+   The upshot of this is that considerable work would be needed to get Ubik
+   into a condition which would allow a single process to maintain multiple
+   independent Ubik databases at the same time.  Note that this is
+   orthogonal to the question of whether a single multi-file database is
+   possible.
+
+
+OTHER DATA STRUCTURES
+
+   Some other data structures are mentioned in ubik.p.h or elsewhere, but
+   are of relatively little interest from the point of view of threading.
+   They are described here primarily as an alternative to deleting
+   descriptive text that was already written.
+
+   struct ubik_hdr  - on-disk database file header
+
+      This structure represents the on-disk format of the Ubik database
+      file header (label).  It is used only for local variables in
+      uphys_getlabel() and uphys_setlabel(), which read and write this
+      header, respectively.
+
+   struct ubik_stat - database file status
+
+      This structure is used to convey the size and modification timestamp
+      of a database file.  It is used as the type of an output parameter of
+      uphys_stat(), and for local variables in callers of that function.
+
+   struct ubik_stats - global statistics
+
+      This structure is used to contain "miscellaneous" global statistics.
+      Currently that consists of a single counter which is incremented in
+      one place (an exceptional condition in ubik_EndTrans) and is never
+      read.  The one increment is performed only when holding the database
+      lock; thus, this structure may be treated the same as other globals
+      protected by non-global locks.
+
+OTHER NOTES
+
+   There appears to be nothing to insure that calls to disk.c:DRead()
+   during a write transaction won't find and use a "clean" cached page when
+   there is already a dirty page in the cache resulting from an earlier
+   write as part of the same transaction.  This means that if a transaction
+   reads a page after writing it, it may read back the original data
+   instead of the new, and if a transaction writes a page more than once,
+   the later writes may corrupt the database.  It seems likely that we are
+   merely lucky in this regard, and this problem should be fixed.
+
+   src/ubik/beacon.c:ubeacon_ReinitServer() assumes 'ubik_CRXSecurityRock'
+   is in fact an AFS configuration directory pointer, suitable as an
+   argument to afsconf_UpToDate().  This is inappropriate;
+   'ubik_CRXSecurityRock' is an opaque argument to
+   (*ubik_CRXSecurityProc)(), Ubik must not make assumptions about what it
+   is.
+
+   It may be worth examining whether it is appropriate for SVOTE_Beacon()
+   to call urecovery_CheckTid() only when voting yes, and not whenever
+   a beacon is received from a server claiming to be sync site.
+
+   Recently, code has been introduced which attempts to insure that the
+   recovery process does not truncate an old database file before a new one
+   has been fully transferred, since this could, depending on the timing of
+   a server failure, deprive the new quorum of a valid database.  This
+   so-called "new recovery" code violates the abstraction provided by the
+   PHYS package, encoding specific  knowledge of the underlying file store
+   into the REMOTE and RECOVERY packages.  This means that the backend
+   provided by phys.c cannot be replaced with an alternative, since in that
+   case recovery would do the wrong thing with the transferred database.
+
+   The DBWRITING loop in urecovery_Interact() is not portable, as it
+   depends the contents of the timeout after a call to select(2).  This was
+   fine for IOMGR_Select(), which has defined behavior, but not for
+   select(2).
+

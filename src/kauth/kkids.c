@@ -14,26 +14,18 @@
 /* These two needed for rxgen output to work */
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
+#include <roken.h>
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <errno.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <afs/fs_utils.h>
 #else
-#include <unistd.h>
-#include <netinet/in.h>
 #include <afs/venus.h>
 #endif
-#include <signal.h>
-#include <afs/stds.h>
+
 #include <rx/xdr.h>
 #include <afs/prs_fs.h>
-#include <stdlib.h>
-#include <string.h>
 #include <afs/sys_prototypes.h>
 #include <afs/afs_consts.h>
 
@@ -52,6 +44,7 @@ static int
 simplify_name(char *orig_name, char *true_name)
 {
     struct stat statbuff;
+
 
 #ifdef AFS_NT40_ENV
     if (stat(orig_name, &statbuff) < 0) {
@@ -185,14 +178,12 @@ find_me(char *arg, char *parent_dir)
 	 */
 	strncpy(parent_dir, truename, bp - truename);
 	parent_dir[bp - truename] = 0;
-	bp++;			/*Skip the slash */
     } else {
 	/*
 	 * No slash appears in the given file name.  Set parent_dir to the current
 	 * directory, and the last component as the given name.
 	 */
 	strcpy(parent_dir, ".");
-	bp = truename;
     }
 
     return 1;			/* found it */
@@ -245,7 +236,7 @@ ParseAcl(char *astr)
     sscanf(astr, "%d", &nminus);
     SkipLine(astr);
 
-    ta = (struct Acl *)malloc(sizeof(struct Acl));
+    ta = malloc(sizeof(struct Acl));
     ta->nplus = nplus;
 
     last = 0;
@@ -253,7 +244,7 @@ ParseAcl(char *astr)
     for (i = 0; i < nplus; i++) {
 	sscanf(astr, "%100s %d", tname, &trights);
 	SkipLine(astr);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = malloc(sizeof(struct AclEntry));
 	if (!first)
 	    first = tl;
 	strcpy(tl->name, tname);

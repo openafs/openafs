@@ -1,0 +1,116 @@
+=head1 NAME
+
+vos_listaddrs - Displays all VLDB server entries
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos listaddrs> S<<< [B<-uuid> <I<uuid of server>>] >>>
+    S<<< [B<-host> <I<address of host>>] >>> [B<-printuuid>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
+    S<<< [B<-config> <I<config directory>>] >>>
+    [B<-help>]
+
+B<vos lista> [B<-u> <I<uuid of server>>] >>>
+    S<<< [B<-h> <I<address of host>>] >>> [B<-p>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-noa>] [B<-l>]
+    [B<-v>] [B<-e>] [B<-nor>]
+    S<<< [B<-co> <I<config directory>>] >>>
+    [B<-he>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<vos listaddrs> command displays all of the server entries from the
+Volume Location Database (VLDB). An entry is created as the File Server
+initializes and registers the contents of its F</usr/afs/local/sysid> file
+in the VLDB.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-host> <I<address of host>>
+
+Rather than displaying all the server entries, display only server entries
+for the specified host. This will show all multihomed addresses registered
+by that File Server in the VLDB.
+
+=item B<-uuid> <I<uuid of server>>
+
+Rather than displaying all the server entries, display only server entries
+for the File Server with the specified UUID. This will show all multihomed
+addresses registered by that File Server in the VLDB and also allows
+mapping a File Server UUID to its address.
+
+=item B<-printuuid>
+
+Prints the UUID of server entries in addition to the registered
+addresses. The B<-printuuid> option is available in OpenAFS versions 1.4.5
+or later and 1.5.8 or later.
+
+=include fragments/vos-common.pod
+
+=back
+
+=head1 OUTPUT
+
+The output displays all server entries from the VLDB, each on its own
+line. If a file server machine is multihomed, all of its registered
+addresses appear on the line. The first one is the one reported as a
+volume's site in the output from the B<vos examine> and B<vos listvldb>
+commands.
+
+The VLDB records IP addresses, and the command interpreter has the local
+name service (either a process like the Domain Name Service or a local
+host table) translate them to hostnames before displaying them. If an IP
+address appears in the output, it is not possible to translate it.
+
+The existence of an entry does not necessarily indicate that the machine
+that is still an active file server machine. To remove obsolete server
+entries, use the B<vos changeaddr> command with the B<-remove> argument.
+
+=head1 EXAMPLES
+
+The following command displays the VLDB server entries in the Example
+Corporation cell:
+
+   % vos listaddrs
+   sv5.example.com
+   sv1.example.com
+   sv2.example.com  afs2.example.com
+   sv6.example.com
+
+The following command displays the VLDB server entry and UUID for
+host sv5.example.com in the Example Corporation cell:
+
+   % vos listaddrs -p -ho sv5.example.com
+   UUID: 000c5aff-8246-1699-96-c4-437b5a45aa77
+   sv5.example.com
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<fs_uuid(1)>,
+L<sysid(5)>,
+L<vos(1)>,
+L<vos_examine(1)>,
+L<vos_listvldb(1)>,
+L<vos_setaddrs(1)>,
+L<vos_remaddrs(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It was
+converted from HTML to POD by software written by Chas Williams and Russ
+Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

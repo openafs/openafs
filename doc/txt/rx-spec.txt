@@ -1,0 +1,921 @@
+Rx protocol specification draft
+Nickolai Zeldovich, kolya@MIT.EDU
+
+Introduction
+============
+
+Rx is a client-server RPC protocol, an extended and combined version
+of the older R and RFTP protocols.  This document describes Rx, but
+the details of Rx security protocols (such as Rxkad) are not specified.
+
+Rx communicates via UDP datagrams on a user-specified port.  Rx also
+provides for multiplexing of Rx services on a single port, via a
+16-bit service ID which identifies a particular Rx service that's
+listening on a given port akin to a port number.  Therefore, an Rx
+service is identified by a triple of <IP address; UDP port number;
+Rx service ID>.
+
+The protocol is connection-oriented -- a client and a server must
+first hand-shake and establish a connection before Rx calls can be
+made.  Said hand-shaking is implicit upon the first request if no
+authentication is desired, or can consist of a pair of Challenge
+and Response requests in order to establish authentication between
+the client and the server.
+
+Protocol Overview
+=================
+
+As mentioned above, Rx uses UDP/IP datagrams on a user-specified
+port to communicate.  An optional user-selectable authentication
+and encryption method can be used to achieve desired security.
+Each Rx server may provide multiple services, specified by the
+Service ID.  This allows for service multiplexing, much in the
+same way as UDP port numbers allow for multiplexing of UDP
+datagrams addressed to the same host.
+
+Each client and server pair that want to communicate using Rx must
+establish an Rx connection, which can be thought of as a context
+for all subsequent Rx activity between these two parties.  An Rx
+connection can only be associated with a single Rx service.
+
+Each Rx connection context contains multiple channels, which are
+used for data transmission and actually performing an RPC call.
+The channels are independent of each other, allowing multiple
+RPC calls to be performed to the same Rx server simultaneously.
+
+An Rx call involves the transmission of call arguments over an Rx
+channel to the server and reception of the reply data.  For each
+Rx call, an available Rx channel must be allocated exclusively to
+that call.  The channel cannot be used for anything else until the
+call completes.  After call completion, the channel may be reused
+for subsequent Rx calls.
+
+Rx Connections
+==============
+
+This section makes many references to fields of an Rx header; see
+the ``Packet Formats'' section for specific layout of the Rx header.
+
+The connection epoch is a unique value chosen by Rx on startup and
+used by the peer to both to identify connections to this host, and
+to detect when this host's Rx restarts.  An Rx connection between
+two hosts is identified by:
+
+	{ Epoch, Connection ID, Peer IP, Peer Port },
+		if the high bit of the epoch (+) is not set
+	{ Epoch, Connection ID },
+		if the high bit of the epoch (+) is set
+
+This means that if the high epoch bit is set, the recipient of a
+packet should accept packets for this Rx connection from any IP
+address and port number.  Conversely, if the high bit is not set,
+the IP and port number must be the same in order for packets to
+be properly recognized as being part of the same connection.
+
+Connection ID is chosen by the client that establishes the connection.
+The last two bits of the same 32-bit field are used by Rx to multiplex
+between 4 parallel calls on the same connection.  Each one of them is
+called an Rx channel, and therefore the field is denoted "Channel ID".
+
+Call number identifies a particular call within a channel (so there
+are four call numbers associated with an Rx connection).  Each new
+call should start with a higher number than the previous call, and
+typically this is just the previous call number + 1.  The initial
+call number must be non-zero, since call number zero indicates a
+connection-only Rx packet (see below).  The call number is chosen
+by the peer initiating the call.  Although only one call can use
+a channel at one time, the call number allows peers to distinguish
+packets on the same channel that belong to different calls.
+
+The sequence number is similar to the sequence number in TCP, but
+instead of bytes they count packets within a call.  Sequence numbers
+always start with 1 at the beginning of each call, and are incremented
+by 1 for each additional packet sent.  Retransmissions in Rx are done
+on a packet-by-packet basis, identified by these sequence numbers.
+
+Every outgoing packet associated with a certain connection is stamped
+with a serial number in the serial field, and the serial number is
+incremented by 1 for every packet sent.  This is used by the flow
+control mechanisms (described below).  The serial number for a
+connection should start out with 1 (i.e., the first packet sent
+should have a serial number of 1.)
+
+Service ID identifies a particular Rx service running on a given
+host/port combination.  This is analogous to how UDP port numbers
+allow multiplexing packets to a single IP address.  Note that once
+an Rx connection has been created, the service ID may not be changed;
+existing implementations cache the service ID value for a given
+connection, and will ignore service ID values in subsequent packets.
+
+The Checksum field allows for an optional packet checksum.  A zero
+checksum field value means that checksums are not being computed.
+An Rx security protocol (identified by the security field, described
+below) may choose to use this field to transport some checksum of
+the packet that is computed and verified by it (for example, rxkad
+uses this field for a cryptographic header checksum).  Rx itself
+makes no use of the checksum field.
+
+The status field allows for additional user flags to be transported
+with each packet.  These have no significance to the protocol itself.
+These flags are associated with a call rather than an individual
+packet.
+
+The security field specifies the type of security in use on this
+connection.  These values don't have a defined mapping in the Rx
+protocol but rather are mapped to specific Rx security types by
+the application using Rx.
+
+An Rx security protocol can use the checksum field as described
+above, and can also modify the packet payload in any way, for
+instance by encrypting the contents or adding headers or trailers
+specific to the security protocol (although the end result must
+be a properly sized packet that Rx will be able to transmit.)
+
+The "Flags" field consists of a number of single-bit flags with
+meanings as follows.  The actual bit values are defined below,
+in the ``Protocol Constants'' section.
+
+	* CLIENT-INITIATED
+		This packet originated from an Rx client (as opposed
+		to server).  To avoid packet loops, a server should
+		always clear the CLIENT-INITIATED flag on any packets
+		it sends, and discard incoming packets without the
+		CLIENT-INITIATED flag.
+
+	* REQUEST-ACK
+		Sender is requesting acknowledgement of this packet,
+		via an Ack packet response.
+
+	* LAST-PACKET
+		This packet is the last packet in this call from the
+		sender.
+
+		NOTE: some older Rx implementations, which do not
+		support the trailing packet size fields in Rx Ack
+		packets, use the LAST-PACKET flag for computing the
+		MTU.  In particular, when a DATA packet with the
+		REQUEST-ACK flag but without the LAST-PACKET flag
+		is received, the MTU is adjusted down to the size
+		of that packet.
+
+	* MORE-PACKETS
+		More packets are going to be following this one.  This
+		flag is set on all but the last packet by the sender
+		transmitting a list of packets at once, for possible
+		optimization at the receiver end.
+
+	* SLOW-START-OK
+		In an ack packet, indicates that the sender of this
+		packet supports the slow-start mechanism, described
+		below under ``Flow Control''.
+
+	* JUMBO-PACKET
+		In a data packet, indicates that this packet is part
+		of a jumbogram, and is not the last one.  See the
+		``Jumbograms'' section below for more details.
+
+Packet Types
+============
+
+The "Type" field indicates the contents of this packet.  Actual
+values are specified in the ``Protocol Constants'' section.
+This section describes the simpler packet types, and subsequent
+sections cover more complex packet types in more detail.
+
+Certain type packets are connection-only requests (that is, they
+are not associated with an RPC call).  A connection-only request
+is indicated by a zero call number.  Valid packet types in a
+connection-only context are Abort, Challenge, Response, Debug,
+Version, and the parameter exchange packet types.  All other
+packets can only be used in the context of a call.  Additionally,
+Abort can be used both in a connection and call context.
+
+The payload of the packet following the header depends on the
+type of the field, as follows:
+
+ * DATA type (Standard data packet)
+
+	The payload of a data packet is simply the Rx payload,
+	corresponding to the sequence number and call specified
+	in the header.  The actual data that is transmitted in
+	Rx data packets is described below.
+
+	The receipt of a data packet by a client implicitly
+	acknowledges that the server has received and processed
+	all the packets that have been transmitted to it as
+	part of this call.
+
+ * ACK type (Acknowledgement of received data)
+
+	An acknowledgement packet provides information about
+	which packets were or were not received by the peer,
+	and other useful parameters.  The semantics of these
+	packets are described below in the ``Call Layer''
+	section.
+
+ * BUSY type (Busy response)
+
+	When a client tries to start a new call on a channel
+	which the server still considers active, a busy response
+	is returned.  The call and channel number in the packet
+	header indicate which call is being rejected.  This packet
+	type has no payload associated with it.
+
+ * ABORT type (Abort packet)
+
+	Indicates that the relevant connection or call (if the
+	call number field is non-zero) has encountered an error
+	and has been terminated.  The payload of the packet has
+	a network-byte-order 32-bit user error code.
+
+ * ACKALL type (Acknowledgement of all packets)
+
+	An acknowledge-all packet indicates the obvious: the peer
+	wants to acknowledge the receipt of all packets sent to
+	it.  This could be used, for example, when a connection
+	is being closed and the client wants to ensure that no
+	retransmissions are attempted after it exits.
+
+	There is no payload associated with an acknowledge-all
+	packet.
+
+ * CHALLENGE, RESPONSE types (Challenge request/response)
+
+	The payload of the packet is security-layer-specific
+	data, and is used to authenticate an Rx connection.
+
+	Perhaps this should include a reference to some spec
+	on rxkad (or rxkad should just be added to this spec.)
+
+ * DEBUG type (Debug packet)
+
+	Rx supports an optional debugging interface; see the
+	``Debugging'' section below for more details.
+
+ * PARAMS types (Parameter exchange)
+
+	These types were assigned in AFS 3.2 but never used for
+	anything, and therefore have no protocol significance
+	at this time.
+
+ * VERSION type (Get AFS version)
+
+	If a server receives a packet with a type value of 13, and
+	the client-initiated flag set, it should respond with a
+	65-byte payload containing a string that identifies the
+	version of AFS software it is running.  The response should
+	not have the client-initiated flag set.
+
+	Nothing should respond to a version packet without the
+	client-initiated flag, to avoid infinite packet loops.
+
+Call Layer
+==========
+
+	The call layer provides a reliable data transport over an
+	Rx channel, and is used by the RPC layer to make Rx calls.
+	One of the most important pieces of the call layer is the
+	Rx acknowledgement packet.  The acknowledgement packet is
+	used by Rx to determine when retransmissions are needed,
+	as well as determining the proper transmission / receiving
+	parameters to use (such as the transmit window size and
+	jumbogram length, described in more detail below).
+
+	A new call is established by the client simply sending a
+	data packet to the server on an available channel.  Either
+	side can indicate that they have no more data to send by
+	setting the LAST-PACKET flag in their last Rx packet.  The
+	call remains open until the upper layer informs Rx that it
+	is done with the call.  (The upper layer in this case would
+	most likely be the Rx RPC layer.)
+
+	The structure of an Rx acknowledgement packet is described
+	in the Packet Formats section.  We will refer to particular
+	fields of the acknowledgement packet here by names.
+
+	The <Buffer Space> field specifies the number of packets that
+	the sender of the acknowledgement is willing to provide for
+	receiving packets for this call.  The sender, presumably,
+	should not send packets beyond the number specified here,
+	without receiving further acknowledgement allowing it.
+
+	The <Max Skew> field indicates the maximum packet skew that
+	the sender of this packet has seen for this call.  If a
+	packet is received N packets later than expected (based
+	on the packet's serial number, i.e. if the last received
+	packet's serial number is N higher than this packet's),
+	then it is defined to have a skew of N.  This can be used
+	to avoid retransmission because of packet reordering.
+
+	The <First Sequence> number specifies the sequence number of
+	the first packet that is being explicitly acknowledged (either
+	positively or negatively) by this packet.  All packets with
+	sequence numbers smaller than this are implicitly acknowledged.
+
+	The <Reserved> field, previously used to indicate the previous
+	received packet, is no longer used.  It should be set to zero
+	by the sender and not interpreted by the receiver.
+
+	The <Serial Number> field indicates the serial number of the
+	packet which has triggered this acknowledgement, or zero if there
+	is no such packet (i.e. the ack packet was delayed and should not
+	be used for round-trip time computation).  The receiver should
+	note that any transmitted packets with a serial number less than
+	this, which are not acknowledged by this packet, are likely lost
+	or reordered.  Thus, these packets should be retransmitted, after
+	a possible delay to allow for packet reordering (as measured by
+	packet skew).
+
+	The trailing fields after the variable-length acknowledgements
+	section are not always 32-bit aligned with respect to the packet,
+	and aren't always present.  (Their presence depends on the Rx
+	version of the peer.)  The maximum and recommended packet sizes
+	are, respectively, the largest possible packet size that the peer
+	is willing to accept from us, and the size of the packet they
+	would prefer to receive.  In absence of these fields, it should
+	be assumed that the maximum allowed packet size is 1444 bytes.
+
+	The receive window size indicates the size of the ACK sender's
+	receive window, in packets.  Its use is described below in
+	the "Flow Control" section.  If this field is absent, the
+	implementation must assume a maximum window size of 15 packets;
+	older implementations that do not support this trailing field
+	only allow for a window of 15 packets.
+
+	The "Max Packets per Jumbogram" field indicates how many packets
+	the ACK sender is willing to receive in a jumbogram (also
+	described below).  All packets in a jumbogram are always of the
+	same size (except the last one), regardless of the maximum and
+	recommended packet sizes described above.
+
+	The <Reason> field specifies a particular type of an ack packet.
+	Valid reason codes are specified in the ``Packet Formats and
+	Protocol Constants'' section; their meanings are as follows:
+
+	REQUESTED
+		Acknowledgement was requested.  The peer received
+		a packet from us with the acknowledgement-requested
+		flag set, and is acknowledging it.
+
+	DUPLICATE
+		A duplicate packet was received.  The duplicate
+		packet's serial number is in the <Serial> field.
+
+	OUT-OF-SEQUENCE
+		A packet was received out of sequence.  The serial
+		number of said packet is in the <Serial> field.
+
+	WINDOW-EXCEEDED
+		A packet was received but exceeded the current
+		receive window, and was dropped.
+
+	NO-SPACE
+		A packet was received, but no buffer space was
+		available and therefore it was dropped.
+
+	PING
+		This is a keep-alive packet, used to verify that
+		the peer is still alive.  If the REQUEST-ACK flag
+		in the Rx packet is set, the recipient of this
+		packet should reply with a PING-RESPONSE packet.
+
+	PING-RESPONSE
+		This is a response to a keep-alive ack (ping).
+
+	DELAYED
+		A delayed acknowledgement, usually because a certain
+		amount of time has passed since the receipt of the
+		last packet and there are outstanding unacknowledged
+		packets.  Should not be used for RTT computation.
+
+	OTHER
+		Un-delayed general acknowledgement, which does not
+		fall in any of the above categories.
+
+	A peer should never delay the transmission of an ack packet
+	in response to a received packet unless it sets the delayed
+	ack type field.  This is because ack packets (except for
+	delayed ones) are used for RTT computation by Rx.
+
+	All acknowledgement packets should have the REQUEST-ACK
+	flag in the Rx header turned off, except for PING type
+	ack packets.
+
+	The <Ack Count> field specifies the number of bytes following
+	in the acknowledgements section.  Each of those bytes indicate
+	the acknowledgement status corresponding to a sequence number
+	between firstSequence and firstSequence+ackCount-1 inclusively.
+	There can be up to 255 bytes in the acknowledgements section.
+	Typically the ack count is the receive window size of the
+	ack packet sender, and the individual packet status bytes
+	correspond to the packets in the current receive window.
+	The values in each of those bytes can be as follows:
+
+	0	Explicit negative acknowledgement: packet with the
+		corresponding sequence number has not been received
+		or has been dropped.
+	1	Explicit acknowledgement: packet with the corresponding
+		sequence number has been received but not processed by
+		the application yet.
+
+	It's important to note the distinction between packets with
+	sequence numbers before firstSequence, between firstSequence
+	and firstSequence+ackCount-1, and those with sequence numbers
+	of at least firstSequence+ackCount.  Those in the first category
+	have been passed up to the application level and the sender
+	(recipient of this ack) can recycle packets with such sequence
+	numbers.
+
+	Packets in the second category are individually acknowledged
+	in the acknowledgements section, either as being queued for
+	the application or not received.  The recipient of the ack
+	should keep all packets with sequence numbers in this range,
+	but avoid retransmitting the positively acknowledged ones.
+	Negatively acknowledged packets should be retransmitted.
+	A more detailed explaination of the retransmit strategy is
+	given below.
+
+	Packets in the third category are not acknowledged at all,
+	and the recipient of the ack should assume no knowledge
+	of their state.  Since the Rx receive window should not
+	exceed the size of an ack packet, the sender shouldn't
+	have transmitted any packets in this category anyway.
+
+ * Round-trip time computation
+
+	To determine when packet retransmission is necessary, Rx
+	computes some statistics about the round-trip time between
+	the two hosts:  exponentially-decaying averages of the
+	round-trip time and the standard deviation thereof.  Each
+	acknowledgement packet which mentions a specific packet in
+	the <Serial> field and is not delayed is used to update the
+	round-trip statistics.  First, the round-trip time for this
+	packet (R) is computed as the difference between the arrival
+	time of the ack packet and the time we transmitted the
+	packet with the serial number specified in <Serial>.
+
+	Next, the round-trip time average and standard deviation
+	values are updated.  For instance, this algorithm could
+	be used:
+
+		RTTdev = RTTdev * (3/4) + |RTTavg - R| / 4
+		RTTavg = RTTavg * (7/8) + R / 8
+
+ * Packet retransmission
+
+	In order to support reliable data transport, Rx must retransmit
+	packet which are lost in the network.  This must not be done
+	too early, otherwise we might retransmit a packet whose first
+	copy is still in transit, thereby wasting bandwidth.
+
+	Rx computes a retransmit timeout value T, and retransmits any
+	packet which hasn't been positively acknowledged since last
+	transmission for at least T seconds.  This timeout could be
+	computed as follows from the round-trip statistics above:
+
+		T = RTTavg + 4 * RTTdev + 0.350
+
+	This allows the packet to be up to 4 deviations late and still
+	not be retransmitted.  The 350 msec fudge factor is used to
+	compensate for bursty networks, though it is likely becoming
+	less relevant (and accurate) with time.
+
+	A more clever algorithm could take into account the maximum
+	packet skew rate, and improve the retransmission strategy to
+	take into the account the likelihood that a given packet has
+	been reordered, and give it extra time before retransmission.
+
+ * Keepalive and Timeout
+
+	The upper layer (either the Rx RPC layer or the application)
+	have to specify a timeout, T, to the call layer.  If the peer
+	is not heard from within T seconds, the call layer declares
+	the call to be dead and propagates the error to the upper
+	layer.
+
+	In order to determine whether the peer is still alive or not,
+	keepalive requests are used.  These take form of an ack PING
+	and PING-RESPONSE packets.  When the client has not received
+	any response from the server, either to the original request
+	or the keepalive requests, in T seconds, the call times out.
+
+	The following strategy may be used to determine when to send
+	keepalive requests:
+
+		Compute a keepalive timeout, KT = T/6
+
+		If the call was initiated KT seconds ago, or KT
+		seconds have passed since the last keepalive
+		request transmission, send a keepalive packet.
+
+	This strategy limits the number of transmitted keepalive
+	packets to a fixed number in the case of a dead server,
+	and proportional to the real timeout in case of a slow
+	server.  It also allows up to 5 keepalives to be dropped
+	before the server is erroneously declared dead.
+
+ * Flow Control
+
+	Every Rx client or server has associated with each Rx call a
+	receive and transmit window.  These windows indicate the number
+	of packets that haven't been fully acknowledged packets (that
+	is, not read by the peer's application) that an Rx sender can
+	have outstanding at any time.  A sender's transmit window may
+	never be greater than it's peer's receive window for that call.
+	The receive windows are exchanged via the "Receive Window Size"
+	parameter in an Ack packet.
+
+	Rx ``sliding windows'' are similar to those used by TCP, except
+	they measure packets rather than bytes.  Also, in TCP the window
+	effectively applies to bytes in flight between the two peers,
+	whileas in Rx the window applies to packets between the user
+	applications.  For example, a transmit window of 8 on a certain
+	Rx connection means that at most 8 packets can be transmitted
+	and not yet read by the peer's application at any time.  The
+	sequence number of the first packet that hasn't been read by
+	the application is indicated by the First Sequence field of
+	an Ack packet.
+
+	The selection of initial window sizes isn't strictly defined
+	by the Rx protocol, but here are a few things that one might
+	want to consider when choosing initial windows:
+
+		 * A useful strategy can be to advertise a small receive
+		   window until the application starts reading data, and
+		   advertise a larger window afterwards.
+
+		 * The transmit window should be initially a conservative
+		   small value.  Once an Ack packet is received, the peer's
+		   advertised receive window can be used to choose a better
+		   transmit window.
+
+	Rx uses the slow start, congestion avoidance, and fast recovery
+	algorithms[6].  The algorithms are modified to work in the context
+	of Rx packet-based transmission windows, and are described below.
+
+	These algorithms require two additional variables to be maintained
+	for each active Rx call: a congestion window, cwind, and a slow
+	start threshold, ssthresh.
+
+	Define a "negative ack" as an Ack packet that contains a negative
+	acknowledgement followed by a positive one.  Similarly, define a
+	"positive ack" to be any Ack that is not negative.  Upon receiving
+	three negative acks for a call in a row since the last congestion
+	avoidance attempt (if any), the Rx protocol enters congestion
+	avoidance for that Rx call.
+
+	 * Slow start, congestion avoidance, and fast recovery algorithms
+
+		First, the congestion window, cwind, is initialized to 1.
+		The number of unread transmitted packets is now limited not
+		only by the transmission window, but also by the congestion
+		window.  The latter limit is a little different:  Rx may
+		send up to cwind packets (by sequence number) past the last
+		contiguous positively acknowledged packet.  For example,
+		if an Ack packet indicates that packets 1, 2 and 8 were
+		received, and cwind is 2, Rx may transmit packets 3 and 4.
+
+		When congestion occurs (indicated by a negative ack or a
+		packet retransmission timeout), Rx enters congestion avoidance
+		and fast recovery.  The slow-start threshold, ssthresh, is
+		set to half of the effective transmission window (minimum of
+		cwind and transmit window), but no less than 2 packets.
+
+		If triggered by a negative ack, any negatively acknowledged
+		packets should be retransmitted as soon as possible (i.e.
+		window-permitting).
+
+		If triggered by a retransmission timeout, the congestion
+		window is reset to a single packet.
+
+		When in fast-recovery mode, every additional negative ack
+		packet received causes cwind to be increased by one packet.
+		A positive ack packet causes cwind to be set to ssthresh,
+		and terminates fast recovery.  At this point we are back
+		to congestion avoidance, since the cwind is half the original
+		transmission window.
+
+		When packet acknowledgements are received, the congestion
+		window should be increased.  If cwind is less than ssthresh,
+		cwind should be increased by 1 for each newly acknowledged
+		packet.  If cwind is at least ssthresh, cwind is increased
+		by 1 for each newly received Ack packet.
+
+	The size of the receive window should not grow past the size of
+	an Rx ack packet (which can acknowledge up to 255 packets at a
+	time.)
+
+Debugging
+=========
+
+Rx provides for an optional debugging interface, using the Debug AFS
+packet type, allowing remote Rx clients to query an Rx server for
+some Rx protocol statistics.  Not all implementations are required
+to implement this interface.  Some parts of this interface may also
+be specific to a particular implementation of Rx.  In order to prevent
+packet loops, a server should only reply to debug packets with the
+client-initiated flag set.
+
+The payload of a debug request packet is always the same; both of
+the 32-bit quantities are in network byte order:
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                           Debug Type                          |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                           Debug Index                         |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+The debug type indicates the kind of debug information being sent
+or requested, and determines the format of the rest of the packet.
+The debug index allows some debug types to export array-like data,
+indexed by this field.  The following debug types are defined for
+the Transarc implementation:
+
+	0x01	Retrieve basic connection statistics
+	0x02	Get information about some connections
+	0x03	Get information about all connections
+	0x04	Get all Rx stats
+	0x05	Get all peers of this server
+
+The index field in the debug packet indicates which element of the
+debug information the client wants to access, in cases where there
+are multiple entries in question.
+
+The responses to each of those debug queries contain the following
+information:
+
+1. Retrieve basic connection stats
+
+	An array of general statistics about packet allocation,
+	server performance, and so on.  The first octet in this
+	response represents the debug protocol version being used
+	by the server.  See RX_DEBUGI_VERSION* in rx/rx.h.
+
+2, 3. Get information about connections
+
+	Both of these calls return a struct rx_debugConn (see
+	rx/rx.h), indexed by the "index" field.
+
+	The first version of the debug call (type 2) only retrieves
+	information about connections which are deemed interesting,
+	that is, connections which are active, or about to be
+	reaped.
+
+	The end of the list is signaled by a response where the
+	connection ID value is 0xFFFFFFFF.
+
+4. Get Rx stats
+
+	This call returns a struct rx_stats to the client in network
+	byte order, containing various statistics about the state of
+	Rx on the server (see rx/rx.h).
+
+5. Get all Rx peers
+
+	Similar to the connection request above (2, 3) this call
+	returns all the Rx peers of the server (in a network-byte-order
+	struct rx_debugPeer), indexed by the index field in the request.
+	End of list is indicated by a host value of 0xFFFFFFFF.  (These
+	are the first 4 octets.)
+
+In response to unknown requests, the server returns 0xFFFFFFF8 in the
+debug type field.
+
+	XXX	The response interface should probably be fixed
+		to include a fixed header that indicates whether
+		the request was successfully completed.
+
+Jumbograms
+==========
+
+To be able to transmit more data in a single packet, Rx supports
+``jumbograms'', which are single UDP datagrams containing multiple
+sequential Rx DATA packets.  In a jumbogram, all packets except the
+last one must be of a fixed maximal size (1412 bytes).  Because all
+the packets in the jumbogram are sequential, only one full header
+is needed.  Here is what a jumbogram could look like:
+
+  +-----------+---------------+--------------+---------------+
+  | Rx header | 1412 byte pkt | Short header | 1412 byte pkt | ->
+  +-----------+---------------+--------------+---------------+
+
+      +--------------+-   -+-----------------------+
+   -> | Short header | ... | <= 1412 byte last pkt |
+      +--------------+-   -+-----------------------+
+
+Every Rx packet in a jumbogram except the first one must be preceeded
+by the short Rx header, and all packets except the last one must have
+the Jumbogram Rx flag set in their respective headers.  The number of
+packets in a jumbogram may not exceed the peer's advertised Max Packets
+Per Jumbogram value in the Ack packet.
+
+The maximum number of packets per jumbogram should be assumed to be 1
+(i.e., no jumbograms) unless explicitly specified otherwise by an Ack
+packet.  If an Ack packet is received without the packet-per-jumbogram
+field, it might indicate that the peer is now running a version of Rx
+that does not support jumbograms, and therefore no jumbograms should
+be sent until they are explicitly enabled again.
+
+The short header in a jumbogram has the following makeup:
+
+    0                   1
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Flags     |    Reserved   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |           Checksum            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+All the packets in the jumbogram have the same Rx header fields
+(from the full Rx header) except for Flags, Checksum, Sequence,
+and Serial.  The flags and checksum field for subsequent packets
+are taken from the short header preceeding that packet in the
+jumbogram.  The sequence and serial numbers are assumed to be
+consecutive, and are incremented by 1 from the first packet in
+the jumbogram (ie the full Rx header).
+
+Retransmitted packets should not be sent in a jumbogram.
+
+RPC Layer
+=========
+
+This section discusses how an RPC call is made using the Rx protocol.
+There are two common ``types'' of Rx calls: simple and streaming.
+These mostly reflect a difference in the upper-level API rather than
+in the Rx protocol.  A simple Rx call has a fixed number of input
+variables and a fixed number of output variables.  A streaming Rx
+call, in addition to the above, allows the user to send and receive
+arbitrary amounts of data (whose length should be specified as a
+fixed-length argument.)
+
+In either case, an Rx call consists of two basic stages: client
+sending the data to the server, and server sending the response
+back to the client.  No data can be sent by the client in the
+same call after the server has started sending its response.
+
+Each remote function call associated with a particular Rx service
+(identified by the IP-port-serviceId triplet, as mentioned above)
+is assigned a 32-bit integer opcode number.  To make a simple Rx
+call, the caller must transmit the opcode number followed by the
+expected arguments for that call over an Rx channel using XDR
+encoding.  The callee uses XDR to unmarshall the opcode and input
+arguments, performs a function call corresponding to that opcode
+and arguments, and then uses XDR to encode the return values back
+to the caller.  The caller then uses XDR to receive the output
+variables.
+
+For streaming calls which send data from the caller to the callee,
+the convention is to include the length of the data to be sent as
+one of the fixed-length arguments, and send the variable-length
+data immediately after the fixed-length portion.  For streaming
+calls which receive data, the convention is for the callee to first
+reply with a fixed-length field specifying the number of bytes it's
+about to send, and then send those bytes.  Upon completion of the
+streaming part of the call, the output arguments are sent back to
+the caller in fixed-length XDR form, as with simple calls.
+
+Packet Formats and Protocol Constants
+=====================================
+
+ * Rx packet
+
+	Every simple Rx packet has an Rx header, of the form below.
+	All quantities are in network byte order.
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |+|                     Connection Epoch                        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                         Connection ID                     | * |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                          Call Number                          |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                        Sequence Number                        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                         Serial Number                         |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Type      |     Flags     |     Status    |    Security   |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |           Checksum            |          Service ID           |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |   Payload  ....
+   +-+-+-+-+-
+
+	[*]	The field marked with * is the Channel ID.  The last
+		two bits of the connection ID are used to multiplex
+		between 4 parallel calls.
+
+	[+]	The bit marked with + is used to indicate that only
+		the connection ID should be used to identify this
+		connection, and sender host/port should not be used.
+
+	The values for the Flags field are defined as follows:
+
+	0000 0001	CLIENT-INITIATED
+	0000 0010	REQUEST-ACK
+	0000 0100	LAST-PACKET
+	0000 1000	MORE-PACKETS
+	0001 0000	- Reserved -
+	0010 0000	SLOW-START-OK
+	0010 0000	JUMBO-PACKET
+
+	Commonly, but not necessarily, the following value mappings
+	for the Security field are used:
+
+	0		No security or encryption
+	1		bcrypt security, only used in AFS 2.0
+	2		"krb4" rxkad
+	3		"krb4" rxkad with encryption (sometimes)
+
+	The following packet type values are defined:
+
+	1		DATA		Standard data packet
+	2		ACK		Acknowledgement of received data
+	3		BUSY		Busy response
+	4		ABORT		Abort packet
+	5		ACKALL		Acknowledgement of all packets
+	6		CHALLENGE	Challenge request
+	7		RESPONSE	Challenge response
+	8		DEBUG		Debug packet
+	9		PARAMS		Exchange of parameters
+	10		PARAMS		Exchange of parameters
+	11		PARAMS		Exchange of parameters
+	12		PARAMS		Exchange of parameters
+	13		VERSION		Get AFS version
+
+ * Rx acknowledgement packet
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |         Buffer Space          |          Max Skew             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                        First Sequence                         |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                           Reserved                            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                            Serial                             |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     Reason    |   Ack Count   |   Acknowledgements ...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ ..
+
+           ...  -+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       ... Acks    |   Reserved    |           Reserved            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                    Maximum Packet Size                        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                  Recommended Packet Size                      |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                    Receive Window Size                        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |                 Max Packets per Jumbogram                     |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+	Note that the trailing fields can have arbitrary alignment,
+	determined by the number of individual acks in the packet.
+	There are three reserved octets between the variable acks
+	section and the start of the trailing fields; they also have
+	no particular alignment.
+
+	The valid values for the Reason code are:
+
+	1		REQUESTED
+	2		DUPLICATE
+	3		OUT-OF-SEQUENCE
+	4		WINDOW-EXCEEDED
+	5		NO-SPACE
+	6		PING
+	7		PING-RESPONSE
+	8		DELAYED
+	9		OTHER
+
+Acknowledgements
+================
+
+Jeffrey Hutzelman <jhutz@cmu.edu> reviewed an early draft of this
+specification, and provided much appreciated feedback on technical
+details as well as document structuring.
+
+Love Hornquist-Astrand <lha@stacken.kth.se> made many corrections
+to this specification, especially regarding backwards-compatibility
+with older Rx implementations.
+
+References
+==========
+
+	[1] /afs/sipb.mit.edu/contrib/doc/AFS/hijacking-afs.ps.gz
+
+	[2] OpenAFS: src/rx/
+
+	[3] /afs/sipb.mit.edu/contrib/doc/AFS/ps/rx-spec.ps
+
+	[4] ftp://ftp.stacken.kth.se/pub/arla/prog-afs/shadow/doc/r.vdoc
+
+	[5] ftp://ftp.stacken.kth.se/pub/arla/prog-afs/shadow/doc/rx.mss
+
+	[6] http://web.mit.edu/rfc/rfc2001.txt
+
+$Id: rx-spec,v 1.22 2002/10/20 06:46:00 kolya Exp $

@@ -39,6 +39,13 @@ struct xfs_inode_info {
 #include "h/mm.h"
 #endif
 
+#if defined(AFS_NBSD50_ENV)
+# if !defined(DEF_CADDR_T)
+typedef char * caddr_t;
+#define DEF_CADDR_T
+# endif
+#endif
+
 
 /* this is just a dummy type decl, we're really using struct sockets here */
 struct osi_socket {
@@ -119,12 +126,7 @@ struct afs_osi_WaitHandle {
 
 #define	osi_NPACKETS	20	/* number of cluster pkts to alloc */
 
-/*
- * Alloc declarations.
- */
-#if !defined(AFS_OBSD44_ENV) && !defined(AFS_NBSD_ENV)
-#define afs_osi_Alloc_NoSleep afs_osi_Alloc
-#endif
+
 
 /*
  * Default vnode related macros
@@ -184,7 +186,7 @@ typedef struct {
     afs_int32 tv_sec;
     afs_int32 tv_usec;
 } osi_timeval32_t;
-#elif defined(AFS_SUN57_ENV)
+#elif defined(AFS_SUN5_ENV)
 typedef struct timeval32 osi_timeval_t;
 typedef struct timeval32 osi_timeval32_t;
 #else
@@ -205,8 +207,6 @@ typedef struct timeval osi_timeval32_t;
 #ifdef AFS_FBSD_ENV
 /* should use curthread, but 'ps' can't display it */
 #define osi_ThreadUnique()	(curproc->p_pid)
-#elif defined(AFS_LINUX_ENV)
-#define osi_ThreadUnique()	(current->pid)
 #elif defined(UKERNEL)
 #define osi_ThreadUnique()	osi_getpid()
 #else
@@ -376,7 +376,7 @@ typedef struct timeval osi_timeval32_t;
 	    uio_setrw((UIO),(RW));				\
 	    CODE = uiomove((SRC),(LEN),(UIO));			\
 	} while(0)
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_DARWIN_ENV) || (defined(AFS_XBSD_ENV) && !defined(AFS_NBSD40_ENV))
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    (UIO)->uio_rw = (RW);				\

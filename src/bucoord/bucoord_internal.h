@@ -20,6 +20,8 @@ extern char *bc_CopyString(char *astring);
 extern afs_int32 getPortOffset(char *port);
 extern afs_int32 bc_SafeATOI(char *anum);
 extern int bc_WaitForNoJobs(void);
+extern afs_int32 bc_ParseExpiration(struct cmd_parmdesc *paramPtr,
+		                    afs_int32 *expType, afs_int32 *expDate);
 
 struct cmd_syndesc;
 extern int bc_DumpCmd(struct cmd_syndesc *as, void *arock);
@@ -114,10 +116,6 @@ extern int bc_ScanDumps(struct bc_config *config, afs_int32 dbAddFlag,
 extern afs_int32 bc_UpdateDumpSchedule(void);
 extern int bc_SaveDumpSchedule(void);
 
-/* expire.c */
-struct cmd_parmdesc;
-extern afs_int32 bc_ParseExpiration(struct cmd_parmdesc *paramPtr,
-		                    afs_int32 *expType, afs_int32 *expDate);
 /* main.c */
 extern time_t tokenExpires;
 extern afs_int32 doDispatch(afs_int32, char *[], afs_int32);

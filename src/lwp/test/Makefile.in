@@ -7,15 +7,11 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
 
-INCDIRS= -I.. -I${DESTDIR}/include 
+
+INCDIRS= -I.. -I${DESTDIR}/include
 LIBS= ../liblwp.a
-
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${XCFLAGS} ${ARCHFLAGS}
 
 system noversion: test
 
@@ -27,26 +23,19 @@ testlwp.o	: testlwp.c
 
 
 selclient.o: selclient.c seltest.h
-	${CC} ${CFLAGS} -c -g selclient.c
 
 selclient: selclient.o selsubs.o ${LIBS}
-	${CC} ${CFLAGS} -g -o selclient selclient.o selsubs.o ${LIBS}
+	$(AFS_LDRULE) selclient.o selsubs.o ${LIBS}
 
 selserver.o: selserver.c seltest.h
-	${CC} ${CFLAGS} -c -g selserver.c
 
 selserver: selserver.o selsubs.o ${LIBS}
-	${CC} ${CFLAGS} -g -o selserver selserver.o selsubs.o ${LIBS}
+	$(AFS_LDRULE) selserver.o selsubs.o ${LIBS}
 
 selsubs.o: selsubs.c seltest.h
-	${CC} ${CFLAGS} -g -c selsubs.c
-
 
 test_key: test_key.o
-	${CC} ${CFLAGS} -g -o test_key test_key.o \
-		../liblwp.a $(DESTDIR)/lib/afs/util.a
-
-
+	$(AFS_LDRULE) test_key.o ${LIBS} ${TOP_LIBDIR}/util.a
 
 clean:
-	-$(RM) -f *.o *.a test testlwp selclient selserver core
+	-$(RM) -f *.o *.a test test_key selclient selserver core

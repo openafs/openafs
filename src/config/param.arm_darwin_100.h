@@ -5,7 +5,6 @@
 #define AFS_PARAM_H
 
 #define AFS_ENV                 1
-#define AFS_64BIT_ENV           1	/* Defines afs_int32 as int, not long. */
 #define AFS_64BIT_CLIENT        1
 #define AFS_64BIT_IOPS_ENV	1
 #if defined(__ppc__)
@@ -158,6 +157,7 @@ struct rt_addrinfo {
 #define AFS_PARAM_H
 
 #define AFS_ENV                 1
+#define AFS_64BIT_CLIENT        1
 #define AFS_64BIT_ENV           1	/* Defines afs_int32 as int, not long. */
 #if defined(__ppc__)
 #define AFS_PPC_ENV		1

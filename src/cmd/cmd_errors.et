@@ -18,4 +18,7 @@ error_table CMD
   ec CMD_AMBIG, "<unused>"
   ec CMD_TOOFEW, "Insufficient required parameters provided"
   ec CMD_TOOBIG, "Token too large"
+  ec CMD_MISSING, "Option not specified on command line"
+  ec CMD_BADFORMAT, "Improper format of configuration file"
+  ec CMD_HELP, "Help requested"
 end

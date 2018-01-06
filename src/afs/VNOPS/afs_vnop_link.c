@@ -123,11 +123,7 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
 	if (tdc)
 	    afs_PutDCache(tdc);
 	if (code < 0) {
-	    ObtainWriteLock(&afs_xcbhash, 492);
-	    afs_DequeueCallback(adp);
-	    adp->f.states &= ~CStatd;
-	    ReleaseWriteLock(&afs_xcbhash);
-	    osi_dnlc_purgedp(adp);
+	    afs_StaleVCache(adp);
 	}
 	ReleaseWriteLock(&adp->lock);
 	goto done;
@@ -158,12 +154,7 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
      * returned in ustat is the most recent to store in the file's
      * cache entry */
 
-    ObtainWriteLock(&afs_xcbhash, 493);
-    afs_DequeueCallback(avc);
-    avc->f.states &= ~CStatd;	/* don't really know new link count */
-    ReleaseWriteLock(&afs_xcbhash);
-    if (avc->f.fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
-	osi_dnlc_purgedp(avc);
+    afs_StaleVCache(avc); /* don't really know new link count */
     ReleaseWriteLock(&avc->lock);
     code = 0;
   done:

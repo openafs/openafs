@@ -99,32 +99,22 @@ NONINFRINGEMENT.
 #include "afs/afs_stats.h"	/* statistics */
 
 #include <sys/ioctl.h>
+#ifndef AFS_NBSD60_ENV
 #include <sys/lkm.h>
-
-#if 0
-/* from /usr/src/sys/kern/vfs_subr.c */
-extern void insmntque(struct vnode *, struct mount *);
 #endif
-extern int sys_lkmnosys(), afs3_syscall(), afs_xioctl(), Afs_xsetgroups();
+#include <sys/namei.h>
+#include <miscfs/genfs/genfs.h>
+
+VFS_PROTOS(afs);
+
+#ifndef AFS_NBSD60_ENV
+extern int sys_lkmnosys(struct lwp *, const void *, register_t *);
+extern int afs3_syscall(struct lwp *, const void *, register_t *);
+extern int afs_xioctl(struct lwp *, const void *, register_t *);
+extern int Afs_xsetgroups(struct lwp *, const void *, register_t *);
+static int afs_badcall(struct lwp *, const void *, register_t *);
 
 static int lkmid = -1;
-static int afs_badcall(struct lwp *, void *, register_t *);
-
-#if 0
-int
-newcall(l, v, retval)
-	struct lwp *l;
-	void *v;
-	int *retval;
-{
-	struct afs_sysargs *uap = v;
-
-	printf("kmod: newcall: %ld %ld %ld %ld\n",
-	       SCARG(uap, syscall), SCARG(uap, parm1),
-	       SCARG(uap, parm2), SCARG(uap, parm3));
-	return(0);
-}
-#endif
 
 struct sysent afs_sysent = { 6,
 			     sizeof(struct afs_sysargs),
@@ -132,20 +122,19 @@ struct sysent afs_sysent = { 6,
 			     afs3_syscall};
 
 static struct sysent old_sysent;
+static struct sysent old_setgroups;
+#endif
 
 struct osi_vfs *afs_globalVFS;
 struct vcache *afs_globalVp;
 fsid_t afs_dynamic_fsid;
 
-int afs_mount(struct mount *, const char *, void *,
-	      struct nameidata *, struct lwp *);
-int afs_start(struct mount *, int, struct lwp *);
-int afs_unmount(struct mount *, int, struct lwp *);
+int afs_mount(struct mount *, const char *, void *, size_t *);
+int afs_start(struct mount *, int);
+int afs_unmount(struct mount *, int);
 int afs_root(struct mount *, struct vnode **);
-int afs_quotactl(struct mount *, int, uid_t, void *, struct lwp *);
-int afs_statvfs(struct mount *, struct statvfs *, struct lwp *);
-int afs_sync(struct mount *, int, kauth_cred_t, struct lwp *);
-int afs_vget(struct mount *, ino_t, struct vnode **);
+int afs_statvfs(struct mount *, struct statvfs *);
+int afs_sync(struct mount *, int, kauth_cred_t);
 void afs_init(void);
 void afs_reinit(void);
 void afs_done(void);
@@ -158,38 +147,47 @@ static const struct vnodeopv_desc *afs_vnodeopv_descs[] = {
 
 struct vfsops afs_vfsops = {
     AFS_MOUNT_AFS,
+#ifdef AFS_NBSD50_ENV
+	0,						/* vfs_min_mount_data */
+#endif
     afs_mount,
     afs_start,
     afs_unmount,
     afs_root,
-    afs_quotactl,
+    (void *) eopnotsupp,	/* vfs_quotactl */
     afs_statvfs,
     afs_sync,
-    afs_vget,
+    (void *) eopnotsupp,	/* vfs_vget */
     (void *) eopnotsupp,	/* vfs_fhtovp */
     (void *) eopnotsupp,	/* vfs_vptofh */
     afs_init,
     afs_reinit,
     afs_done,
-    (int (*) (void)) eopnotsupp, /* mountroot */
-    (int (*)(struct mount *, struct vnode *, struct timespec *)) eopnotsupp,
+    (void *) eopnotsupp,	/* vfs_mountroot */
+    (void *) eopnotsupp,	/* vfs_snapshot */
     vfs_stdextattrctl,
+#ifdef AFS_NBSD50_ENV
+    (void *) eopnotsupp, 	/* vfs_suspendctl */
+    genfs_renamelock_enter,	/* vfs_renamelock_enter */
+    genfs_renamelock_exit,	/* vfs_renamelock_exit */
+    (void *) eopnotsupp,	/* vfs_fsync */
+#endif
     afs_vnodeopv_descs,
-    0,			/* vfs_refcount */
+    0,				/* vfs_refcount */
     { NULL, NULL },
 };
 
-VFS_ATTACH(afs_vfsops);
-
 int
-afs_nbsd_lookupname(char *fnamep, enum uio_seg segflg, int followlink,
+afs_nbsd_lookupname(const char *fnamep, enum uio_seg segflg, int followlink,
 		    struct vnode **compvpp)
 {
     struct nameidata nd;
     int niflag;
     int error;
 
-    afs_warn("afs_nbsd_lookupname enter (%s)\n", fnamep);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	afs_warn("afs_nbsd_lookupname enter (%s)\n", fnamep);
+    }
 
     /*
      * Lookup pathname "fnamep", returning leaf in *compvpp.  segflg says
@@ -197,28 +195,32 @@ afs_nbsd_lookupname(char *fnamep, enum uio_seg segflg, int followlink,
      */
     /* XXX LOCKLEAF ? */
     niflag = followlink ? FOLLOW : NOFOLLOW;
+	/*
+	*	NBSD50 seems to have stopped caring about the curproc of things.
+	*	mattjsm
+	*/
+#if defined(AFS_NBSD60_ENV)
+    struct pathbuf *ipb = NULL;
+    ipb = pathbuf_create(fnamep);
+    NDINIT(&nd, LOOKUP, niflag, ipb);
+#elif defined(AFS_NBSD50_ENV)
+    NDINIT(&nd, LOOKUP, niflag, segflg, fnamep);
+#else
     NDINIT(&nd, LOOKUP, niflag, segflg, fnamep, osi_curproc());
-    if ((error = namei(&nd)))
-	return error;
+#endif
+    if ((error = namei(&nd))) {
+	goto out;
+    }
     *compvpp = nd.ni_vp;
+out:
+#if defined(AFS_NBSD60_ENV)
+    pathbuf_destroy(ipb);
+#endif
     return error;
 }
 
 int
-afs_quotactl(struct mount *mp, int cmd, uid_t uid,
-    void *arg, struct lwp *l)
-{
-    return EOPNOTSUPP;
-}
-
-int
-afs_sysctl()
-{
-    return EOPNOTSUPP;
-}
-
-int
-afs_start(struct mount *mp, int flags, struct lwp *l)
+afs_start(struct mount *mp, int flags)
 {
     return (0); /* nothing to do? */
 }
@@ -230,62 +232,65 @@ void afs_done(void)
 
 int
 afs_mount(struct mount *mp, const char *path, void *data,
-	  struct nameidata *ndp, struct lwp *l)
+	  size_t *dlen)
 {
     /* ndp contains the mounted-from device.  Just ignore it.
      * we also don't care about our proc struct. */
-    u_int size;
+    size_t size;
 
     AFS_STATCNT(afs_mount);
 
-    afs_warn("afs_mount enter\n");
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	afs_warn("afs_mount enter\n");
+    }
 
     if (mp->mnt_flag & MNT_UPDATE)
 	return EINVAL;
 
-    if (afs_globalVFS) {
+    if (afs_globalVFS != NULL) {
 	/* Don't allow remounts */
 	return EBUSY;
     }
 
     AFS_GLOCK();
+#ifdef AFS_DISCON_ENV
     /* initialize the vcache entries before we start using them */
 
     /* XXX find a better place for this if possible  */
     init_vcache_entries();
+#endif
     afs_globalVFS = mp;
     mp->mnt_stat.f_bsize = 8192;
     mp->mnt_stat.f_frsize = 8192;
     mp->mnt_stat.f_iosize = 8192;
-#if 0
-    mp->osi_vfs_fsid.val[0] = AFS_VFSMAGIC;	/* magic */
-    mp->osi_vfs_fsid.val[1] = (int)AFS_VFSFSID;
-#else
+    mp->mnt_fs_bshift = DEV_BSHIFT;
+    mp->mnt_dev_bshift = DEV_BSHIFT;
     vfs_getnewfsid(mp);
     afs_dynamic_fsid = mp->mnt_stat.f_fsidx;
-#endif
     (void)copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1,
 		    &size);
-    bzero(mp->mnt_stat.f_mntonname + size, MNAMELEN - size);
-    bzero(mp->mnt_stat.f_mntfromname, MNAMELEN);
+    memset(mp->mnt_stat.f_mntonname + size, 0, MNAMELEN - size);
+    memset(mp->mnt_stat.f_mntfromname, 0, MNAMELEN);
     strcpy(mp->mnt_stat.f_mntfromname, "AFS");
     /* null terminated string "AFS" will fit, just leave it be. */
     strcpy(mp->mnt_stat.f_fstypename, AFS_MOUNT_AFS);
     AFS_GUNLOCK();
-    (void)afs_statvfs(mp, &mp->mnt_stat, l);
+    (void)afs_statvfs(mp, &mp->mnt_stat);
 
-    afs_warn("afs_mount exit\n");
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	afs_warn("afs_mount exit\n");
+    }
 
     return 0;
 }
 
 int
-afs_unmount(struct mount *mp, int mntflags, struct lwp *l)
+afs_unmount(struct mount *mp, int mntflags)
 {
-    extern int sys_ioctl(), sys_setgroups();
-
     AFS_STATCNT(afs_unmount);
+#ifdef AFS_DISCON_ENV
     give_up_cbs();
+#endif
     if (afs_globalVFS == NULL) {
 	printf("afs already unmounted\n");
 	return 0;
@@ -295,85 +300,117 @@ afs_unmount(struct mount *mp, int mntflags, struct lwp *l)
     afs_globalVp = NULL;
 
     vflush(mp, NULLVP, 0);	/* don't support forced */
-    mp->mnt_data = NULL;
     AFS_GLOCK();
-    afs_globalVFS = 0;
+    afs_globalVFS = NULL;
     afs_cold_shutdown = 1;
     afs_shutdown();		/* XXX */
     AFS_GUNLOCK();
 
-    printf
-	("AFS unmounted--use `/sbin/modunload -i %d' to unload before restarting AFS\n",
-	 lkmid);
+    mp->mnt_data = NULL;
+
+    printf("AFS unmounted.\n");
     return 0;
 }
 
+#ifndef AFS_NBSD60_ENV
 static int
-afs_badcall(struct lwp *l, void *xx, register_t * yy)
+afs_badcall(struct lwp *l, const void *xx, register_t *yy)
 {
     return ENOSYS;
 }
+#endif
 
 int
 afs_root(struct mount *mp, struct vnode **vpp)
 {
     struct vrequest treq;
     struct vcache *tvp;
-    int code, glocked;
+    struct vcache *gvp;
+    int code;
 
     AFS_STATCNT(afs_root);
 
-    glocked = ISAFS_GLOCK();
-    afs_warn("afs_root enter, glocked==%d\n", glocked);
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	int glocked = ISAFS_GLOCK();
+	afs_warn("afs_root enter, glocked==%d\n", glocked);
+    }
 
     AFS_GLOCK();
 
-    afs_warn("glocked\n");
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	afs_warn("afs_root: glocked\n");
+    }
 
-    if (!(code = afs_InitReq(&treq, osi_curcred()))
-	&& !(code = afs_CheckInit())) {
+    tvp = NULL;
+tryagain:
+    if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
+	tvp = afs_globalVp;
+	code = 0;
+    } else {
+	if (afs_globalVp) {
+	    gvp = afs_globalVp;
+	    afs_globalVp = NULL;
+	    afs_PutVCache(gvp);
+	}
 
-	afs_warn("afs_root: initReq && CheckInit: code==%d\n", code);
+	if (!(code = afs_InitReq(&treq, osi_curcred()))
+	    && !(code = afs_CheckInit())) {
+	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 
-	tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
-	afs_warn("afs_root: GetVCache: tvp==%lx\n", tvp);
-	if (tvp) {
-	    /* There is really no reason to over-hold this bugger--it's held
-	     * by the root filesystem reference. */
-	    if (afs_globalVp != tvp) {
-#ifdef AFS_DONT_OVERHOLD_GLOBALVP
-		if (afs_globalVp)
-		    AFS_RELE(AFSTOV(afs_globalVp));
-#endif
+	    if (tvp) {
+		if (afs_globalVp) {
+
+		    afs_PutVCache(tvp);
+		    tvp = NULL;
+		    goto tryagain;
+		}
 		afs_globalVp = tvp;
-		VREF(AFSTOV(afs_globalVp));
-	    }
-	    AFSTOV(tvp)->v_flag |= VROOT;
+	    } else
+		code = EIO;
+	}
+    }
+    if (tvp) {
+	struct vnode *vp = AFSTOV(tvp);
+	AFS_GUNLOCK();
+	vref(vp);
+	if (code != 0) {
+		vrele(vp);
+		return code;
+	}
+	if (!VOP_ISLOCKED(*vpp))
+	    code = vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
+	AFS_GLOCK();
+	if (!afs_globalVp || !(afs_globalVp->f.states & CStatd) ||
+	    tvp != afs_globalVp) {
+	    vput(vp);
+	    afs_PutVCache(tvp);
+	    tvp = NULL;
+	    goto tryagain;
+	}
+	if (code != 0)
+	    goto tryagain;
+	vp->v_vflag |= VV_ROOT;
+	if (afs_globalVFS != mp)
 	    afs_globalVFS = mp;
-	    *vpp = AFSTOV(tvp);
-	} else
-	    code = ENOENT;
+	*vpp = vp;
     }
     AFS_GUNLOCK();
 
-    afs_warn("afs_root: gunlocked\n");
-
-    if (!code) {
-	if (!VOP_ISLOCKED(*vpp))
-	    vn_lock(*vpp, LK_EXCLUSIVE | LK_RETRY); /* return it locked */
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	afs_warn("afs_root exit\n");
     }
-
-    afs_warn("afs_root exit\n");
 
     return code;
 }
 
 int
-afs_statvfs(struct mount *mp, struct statvfs *abp, struct lwp *l)
+afs_statvfs(struct mount *mp, struct statvfs *abp)
 {
     AFS_STATCNT(afs_statfs);
 
-    afs_warn("afs_statvfs enter\n");
+    if ((afs_debug & AFSDEB_VNLAYER) != 0) {
+	afs_warn("afs_statvfs enter\n");
+    }
 
     /* thank you, NetBSD */
     copy_statvfs_info(abp, mp);
@@ -392,22 +429,18 @@ afs_statvfs(struct mount *mp, struct statvfs *abp, struct lwp *l)
 }
 
 int
-afs_sync(struct mount *mp, int waitfor, kauth_cred_t cred, struct lwp *l)
+afs_sync(struct mount *mp, int waitfor, kauth_cred_t cred)
 {
     AFS_STATCNT(afs_sync);
+#if defined(AFS_DISCON_ENV)
     /* Can't do this in OpenBSD 2.7, it faults when called from apm_suspend() */
     store_dirty_vcaches();
+#endif
     return 0;
 }
 
-int
-afs_vget(struct mount *mp, ino_t ino, struct vnode **vpp)
-{
-    return (EOPNOTSUPP);
-}
-
 void
-afs_init()
+afs_init(void)
 {
     osi_Init();
     return;
@@ -419,6 +452,7 @@ afs_reinit(void)
     return;
 }
 
+#ifndef AFS_NBSD60_ENV
 /* LKM */
 
 /*
@@ -426,63 +460,35 @@ afs_reinit(void)
  */
 MOD_VFS("afs", -1, &afs_vfsops);
 
-#if 0
-static char afsgenmem[] = "afsgenmem";
-static char afsfidmem[] = "afsfidmem";
-static char afsbhdrmem[] = "afsbhdrmem";
-static char afsbfrmem[] = "afsbfrmem";
-#endif
-
-int
+static int
 afs_vfs_load(struct lkm_table *lkmtp, int cmd)
 {
-#if 0
-    extern char *memname[];
-
-    if (memname[M_AFSGENERIC] == NULL)
-	memname[M_AFSGENERIC] = afsgenmem;
-    if (memname[M_AFSFID] == NULL)
-	memname[M_AFSFID] = afsfidmem;
-    if (memname[M_AFSBUFHDR] == NULL)
-	memname[M_AFSBUFHDR] = afsbhdrmem;
-    if (memname[M_AFSBUFFER] == NULL)
-	memname[M_AFSBUFFER] = afsbfrmem;
-#endif
     lkmid = lkmtp->id;
-
-    if (sysent[AFS_SYSCALL].sy_call != sys_nosys) {
+    if (sysent[AFS_SYSCALL].sy_call != sys_lkmnosys) {
 	printf("LKM afs_vfs_load(): AFS3 syscall %d already used\n",
-	       AFS_SYSCALL);
+	    AFS_SYSCALL);
 	/* return EEXIST; */
     }
 
     old_sysent = sysent[AFS_SYSCALL];
     sysent[AFS_SYSCALL] = afs_sysent;
+    old_setgroups = sysent[SYS_setgroups];
+    sysent[SYS_setgroups].sy_call = Afs_xsetgroups;
+#if NOTYET
+    old_ioctl = sysent[SYS_ioctl];
+    sysent[SYS_ioctl].sy_call = afs_xioctl;
+#endif
 
-    printf("OpenAFS lkm loaded\n");
+    aprint_verbose("OpenAFS loaded\n");
 
     return (0);
 }
 
-int
+static int
 afs_vfs_unload(struct lkm_table *lktmp, int cmd)
 {
-#if 0
-    extern char *memname[];
-#endif
-
     if (afs_globalVp)
 	return EBUSY;
-#if 0
-    if (memname[M_AFSGENERIC] == afsgenmem)
-	memname[M_AFSGENERIC] = NULL;
-    if (memname[M_AFSFID] == afsfidmem)
-	memname[M_AFSFID] = NULL;
-    if (memname[M_AFSBUFHDR] == afsbhdrmem)
-	memname[M_AFSBUFHDR] = NULL;
-    if (memname[M_AFSBUFFER] == afsbfrmem)
-	memname[M_AFSBUFFER] = NULL;
-#endif
 
     if (sysent[AFS_SYSCALL].sy_call != afs_sysent.sy_call) {
 	printf("LKM afs_vfs_load(): AFS3 syscall %d already used\n",
@@ -491,10 +497,16 @@ afs_vfs_unload(struct lkm_table *lktmp, int cmd)
     }
 
     sysent[AFS_SYSCALL] = old_sysent;
+    sysent[SYS_setgroups] = old_setgroups;
+#if NOTYET
+    sysent[SYS_ioctl] = old_ioctl;
+#endif
     printf("OpenAFS unloaded\n");
 
     return (0);
 }
+
+int libafs_lkmentry(struct lkm_table *, int, int);
 
 int
 libafs_lkmentry(struct lkm_table *lkmtp, int cmd, int ver)
@@ -506,5 +518,7 @@ libafs_lkmentry(struct lkm_table *lkmtp, int cmd, int ver)
 	    return EINVAL;
 	}
     }
+
     DISPATCH(lkmtp, cmd, ver, afs_vfs_load, afs_vfs_unload, lkm_nofunc);
 }
+#endif

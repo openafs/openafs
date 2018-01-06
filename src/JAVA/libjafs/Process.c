@@ -115,7 +115,7 @@ void getProcessInfoChar( JNIEnv *env, void *serverHandle,
   }
 
   // set state variable
-  auxStatus = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN );
+  auxStatus = malloc( sizeof(char)*BOS_MAX_NAME_LEN );
   if( !auxStatus ) {
     throwAFSException( env, JAFSADMNOMEM );
     return;    

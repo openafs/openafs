@@ -6,10 +6,9 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+include @TOP_OBJDIR@/src/config/Makefile.lwptool
+
 ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 INCLS=${TOP_INCDIR}/ubik.h \
@@ -30,21 +29,31 @@ LINCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/afs/cellconfig.h \
 	ptclient.h ptuser.h ptint.h pterror.h
 
-LIBS=${TOP_LIBDIR}/libubik.a \
+LIBS=   ${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/librxstat.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/libafsutil.a
+	${TOP_LIBDIR}/libaudit.a \
+	${TOP_LIBDIR}/libafsutil.a \
+	${TOP_LIBDIR}/libopr.a \
+	${TOP_LIBDIR}/libafsrfc3961.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
+LT_objs = ptuser.lo pterror.lo ptint.cs.lo ptint.xdr.lo display.lo
 
-all: ptserver pts pt_util db_verify ${TOP_LIBDIR}/libprot.a \
-	depinstall readgroup readpwd testpt
+LT_deps = $(top_builddir)/src/opr/liboafs_opr.la \
+	  $(top_builddir)/src/rx/liboafs_rx.la \
+	  $(top_builddir)/src/ubik/liboafs_ubik.la \
+	  $(top_builddir)/src/auth/liboafs_auth.la
+LT_libs =
+
+all: ptserver pts pt_util db_verify liboafs_prot.la libprot_pic.la \
+     ${TOP_LIBDIR}/libprot.a depinstall readgroup readpwd testpt ptclient
 
 generated: \
 	pterror.h pterror.c \
@@ -95,26 +104,24 @@ ${TOP_INCDIR}/afs/ptserver.h: ptserver.h
 #
 # Build targets
 #
-ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) ${TOP_LIBDIR}/libaudit.a map.o
-	$(CC) ${CFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a ${KRB5_LIBS}
+ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.lo utils.o $(LIBS) map.o
+	$(AFS_LDRULE) ptserver.o ptutils.o ptprocs.o ptint.ss.o .lwp/ptint.xdr.o \
+		utils.o map.o $(LIBS) $(LIB_roken) ${XLIBS}
 
 ptserver.o: ptserver.c ${INCLS} AFS_component_version_number.c
 
 # When supergroups is enabled, some parts of ptserver cast between
 # incompatible structs.
+CFLAGS_ptutils.o = @CFLAGS_NOSTRICT@
+CFLAGS_ptprocs.o = @CFLAGS_NOSTRICT@
+
 ptutils.o: ptutils.c ${INCLS}
-	$(CCOBJ) $(CFLAGS) @CFLAGS_NOSTRICT@ -c ${srcdir}/ptutils.c
-
 ptprocs.o: ptprocs.c ${INCLS}
-	$(CCOBJ) $(CFLAGS) @CFLAGS_NOSTRICT@ -c ${srcdir}/ptprocs.c
-
-utils.o: utils.c ${INCLS} 
-
+utils.o: utils.c ${INCLS}
 map.o: map.c ${INCLS}
-
 ptint.ss.o: ptint.ss.c ptint.xdr.c ptint.xg
-ptint.cs.o: ptint.cs.c ptint.xdr.c ptint.xg
-ptint.xdr.o: ptint.xdr.c ptint.h ptint.xg
+ptint.cs.lo: ptint.cs.c ptint.xdr.c ptint.xg
+ptint.xdr.lo: ptint.xdr.c ptint.h ptint.xg
 
 ptint.cs.c: ptint.xg
 	${RXGEN} -A -x -C -u -o $@ ${srcdir}/ptint.xg
@@ -141,19 +148,17 @@ Kptint.xdr.c: ptint.xg
 Kptint.h: ptint.xg
 	${RXGEN} -A -x -k -h -o Kptint.h ${srcdir}/ptint.xg
 
-display.o: display.c ${INCLS}
-
 db_verify.o: db_verify.c ${INCLS} AFS_component_version_number.c
 
-db_verify: db_verify.o pterror.o display.o $(LIBS)
-	$(CC) ${CFLAGS} -o db_verify db_verify.o display.o pterror.o $(LIBS) ${XLIBS} ${KRB5_LIBS}
+db_verify: db_verify.o libprot.a $(LIBS)
+	$(AFS_LDRULE) db_verify.o libprot.a \
+		$(LIBS) $(LIB_roken) ${XLIBS}
 
-ptclient: ptclient.o display.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o ptclient ptclient.o display.o libprot.a $(LIBS) ${XLIBS} ${KRB5_LIBS}
+ptclient: ptclient.o libprot.a $(LIBS)
+	$(AFS_LDRULE) ptclient.o libprot.a \
+		$(LIBS) $(LIB_roken) ${XLIBS}
 
 ptclient.o: ptclient.c ${INCLS} AFS_component_version_number.c
-
-ptuser.o: ptuser.c ${LINCLS}
 
 pterror.c: pterror.et
 	${COMPILE_ET_C} -p ${srcdir} pterror
@@ -161,49 +166,62 @@ pterror.c: pterror.et
 pterror.h: pterror.et
 	${COMPILE_ET_H} -p ${srcdir} pterror
 
-db_verify.o: pterror.h
-ptclient.o: pterror.h
-ptprocs.o: pterror.h
-pts.o: pterror.h
-ptuser.o: pterror.h
-pt_util.o: pterror.h
-ptutils.o: pterror.h
-readgroup.o: pterror.h
-testpt.o: pterror.h
-utils.o: pterror.h
+db_verify.o db_verify.lo: pterror.h
+ptclient.o ptclient.lo: pterror.h
+ptprocs.o ptprocs.lo: pterror.h
+pts.o pts.lo: pterror.h
+ptuser.o ptuser.lo: pterror.h
+pt_util.o pt_util.lo: pterror.h
+ptutils.o ptutils.lo: pterror.h
+readgroup.o readgroup.lo: pterror.h
+testpt.o testpt.lo: pterror.h
+utils.o utils.lo: pterror.h
 
-libprot.a: ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o
-	$(RM) -f $@
-	$(AR) crv $@ ptuser.o pterror.o ptint.cs.o ptint.xdr.o AFS_component_version_number.o
-	$(RANLIB) $@
+display.lo: $(INCLS)
+ptuser.lo: $(LINCLS)
+
+liboafs_prot.la: liboafs_prot.la.sym $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
+
+libprot_pic.la: $(LT_objs)
+	$(LT_LDLIB_pic) $(LT_objs)
+
+libprot.a: $(LT_objs)
+	$(LT_LDLIB_lwp) $(LT_objs)
 
 pts: pts.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
-	$(CC) ${CFLAGS} -o pts pts.o ${TOP_LIBDIR}/libcmd.a libprot.a ${LIBS} ${XLIBS} ${KRB5_LIBS}
+	$(AFS_LDRULE) pts.o ${TOP_LIBDIR}/libcmd.a libprot.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 pts.o: pts.c ${LINCLS} ${TOP_INCDIR}/afs/cmd.h AFS_component_version_number.c
 
 readgroup: readgroup.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o readgroup readgroup.o libprot.a ${LIBS} ${XLIBS} ${KRB5_LIBS}
+	$(AFS_LDRULE) readgroup.o libprot.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 readgroup.o: readgroup.c ${LINCLS} AFS_component_version_number.c
 
 readpwd: readpwd.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o readpwd readpwd.o libprot.a ${LIBS} ${XLIBS} ${KRB5_LIBS}
+	$(AFS_LDRULE) readpwd.o libprot.a \
+		${LIBS} $(LIB_roken) ${XLIBS}
 
 readpwd.o: readpwd.c ${LINCLS} AFS_component_version_number.c
 
 testpt: testpt.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS)
 	case "$(SYS_NAME)" in \
 	*_darwin_12 ) \
-		$(CC) ${CFLAGS} -o testpt testpt.o ${TOP_LIBDIR}/libcmd.a libprot.a $(LIBS) ${KRB5_LIBS} ;; \
+		$(AFS_LDRULE_NOQ) testpt.o ${TOP_LIBDIR}/libcmd.a \
+			libprot.a $(LIBS) $(LIB_roken) ;; \
 	* ) \
-		$(CC) ${CFLAGS} -o testpt testpt.o -lm ${TOP_LIBDIR}/libcmd.a libprot.a $(LIBS) ${XLIBS} ${KRB5_LIBS} ;; \
+		$(AFS_LDRULE_NOQ) testpt.o -lm ${TOP_LIBDIR}/libcmd.a \
+			libprot.a $(LIBS) $(LIB_roken) ${XLIBS} ;; \
 	esac
 
 testpt.o: testpt.c ${INCLS} ${TOP_INCDIR}/afs/cmd.h AFS_component_version_number.c
 
 pt_util: pt_util.o ptutils.o ptubik.o utils.o map.o libprot.a $(LIBS)
-	$(CC) ${CFLAGS} -o pt_util pt_util.o ptutils.o ptubik.o utils.o map.o libprot.a ${TOP_LIBDIR}/libcmd.a $(LIBS) ${XLIBS} ${KRB5_LIBS}
+	$(AFS_LDRULE) pt_util.o ptutils.o ptubik.o utils.o map.o libprot.a \
+		${TOP_LIBDIR}/libcmd.a $(LIBS) $(LIB_roken) ${XLIBS}
 
 ptubik.o: ptubik.c ${INCLS}
 
@@ -269,6 +287,7 @@ dest: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 # Misc. targets
 #
 clean:
+	$(LT_CLEAN)
 	$(RM) -f *.a *.o ptserver ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h \
 	libprot.a pts readgroup readpwd db_verify testpt pt_util pterror.h pterror.c \
 	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c

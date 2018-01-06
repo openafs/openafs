@@ -6,16 +6,12 @@
 #
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
 
-SRCS= rpc_main.c rpc_hout.c rpc_cout.c rpc_parse.c rpc_scan.c rpc_util.c \
-	rpc_svcout.c rpc_clntout.c
+
+SRCS= rpc_main.c rpc_hout.c rpc_cout.c rpc_parse.c rpc_scan.c rpc_util.c
 HDRS= rpc_util.h rpc_parse.h rpc_scan.h
-OBJS= rpc_main.o rpc_hout.o rpc_cout.o rpc_parse.o rpc_scan.o rpc_util.o \
-	rpc_svcout.o rpc_clntout.o
+OBJS= rpc_main.o rpc_hout.o rpc_cout.o rpc_parse.o rpc_scan.o rpc_util.o
 
 all: rxgen ${TOP_INCDIR}/afs/rxgen_consts.h
 
@@ -25,10 +21,9 @@ ${TOP_INCDIR}/afs/rxgen_consts.h: rxgen_consts.h
 	${INSTALL_DATA} $? $@
 
 rxgen: $(OBJS) AFS_component_version_number.c $(HDRS)
-	$(CC) $(CFLAGS) $(OBJS) $(XLIBS) -o $@
+	$(AFS_LDRULE) $(OBJS) $(XLIBS)
 
-rpc_main.o: rpc_main.c
-	$(CCOBJ) $(CFLAGS) -c ${srcdir}/rpc_main.c -DPATH_CPP="\"$(PATH_CPP)\""
+CFLAGS_rpc_main.o= -DPATH_CPP="\"$(PATH_CPP)\""
 
 #
 # Install targets

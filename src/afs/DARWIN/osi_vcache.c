@@ -85,12 +85,6 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
 void
 osi_PrePopulateVCache(struct vcache *avc) {
     memset(avc, 0, sizeof(struct vcache));
-
-    /* PPC Darwin 80 seems to be a BOZONLOCK environment, so we need this
-     * here ... */
-#if defined(AFS_BOZONLOCK_ENV)
-    afs_BozonInit(&avc->pvnLock, avc);
-#endif
 }
 
 void

@@ -9,39 +9,27 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
 #include <afs/stds.h>
-#include <sys/types.h>
+
+#include <roken.h>
+
 #ifdef AFS_NT40_ENV
-#include <io.h>
-#include <fcntl.h>
 #include <sys/utime.h>
-#else
-#include <sys/file.h>
-#include <netinet/in.h>
 #endif /* AFS_NT40_ENV */
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
-#include <errno.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
-#include <sys/stat.h>
-#include <des.h>
-#include <dirent.h>
-#include <stdio.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include <afs/ktime.h>
 #include <afs/audit.h>
 #include <afs/kautils.h>
-#include <string.h>
 
 #include "bnode.h"
+#include "bnode_internal.h"
 #include "bosint.h"
 #include "bosprototypes.h"
 
@@ -147,41 +135,46 @@ SBOZO_GetDates(struct rx_call *acall, char *aname, afs_int32 *atime,
 	       afs_int32 *abakTime, afs_int32 *aoldTime)
 {
     struct stat tstat;
-    char *strp;
-    char tbuffer[AFSDIR_PATH_MAX];
+    char *filepath = NULL, *fpBak = NULL, *fpOld = NULL;
 
     *atime = *abakTime = *aoldTime = 0;
 
     /* construct local path from canonical (wire-format) path */
-    if (ConstructLocalBinPath(aname, &strp)) {
+    if (ConstructLocalBinPath(aname, &filepath)) {
 	return 0;
     }
-    strcpy(tbuffer, strp);
-    free(strp);
+    if (asprintf(&fpBak, "%s.BAK", filepath) < 0) {
+	fpBak = NULL;
+	goto out;
+    }
+    if (asprintf(&fpOld, "%s.OLD", filepath) < 0) {
+	fpOld = NULL;
+	goto out;
+    }
 
-    strp = tbuffer + strlen(tbuffer);
-
-    if (!stat(tbuffer, &tstat)) {
+    if (!stat(filepath, &tstat)) {
 	*atime = tstat.st_mtime;
     }
 
-    strcpy(strp, ".BAK");
-    if (!stat(tbuffer, &tstat)) {
+    if (!stat(fpBak, &tstat)) {
 	*abakTime = tstat.st_mtime;
     }
 
-    strcpy(strp, ".OLD");
-    if (!stat(tbuffer, &tstat)) {
+    if (!stat(fpOld, &tstat)) {
 	*aoldTime = tstat.st_mtime;
     }
+out:
+    free(fpOld);
+    free(fpBak);
+    free(filepath);
     return 0;
 }
 
 afs_int32
 SBOZO_UnInstall(struct rx_call *acall, char *aname)
 {
-    char *filepath;
-    char fpOld[AFSDIR_PATH_MAX], fpBak[AFSDIR_PATH_MAX];
+    char *filepath = NULL;
+    char *fpOld = NULL, *fpBak = NULL;
     afs_int32 code;
     char caller[MAXKTCNAMELEN];
     struct stat tstat;
@@ -205,26 +198,35 @@ SBOZO_UnInstall(struct rx_call *acall, char *aname)
     if (DoLogging)
 	bozo_Log("%s is executing UnInstall '%s'\n", caller, filepath);
 
-    strcpy(fpBak, filepath);
-    strcat(fpBak, ".BAK");
-    strcpy(fpOld, filepath);
-    strcat(fpOld, ".OLD");
+    if (asprintf(&fpBak, "%s.BAK", filepath) < 0) {
+	code = BZIO;
+	fpBak = NULL;
+	goto out;
+    }
+    if (asprintf(&fpOld, "%s.OLD", filepath) < 0) {
+	code = BZIO;
+	fpOld = NULL;
+	goto out;
+    }
 
-    code = renamefile(fpBak, filepath);
+    code = rk_rename(fpBak, filepath);
     if (code) {
 	/* can't find .BAK, try .OLD */
-	code = renamefile(fpOld, filepath);
+	code = rk_rename(fpOld, filepath);
 	if (code && errno == ENOENT)	/* If doesn't exist don't fail */
 	    code = 0;
     } else {
 	/* now rename .OLD to .BAK */
 	if (stat(fpOld, &tstat) == 0)
-	    code = renamefile(fpOld, fpBak);
+	    code = rk_rename(fpOld, fpBak);
     }
     if (code)
 	code = errno;
 
+out:
     osi_auditU(acall, BOS_UnInstallEvent, code, AUD_STR, filepath, AUD_END);
+    free(fpBak);
+    free(fpOld);
     free(filepath);
 
     return code;
@@ -235,20 +237,24 @@ static void
 SaveOldFiles(char *aname)
 {
     afs_int32 code;
-    char bbuffer[AFSDIR_PATH_MAX], obuffer[AFSDIR_PATH_MAX];
+    char *bbuffer = NULL, *obuffer = NULL;
     struct stat tstat;
     afs_int32 now;
     afs_int32 oldTime, bakTime;
 
-    strcpy(bbuffer, aname);
-    strcat(bbuffer, ".BAK");
-    strcpy(obuffer, aname);
-    strcat(obuffer, ".OLD");
     now = FT_ApproxTime();
 
     code = stat(aname, &tstat);
     if (code < 0)
 	return;			/* can't stat file */
+
+    if (asprintf(&bbuffer, "%s.BAK", aname) < 0)
+	return;
+
+    if (asprintf(&obuffer, "%s.OLD", aname) < 0) {
+	obuffer = NULL;
+	goto out;
+    }
 
     code = stat(obuffer, &tstat);	/* discover old file's time */
     if (code)
@@ -264,18 +270,22 @@ SaveOldFiles(char *aname)
 
     if (bakTime && (oldTime == 0 || bakTime < now - BOZO_OLDTIME)) {
 	/* no .OLD file, or .BAK is at least a week old */
-	code = renamefile(bbuffer, obuffer);
+	rk_rename(bbuffer, obuffer);
     }
 
     /* finally rename to .BAK extension */
-    renamefile(aname, bbuffer);
+    rk_rename(aname, bbuffer);
+
+out:
+    free(bbuffer);
+    free(obuffer);
 }
 
 afs_int32
 SBOZO_Install(struct rx_call *acall, char *aname, afs_int32 asize, afs_int32 mode, afs_int32 amtime)
 {
-    afs_int32 code;
-    int fd;
+    afs_int32 code, ret = 0;
+    int fd = -1;
     afs_int32 len;
     afs_int32 total;
 #ifdef AFS_NT40_ENV
@@ -283,7 +293,7 @@ SBOZO_Install(struct rx_call *acall, char *aname, afs_int32 asize, afs_int32 mod
 #else
     struct timeval tvb[2];
 #endif
-    char filepath[AFSDIR_PATH_MAX], tbuffer[AFSDIR_PATH_MAX], *fpp;
+    char *filepath = NULL, *fpNew = NULL, *tbuffer = NULL;
     char caller[MAXKTCNAMELEN];
 
     if (!afsconf_SuperUser(bozo_confdir, acall, caller))
@@ -292,53 +302,58 @@ SBOZO_Install(struct rx_call *acall, char *aname, afs_int32 asize, afs_int32 mod
 	return BZACCESS;
 
     /* construct local path from canonical (wire-format) path */
-    if (ConstructLocalBinPath(aname, &fpp)) {
+    if (ConstructLocalBinPath(aname, &filepath)) {
 	return BZNOENT;
     }
-    strcpy(filepath, fpp);
-    free(fpp);
+    if (asprintf(&fpNew, "%s.NEW", filepath) < 0) {
+	ret = ENOMEM;
+	fpNew = NULL;
+	goto out;
+    }
+    tbuffer = malloc(AFSDIR_PATH_MAX);
+    if (tbuffer == NULL) {
+	ret =  ENOMEM;
+	goto out;
+    }
 
     if (DoLogging)
 	bozo_Log("%s is executing Install '%s'\n", caller, filepath);
 
     /* open file */
-    fpp = filepath + strlen(filepath);
-    strcpy(fpp, ".NEW");	/* append ".NEW" to end of filepath */
-    fd = open(filepath, O_CREAT | O_RDWR | O_TRUNC, 0777);
-    if (fd < 0)
-	return errno;
+    fd = open(fpNew, O_CREAT | O_RDWR | O_TRUNC, 0777);
+    if (fd < 0) {
+	ret =  errno;
+	goto out;
+    }
     total = 0;
     while (1) {
 	len = rx_Read(acall, tbuffer, sizeof(tbuffer));
 	if (len < 0) {
-	    close(fd);
-	    unlink(filepath);
-	    return 102;
+	    unlink(fpNew);
+	    ret =  102;
+	    goto out;
 	}
 	if (len == 0)
 	    break;		/* no more input */
 	code = write(fd, tbuffer, len);
 	if (code != len) {
-	    close(fd);
-	    unlink(filepath);
-	    return 100;
+	    unlink(fpNew);
+	    ret =  100;
+	    goto out;
 	}
 	total += len;		/* track total written for safety check at end */
     }
-    close(fd);
     if (asize != total) {
-	unlink(filepath);
-	return 101;		/* wrong size */
+	unlink(fpNew);
+	ret =  101;		/* wrong size */
+	goto out;
     }
 
     /* save old files */
-    *fpp = '\0';		/* remove ".NEW" from end of filepath */
     SaveOldFiles(filepath);	/* don't care if it works, still install */
 
     /* all done, rename to final name */
-    strcpy(tbuffer, filepath);
-    strcat(tbuffer, ".NEW");
-    code = (renamefile(tbuffer, filepath) ? errno : 0);
+    code = (rk_rename(fpNew, filepath) ? errno : 0);
 
     /* label file with same time for our sanity */
 #ifdef AFS_NT40_ENV
@@ -355,9 +370,17 @@ SBOZO_Install(struct rx_call *acall, char *aname, afs_int32 asize, afs_int32 mod
 
     if (code < 0) {
 	osi_auditU(acall, BOS_InstallEvent, code, AUD_STR, filepath, AUD_END);
-	return errno;
-    } else
-	return 0;
+	ret = errno;
+	goto out;
+    }
+    ret = 0;
+out:
+    if (fd >= 0)
+	close(fd);
+    free(filepath);
+    free(fpNew);
+    free(tbuffer);
+    return ret;
 }
 
 afs_int32
@@ -409,11 +432,10 @@ SBOZO_GetCellName(struct rx_call *acall, char **aname)
     code = afsconf_GetLocalCell(bozo_confdir, tname, sizeof(tname));
     if (code) {
 	/* must set output parameters even if aborting */
-	*aname = (char *)malloc(1);
+	*aname = malloc(1);
 	**aname = 0;
     } else {
-	*aname = (char *)malloc(strlen(tname) + 1);
-	strcpy(*aname, tname);
+	*aname = strdup(tname);
     }
 
     return code;
@@ -439,17 +461,19 @@ SBOZO_GetCellHost(struct rx_call *acall, afs_uint32 awhich, char **aname)
     }
 
     tp = tcell.hostName[awhich];
-    *aname = (char *)malloc(strlen(tp) + 3);
     if (clones[awhich]) {
-	strcpy(*aname, "[");
-	strcat(*aname, tp);
-	strcat(*aname, "]");
+	if (asprintf(aname, "[%s]", tp) < 0)
+	    *aname = NULL;
     } else
-	strcpy(*aname, tp);
+	*aname = strdup(tp);
+    if (*aname == NULL) {
+	code = BZIO;
+	goto fail;
+    }
     goto done;
 
   fail:
-    *aname = (char *)malloc(1);	/* return fake string */
+    *aname = malloc(1);	/* return fake string */
     **aname = 0;
 
   done:
@@ -614,7 +638,7 @@ SBOZO_ListKeys(struct rx_call *acall, afs_int32 an, afs_int32 *akvno,
     memset(akeyinfo, 0, sizeof(struct bozo_keyInfo));
 
     noauth = afsconf_GetNoAuthFlag(bozo_confdir);
-    rxkad_GetServerInfo(acall->conn, &enc_level, 0, 0, 0, 0, 0);
+    rxkad_GetServerInfo(rx_ConnectionOf(acall), &enc_level, 0, 0, 0, 0, 0);
     /*
      * only return actual keys in noauth or if this is an encrypted connection
      */
@@ -654,7 +678,7 @@ SBOZO_AddKey(struct rx_call *acall, afs_int32 an, struct bozo_key *akey)
 	goto fail;
     }
     noauth = afsconf_GetNoAuthFlag(bozo_confdir);
-    rxkad_GetServerInfo(acall->conn, &enc_level, 0, 0, 0, 0, 0);
+    rxkad_GetServerInfo(rx_ConnectionOf(acall), &enc_level, 0, 0, 0, 0, 0);
     if ((!noauth) && (enc_level != rxkad_crypt)) {
 	code = BZENCREQ;
 	goto fail;
@@ -717,7 +741,7 @@ SBOZO_ListSUsers(struct rx_call *acall, afs_int32 an, char **aname)
     afs_int32 code;
     char *tp;
 
-    tp = *aname = (char *)malloc(256);
+    tp = *aname = malloc(256);
     *tp = 0;			/* in case getnthuser doesn't null-terminate the string */
     code = afsconf_GetNthUser(bozo_confdir, an, tp, 256);
 
@@ -1025,9 +1049,6 @@ SBOZO_Restart(struct rx_call *acall, char *ainstance)
 	goto fail;
     }
 
-    /* setup return code */
-    code = 0;
-
     bnode_Hold(tb);
     bnode_SetStat(tb, BSTAT_SHUTDOWN);
     code = bnode_WaitStatus(tb, BSTAT_SHUTDOWN);	/* this can fail */
@@ -1121,7 +1142,7 @@ SBOZO_GetStatus(struct rx_call *acall, char *ainstance, afs_int32 *astat,
 	goto fail;
     }
 
-    *astatDescr = (char *)malloc(BOZO_BSSIZE);
+    *astatDescr = malloc(BOZO_BSSIZE);
     code = bnode_GetString(tb, *astatDescr, BOZO_BSSIZE);
     bnode_Release(tb);
     if (code)
@@ -1129,7 +1150,7 @@ SBOZO_GetStatus(struct rx_call *acall, char *ainstance, afs_int32 *astat,
     return 0;
 
   fail:
-    *astatDescr = (char *)malloc(1);
+    *astatDescr = malloc(1);
     **astatDescr = 0;
     return code;
 }
@@ -1225,7 +1246,7 @@ SBOZO_EnumerateInstance(struct rx_call *acall, afs_int32 anum,
 {
     struct eidata tdata;
 
-    *ainstance = (char *)malloc(BOZO_BSSIZE);
+    *ainstance = malloc(BOZO_BSSIZE);
     **ainstance = 0;
     tdata.counter = anum;
     tdata.iname = *ainstance;
@@ -1363,7 +1384,7 @@ SBOZO_GetInstanceInfo(IN struct rx_call *acall,
     struct bnode *tb;
 
     tb = bnode_FindInstance(ainstance);
-    *atype = (char *)malloc(BOZO_BSSIZE);
+    *atype = malloc(BOZO_BSSIZE);
     **atype = 0;
     if (!tb)
 	return BZNOENT;
@@ -1399,7 +1420,7 @@ SBOZO_GetInstanceParm(struct rx_call *acall,
     char *tp;
     afs_int32 code;
 
-    tp = (char *)malloc(BOZO_BSSIZE);
+    tp = malloc(BOZO_BSSIZE);
     *aparm = tp;
     *tp = 0;			/* null-terminate string in error case */
     tb = bnode_FindInstance(ainstance);
@@ -1490,11 +1511,11 @@ SBOZO_GetInstanceStrings(struct rx_call *acall, char *abnodeName,
 {
     struct bnode *tb;
 
-    *as2 = (char *)malloc(1);
+    *as2 = malloc(1);
     **as2 = 0;
-    *as3 = (char *)malloc(1);
+    *as3 = malloc(1);
     **as3 = 0;
-    *as4 = (char *)malloc(1);
+    *as4 = malloc(1);
     **as4 = 0;
     tb = bnode_FindInstance(abnodeName);
     if (!tb)
@@ -1502,16 +1523,15 @@ SBOZO_GetInstanceStrings(struct rx_call *acall, char *abnodeName,
 
     /* now, return the appropriate error string, if any */
     if (tb->lastErrorName) {
-	*as1 = (char *)malloc(strlen(tb->lastErrorName) + 1);
-	strcpy(*as1, tb->lastErrorName);
+	*as1 = strdup(tb->lastErrorName);
     } else {
-	*as1 = (char *)malloc(1);
+	*as1 = malloc(1);
 	**as1 = 0;
     }
     return 0;
 
   fail:
-    *as1 = (char *)malloc(1);
+    *as1 = malloc(1);
     **as1 = 0;
     return BZNOENT;
 }

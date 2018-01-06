@@ -117,13 +117,13 @@ The following command confirms that the Backup Database is undamaged:
 
 The following command confirms that the Backup Database is undamaged and
 that it has no orphan blocks or invalid Tape Coordinator entries. The
-Backup Server running on the machine C<db1.abc.com> checked its copy of
+Backup Server running on the machine C<db1.example.com> checked its copy of
 the Database.
 
    % backup dbverify -detail
    Database OK
    Orphan blocks 0
-   Database checker was db1.abc.com
+   Database checker was db1.example.com
 
 =head1 PRIVILEGE REQUIRED
 

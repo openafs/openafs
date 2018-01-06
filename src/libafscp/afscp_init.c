@@ -27,6 +27,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #include <rx/rx_null.h>
 #include <rx/rx.h>
 #include "afscp.h"
@@ -89,9 +91,5 @@ afscp_Finalize(void)
     afscp_FreeAllCells();
     afscp_FreeAllServers();
     rx_Finalize();
-#ifdef AFS_NT40_ENV
-    closesocket(serv->socket);
-#else
-    close(serv->socket);
-#endif
+    rk_closesocket(serv->socket);
 }

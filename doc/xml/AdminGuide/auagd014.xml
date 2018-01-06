@@ -253,8 +253,8 @@
           <listitem>
             <para>In addition to using server encryption keys when communicating with clients, the server processes use them to
             protect communications with other server processes. Therefore, all server machines in your cell must have the same
-            version of the <emphasis role="bold">KeyFile</emphasis> file. The easiest way to maintain consistency (if you run the
-            United States edition of AFS) is to use the Update Server to distribute the contents of the system control machine's
+            version of the <emphasis role="bold">KeyFile</emphasis> file. The easiest way to maintain consistency
+            is to use the Update Server to distribute the contents of the system control machine's
             <emphasis role="bold">/usr/afs/etc</emphasis> directory to all of the other server machines. There are two implications:
             <itemizedlist>
                 <listitem>
@@ -285,13 +285,6 @@
                   </indexterm>
                 </listitem>
               </itemizedlist></para>
-
-            <para>If you run the international edition of AFS, do not use the Update Server to distribute the contents of the
-            <emphasis role="bold">/usr/afs/etc</emphasis> directory, particularly the <emphasis role="bold">KeyFile</emphasis> file.
-            The data in the file is too sensitive for transfer in unencrypted form, and because of United States government exports
-            regulations the international edition of AFS does not include the necessary encryption routines in a form that the
-            Update Server can use. You must instead modify the file on each server machine individually, taking care to enter the
-            same key on every server machine.</para>
           </listitem>
 
           <listitem>
@@ -422,7 +415,7 @@
       output is complete.</para>
 
       <programlisting>
-   % <emphasis role="bold">bos listkeys fs1.abc.com</emphasis>
+   % <emphasis role="bold">bos listkeys fs1.example.com</emphasis>
    key 0 has cksum 972037177
    key 1 has cksum 2825165022
    Keys last changed on Wed Jan 13 11:20:29 1999. 
@@ -651,8 +644,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ364" />Issue the <emphasis role="bold">bos listkeys</emphasis> command to display the key version
+        <listitem id="LIWQ364">
+          <para>Issue the <emphasis role="bold">bos listkeys</emphasis> command to display the key version
           numbers that are already in use, as a first step in choosing the key version number for the new key. <programlisting>
    % <emphasis role="bold">bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt;
 </programlisting></para>
@@ -676,8 +669,8 @@
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ365" />Choose a key version number for the new key, based on the output from Step <link
+        <listitem id="LIWQ365">
+          <para>Choose a key version number for the new key, based on the output from Step <link
           linkend="LIWQ364">2</link> and the following requirements: <itemizedlist>
               <listitem>
                 <para>A key version number must be an integer between 0 (zero) and 255 to comply with Kerberos standards. It is
@@ -709,17 +702,14 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ366" />Issue the <emphasis role="bold">bos addkey</emphasis> command to create a new AFS server
+        <listitem id="LIWQ366">
+          <para>Issue the <emphasis role="bold">bos addkey</emphasis> command to create a new AFS server
           encryption key in the <emphasis role="bold">KeyFile</emphasis> file.</para>
 
-          <para>If you run the United States edition of AFS and use the Update Server to distribute the contents of the system
+          <para>If you use the Update Server to distribute the contents of the system
           control machine's <emphasis role="bold">/usr/afs/etc</emphasis> directory, substitute the system control machine for the
           machine name argument. (If you have forgotten which machine is the system control machine, see <link linkend="HDRWQ96">To
           locate the system control machine</link>.)</para>
-
-          <para>If you run the international edition of AFS or do not use the Update Server, repeat the <emphasis role="bold">bos
-          addkey</emphasis> command, substituting each server machine in your cell for the machine name argument in turn.</para>
 
           <para>To avoid visible echoing of the string that corresponds to the new key, omit the <emphasis
           role="bold">-key</emphasis> argument from the command line; instead enter the string at the prompts that appear when you
@@ -755,8 +745,7 @@
                 <listitem>
                   <para>Specifies the new key's key version number as an integer from the range 0 (zero) through 255.</para>
 
-                  <para>Remember the number. You need to use it again in Step <link linkend="LIWQ367">6</link>. If you are using the
-                  international edition of AFS, be sure to type the same number each time you issue this command.</para>
+                  <para>Remember the number. You need to use it again in Step <link linkend="LIWQ367">6</link>.</para>
                 </listitem>
               </varlistentry>
 
@@ -766,8 +755,7 @@
                 <listitem>
                   <para>Is a character string similar to a user password, of any length from one to about 1,000 characters. To
                   improve security, include nonalphabetic characters and make the string as long as is practical (you need to type
-                  it only in this step and in Step <link linkend="LIWQ367">6</link>). If you are using the international edition of
-                  AFS, be sure to type the same string each time you issue this command.</para>
+                  it only in this step and in Step <link linkend="LIWQ367">6</link>).</para>
 
                   <para>Do not enter an octal string directly. The BOS Server scrambles the character string into an octal string
                   appropriate for use as an encryption key before recording it in the <emphasis role="bold">KeyFile</emphasis>
@@ -807,8 +795,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ367" />Issue the <emphasis role="bold">kas setpassword</emphasis> command to enter the same key in
+        <listitem id="LIWQ367">
+          <para>Issue the <emphasis role="bold">kas setpassword</emphasis> command to enter the same key in
           the <emphasis role="bold">afs</emphasis> entry in the Authentication Database.</para>
 
           <para>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,
@@ -1006,13 +994,10 @@
           <para>Issue the <emphasis role="bold">bos removekey</emphasis> command to remove one or more server encryption keys from
           the <emphasis role="bold">KeyFile</emphasis> file.</para>
 
-          <para>If you run the United States edition of AFS and use the Update Server to distribute the contents of the system
+          <para>If you use the Update Server to distribute the contents of the system
           control machine's <emphasis role="bold">/usr/afs/etc</emphasis> directory, substitute the system control machine for the
           machine name argument. (If you have forgotten which machine is the system control machine, see <link linkend="HDRWQ96">To
           locate the system control machine</link>.)</para>
-
-          <para>If you run the international edition of AFS or do not use the Update Server, repeat the <emphasis role="bold">bos
-          removekey</emphasis> command, substituting each server machine in your cell for the machine name argument in turn.</para>
 
           <programlisting>
    % <emphasis role="bold">bos removekey</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>key version number</replaceable>&gt;
@@ -1173,7 +1158,7 @@
       system control machine first. If the Update Server is working, then it is distributing the same change as you are making on
       each server machine individually.</para>
 
-      <para>If your cell does not use the Update Server, or uses the international edition of AFS, you always change keys on server
+      <para>If your cell does not use the Update Server or you always change keys on server
       machines individually. The following instructions are also appropriate for you.</para>
     </sect2>
 
@@ -1201,8 +1186,8 @@
             </indexterm>
           </listitem>
 
-          <listitem>
-            <para><anchor id="LIWQ374" />Create the file <emphasis role="bold">/usr/afs/local/NoAuth</emphasis> to disable
+          <listitem id="LIWQ374">
+            <para>Create the file <emphasis role="bold">/usr/afs/local/NoAuth</emphasis> to disable
             authorization checking. <programlisting>
    # <emphasis role="bold">touch /usr/afs/local/NoAuth</emphasis>
 </programlisting></para>
@@ -1268,13 +1253,13 @@
       <title>To create a new server encryption key in emergencies</title>
 
       <orderedlist>
-        <listitem>
-          <para><anchor id="LIWQ376" /><emphasis role="bold">On the system control machine</emphasis>, disable authorization
+        <listitem id="LIWQ376">
+          <para><emphasis role="bold">On the system control machine</emphasis>, disable authorization
           checking as instructed in <link linkend="HDRWQ373">Disabling Authorization Checking in an Emergency</link>.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ377" />Issue the <emphasis role="bold">bos listkeys</emphasis> command to display the key version
+        <listitem id="LIWQ377">
+          <para>Issue the <emphasis role="bold">bos listkeys</emphasis> command to display the key version
           numbers already in use in the <emphasis role="bold">KeyFile</emphasis> file, as a first step in choosing the new key's key
           version number. <programlisting>
    # <emphasis role="bold">bos listkeys</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-noauth</emphasis>
@@ -1308,8 +1293,8 @@
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ378" />Choose a key version number for the new key, based on what you learned in Step <link
+        <listitem id="LIWQ378">
+          <para>Choose a key version number for the new key, based on what you learned in Step <link
           linkend="LIWQ377">2</link> plus the following requirements: <itemizedlist>
               <listitem>
                 <para>It is best to keep your key version numbers in sequence by choosing a key version number one greater than the
@@ -1335,8 +1320,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ379" /><emphasis role="bold">On the system control machine</emphasis>, issue the <emphasis
+        <listitem id="LIWQ379">
+          <para><emphasis role="bold">On the system control machine</emphasis>, issue the <emphasis
           role="bold">bos addkey</emphasis> command to create a new AFS server encryption key in the <emphasis
           role="bold">KeyFile</emphasis> file. <programlisting>
    # <emphasis role="bold">bos addkey</emphasis> &lt;<replaceable>machine name</replaceable>&gt; <emphasis role="bold">-kvno</emphasis> &lt;<replaceable>key version number</replaceable>&gt; <emphasis
@@ -1400,8 +1385,8 @@
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ380" /><emphasis role="bold">On every database server machine in your cell</emphasis> (other than
+        <listitem id="LIWQ380">
+          <para><emphasis role="bold">On every database server machine in your cell</emphasis> (other than
           the system control machine), disable authorization checking as instructed in <link linkend="HDRWQ373">Disabling
           Authorization Checking in an Emergency</link>. Do not repeat the procedure on the system control machine, if it is a
           database server machine, because you already disabled authorization checking in Step <link linkend="LIWQ376">1</link>. (If
@@ -1409,8 +1394,8 @@
           command as described in <link linkend="HDRWQ95">To locate database server machines</link>.)</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ381" />Wait at least 90 seconds after finishing Step <link linkend="LIWQ380">5</link>, to allow each
+        <listitem id="LIWQ381">
+          <para>Wait at least 90 seconds after finishing Step <link linkend="LIWQ380">5</link>, to allow each
           of the database server processes (the Authentication, Backup, Protection and Volume Location Servers) to finish electing a
           new sync site. Then issue the <emphasis role="bold">udebug</emphasis> command to verify that the election worked properly.
           Issue the following commands, substituting each database server machine's name for server machine in turn. Include the
@@ -1442,8 +1427,8 @@
           assistance.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ382" /><emphasis role="bold">On every database server machine in your cell</emphasis> (other than
+        <listitem id="LIWQ382">
+          <para><emphasis role="bold">On every database server machine in your cell</emphasis> (other than
           the system control machine), issue the <emphasis role="bold">bos addkey</emphasis> command described in Step <link
           linkend="LIWQ379">4</link>. Be sure to use the same values for afs_password and kvno as you used in that step.</para>
 
@@ -1454,8 +1439,8 @@
           </indexterm>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ383" />Issue the <emphasis role="bold">kas setpassword</emphasis> command to define the new key in
+        <listitem id="LIWQ383">
+          <para>Issue the <emphasis role="bold">kas setpassword</emphasis> command to define the new key in
           the Authentication Database's <emphasis role="bold">afs</emphasis> entry. It must match the key you created in Step <link
           linkend="LIWQ379">4</link> and Step <link linkend="LIWQ382">7</link>. <programlisting>
    # <emphasis role="bold">kas setpassword  -name afs</emphasis>  <emphasis role="bold">-kvno</emphasis> &lt;<replaceable>key version number</replaceable>&gt; <emphasis
@@ -1493,8 +1478,8 @@
             </variablelist></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ384" /><emphasis role="bold">On every database server machine in your cell</emphasis> (including the
+        <listitem id="LIWQ384">
+          <para><emphasis role="bold">On every database server machine in your cell</emphasis> (including the
           system control machine if it is a database server machine), reenable authorization checking as instructed in <link
           linkend="HDRWQ375">Reenabling Authorization Checking in an Emergency</link>. If the system control machine is not a
           database server machine, do not perform this procedure until Step <link linkend="LIWQ385">11</link>.</para>
@@ -1505,8 +1490,8 @@
           site after being restarted in Step <link linkend="LIWQ384">9</link>.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ385" /><emphasis role="bold">On the system control machine</emphasis> (if it is not a database
+        <listitem id="LIWQ385">
+          <para><emphasis role="bold">On the system control machine</emphasis> (if it is not a database
           server machine), reenable authorization checking as instructed in <link linkend="HDRWQ375">Reenabling Authorization
           Checking in an Emergency</link>. If it is a database server machine, you already performed the procedure in Step <link
           linkend="LIWQ384">9</link>.</para>
@@ -1517,8 +1502,8 @@
           instructed in <link linkend="HDRWQ373">Disabling Authorization Checking in an Emergency</link>.</para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIWQ386" /><emphasis role="bold">On all remaining (simple) file server machines</emphasis>, issue the
+        <listitem id="LIWQ386">
+          <para><emphasis role="bold">On all remaining (simple) file server machines</emphasis>, issue the
           <emphasis role="bold">bos addkey</emphasis> command described in Step <link linkend="LIWQ379">4</link>. Be sure to use the
           same values for afs_password and kvno as you used in that step.</para>
         </listitem>

@@ -13,19 +13,12 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
-
-#include <stdio.h>
 #include <afs/stds.h>
-#include <sys/types.h>
+
+#include <roken.h>
+
 #include <ctype.h>
-#include <sys/stat.h>
-#include <signal.h>
-#include <time.h>
-#include <netdb.h>
-#include <errno.h>
-#include <sys/ioctl.h>
-#include <string.h>
+
 #include <afs/vice.h>
 #include <afs/cmd.h>
 #include <afs/auth.h>
@@ -447,7 +440,7 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax(NULL, cmdproc, NULL, "copy tickets for NFS");
+    ts = cmd_CreateSyntax(NULL, cmdproc, NULL, 0, "copy tickets for NFS");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "user ID (decimal)");
     cmd_AddParm(ts, "-sysname", CMD_SINGLE, CMD_OPTIONAL,

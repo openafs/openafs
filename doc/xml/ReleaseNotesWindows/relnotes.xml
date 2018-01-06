@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.3//EN"
-        "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"[
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.3//EN" "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"[
 <!ENTITY version SYSTEM "version.xml">
 ]>
 <book>
   <bookinfo>
     <title>OpenAFS for Windows Release Notes</title>
     <copyright>
-      <year>2003-2011</year>
-      <holder>Secure Endpoints Inc.</holder>
+      <year>2003-2013</year>
+      <holder>Secure Endpoints Inc. and Your File System Inc.</holder>
     </copyright>
     <legalnotice>
       <para>This documentation is covered by the MIT License.</para>
@@ -25,32 +24,35 @@
   </bookinfo>
   <preface>
     <title id="Preface">Preface</title>
-    <para>The Andrew File System (AFS) is a location-independent file system that uses a local cache to increase its performance. An AFS client accesses files anonymously or via a Kerberos authentication. The global AFS is partitioned into cells. The AFS cell is a collection of AFS volumes that are administered by a common entity. AFS cells can be administered by a department even when the Kerberos realm used for local authentication is managed by a much larger organization. AFS clients and servers take advantage of Kerberos cross realm authentication to enable authenticated access by entities located outside the local realm. Authorization is enforced by the use of directory level access control lists which can consist of individual or group identities. </para>
+    <para>The Andrew File System (AFS) is a globally-accessible location-independent file system
+      that uses local caching to increase its performance. An AFS client accesses files anonymously
+      or authenticated via Kerberos. The global AFS is partitioned into cells. Each AFS cell is a
+      collection of AFS volumes that are administered by a common entity. AFS cells can be
+      administered by a department even when the associated Kerberos authentication realms are
+      managed by a much larger organization. AFS clients and servers take advantage of Kerberos
+      cross-realm authentication to permit authenticated access by entities located outside the
+      local realm. Authorization is enforced by the use of directory level access control lists of
+      individual or group identities. </para>
     <para>The AFS volume is a tree of files and sub-directories. AFS volumes are created by administrators and are joined to an AFS cell via the use of a mount point. Once a volume is created, users can create files and directories as well as mount points and symlinks within the volume without regard for the physical location of the volume. Administrators can move the volume to another server as necessary without the need to notify users. In fact, the volume move can occur while files in the volume are in use. </para>
     <para>AFS volumes can be replicated to read-only copies. When accessing files from a read-only replica, clients will read all of the data from a single replica. If that replica becomes unavailable, the clients will failover to any replica that is reachable. Users of the data are unaware of where the replicas are stored or which one is being accessed. The contents of the replicas can be updated at any time by
       <emphasis>releasing</emphasis> the current contents of the source volume.
     </para>
-    <para>OpenAFS for Windows (OAFW) provides AFS client access Microsoft Windows operating systems. It strives to maintain transparency such that the user is unaware of the distinction between the use of AFS and Microsoft Windows file shares. OAFW can be part of a single sign-on solution by allowing credentials for a Kerberos principal to be obtained at logon and for that principal to be used to obtain AFS tokens for one or more cells. Although OAFW is implemented as a locally installed SMB to AFS gateway, OAFW maintains the portability of file paths by its use of the \\AFS UNC server name.</para>
-    <para>OpenAFS is the product of an open source development effort begun on October 31 2000. OpenAFS is maintained and developed by a group of volunteers with the support of the user community. If you use OpenAFS as part of your computing infrastructure please contribute to its continued growth.
-  </para>
+    <para>OpenAFS for Windows (OAFW) provides AFS client access on Microsoft Windows operating
+      systems. It strives to maintain transparency such that the user is unaware of the distinction
+      between the use of AFS and Microsoft Windows file shares. OAFW can be part of a single sign-on
+      solution by allowing credentials for a Kerberos principal to be obtained at logon and for that
+      principal to be used to obtain AFS tokens for one or more cells. OAFW is implemented as a
+      native installable file system and maintains the portability of file paths by its use of the
+      \\AFS UNC server name.</para>
+    <para>OpenAFS is the product of an open source development effort begun on 1 November 2000.
+      OpenAFS is maintained and developed by a group of volunteers with the support of the end user
+      community. When OpenAFS is used as part of your computing infrastructure, please <link linkend="Contributing_to_OpenAFS">contribute</link> to its continued growth. </para>
   </preface>
   <chapter id="chap_1">
     <title id="Installer_Options">Installer Options</title>
-    <para>OpenAFS can be installed either as a new installation or an upgrade from previous versions of either OpenAFS for Windows or IBM AFS for Windows. Installers are provided in two forms:</para>
-    <para>
-      <orderedlist inheritnum="ignore" continuation="restarts">
-        <listitem>
-          <para>
-   an executable (.exe) that is built using the Nullsoft Scriptable Installation System, or
-        </para>
-        </listitem>
-        <listitem>
-          <para>
-  a Windows Installer package (.msi) that is built using the open source WiX Toolkit.  The MSI can be customized for organizations via the use of MSI Transforms (see
-          <link linkend="MSI_Deployment_Guide">MSI Deployment Guide</link>)
-        </para>
-        </listitem>
-      </orderedlist>
+    <para>OpenAFS can be installed either as a new installation or an upgrade from previous versions of either OpenAFS for Windows or the former IBM AFS 3.6 for Windows.
+  Installers are provided as <ulink url="http://msdn.microsoft.com/en-us/library/cc185688%28v=vs.85%29.aspx">Windows Installer packages (.msi)</ulink> that are built using the open source
+  <ulink url="http://wix.sourceforge.net/">WiX Toolkit</ulink>.  The MSI can be customized for organizations via the use of <ulink url="http://msdn.microsoft.com/en-us/library/aa367447%28v=vs.85%29.aspx">MSI Transforms</ulink> (see <link linkend="Introduction_to_MSI_Deployment">MSI Deployment Guide</link>)
     </para>
   </chapter>
   <chapter id="chap_2">
@@ -66,22 +68,16 @@
         </indexterm>
         <itemizedlist>
           <listitem>
-            <para>Microsoft Windows 2000 Workstation (The 1.6.x series will be the last to support Windows 2000)</para>
+            <para>Microsoft Windows XP Home SP2 and SP3</para>
           </listitem>
           <listitem>
-            <para>Microsoft Windows 2000 Server (The 1.6.x series will be the last to support Windows 2000)</para>
+            <para>Microsoft Windows XP Professional SP2 and SP3</para>
           </listitem>
           <listitem>
-            <para>Microsoft Windows XP Home</para>
+            <para>Microsoft Windows XP 64 SP1 and SP2</para>
           </listitem>
           <listitem>
-            <para>Microsoft Windows XP Professional</para>
-          </listitem>
-          <listitem>
-            <para>Microsoft Windows XP 64</para>
-          </listitem>
-          <listitem>
-            <para>Microsoft Windows 2003 Server (32-bit and 64-bit Intel)</para>
+            <para>Microsoft Windows 2003 Server SP1 and SP2 (32-bit and 64-bit Intel)</para>
           </listitem>
           <listitem>
             <para>Microsoft Windows 2003 R2 Server (32-bit and 64-bit Intel)</para>
@@ -96,7 +92,13 @@
             <para>Microsoft Windows 7 (32-bit and 64-bit Intel)</para>
           </listitem>
           <listitem>
-            <para>Microsoft Windows 2008 Server R2 (32-bit and 64-bit Intel)</para>
+            <para>Microsoft Windows 2008 Server R2 (64-bit Intel)</para>
+          </listitem>
+          <listitem>
+            <para>Microsoft Windows 8 (32-bit and 64-bit Intel)</para>
+          </listitem>
+          <listitem>
+            <para>Microsoft Windows Server 2012 (64-bit Intel)</para>
           </listitem>
         </itemizedlist>
       </para>
@@ -123,26 +125,48 @@
           <listitem>
             <para>Microsoft NT</para>
           </listitem>
+          <listitem>
+            <para>Microsoft Windows 2000 Workstation</para>
+          </listitem>
+          <listitem>
+            <para>Microsoft Windows 2000 Server</para>
+          </listitem>
+          <listitem>
+            <para>Microsoft Windows XP Home (pre-SP2)</para>
+          </listitem>
+          <listitem>
+            <para>Microsoft Windows XP Professional (pre-SP2)</para>
+          </listitem>
+          <listitem>
+            <para>Microsoft Windows 8 RT (ARM)</para>
+          </listitem>
         </itemizedlist>
       </para>
-      <para>Older releases of OpenAFS are available for download if unsupported operating systems must be used. The last version of OpenAFS with support for Win9x is 1.2.2b. The last version with support for Windows NT 4.0 is 1.2.10.</para>
+      <para>Older releases of OpenAFS are available for download if unsupported operating systems
+        must be used. The last version of OpenAFS with support for Win9x is 1.2.2b. The last version
+        with support for Windows NT 4.0 is 1.2.10. The last version to support Windows 2000 and XP
+        SP1 is 1.6.1.</para>
     </section>
     <section>
       <title id="Disk_Space">2.2 Disk Space</title>
       <para>
         <indexterm significance="normal">
           <primary>disk space required</primary>
-        </indexterm>
-      Up to 60mb required for the OpenAFS binaries plus 100MB for the default AFSCache file. The size of the AFSCache file may be adjusted via the Registry after installation.  The maximum cache size for 32-bit Windows is approximately 1.2GB.  On 64-bit Windows there is no practical limit on the cache size.
-      </para>
+        </indexterm> Up to 60mb required for the OpenAFS binaries plus 100MB for the default
+        AFSCache file. The size of the AFSCache file may be adjusted via <link linkend="Regkey_TransarcAFSDaemon_Parameters_CacheSize">the Registry</link> after
+        installation. The maximum cache size for 32-bit Windows is approximately 1.2GB. On 64-bit
+        Windows there is no enforced limit on the cache size. </para>
     </section>
     <section>
       <title id="Additional_Software_Packages">2.3 Additional Software Packages</title>
       <indexterm significance="normal">
         <primary>kerberos for windows</primary>
       </indexterm>
+      <indexterm significance="normal">
+        <primary>heimdal</primary>
+      </indexterm>
       <para>
-        <ulink url="http://web.mit.edu/kerberos/dist/index.html">MIT Kerberos for Windows</ulink> 2.6.x or 3.x.x if Kerberos v5 authentication support is desired.  The recommended release is version 3.2.2.  For 64-bit Windows installations, the 64-bit version of Kerberos for Windows is required.  For 32-bit Windows installations, the 32-bit version of Kerberos for Windows is required.
+        <ulink url="https://www.secure-endpoints.com/heimdal">Heimdal</ulink> or <ulink url="http://web.mit.edu/kerberos/dist/index.html">MIT Kerberos for Windows</ulink> 3.2.x if Kerberos v5 authentication support is desired.  Heimdal is preferred over MIT Kerberos as it will provide OpenAFS the ability to offer enhanced capabilities in future releases.  For 64-bit Windows installations, the 64-bit version of Kerberos for Windows is required.  For 32-bit Windows installations, the 32-bit version of Kerberos for Windows is required.
         See <link linkend="Kerberos_v5_Requirements">3.2 Kerberos v5 Requirements</link> for additional details.
       </para>
     </section>
@@ -171,27 +195,59 @@
         <ulink url="http://en.wikipedia.org/wiki/Unicode_normalization">Unicode Normalization</ulink> as part of the name lookup algorithm.  This is necessary because Unicode does not provide a unique representation for each input string.  The use of normalization permits a file system object name created on MacOS X to be matched with the same string entered on Microsoft Windows even though the operating system's choice of representation may be different.
       </para>
       <para>It is important to note that AFS file servers are character-set agnostic.  All file system object names are stored as octet strings without any character set tagging.  If a file system object is created using OEM Code Page 858 and then interpreted as UTF-8 it is likely that the object name will appear to be gibberish.  OpenAFS for Windows goes to great lengths to ensure that the object name is converted to a form that will permit the user to rename the object using Unicode.  Accessing UTF-8 names on UNIX systems that have the locale set to one of the ISO Latin character sets will result in the UTF-8 strings appearing to be gibberish.  </para>
-      <para>Neither UNIX AFS nor Microsoft Windows 2000 systems can perform Unicode Normalization for string comparisons.  Although it is possible to store and read Unicode object names, it is possible that a user may not be able to open an object by typing the name of the object at the keyboard.  GUI point and click operations should permit any object to be accessed.</para>
+      <para>UNIX AFS can not perform Unicode Normalization for string comparisons.  Although it is possible to store and read Unicode object names, it is possible that a user may not be able to open an object by typing the name of the object at the keyboard.  GUI point and click operations should permit any object to be accessed.</para>
+      <section>
+        <title>3.1.1. Interoperability with MacOS X</title>
+        <indexterm>
+          <primary>MacOS X</primary>
+        </indexterm>
+        <para>MacOS X uses UTF-8 Normalization Form D (NFD) whereas Microsoft Windows and most other
+          applications use UTF-8 Normalization Form C (NFC).  The difference is that in NFD Unicode
+          character sequences containing diacritical marks are decomposed whereas in NFC the Unicode
+          character sequences use combined characters whenever possible.  Whereas Microsoft Windows
+          can display and manipulate files stored using NFD, MacOS X Finder does have trouble with
+          filenames that are NFC encoded.  All file names stored by the OpenAFS Windows client use
+          NFC.</para>
+      </section>
     </section>
-    <section>
-      <title id="Kerberos_v5_Requirements">3.2. Requirements for Kerberos v5 Authentication</title>
+    <section id="Kerberos_v5_Requirements">
+      <title>3.2. Requirements for Kerberos v5 Authentication</title>
       <indexterm significance="normal">
         <primary>kerberos for windows</primary>
       </indexterm>
-      <para>The OpenAFS distribution ships with its own implementation of Kerberos v4 and although it is Kerberos v5 capable, it relies on third-party Kerberos v5 libraries.  The OpenAFS 1.4 series (and later) integrates with
-        <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for Windows</ulink> 2.6.5 and above.  OpenAFS Kerberos v5 capable functionality includes integrated logon, the AFS Authentication Tool, the Network Identity Manager AFS provider, and the aklog command.  These tools provide support for Kerberos v5 authentication including acquisition and automatic renewal of AFS tokens as well as support for single sign-on via the Microsoft Windows Kerberos Logon Service.
-      </para>
+      <indexterm significance="normal">
+        <primary>heimdal</primary>
+      </indexterm>
+      <para>The OpenAFS distribution ships with its own implementation of Kerberos v4 and although
+        it is Kerberos v5 capable, it relies on third-party Kerberos v5 libraries. The OpenAFS 1.4
+        series (and later) integrates with <ulink url="https://www.secure-endpoints.com/heimdal">Heimdal</ulink> or <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for
+          Windows</ulink> 2.6.5 and above. OpenAFS Kerberos v5 capable functionality includes
+        integrated logon, the AFS Authentication Tool, the Network Identity Manager AFS provider,
+        and the aklog command. These tools provide support for Kerberos v5 authentication including
+        acquisition and automatic renewal of AFS tokens as well as support for single sign-on via
+        the Microsoft Windows Kerberos Logon Service. </para>
       <indexterm significance="normal">
         <primary>network identity manager</primary>
       </indexterm>
-      <para>The recommended version of
-        <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for Windows</ulink> is 3.2.2 as distributed by <ulink url="https://www.secure-endpoints.com/">Secure Endpoints Inc.</ulink>.  As of this writing, the Secure Endpoints Inc. distribution provides 64-bit Windows support which is unavailable from MIT.  KFW 3.2.2 includes Network Identity Manager 1.3.1 which integrates with the
-        <link linkend="Network_Identity_Manager_Provider">AFS Provider</link> installed as part of OpenAFS for Windows.  The most recent version of Network Identity Manager is version 2.1 which is available as an independent upgrade to MIT Kerberos for Windows.
-      </para>
+      <para>The recommended versions of <ulink url="https://www.secure-endpoints.com/heimdal">Heimdal</ulink> and <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for
+          Windows</ulink> are distributed by <ulink url="https://www.secure-endpoints.com/">Secure
+          Endpoints Inc.</ulink>. As of this writing, the Secure Endpoints Inc. distribution
+        provides 64-bit Windows support which is unavailable from MIT.  KFW 3.2.2 includes Network
+        Identity Manager 1.3.1 which integrates with the <link linkend="Network_Identity_Manager_Provider">AFS Provider</link> installed as part of
+        OpenAFS for Windows. The most recent version of Network Identity Manager is version 2.1
+        which is available as an independent upgrade to MIT Kerberos for Windows.   Heimdal does not
+        include a version of Network Identity Manager.</para>
       <indexterm significance="normal">
         <primary>transarc afs</primary>
       </indexterm>
-      <para>With Kerberos for Windows installed, the OpenAFS for Windows client can obtain Kerberos v5 service tickets for AFS cells for use as tokens. When a Kerberos v5 derived AFS token is in use, all of the AFS Servers within the authenticated cell must support Kerberos v5 authentication.  If a Kerberos v5 based token is presented to an AFS server that does not support them, the server will be unable to communicate with the client.  Attempts to access AFS volumes stored on such a server will fail with a "No Kerberos Key" error.  Kerberos v5 based tokens are supported by OpenAFS revisions 1.2.8 or later.  IBM Transarc servers do not support Kerberos v5.</para>
+      <para>With Heimdal or Kerberos for Windows installed, the OpenAFS for Windows client can
+        perform authentication to AFS services using Kerberos v5 service tickets as AFS tokens. When
+        a Kerberos v5 derived AFS token is used, all of the AFS Volume Location and File Servers
+        within the authenticated cell must support Kerberos v5. If a Kerberos v5 based token is
+        presented to an AFS server that does not support them, the server will be unable to respond
+        to the client. Attempts to access AFS volumes stored on such a server will fail with the
+        Windows STATUS_NO_KERB_KEY (0xC0000322L) error. Kerberos v5 based tokens are supported by
+        OpenAFS revisions 1.2.8 or later. IBM AFS 3.6 servers do not support Kerberos v5.</para>
       <section>
         <title id="Active_Directory">3.2.1. Active Directory</title>
         <indexterm significance="normal">
@@ -200,14 +256,52 @@
         <indexterm significance="normal">
           <primary>des-cbc-crc encryption type</primary>
         </indexterm>
-        <para>Microsoft Windows Active Directory can be used as a Kerberos v5 KDC in conjunction with OpenAFS.  There are two things to consider when using an Active Directory as the Kerberos realm that issues the AFS service ticket. First, the Kerberos v5 tickets issued by Active Directory can be quite large when compared to tickets issued by a traditional UNIX KDCs due to the inclusion of Windows specific authorization data (the Microsoft PAC). If the issued tickets are larger than 344 bytes, the OpenAFS 1.2.x servers will be unable to process them and will issue a RXKADBADTICKET error.  OpenAFS 1.4 (and beyond) servers can support the largest tickets that Active Directory can issue. Second, the Kerberos v5 tickets issued by Windows 2003 Active Directory are encrypted with the DES-CBC-MD5 encryption type (enctype). OpenAFS 1.2.x servers only support the DES-CBC-CRC enctype.  As a result, OpenAFS 1.2.x servers cannot process the resulting Kerberos v5 tokens.  Windows 2000 Active Directory issues tickets with the DES-CBC-CRC enctype.  Windows Server 2008 R2 Active Directory domain by default disables use of DES-CBC-MD5 and it must be enabled.</para>
-        <para>Microsoft has documented in
-          <ulink url="http://support.microsoft.com/kb/832572/">Knowledge Base article 832572</ulink> a new NO_AUTH_REQUIRED flag that can be set on the account mapped to the AFS service principal.  When this flag is set, the PAC authorization data will not be included in the ticket.  Setting this flag is recommended for all accounts that are associated with non-Windows services and that do not understand the authorization data stored in the PAC.  This flag cannot be used if AFS service tickets are obtained via cross-realm using an Active Directory user principal.
-        </para>
-        <para>Note that an Active Directory computer object cannot be used for the afs service principal.</para>
+        <para>Microsoft Windows Active Directory can be used as a Kerberos v5 KDC in conjunction
+          with OpenAFS. <itemizedlist>
+            <listitem>
+              <para> There are two things to consider when using an Active Directory as the Kerberos
+                realm that issues the AFS service ticket. First, the Kerberos v5 tickets issued by
+                Active Directory can be quite large when compared to tickets issued by traditional
+                UNIX KDCs due to the inclusion of Windows specific authorization data <ulink url="http://msdn.microsoft.com/en-us/library/cc237917%28v=prot.10%29.aspx">(the
+                  Microsoft PAC)</ulink>. If the issued tickets are larger than 344 bytes, OpenAFS
+                1.2.x servers will be unable to process them and will issue a RXKADBADTICKET error.
+                OpenAFS 1.4 (and beyond) servers can support the largest tickets that Active
+                Directory can issue. </para>
+            </listitem>
+            <listitem>
+              <para>Second, the Kerberos v5 tickets issued by Windows 2003 Active Directory are
+                encrypted with the DES-CBC-MD5 encryption type (enctype). OpenAFS 1.2.x servers only
+                support the DES-CBC-CRC enctype. As a result, OpenAFS 1.2.x servers cannot process
+                the resulting Kerberos v5 tokens. Windows 2000 Active Directory issues tickets with
+                the DES-CBC-CRC enctype. Windows Server 2008 R2 Active Directory domain by default
+                disables use of DES-CBC-MD5 and it must be enabled. </para>
+              <para>Microsoft has documented in <ulink url="http://support.microsoft.com/kb/832572/">Knowledge Base article 832572</ulink> a new NO_AUTH_REQUIRED flag that can be set
+                on the account mapped to the AFS service principal. When this flag is set, the PAC
+                authorization data will not be included in the ticket. Setting this flag is
+                recommended for all accounts that are associated with non-Windows services and that
+                do not understand the authorization data stored in the PAC. This flag cannot be used
+                if AFS service tickets are obtained via cross-realm using an Active Directory user
+                principal. </para>
+              <para>Note that an Active Directory computer object cannot be used for the afs service
+                principal. A user object must be used.</para>
+            </listitem>
+            <listitem>
+              <para>Starting with Windows 7 and Windows Server 2008 R2, Microsoft has disabled the
+                single DES encryption types,<ulink url="http://technet.microsoft.com/en-us/library/dd560670(WS.10).aspx">TechNet:
+                  Changes in Kerberos Authentication</ulink>. DES must be enabled via Group Policy
+                in order for Active Directory to be used as a KDC for OpenAFS.  Enable weak
+                encryption becuase of AFS... Start &gt; Administrative Tools &gt; Group Policy
+                Management Expand Forest &gt; Domains &gt; (domain name) &gt; Group Policy Objects
+                &gt; Default Domain Policy Right-click "Default Domain Policy" and select "Edit"
+                Expand "Computer Configuration" &gt; "Policies" &gt; "Windows Settings” &gt;
+                "Security Settings” &gt; "Local Policies” &gt; "Security Options” Double click
+                "Network security: Configure encryption types allowed for Kerberos” Select "Define
+                this policy setting", then select "DES_CBC_CRC" and all the others... Press "OK" </para>
+            </listitem>
+          </itemizedlist></para>
       </section>
       <section>
-        <title id="Using_krb524_Service">3.2.2. Using the krb524 Service</title>
+        <title id="Using_krb524_Service">3.2.2. The krb524 Service is no longer supported</title>
         <indexterm significance="normal">
           <primary>krb524</primary>
         </indexterm>
@@ -217,32 +311,31 @@
         <indexterm significance="normal">
           <primary>registry value, Use524</primary>
         </indexterm>
-        <para>Before there was native support for Kerberos v5 derived AFS tokens, the krb524 service was used to convert a Kerberos v5 service ticket into a Kerberos v4 service ticket that could in turn be used to construct an AFS authentication token. As of OpenAFS 1.2.8, support was added to allow the immediate use of Kerberos v5 tickets as AFS (2b) tokens. This is the first building block necessary to break away from the limitations of Kerberos v4 with AFS. By using Kerberos v5 directly we avoid the security holes inherent in Kerberos v4 cross-realm. We also gain access to cryptographically stronger algorithms for authentication and encryption.</para>
-        <para>Another reason for using Kerberos v5 directly is because the krb524 service runs on a port (4444/udp) which has increasingly been blocked by ISPs. The port was used to spread a worm which attacked Microsoft Windows in the Summer of 2003. When the port is blocked users find that they are unable to authenticate.</para>
-        <para>
+        <para>Before there was native support for Kerberos v5 derived AFS tokens, the krb524 service was used to convert a Kerberos v5 service ticket into a Kerberos v4 service ticket that could in turn be used to construct an AFS authentication token. As of OpenAFS 1.2.8 [14 December 2002], support was added to allow the immediate use of Kerberos v5 tickets as AFS (2b) tokens. This is the first building block necessary to break away from the limitations of Kerberos v4 with AFS. By using Kerberos v5 directly the security holes inherent in Kerberos v4 cross-realm are avoided.  Use of cryptographically stronger algorithms for authentication and encryption become a possibility.</para>
+        <para>Another reason for using Kerberos v5 directly is because the krb524 service runs on port (4444/udp), which has increasingly been blocked by Internet service providers. The port was used to spread a worm which attacked Microsoft Windows in the Summer of 2003. When the port is blocked users find that they are unable to authenticate.</para>
+        <para>Replacing the Kerberos v4 ticket with a Kerberos v5 ticket is a win in all situations except when the cell name does not match the realm name and the principal names placed into the ACL's are not the principal names from the Kerberos v5 ticket.  Unfortunately, some organizations have AFS cell names and Kerberos realm names which differ by more then just typographic case and rely the krb524d service to map the Kerberos v5 client principal name from realm FOO to a Kerberos v4 principal in realm BAR. This allows user@FOO to appear to be user@bar for the purposes of accessing the AFS cell.
         </para>
-        <para>Replacing the Kerberos v4 ticket with a Kerberos v5 ticket is a win in all situations except when the cell name does not match the realm name and the principal names placed into the ACL's are not the principal names from the Kerberos v5 ticket.  Unfortunately, some organizations have AFS cell names and Kerberos realm names which differ by more then just lower and upper case and rely on a modification to krb524d that maps a Kerberos v5 ticket from realm FOO to a Kerberos v4 ticket in realm BAR. This allows user@FOO to appear to be user@bar for the purposes of accessing the AFS cell.
+        <para>To support this mode of operation OpenAFS for Windows versions 1.4.x through 1.6.x supported a registry value,
+          <link linkend="Value_Use524">Use524</link>, that forced the use of krb524d within the AFS Authentication Tool and during integrated logon. Previous revisions of this documentation advised that this option should only be used by individuals until such time as their organizations transitioned away from the krb524 service.
         </para>
-        <para>To support this mode of operation OpenAFS for Windows (as of 1.4.0) supports a registry value,
-          <link linkend="Value_Use524">Use524</link>, that forces the use of krb524d within the AFS Authentication Tool and integrated logon. This option should only be used by individuals until such time as their organizations can transition away from the krb524 service.
-        </para>
-        <para>Note that the OpenAFS 1.4.x servers permit the use of a secondary realm name that can be treated as equivalent to the cell name for authentication.  This functionality can be used to avoid the need for the krb524 service if and only if both realms are managed by the same administrative entity.
+        <para>Over the last few years all Kerberos distributions have removed support for Kerberos v4.  As a result, OpenAFS can no longer support the krb524d service and the functionality has been removed from the source tree for the 1.7.x release.</para>
+        <para>As an alternative, sites should be aware that the OpenAFS 1.4.x servers permit the use of a secondary realm name that can be treated as equivalent to the cell name for authentication.  This functionality can be used to avoid the need for the krb524 service if and only if both realms are managed by the same administrative entity.
         </para>
       </section>
-      <section>
-        <title id="Network_Identity_Manager_Provider">3.2.3. Network Identity Manager Provider</title>
+      <section id="Network_Identity_Manager_Provider">
+        <title>3.2.3. Network Identity Manager Provider</title>
         <indexterm significance="normal">
           <primary>network identity manager</primary>
         </indexterm>
-        <para>As of release 1.5.9, OpenAFS for Windows includes a Network Identity Manager Provider for obtaining AFS tokens.  This plug-in is a contribution from
-          <ulink url="https://www.secure-endpoints.com/">Secure Endpoints Inc.</ulink>  Network Identity Manager is a multiple identity credential management tool that ships with
-          <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for Windows</ulink> version 3.0 and above.  The OpenAFS plug-in requires
-          <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for Windows</ulink> version 3.1 or above.  Version 3.2.2 is recommended for the best user experience.
-        </para>
+        <para>As of release 1.5.9, OpenAFS for Windows includes a Network Identity Manager Provider
+          for obtaining AFS tokens. This plug-in is a contribution from <ulink url="https://www.secure-endpoints.com/">Secure Endpoints Inc.</ulink> Network Identity
+          Manager is a multiple identity credential management tool that ships with <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for Windows</ulink> version 3.0 and
+          above. The OpenAFS plug-in requires <ulink url="https://www.secure-endpoints.com/heimdal">Heimdal</ulink> or <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for
+            Windows</ulink> version 3.1 or above. </para>
         <para>
           <inlinemediaobject>
             <imageobject>
-              <imagedata format="JPG" fileref="relnotes00.jpg" />
+              <imagedata format="JPG" fileref="relnotes00.jpg"/>
             </imageobject>
           </inlinemediaobject>
         </para>
@@ -250,7 +343,7 @@
         <para>
           <inlinemediaobject>
             <imageobject>
-              <imagedata format="JPG" fileref="relnotes01.jpg" />
+              <imagedata format="JPG" fileref="relnotes01.jpg"/>
             </imageobject>
           </inlinemediaobject>
         </para>
@@ -258,7 +351,7 @@
         <para>
           <inlinemediaobject>
             <imageobject>
-              <imagedata format="JPG" fileref="relnotes02.jpg" />
+              <imagedata format="JPG" fileref="relnotes02.jpg"/>
             </imageobject>
           </inlinemediaobject>
         </para>
@@ -279,12 +372,29 @@
           </listitem>
         </itemizedlist>
       </section>
+      <section>
+        <title>3.2.4. Heimdal 1.5, MIT 4.x, and Weak Encryption Types</title>
+        <para>Just as Microsoft disabled the use of Weak Encryption Types in Windows 7 and Windows
+          Server 2008 R2, Heimdal and MIT have disabled the use of weak encryption types in their
+          latest releases. In order to use Heimdal 1.5 or MIT Kerberos 1.9 or later with OpenAFS,
+          the weak encryption types including DES-CBC-CRC and DES-CBC-MD5 must be enabled. In
+          Heimdal, this is performed by adding "allow_weak_crypto = true" to the [libdefaults]
+          section of the %SystemRoot%\ProgramData\Kerberos\krb5.conf file.  In MIT KFW 4.x, this is
+          performed by adding "allow_weak_crypto = true" to the [libdefaults] section of the
+          %SystemRoot%\ProgramData\MIT\Kerberos5\krb5.ini file.</para>
+        <para>Futures versions of OpenAFS will not have this requirement.</para>
+      </section>
     </section>
     <section>
-      <title id="Use_of_Microsoft_Loopback">3.3. Use of the Microsoft Loopback Adapter by the AFS Client Service</title>
+      <title id="Use_of_Microsoft_Loopback">3.3. The Former use of the Microsoft Loopback Adapter by the OpenAFS Client Service</title>
       <indexterm significance="normal">
         <primary>microsoft loopback adapter</primary>
       </indexterm>
+      <para> This section is preserved for those sites that may want to manually configure the
+        OpenAFS Client Service to run as an SMB Gateway to AFS instead of using the native IFS file
+        system redirector driver. When the IFS driver is active, the Microsoft Loopback Adapter is
+        ignored. The OpenAFS 1.7.x installer will not install a Microsoft Loopback Adapter by
+        default nor will it remove one if already present on the machine. </para>
       <para>The Microsoft Loopback Adapter (MLA) is installed with a name "AFS" and a pre-assigned IP address of 10.254.254.253. The MLA is bound to the "Client for Microsoft Networks" service and not bound to the "File and Printer Sharing for Microsoft Networks" service. If the MLA is unbound to "Client Microsoft Networks", the OpenAFS Client Service will become inaccessible when the machine is disconnected from the network. If the MLA is bound to "File and Printer Sharing ..." there will be a service type collision between the "AFS" SMB Service and the local machine's File Sharing Service.  This will result in the OpenAFS client service becoming inaccessible and the "NET VIEW \\AFS" command will return a "System Error 52" message. To correct the problem:</para>
       <itemizedlist>
         <listitem>
@@ -320,8 +430,17 @@
       <indexterm significance="normal">
         <primary>symlinks</primary>
       </indexterm>
-      <para>Traditionally, when the OpenAFS Client Service starts it must be able to access the "root.afs" volume of the default cell. The "root.afs" volume contains the set of mount points to the "root.cell" volumes of various cells the administrator of the default cell believes should be accessible. If the "root.afs" volume is inaccessible when the client service is started, the service will terminate unexpectedly. Since many users now use laptops or otherwise operate in disconnected environments in which a Virtual Private Network (VPN) connection may be required to access the cell's servers, it is often the case that the "root.afs" volume for the default cell is not reachable and the OpenAFS Client Service can not successfully start. </para>
-      <para>To allow the OpenAFS Client Service to operate in these environments, Freelance mode dynamically constructs a fake "root.afs" volume from mount points and symlinks stored in the local registry.</para>
+      <para>Historically, when the OpenAFS Client Service starts it must mount the "root.afs" volume
+        of the default cell. The "root.afs" volume contains the set of mount points to the
+        "root.cell" volumes of various cells the administrator of the default cell believes should
+        be accessible. If the "root.afs" volume is inaccessible when the client service starts, the
+        service will terminate unexpectedly. Since many users now use laptops or otherwise operate
+        in disconnected environments in which a Virtual Private Network (VPN) connection may be
+        required to access the cell's servers, it is often the case that the "root.afs" volume is
+        unreachable and the OpenAFS Client Service can not successfully start. </para>
+      <para>Freelance mode dynamically constructs a fake "root.afs" volume from mount points and
+        symlinks stored in the local registry.  This permits the OpenAFS Client Service to operate
+        in these environments.</para>
       <para>The content of the fake "root.afs" volume is dynamically generated as cells are accessed. When the fake "root.afs" volume is initially constructed it will only contain two mount points: a
         <emphasis>regular path </emphasis>and
         <emphasis>read-write path </emphasis>mount point used to access the "root.cell" volume of the default AFS cell. Any attempt to access a valid cell name will result in a new mount point being created in the fake "root.afs" volume. If the cellname begins with a "." the mount point will be a
@@ -345,6 +464,7 @@
       <para>
         <link linkend="Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance_Symlinks">HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks</link>
       </para>
+      <para><emphasis>NET VIEW \\AFS</emphasis> can be used to browse all of the entries from the command line.</para>
     </section>
     <section>
       <title id="Locating_VLDB_via_DNS">3.5. Locating AFS Volume Database Servers via DNS </title>
@@ -354,8 +474,12 @@
       <indexterm significance="normal">
         <primary>afsdb dns records</primary>
       </indexterm>
-      <para>The OpenAFS for Windows client will use DNS SRV records and AFSDB records to discover the location of AFS Volume Database servers when entries for the cell are not present in either the client's CellServDB registry store or file (\%PROGRAMFILES%\OpenAFS\Client\CellServDB).
-      Also see <link linkend="Registry_VLDB_Configuration">Registry Configuration for AFS Volume Database Servers</link>.</para>
+      <para>The OpenAFS for Windows client will use DNS SRV records and DNS AFSDB records to
+        discover the location of AFS Volume Database servers when entries for the cell are not
+        present in either the client's CellServDB registry store or file
+        (\%ALLUSERSPROFILE%\OpenAFS\Client\CellServDB or \%PROGRAMFILES%\OpenAFS\Client\CellServDB).
+        Also see <link linkend="Registry_VLDB_Configuration">Registry Configuration for AFS Volume
+          Database Servers</link>.</para>
     </section>
     <section>
       <title id="Integrated_Logon">3.6. Obtaining AFS Tokens as a Integrated Part of Windows Logon</title>
@@ -380,17 +504,156 @@
       <indexterm significance="normal">
         <primary>tokens</primary>
       </indexterm>
-      <para>OpenAFS for Windows installs a WinLogon Network Provider to provide Single Sign-On functionality (aka Integrated Logon.) Integrated Logon can be used when the Windows username and password match the username and password associated with the default cell's Kerberos realm. For example, if the Windows username is "jaltman" and the default cell is "athena.mit.edu", then Integrated Logon can be successfully used if the windows password matches the password assigned to the Kerberos principal "jaltman@ATHENA.MIT.EDU". The realm "ATHENA.MIT.EDU" is obtained by performing a domain name to realm mapping on the hostname of one of the cell's Volume Database servers.</para>
-      <para>Integrated Logon is required if you desire the ability to store roaming user profiles within the AFS file system. OpenAFS does not provide tools for synchronizing the Windows and Kerberos user accounts and passwords.</para>
-      <para>When KFW is configured, Integrated Logon will use it to obtain tokens. Use of KFW for Integrated Logon can be disabled via the
-        <link linkend="Value_EnableKFW">EnableKFW</link> registry value.  Use of the krb524 service can be configured via the
-        <link linkend="Value_Use524">Use524</link> registry value.
+      <para>OpenAFS for Windows installs a WinLogon Authentication Provider to provide Single
+        Sign-On functionality (aka Integrated Logon.) Integrated Logon can be used to obtain AFS
+        tokens when the Windows username and password match the username and password associated
+        with the default cell's Kerberos realm. For example, if the Windows username is "jaltman"
+        and the default cell is "your-file-system.com", then Integrated Logon can be successfully
+        used if the windows password matches the password assigned to the Kerberos principal
+        "jaltman@YOUR-FILE-SYSTEM.COM". The realm "YOUR-FILE-SYSTEM.COM" is obtained by performing a
+        domain name to realm mapping on the hostname of one of the cell's Volume Database
+        servers.</para>
+      <para>Integrated Logon is required if roaming user profiles are stored within the AFS file
+        system. OpenAFS does not provide tools for synchronizing the Windows and Kerberos user
+        accounts and passwords.  Integrated Logon can be enabled or disabled via the <link linkend="Value_LogonOptions">LogonOptions</link> registry value.</para>
+      <para>When Heimdal or KFW is installed, Integrated Logon will use it to obtain tokens using
+        Kerberos v5. If you must use the <emphasis role="italic">deprecated</emphasis> kaserver for
+        authentication instead of Kerberos v5, the use of KFW can be disabled via the <link linkend="Value_EnableKFW">EnableKFW</link> registry value. </para>
+      <para>Integrated Logon will not transfer Kerberos v5 tickets into the user's logon session credential cache.  This is no longer possible on Vista and Windows 7.</para>
+      <para>Integrated Logon does not have the ability to cache the username and password for the
+        purpose of obtaining tokens if the Kerberos KDC is inaccessible at logon time.</para>
+      <para>Integrated Logon supports the ability to obtain tokens for multiple cells.  For further
+        information on how to configure this feature, read about the <link linkend="Value_TheseCells">TheseCells</link> registry value. </para>
+      <para>Depending on the configuration of the local machine, it is possible for logon
+        authentication to complete with one of the following user account types:</para>
+      <para>
+        <itemizedlist>
+          <listitem>
+            <para>Local Machine Account (<emphasis role="italic">LOCALHOST</emphasis> domain)</para>
+          </listitem>
+          <listitem>
+            <para>Domain or Forest Account</para>
+          </listitem>
+          <listitem>
+            <para>Domain or Forest Account NETBIOS-compatible name</para>
+          </listitem>
+          <listitem>
+            <para>Kerberos Principal mapped to a local or domain or forest account</para>
+          </listitem>
+        </itemizedlist>
       </para>
-      <para>Integrated Logon will not transfer Kerberos v5 tickets into the user's logon session credential cache. KFW 3.1 and above provides that functionality via its own network provider.</para>
-      <para>Integrated Logon does not have the ability to cache the user's username and password for the purpose of obtaining tokens if the Kerberos KDC is inaccessible at logon time.</para>
-      <para>Integrated Logon supports the ability to obtain tokens for multiple cells. For further information on how to configure this feature, read about the
-        <link linkend="Value_TheseCells">TheseCells</link> value.
+      <para>For each "domain" context, the following properties are configurable:</para>
+      <itemizedlist>
+        <listitem>
+          <para>Obtain AFS Tokens at Logon</para>
+            <itemizedlist>
+              <listitem>
+                <para>Yes</para>
+              </listitem>
+              <listitem>
+                <para>No</para>
+              </listitem>
+            </itemizedlist>
+        </listitem>
+        <listitem>
+          <para>Alternate Kerberos Realm Name - combined with the username to construct a Kerberos
+            principal</para>
+        </listitem>
+        <listitem>
+          <para>TheseCells - A list of cell names other than the workstation cell for which tokens
+            should be obtained</para>
+        </listitem>
+        <listitem>
+          <para>Fail Logons Silently</para>
+            <itemizedlist>
+              <listitem>
+                <para>Yes</para>
+              </listitem>
+              <listitem>
+                <para>No</para>
+              </listitem>
+            </itemizedlist>
+          
+        </listitem>
+        <listitem>
+          <para>Logon Script to Execute</para>
+        </listitem>
+        <listitem>
+          <para>Logon Retry Interval</para>
+        </listitem>
+        <listitem>
+          <para>Logon Sleep between Failure Interval</para>
+        </listitem>
+      </itemizedlist>
+      <para>Within a "domain" context it is often desireable to apply alternate rules for a
+        particular user.  The rules can include a username substitution.</para>
+      <para>
+        <itemizedlist>
+          <listitem>
+            <para>Obtain AFS Tokens at Logon</para>
+            <itemizedlist>
+              <listitem>
+                <para>Yes</para>
+              </listitem>
+              <listitem>
+                <para>No</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+          <listitem>
+            <para>Alternate User Name</para>
+          </listitem>
+          <listitem>
+            <para>Alternate Kerberos Realm Name - combined with the username to construct a Kerberos
+              principal</para>
+          </listitem>
+          <listitem>
+            <para>TheseCells - A list of cell names other than the workstation cell for which tokens
+              should be obtained</para>
+          </listitem>
+          <listitem>
+            <para>Fail Logons Silently</para>
+            <itemizedlist>
+              <listitem>
+                <para>Yes</para>
+              </listitem>
+              <listitem>
+                <para>No</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+          <listitem>
+            <para>Logon Script to Execute</para>
+          </listitem>
+          <listitem>
+            <para>Logon Retry Interval</para>
+          </listitem>
+          <listitem>
+            <para>Logon Sleep between Failure Interval</para>
+          </listitem>
+        </itemizedlist>
       </para>
+      <para>The  configuration hierarchy is specified in the registry under the
+        HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain key.   For
+        example:</para>
+      <para>
+        <itemizedlist>
+          <listitem>
+            <para>...\NetworkProvider\Domain\LOCALHOST\</para>
+          </listitem>
+          <listitem>
+            <para>...\NetworkProvider\Domain\LOCALHOST\Administrator\</para>
+          </listitem>
+          <listitem>
+            <para>...\NetworkProvider\Domain\AD\</para>
+          </listitem>
+          <listitem>
+            <para>...\NetworkProvider\Domain\AD.EXAMPLE.ORG\</para>
+          </listitem>
+        </itemizedlist>
+      </para>
+      <para> From the perspective of configuration, the Full domain name and the
+        NETBIOS-compatibility name are separate entities.  </para>
     </section>
     <section>
       <title id="AFS_System_Tray">3.7. AFS Authentication Tool Command Line Options</title>
@@ -403,7 +666,10 @@
       <indexterm significance="normal">
         <primary>network identity manager</primary>
       </indexterm>
-      <para>The AFS Authentication Tool (afscreds.exe) has been deprecated in favor of Network Identity Manager.  afscreds.exe will be removed from the OpenAFS in the 1.7 release series.</para>
+      <para><emphasis role="italic">The AFS Authentication Tool (afscreds.exe) has been deprecated
+          in favor of Network Identity Manager. afscreds.exe is no longer installed by default in
+          the OpenAFS 1.7 release series. The following information is for historical
+          reference.</emphasis></para>
       <para>The AFS Authentication Tool (afscreds.exe) supports several command line options: </para>
       <itemizedlist>
         <listitem>
@@ -562,11 +828,21 @@
         <primary>PowerShell</primary>
       </indexterm>
       <para>The OpenAFS client supports UNC paths everywhere. UNC paths provide a canonical name for resources stored within AFS. UNC paths should be used instead of drive letter mappings whenever possible. This is especially true when specifying the location of roaming profiles and redirected folders.</para>
-      <para>Power users that make extensive use of the command line shell, cmd.exe, should consider using JP Software's 4NT or Take Command command processors. Unlike cmd.exe, the JPSoftware shells fully support UNC paths as the current directory. JPSoftware added special recognition for OpenAFS to its command shells, 4NT 7.0 and Take Command 7.0. AFS paths can be entered in UNIX notation (e.g., /afs/openafs.org/software), space utilization reports the output of the volume status for the specified path, and many AFS specific functions and variables have been added to the command language.</para>
+      <para>Power users that make extensive use of the command line shell, cmd.exe, should consider
+        using JP Software's Take Command command processor. Unlike cmd.exe, the JPSoftware shells
+        fully support UNC paths as the current directory. JPSoftware added special recognition for
+        OpenAFS to its command shells starting in version 7.0. AFS paths can be entered in UNIX
+        notation (e.g., /afs/openafs.org/software), space utilization reports the output of the
+        volume status for the specified path, and many AFS specific functions and variables have
+        been added to the command language. Take Command 14.03 includes support for OpenAFS IFS
+        Reparse Points and Hard Links.</para>
       <para>JPSoftware's web site is
         <ulink url="http://www.jpsoft.com/">http://www.jpsoft.com</ulink>.
       </para>
-      <para>Microsoft PowerShell 1.0 and 2.0 will also support UNC paths as the current directory. </para>
+      <para>Microsoft PowerShell 1.0, 2.0 and 3.0 also support UNC paths as the current directory. </para>
+      <para>The Cygwin environment also supports UNC paths as the current directory. Enter AFS paths
+        with two leading forward slashes: //afs/grand.central.org/software/openafs/.  As of Cygwin
+        1.7.18-1, AFS Symbolic Links are supported natively by the Cygwin environment.</para>
     </section>
     <section>
       <title id="aklog.exe">3.10. aklog.exe</title>
@@ -579,15 +855,16 @@
     Usage: aklog [-d] [[-cell | -c] cell [-k krb_realm]]
                  [[-p | -path] pathname]
                  [-noprdb] [-force]
-                 [-5 [-m]| -4]
+                 [-5]
 
                  -d = output debugging information.
                  cell = zero or more cells for which tokens will be obtained
                  krb_realm = the kerberos realm of the cell.
                  pathname = the directory for which authentication is required
                  -noprdb = don't try to determine AFS ID.
-                 -5 or -4 = use Kerberos V (default) or Kerberos IV tickets
-                 -m = use krb524d to convert Kerberos V tickets to Kerberos IV
+                 -5 = use Kerberos v5.
+                      (only Kerberos v5 is available)
+                 No commandline arguments means authenticate to the local cell.
       </programlisting>
       </para>
     </section>
@@ -636,11 +913,18 @@
       </section>
     </section>
     <section>
-      <title id="OpenAFS_Debug_Symbols">3.12. OpenAFS Debugging Symbol files</title>
+      <title id="OpenAFS_Debug_Symbols">3.12. OpenAFS Debugging Symbols and Checked Builds</title>
       <indexterm significance="normal">
         <primary>debug symbols</primary>
       </indexterm>
-      <para>The OpenAFS for Windows installers include Debugging Symbol files which should be installed if you are experiencing problems and need to send crash reports. This is true for both the release and the debug versions of the installers. The difference between the release and debug versions are:</para>
+      <indexterm significance="normal">
+        <primary>checked builds</primary>
+      </indexterm>
+      <para>The OpenAFS for Windows installers include Debugging Symbol files which should be
+        installed if you are experiencing problems and need to send crash reports or view OpenAFS
+        stack traces within Process Explorer or Debug View. This is true for both the release and
+        the debug versions of the installers. The difference between the release and debug versions
+        are:</para>
       <itemizedlist>
         <listitem>
           <para>whether or not the binaries were compiled with optimization (release: yes, debug: no)</para>
@@ -666,7 +950,10 @@
       <indexterm significance="normal">
         <primary>64-bit file sizes</primary>
       </indexterm>
-      <para>As of release 1.5.3, OpenAFS for Windows supports files larger than 2GB. The maximum file size is now 16777216 terabytes when the AFS File Server supports large files. If the AFS File Server does not support 64-bit file sizes, then the maximum size of files stored on that server remains 2GB.</para>
+      <para>As of release 1.5.3, OpenAFS for Windows supports files larger than 2GB. The maximum
+        file size is now 16777216 terabytes when the AFS File Server supports large files. If the
+        AFS File Server does not support 64-bit file sizes, then the maximum size of files stored on
+        that server remains 2GB.  </para>
     </section>
     <section>
       <title id="Encrypted_AFS_Network_Communication">3.14. Encrypted AFS Network Communication</title>
@@ -689,6 +976,7 @@
       <indexterm significance="normal">
         <primary>GSS SPNEGO</primary>
       </indexterm>
+      <para><emphasis>This section is maintained for historical reference and those sites that are manually configuring the OpenAFS Service to act as an SMB gateway.  This section does not apply when the OpenAFS IFS redirector driver is in use.</emphasis></para>
       <para>OpenAFS authenticates SMB connections using either NTLM or GSS SPNEGO (NTLM). In previous versions of OpenAFS, the SMB connections were unauthenticated which opened the door for several attacks which could be used to obtain access to another user's tokens on shared machines. </para>
       <para>When GSS SPNEGO attempts a Kerberos v5 authentication, the Windows SMB client will attempt to retrieve service tickets for "cifs/afs@REALM" (if the loopback adapter is in use) or "cifs/machine-afs@REALM" (if the loopback adapter is not being used). It is extremely important that this service principal not exist in the KDC database as the Kerberos authentication must fail allowing automatic fallback to NTLM. When NTLM is used a special local authentication mode will be used that does not require access to the user's password. Instead, Windows will internally recognize the request as coming from a local logon session.</para>
       <para>It should also be noted that because Kerberos v5 authentication cannot be used, it is not possible to digitally sign the SMB communications.   On systems that require Digital Signing of SMB Client connections, access to \\AFS will fail with a connection error.</para>
@@ -721,9 +1009,13 @@
       <indexterm significance="normal">
         <primary>Back Connection</primary>
       </indexterm>
-      <para>The OpenAFS Client is compatible with the Internet Connection Firewall that debuted with Windows XP SP2 and Windows 2003 SP1. The Internet Connection Firewall will be automatically adjusted to allow the receipt of incoming callback messages from the AFS file server. In addition, the appropriate
-        <emphasis>Back Connection</emphasis> registry entries are added to allow SMB authentication to be performed across the Microsoft Loopback Adapter.
-      </para>
+      <para>The OpenAFS Client is compatible with the Internet Connection Firewall that debuted with
+        Windows XP SP2 and Windows 2003 SP1 and the Advanced Firewall that was introduced with
+        Windows Vista. The Internet Connection Firewall will be automatically configured to allow
+        the receipt of incoming callback messages from the AFS file server. In addition, if the
+        OpenAFS Service is manually configured to behave as an SMB Gateway, the appropriate
+          <emphasis>Back Connection</emphasis> registry entries are added to allow SMB
+        authentication to be performed across the Microsoft Loopback Adapter. </para>
     </section>
     <section>
       <title id="Browsing_AFS_from_Explorer_Shell">3.18. Browsing AFS from the Explorer Shell and Office</title>
@@ -787,6 +1079,7 @@
       <indexterm significance="normal">
         <primary>LogoffPreserveTokens</primary>
       </indexterm>
+      <para><emphasis>This section does not apply unless the OpenAFS Service is manually configured as an SMB Gateway.</emphasis></para>
       <para>The OpenAFS Client will automatically forget a user's tokens upon Logoff unless the user's profile was loaded from an AFS volume. In this situation there is no mechanism to determine when the profile has been successfully written back to the network. It is therefore unsafe to release the user's tokens. Whether or not the profile has been loaded from the registry can be determined for Local Accounts, Active Directory accounts and NT4 accounts.</para>
       <para>If there is a need to disable this functionality, the
         <link linkend="Value_LogoffPreserveTokens">LogoffPreserveTokens</link> registry value can be used. (see
@@ -801,7 +1094,8 @@
       <indexterm significance="normal">
         <primary>Installation</primary>
       </indexterm>
-      <para>The MSI installers are preferred for Terminal Server installations.  When installing the NSIS (.exe) installer under Terminal Server, you must execute it from within the Add/Remove Programs Control Panel. Failure to do so will result in AFS not running properly. The AFS Server should not be installed on a machine with Terminal Server installed.</para>
+      <para>The OpenAFS Servers should not be installed on a machine with Terminal Server installed.
+        The OpenAFS Client is fully compatible with Terminal Services.</para>
     </section>
     <section>
       <title id="Hidden_Dot_Files">3.22. Hidden Dot Files</title>
@@ -836,6 +1130,8 @@
       <indexterm significance="normal">
         <primary>NETBIOS over TCP</primary>
       </indexterm>
+      <para><emphasis role="italic">This section only applies when the IFS client mode is
+          disabled.</emphasis></para>
       <para>"Netbios over TCP/IP" must be active on the machine in order for communication with the AFS Client Service to succeed. If "Netbios over TCP/IP" is disabled on the machine, then communication with the AFS Client Service will be impossible.  If you are using the Microsoft Loopback Adapter, configure the "Netbios over TCP/IP" setting for the adapter.</para>
     </section>
     <section>
@@ -844,12 +1140,15 @@
         <primary>digital signatures</primary>
       </indexterm>
       <indexterm significance="normal">
+        <primary>Your File System Inc.</primary>
+      </indexterm>
+      <indexterm significance="normal">
         <primary>Secure Endpoints Inc.</primary>
       </indexterm>
       <indexterm significance="normal">
         <primary>VerifyServiceSignature</primary>
       </indexterm>
-      <para>The OpenAFS Client Service and related binaries distributed by OpenAFS.org are digitally signed by "Secure Endpoints Inc.". The OpenAFS Client Service will perform a run-time verification check to ensure that all OpenAFS related DLLs loaded by the service match the same file version number and were signed by the same entity. This check has been added to prevent the stability problems caused by more than one AFS installation present on a machine at the same time. Many hours of support time have been wasted tracking down problems caused by the mixture of files from different releases. </para>
+      <para>The OpenAFS Client Service and related binaries distributed by OpenAFS.org are digitally signed by "Secure Endpoints Inc." or "Your File System Inc.". The OpenAFS Client Service will perform a run-time verification check to ensure that all OpenAFS related DLLs loaded by the service match the same file version number and were signed by the same entity. This check has been added to prevent the stability problems caused when more than one AFS installation is present on a machine simultaneously. Many hours of support time have been wasted tracking down problems caused by the mixture of files from different releases. </para>
       <para>
         <link linkend="appendix_a">Appendix A</link> documents the "
         <link linkend="Value_VerifyServiceSignature">VerifyServiceSignature</link>" registry value which can be used to disable the signature check. The file version check cannot be disabled.
@@ -871,11 +1170,11 @@
       <indexterm significance="normal">
         <primary>StoreAnsiFilenames</primary>
       </indexterm>
-      <para>This section describes functionality and concerns related to pre-1.5.50 releases of OpenAFS for Windows.   This release stores all file names on the file servers as Unicode encoded using UTF-8.</para>
+      <para><emphasis>This section describes functionality and concerns related to pre-1.5.50 releases of OpenAFS for Windows.   This release stores all file names on the file servers as Unicode encoded using UTF-8.</emphasis></para>
       <para>OpenAFS for Windows implements an SMB server which is used as a gateway to the AFS filesystem. Because of limitations of the SMB implementation in pre-1.5.50 releases, Windows stored all files into AFS using OEM code pages such as CP437 (United States) or CP850 (Western Europe). These code pages are incompatible with the ISO Latin-1 or Unicode (UTF-8) character sets typically used as the default on UNIX systems in both the United States and Western Europe. Filenames stored by OpenAFS for Windows were therefore unreadable on UNIX systems if they include any of the following characters:</para>
       <informaltable frame="all">
         <tgroup rowsep="1" align="left" colsep="1" cols="1">
-          <colspec colwidth="442pt" colname="c1" />
+          <colspec colwidth="442pt" colname="c1"/>
           <tbody>
             <row>
               <entry>
@@ -916,7 +1215,6 @@
           </tbody>
         </tgroup>
       </informaltable>
-      <para></para>
       <para>The pre-1.5.50 OpenAFS Client provided an optional registry value,
         <link linkend="Value_StoreAnsiFilenames">StoreAnsiFilenames</link>, that could be set to instruct OpenAFS to store filenames using the ANSI Code Page instead of the OEM Code Page. The ANSI Code Page is a compatible superset of Latin-1. This setting is not the default setting because making this change would prevent OpenAFS for Windows from being able to access filenames containing the above characters which were created without this setting.
       </para>
@@ -932,7 +1230,7 @@
       <indexterm significance="normal">
         <primary>roaming profiles</primary>
       </indexterm>
-      <para>This section describes functionality and concerns related to pre-1.5.50 releases of OpenAFS for Windows.   This release stores all file names on the file servers as Unicode encoded using UTF-8.</para>
+      <para><emphasis>This section describes functionality and concerns related to pre-1.5.50 releases of OpenAFS for Windows.   This release stores all file names on the file servers as Unicode encoded using UTF-8.</emphasis></para>
       <para>There is a known issue with storing Windows Roaming Profiles when the profile contains either directories or files with names which cannot be represented in the local OEM character set. In this case, attempts to write the profile back to AFS will fail during the character set conversion. The pre-1.5.50 OpenAFS Client's CIFS gateway did not support UNICODE. To avoid this problem some sites run custom logoff scripts (assigned by group policy) which rename all files to use only the supported characters for the locale.</para>
       <para>Versions of OpenAFS for Windows 1.5.50 and above do not suffer from these issues.</para>
     </section>
@@ -948,7 +1246,7 @@
         <primary>SysInternals</primary>
       </indexterm>
       <para>The AFS Cache file is stored by default at %TEMP%\AFSCache in a persistent file marked with the Hidden and System attributes. The persistent nature of the data stored in the cache file improves the performance of OpenAFS by reducing the number of times data must be read from the AFS file servers. </para>
-      <para>The performance of the AFS Client Service is significantly affected by the access times associated with the AFSCache paging file. When given the choice, the AFSCache file should be placed on a fast disk, preferably NTFS, the file should not be compressed and should consist of as few fragments as possible. Significant performance gains can be achieved by defragmenting the AFSCache file with SysInternal's Contig utility while the AFS Client Service is stopped.</para>
+      <para>The performance of the AFS Client Service is significantly affected by the access times associated with the AFSCache paging file. When given the choice, the AFSCache file should be placed on a fast disk, preferably formatted NTFS and using a Solid State Disk, the file should not be compressed and should consist of as few fragments as possible. Significant performance gains can be achieved by defragmenting the AFSCache file with SysInternal's Contig utility while the AFS Client Service is stopped.</para>
     </section>
     <section>
       <title id="Restricting_OpenAFS_Service_Start_and_Stop">3.30. Restricting OpenAFS Client Service Start and Stop</title>
@@ -986,6 +1284,10 @@
         <primary>SysName</primary>
       </indexterm>
       <para>The default @sys name list in the OpenAFS Client is set to "x86_win32 i386_w2k i386_nt40" for 32-bit x86 systems. The default is "amd64_win64" for amd 64-bit versions of Windows.</para>
+      <para>The IFS redirector driver is aware of the process type. On 64-bit systems, there are two
+        @sys name lists "SysName" which is used for the WOW64 environment and "SysName64" which is
+        used for the 64-bit environment.  If "SysName64" is not provided, "SysName" is used for all
+        processes.</para>
     </section>
     <section>
       <title id="Symlinks_to_AFS_UNC_Paths">3.32. Symlinks to AFS UNC Paths</title>
@@ -1015,7 +1317,7 @@
       <indexterm significance="normal">
         <primary>cmdebug.exe</primary>
       </indexterm>
-      <para>The OpenAFS Client implements the Cache Manager Debugging RPC Interface. The CM debugger can be queried with cmdebug.exe.  </para>
+      <para>The OpenAFS Client implements the Cache Manager Debugging RPC Interface. The CM debugger can be queried with <ulink url="http://docs.openafs.org/Reference/1/cmdebug.html">cmdebug.exe</ulink>.  </para>
       <para>
         <programlisting format="linespecific">
     Usage: cmdebug -servers &lt;server machine&gt; [-port &lt;IP port&gt;] [-long] [-refcounts]
@@ -1038,7 +1340,7 @@
       <indexterm significance="normal">
         <primary>kerberos</primary>
       </indexterm>
-      <para>If you are a site which utilizes MIT/Heimdal Kerberos principals to logon to Windows via a cross-realm relationship with a multi-domain Windows forest, you must enable Windows logon caching unless the workstation is Windows Vista.</para>
+      <para>If you are a site which utilizes MIT/Heimdal Kerberos principals to logon to Windows via a cross-realm relationship with a multi-domain Windows forest, you must enable Windows logon caching unless the workstation is Windows Vista or Windows 7.</para>
     </section>
     <section>
       <title id="Initial_Server_Preferences">3.35. Initial Server Preferences</title>
@@ -1092,12 +1394,15 @@
       <para>OpenAFS 1.4 added a new command, "fs minidump". This command can be used at any time to generate a mini dump file containing the current stack of the afsd_service.exe process. This output can be very helpful when debugging the AFS Client Service when it is unresponsive to SMB/CIFS requests.</para>
     </section>
     <section>
-      <title id="AFS_UUIDs_vs_System_Cloning">3.39. AFS Client Universally Unique Identifiers (UUIDs) vs. System Cloning</title>
+      <title id="AFS_UUIDs_vs_System_Cloning">3.39. AFS Client Universally Unique Identifiers (UUIDs) vs. System Cloning or Virtual Machine Cloning</title>
       <indexterm significance="normal">
         <primary>UUIDs</primary>
       </indexterm>
       <indexterm significance="normal">
         <primary>system cloning</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>vm cloning</primary>
       </indexterm>
       <indexterm significance="normal">
         <primary>NonPersistentCaching</primary>
@@ -1115,11 +1420,12 @@
       <para>For lab environments that wish to erase all cached data on each restart, the
         <link linkend="Value_NonPersistentCaching">NonPersistentCaching</link> option will disable the use of the persistent cache file. As a side effect, a new UUID will be generated for the AFS client service on each restart.
       </para>
-      <para>When a Windows system is cloned, the Microsoft Loopback Adapter will be disabled in the cloned system.  Administrators must re-install the Microsoft Loopback Adapter within the cloned environment.  This can be automated by using the OpenAFS "
-        <emphasis>instloop.exe</emphasis> –
-        <emphasis>i</emphasis>" command.  Instloop.exe can be extracted from the MSI installer by performing an administrative install via
-        <emphasis>msiexec.exe /a</emphasis>.
-      </para>
+      <para><emphasis role="italic">[SMB only]</emphasis> When a Windows system is cloned, the
+        Microsoft Loopback Adapter will be disabled in the cloned system. Administrators must
+        re-install the Microsoft Loopback Adapter within the cloned environment. This can be
+        automated by using the OpenAFS " <emphasis>instloop.exe</emphasis> – <emphasis>i</emphasis>"
+        command. Instloop.exe can be extracted from the MSI installer by performing an
+        administrative install via <emphasis>msiexec.exe /a</emphasis>. </para>
     </section>
     <section>
       <title id="Delayed_Write_Errors">3.40. Delayed Write Errors with Microsoft Office Applications</title>
@@ -1138,6 +1444,7 @@
       <indexterm significance="normal">
         <primary>SMB timeouts</primary>
       </indexterm>
+      <para><emphasis>This section does not apply unless the OpenAFS Service is manually configured as an SMB Gateway.</emphasis></para>
       <para>Microsoft Office makes heavy use of asynchronous input/output methods for reading and writing to file streams. This can result in hundreds of requests being simultaneously queued for service by the CIFS client with a fixed timeout period. As the AFS CIFS server is local to the machine the Windows CIFS client believes that it can respond almost instantaneously to write requests as the actual writing to the AFS file server is performed by a background daemon thread. When the actual network bandwidth to the AFS file server is slow and the file size is large it is possible for the CIFS client to time out the connection. When this happens a "delayed write error" will be reported to the user and the application may crash. The only workaround at the current time is to save first to a local disk and subsequently copy the file to AFS as copying a file with the explorer shell does not use asynchronous i/o. </para>
       <para>The CIFS session timeout defaults to 45 seconds and can be increased by modifying the
         <link linkend="Value_ConnDeadTimeout">ConnDeadTimeout registry value</link>.
@@ -1164,7 +1471,8 @@
       <indexterm significance="normal">
         <primary>path ioctl failures</primary>
       </indexterm>
-      <para>The Global DriveAuto-mount feature has been deprecated due to the following Microsoft KB article.</para>
+      <para>The Global Drive auto-mount feature has been deprecated due to the following Microsoft
+        KB article.</para>
       <para>
         <ulink url="http://msdn.microsoft.com/library/en-us/dllproc/base/services_and_redirected_drives.asp">http://msdn.microsoft.com/library/en-us/dllproc/base/services_and_redirected_drives.asp</ulink>
       </para>
@@ -1183,11 +1491,12 @@
       <indexterm significance="normal">
         <primary>64-bit Windows</primary>
       </indexterm>
-      <para>Although 64-bit Windows platforms support both 64-bit and 32-bit applications, the OpenAFS Service installed on the machine must be 64-bit. The 64-bit installer contains only 64-bit executables. In order to support 32-bit applications that link against OpenAFS libraries it is required that a separate 32-bit OpenAFS Tools set be installed.  For example, the 32-bit version of Kerberos for Windows can be used with the 32-bit OpenAFS Tools to manage AFS tokens.</para>
+      <para>Although 64-bit Windows platforms support both 64-bit and 32-bit applications, the OpenAFS Service installed on the machine must be 64-bit. The 64-bit installer contains only 64-bit executables. In order to support 32-bit applications it is required that a separate 32-bit OpenAFS Tools set be installed.  This is especially true when the IFS redirector is in use as the 32-bit Network Provider DLL must be installed in order for 32-bit applications to access drive letters mapped to \\AFS.</para>
       <para>OpenAFS on 64-bit Windows benefits from the lifting of the 2GB process memory restriction that is present in 32-bit Windows. Without this restriction the AFS Cache File can become arbitrarily large limited only by available disk space.</para>
     </section>
     <section>
-      <title id="Windows_Vista_Known_Issues">3.43. Known Issues with Microsoft Windows Vista, Windows 7, and Server 2008 [R2]</title>
+      <title id="Windows_Vista_Known_Issues">3.43. Known Issues with Microsoft Windows Vista,
+        Windows 7, Server 2008 [R2], Windows 8 and Server 2012</title>
       <indexterm significance="normal">
         <primary>windows vista</primary>
       </indexterm>
@@ -1197,6 +1506,14 @@
       <indexterm significance="normal">
         <primary>windows 7</primary>
       </indexterm>
+      <para>Windows Vista, Windows 7, and Server 2008 [R2] implement
+        <ulink url="http://www.microsoft.com/technet/windowsvista/library/0d75f774-8514-4c9e-ac08-4c21f5c6c2d9.mspx">User Account Control</ulink> (UAC), a new security feature that implements least user privilege.  With UAC, applications only run with the minimum required privileges.  Even Administrator accounts run applications without the "Administrator" access control credentials.  One side effect of this is that existing applications that mix user and system configuration capabilities must be re-written to separate those functions that require "Administrator" privileges into a separate process space.  Future updates to OpenAFS will incorporate the necessary privilege separation, until that time some functions such as the Start and Stop Service features of the AFS Authentication Tool and the AFS Control Panel will not work unless they are "Run as Administrator".  When a Vista user account that is a member of the "Administrators" group is used to access the AFS Control Panel (afs_config.exe), the process must be "Run as Administrator".   Otherwise, attempts to modify the OpenAFS configuration will appear to succeed but in reality will have failed due to Vista's system file and registry virtualization feature.
+      </para>
+      <para>The help files provided with OpenAFS are in .HLP format. <ulink
+          url="http://support.microsoft.com/kb/917607">Windows Vista, Windows 7, Server 2008 [R2],
+          Windows 8 and Server 2012 do not include a help engine for this format.</ulink>
+      </para>
+      <para><emphasis>The following items only apply when the OpenAFS Service is manually configured as an SMB Gateway.</emphasis></para>
       <para>OpenAFS for Windows works with Microsoft Windows Vista, Windows 7 and Server 2008 [R2] from both the command prompt and the Explorer Shell.
             When performing an upgrade from earlier versions of Microsoft Windows the Microsoft Loopback Adapter (MSLA) will be uninstalled.
             OpenAFS should be re-installed after the Windows Upgrade installation to restore the MSLA configuration.</para>
@@ -1205,11 +1522,6 @@
             As a result, it takes anywhere from 30 to 90 seconds after the operating system is resumed for access to the OpenAFS Client
             and the AFS file name space to be restored.  Until the network bindings have been re-established, ticket managers and other
             tools will report that the "AFS Client Service may not have been started".</para>
-      <para>Windows Vista, Windows 7, and Server 2008 [R2] implement
-        <ulink url="http://www.microsoft.com/technet/windowsvista/library/0d75f774-8514-4c9e-ac08-4c21f5c6c2d9.mspx">User Account Control</ulink> (UAC), a new security feature that implements least user privilege.  With UAC, applications only run with the minimum required privileges.  Even Administrator accounts run applications without the "Administrator" access control credentials.  One side effect of this is that existing applications that mix user and system configuration capabilities must be re-written to separate those functions that require "Administrator" privileges into a separate process space.  Future updates to OpenAFS will incorporate the necessary privilege separation, until that time some functions such as the Start and Stop Service features of the AFS Authentication Tool and the AFS Control Panel will not work unless they are "Run as Administrator".  When a Vista user account that is a member of the "Administrators" group is used to access the AFS Control Panel (afs_config.exe), the process must be "Run as Administrator".   Otherwise, attempts to modify the OpenAFS configuration will appear to succeed but in reality will have failed due to Vista's system file and registry virtualization feature.
-      </para>
-      <para>The help files provided with OpenAFS are in .HLP format.
-        <ulink url="http://support.microsoft.com/kb/917607">Windows Vista, Windows 7, and Server 2008 [R2] do not include a help engine for this format.</ulink></para>
     </section>
     <section>
       <title id="AFS_Share_Direct_Access_to_Volumes">3.44. AFS Share Name Syntax Provides Direct Access to Volumes</title>
@@ -1286,13 +1598,12 @@
       <indexterm significance="normal">
         <primary>fs whichcell</primary>
       </indexterm>
-      <para>Beginning with the 1.5.31 release, the fs commands
-        <emphasis>examine</emphasis>,
-        <emphasis>flush</emphasis>,
-        <emphasis>whereis</emphasis>, and
-        <emphasis>whichcell</emphasis> provide a new command-line parameter,
-        <emphasis>-literal</emphasis>.  When specified, if the evaluated object is a symlink or a mountpoint the resulting output will describe the specified object and not the target of the symlink or mountpoint.
-      </para>
+      <para>Beginning with the 1.5.31 release, the fs commands <emphasis>examine</emphasis>,
+          <emphasis>flush</emphasis>, <emphasis>getuseraccess</emphasis>, <emphasis>whereis</emphasis>, and
+          <emphasis>whichcell</emphasis> provide a new command-line parameter,
+          <emphasis>-literal</emphasis>. When specified, if the evaluated object is a symlink or a
+        mountpoint the resulting output will describe the specified object and not the target of the
+        symlink or mountpoint. </para>
     </section>
     <section>
       <title id="Out_of_Quota_Errors">3.47. Out of Quota errors</title>
@@ -1304,8 +1615,8 @@
       </indexterm>
       <para>Prior to the 1.5.31 release, out of quota errors were reported to the calling application as an out of space error.  As of 1.5.31, an out of space error will indicate that the partition on which the volume is located is in fact out of space.  Whereas an out of quota error indicates that the user does not have permission to allocate additional space.</para>
     </section>
-    <section>
-      <title id="Linked_Cells">3.48. Linked Cells</title>
+    <section id="Linked_Cells">
+      <title>3.48. Linked Cells</title>
       <indexterm significance="normal">
         <primary>linked cells</primary>
       </indexterm>
@@ -1348,8 +1659,8 @@
       <para>aklog and Network Identity Manager will automatically obtain tokens for the linked cell when tokens for the other cell is specified.
       </para>
     </section>
-    <section>
-      <title id="Registry_VLDB_Configuration">3.49 Registry Configuration for AFS Volume Database Servers</title>
+    <section id="Registry_VLDB_Configuration">
+      <title>3.49 Registry Alternative to CellServDB File</title>
       <indexterm significance="normal">
         <primary>vldb server locations</primary>
       </indexterm>
@@ -1361,7 +1672,7 @@
     as a substitute for it.  The precedence order for lookups is: Registry, File, and then DNS.</para>
     </section>
     <section>
-      <title id="HTMLHelp_Documentation">3.50 Documentation Converted to Windows HTML Help</title>
+      <title id="HTMLHelp_Documentation">3.50 Release Notes Converted to Windows HTML Help</title>
       <indexterm significance="normal">
         <primary>HTMLHelp</primary>
       </indexterm>
@@ -1376,11 +1687,12 @@
       <indexterm significance="normal">
         <primary>Microsoft Office</primary>
       </indexterm>
-      <para>Beginning with the 1.5.62 release, the OpenAFS SMB Server supports named pipes and the Microsoft RPC Services
-        WKSSVC and SRVSVC.  This permits a significantly improved Netbios Server browsing experience with both the
-        <emphasis>NET VIEW \\AFS</emphasis> command and the Explorer Shell.  No longer will Windows display truncated
-        cell names as available network shares.  The network share properties will also include the object type and
-        and the target of symlinks and mount points.</para>
+      <para>Beginning with the 1.5.62 release, the OpenAFS client supports named pipes and the
+        Microsoft RPC Services WKSSVC and SRVSVC. This permits a significantly improved Netbios
+        Server browsing experience with both the <emphasis>NET VIEW \\AFS</emphasis> command and the
+        Explorer Shell. No longer will Windows display truncated cell names as available network
+        shares. The network share properties will also include the object type and and the target of
+        symlinks and mount points.</para>
     </section>
     <section>
       <title id="fs_newcell_differences">3.52. Differences between Windows and UNIX <emphasis>fs newcell</emphasis></title>
@@ -1417,16 +1729,216 @@
         </listitem>
       </itemizedlist>
     </section>
+
+    <section>
+      <title id="openafs_reparse_points">3.53. AFS Mount Points and Symlinks are Reparse Points</title>
+      <indexterm significance="normal">
+        <primary>reparse points</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>mount points</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>symlinks</primary>
+      </indexterm>
+      <para> The AFS redirector driver represents all AFS mount points and AFS symlinks as reparse
+        points within the file system name space using a Microsoft assigned tag value. Tools that
+        are OpenAFS reparse point aware can create, query and remove AFS symlinks and mount points
+        without requiring knowledge of AFS pioctls. The explorer shell will be able to delete a
+        mount point or symlink as part of a recursive directory tree removal without crossing into
+        the reparse point target. </para>
+      <para>The Explorer Shell displays Symlinks and Mount Points using overlay icons.</para>
+      <para><inlinegraphic fileref="relnotes03.jpg" align="center" arch=""/></para>
+      <para>Beginning with 1.7.22, AFS Symlinks are represented as Microsoft Symlink reparse points
+        instead of an OpenAFS specific reparse point.  Symlinks can now be created using the Win32
+          <ulink
+          url="http://msdn.microsoft.com/en-us/library/windows/desktop/aa363866%28v=vs.85%29.aspx"
+          >CreateSymbolicLink</ulink> API and follow all of the behaviors of Microsoft Windows'
+          <ulink
+          url="http://msdn.microsoft.com/en-us/library/windows/desktop/aa365680%28v=vs.85%29.aspx"
+          >Symbolic Links</ulink>.  Any tool capable of creating symbolic links on NTFS can now do
+        so within AFS.</para>
+      <para>Symbolic Links to Files are not supported by all Microsoft Windows applications because
+        directory enumerations, GetFileAttributes and GetFileAttributesEx return the attributes and
+        size of the Symbolic Link and not that of the target file.   Applications that treat the
+        size of the Symbolic Link as the size of the target file will misbehave.  All Java releases
+        1.6.x and earlier and all .NET applications as of this writing use the Symbolic Link size as
+        the size of the target file.  Java 1.7 correctly processes Symbolic Links.</para>
+    </section>
+
+    <section>
+      <title id="authentication_groups">3.54. AFS Authentication Groups</title>
+      <indexterm significance="normal">
+        <primary>authentication groups</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>PAG</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>tokens</primary>
+      </indexterm>
+      <para>
+ 	 	When the OpenAFS Service is configured as an SMB Gateway, all AFS Tokens are associated with Windows user names.
+		With the IFS redirector driver, tokens are associated with Authentication Groups.
+ 		By default, an authentication group is allocated for each User SID
+		and Logon Session Id combination.  In addition, it is possible for
+		processes to create additional Authentication Groups.  Each thread in
+		a process can select an Authentication Group within the process as the
+		active Authentication Group.
+		</para>
+ 	  <para>
+		One of the significant benefits of Authentication Groups within the
+		Windows environment is that Windows services (svchost.exe, csrss.exe,
+		etc.) which impersonate user processes will seamlessly gain access
+		to the user's AFS credentials for the lifetime of the impersonation.
+      </para>
+    </section>
+
+    <section>
+      <title id="ifs_known_issues">3.55. Known IFS redirector driver limitations</title>
+      <indexterm significance="normal">
+        <primary>IFS redirector</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>known issues</primary>
+      </indexterm>
+      <para>
+      The following is a list of known issues when using the IFS redirector driver:
+      <itemizedlist>
+      <listitem>
+            <para>Adobe Reader Protected Mode prevents saving PDF documents to AFS. </para>
+            <para>
+              In Acrobat Reader 9.3.2 Adobe added a new security feature "Protected
+Mode" which is enabled by default.  Protected mode runs AcroRd32.exe in
+a sandbox and prevents undesirable network access.  The release notes
+with all versions of Reader since 9.3.2 indicate that DFS and NFS
+network paths are inaccessible when Protected Mode is on.
+            </para>
+          </listitem>
+          <listitem>
+            <para>Command Prompt .LNK files do not behave properly when stored within AFS <itemizedlist>
+                <listitem>
+                  <para>Custom properties will be ignored.</para>
+                </listitem>
+                <listitem>
+                  <para>It is not possible to make changes to the LNK properties.</para>
+                </listitem>
+              </itemizedlist> These issues are the result of the <emphasis role="italic">Console
+                Window Host</emphasis> process (conhost.exe) running outside the logon session's
+              authentication group. While conhost.exe impersonates the Windows user, it does not
+              impersonate a logon session process. As a result, it has no tokens and cannot access
+              the LNK file.</para>
+          </listitem>
+      <listitem>
+      <para>The Windows File System <ulink url="http://msdn.microsoft.com/en-us/library/ff549293%28v=vs.85%29.aspx">Volume Query Quota Interface</ulink> is not implemented.  As a result, AFS quota information is not available to application processes or end users via Windows dialogs.</para>
+      </listitem>
+      <listitem>
+      <para>The Windows <ulink url="https://secure.wikimedia.org/wikipedia/en/wiki/Shadow_Copy">Volume Shadow Copy Service</ulink> is not implemented.  As a result, AFS backup volumes are not accessible via the Explorer Shell.</para>
+      </listitem>
+      <listitem>
+      <para>There is no support for storing DOS attributes such as Hidden, System, or Archive. </para>
+      </listitem>
+      <listitem>
+      <para>There is no support for Alternate Data Streams as required by Windows User Account
+              Control to store Zone Identity data. </para>
+      </listitem>
+      <listitem>
+      <para>There is no support for Extended Attributes. </para>
+      </listitem>
+      <listitem>
+      <para>There is no support for <ulink
+                url="https://blogs.technet.com/b/hugofe/archive/2010/06/21/windows-2008-access-based-enumeration-abe.aspx"
+                >Access Based Enumeration</ulink>. </para>
+      </listitem>
+      <listitem>
+      <para>There is no support for <ulink
+                url="https://secure.wikimedia.org/wikipedia/en/wiki/Windows_Management_Instrumentation"
+                >Windows Management Instrumentation</ulink>
+            </para>
+      </listitem>
+      <listitem>
+      <para>There is no support for <ulink
+                url="http://msdn.microsoft.com/en-us/library/aa363997%28v=vs.85%29.aspx">Distributed
+                Link Tracking and Object Identifiers</ulink>
+            </para>
+      </listitem>
+      <listitem>
+            <para>There is no support for storing <ulink
+                url="http://msdn.microsoft.com/en-us/magazine/cc982153.aspx">Windows Access Control
+                Lists</ulink>. Only the AFS ACLs are enforced. </para>
+          </listitem>
+          <listitem>
+            <para>There is a bug in the Explorer Shell which can result in the Shell responding to a
+              Ctrl-V (Paste) operation with an out of space error.  The bug is that the Shell
+              queries the root directory of the UNC Path or Drive Letter for free space instead of
+              the path in which the Paste is being performed.  To work around the bug, select a
+              directory in another volume under the same root and then return to the target
+              directory before initiating the Paste.  Performing the Paste using the Context Menu
+              instead of Ctrl-V will avoid triggering the bug.</para>
+          </listitem>
+          <listitem>
+            <para>Windows file systems support a maximum of 31 reparse points (mount points or
+              symbolic links) within a path.</para>
+          </listitem>
+      </itemizedlist>
+      </para>
+    </section>
+    <section>
+      <title id="windows8_changes">3.56. Changes for Windows 8 and Server 2012</title>
+      <indexterm significance="normal">
+        <primary>Windows 8</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>Server 2012</primary>
+      </indexterm>
+      <para>
+      In Windows 8 and Server 2012 Microsoft has introduced a new file system, ReFS, and has begun the process of transitioning away from several legacy file system properties including 8.3 compatible short names for all file system objects.
+      The OpenAFS file system has followed suit and is disabling automatic generation of 8.3 compatible names on Windows 8 and Server 2012.
+      </para>
+    </section>
+    <section>
+      <title id="explorer_read_only_volume_bug">3.57. The Explorer Shell, Drive Letter Mappings, and Read Only Volumes</title>
+      <indexterm significance="normal">
+        <primary>explorer shell</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>drive letter mappings</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>.readonly volumes</primary>
+      </indexterm>
+      <para>File systems can expose a variety of information about the underlying volumes they serve
+        to applications.  All AFS volumes are described as supporting Case Preservation, Hard Links,
+        Reparse Points and Unicode characters.  For .readonly volumes the file system can indicate
+        that the volume is a Read Only Volume.  The benefit of doing so is that applications such as
+        the Explorer Shell can alter their behavior to improve the user experience.  For example,
+        when the volume is reported as read-only the Explorer Shell can remove the Rename, Delete,
+        and other file modifying operations from the user interface.  Unfortunately, the Windows 7
+        Explorer Shell is broken with regards to Volume Information queries when issued on Network
+        Mapped Drive Letters.  Instead of performing a volume information query on the current
+        directory, the Explorer Shell only queries the root directory of the mapped drive letter.
+        As a result, if the drive letter is mapped to a .readonly volume, all paths accessed via the
+        drive letter are considered to be read-only even when they are not.  This behavior is fixed
+        in Windows 8 and Server 2012.</para>
+      <para>Due to this bug, OpenAFS on Windows 7 and below does not report the
+        <ulink url="http://msdn.microsoft.com/en-us/library/windows/desktop/aa964920%28v=vs.85%29.aspx">FILE_READ_ONLY_VOLUME</ulink>
+        flag as part of the volume information.  The Explorer Shell properly
+        queries the volume information for UNC paths.  If network mapped drive letters are not used,
+        it is often convenient if the FILE_READ_ONLY_VOLUME flag is reported.  This can be
+        configured using the <link linkend="Regkey_TransarcAFSDaemon_Parameters_VolumeInfoReadOnlyFlag">VolumeInfoReadOnlyFlag</link> registry value.</para>
+    </section>
+
   </chapter>
   <chapter id="chap_4">
     <title id="How_to_Debug_Problems">How to Troubleshoot Problems with OpenAFS for Windows</title>
+    <para>
     <indexterm significance="normal">
       <primary>debugging</primary>
     </indexterm>
     <indexterm significance="normal">
       <primary>troubleshooting</primary>
     </indexterm>
-    <para>OpenAFS for Windows provides a wide range of tools to assist you in debugging problems. The techniques available to you are varied because of the wide range of issues that have been discovered over the years.</para>
+    OpenAFS for Windows provides a wide range of tools to assist you in debugging problems. The techniques available to you are varied because of the wide range of issues that have been discovered over the years.</para>
     <section>
       <title id="pioctl_debugging">4.1. pioctl debugging (
         <link linkend="Value_IoctlDebug">IoctlDebug</link> registry key)
@@ -1508,7 +2020,8 @@
       <para>A restart of the service is necessary when adjusting this value. Execute "fs trace -on -reset" to begin the logging and "fs trace -dump" to output the contents of the log to the file.</para>
     </section>
     <section>
-      <title id="Using_Sysinternals_Tools">4.4. Using SysInternal's Debug Viewer, Process Monitor and Process Explorer Tools</title>
+      <title id="Using_Sysinternals_Tools">4.4. Using SysInternal's Debug Viewer, Process Monitor,
+        Process Explorer and Process Dump Tools</title>
       <indexterm significance="normal">
         <primary>SysInternals</primary>
       </indexterm>
@@ -1572,11 +2085,10 @@
       <indexterm significance="normal">
         <primary>TraceOption</primary>
       </indexterm>
-      <para>If you are having trouble with the Integrated Logon operations it is often useful to be able to obtain a log of what it is attempting to do. Setting Bit 0 of the
-        <link linkend="Value_TraceOption">TraceOption</link> registry value:
-      </para>
-      <para> [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
-      <para> REG_DWORD TraceOption = 0x01</para>
+      <para>If you are having trouble with the Integrated Logon operations it is often useful to be
+        able to obtain a log of what it is attempting to do. Setting the <link linkend="Value_AFSLogon_Debug">Debug</link> registry value: </para>
+      <para> [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
+      <para> REG_DWORD Debug = 0x01</para>
       <para>will instruct the Integrated Logon Network Provider and Event Handlers to log information to the Windows Event Log: Application under the name "AFS Logon".</para>
     </section>
     <section>
@@ -1657,12 +2169,13 @@
       </para>
     </section>
   </chapter>
-  <chapter id="chap_5">
-    <title id="Reporting_Bugs">Reporting Bugs</title>
+  <chapter id="Reporting_Bugs">
+    <title>Reporting Bugs</title>
+    <para>
     <indexterm significance="normal">
       <primary>bug reports</primary>
     </indexterm>
-    <para>Bug reports should be sent to
+    Bug reports should be sent to
       <ulink url="mailto:openafs-bugs@openafs.org?subject=Bug%20Report">openafs-bugs@openafs.org</ulink>. Please include as much information as possible about the issue. If you are reporting a crash, please install the debugging symbols by re-running the installer. If a dump file is available for the problem, %WINDIR%\TEMP\afsd.dmp, include it along with the AFS Client Trace file %WINDIR%\TEMP\afsd.log. The AFS Client startup log is %WINDIR%\TEMP\afsd_init.log. Send the last continuous block of log information from this file.
     </para>
     <para>Configuring DrWatson to generate dump files for crashes:</para>
@@ -1710,21 +2223,22 @@
   </chapter>
   <chapter id="chap_6">
     <title id="Contributing_to_OpenAFS">How to Contribute to the Development of OpenAFS for Windows</title>
+    <para>
     <indexterm significance="normal">
       <primary>contributing to OpenAFS</primary>
     </indexterm>
-    <para>Contributions to the development of OpenAFS for Windows are continuously needed. Contributions may take many forms including cash donations, support contracts, donated developer time, and even donated tech writer time.</para>
+    Contributions to the development of OpenAFS for Windows are continuously needed. Contributions may take many forms including cash donations, support contracts, donated developer time, and even donated tech writer time.</para>
     <section>
       <title id="USENIX_OpenAFS_Fund">6.1. The USENIX OpenAFS Fund </title>
+      <para>
       <indexterm significance="normal">
         <primary>USENIX OpenAFS Fund</primary>
       </indexterm>
-      <para>
         <ulink url="http://www.usenix.org/">USENIX</ulink>, a 501c3 non-profit corporation, has formed the USENIX OpenAFS Fund in order to accept tax deductible donations on behalf of the OpenAFS Elders. The donated funds will be allocated by the OpenAFS Elders to fund OpenAFS development, documentation, project management, and maintaining openafs.org.
       </para>
       <informaltable frame="none">
         <tgroup rowsep="1" align="left" colsep="1" cols="1">
-          <colspec colwidth="405pt" colname="c1" />
+          <colspec colwidth="405pt" colname="c1"/>
           <tbody>
             <row>
               <entry>
@@ -1747,10 +2261,10 @@
     </section>
     <section>
       <title id="Secure_Endpoints_Inc">6.2. Secure Endpoints Inc. </title>
+      <para>
       <indexterm significance="normal">
         <primary>Secure Endpoints Inc.</primary>
       </indexterm>
-      <para>
         <ulink url="http://www.secure-endpoints.com/">Secure Endpoints Inc.</ulink> provides development and support services for OpenAFS for Windows and
         <ulink url="http://web.mit.edu/kerberos/">MIT Kerberos for Windows</ulink>. Donations provided to Secure Endpoints Inc. for the development of OpenAFS are used to cover the OpenAFS gatekeeper responsibilities; providing support to the OpenAFS community via the OpenAFS mailing lists; and furthering development of desired features that are either too small to be financed by development contracts.
       </para>
@@ -1760,11 +2274,28 @@
       </para>
     </section>
     <section>
-      <title id="Direct_Code_Contributions">6.3. Direct contributions of code and/or documentation </title>
-      <para>Organizations that use OpenAFS in house and have development staffs are encouraged to contribute any code modifications they make to OpenAFS.org via openafs-bugs@openafs.org. Contributions of documentation are highly desired. </para>
+      <title id="Your_File_System_Inc">6.3. Your File System Inc. </title>
+      <para>
+      <indexterm significance="normal">
+        <primary>Your File System Inc.</primary>
+      </indexterm>
+        <ulink url="http://www.your-file-system.com/">Your File System Inc.</ulink> provides development and support services for OpenAFS for Windows.
+        Donations provided to Your File System Inc. for the development of OpenAFS are used to cover the OpenAFS gatekeeper responsibilities;
+        providing support to the OpenAFS community via the OpenAFS mailing lists;
+        and furthering development of desired features that are either too small to be financed by development contracts.
+      </para>
+      <para>Your File System Inc. accepts software development agreements from organizations who wish to fund a well-defined set of bug fixes or new features. </para>
+      <para>Your File System Inc. provides contract based support for OpenAFS on all platforms.
+      </para>
     </section>
     <section>
-      <title id="OAFW_Mailing_Lists">6.4. OpenAFS for Windows Mailing Lists</title>
+      <title id="Direct_Code_Contributions">6.4. Direct contributions of code and/or documentation </title>
+      <para>Organizations that use OpenAFS in house and have development staffs are encouraged to
+        contribute code and documentation modifications to OpenAFS.org via
+          <emphasis>>http://gerrit.openafs.org/</emphasis>.</para>
+    </section>
+    <section>
+      <title id="OAFW_Mailing_Lists">6.5. OpenAFS for Windows Mailing Lists</title>
       <indexterm significance="normal">
         <primary>mailing lists</primary>
       </indexterm>
@@ -1774,9 +2305,7 @@
       <indexterm significance="normal">
         <primary>openafs-info</primary>
       </indexterm>
-      <para>If you wish to participate in OpenAFS for Windows development please join the
-        <ulink url="mailto:openafs-win32-devel@openafs.org?subject=OpenAFS%20for%20Windows%20Development%20Contribution">openafs-win32-devel@openafs.org</ulink> mailing list.
-      </para>
+      <para>If you wish to participate in OpenAFS for Windows development, please join the <ulink url="mailto:openafs-win32-devel@openafs.org?subject=OpenAFS%20for%20Windows%20Development%20Contribution">openafs-win32-devel@openafs.org</ulink> mailing list. </para>
       <para>
         <emphasis role="bold">https://lists.openafs.org/mailman/listinfo/openafs-win32-devel</emphasis>
       </para>
@@ -1791,15 +2320,15 @@
   </chapter>
   <chapter id="chap_7">
     <title id="MSI_Deployment_Guide">MSI Deployment Guide</title>
-    <indexterm significance="normal">
-      <primary>msi deployment</primary>
-    </indexterm>
-    <indexterm significance="normal">
-      <primary>msi transforms</primary>
-    </indexterm>
     <section>
-      <title id="Introduction_to_MSI_Deployment">7.1. Introduction</title>
-      <para>A MSI installer option is available for those who wish to use Windows Installer for installing OpenAFS and for organizations that wish to deploy OpenAFS through Group Policy. The first version of OpenAFS for Windows available as an MSI was 1.3.65.</para>
+      <title>7.1. Introduction</title>
+      <indexterm significance="normal">
+        <primary>msi deployment</primary>
+      </indexterm>
+      <indexterm significance="normal">
+        <primary>msi transforms</primary>
+      </indexterm>
+      <para id="Introduction_to_MSI_Deployment">A MSI installer option is available for those who wish to use Windows Installer for installing OpenAFS and for organizations that wish to deploy OpenAFS through Group Policy. The first version of OpenAFS for Windows available as an MSI was 1.3.65.</para>
       <para>This document provides a guide for authoring transforms used to customize the MSI package for a particular organization. Although many settings can be deployed via transforms, in an Active Directory environment it is advisable to deploy registry settings and configuration files through group policy and/or startup scripts so that machines where OpenAFS for Windows is already installed will pick up these customizations.</para>
       <section>
         <title id="MSI_Deployment_Requirements">7.1.1 Requirements</title>
@@ -1883,7 +2412,7 @@
           <title id="MSI_OAFW_Properties">7.2.1.2 OpenAFS for Windows Properties</title>
           <informaltable frame="all">
             <tgroup rowsep="1" align="left" colsep="1" cols="1">
-              <colspec colwidth="447pt" colname="c1" />
+              <colspec colwidth="447pt" colname="c1"/>
               <tbody>
                 <row>
                   <entry>
@@ -1917,7 +2446,7 @@
             <para>These properties are used to set the values of registry entries associated with OpenAFS for Windows.</para>
             <informaltable frame="all">
               <tgroup rowsep="1" align="left" colsep="1" cols="1">
-                <colspec colwidth="447pt" colname="c1" />
+                <colspec colwidth="447pt" colname="c1"/>
                 <tbody>
                   <row>
                     <entry>
@@ -2105,7 +2634,7 @@
             <para>These properties are combined to add a command line option to the shortcut that will be created in the Start:Programs:OpenAFS and Start:Programs:Startup folders (see CREDSSTARTUP). The method of specifying the option was chosen for easy integration with the Windows Installer user interface. Although other methods can be used to specify options to AFSCREDS.EXE, it is advised that they be avoided as transforms including such options may not apply to future releases of OpenAFS.</para>
             <informaltable frame="all">
               <tgroup rowsep="1" align="left" colsep="1" cols="1">
-                <colspec colwidth="447pt" colname="c1" />
+                <colspec colwidth="447pt" colname="c1"/>
                 <tbody>
                   <row>
                     <entry>
@@ -2211,8 +2740,8 @@
                 <para>Enter the following :</para>
                 <informaltable frame="all">
                   <tgroup rowsep="1" align="left" colsep="1" cols="2">
-                    <colspec colwidth="84pt" colname="c1" />
-                    <colspec colwidth="318pt" colname="c2" />
+                    <colspec colwidth="84pt" colname="c1"/>
+                    <colspec colwidth="318pt" colname="c2"/>
                     <tbody>
                       <row>
                         <entry>
@@ -2251,7 +2780,7 @@
                           <para>Condition</para>
                         </entry>
                         <entry>
-                          <para></para>
+                          <para/>
                         </entry>
                       </row>
                       <row>
@@ -2281,8 +2810,8 @@
                 <para>Add a new row (Ctrl-R or 'Tables'-&gt;'Add Row') with the following values:</para>
                 <informaltable frame="all">
                   <tgroup rowsep="1" align="left" colsep="1" cols="2">
-                    <colspec colwidth="94pt" colname="c1" />
-                    <colspec colwidth="307pt" colname="c2" />
+                    <colspec colwidth="94pt" colname="c1"/>
+                    <colspec colwidth="307pt" colname="c2"/>
                     <tbody>
                       <row>
                         <entry>
@@ -2305,7 +2834,7 @@
                           <para>Title</para>
                         </entry>
                         <entry>
-                          <para></para>
+                          <para/>
                         </entry>
                       </row>
                       <row>
@@ -2313,7 +2842,7 @@
                           <para>Description</para>
                         </entry>
                         <entry>
-                          <para></para>
+                          <para/>
                         </entry>
                       </row>
                       <row>
@@ -2337,7 +2866,7 @@
                           <para>Directory_</para>
                         </entry>
                         <entry>
-                          <para></para>
+                          <para/>
                         </entry>
                       </row>
                       <row>
@@ -2367,8 +2896,8 @@
                 <para>Add a new row with the following values:</para>
                 <informaltable frame="all">
                   <tgroup rowsep="1" align="left" colsep="1" cols="2">
-                    <colspec colwidth="90pt" colname="c1" />
-                    <colspec colwidth="312pt" colname="c2" />
+                    <colspec colwidth="90pt" colname="c1"/>
+                    <colspec colwidth="312pt" colname="c2"/>
                     <tbody>
                       <row>
                         <entry>
@@ -2402,8 +2931,8 @@
                 <para>Add a new row with the following values:</para>
                 <informaltable frame="all">
                   <tgroup rowsep="1" align="left" colsep="1" cols="2">
-                    <colspec colwidth="91pt" colname="c1" />
-                    <colspec colwidth="311pt" colname="c2" />
+                    <colspec colwidth="91pt" colname="c1"/>
+                    <colspec colwidth="311pt" colname="c2"/>
                     <tbody>
                       <row>
                         <entry>
@@ -2472,8 +3001,8 @@
                 <para>Add a row with the following values :</para>
                 <informaltable frame="all">
                   <tgroup rowsep="1" align="left" colsep="1" cols="2">
-                    <colspec colwidth="93pt" colname="c1" />
-                    <colspec colwidth="309pt" colname="c2" />
+                    <colspec colwidth="93pt" colname="c1"/>
+                    <colspec colwidth="309pt" colname="c2"/>
                     <tbody>
                       <row>
                         <entry>
@@ -2501,8 +3030,8 @@
             </orderedlist>
           </listitem>
         </orderedlist>
-        <section>
-          <title id="MSI_Configuration_File_Components">7.2.3.1 Components for Configuration Files</title>
+        <section id="MSI_Configuration_File_Components">
+          <title>7.2.3.1 Components for Configuration Files</title>
           <para>CellServDB: 'cpf_CellServDB' (ID {D5BA4C15-DBEC-4292-91FC-B54C30F24F2A})</para>
         </section>
       </section>
@@ -2519,7 +3048,7 @@
         <para> We create a new feature and component to hold the new registry keys.</para>
         <informaltable frame="all">
           <tgroup rowsep="1" align="left" colsep="1" cols="1">
-            <colspec colwidth="448pt" colname="c1" />
+            <colspec colwidth="448pt" colname="c1"/>
             <tbody>
               <row>
                 <entry>
@@ -2643,7 +3172,6 @@
             </tbody>
           </tgroup>
         </informaltable>
-        <para></para>
         <para>The example adds domain specific keys for 'ATHENA.MIT.EDU' (enable integrated logon) and 'LOCALHOST' (disable integrated logon and fail logins silently).</para>
       </section>
       <section>
@@ -2653,7 +3181,7 @@
         <para> We create a new feature and component to hold the new registry keys.</para>
         <informaltable frame="all">
           <tgroup rowsep="1" align="left" colsep="1" cols="1">
-            <colspec colwidth="447pt" colname="c1" />
+            <colspec colwidth="447pt" colname="c1"/>
             <tbody>
               <row>
                 <entry>
@@ -2811,8 +3339,8 @@
   </chapter>
   <chapter id="appendix_a" label="Appendix A">
     <title id="Registry_Values">Registry Values</title>
-    <section>
-      <title id="Service_Parameters">A.1. Service parameters</title>
+    <section id="Service_Parameters">
+      <title>A.1. Service parameters</title>
       <para>The service parameters primarily affect the behavior of the AFS client service (afsd_service.exe).</para>
       <section>
         <title id="Regkey_TransarcAFSDaemon_Parameters">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</title>
@@ -2826,18 +3354,18 @@
           <para>Default: -1</para>
           <para>Variable: LANadapter</para>
           <para>LAN adapter number to use. This is the lana number of the LAN adapter that the SMB server should bind to. If unspecified or set to -1, a LAN adapter with named 'AFS' or a loopback adapter will be selected. If neither are present, then all available adapters will be bound to. When binding to a non-loopback adapter, the NetBIOS name hostname%-AFS' will be used (where %hostname% is the NetBIOS name of the host truncated to 11 characters). Otherwise, the NetBIOS name will be 'AFS'.</para>
+          <para>[This parameter is ignored unless SMB mode is active.]</para>
         </section>
         <section>
-          <title id="Regkey_TransarcAFSDaemon_Parameters_CacheSize">
-            <anchor id="Value_CacheSize" />Value: CacheSize</title>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_CacheSize">Value: CacheSize</title>
           <indexterm significance="normal">
             <primary>CacheSize</primary>
           </indexterm>
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_CacheSize">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD</para>
           <para>Default: 98304 (CM_CONFIGDEFAULT_CACHESIZE)</para>
           <para>Variable: cm_initParams.cacheSize</para>
-          <para>Size of the AFS cache in 1k blocks.</para>
+          <para>Size of the AFS data cache specified in 1k blocks.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_ChunkSize">Value: ChunkSize</title>
@@ -2848,7 +3376,19 @@
           <para>Type: DWORD</para>
           <para>Default: 20 (CM_CONFIGDEFAULT_CHUNKSIZE)</para>
           <para>Variable: cm_logChunkSize (cm_chunkSize = 1 &lt;&lt; cm_logChunkSize)</para>
-          <para>Size of chunk for reading and writing. Actual chunk size is 2^cm_logChunkSize. The default chunk size is therefore 1 MB.</para>
+          <para>Maximum size of chunk for reading and writing. Actual chunk size is
+            2^cm_logChunkSize. The default chunk size is therefore 1 MB.</para>
+        </section>
+        <section>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_BlockSize">Value: BlockSize</title>
+          <indexterm>
+            <primary>BlockSize</primary>
+          </indexterm>
+          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD</para>
+          <para>Default: 4096 (CM_CONFIGDEFAULT_BLOCKSIZE)</para>
+          <para>Size of buffer allocation.  Must be an even multiple of 1024 and (2^cm_logChuckSize
+            mod BlockSize) must equal zero.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_Daemons">Value: Daemons</title>
@@ -2856,9 +3396,10 @@
             <emphasis>Value: Daemons</emphasis>
           </para>
           <para>Type: DWORD</para>
-          <para>Default: 4 (CM_CONFIGDEFAULT_DAEMONS)</para>
+          <para>Default: 16 (CM_CONFIGDEFAULT_DAEMONS)</para>
           <para>Variable: numBkgD</para>
-          <para>Number of background daemons (number of threads of cm_BkgDaemon). (see cm_BkgDaemon in cm_daemon.c)</para>
+          <para>Number of background daemon threads used to fetch data from and store data to the
+            file servers.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_ServerThreads">Value: ServerThreads</title>
@@ -2869,19 +3410,20 @@
           <para>Type: DWORD</para>
           <para>Default: 25 (CM_CONFIGDEFAULT_SVTHREADS)</para>
           <para>Variable: numSvThreads</para>
-          <para>Number of SMB server threads (number of threads of smb_Server). (see smb_Server in smb.c).</para>
+          <para>Number of SMB server or AFS Redirector worker threads used to process application
+            file system requests..</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_Stats">Value: Stats</title>
           <indexterm significance="normal">
             <primary>Stats</primary>
           </indexterm>
-          <anchor id="Value_Stats" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_Stats">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD</para>
           <para>Default: 10000 (CM_CONFIGDEFAULT_STATS)</para>
           <para>Variable: cm_initParams.nStatCaches</para>
-          <para>Cache configuration.</para>
+          <para>The number of file system status objects.  One status object is required for each
+            directory entry (file, directory, mount point, symlink).</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_Volumes">Value: Volumes</title>
@@ -2895,9 +3437,8 @@ Default:  3333 (CM_CONFIGDEFAULT_STATS/3)
           </para>
           <para>
 Variable: cm_initParams.nVolumes</para>
-          <para>
-            <emphasis>Cache configuration.</emphasis>
-          </para>
+          <para> The number of volume group objects.  One volume group object is required for each
+            set of volume, volume.readonly and volume.backup. </para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_Cells">Value: Cells</title>
@@ -2911,22 +3452,22 @@ Default: 1024 (CM_CONFIGDEFAULT_CELLS)
           </para>
           <para>
 Variable: cm_initParams.nCells</para>
-          <para>
-            <emphasis>Cache configuration.</emphasis>
-          </para>
+          <para> The number of cell objects.  One cell object is required for each cell accessed by
+            the AFS cache manager.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_LogoffPreserveTokens">Value: LogoffPreserveTokens</title>
           <indexterm significance="normal">
             <primary>LogoffPreserveTokens</primary>
           </indexterm>
-          <anchor id="Value_LogoffPreserveTokens" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_LogoffPreserveTokens">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {1,0}
                   </para>
           <para>
 Default : 0</para>
-          <para>If enabled (set to 1), the Logoff Event handler will not attempt to delete the user's tokens if the user's profile is stored outside of AFS.</para>
+          <para>If enabled (set to 1), the Logoff Event handler will not attempt to delete the
+            user's tokens if the user's profile is stored outside of AFS.  This option only applies
+            when the AFS SMB gateway interface is in use.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_RootVolume">Value: RootVolume</title>
@@ -2954,8 +3495,7 @@ Variable: cm_rootVolumeName</para>
           <indexterm significance="normal">
             <primary>/afs</primary>
           </indexterm>
-          <anchor id="Value_Mountroot" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_Mountroot">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: REG_SZ
                   </para>
           <para>
@@ -2973,13 +3513,10 @@ Variable: cm_mountRoot</para>
           <indexterm significance="normal">
             <primary>AFSCache</primary>
           </indexterm>
-          <anchor id="Value_CachePath" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
-          <para>Type: REG_SZ or REG_EXPAND_SZ
-                  </para>
-          <para>
-Default: "%TEMP%\AFSCache"
-                  </para>
+          <para id="Value_CachePath">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: Use REG_SZ if the path contains no expansion variables or REG_EXPAND_SZ if it
+            does.</para>
+          <para> Default: "%TEMP%\AFSCache"  (REG_EXPAND_SZ)</para>
           <para>
 Variable: cm_CachePath</para>
           <para>Location of on-disk cache file. The default is the SYSTEM account's TEMP directory. The attributes assigned to the file are HIDDEN and SYSTEM.</para>
@@ -2989,8 +3526,7 @@ Variable: cm_CachePath</para>
           <indexterm significance="normal">
             <primary>NonPersistentCaching</primary>
           </indexterm>
-          <anchor id="Value_NonPersistentCaching" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_NonPersistentCaching">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD [0..1]
                   </para>
           <para>
@@ -3048,8 +3584,7 @@ Variable: traceOnPanic</para>
           <indexterm significance="normal">
             <primary>\\AFS</primary>
           </indexterm>
-          <anchor id="Value_NetbiosName" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_NetbiosName">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: REG_EXPAND_SZ
                   </para>
           <para>
@@ -3057,7 +3592,10 @@ Default: "AFS"
                   </para>
           <para>
 Variable: cm_NetbiosName</para>
-          <para>Specifies the NetBIOS name (or SMB Server Name) to be used when binding to a Loopback adapter. To provide the old behavior specify a value of "%COMPUTERNAME%-AFS".</para>
+          <para>Specifies the NetBIOS name (or SMB Server Name) to be used when binding to a
+            Loopback adapter. To provide the old behavior specify a value of "%COMPUTERNAME%-AFS".
+            When the AFS Redirector interface is in use, this value specifies the UNC server name
+            registered with the Windows Multiple UNC Provider.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_IsGateway">Value: IsGateway</title>
@@ -3074,6 +3612,7 @@ Default: 0
 Variable: isGateway</para>
           <para>Select whether or not this AFS client should act as a gateway. If set and the NetBIOS name hostname-AFS is bound to a physical NIC, other machines in the subnet can access AFS via SMB connections to hostname-AFS.</para>
           <para>When IsGateway is non-zero, the LAN adapter detection code will avoid binding to a loopback adapter. This will ensure that the NetBIOS name will be of the form hostname-AFS instead of the value set by the "NetbiosName" registry value.</para>
+          <para>This setting only applies when the AFS SMB interface is in use.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_ReportSessionStartups">Value: ReportSessionStartups</title>
@@ -3095,8 +3634,7 @@ Variable: reportSessionStartups</para>
           <indexterm significance="normal">
             <primary>TraceBufferSize</primary>
           </indexterm>
-          <anchor id="Value_TraceBufferSize" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_TraceBufferSize">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD
                   </para>
           <para>
@@ -3111,8 +3649,7 @@ Variable: traceBufSize</para>
           <indexterm significance="normal">
             <primary>SysName</primary>
           </indexterm>
-          <anchor id="Value_SysName" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_SysName">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: REG_SZ
                   </para>
           <para>
@@ -3133,8 +3670,7 @@ Variable: cm_sysName</para>
           <indexterm significance="normal">
             <primary>fs setcrypt</primary>
           </indexterm>
-          <anchor id="Value_SecurityLevel" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_SecurityLevel">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {1,0}
                   </para>
           <para>
@@ -3155,8 +3691,7 @@ Variable: cryptall</para>
           <indexterm significance="normal">
             <primary>SRV DNS records</primary>
           </indexterm>
-          <anchor id="Value_UseDNS" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_UseDNS">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {1,0}
                   </para>
           <para>
@@ -3174,8 +3709,7 @@ Variable: cm_dnsEnabled</para>
           <indexterm significance="normal">
             <primary>dynroot</primary>
           </indexterm>
-          <anchor id="Value_FreelanceClient" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_FreelanceClient">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {1,0}
                   </para>
           <para>
@@ -3186,12 +3720,47 @@ Variable: cm_freelanceEnabled</para>
           <para>Enables freelance client.</para>
         </section>
         <section>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_FreelanceImportCellServDB">Value: FreelanceImportCellServDB</title>
+          <indexterm significance="normal">
+            <primary>FreelanceImportCellServDB</primary>
+          </indexterm>
+          <indexterm significance="normal">
+            <primary>dynroot</primary>
+          </indexterm>
+          <para id="Value_FreelanceImportCellServDB">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD {1,0}
+          </para>
+          <para>
+            Default: 0
+          </para>
+          <para>
+            Variable: cm_freelanceImportCellServDB</para>
+          <para>Creates Freelance Mount Points for each cell listed in the CellServDB during startup.</para>
+        </section>
+        <section>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_FreelanceDiscovery">Value: FreelanceDiscovery</title>
+          <indexterm significance="normal">
+            <primary>FreelanceDiscovery</primary>
+          </indexterm>
+          <indexterm significance="normal">
+            <primary>dynroot</primary>
+          </indexterm>
+          <para id="Value_FreelanceDiscovery">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD {1,0}
+          </para>
+          <para>
+            Default: 1
+          </para>
+          <para>
+            Variable: cm_freelanceDiscovery</para>
+          <para>Enables automatic discovery of cell mount points within the Freelance root.</para>
+        </section>
+        <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_HideDotFiles">Value: HideDotFiles</title>
           <indexterm significance="normal">
             <primary>HideDotFiles</primary>
           </indexterm>
-          <anchor id="Value_HideDotFiles" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_HideDotFiles">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {1,0}
                   </para>
           <para>
@@ -3239,8 +3808,7 @@ Variable: smb_maxVCPerServer</para>
           <indexterm significance="normal">
             <primary>workstation cell name</primary>
           </indexterm>
-          <anchor id="Value_Cell" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_Cell">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: REG_SZ
                   </para>
           <para>
@@ -3264,7 +3832,6 @@ Default: 1
           <para>
 Variable: rx_enable_peer_stats</para>
           <para>When set to 1, the Rx library collects peer statistics.</para>
-          <para></para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_RxEnableProcessStats">Value: RxEnableProcessStats</title>
@@ -3280,7 +3847,6 @@ Default: 1
           <para>
 Variable: rx_extra_process_stats</para>
           <para>When set to 1, the Rx library collects process statistics.</para>
-          <para></para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_RxExtraPackets">Value: RxExtraPackets</title>
@@ -3302,8 +3868,7 @@ Variable: rx_extraPackets</para>
           <indexterm significance="normal">
             <primary>RxMaxMTU</primary>
           </indexterm>
-          <anchor id="Value_RxMaxMTU" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_RxMaxMTU">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD
                   </para>
           <para>
@@ -3334,8 +3899,7 @@ Variable: rx_nojumbo</para>
           <indexterm significance="normal">
             <primary>ConnDeadTimeout</primary>
           </indexterm>
-          <anchor id="Value_ConnDeadTimeout" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_ConnDeadTimeout">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>
                      Type: DWORD
                   </para>
@@ -3377,18 +3941,30 @@ Variable: rx_nojumbo</para>
             <primary>IdleDeadTimeout</primary>
           </indexterm>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
-          <para>
-                     Type: DWORD
-                  </para>
-          <para>
-                        Default: 0 (seconds)
-                  </para>
-          <para>
-                        Variable: IdleDeadtimeout
-                  </para>
-          <para>The Idle Dead Time determines how long the cache manager will wait for an RPC to complete when the service is responding that it is busy.
-                        If the timeout occurs on a replicated object, the cache manager can choose to fail over to an alternate replica.
-                        This value is typically the same as the ConnDeadTimeout. </para>
+          <para>Type: DWORD </para>
+          <para>Default: 1200 (seconds) </para>
+          <para>Variable: IdleDeadtimeout </para>
+          <para>The Idle Dead Time determines how long the cache manager will wait for an RPC on a
+            non-replicated volume to complete when the service is responding only with keep alive
+            messages.  When there is no replica available there is no other file server to try.  An
+            idle dead timeout in this case is fatal.  This option is intended to protect a client
+            against a file server that never responds.  This value must be larger that the file
+            server hard dead timeout of 120 seconds.</para>
+        </section>
+        <section>
+          <title>Value: ReplicaIdleDeadTimeout</title>
+          <indexterm>
+            <primary>ReplicaIdleDeadTimeout</primary>
+          </indexterm>
+          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD</para>
+          <para>Default: 180 (seconds)</para>
+          <para>Variable: ReplicaIdleDeadtimeout</para>
+          <para>The Replica Idle Dead Time determines how long the cache manager will wait for an
+            RPC on a replicated volume to complete when the service is responding only with keep
+            alive messages.  When a volume is replicated the cache manager can choose to retry the
+            request against a file server hosting one of the replicas.  This value must be larger
+            that the file server hard dead timeout of 120 seconds.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_NATPingInterval">Value: NATPingInterval</title>
@@ -3421,8 +3997,7 @@ Variable: rx_nojumbo</para>
           <indexterm significance="normal">
             <primary>TraceOption</primary>
           </indexterm>
-          <anchor id="Value_TraceOption" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_TraceOption">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0-15}
                   </para>
           <para>
@@ -3451,8 +4026,7 @@ Default: 1</para>
           <indexterm significance="normal">
             <primary>NoFindLanaByName</primary>
           </indexterm>
-          <anchor id="Value_NoFindLanaByName" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_NoFindLanaByName">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0, 1}
                   </para>
           <para>
@@ -3467,17 +4041,18 @@ Default: 0</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {1..32} or {1..64} depending on the architecture
                   </para>
-          <para>
-Default: &lt;no default&gt;</para>
-          <para>If this value is specified, afsd_service.exe will restrict itself to executing on the specified number of CPUs if there are a greater number installed in the machine. </para>
+          <para> Default: 2</para>
+          <para>If this value is specified, afsd_service.exe will restrict itself to executing on
+            the specified number of CPUs if there are a greater number installed in the machine.
+            Performance profiling shows that overall system performance degrades when the
+            afsd_service.exe is permitted to execute on more than two cores.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_SmbAuthType">Value: SmbAuthType</title>
           <indexterm significance="normal">
             <primary>SMBAuthType</primary>
           </indexterm>
-          <anchor id="Value_smbAuthType" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_smbAuthType">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0..2}
                   </para>
           <para>
@@ -3495,16 +4070,15 @@ Default: 2</para>
 </member>
             </simplelist>
           </para>
-          <para>
-The default is Extended authentication</para>
+          <para> The default is Extended authentication  This value only applies when the SMB server
+            interface is in use.</para>
         </section>
         <section>
           <title id="Regkey_TransarcAFSDaemon_Parameters_MaxLogSize">Value: MaxLogSize</title>
           <indexterm significance="normal">
             <primary>MaxLogSize</primary>
           </indexterm>
-          <anchor id="Value_MaxLogSize" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_MaxLogSize">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0 .. MAXDWORD}
                   </para>
           <para>
@@ -3627,8 +4201,7 @@ Default: 7001</para>
           <indexterm significance="normal">
             <primary>EnableServerLocks</primary>
           </indexterm>
-          <anchor id="Value_EnableServerLocks" />
-          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para id="Value_EnableServerLocks">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0, 1, 2}
                   </para>
           <para>
@@ -3700,8 +4273,7 @@ Default: 0</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0, 1}
                   </para>
-          <para>
-Default: 0</para>
+          <para> Default: 1</para>
           <para>Determines whether or not the AFS Cache Manager will give up all callbacks prior to the service being suspended or shutdown.  Doing so will have significant performance benefits for the file servers.  However, file servers older than 1.4.6 can become unstable if the GiveUpAllCallBacks RPC is executed.</para>
           <para>0: do not perform GiveUpAllCallBacks RPCs</para>
           <para>1: perform GiveUpAllCallBacks RPCs </para>
@@ -3714,15 +4286,14 @@ Default: 0</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0, 1}
                   </para>
-          <para>
-Default: 0</para>
-          <para>
-                     Determines whether or not the AFS Cache Manager will will make use of the volume version information reported
-                     by the file server as part of the AFSVolSync data structure.  Use of volume version information can significantly
-                     reduce the number of FetchStatus RPCs issued on objects stored in read-only volumes.  This functionality is
-                     disabled by default because all OpenAFS file servers older than OpenAFS 1.4.10 failed to include valid volume
-                     version information as part of the BulkStatus and InlineBulkStatus RPCs.
-                  </para>
+          <para>Default: 0</para>
+          <para>Determines whether or not the AFS Cache Manager will will make use of the volume
+            version information reported by the file server as part of the AFSVolSync data
+            structure. Use of volume version information can significantly reduce the number of
+            FetchStatus RPCs issued on objects stored in read-only volumes. This functionality is
+            disabled by default because all OpenAFS file servers older than OpenAFS 1.4.10 failed to
+            include valid volume version information as part of the BulkStatus and InlineBulkStatus
+            RPCs. </para>
           <para>0: do not make use of volume version information</para>
           <para>1: make use of volume version information</para>
         </section>
@@ -3734,8 +4305,7 @@ Default: 0</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {0, 1}
                   </para>
-          <para>
-Default: 0</para>
+          <para>Default: 0</para>
           <para>Determines whether or not the AFS Cache Manager will give preference to .backup volumes when following mount points that originate in a .backup volume.</para>
           <para>0: do not prefer .backup volumes when the mount point originates in a .backup volume.</para>
           <para>1: prefer .backup volumes when the mount point originates in a .backup volume.</para>
@@ -3748,9 +4318,110 @@ Default: 0</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD {bytes}
                   </para>
-          <para>
-Default: 262144</para>
+          <para>Default: 262144</para>
           <para>Specifies the UDP socket receive and send buffer sizes..</para>
+        </section>
+        <section>
+          <title>Value: VerifyData</title>
+          <indexterm>
+            <primary>VerifyData</primary>
+          </indexterm>
+          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD {0, 1}</para>
+          <para>Default: 0</para>
+          <para>1: after every RXAFS_StoreData RPC immediately perform an RXAFS_FetchData RPC and
+            verify that the data was correctly stored on the file server.  If the data does not
+            match, retry the store operation until it does.</para>
+          <para>The "fs getverify" and "fs setverify {on, off}" commands can be used to query and
+            set this value at runtime.</para>
+        </section>
+        <section>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_ShortNames">Value: ShortNames</title>
+          <indexterm significance="normal">
+            <primary>ShortNames</primary>
+          </indexterm>
+          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD {0, 1}
+          </para>
+          <para> Default: 0 on Windows 7, Windows 8, Server 2008 R2 and Server 2012, 1
+            otherwise</para>
+          <para>Determines whether or not the AFS Cache Manager will generate 8.3 compatible shortnames for all objects stored in AFS.  Short names are disabled by default on Windows 8 and Server 2012.  All prior operating systems enable short names by default.</para>
+          <para>0: do not generate 8.3 compatible short names.</para>
+          <para>1: generate 8.3 compatible short names.</para>
+        </section>
+        <section>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_DirectIO">Value: DirectIO</title>
+          <indexterm significance="normal">
+            <primary>DirectIO</primary>
+          </indexterm>
+          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD {0, 1}
+          </para>
+          <para>
+            Default: 1</para>
+          <para>The AFS redirector as of 1.7.22 supports two I/O processing mechanisms. The new
+            implementation is referred to as Direct I/O.  Direct I/O provides two benefits over the
+            prior implementation.  First, it is faster.  Second, it provides support for
+            CreateFile(FILE_FLAG_NO_BUFFERING).  When a file is opened with the
+            FILE_FLAG_NO_BUFFERING flag set, the AFSCache is bypassed and all I/O operations on the
+            file are performed directly to and from the file server.</para>
+          <para>0: use the older I/O processing mechanism.</para>
+          <para>1: use the new Direct I/O processing mechanism.</para>
+        </section>
+        <section>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_VolumeInfoReadOnlyFlag">Value: VolumeInfoReadOnlyFlag</title>
+          <indexterm significance="normal">
+            <primary>VolumeInfoReadOnlyFlag</primary>
+          </indexterm>
+          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD {0, 1}
+          </para>
+          <para>
+            Default: 1</para>
+          <para>The Win32 GetVolumeInformation and GetVolumeInformationByHandle APIs permit
+            applications to query volume attributes such as Case Preserving, Case Insensitive
+            lookups, support for hard links, support for reparse points, support for Unicode and
+            whether or not the volume is read only.  The FILE_READ_ONLY_VOLUME flag when set permits
+            applications such as the Explorer Shell to disable the "Delete" and "Rename" options and
+            prevent copying files into the volume without issuing the request to the file system.
+            Unfortunately, the Windows 7 explorer shell has a bug when a drive letter is mapped to a
+            UNC path.  If the mapped path refers to a read only volume, then all volumes accessible
+            via the drive letter are also treated as read only.  This bug is fixed in Windows 8 and
+            Server 2012.  To improve application compatibility the setting of the
+            FILE_READ_ONLY_VOLUME flag is disabled by default on Windows 7 and below and enabled on
+            Windows 8 and above.</para>
+          <para>0: prevent setting the FILE_READ_ONLY_VOLUME flag. (default on Win7 and below).</para>
+          <para>1: permit setting the FILE_READ_ONLY_VOLUME flag. (default on Win8 and above)</para>
+        </section>
+        <section>
+          <title id="Regkey_TransarcAFSDaemon_Parameters_ReparsePointPolicy">Value: ReparsePointPolicy</title>
+          <indexterm significance="normal">
+            <primary>ReparsePointPolicy</primary>
+          </indexterm>
+          <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+          <para>Type: DWORD {0, 1}
+          </para>
+          <para>
+            Default: 0</para>
+          <para>Windows file systems use <ulink
+              url="http://msdn.microsoft.com/en-us/library/windows/desktop/aa365503%28v=vs.85%29.aspx"
+              >reparse points</ulink> to represent special file system objects such as NTFS
+            Junctions, Symbolic Links and AFS Mount Points.  Windows applications must be designed
+            to work with <ulink
+              url="http://msdn.microsoft.com/en-us/library/windows/desktop/aa365680%28v=vs.85%29.aspx"
+              >Symbolic Links</ulink> because <ulink
+              url="http://msdn.microsoft.com/en-us/library/windows/desktop/aa365682%28v=vs.85%29.aspx"
+              >several standard file system functions</ulink> behave differently when the provided
+            path specifies a reparse point.  Although there is not a significant impact for Symbolic
+            Links to Directories and Mount Points to volume root directories, Symbolic Links to
+            Files can result in applications misinterpreting the file size and attributes.</para>
+          <para>The ReparsePointPolicy value permits alternate behaviors for reparse point objects
+            on  a global basis.  In this version, there is only one policy option which permits
+            Symbolic Links to Files to be represented with the target file's size and attributes in
+            the output of FindFirstFile, GetFileAttributes, and GetFileAttributesEx
+            operations.</para>
+          <para>0: All Reparse Points are treated as reparse points.</para>
+          <para>1: Reparse Points to Files treated as the target File.</para>
         </section>
       </section>
       <section>
@@ -3769,8 +4440,8 @@ Default: 262144</para>
           </para>
         </section>
       </section>
-      <section>
-        <title id="Regkey_HKLM_SOFTWARE_OpenAFS_Client">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</title>
+      <section id="Regkey_HKLM_SOFTWARE_OpenAFS_Client">
+        <title>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</title>
         <section>
           <title id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDBDir">Value: CellServDBDir</title>
           <indexterm significance="normal">
@@ -3779,8 +4450,7 @@ Default: 262144</para>
           <indexterm significance="normal">
             <primary>CellServDBDir</primary>
           </indexterm>
-          <anchor id="Value_CellServDBDir" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_CellServDBDir">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_SZ
                   </para>
           <para>
@@ -3792,8 +4462,7 @@ Default: &lt;not defined&gt;</para>
           <indexterm significance="normal">
             <primary>VerifyServiceSignature</primary>
           </indexterm>
-          <anchor id="Value_VerifyServiceSignature" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_VerifyServiceSignature">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_DWORD
                   </para>
           <para>
@@ -3808,8 +4477,7 @@ Default: 0x1</para>
           <indexterm significance="normal">
             <primary>path ioctl debugging</primary>
           </indexterm>
-          <anchor id="Value_IoctlDebug" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_IoctlDebug">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_DWORD
                   </para>
           <para>
@@ -3824,8 +4492,7 @@ Default: 0x0</para>
           <indexterm significance="normal">
             <primary>MiniDumpType</primary>
           </indexterm>
-          <anchor id="Value_MiniDumpType" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_MiniDumpType">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_DWORD
                   </para>
           <para>
@@ -3887,8 +4554,7 @@ MiniDumpWithCodeSegs = 0x00002000
           <indexterm significance="normal">
             <primary>EnableSMBAsyncStore</primary>
           </indexterm>
-          <anchor id="Value_EnableSMBAsyncStore" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_EnableSMBAsyncStore">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_DWORD
                   </para>
           <para>
@@ -3900,8 +4566,7 @@ Default: 0x1</para>
           <indexterm significance="normal">
             <primary>SMBAsyncStoreSize</primary>
           </indexterm>
-          <anchor id="Value_SMBAsyncStoreSize" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_SMBAsyncStoreSize">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_DWORD
                   </para>
           <para>
@@ -3919,8 +4584,7 @@ Default: 32</para>
           <indexterm significance="normal">
             <primary>character sets</primary>
           </indexterm>
-          <anchor id="Value_StoreAnsiFilenames" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_StoreAnsiFilenames">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_DWORD
                   </para>
           <para>
@@ -3946,8 +4610,8 @@ Default: &lt;none&gt;</para>
           <para>These values used to be stored in afsdsbmt.ini</para>
         </section>
       </section>
-      <section>
-        <title id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB">Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB]</title>
+      <section id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB">
+        <title>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB]</title>
         <indexterm significance="normal">
           <primary>CellServDB</primary>
         </indexterm>
@@ -4032,8 +4696,8 @@ Default: &lt;none&gt;</para>
           <para>A text string that can be displayed to end users to describe the server.</para>
         </section>
       </section>
-      <section>
-        <title id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance">Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Freelance]</title>
+      <section id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance">
+        <title>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Freelance]</title>
         <indexterm significance="normal">
           <primary>Freelance</primary>
         </indexterm>
@@ -4053,8 +4717,8 @@ Default: &lt;none&gt;</para>
           <para>These values used to be stored in afs_freelance.ini</para>
         </section>
       </section>
-      <section>
-        <title id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance_Symlinks">Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks]</title>
+      <section id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance_Symlinks">
+        <title>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks]</title>
         <indexterm significance="normal">
           <primary>Freelance Symlinks</primary>
         </indexterm>
@@ -4136,9 +4800,8 @@ Default: &lt;none&gt;</para>
           <para>NOTE: Submounts should no longer be used with OpenAFS. Use the Windows Explorer to create drive mappings to AFS UNC paths instead of using the AFS Submount mechanism.</para>
         </section>
       </section>
-      <section>
-        <title id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences_VLDB">Regkey:
-[HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\VLDB]</title>
+      <section id="Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences_VLDB">
+        <title>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\VLDB]</title>
         <indexterm significance="normal">
           <primary>Server Preferences</primary>
         </indexterm>
@@ -4182,8 +4845,7 @@ Default: &lt;none&gt;</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
           <para>Type: DWORD
                   </para>
-          <para>
-Default: 0</para>
+          <para>Default: 0</para>
           <para>Do not display message boxes if the login fails.</para>
         </section>
       </section>
@@ -4198,9 +4860,16 @@ Default: 0</para>
           <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
           <para>Type: DWORD
                   </para>
-          <para>
-Default: 0</para>
+          <para>Default: 0</para>
           <para>Disables visible warnings during logon.</para>
+        </section>
+        <section>
+          <title id="Value_AFSLogon_Debug">Value: Debug</title>
+          <para>Regkey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
+          <para>Type: DWORD</para>
+          <para>Default: 0</para>
+          <para>Set to 1 to turn on "AFS Logon" event logging to the Windows Event Log.</para>
         </section>
         <section>
           <title id="NP_Regkey_TransarcAFSDaemon_NetworkProvider_AuthentProviderPath">Value: AuthentProviderPath</title>
@@ -4281,204 +4950,267 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
           <para>Specifies the DLL to use for the network provider</para>
         </section>
       </section>
-    </section>
-    <section>
-      <title id="Domain_Specific_Configuration">A.2.1 Domain specific configuration keys for the Network Provider</title>
-      <indexterm significance="normal">
-        <primary>domain logon configuration</primary>
-      </indexterm>
-      <para>The network provider can be configured to have different behavior depending on the domain that the user logs into. These settings are only relevant when using integrated login. A domain refers to an Active Directory (AD) domain, a trusted Kerberos (non-AD) realm or the local machine (i.e. local account logins). The domain name that is used for selecting the domain would be the domain that is passed into the NPLogonNotify function of the network provider.</para>
-      <para>Domain specific registry keys are:</para>
-      <section>
-        <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</title>
-        <para> (NP key)</para>
-      </section>
-      <section>
-        <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider_Domain">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</title>
-        <para> (Domains key)</para>
-      </section>
-      <section>
-        <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider_Domain_DomainName">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;Domain Name&gt;]</title>
-        <para> (Specific domain key. One per domain.)</para>
-      </section>
-      <section>
-        <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider_Domain_LocalHost">Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</title>
-        <para> (Localhost key)</para>
-      </section>
-      <section>
-        <title id="Domain_Example">Domain Specific Example:</title>
-        <para>HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider</para>
-        <para> |</para>
-        <para> +- Domain</para>
-        <para> +-AD1.EXAMPLE.COM</para>
-        <para> +-AD2.EXAMPLE.NET</para>
-        <para> +-LOCALHOST</para>
-        <para>Each of the domain specific keys can have the set of values described in 2.1.1. The effective values are chosen as described in 2.1.2.</para>
-      </section>
-      <section>
-        <title id="Domain_Specific_Configuration_Values">A.2.1.1 Domain Specific Configuration Values</title>
+      <section id="Domain_Specific_Configuration">
+        <title>A.2.1 Domain specific configuration keys for the Network Provider</title>
+        <indexterm significance="normal">
+          <primary>domain logon configuration</primary>
+        </indexterm>
+        <para>The network provider can be configured to have different behavior depending on the
+          domain that the user logs into. These settings are only relevant when using integrated
+          login. A domain refers to an Active Directory (AD) domain, a trusted Kerberos (non-AD)
+          realm or the local machine (i.e. local account logins). The domain name that is used for
+          selecting the domain would be the domain that is passed into the NPLogonNotify function of
+          the network provider.</para>
+        <para>Domain specific registry keys are:</para>
         <section>
-          <title id="Domain_Specific_Regkeys">Regkeys: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
-[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]
-[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\"domain name"]
-[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</title>
-          <section>
-            <title id="Domain_Specific_Regkeys_LogonOptions">Value: LogonOptions</title>
-            <indexterm significance="normal">
-              <primary>LogonOptions</primary>
-            </indexterm>
-            <anchor id="Value_LogonOptions" />
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: DWORD
-                  </para>
-            <para>
-Default: 0x01</para>
-            <para>NSIS/WiX: depends on user configuration</para>
-            <para>
-              <simplelist type="vert">
-                <member>0x00 - Integrated Logon is not used
-</member>
-                <member>
-0x01 - Integrated Logon is used
-</member>
-                <member>
-0x02 - High Security Mode is used (deprecated)
-</member>
-                <member>
-0x03 - Integrated Logon with High Security Mode is used (deprecated)
-</member>
-              </simplelist>
-            </para>
-            <para>High Security Mode generates random SMB names for the creation of Drive Mappings. This mode should not be used without Integrated Logon.</para>
-            <para>As of 1.3.65 the SMB server supports SMB authentication. The High Security Mode should not be used when using SMB authentication (SMBAuthType setting is non zero).</para>
+          <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider">Regkey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</title>
+          <para> (NP key)</para>
+        </section>
+        <section>
+          <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider_Domain">Regkey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</title>
+          <para> (Domains key)</para>
+        </section>
+        <section>
+          <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider_Domain_DomainName">Regkey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;Domain
+            Name&gt;]</title>
+          <para> (Specific domain key. One per domain.)</para>
+        </section>
+        <section>
+          <title id="Domain_Regkey_TransarcAFSDaemon_NetworkProvider_Domain_LocalHost">Regkey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</title>
+          <para> (Localhost key)</para>
+        </section>
+        <section>
+          <title id="Domain_Example">Domain Specific Example:</title>
+          <para>HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider</para>
+          <para> |</para>
+          <para> +- Domain</para>
+          <para>      +-AD1.EXAMPLE.COM</para>
+          <para>      +-AD1</para>
+          <para>      +-AD2.EXAMPLE.NET</para>
+          <para>      +-AD2</para>
+          <para>      +-LOCALHOST</para>
+          <para>           +-Administrator</para>
+          <para>           +-Other User</para>
+          <para>Each of the domain specific keys can have the set of values described in 2.1.1. The
+            effective values are chosen as described in 2.1.2.</para>
+        </section>
+        <section>
+          <title id="Domain_Specific_Configuration_Values">A.2.1.1 Domain Specific Configuration
+            Values</title>
+          <section id="Domain_Specific_Regkeys">
+            <title>Regkeys:
+              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
+              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]
+              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\"domain
+              name"]
+              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\"domain
+              name"]["user name"]
+              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]
+              [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\"user name"]
+            </title>
+            <section>
+              <title id="Domain_Specific_Regkeys_LogonOptions">Value: LogonOptions</title>
+              <indexterm significance="normal">
+                <primary>LogonOptions</primary>
+              </indexterm>
+              <para id="Value_LogonOptions">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
+              <para>Type: DWORD </para>
+              <para> Default: 0x01</para>
+              <para>NSIS/WiX: depends on user configuration</para>
+              <para>
+                <simplelist type="vert">
+                  <member>0x00 - Integrated Logon is not used </member>
+                  <member> 0x01 - Integrated Logon is used </member>
+                </simplelist>
+              </para>
+            </section>
+            <section>
+              <title id="Domain_Specific_Regkeys_FailLoginsSilently">Value:
+                FailLoginsSilently</title>
+              <indexterm significance="normal">
+                <primary>FailLoginsSilently</primary>
+              </indexterm>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
+              <para>Type: DWORD (1|0) </para>
+              <para> Default: 0 </para>
+              <para> NSIS/WiX: (not set)</para>
+              <para>If true, does not display any visible warnings in the event of an error during
+                the integrated login process.</para>
+            </section>
+            <section>
+              <title id="Domain_Specific_Regkeys_LogonScript">Value: LogonScript</title>
+              <indexterm significance="normal">
+                <primary>LogonScript</primary>
+              </indexterm>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
+              <para>Type: REG_SZ or REG_EXPAND_SZ </para>
+              <para> Default: (null) </para>
+              <para> NSIS/WiX: (only value under NP key) &lt;install path&gt;\afscreds.exe -:%s -x
+                -a -m -n -q</para>
+              <para>A logon script that will be scheduled to be run after the profile load is
+                complete. If using the REG_EXPAND_SZ type, you can use any system environment
+                variable as "%varname%" which would be expanded at the time the network provider is
+                run. Optionally using a "%s" in the value would result in it being expanded into the
+                AFS SMB username for the session.</para>
+            </section>
+            <section>
+              <title id="Domain_Specific_Regkeys_LoginRetryInterval">Value:
+                LoginRetryInterval</title>
+              <indexterm significance="normal">
+                <primary>LoginRetryInterval</primary>
+              </indexterm>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
+              <para>Type: DWORD </para>
+              <para> Default: 30 </para>
+              <para> NSIS/WiX: (not set)</para>
+              <para>If the OpenAFS client service has not started yet, the network provider will
+                wait for a maximum of "LoginRetryInterval" seconds while retrying every
+                "LoginSleepInterval" seconds to check if the service is up.</para>
+            </section>
+            <section>
+              <title id="Domain_Specific_Regkeys_LoginSleepInterval">Value:
+                LoginSleepInterval</title>
+              <indexterm significance="normal">
+                <primary>LoginSleepInterval</primary>
+              </indexterm>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
+              <para>Type: DWORD </para>
+              <para> Default: 5 </para>
+              <para> NSIS/WiX: (not set)</para>
+              <para>See description of LoginRetryInterval.</para>
+            </section>
+            <section>
+              <title id="Domain_Specific_Regkeys_Realm">Value: Realm</title>
+              <indexterm significance="normal">
+                <primary>Realm</primary>
+              </indexterm>
+              <para id="Value_Realm">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
+              <para>Type: REG_SZ </para>
+              <para> NSIS: &lt;not set&gt;</para>
+              <para>When Kerberos v5 is being used, Realm specifies the Kerberos v5 realm that
+                should be appended to the first component of the Domain logon username to construct
+                the Kerberos v5 principal for which AFS tokens should be obtained.</para>
+            </section>
+            <section>
+              <title id="Domain_Specific_Regkeys_TheseCells">Value: TheseCells</title>
+              <indexterm significance="normal">
+                <primary>TheseCells</primary>
+              </indexterm>
+              <para id="Value_TheseCells">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
+              <para>Type: REG_MULTI_SZ </para>
+              <para> NSIS: &lt;not set&gt;</para>
+              <para>When Kerberos v5 is being used, TheseCells provides a list of additional cells
+                for which tokens should be obtained with the default Kerberos v5 principal.</para>
+            </section>
+            <section>
+              <title id="Domain_User_Specific_Regkeys_Username">Value: Username</title>
+              <indexterm significance="normal">
+                <primary>Username</primary>
+              </indexterm>
+              <para id="Value_Username">[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain
+                name&gt;\&lt;user name&gt;]</para>
+              <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST\&lt;user name&gt;]</para>
+              <para>Type: REG_SZ </para>
+              <para> NSIS: &lt;not set&gt;</para>
+              <para>Username specifies an alternate username to be combined with the Realm when constructing
+                the Kerberos v5 principal for which AFS tokens should be obtained.</para>
+            </section>
           </section>
+        </section>
+        <section>
+          <title id="Selection_Effective_Values_for_Domain_Specific_Configuration">A.2.1.2 Selection
+            of effective values for domain specific configuration</title>
+          <para>During login to domain X, where X is the domain passed into NPLogonNotify as
+            lpAuthentInfo-&gt;LogonDomainName or the string 'LOCALHOST' if
+            lpAuthentInfo-&gt;LogonDomainName equals the name of the computer, the following keys
+            will be looked up.</para>
+          <para>1. NP key.
+            ("HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider")</para>
+          <para>2. Domains key. (NP key\"Domain")</para>
+          <para>3. Specific domain key. (Domains key\X)</para>
+          <para>If the specific domain key does not exist, then the domains key will be ignored. All
+            the configuration information in this case will come from the NP key.</para>
+          <para>If the specific domain key exists, then for each of the values metioned in (2), they
+            will be looked up in the specific domain key, domains key and the NP key successively
+            until the value is found. The first instance of the value found this way will be the
+            effective for the login session. If no such instance can be found, the default will be
+            used. To re-iterate, a value in a more specific key supercedes a value in a less
+            specific key. The exceptions to this rule are stated below.</para>
+        </section>
+        <section>
+          <title id="Domain_Specific_Configuration_Exceptions">A.2.1.3 Exceptions to A.2.1.2</title>
+          <para>To retain backwards compatibility, the following exceptions are made to
+            A.2.1.2.</para>
           <section>
-            <title id="Domain_Specific_Regkeys_FailLoginsSilently">Value: FailLoginsSilently</title>
+            <title id="Domain_Specific_Configuration_Exception_FailLoginsSilently">2.1.3.1
+              'FailLoginsSilently'</title>
             <indexterm significance="normal">
               <primary>FailLoginsSilently</primary>
             </indexterm>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: DWORD (1|0)
-                  </para>
-            <para>
-Default: 0
-                  </para>
-            <para>
-NSIS/WiX: (not set)</para>
-            <para>If true, does not display any visible warnings in the event of an error during the integrated login process.</para>
+            <para>Historically, the 'FailLoginsSilently' value was in
+              HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters key and not in the
+              NP key. Therefore, for backwards compatibility, the value in the Parameters key will
+              supercede all instances of this value in other keys. In the absence of this value in
+              the Parameters key, normal scope rules apply.</para>
           </section>
           <section>
-            <title id="Domain_Specific_Regkeys_LogonScript">Value: LogonScript</title>
+            <title id="Domain_Specific_Configuration_Exception_LogonScript">2.1.3.2
+              'LogonScript'</title>
             <indexterm significance="normal">
               <primary>LogonScript</primary>
             </indexterm>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: REG_SZ or REG_EXPAND_SZ
-                  </para>
-            <para>
-Default: (null)
-                  </para>
-            <para>
-NSIS/WiX: (only value under NP key) &lt;install path&gt;\afscreds.exe -:%s -x -a -m -n -q</para>
-            <para>A logon script that will be scheduled to be run after the profile load is complete. If using the REG_EXPAND_SZ type, you can use any system environment variable as "%varname%" which would be expanded at the time the network provider is run. Optionally using a "%s" in the value would result in it being expanded into the AFS SMB username for the session.</para>
+            <para>If a 'LogonScript' is not specified in the specific domain key nor in the domains
+              key, the value in the NP key will only be checked if the effective 'LogonOptions'
+              specify a high security integrated login. If a logon script is specified in the
+              specific domain key or the domains key, it will be used regardless of the high
+              security setting. Please be aware of this when setting this value.</para>
           </section>
-          <section>
-            <title id="Domain_Specific_Regkeys_LoginRetryInterval">Value: LoginRetryInterval</title>
-            <indexterm significance="normal">
-              <primary>LoginRetryInterval</primary>
-            </indexterm>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: DWORD
-                  </para>
-            <para>
-Default: 30
-                  </para>
-            <para>
-NSIS/WiX: (not set)</para>
-            <para>If the OpenAFS client service has not started yet, the network provider will wait for a maximum of "LoginRetryInterval" seconds while retrying every "LoginSleepInterval" seconds to check if the service is up.</para>
-          </section>
-          <section>
-            <title id="Domain_Specific_Regkeys_LoginSleepInterval">Value: LoginSleepInterval</title>
-            <indexterm significance="normal">
-              <primary>LoginSleepInterval</primary>
-            </indexterm>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: DWORD
-                  </para>
-            <para>
-Default: 5
-                  </para>
-            <para>
-NSIS/WiX: (not set)</para>
-            <para>See description of LoginRetryInterval.</para>
-          </section>
-          <section>
-            <title id="Domain_Specific_Regkeys_Realm">Value: Realm</title>
-            <indexterm significance="normal">
-              <primary>Realm</primary>
-            </indexterm>
-            <anchor id="Value_Realm" />
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: REG_SZ
-                  </para>
-            <para>
-NSIS: &lt;not set&gt;</para>
-            <para>When Kerberos v5 is being used, Realm specifies the Kerberos v5 realm that should be appended to the first component of the Domain logon username to construct the Kerberos v5 principal for which AFS tokens should be obtained.</para>
-          </section>
-          <section>
-            <title id="Domain_Specific_Regkeys_TheseCells">Value: TheseCells</title>
-            <indexterm significance="normal">
-              <primary>TheseCells</primary>
-            </indexterm>
-            <anchor id="Value_TheseCells" />
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
-            <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
-            <para>Type: REG_MULTI_SZ
-                  </para>
-            <para>
-NSIS: &lt;not set&gt;</para>
-            <para>When Kerberos v5 is being used, TheseCells provides a list of additional cells for which tokens should be obtained with the default Kerberos v5 principal.</para>
-          </section>
-        </section>
-      </section>
-      <section>
-        <title id="Selection_Effective_Values_for_Domain_Specific_Configuration">A.2.1.2 Selection of effective values for domain specific configuration</title>
-        <para>During login to domain X, where X is the domain passed into NPLogonNotify as lpAuthentInfo-&gt;LogonDomainName or the string 'LOCALHOST' if lpAuthentInfo-&gt;LogonDomainName equals the name of the computer, the following keys will be looked up.</para>
-        <para>1. NP key. ("HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider")</para>
-        <para>2. Domains key. (NP key\"Domain")</para>
-        <para>3. Specific domain key. (Domains key\X)</para>
-        <para>If the specific domain key does not exist, then the domains key will be ignored. All the configuration information in this case will come from the NP key.</para>
-        <para>If the specific domain key exists, then for each of the values metioned in (2), they will be looked up in the specific domain key, domains key and the NP key successively until the value is found. The first instance of the value found this way will be the effective for the login session. If no such instance can be found, the default will be used. To re-iterate, a value in a more specific key supercedes a value in a less specific key. The exceptions to this rule are stated below.</para>
-      </section>
-      <section>
-        <title id="Domain_Specific_Configuration_Exceptions">A.2.1.3 Exceptions to A.2.1.2</title>
-        <para>To retain backwards compatibility, the following exceptions are made to A.2.1.2.</para>
-        <section>
-          <title id="Domain_Specific_Configuration_Exception_FailLoginsSilently">2.1.3.1 'FailLoginsSilently'</title>
-          <indexterm significance="normal">
-            <primary>FailLoginsSilently</primary>
-          </indexterm>
-          <para>Historically, the 'FailLoginsSilently' value was in HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters key and not in the NP key. Therefore, for backwards compatibility, the value in the Parameters key will supercede all instances of this value in other keys. In the absence of this value in the Parameters key, normal scope rules apply.</para>
-        </section>
-        <section>
-          <title id="Domain_Specific_Configuration_Exception_LogonScript">2.1.3.2 'LogonScript'</title>
-          <indexterm significance="normal">
-            <primary>LogonScript</primary>
-          </indexterm>
-          <para>If a 'LogonScript' is not specified in the specific domain key nor in the domains key, the value in the NP key will only be checked if the effective 'LogonOptions' specify a high security integrated login. If a logon script is specified in the specific domain key or the domains key, it will be used regardless of the high security setting. Please be aware of this when setting this value.</para>
         </section>
       </section>
     </section>
@@ -4552,8 +5284,7 @@ Function: InitApp(), Main_OnCheckTerminate()</para>
           <indexterm significance="normal">
             <primary>EnableKFW</primary>
           </indexterm>
-          <anchor id="Value_EnableKFW" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_EnableKFW">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: DWORD {0, 1}
                   </para>
@@ -4585,8 +5316,7 @@ Function: KFW_accept_dotted_usernames()</para>
           <indexterm significance="normal">
             <primary>Use524</primary>
           </indexterm>
-          <anchor id="Value_Use524" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_Use524">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: DWORD {0, 1}
                   </para>
@@ -4602,8 +5332,7 @@ Function: KFW_use_krb524()</para>
           <indexterm significance="normal">
             <primary>AfscredsShortcutParams</primary>
           </indexterm>
-          <anchor id="Value_AfscredsShortcutParams" />
-          <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+          <para id="Value_AfscredsShortcutParams">Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
           <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</para>
           <para>Type: REG_SZ
                   </para>
@@ -4701,8 +5430,7 @@ Default: &lt;none&gt;</para>
           <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client\Mappings]</para>
           <para>Type: REG_SZ
                   </para>
-          <para>
-Default: &lt;none&gt;</para>
+          <para>Default: &lt;none&gt;</para>
           <para>These values are used to store the AFS path in UNIX notation to which the drive letter is to be mapped.</para>
           <para>These values used to be stored in the afsdsbmt.ini file.</para>
         </section>
@@ -4737,6 +5465,106 @@ Default: RPC encryption is on
         <para>
 Default: local RPC
                 </para>
+      </section>
+    </section>
+    <section>
+      <title>A.5 AFS Redirector Parameters</title>
+      <indexterm>
+        <primary>afsredir.sys</primary>
+      </indexterm>
+      <indexterm>
+        <primary>afsredirlib.sys</primary>
+      </indexterm>
+      <para>The AFS Redirector is implemented with three components:
+        %windir%\system32\drivers\AFSRedir.sys, %windir%\system32\drivers\AFSRedirLib.sys and
+        %windir%\system32\AFSRDFSProvider.dll.  These components provide the interface between the
+        Windows Installable File System interface and the WNet application interface and the AFS
+        file system.  The </para>
+      <section>
+        <title>[HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\Parameters]</title>
+        <para/>
+        <section>
+          <title>Value: DebugFlags</title>
+          <para>RegKey: [HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\Parameters]</para>
+          <para>Type: REG_DWORD</para>
+          <para>Default: 0</para>
+          <para>Bit 0 (0x1): Trigger Debug Break on AFSRedir.sys start.  Used for kernel
+            debugging.</para>
+          <para>Bit 1 (0x2): Output trace logging to Kernel Debugger.  Used for kernel
+            debugging.</para>
+          <para>Bit 2 (0x4): Enable Force Crash Ioctl.  Checked builds only.  Used for force a
+            BSOD.</para>
+          <para>Bit 3 (0x8): Enable Bug Check on all exceptions.  Normally exceptions are caught by
+            handlers.  Used during testing.</para>
+          <para>Bit 4 (0x10): Reserved.</para>
+          <para>Bit 5 (0x20): Do not start the AFS Redirector if Windows did not perform a clean
+            shutdown.</para>
+        </section>
+        <section>
+          <title>Value: TraceBufferSize</title>
+          <para>RegKey: [HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\Parameters]</para>
+          <para>Type: REG_DWORD</para>
+          <para>Default: 0 {0 .. 10000} (KBs)</para>
+          <para>Specifies the size of the circular trace log buffer allocated within kernel memory.
+            0 disables trace logging.</para>
+        </section>
+        <section>
+          <title>Value: TraceLevel</title>
+          <para>RegKey: [HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\Parameters]</para>
+          <para>Type: REG_DWORD</para>
+          <para>Default: 0 {0..4}</para>
+          <para>0: No logging; 1: Error; 2: Warning; 3: Verbose; 4: Maximum Verbosity</para>
+        </section>
+        <section>
+          <title>Value: TraceSubsystem</title>
+          <para>RegKey: [HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\Parameters]</para>
+          <para>Type: REG_DWORD</para>
+          <para>Default: 0</para>
+          <para>Bit 0 (0x1): I/O Subsystem</para>
+          <para>Bit 1 (0x2): File Control Blocks and Name Processing</para>
+          <para>Bit 2 (0x4): Lock Processing (requires Verbose or higher level)</para>
+          <para>Bit 3 (0x8): Extent Processing</para>
+          <para>Bit 4 (0x10): Worker Thread Processing</para>
+          <para>Bit 5 (0x20): Reference counting of directory entries</para>
+          <para>Bit 6 (0x40): Reference counting of objects</para>
+          <para>Bit 7 (0x80): Reference counting of volumes</para>
+          <para>Bit 8 (0x100): Reference counting of file control blocks</para>
+          <para>Bit 9 (0x200): Garbage Collection</para>
+          <para>Bit 10 (0x400): Pipe and share processing</para>
+          <para>Bit 11 (0x800): Directory notification interface</para>
+          <para>Bit 12 (0x1000): Network Provider support processing</para>
+          <para>Bit 13 (0x2000): Directory node count processing</para>
+          <para>Bit 14 (0x4000): PIOCTL processing</para>
+          <para>Bit 15 (0x8000): Authentication Group creation and assignment</para>
+          <para>Bit 16 (0x10000): Library load and unload, task queuing</para>
+          <para>Bit 17 (0x20000): Process creation and destruction</para>
+          <para>Bit 18 (0x40000): Extent Active counting</para>
+          <para>Bit 19 (0x80000): Redirector initialization</para>
+          <para>Bit 20 (0x100000): Name Array processing</para>
+        </section>
+      </section>
+      <section>
+        <title>[HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider]</title>
+        <para/>
+        <section>
+          <title>Value: Debug</title>
+          <para>RegKey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider]</para>
+          <para>Type: REG_DWORD</para>
+          <para>Default: 0</para>
+          <para>Set to 1 to log all AFSRDFSProvider Network Provider requests to
+            C:\TEMP\AFSRDFSProvider.log.  The C:\TEMP directory cannot be changed and must
+            exist.</para>
+        </section>
+        <section>
+          <title>Value: Name</title>
+          <para>RegKey:
+            [HKLM\SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider]</para>
+          <para>Type: REG_SZ</para>
+          <para>Default: "OpenAFS Network"</para>
+          <para>This value defines the name displayed in the Explorer Shell and to which network
+            drive mappings are made.</para>
+        </section>
       </section>
     </section>
   </chapter>

@@ -81,7 +81,8 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
 L<bos(8)>.
@@ -96,14 +97,14 @@ ignored.
 =head1 EXAMPLES
 
 The following command stops all processes other than the BOS Server on the
-machine C<fs3.abc.com>.
+machine C<fs3.example.com>.
 
-   % bos shutdown fs3.abc.com
+   % bos shutdown fs3.example.com
 
 The following command stops the C<upserver> process (server portion of the
-Update Server) on the machine C<fs5.abc.com>.
+Update Server) on the machine C<fs5.example.com>.
 
-   % bos shutdown -server fs5.abc.com -instance upserver
+   % bos shutdown -server fs5.example.com -instance upserver
 
 =head1 PRIVILEGE REQUIRED
 
@@ -116,6 +117,7 @@ included.
 
 L<BosConfig(5)>,
 L<KeyFile(5)>,
+L<KeyFileExt(5)>,
 L<UserList(5)>,
 L<bos(8)>,
 L<bos_create(8)>,

@@ -20,6 +20,9 @@
 #include "afs/afs_consts.h"
 #endif
 
+/* jhash.h is a standalone header and is fine to pull into kernel code. */
+#include <opr/jhash.h>
+
 /*
  * afs_fsfragsize cannot be less than 1023, or some cache-tracking
  * calculations will be incorrect (since we track cache usage in kb).
@@ -63,7 +66,7 @@ extern enum afs_shutdown_state afs_shuttingdown;
 #if     defined(AFS_HPUX102_ENV)
 #define AFS_FLOCK       k_flock
 #else
-#if     defined(AFS_SUN56_ENV) || (defined(AFS_LINUX24_ENV) && !(defined(AFS_LINUX26_ENV) && defined(AFS_LINUX_64BIT_KERNEL)))
+#if     defined(AFS_SUN5_ENV) || (defined(AFS_LINUX24_ENV) && !(defined(AFS_LINUX26_ENV) && defined(AFS_LINUX_64BIT_KERNEL)))
 #define AFS_FLOCK       flock64
 #else
 #define AFS_FLOCK       flock
@@ -86,13 +89,14 @@ extern enum afs_shutdown_state afs_shuttingdown;
 #define	NSERVERS	16	/* hash table size for server table */
 #define	NVOLS		64	/* hash table size for volume table */
 #define	NFENTRIES	256	/* hash table size for disk volume table */
-#define	VCSIZE	       1024	/* stat cache hash table size */
-#define	DCSIZE		512	/* disk cache hash table size */
+#define VCSIZEBITS	16	/* log of stat cache hash table size */
+#define	VCSIZE		(opr_jhash_size(VCSIZEBITS))
 #define CBRSIZE		512	/* call back returns hash table size */
 #define	PIGGYSIZE	1350	/* max piggyback size */
 #define	MAXVOLS		128	/* max vols we can store */
 #define	MAXSYSNAME	128	/* max sysname (i.e. @sys) size */
 #define MAXNUMSYSNAMES	32	/* max that current constants allow */
+#define MAXROOTVOLNAMELEN	64	/* max length of root volume name */
 #define	NOTOKTIMEOUT	(2*3600)	/* time after which to timeout conns sans tokens */
 #define	NOPAG		0xffffffff
 
@@ -143,6 +147,7 @@ struct sysname_info {
 #ifdef AFS_DARWIN_ENV
 #define	BOP_MOVE	5	 /* ptr1 afs_uspc_param ptr2 sname ptr3 dname */
 #endif
+#define BOP_PARTIAL_STORE 6     /* parm1 is chunk to store */
 
 #define	B_DONTWAIT	1	/* On failure return; don't wait */
 
@@ -278,7 +283,7 @@ struct afs_cbr {
  */
 # define AFS_NCBRS	PAGE_SIZE/sizeof(struct afs_cbr)
 #else
-# define AFS_NCBRS	300	/* max # of call back return entries */
+# define AFS_NCBRS	1024	/* max # of call back return entries */
 #endif
 
 /* cellinfo file magic number */
@@ -357,36 +362,74 @@ extern char afs_cachebasedir[1024];
 extern afs_int32 afs_numcachefiles;
 extern afs_int32 afs_numfilesperdir;
 
+struct rxkadToken {
+    afs_int32 ticketLen;
+    char * ticket;
+    struct ClearToken clearToken;
+};
+
+union tokenUnion {
+    struct rxkadToken rxkad;
+};
+
+struct tokenJar {
+    struct tokenJar *next;
+    int type;
+    union tokenUnion content;
+};
+
 struct unixuser {
     struct unixuser *next;	/* next hash pointer */
     afs_int32 uid;		/* search based on uid and cell */
     afs_int32 cell;
-    afs_int32 vid;		/* corresponding vice id in specified cell */
+    afs_int32 viceId;		/* Optional viced ID corresponding to current tokens */
     short refCount;		/* reference count for allocation */
     char states;		/* flag info */
     afs_int32 tokenTime;	/* last time tokens were set, used for timing out conn data */
-    afs_int32 stLen;		/* ticket length (if kerberos, includes kvno at head) */
-    char *stp;			/* pointer to ticket itself */
-    struct ClearToken ct;
+    struct tokenJar *tokens;
     struct afs_exporter *exporter;	/* more info about the exporter for the remote user */
     void *cellinfo;             /* pointer to cell info (PAG manager only) */
+    afs_rwlock_t lock;
 };
 
+#define CVEC_LEN 3 /* per-user connection pool */
+
+struct sa_conn_vector;
+typedef struct sa_conn_vector * p_sa_conn_vector; /* forward decl */
 
 #define CONN_REPLICATED 0x1
 
 struct afs_conn {
-    /* Per-connection block. */
-    struct afs_conn *next;		/* Next dude same server. */
+    int refCount;
+    int activated;
+    char forceConnectFS; /* Should we try again with these tokens? */
+    struct rx_connection *id; /* RPC connid */
+    struct sa_conn_vector *parent; /* the con_vector which contains us */
+};
+
+/* An sa_conn_vector replaces the erstwhile list of conn
+   structures maintained by the cache manager.  The sa_conn_vector
+   contains a C array of connections which, if non-zero, represent
+   connections to AFS servers.
+*/
+
+struct sa_conn_vector {
+    /* linked-list machinery */
+    struct sa_conn_vector *next;
+
+    /* AFS conn-identifying info */
     struct unixuser *user;	/* user validated with respect to. */
-    struct rx_connection *id;	/* RPC connid. */
     struct srvAddr *srvr;	/* server associated with this conn */
     short refCount;		/* reference count for allocation */
     unsigned short port;	/* port associated with this connection */
-    char forceConnectFS;	/* Should we try again with these tokens? */
     int flags;
-};
 
+    /* next connection to return when all in cvec are fully utilized */
+    int select_index; 
+    
+    /* connections vector */
+    struct afs_conn cvec[CVEC_LEN];
+};
 
 #define SQNULL -1
 
@@ -406,11 +449,12 @@ struct afs_conn {
 #define	SRVADDR_MH	1
 #define	SRVADDR_ISDOWN	0x20	/* same as SRVR_ISDOWN */
 #define  SRVADDR_NOUSE    0x40	/* Don't use this srvAddr */
+
 struct srvAddr {
     struct srvAddr *next_bkt;	/* next item in hash bucket */
     struct srvAddr *next_sa;	/* another interface on same host */
     struct server *server;	/* back to parent */
-    struct afs_conn *conns;	/* All user connections to this server */
+    struct sa_conn_vector *conns;   /* All user connections to this server */
     struct afs_conn *natping;
     afs_int32 sa_ip;		/* Host addr in network byte order */
     u_short sa_iprank;		/* indiv ip address priority */
@@ -438,8 +482,8 @@ struct srvAddr {
 #define SRV_CAPABILITIES(ts) \
 { if ( !(ts->flags & SCAPS_KNOWN)) afs_GetCapabilities(ts); ts->capabilities; }
 
-#define afs_serverSetNo64Bit(s) ((s)->srvr->server->flags |= SNO_64BIT)
-#define afs_serverHasNo64Bit(s) ((s)->srvr->server->flags & SNO_64BIT)
+#define afs_serverSetNo64Bit(s) (((struct sa_conn_vector*)(s)->parent)->srvr->server->flags |= SNO_64BIT)
+#define afs_serverHasNo64Bit(s) (((struct sa_conn_vector*)(s)->parent)->srvr->server->flags & SNO_64BIT)
 
 struct server {
     union {
@@ -538,7 +582,8 @@ struct chservinfo {
 #define VRecheck		2	/* recheck volume info with server */
 #define VBackup			4	/* is this a backup volume? */
 #define VForeign		8	/* this is a non-afs volume */
-#define VHardMount		16	/* we are hard-mount waiting for the vol */
+#define VPartVisible		16	/* Volume's partition is visible on the client */
+#define VHardMount		32	/* we are hard-mount waiting for the vol */
 
 enum repstate { not_busy, end_not_busy = 6, rd_busy, rdwr_busy, offline };
 
@@ -558,7 +603,7 @@ struct volume {
     afs_int32 roVol;
     afs_int32 backVol;
     afs_int32 rwVol;		/* For r/o vols, original read/write volume. */
-    afs_int32 accessTime;	/* last time we used it */
+    afs_int32 setupTime;	/* time volume was setup from vldb info */
     afs_int32 vtix;		/* volume table index */
     afs_int32 copyDate;		/* copyDate field, for tracking vol releases */
     afs_int32 expireTime;	/* for per-volume callbacks... */
@@ -623,11 +668,13 @@ struct SimpleLocks {
 #endif
 #define CCreating	0x00400000	/* avoid needless store after open truncate */
 #define CPageHog	0x00800000	/* AIX - dumping large cores is a page hog. */
+#define CCorrupt	0x01000000	/* corrupt dir already reported */
 #define CDCLock		0x02000000	/* Vnode lock held over call to GetDownD */
 #define CBulkFetching	0x04000000	/* stats are being fetched by bulk stat */
 #define CExtendedFile	0x08000000	/* extended file via ftruncate call. */
 #define CVInit          0x10000000      /* being initialized */
 #define CMetaDirty	0x20000000	/* vnode meta-data needs to be flushed */
+#define CPartVisible	0x40000000	/* fileserver partition visible on client */
 
 /* vcache vstate bits */
 #define VRevokeWait   0x1
@@ -690,9 +737,9 @@ struct SimpleLocks {
 #else
 #define VREFCOUNT(v)		((v)->vrefCount)
 #define VREFCOUNT_GT(v,y)     ((v)->vrefCount > (y))
-#define VREFCOUNT_SET(v, c)	(v)->vrefCount = c;
-#define VREFCOUNT_DEC(v)	(v)->vrefCount--;
-#define VREFCOUNT_INC(v)	(v)->vrefCount++;
+#define VREFCOUNT_SET(v, c)	(v)->vrefCount = c
+#define VREFCOUNT_DEC(v)	(v)->vrefCount--
+#define VREFCOUNT_INC(v)	(v)->vrefCount++
 #define d_unhash(d) list_empty(&(d)->d_hash)
 #define dget_locked(d) dget(d)
 #endif
@@ -708,6 +755,13 @@ extern afs_int32 vmPageHog;	/* counter for # of vnodes which are page hogs. */
 
 #if defined(AFS_DARWIN80_ENV)
 #define VTOAFS(v) ((struct vcache *)vnode_fsnode((v)))
+#define AFSTOV(vc) ((vc)->v)
+#elif defined(AFS_NBSD40_ENV)
+struct nbvdata {
+    struct genfs_node gfsn;
+    struct vcache *afsvc;
+};
+#define VTOAFS(v) ((((struct nbvdata *)((v)->v_data)))->afsvc)
 #define AFSTOV(vc) ((vc)->v)
 #elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
@@ -757,6 +811,11 @@ struct fvcache {
     /*! The old parent FID for renamed vnodes */
     struct afs_vnuniq oldParent;
 };
+
+/* Values for 'mvstat' in struct vcache */
+#define AFS_MVSTAT_FILE (0x0) /* regular file or directory */
+#define AFS_MVSTAT_MTPT (0x1) /* mountpoint */
+#define AFS_MVSTAT_ROOT (0x2) /* volume root dir */
 
 #ifdef AFS_SUN5_ENV
 /*
@@ -808,9 +867,6 @@ struct vcache {
     krwlock_t rwlock;
     struct cred *credp;
 #endif
-#ifdef AFS_BOZONLOCK_ENV
-    afs_bozoLock_t pvnLock;	/* see locks.x */
-#endif
 #ifdef	AFS_AIX32_ENV
     afs_lock_t pvmlock;
     vmhandle_t vmh;
@@ -830,12 +886,20 @@ struct vcache {
     struct lock__bsd__ rwlock;
 #endif
 #ifdef AFS_XBSD_ENV
-#if !defined(AFS_DFBSD_ENV)
+#if !defined(AFS_DFBSD_ENV) && !defined(AFS_NBSD_ENV)
     struct lock rwlock;
 #endif
 #endif
 
-    struct VenusFid *mvid;	/* Either parent dir (if root) or root (if mt pt) */
+    union {
+	char *silly_name;        /* For sillyrenamed regular files, the silly
+	                          * name the file was renamed to. */
+	struct VenusFid *target_root; /* For mountpoints, the fid of the root dir
+	                               * in the target volume. */
+	struct VenusFid *parent; /* For root dir vcaches, the fid of the
+	                          * parent dir. */
+    } mvid;
+
     char *linkData;		/* Link data if a symlink. */
     afs_hyper_t flushDV;	/* data version last flushed from text */
     afs_hyper_t mapDV;		/* data version last flushed from map */
@@ -852,7 +916,7 @@ struct vcache {
     short execsOrWriters;	/* The number of execs (if < 0) or writers (if > 0) of
 				 * this file. */
     short flockCount;		/* count of flock readers, or -1 if writer */
-    char mvstat;		/* 0->normal, 1->mt pt, 2->root. */
+    char mvstat;		/* see the AFS_MVSTAT_* constants */
 
     char cachingStates;			/* Caching policies for this file */
     afs_uint32 cachingTransitions;		/* # of times file has flopped between caching and not */
@@ -900,6 +964,10 @@ struct vcache {
     int asynchrony;		/* num kbytes to store behind */
 #ifdef AFS_SUN5_ENV
     struct afs_q multiPage;	/* list of multiPage_range structs */
+#endif
+    int protocol;		/* RX_FILESERVER, RX_OSD, ... defined in afsint.xg */
+#if !defined(UKERNEL)
+    void *vpacRock;		/* used to read or write in visible partitions */
 #endif
     afs_uint32 lastBRLWarnTime; /* last time we warned about byte-range locks */
 #ifdef AFS_LINUX26_ENV
@@ -1108,7 +1176,7 @@ struct afs_fheader {
 
 #if defined(AFS_CACHE_VNODE_PATH)
 typedef char *afs_ufs_dcache_id_t;
-#elif defined(AFS_SGI61_ENV) || defined(AFS_SUN57_64BIT_ENV)
+#elif defined(AFS_SGI61_ENV) || defined(AFS_SUN5_64BIT_ENV)
 /* Using ino64_t here so that user level debugging programs compile
  * the size correctly.
  */
@@ -1276,21 +1344,6 @@ struct afs_FetchOutput {
 
 #define afs_InReadDir(avc) (((avc)->f.states & CReadDir) && (avc)->readdir_pid == MyPidxx2Pid(MyPidxx))
 
-/* The PFlush algorithm makes use of the fact that Fid.Unique is not used in
-  below hash algorithms.  Change it if need be so that flushing algorithm
-  doesn't move things from one hash chain to another
-*/
-/* extern int afs_dhashsize; */
-#define	DCHash(v, c)	((((v)->Fid.Vnode + (v)->Fid.Volume + (c))) & (afs_dhashsize-1))
-	/*Vnode, Chunk -> Hash table index */
-#define	DVHash(v)	((((v)->Fid.Vnode + (v)->Fid.Volume )) & (afs_dhashsize-1))
-	/*Vnode -> Other hash table index */
-/* don't hash on the cell, our callback-breaking code sometimes fails to compute
-    the cell correctly, and only scans one hash bucket */
-#define	VCHash(fid)	(((fid)->Fid.Volume + (fid)->Fid.Vnode) & (VCSIZE-1))
-/* Hash only on volume to speed up volume callbacks. */
-#define VCHashV(fid) ((fid)->Fid.Volume & (VCSIZE-1))
-
 extern struct dcache **afs_indexTable;	/*Pointers to in-memory dcache entries */
 extern afs_int32 *afs_indexUnique;	/*dcache entry Fid.Unique */
 extern afs_int32 *afs_dvnextTbl;	/*Dcache hash table links */
@@ -1345,25 +1398,30 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #define AFS_VOLCHECK_MTPTS	0x4	/* mount point invalidation also */
 #define AFS_VOLCHECK_FORCE	0x8	/* do all forcibly */
 
+/* For volume ttl expiry checks. */
+#define AFS_MIN_VOLUME_TTL 600
+#define AFS_MAX_VOLUME_TTL MAX_AFS_INT32
+
 #endif /* KERNEL */
 
 #define	AFS_FSPORT	    ((unsigned short) htons(7000))
 #define	AFS_VLPORT	    ((unsigned short) htons(7003))
-
-#define	afs_read(avc, uio, acred, albn, abpp, nolock) \
-        (*(afs_cacheType->vread))(avc, uio, acred, albn, abpp, nolock)
-#define	afs_write(avc, uio, aio, acred, nolock) \
-        (*(afs_cacheType->vwrite))(avc, uio, aio, acred, nolock)
+#define AFS_RXOSDPORT	    ((unsigned short) htons(7011))
 
 #define	afs_rdwr(avc, uio, rw, io, cred) \
-    (((rw) == UIO_WRITE) ? afs_write(avc, uio, io, cred, 0) : afs_read(avc, uio, cred, 0, 0, 0))
+    (((rw) == UIO_WRITE) ? afs_write(avc, uio, io, cred, 0) : afs_read(avc, uio, cred, 0))
 #define	afs_nlrdwr(avc, uio, rw, io, cred) \
-    (((rw) == UIO_WRITE) ? afs_write(avc, uio, io, cred, 1) : afs_read(avc, uio, cred, 0, 0, 1))
+    (((rw) == UIO_WRITE) ? afs_write(avc, uio, io, cred, 1) : afs_read(avc, uio, cred, 1))
 
 /* Cache size truncation uses the following low and high water marks:
- * If the cache is more than 95% full (CM_DCACHECOUNTFREEPCT), the cache
- * truncation daemon is awakened and will free up space until the cache is 85%
- * (CM_DCACHESPACEFREEPCT - CM_DCACHEEXTRAPCT) full.
+ * If the cache is more than 90% full by space (CM_DCACHESPACEFREEPCT) or
+ * 95% full by # of chunks (CM_DCACHECOUNTFREEPCT), the cache truncation
+ * daemon is awakened and will start freeing space. The cache truncation
+ * daemon will continue to free space until the cache is at most 85% full
+ * by space (CM_DCACHESPACEFREEPCT - CM_DCACHEEXTRAPCT). The cache truncation
+ * daemon will also try to free space until the cache is at most 90% full by
+ * chunks (CM_DCACHECOUNTFREEPCT - CM_DCACHEEXTRAPCT), but the 85% space limit
+ * is the only limit that we must hit.
  * afs_UFSWrite and afs_GetDCache (when it needs to fetch data) will wait on
  * afs_WaitForCacheDrain if the cache is 98% (CM_WAITFORDRAINPCT) full.
  * afs_GetDownD wakes those processes once the cache is 95% full
@@ -1522,7 +1580,6 @@ afs_set_cr_rgid(afs_ucred_t *cred, gid_t gid) {
  * to accomodate both, *long* is used instead of afs_int32
  */
 
-# ifdef AFS_SUN57_ENV
 struct afssysa {
     long syscall;
     long parm1;
@@ -1532,18 +1589,39 @@ struct afssysa {
     long parm5;
     long parm6;
 };
-# else
-struct afssysa {
-    afs_int32 syscall;
-    afs_int32 parm1;
-    afs_int32 parm2;
-    afs_int32 parm3;
-    afs_int32 parm4;
-    afs_int32 parm5;
-    afs_int32 parm6;
-};
-# endif
 extern int Afs_syscall(struct afssysa *uap, rval_t *rvp);
 #endif /* AFS_SUN5_ENV */
+
+/*
+ * Various definitions for osi_sleep and its event hash table
+ * DFBSD and SUNOS have no osi_sleep, and HPUX has its own hack for this stuff
+ */
+#define AFS_EVHASHSIZE	128	/* size of afs_evhasht, must be power of 2 */
+
+typedef struct afs_event {
+    struct afs_event *next;	/* next in hash chain */
+    char *event;		/* lwp event: an address */
+    int refcount;		/* Is it in use? */
+    int seq;			/* Sequence number: this is incremented
+				 * by wakeup calls; wait will not return until
+				 * it changes */
+#if defined(AFS_AIX_ENV)
+    tid_t cond;
+#elif defined(AFS_DARWIN_ENV)
+# ifdef AFS_DARWIN80_ENV
+    lck_mtx_t *lck;
+    thread_t owner;
+# endif
+    /* no cond member */
+#elif defined(AFS_FBSD_ENV) || defined(AFS_OBSD_ENV)
+    int cond;			/* "all this gluck should probably be replaced by CVs" */
+#elif defined(AFS_LINUX24_ENV)
+    wait_queue_head_t cond;
+#elif defined(AFS_NBSD_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+    kcondvar_t cond;		/* Currently associated condition variable */
+#endif
+} afs_event_t;
+
+extern afs_event_t *afs_evhasht[AFS_EVHASHSIZE];	/* Hash table for events */
 
 #endif /* _AFS_H_ */

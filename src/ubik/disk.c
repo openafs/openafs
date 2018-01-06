@@ -10,23 +10,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+#include <afs/opr.h>
 
-#include <sys/types.h>
-#include <string.h>
-#include <stdarg.h>
-#include <errno.h>
-
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
+#ifdef AFS_PTHREAD_ENV
+# include <opr/lock.h>
 #else
-#include <sys/file.h>
-#include <netinet/in.h>
+# include <opr/lockstub.h>
 #endif
-
-#include <lock.h>
-#include <rx/xdr.h>
-
-
 
 #define UBIK_INTERNALS
 #include "ubik.h"
@@ -56,7 +47,6 @@ static int calls = 0, ios = 0, lastb = 0;
 static char *BufferData;
 static struct buffer *newslot(struct ubik_dbase *adbase, afs_int32 afid,
 			      afs_int32 apage);
-static int initd = 0;
 #define	BADFID	    0xffffffff
 
 static int DTrunc(struct ubik_trans *atrans, afs_int32 fid, afs_int32 length);
@@ -246,15 +236,14 @@ udisk_LogWriteData(struct ubik_dbase *adbase, afs_int32 afile, void *abuffer,
     return 0;
 }
 
-static int
-DInit(int abuffers)
+int
+udisk_Init(int abuffers)
 {
     /* Initialize the venus buffer system. */
     int i;
     struct buffer *tb;
-    Buffers = (struct buffer *)malloc(abuffers * sizeof(struct buffer));
-    memset(Buffers, 0, abuffers * sizeof(struct buffer));
-    BufferData = (char *)malloc(abuffers * UBIK_PAGESIZE);
+    Buffers = calloc(abuffers, sizeof(struct buffer));
+    BufferData = malloc(abuffers * UBIK_PAGESIZE);
     nbuffers = abuffers;
     for (i = 0; i < PHSIZE; i++)
 	phTable[i] = 0;
@@ -345,14 +334,16 @@ static char *
 DRead(struct ubik_trans *atrans, afs_int32 fid, int page)
 {
     /* Read a page from the disk. */
-    struct buffer *tb, *lastbuffer;
+    struct buffer *tb, *lastbuffer, *found_tb = NULL;
     afs_int32 code;
     struct ubik_dbase *dbase = atrans->dbase;
 
     calls++;
     lastbuffer = LruBuffer->lru_prev;
 
-    if (MatchBuffer(lastbuffer, page, fid, atrans)) {
+    /* Skip for write transactions for a clean page - this may not be the right page to use */
+    if (MatchBuffer(lastbuffer, page, fid, atrans)
+		&& (atrans->type == UBIK_READTRANS || lastbuffer->dirty)) {
 	tb = lastbuffer;
 	tb->lockers++;
 	lastb++;
@@ -360,11 +351,21 @@ DRead(struct ubik_trans *atrans, afs_int32 fid, int page)
     }
     for (tb = phTable[pHash(page)]; tb; tb = tb->hashNext) {
 	if (MatchBuffer(tb, page, fid, atrans)) {
-	    Dmru(tb);
-	    tb->lockers++;
-	    return tb->data;
+	    if (tb->dirty || atrans->type == UBIK_READTRANS) {
+		found_tb = tb;
+		break;
+	    }
+	    /* Remember this clean page - we might use it */
+	    found_tb = tb;
 	}
     }
+    /* For a write transaction, use a matching clean page if no dirty one was found */
+    if (found_tb) {
+	Dmru(found_tb);
+	found_tb->lockers++;
+	return found_tb->data;
+    }
+
     /* can't find it */
     tb = newslot(dbase, fid, page);
     if (!tb)
@@ -423,8 +424,7 @@ GetTrunc(void)
 {
     struct ubik_trunc *tt;
     if (!freeTruncList) {
-	freeTruncList =
-	    (struct ubik_trunc *)malloc(sizeof(struct ubik_trunc));
+	freeTruncList = malloc(sizeof(struct ubik_trunc));
 	freeTruncList->next = (struct ubik_trunc *)0;
     }
     tt = freeTruncList;
@@ -833,12 +833,7 @@ udisk_begin(struct ubik_dbase *adbase, int atype, struct ubik_trans **atrans)
     afs_int32 code;
     struct ubik_trans *tt;
 
-    *atrans = (struct ubik_trans *)NULL;
-    /* Make sure system is initialized before doing anything */
-    if (!initd) {
-	initd = 1;
-	DInit(ubik_nBuffers);
-    }
+    *atrans = NULL;
     if (atype == UBIK_WRITETRANS) {
 	if (adbase->flags & DBWRITING)
 	    return USYNC;
@@ -846,16 +841,18 @@ udisk_begin(struct ubik_dbase *adbase, int atype, struct ubik_trans **atrans)
 	if (code)
 	    return code;
     }
-    tt = (struct ubik_trans *)malloc(sizeof(struct ubik_trans));
-    memset(tt, 0, sizeof(struct ubik_trans));
+    tt = calloc(1, sizeof(struct ubik_trans));
     tt->dbase = adbase;
     tt->next = adbase->activeTrans;
     adbase->activeTrans = tt;
     tt->type = atype;
     if (atype == UBIK_READTRANS)
 	adbase->readers++;
-    else if (atype == UBIK_WRITETRANS)
+    else if (atype == UBIK_WRITETRANS) {
+	UBIK_VERSION_LOCK;
 	adbase->flags |= DBWRITING;
+	UBIK_VERSION_UNLOCK;
+    }
     *atrans = tt;
     return 0;
 }
@@ -878,15 +875,21 @@ udisk_commit(struct ubik_trans *atrans)
 
 	/* On the first write to the database. We update the versions */
 	if (ubeacon_AmSyncSite() && !(urecovery_state & UBIK_RECLABELDB)) {
+	    UBIK_VERSION_LOCK;
 	    oldversion = dbase->version;
-	    newversion.epoch = FT_ApproxTime();;
+	    newversion.epoch = version_globals.ubik_epochTime;
 	    newversion.counter = 1;
 
 	    code = (*dbase->setlabel) (dbase, 0, &newversion);
-	    if (code)
-		return (code);
-	    ubik_epochTime = newversion.epoch;
+	    if (code) {
+		UBIK_VERSION_UNLOCK;
+		return code;
+	    }
+
 	    dbase->version = newversion;
+	    UBIK_VERSION_UNLOCK;
+
+	    urecovery_state |= UBIK_RECLABELDB;
 
 	    /* Ignore the error here. If the call fails, the site is
 	     * marked down and when we detect it is up again, we will
@@ -894,20 +897,22 @@ udisk_commit(struct ubik_trans *atrans)
 	     */
 	    ContactQuorum_DISK_SetVersion( atrans, 1 /*CStampVersion */ ,
 					   &oldversion, &newversion);
-	    urecovery_state |= UBIK_RECLABELDB;
 	}
 
+	UBIK_VERSION_LOCK;
 	dbase->version.counter++;	/* bump commit count */
 #ifdef AFS_PTHREAD_ENV
-	CV_BROADCAST(&dbase->version_cond);
+	opr_cv_broadcast(&dbase->version_cond);
 #else
 	LWP_NoYieldSignal(&dbase->version);
 #endif
 	code = udisk_LogEnd(dbase, &dbase->version);
 	if (code) {
 	    dbase->version.counter--;
-	    return (code);
+	    UBIK_VERSION_UNLOCK;
+	    return code;
 	}
+	UBIK_VERSION_UNLOCK;
 
 	/* If we fail anytime after this, then panic and let the
 	 * recovery replay the log.
@@ -987,19 +992,6 @@ udisk_end(struct ubik_trans *atrans)
 {
     struct ubik_dbase *dbase;
 
-#if defined(UBIK_PAUSE)
-    /* Another thread is trying to lock this transaction.
-     * That can only be an RPC doing SDISK_Lock.
-     * Unlock the transaction, 'cause otherwise the other
-     * thread will never wake up.  Don't free it because
-     * the caller will do that already.
-     */
-    if (atrans->flags & TRSETLOCK) {
-	atrans->flags |= TRSTALE;
-	ulock_relLock(atrans);
-	return UINTERNAL;
-    }
-#endif /* UBIK_PAUSE */
     if (!(atrans->flags & TRDONE))
 	udisk_abort(atrans);
     dbase = atrans->dbase;
@@ -1011,7 +1003,9 @@ udisk_end(struct ubik_trans *atrans)
      * we could be unsetting someone else's bit.
      */
     if (atrans->type == UBIK_WRITETRANS && dbase->flags & DBWRITING) {
+	UBIK_VERSION_LOCK;
 	dbase->flags &= ~DBWRITING;
+	UBIK_VERSION_UNLOCK;
     } else {
 	dbase->readers--;
     }
@@ -1023,7 +1017,7 @@ udisk_end(struct ubik_trans *atrans)
 
     /* Wakeup any writers waiting in BeginTrans() */
 #ifdef AFS_PTHREAD_ENV
-    CV_BROADCAST(&dbase->flags_cond);
+    opr_cv_broadcast(&dbase->flags_cond);
 #else
     LWP_NoYieldSignal(&dbase->flags);
 #endif

@@ -2,4 +2,6 @@
 #     git ls-files -i --exclude-standard
 # to check that you haven't inadvertently ignored any tracked files.
 
+/exec-alt-t
 /ktime-t
+/queues-t

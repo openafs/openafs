@@ -34,74 +34,34 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#include <stdio.h>
-#include <setjmp.h>
-#include <sys/types.h>
-#include <string.h>
-#include <ctype.h>
+#include <roken.h>
 
 #ifdef AFS_NT40_ENV
 #include <windows.h>
-#include <winsock2.h>
 #define _CRT_RAND_S
-#include <stdlib.h>
-#include <process.h>
-#include <fcntl.h>
-#include <io.h>
 #include <afs/smb_iocons.h>
 #include <afs/afsd.h>
 #include <afs/cm_ioctl.h>
 #include <afs/pioctl_nt.h>
 #include <WINNT/syscfg.h>
 #else
-#include <sys/param.h>
-#include <sys/file.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <string.h>
-#include <fcntl.h>
-#include <pwd.h>
-#include <afs/venus.h>
-#include <sys/time.h>
-#include <netdb.h>
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG 1
 #endif
-#include <sys/stat.h>
-#include <errno.h>
-#include <signal.h>
-#include <afs/vice.h>
+
+#include <afs/opr.h>
 #include <afs/cmd.h>
 #include <afs/auth.h>
 #include <afs/vlserver.h>
 #include <afs/ihandle.h>
 #include <afs/com_err.h>
 #include <afs/afscp.h>
-#ifdef HAVE_DIRENT_H
-#include <dirent.h>
-#endif
+
 #ifdef HAVE_DIRECT_H
 #include <direct.h>
 #endif
-#include <afs/errors.h>
-#include <afs/sys_prototypes.h>
-#include <des_prototypes.h>
-#include <rx/rx_prototypes.h>
-#include "../rxkad/md5.h"
-#ifdef O_LARGEFILE
-#define afs_stat        stat64
-#define afs_fstat       fstat64
-#define afs_open        open64
-#else /* !O_LARGEFILE */
-#define afs_stat        stat
-#define afs_fstat       fstat
-#define afs_open        open
-#endif /* !O_LARGEFILE */
+#include <hcrypto/md5.h>
 #ifdef AFS_PTHREAD_ENV
-#include <assert.h>
 pthread_key_t uclient_key;
 #endif
 
@@ -119,6 +79,8 @@ static int BreakUpPath(char *, char **, char **);
 
 static char pnp[AFSPATHMAX];	/* filename of this program when called */
 static int verbose = 0;		/* Set if -verbose option given */
+static int clear = 0;		/* Set if -clear option given,
+				   Unset if -crypt given; default is -crypt */
 static int cellGiven = 0;	/* Set if -cell option given */
 static int force = 0;		/* Set if -force option given */
 static int readlock = 0;	/* Set if -readlock option given */
@@ -278,6 +240,10 @@ CmdProlog(struct cmd_syndesc *as, char **cellp, char **realmp,
 	if (pdp->items != NULL) {
 	    if (strcmp(pdp->name, "-verbose") == 0)
 	        verbose = 1;
+	    if (strcmp(pdp->name, "-clear") == 0)
+	        clear = 1;
+	    if (strcmp(pdp->name, "-crypt") == 0)
+	        clear = 0;
             else if (strcmp(pdp->name, "-md5") == 0)
 		md5sum = 1;	/* global */
             else if (strcmp(pdp->name, "-cell") == 0) {
@@ -329,74 +295,84 @@ main(int argc, char **argv)
     free(baseName);
 
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_key_create(&uclient_key, NULL) == 0);
+    opr_Verify(pthread_key_create(&uclient_key, NULL) == 0);
 #endif
 
-    ts = cmd_CreateSyntax("lock", lockFile, (void *)LockWrite,
+    ts = cmd_CreateSyntax("lock", lockFile, (void *)LockWrite, 0,
 			  "lock a file in AFS");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
     cmd_AddParm(ts, "-readlock", CMD_FLAG, CMD_OPTIONAL, "read lock only");
 
-    ts = cmd_CreateSyntax("fidlock", lockFile, (void *)LockWrite,
+    ts = cmd_CreateSyntax("fidlock", lockFile, (void *)LockWrite, 0,
 			  "lock by FID a file from AFS");
-    cmd_IsAdministratorCommand(ts);
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
     cmd_AddParm(ts, "-readlock", CMD_FLAG, CMD_OPTIONAL, "read lock only");
 
-    ts = cmd_CreateSyntax("unlock", lockFile, (void *)LockRelease,
+    ts = cmd_CreateSyntax("unlock", lockFile, (void *)LockRelease, 0,
 			  "unlock a file in AFS");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
 
-    ts = cmd_CreateSyntax("fidunlock", lockFile, (void *)LockRelease,
+    ts = cmd_CreateSyntax("fidunlock", lockFile, (void *)LockRelease, 0,
 			  "unlock by FID a file from AFS");
-    cmd_IsAdministratorCommand(ts);
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
 
-    ts = cmd_CreateSyntax("read", readFile, NULL,
+    ts = cmd_CreateSyntax("read", readFile, NULL, 0,
 			  "read a file from AFS");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
-    ts = cmd_CreateSyntax("fidread", readFile, CMD_REQUIRED,
+    ts = cmd_CreateSyntax("fidread", readFile, CMD_REQUIRED, 0,
 			  "read on a non AFS-client a file from AFS");
-    cmd_IsAdministratorCommand(ts);
     cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
-    ts = cmd_CreateSyntax("write", writeFile, NULL,
+    ts = cmd_CreateSyntax("write", writeFile, NULL, 0,
 			  "write a file into AFS");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"overwrite existing file");
@@ -404,32 +380,36 @@ main(int argc, char **argv)
 		"create data pattern of specified length instead reading from stdin");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
-    ts = cmd_CreateSyntax("fidwrite", writeFile, CMD_REQUIRED,
+    ts = cmd_CreateSyntax("fidwrite", writeFile, CMD_REQUIRED, 0,
 			  "write a file into AFS");
-    cmd_IsAdministratorCommand(ts);
     cmd_AddParm(ts, "-vnode", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"overwrite existing file");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
-    ts = cmd_CreateSyntax("append", writeFile, NULL,
+    ts = cmd_CreateSyntax("append", writeFile, NULL, 0,
 			  "append to a file in AFS");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
-    ts = cmd_CreateSyntax("fidappend", writeFile, NULL,
+    ts = cmd_CreateSyntax("fidappend", writeFile, NULL, 0,
 			  "append to a file in AFS");
-    cmd_IsAdministratorCommand(ts);
     cmd_AddParm(ts, "-vnode", CMD_SINGLE, CMD_REQUIRED,
 		"volume.vnode.uniquifier");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
 
     if (afscp_Init(NULL) != 0)
@@ -501,13 +481,12 @@ GetVenusFidByFid(char *fidString, char *cellName, int onlyRW,
     struct afscp_volume *avolp;
 
     if (*avfpp == NULL) {
-	*avfpp = malloc(sizeof(struct afscp_venusfid));
+	*avfpp = calloc(1, sizeof(struct afscp_venusfid));
 	if ( *avfpp == NULL ) {
 	    code = ENOMEM;
 	    return code;
 	}
     }
-    memset(*avfpp, 0, sizeof(struct afscp_venusfid));
 
     if (cellName == NULL) {
 	(*avfpp)->cell = afscp_DefaultCell();
@@ -698,15 +677,17 @@ lockFile(struct cmd_syndesc *as, void *arock)
 
     CmdProlog(as, &cell, &realm, &fname, NULL);
     afscp_AnonymousAuth(1);
+    if (clear)
+	afscp_Insecure();
 
     if ((locktype == LockWrite) && readlock)
 	locktype = LockRead;
 
     if (realm != NULL)
-	code = afscp_SetDefaultRealm(realm);
+	afscp_SetDefaultRealm(realm);
 
     if (cell != NULL)
-	code = afscp_SetDefaultCell(cell);
+	afscp_SetDefaultCell(cell);
 
     if (useFid)
 	code = GetVenusFidByFid(fname, cell, 0, &avfp);
@@ -714,6 +695,7 @@ lockFile(struct cmd_syndesc *as, void *arock)
 	code = GetVenusFidByPath(fname, cell, &avfp);
     if (code != 0) {
 	afs_com_err(pnp, code, "(file not found: %s)", fname);
+	afscp_FreeFid(avfp);
 	return code;
     }
 
@@ -784,21 +766,24 @@ readFile(struct cmd_syndesc *as, void *unused)
 
     CmdProlog(as, &cell, &realm, &fname, NULL);
     afscp_AnonymousAuth(1);
+    if (clear)
+	afscp_Insecure();
 
     if (md5sum)
 	MD5_Init(&md5);
 
     if (realm != NULL)
-	code = afscp_SetDefaultRealm(realm);
+	afscp_SetDefaultRealm(realm);
 
     if (cell != NULL)
-	code = afscp_SetDefaultCell(cell);
+	afscp_SetDefaultCell(cell);
 
     if (useFid)
 	code = GetVenusFidByFid(fname, cell, 0, &avfp);
     else
 	code = GetVenusFidByPath(fname, cell, &avfp);
     if (code != 0) {
+	afscp_FreeFid(avfp);
 	afs_com_err(pnp, code, "(file not found: %s)", fname);
 	return code;
     }
@@ -827,14 +812,13 @@ readFile(struct cmd_syndesc *as, void *unused)
     Len <<= 32;
     Len += OutStatus.Length;
     ZeroInt64(Pos);
-    buf = (char *) malloc(bufflen * sizeof(char));
+    buf = calloc(bufflen, sizeof(char));
     if (buf == NULL) {
 	code = ENOMEM;
 	afs_com_err(pnp, code, "(cannot allocate buffer)");
 	afscp_FreeFid(avfp);
 	return code;
     }
-    memset(buf, 0, bufflen * sizeof(char));
     length = Len;
     while (!code && NonZeroInt64(length)) {
 	if (length > bufflen)
@@ -902,12 +886,14 @@ writeFile(struct cmd_syndesc *as, void *unused)
 
     CmdProlog(as, &cell, &realm, &fname, &sSynthLen);
     afscp_AnonymousAuth(1);
+    if (clear)
+	afscp_Insecure();
 
     if (realm != NULL)
-	code = afscp_SetDefaultRealm(realm);
+	afscp_SetDefaultRealm(realm);
 
     if (cell != NULL)
-	code = afscp_SetDefaultCell(cell);
+	afscp_SetDefaultCell(cell);
 
     if (sSynthLen) {
 	code = util_GetInt64(sSynthLen, &synthlength);
@@ -1023,7 +1009,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
      */
     Len = 0;
     while (Len < WRITEBUFLEN) {
-	tbuf = (struct wbuf *)malloc(sizeof(struct wbuf));
+	tbuf = calloc(1, sizeof(struct wbuf));
 	if (tbuf == NULL) {
 	    if (!bufchain) {
 		code = ENOMEM;
@@ -1032,7 +1018,6 @@ writeFile(struct cmd_syndesc *as, void *unused)
 	    }
 	    break;
 	}
-	memset(tbuf, 0, sizeof(struct wbuf));
 	tbuf->buflen = BUFFLEN;
 	if (synthesize) {
 	    afs_int64 ll, l = tbuf->buflen;
@@ -1066,7 +1051,6 @@ writeFile(struct cmd_syndesc *as, void *unused)
     while (!code && bytes) {
 	Len = bytes;
 	length = Len;
-	tbuf = bufchain;
 	if (Len) {
 	    for (tbuf = bufchain; tbuf; tbuf = tbuf->next) {
 		if (tbuf->used == 0)

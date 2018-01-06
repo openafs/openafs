@@ -10,19 +10,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#endif
 #include <rx/xdr.h>
 #include <afs/vlserver.h>	/*Misc server-side Volume Location stuff */
 #include <ubik.h>
+#include <afs/afsint.h>
 #include <afs/volser.h>
+
 #include "bc.h"
 #include <afs/volint.h>
 #include <afs/volser.h>

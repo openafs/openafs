@@ -1,4 +1,9 @@
-/*! \mainpage AFS-3 Programmer's Reference: Specification for the Rx Remote
+/*!
+ * \addtogroup rxrpc-spec RX RPC Specification
+ * RX RPC Specification
+ * @{
+ *
+ * \mainpage AFS-3 Programmer's Reference: Specification for the Rx Remote
  * Procedure Call Facility
  *
  * AFS-3 Programmer's Reference:  
@@ -576,42 +581,6 @@
  * the notReally parameter set to TRUE in order to prevent the lookup from
  * taking place. This is useful if you are using another package that uses the
  * fast time facility. 
- * 
- * 	\subsection sec2-2-6 Section 2.2.6: Preemption 
- * 
- * \par
- * The preemption package provides a mechanism by which control can pass
- * between lightweight processes without the need for explicit calls to LWP
- * DispatchProcess(). This effect is achieved by periodically interrupting the
- * normal flow of control to check if other (higher priority) procesess are
- * ready to run. 
- * \par
- * The package makes use of the BSD interval timer facilities, and so will
- * cause programs that make their own use of these facilities to malfunction.
- * In particular, use of alarm(3) or explicit handling of SIGALRM is
- * disallowed. Also, calls to sleep(3) may return prematurely. 
- * \par
- * Care should be taken that routines are re-entrant where necessary. In
- * particular, note that stdio(3) is not re-entrant in general, and hence
- * multiple threads performing I/O on the same fiLE structure may function
- * incorrectly. 
- * \par
- * An example pseudocode routine illustrating the use of this preemption
- * facility appears below. 
- * 
- * \code
- * #include <sys/time.h> 
- * #include "preempt.h" 
- * 	...  struct timeval tv; 
- * 	LWP_InitializeProcessSupport( ... ); 
- * 	tv.tv_sec = 10; 
- * 	tv.tv_usec = 0; 
- * 	PRE_InitPreempt(&tv); 
- * 	PRE_PreemptMe(); ... 
- * 	PRE_BeginCritical(); ... 
- * 	PRE_EndCritical(); ... 
- * 	PRE_EndPreempt(); 
- * \endcode
  * 
  * 	\section sec2-3 Section 2.3: Interface Specifications 
  * 
@@ -6445,5 +6414,6 @@
  * \li [4] S. R. Kleinman. 	Vnodes: An Architecture for Multiple file
  * System Types in Sun UNIX, Conference Proceedings, 1986 Summer Usenix
  * Technical Conference, pp. 238-247, El Toro, CA, 1986. 
- * 
+ *
+ * @}
  */

@@ -7,20 +7,22 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
-INSTALL = @INSTALL@
-INSTALL_DATA = @INSTALL_DATA@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
-INSTALL_SCRIPT = @INSTALL_SCRIPT@
+include @TOP_OBJDIR@/src/config/Makefile.lwp
+
 
 LIBS=${TOP_LIBDIR}/libbudb.a ${TOP_LIBDIR}/libbubasics.a \
         ${TOP_LIBDIR}/libbutm.a ${TOP_LIBDIR}/libvolser.a \
         ${TOP_LIBDIR}/libvldb.a  ${TOP_LIBDIR}/vlib.a \
         ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libubik.a \
         ${TOP_LIBDIR}/libauth.a  ${TOP_LIBDIR}/librxkad.a \
-        ${TOP_LIBDIR}/libsys.a   ${TOP_LIBDIR}/libdes.a \
+        ${TOP_LIBDIR}/libsys.a \
         ${TOP_LIBDIR}/librx.a  ${TOP_LIBDIR}/libsys.a \
         ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
-        ${TOP_LIBDIR}/libafscom_err.a ${TOP_LIBDIR}/util.a
+        ${TOP_LIBDIR}/libafscom_err.a \
+	${TOP_LIBDIR}/util.a \
+	$(TOP_LIBDIR)/libopr.a \
+	${TOP_LIBDIR}/libafsrfc3961.a \
+	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
 all: ${TOP_LIBDIR}/libbxdb.a ${TOP_INCDIR}/afs/bucoord_prototypes.h ${TOP_INCDIR}/afs/bc.h backup
 
@@ -41,14 +43,13 @@ libbxdb.a: dsstub.o ubik_db_if.o status.o dlq.o bucoord_errs.o volstub.o AFS_com
 	$(RANLIB) $@
 
 ttest: ttest.o ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a libbxdb.a
-	${CC} ${CFLAGS} -o ttest ttest.o libbxdb.a \
-		${TOP_LIBDIR}/libbubasics.a \
+	$(AFS_LDRULE) ttest.o libbxdb.a ${TOP_LIBDIR}/libbubasics.a \
 		${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
 
 ttest.o: AFS_component_version_number.c
 
 btest: btest.o ${TOP_LIBDIR}/libbubasics.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
-	${CC} ${CFLAGS} -o btest btest.o ${TOP_LIBDIR}/libbubasics.a \
+	$(AFS_LDRULE) btest.o ${TOP_LIBDIR}/libbubasics.a \
 		${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
 
 btest.o: AFS_component_version_number.c
@@ -67,16 +68,13 @@ main.o: AFS_component_version_number.c
 $(BACKOBJS): bc.h ${TOP_INCDIR}/afs/butc.h
 
 backup:  $(BACKOBJS) ${LIBS}
-	${CC} ${CFLAGS} -o backup $(BACKOBJS) ${LIBS} ${XLIBS} ${KRB5_LIBS}
-
-bc.h: bucoord_errs.c
+	$(AFS_LDRULE) $(BACKOBJS) ${LIBS} $(LIB_roken) ${XLIBS}
 
 bucoord_errs.c: bucoord_errs.et
 	${COMPILE_ET_C} -p ${srcdir} bucoord_errs
 
 bc.h: bucoord_errs.et bc.p.h
 	${COMPILE_ET_H} -p ${srcdir} bucoord_errs -h bc
-
 
 bc_status.o: bc.h
 btest.o: bc.h
@@ -87,7 +85,6 @@ dsstub.o: bc.h
 dsvs.o: bc.h
 dump.o: bc.h
 dump_sched.o: bc.h
-expire.o: bc.h
 main.o: bc.h
 restore.o: bc.h
 status.o: bc.h
@@ -100,17 +97,7 @@ volstub.o: bc.h
 #
 # Errors
 #
-ubik_db_if.o: ubik_db_if.c
-	$(CC) $(CFLAGS) -c ${srcdir}/ubik_db_if.c
-
-volstub.o: volstub.c
-	$(CC) $(CFLAGS) -c ${srcdir}/volstub.c
-
-commands.o: commands.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c ${srcdir}/commands.c
-
-regex.o: regex.c
-	$(CC) $(CFLAGS) -c ${srcdir}/regex.c
+CFLAGS_commands.o=@CFLAGS_NOERROR@
 
 #
 # Install targets

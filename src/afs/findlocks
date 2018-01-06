@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+
+use File::Find;
+use IO::File;
+
+use strict;
+use vars qw($Pat @Locks $DupOnly);
+
+# This pattern matches the function names we are looking for
+$Pat = qr/(?:NB)?Obtain(?:Write|Shared|)Lock|UpgradeSToWLock/;
+
+if (@ARGV[0] eq '-d') {
+  $DupOnly = 1;
+  shift @ARGV;
+}
+
+find(
+  sub {
+    return unless -f $_;
+
+    my $path = $File::Find::name;
+    my $F = new IO::File($_, O_RDONLY) or die "$path: $!\n";
+    while (<$F>) {
+      next unless /\b(?:$Pat)\(.*,\s*(\d+)\)/o;
+      $Locks[$1] ||= [];
+      push(@{$Locks[$1]}, sprintf("%s:%d", $path, $.));
+    }
+    $F->close;
+  }, @ARGV);
+
+foreach my $id (0 .. @Locks) {
+  next unless defined $Locks[$id];
+  next if $DupOnly && @{$Locks[$id]} < 2;
+  printf("%5d  %s", $id, join("       ", map("$_\n", @{$Locks[$id]})))
+}

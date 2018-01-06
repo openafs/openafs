@@ -20,6 +20,10 @@ if [ ! -f /etc/openafs/server/CellServDB ] ; then
     fi
 fi
 
+if [ -r /etc/openafs/server/rxkad.keytab ] ; then
+    akeyconvert
+fi
+
 #DEBHELPER#
 
 exit 0

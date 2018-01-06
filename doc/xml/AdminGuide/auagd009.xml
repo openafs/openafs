@@ -2,6 +2,7 @@
 <chapter id="HDRWQ142">
   <title>Monitoring and Controlling Server Processes</title>
 
+  <para>
   <indexterm>
     <primary>monitoring</primary>
 
@@ -14,7 +15,7 @@
     <secondary>monitoring server processes</secondary>
   </indexterm>
 
-  <para>One of your most important responsibilities as a system administrator is ensuring that the processes on file server machines
+  One of your most important responsibilities as a system administrator is ensuring that the processes on file server machines
   are running correctly. The BOS Server, which runs on every file server machine, relieves you of much of the responsibility by
   constantly monitoring the other AFS server processes on its machine. It can automatically restart processes that have failed,
   ordering the restarts to take interdependencies into account.</para>
@@ -557,58 +558,6 @@
         </itemizedlist></para>
     </sect2>
 
-    <sect2 id="HDRWQ151">
-      <title>The runntp Process</title>
-
-      <indexterm>
-        <primary>runntp process</primary>
-      </indexterm>
-
-      <indexterm>
-        <primary>ntpd</primary>
-
-        <secondary>invoked by runntp process</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>server process</primary>
-
-        <secondary>runntp</secondary>
-      </indexterm>
-
-      <para>The <emphasis role="bold">runntp</emphasis> process, which runs on every server machine, is a controller program for the
-      Network Time Protocol Daemon (NTPD), which synchronizes the hardware clocks on server machines. You need to run the <emphasis
-      role="bold">runntp</emphasis> process if you are not already running NTP or another time synchronization protocol on your
-      server machines.</para>
-
-      <para>The clocks on database server machines need to be synchronized because AFS's distributed database technology (Ubik)
-      works properly only when the clocks agree within a narrow range of variation (see <link linkend="HDRWQ103">Configuring the
-      Cell for Proper Ubik Operation</link>). The clocks on file server machines need to be correct not only because the File Server
-      sets modification time stamps on files, but because in the conventional configuration they serve as the time source for AFS
-      client machines.</para>
-
-      <para>The process appears as <computeroutput>runntp</computeroutput> in the <emphasis role="bold">bos status</emphasis>
-      command's output, if the conventional name is assigned. It appears in the output from the <emphasis role="bold">ps</emphasis>
-      command as <computeroutput>/usr/afs/bin/runntp</computeroutput>. The <emphasis role="bold">ps</emphasis> command's output also
-      includes an entry called <computeroutput>ntpd</computeroutput>; its exact form depends on the arguments you provide to the
-      <emphasis role="bold">runntp</emphasis> command.</para>
-
-      <indexterm>
-        <primary>ntpd</primary>
-
-        <secondary>when to contact</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>contacting processes</primary>
-
-        <secondary>NTPD</secondary>
-      </indexterm>
-
-      <para>As a system administrator, you do not contact the NTPD directly once you have installed it according to the instructions
-      in the <emphasis>OpenAFS Quick Beginnings</emphasis>.</para>
-    </sect2>
-
     <sect2 id="HDRWQ152">
       <title>The upserver and upclient Processes: the Update Server</title>
 
@@ -634,7 +583,7 @@
       role="bold">upserver</emphasis> process is the server portion of the Update Server. Its function depends on which edition of
       AFS you use: <itemizedlist>
           <listitem>
-            <para>With both the United States and international editions, it runs on the binary distribution machine of each system
+            <para>It runs on the binary distribution machine of each system
             type you use as a server machine, distributing the contents of each one's <emphasis role="bold">/usr/afs/bin</emphasis>
             directory to the other server machines of that type. This guarantees that all machines have the same version of AFS
             binaries. (For a list of the binaries, see <link linkend="HDRWQ84">Binaries in the /usr/afs/bin
@@ -642,7 +591,7 @@
           </listitem>
 
           <listitem>
-            <para>In you use the United States edition of AFS, it also runs on the cell's system control machine, distributing the
+            <para>It also runs on the cell's system control machine, distributing the
             contents of its <emphasis role="bold">/usr/afs/etc</emphasis> directory to all the other server machines in order to
             synchronize the configuration files stored in that directory. (For a list of the configuration files, see <link
             linkend="HDRWQ85">Common Configuration Files in the /usr/afs/etc Directory</link>.)</para>
@@ -659,7 +608,7 @@
           </listitem>
 
           <listitem>
-            <para>If you use the United States edition of AFS, another instance of the process runs on every server machine except
+            <para>Another instance of the process runs on every server machine except
             the system control machine. It references the system control machine as the source for updates to the common
             configuration files in the <emphasis role="bold">/usr/afs/etc</emphasis> directory. The conventional process name to
             assign is <emphasis role="bold">upclientetc</emphasis>.</para>
@@ -1044,17 +993,11 @@
       of the Update Server client portion (by convention called <emphasis role="bold">upclientbin</emphasis>) that references the
       binary distribution machine.</para>
 
-      <para>If you run the United States edition of AFS, it is conventional for the first server machine you install to act as the
+      <para>It is conventional for the first server machine you install to act as the
       system control machine, running the server portion of the Update Server (<emphasis role="bold">upserver</emphasis> process) to
       distribute the contents of its <emphasis role="bold">/usr/afs/etc</emphasis> directory. All other server machines run an
       instance of the Update Server client portion (by convention called <emphasis role="bold">upclientetc</emphasis>) that
       references the system control machine.</para>
-
-      <note>
-        <para>If you are using the international edition of AFS, do not use the Update Server to distribute the contents of the
-        <emphasis role="bold">/usr/afs/etc</emphasis> directory (you do not run a system control machine). Ignore all references to
-        the process in this chapter.</para>
-      </note>
 
       <para>It is simplest not to move binary distribution or system control responsibilities to a different machine unless you
       completely decommission a machine that is currently serving in one of those roles. Running the Update Server usually imposes
@@ -1235,7 +1178,7 @@
       <para>The following example includes a user-defined cron entry called <emphasis role="bold">backupusers</emphasis>:</para>
 
       <programlisting>
-   % <emphasis role="bold">bos status fs3.abc.com</emphasis>
+   % <emphasis role="bold">bos status fs3.example.com</emphasis>
    Instance kaserver, currently running normally.
    Instance ptserver, currently running normally.
    Instance vlserver, has core file, currently running normally.
@@ -1243,7 +1186,6 @@
    Instance fs, currently running normally.
        Auxiliary status is: file server running.
    Instance upserver, currently running normally.
-   Instance runntp, currently running normally.
    Instance backupusers, currently running normally.
        Auxiliary status is: run next at Mon Jun 7 02:00:00 1999.
 </programlisting>
@@ -1362,10 +1304,10 @@
       </informaltable>
 
       <para>The following illustrates the extended output for the <emphasis role="bold">fs</emphasis> process running on the machine
-      <emphasis role="bold">fs3.abc.com</emphasis>:</para>
+      <emphasis role="bold">fs3.example.com</emphasis>:</para>
 
       <programlisting>
-   % <emphasis role="bold">bos status fs3.abc.com fs -long</emphasis>
+   % <emphasis role="bold">bos status fs3.example.com fs -long</emphasis>
    Instance fs, (type is fs), currently running normally.
        Auxiliary status is file server running
    Process last started at Mon May 3 8:29:19 1999 (3 proc starts)
@@ -1527,7 +1469,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ163" />Issue the <emphasis role="bold">bos create</emphasis> command to create an entry in the
+          <para>Issue the <emphasis role="bold">bos create</emphasis> command to create an entry in the
           <emphasis role="bold">BosConfig</emphasis> file and start the process. <programlisting>
    % <emphasis role="bold">bos create</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>server process name</replaceable>&gt;   \
              &lt;<replaceable>server type</replaceable>&gt; &lt;<replaceable>command lines</replaceable>&gt;+ [ <emphasis
@@ -1574,11 +1516,6 @@
 
                       <listitem>
                         <para><emphasis role="bold">ptserver</emphasis> for the Protection Server</para>
-                      </listitem>
-
-                      <listitem>
-                        <para><emphasis role="bold">runntp</emphasis> for the controller process for the Network Time Protocol
-                        Daemon</para>
                       </listitem>
 
                       <listitem>
@@ -1711,25 +1648,25 @@
       </orderedlist>
 
       <para>The following example defines and starts the Protection Server on the machine <emphasis
-      role="bold">db2.abc.com</emphasis>:</para>
+      role="bold">db2.example.com</emphasis>:</para>
 
       <programlisting>
-   % <emphasis role="bold">bos create db2.abc.com ptserver simple /usr/afs/bin/ptserver</emphasis>
+   % <emphasis role="bold">bos create db2.example.com ptserver simple /usr/afs/bin/ptserver</emphasis>
 </programlisting>
 
       <para>The following example defines and starts the <emphasis role="bold">fs</emphasis> process on the machine <emphasis
-      role="bold">fs6.abc.com</emphasis>.</para>
+      role="bold">fs6.example.com</emphasis>.</para>
 
       <programlisting>
-   % <emphasis role="bold">bos create fs6.abc.com fs fs /usr/afs/bin/fileserver</emphasis>   \
+   % <emphasis role="bold">bos create fs6.example.com fs fs /usr/afs/bin/fileserver</emphasis>   \
         <emphasis role="bold">/usr/afs/bin/volserver /usr/afs/bin/salvager</emphasis>
 </programlisting>
 
       <para>The following example defines and starts a cron process called <emphasis role="bold">backupuser</emphasis> process on
-      the machine <emphasis role="bold">fs3.abc.com</emphasis>, scheduling it to run each day at 3:00 a.m.</para>
+      the machine <emphasis role="bold">fs3.example.com</emphasis>, scheduling it to run each day at 3:00 a.m.</para>
 
       <programlisting>
-   % <emphasis role="bold">bos create fs3.abc.com backupuser cron  "/usr/afs/bin/vos backupsys -prefix user -local" 3:00</emphasis>
+   % <emphasis role="bold">bos create fs3.example.com backupuser cron  "/usr/afs/bin/vos backupsys -prefix user -local" 3:00</emphasis>
 </programlisting>
     </sect2>
 
@@ -1789,8 +1726,8 @@
 </programlisting></para>
         </listitem>
 
-        <listitem>
-          <para><anchor id="LIPROC-STOP" />Issue the <emphasis role="bold">bos stop</emphasis> command to change each process's
+        <listitem id="LIPROC-STOP">
+          <para>Issue the <emphasis role="bold">bos stop</emphasis> command to change each process's
           status flag in the <emphasis role="bold">BosConfig</emphasis> file to <computeroutput>NotRun</computeroutput> and to stop
           it. You must issue this command even for cron processes that you wish to remove from the <emphasis
           role="bold">BosConfig</emphasis> file, even though they do not run continuously. For a detailed description of this
@@ -1802,7 +1739,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIPROC-DEL" />Issue the <emphasis role="bold">bos delete</emphasis> command to remove each process from
+          <para>Issue the <emphasis role="bold">bos delete</emphasis> command to remove each process from
           the <emphasis role="bold">BosConfig</emphasis> file. <programlisting>
    % <emphasis role="bold">bos delete</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>server process name</replaceable>&gt;+
 </programlisting></para>
@@ -2030,7 +1967,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIPROC-START" />Issue the <emphasis role="bold">bos start</emphasis> command to change each process's
+          <para>Issue the <emphasis role="bold">bos start</emphasis> command to change each process's
           status flag to <computeroutput>Run</computeroutput> in both the <emphasis role="bold">BosConfig</emphasis> file and the
           BOS Server's memory and to start it. <programlisting>
    %  <emphasis role="bold">bos start</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>server process name</replaceable>&gt;+
@@ -2118,7 +2055,7 @@
         </listitem>
 
         <listitem>
-          <para><anchor id="LIWQ169" />Issue the <emphasis role="bold">bos shutdown</emphasis> command to stop each process by
+          <para>Issue the <emphasis role="bold">bos shutdown</emphasis> command to stop each process by
           changing its status flag in the BOS Server's memory to <computeroutput>NotRun</computeroutput>. <programlisting>
    % <emphasis role="bold">bos shutdown</emphasis> &lt;<replaceable>machine name</replaceable>&gt; [&lt;<replaceable>instances</replaceable>&gt;+] [<emphasis
                 role="bold">-wait</emphasis>]

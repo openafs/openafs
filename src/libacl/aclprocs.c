@@ -16,22 +16,17 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+#include <afs/opr.h>
 
-#include <sys/types.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
 #include <limits.h>
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/ptclient.h>
 #include <afs/ptuser.h>
+
 #include "acl.h"
 #ifdef AFS_PTHREAD_ENV
-#include <assert.h>
 #include <pthread.h>
 pthread_mutex_t acl_list_mutex;
 #endif /* AFS_PTHREAD_ENV */
@@ -97,8 +92,7 @@ acl_NewACL(int nEntries, struct acl_accessList **acl)
     t = sizeof(struct acl_accessList) + (nEntries -
 					 1) * sizeof(struct acl_accessEntry);
     if (GetFromList(&freeList, &e, t) < 0) {
-	e = (struct freeListEntry *)malloc(t + sizeof(int) +
-					   sizeof(struct freeListEntry *));
+	e = malloc(t + sizeof(int) + sizeof(struct freeListEntry *));
 	if (e == NULL) {
 	    perror("acl_NewACL: malloc() failed");
 	    abort();
@@ -141,8 +135,7 @@ acl_NewExternalACL(int nEntries, char **r)
      * name plus decimal 2**32 (for largest rights mask) plus some formatting */
 
     if (GetFromList(&freeList, &e, t)) {
-	e = (struct freeListEntry *)malloc(t + sizeof(int) +
-					   sizeof(struct freeListEntry *));
+	e = malloc(t + sizeof(int) + sizeof(struct freeListEntry *));
 	if (e == NULL) {
 	    perror("acl_NewExternalACL(): malloc() failed");
 	    abort();
@@ -188,9 +181,7 @@ acl_Externalize_pr(int (*func)(idlist *ids, namelist *names), struct acl_accessL
 	return (-1);
     acl_NewExternalACL(acl->total, elist);
     nextc = *elist;
-    lids.idlist_val =
-	(afs_int32 *) malloc(ACL_MAXENTRIES * sizeof(afs_int32));
-    memset(lids.idlist_val, 0, ACL_MAXENTRIES * sizeof(afs_int32));
+    lids.idlist_val = calloc(ACL_MAXENTRIES, sizeof(afs_int32));
     lids.idlist_len = acl->total;
     lnames.namelist_len = 0;
     lnames.namelist_val = (prname *) 0;
@@ -262,8 +253,7 @@ acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struc
 	return 0;
     }
     lnames.namelist_len = (*acl)->total;
-    lnames.namelist_val =
-	(prname *) malloc(lnames.namelist_len * PR_MAXNAMELEN);
+    lnames.namelist_val = calloc(lnames.namelist_len, PR_MAXNAMELEN);
     if (lnames.namelist_val == 0) {
 	return -1;
     }
@@ -315,7 +305,6 @@ acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struc
 	}
 	(*acl)->entries[i].id = lids.idlist_val[i];
     }
-    j = i;
     for (i = (*acl)->total - 1; i >= (*acl)->total - (*acl)->negative; i--) {
 	if (lids.idlist_val[i] == ANONYMOUSID) {
 	    free(lnames.namelist_val);
@@ -423,7 +412,7 @@ acl_Initialize(char *version)
 		ACL_VERSION, version);
     }
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_init(&acl_list_mutex, NULL) == 0);
+    opr_Verify(pthread_mutex_init(&acl_list_mutex, NULL) == 0);
 #endif /* AFS_PTHREAD_ENV */
     return 0;
 }
@@ -445,12 +434,12 @@ AddToList(struct freeListEntry **pflist, struct freeListEntry *elem)
 {
     /* Adds elem to the freelist flist;  returns 0 */
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_lock(&acl_list_mutex) == 0);
+    opr_Verify(pthread_mutex_lock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
     elem->next = *pflist;
     *pflist = elem;
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_unlock(&acl_list_mutex) == 0);
+    opr_Verify(pthread_mutex_unlock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
     return 0;
 }
@@ -467,11 +456,11 @@ GetFromList(struct freeListEntry **pflist, struct freeListEntry **elem,
     struct freeListEntry *y, *z;
 
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_lock(&acl_list_mutex) == 0);
+    opr_Verify(pthread_mutex_lock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
     if (*pflist == NULL) {
 #ifdef AFS_PTHREAD_ENV
-	assert(pthread_mutex_unlock(&acl_list_mutex) == 0);
+	opr_Verify(pthread_mutex_unlock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
 	return -1;
     }
@@ -481,19 +470,19 @@ GetFromList(struct freeListEntry **pflist, struct freeListEntry **elem,
 	    if (z == NULL) {	/* pulling off the head */
 		*pflist = y->next;
 #ifdef AFS_PTHREAD_ENV
-		assert(pthread_mutex_unlock(&acl_list_mutex) == 0);
+		opr_Verify(pthread_mutex_unlock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
 		return 0;
 	    }
 	    z->next = y->next;
 #ifdef AFS_PTHREAD_ENV
-	    assert(pthread_mutex_unlock(&acl_list_mutex) == 0);
+	    opr_Verify(pthread_mutex_unlock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
 	    return 0;
 	}
     }
 #ifdef AFS_PTHREAD_ENV
-    assert(pthread_mutex_unlock(&acl_list_mutex) == 0);
+    opr_Verify(pthread_mutex_unlock(&acl_list_mutex) == 0);
 #endif /* AFS_PTHREAD_ENV */
     return -1;
 }

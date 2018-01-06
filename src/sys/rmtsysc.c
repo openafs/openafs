@@ -15,30 +15,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <errno.h>
 #include <limits.h>
-#include <sys/types.h>
+
 #include <afs/vice.h>
-#ifdef AFS_NT40_ENV
-#include <winsock2.h>
-#else
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/file.h>
-#endif
-#include <sys/stat.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#ifdef HAVE_GRP_H
-#include <grp.h>
-#endif
 #include <rx/xdr.h>
-#include <afs/afsutil.h>
+
 #include "rmtsys.h"
 #include "sys_prototypes.h"
 
@@ -85,8 +68,8 @@ GetAfsServerAddr(char *syscall)
 	} else {
 	    char *pathname;
 
-	    afs_asprintf(&pathname, "%s/%s", home_dir, ".AFSSERVER");
-	    if (pathname == NULL)
+	    len = asprintf(&pathname, "%s/%s", home_dir, ".AFSSERVER");
+	    if (len < 0 || pathname == NULL)
 		return 0;
 	    fp = fopen(pathname, "r");
 	    free(pathname);
@@ -140,7 +123,7 @@ rx_connection(afs_int32 * errorcode, char *syscall)
     null_securityObject = rxnull_NewClientSecurityObject();
     conn =
 	rx_NewConnection(host, htons(AFSCONF_RMTSYSPORT), RMTSYS_SERVICEID,
-			 null_securityObject, 0);
+			 null_securityObject, RX_SECIDX_NULL);
     if (!conn) {
 	printf("Unable to make a new connection\n");
 	*errorcode = -1;
@@ -236,7 +219,7 @@ pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, afs_int32 follow)
     if (!ins)
 	ins = 1;
 #endif
-    if (!(inbuffer = (char *)malloc(ins)))
+    if (!(inbuffer = malloc(ins)))
 	return (-1);		/* helpless here */
     if (data->in_size)
 	memcpy(inbuffer, data->in, data->in_size);

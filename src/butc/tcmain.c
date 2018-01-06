@@ -10,55 +10,53 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/procmgmt.h>
+
+#include <roken.h>
+#include <afs/opr.h>
+
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # pragma GCC diagnostic warning "-Wimplicit-function-declaration"
 #endif
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #ifdef AFS_NT40_ENV
-#include <winsock2.h>
 #include <WINNT/afsevent.h>
-#else
-#include <netinet/in.h>
-#include <sys/time.h>
 #endif
-#include <afs/procmgmt.h>
+
+#include <ctype.h>
+
+#include <rx/rx.h>
+#include <rx/rx_globals.h>
+#include <rx/rxkad.h>
 #include <rx/xdr.h>
+
 #include <afs/afsint.h>
-#include <stdio.h>
-#include <afs/afs_assert.h>
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
-#include <string.h>
 #include <afs/vlserver.h>
 #include <lwp.h>
 #include <lock.h>
 #include <afs/afsutil.h>
-#include <rx/rx.h>
-#include <rx/rx_globals.h>
-#include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/volser.h>
 #include <ubik.h>
 #include <afs/com_err.h>
-#include <errno.h>
 #include <afs/cmd.h>
 #include <afs/tcdata.h>
 #include <afs/bubasics.h>
-#include <ctype.h>
-#include "error_macros.h"
 #include <afs/budb_errs.h>
 #include <afs/budb_client.h>
 #include <afs/bucoord_prototypes.h>
-#include "afs/butx.h"
+#include <afs/butx.h>
+#include <afs/kautils.h>
+#include <afs/bc.h>
+
+#include "error_macros.h"
 #define XBSA_TCMAIN
 #include "butc_xbsa.h"
 #include "butc_prototypes.h"
 #include "butc_internal.h"
-#include <afs/kautils.h>
-#include <afs/bc.h>
 
 #define N_SECURITY_OBJECTS 3
 #define ERRCODE_RANGE 8		/* from error_table.h */
@@ -291,10 +289,9 @@ stringNowReplace(char *logFile, char *deviceName)
 	*pos = '_';
     strcat(logFile, deviceName);
     /* now put back deviceName to the way it was */
-    if (mvFlag) {
-	mvFlag = 0;
+    if (mvFlag)
 	deviceName -= devPrefLen;
-    }
+
     strcpy(deviceName, storeDevice);
 
     return (0);
@@ -517,8 +514,7 @@ GetConfigParams(char *filename, afs_int32 port)
 		continue;
 	    }
 
-	    opencallout = (char *)malloc(strlen(value) + 1);
-	    strcpy(opencallout, value);
+	    opencallout = strdup(value);
 	    printf("Tape mount callout routine is %s\n", opencallout);
 	}
 
@@ -530,8 +526,7 @@ GetConfigParams(char *filename, afs_int32 port)
 		continue;
 	    }
 
-	    closecallout = (char *)malloc(strlen(value) + 1);
-	    strcpy(closecallout, value);
+	    closecallout = strdup(value);
 	    printf("Tape unmount callout routine is %s\n", closecallout);
 	}
 
@@ -664,8 +659,7 @@ GetConfigParams(char *filename, afs_int32 port)
 		     cmd);
 		continue;
 	    }
-	    xbsaObjectOwner = malloc(strlen(value) + 1);
-	    strcpy(xbsaObjectOwner, value);
+	    xbsaObjectOwner = strdup(value);
 	    printf("XBSA node is %s\n", xbsaObjectOwner);
 	}
 
@@ -676,8 +670,7 @@ GetConfigParams(char *filename, afs_int32 port)
 		     cmd);
 		continue;
 	    }
-	    adsmServerName = malloc(strlen(value) + 1);
-	    strcpy(adsmServerName, value);
+	    adsmServerName = strdup(value);
 	    printf("XBSA server is %s\n", adsmServerName);
 	}
 
@@ -695,8 +688,7 @@ GetConfigParams(char *filename, afs_int32 port)
 		continue;
 	    }
 
-	    xbsaSecToken = malloc(strlen(value) + 1);
-	    strcpy(xbsaSecToken, value);
+	    xbsaSecToken = strdup(value);
 	    printf("XBSA Password has been read\n");
 	}
 
@@ -739,8 +731,7 @@ GetConfigParams(char *filename, afs_int32 port)
 		     cmd);
 		continue;
 	    }
-	    xbsalGName = malloc(strlen(value) + 1);
-	    strcpy(xbsalGName, value);
+	    xbsalGName = strdup(value);
 	    printf("XBSA management class is %s\n", xbsalGName);
 	}
 #endif
@@ -774,8 +765,7 @@ GetConfigParams(char *filename, afs_int32 port)
 	}
 
 	else if (!strcmp(cmd, "CENTRALLOG")) {
-	    centralLogFile = malloc(strlen(value) + 1);
-	    strcpy(centralLogFile, value);
+	    centralLogFile = strdup(value);
 	    printf("Central log file is %s\n", centralLogFile);
 	}
 
@@ -915,9 +905,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     }
 
     if (as->parms[6].items) {	/* -restoretofile */
-	int s = strlen(as->parms[6].items->data);
-	restoretofile = malloc(s + 1);
-	strncpy(restoretofile, as->parms[6].items->data, s + 1);
+	restoretofile = strdup(as->parms[6].items->data);
 	printf("Restore to file '%s'\n", restoretofile);
     }
 
@@ -967,7 +955,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	struct stat sbuf;
 	afs_int32 statcode;
 #ifndef AFS_NT40_ENV
-	char path[AFSDIR_PATH_MAX];
+	char *path;
 #endif
 
 	statcode = stat(centralLogFile, &sbuf);
@@ -979,7 +967,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	}
 #ifndef AFS_NT40_ENV
 	/* Make sure it is not in AFS, has to have been created first */
-	if (!realpath(centralLogFile, path)) {
+	path = malloc(AFSDIR_PATH_MAX);
+	if (path == NULL || !realpath(centralLogFile, path)) {
 	    fprintf(stderr,
 		    "Warning: can't determine real path of '%s' (%d)\n",
 		    centralLogFile, errno);
@@ -990,6 +979,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		exit(1);
 	    }
 	}
+	free(path);
 #endif
 
 	/* Write header if created it */
@@ -1051,10 +1041,10 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
-            ccode = parseNetFiles(SHostAddrs, NULL, NULL,
-                                           ADDRSPERSITE, reason,
-                                           AFSDIR_SERVER_NETINFO_FILEPATH,
-                                           AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+            ccode = afsconf_ParseNetFiles(SHostAddrs, NULL, NULL,
+                                          ADDRSPERSITE, reason,
+                                          AFSDIR_SERVER_NETINFO_FILEPATH,
+                                          AFSDIR_SERVER_NETRESTRICT_FILEPATH);
         } else
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
@@ -1083,8 +1073,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     /*initialize the dumpNode list */
     InitNodeList(portOffset);
 
-    deviceLatch =
-	(struct deviceSyncNode *)(malloc(sizeof(struct deviceSyncNode)));
+    deviceLatch = malloc(sizeof(struct deviceSyncNode));
     Lock_Init(&(deviceLatch->lock));
     deviceLatch->flags = 0;
 
@@ -1095,8 +1084,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
      * security on connections made to this server
      */
 
-    securityObjects[0] = rxnull_NewServerSecurityObject();
-    if (!securityObjects[0]) {
+    securityObjects[RX_SECIDX_NULL] = rxnull_NewServerSecurityObject();
+    if (!securityObjects[RX_SECIDX_NULL]) {
 	TLog(0, "rxnull_NewServerSecurityObject");
 	exit(1);
     }
@@ -1189,7 +1178,7 @@ main(int argc, char **argv)
 
     setlinebuf(stdout);
 
-    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, "tape coordinator");
+    ts = cmd_CreateSyntax(NULL, WorkerBee, NULL, 0, "tape coordinator");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "port offset");
     cmd_AddParm(ts, "-debuglevel", CMD_SINGLE, CMD_OPTIONAL, "0 | 1 | 2");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
@@ -1217,32 +1206,31 @@ main(int argc, char **argv)
 
     /* setup the file paths */
     strcompose(eFile, AFSDIR_PATH_MAX, AFSDIR_SERVER_BACKUP_DIRPATH, "/",
-	       TE_PREFIX, NULL);
+	       TE_PREFIX, (char *)NULL);
     strcompose(lFile, AFSDIR_PATH_MAX, AFSDIR_SERVER_BACKUP_DIRPATH, "/",
-	       TL_PREFIX, NULL);
+	       TL_PREFIX, (char *)NULL);
     strcompose(pFile, AFSDIR_PATH_MAX, AFSDIR_SERVER_BACKUP_DIRPATH, "/",
-	       CFG_PREFIX, NULL);
+	       CFG_PREFIX, (char *)NULL);
     strcpy(tapeConfigFile, AFSDIR_SERVER_TAPECONFIG_FILEPATH);
 
     /* special case "no args" case since cmd_dispatch gives help message
      * instead
      */
     if (argc == 1) {
-	ts = (struct cmd_syndesc *)malloc(sizeof(struct cmd_syndesc));
-	memset(ts, 0, sizeof(*ts));
+	ts = calloc(1, sizeof(struct cmd_syndesc));
 
-	ti = (struct cmd_item *)malloc(sizeof(struct cmd_item));
+	ti = malloc(sizeof(struct cmd_item));
 	ti->next = 0;
 	ti->data = "0";
 	ts->parms[0].items = ti;
-	ti = (struct cmd_item *)malloc(sizeof(struct cmd_item));
+	ti = malloc(sizeof(struct cmd_item));
 	ti->next = 0;
 	ti->data = "0";
 	ts->parms[1].items = ti;
-	ts->parms[2].items = (struct cmd_item *)NULL;
-	ts->parms[3].items = (struct cmd_item *)NULL;
-	ts->parms[4].items = (struct cmd_item *)NULL;
-	ts->parms[5].items = (struct cmd_item *)NULL;
+	ts->parms[2].items = NULL;
+	ts->parms[3].items = NULL;
+	ts->parms[4].items = NULL;
+	ts->parms[5].items = NULL;
 	return WorkerBee(ts, NULL);
     } else
 	return cmd_Dispatch(argc, argv);

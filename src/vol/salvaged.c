@@ -18,30 +18,25 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <errno.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#include <WINNT/afsevent.h>
-#else
-#include <sys/param.h>
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#ifndef ITIMER_REAL
-#include <sys/time.h>
-#endif /* ITIMER_REAL */
 #endif
+
+#ifdef AFS_NT40_ENV
+#include <WINNT/afsevent.h>
+#endif
+
 #ifndef WCOREDUMP
 #define WCOREDUMP(x)	((x) & 0200)
 #endif
-#include <rx/xdr.h>
+
+#include <afs/opr.h>
+#include <opr/lock.h>
 #include <afs/afsint.h>
-#include <afs/afs_assert.h>
+#include <rx/rx_queue.h>
+
 #if !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV)
 #if defined(AFS_VFSINCL_ENV)
 #include <sys/vnode.h>
@@ -70,17 +65,13 @@
 #include <sys/lockf.h>
 #else
 #ifdef	AFS_HPUX_ENV
-#include <unistd.h>
 #include <checklist.h>
 #else
 #if defined(AFS_SGI_ENV)
-#include <unistd.h>
-#include <fcntl.h>
 #include <mntent.h>
 #else
 #if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
 #ifdef	  AFS_SUN5_ENV
-#include <unistd.h>
 #include <sys/mnttab.h>
 #include <sys/mntent.h>
 #else
@@ -91,7 +82,6 @@
 #endif /* AFS_HPUX_ENV */
 #endif
 #endif
-#include <fcntl.h>
 #ifndef AFS_NT40_ENV
 #include <afs/osi_inode.h>
 #endif
@@ -100,9 +90,6 @@
 #include <afs/fileutil.h>
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <afs/dir.h>
-#ifndef AFS_NT40_ENV
-#include <syslog.h>
-#endif
 
 #include "nfs.h"
 #include "lwp.h"
@@ -123,6 +110,7 @@
 #include <pthread.h>
 #endif
 
+extern int ClientMode;
 
 #if !defined(AFS_DEMAND_ATTACH_FS)
 #error "online salvager only supported for demand attach fileserver"
@@ -150,13 +138,13 @@ static pthread_cond_t worker_cv;
 static void * SalvageChildReaperThread(void *);
 static int DoSalvageVolume(struct SalvageQueueNode * node, int slot);
 
-static void SalvageServer(int argc, char **argv);
+static void SalvageServer(int argc, char **argv, struct logOptions *logopts);
 static void SalvageClient(VolumeId vid, char * pname);
 
 static int Reap_Child(char * prog, int * pid, int * status);
 
 static void * SalvageLogCleanupThread(void *);
-static int SalvageLogCleanup(int pid);
+static void SalvageLogCleanup(int pid);
 
 static void * SalvageLogScanningThread(void *);
 static void ScanLogs(struct rx_queue *log_watch_queue);
@@ -179,14 +167,37 @@ struct {
 
 #define DEFAULT_PARALLELISM 4 /* allow 4 parallel salvage workers by default */
 
+enum optionsList {
+    OPT_partition,
+    OPT_volumeid,
+    OPT_debug,
+    OPT_nowrite,
+    OPT_inodes,
+    OPT_oktozap,
+    OPT_rootinodes,
+    OPT_salvagedirs,
+    OPT_blockreads,
+    OPT_parallel,
+    OPT_tmpdir,
+    OPT_orphans,
+    OPT_syslog,
+    OPT_syslogfacility,
+    OPT_logfile,
+    OPT_client,
+    OPT_transarc_logs
+};
+
 static int
-handleit(struct cmd_syndesc *as, void *arock)
+handleit(struct cmd_syndesc *opts, void *arock)
 {
-    struct cmd_item *ti;
-    char pname[100], *temp;
+    char pname[100];
     afs_int32 seenpart = 0, seenvol = 0;
     VolumeId vid = 0;
     struct cmdline_rock *rock = (struct cmdline_rock *)arock;
+    char *optstring = NULL;
+    struct logOptions logopts;
+
+    memset(&logopts, 0, sizeof(logopts));
 
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
@@ -196,28 +207,19 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 #endif
 
-    if (as->parms[2].items)	/* -debug */
-	debug = 1;
-    if (as->parms[3].items)	/* -nowrite */
-	Testing = 1;
-    if (as->parms[4].items)	/* -inodes */
-	ListInodeOption = 1;
-    if (as->parms[5].items)	/* -oktozap */
-	OKToZap = 1;
-    if (as->parms[6].items)	/* -rootinodes */
-	ShowRootFiles = 1;
-    if (as->parms[7].items)	/* -salvagedirs */
-	RebuildDirs = 1;
-    if (as->parms[8].items)	/* -ForceReads */
-	forceR = 1;
-    if ((ti = as->parms[9].items)) {	/* -Parallel # */
-	temp = ti->data;
-	if (strncmp(temp, "all", 3) == 0) {
+    cmd_OptionAsFlag(opts, OPT_debug, &debug);
+    cmd_OptionAsFlag(opts, OPT_nowrite, &Testing);
+    cmd_OptionAsFlag(opts, OPT_inodes, &ListInodeOption);
+    cmd_OptionAsFlag(opts, OPT_oktozap, &OKToZap);
+    cmd_OptionAsFlag(opts, OPT_rootinodes, &ShowRootFiles);
+    cmd_OptionAsFlag(opts, OPT_salvagedirs, &RebuildDirs);
+    cmd_OptionAsFlag(opts, OPT_blockreads, &forceR);
+    if (cmd_OptionAsString(opts, OPT_parallel, &optstring) == 0) {
+	if (strncmp(optstring, "all", 3) == 0) {
 	    PartsPerDisk = 1;
-	    temp += 3;
 	}
-	if (strlen(temp) != 0) {
-	    Parallel = atoi(temp);
+	if (strlen(optstring) != 0) {
+	    Parallel = atoi(optstring);
 	    if (Parallel < 1)
 		Parallel = 1;
 	    if (Parallel > MAXPARALLEL) {
@@ -226,68 +228,82 @@ handleit(struct cmd_syndesc *as, void *arock)
 		Parallel = MAXPARALLEL;
 	    }
 	}
+	free(optstring);
+	optstring = NULL;
     } else {
-	Parallel = MIN(DEFAULT_PARALLELISM, MAXPARALLEL);
+	Parallel = min(DEFAULT_PARALLELISM, MAXPARALLEL);
     }
-    if ((ti = as->parms[10].items)) {	/* -tmpdir */
+    if (cmd_OptionAsString(opts, OPT_tmpdir, &optstring) == 0) {
 	DIR *dirp;
-
-	tmpdir = ti->data;
-	dirp = opendir(tmpdir);
+	dirp = opendir(optstring);
 	if (!dirp) {
 	    printf
 		("Can't open temporary placeholder dir %s; using current partition \n",
-		 tmpdir);
+		 optstring);
 	    tmpdir = NULL;
 	} else
 	    closedir(dirp);
+	free(optstring);
+	optstring = NULL;
     }
-    if ((ti = as->parms[11].items))	/* -showlog */
-	ShowLog = 1;
-    if ((ti = as->parms[12].items)) {	/* -orphans */
+    if (cmd_OptionAsString(opts, OPT_orphans, &optstring) == 0) {
 	if (Testing)
 	    orphans = ORPH_IGNORE;
-	else if (strcmp(ti->data, "remove") == 0
-		 || strcmp(ti->data, "r") == 0)
+	else if (strcmp(optstring, "remove") == 0
+		 || strcmp(optstring, "r") == 0)
 	    orphans = ORPH_REMOVE;
-	else if (strcmp(ti->data, "attach") == 0
-		 || strcmp(ti->data, "a") == 0)
+	else if (strcmp(optstring, "attach") == 0
+		 || strcmp(optstring, "a") == 0)
 	    orphans = ORPH_ATTACH;
-    }
-#ifndef AFS_NT40_ENV		/* ignore options on NT */
-    if ((ti = as->parms[13].items)) {	/* -syslog */
-	useSyslog = 1;
-	ShowLog = 0;
-    }
-    if ((ti = as->parms[14].items)) {	/* -syslogfacility */
-	useSyslogFacility = atoi(ti->data);
+	free(optstring);
+	optstring = NULL;
     }
 
-    if ((ti = as->parms[15].items)) {	/* -datelogs */
-	TimeStampLogFile((char *)AFSDIR_SERVER_SALSRVLOG_FILEPATH);
-    }
-#endif
-
-    if ((ti = as->parms[16].items)) {   /* -client */
-	if ((ti = as->parms[0].items)) {	/* -partition */
-	    seenpart = 1;
-	    strlcpy(pname, ti->data, sizeof(pname));
+#ifdef HAVE_SYSLOG
+    if (cmd_OptionPresent(opts, OPT_syslog)) {
+	if (cmd_OptionPresent(opts, OPT_logfile)) {
+	    fprintf(stderr, "Invalid options: -syslog and -logfile are exclusive.\n");
+	    return -1;
 	}
-	if ((ti = as->parms[1].items)) {	/* -volumeid */
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    fprintf(stderr, "Invalid options: -syslog and -transarc-logs are exclusive.\n");
+	    return -1;
+	}
+	logopts.lopt_dest = logDest_syslog;
+	logopts.lopt_facility = LOG_DAEMON;
+	logopts.lopt_tag = "salvageserver";
+	cmd_OptionAsInt(opts, OPT_syslogfacility, &logopts.lopt_facility);
+    } else
+#endif
+    {
+	logopts.lopt_dest = logDest_file;
+	if (cmd_OptionPresent(opts, OPT_transarc_logs)) {
+	    logopts.lopt_rotateOnOpen = 1;
+	    logopts.lopt_rotateStyle = logRotate_old;
+	}
+	if (cmd_OptionPresent(opts, OPT_logfile))
+	    cmd_OptionAsString(opts, OPT_logfile, (char**)&logopts.lopt_filename);
+	else
+	    logopts.lopt_filename = AFSDIR_SERVER_SALSRVLOG_FILEPATH;
+    }
+
+    if (cmd_OptionPresent(opts, OPT_client)) {
+	if (cmd_OptionAsString(opts, OPT_partition, &optstring) == 0) {
+	    seenpart = 1;
+	    strlcpy(pname, optstring, sizeof(pname));
+	    free(optstring);
+	    optstring = NULL;
+	}
+	if (cmd_OptionAsString(opts, OPT_volumeid, &optstring) == 0) {
 	    char *end;
 	    unsigned long vid_l;
 	    seenvol = 1;
-	    vid_l = strtoul(ti->data, &end, 10);
+	    vid_l = strtoul(optstring, &end, 10);
 	    if (vid_l >= MAX_AFS_UINT32 || vid_l == ULONG_MAX || *end != '\0') {
 		printf("Invalid volume id specified; salvage aborted\n");
 		exit(-1);
 	    }
 	    vid = (VolumeId)vid_l;
-	}
-
-	if (ShowLog) {
-	    printf("-showlog does not work with -client\n");
-	    exit(-1);
 	}
 
 	if (!seenpart || !seenvol) {
@@ -298,7 +314,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	SalvageClient(vid, pname);
 
     } else {  /* salvageserver mode */
-	SalvageServer(rock->argc, rock->argv);
+	SalvageServer(rock->argc, rock->argv, &logopts);
     }
     return (0);
 }
@@ -377,45 +393,48 @@ main(int argc, char **argv)
     arock.argc = argc;
     arock.argv = argv;
 
-    ts = cmd_CreateSyntax("initcmd", handleit, &arock, "initialize the program");
-    cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL,
-		"Name of partition to salvage");
-    cmd_AddParm(ts, "-volumeid", CMD_SINGLE, CMD_OPTIONAL,
-		"Volume Id to salvage");
-    cmd_AddParm(ts, "-debug", CMD_FLAG, CMD_OPTIONAL,
-		"Run in Debugging mode");
-    cmd_AddParm(ts, "-nowrite", CMD_FLAG, CMD_OPTIONAL,
-		"Run readonly/test mode");
-    cmd_AddParm(ts, "-inodes", CMD_FLAG, CMD_OPTIONAL,
-		"Just list affected afs inodes - debugging flag");
-    cmd_AddParm(ts, "-oktozap", CMD_FLAG, CMD_OPTIONAL,
-		"Give permission to destroy bogus inodes/volumes - debugging flag");
-    cmd_AddParm(ts, "-rootinodes", CMD_FLAG, CMD_OPTIONAL,
-		"Show inodes owned by root - debugging flag");
-    cmd_AddParm(ts, "-salvagedirs", CMD_FLAG, CMD_OPTIONAL,
-		"Force rebuild/salvage of all directories");
-    cmd_AddParm(ts, "-blockreads", CMD_FLAG, CMD_OPTIONAL,
-		"Read smaller blocks to handle IO/bad blocks");
-    cmd_AddParm(ts, "-parallel", CMD_SINGLE, CMD_OPTIONAL,
-		"# of max parallel partition salvaging");
-    cmd_AddParm(ts, "-tmpdir", CMD_SINGLE, CMD_OPTIONAL,
-		"Name of dir to place tmp files ");
-    cmd_AddParm(ts, "-showlog", CMD_FLAG, CMD_OPTIONAL,
-		"Show log file upon completion");
-    cmd_AddParm(ts, "-orphans", CMD_SINGLE, CMD_OPTIONAL,
-		"ignore | remove | attach");
 
-    /* note - syslog isn't avail on NT, but if we make it conditional, have
-     * to deal with screwy offsets for cmd params */
-    cmd_AddParm(ts, "-syslog", CMD_FLAG, CMD_OPTIONAL,
-		"Write salvage log to syslogs");
-    cmd_AddParm(ts, "-syslogfacility", CMD_SINGLE, CMD_OPTIONAL,
-		"Syslog facility number to use");
-    cmd_AddParm(ts, "-datelogs", CMD_FLAG, CMD_OPTIONAL,
-		"Include timestamp in logfile filename");
+    ts = cmd_CreateSyntax("initcmd", handleit, &arock, 0, "initialize the program");
+    cmd_AddParmAtOffset(ts, OPT_partition, "-partition", CMD_SINGLE,
+	    CMD_OPTIONAL, "Name of partition to salvage");
+    cmd_AddParmAtOffset(ts, OPT_volumeid, "-volumeid", CMD_SINGLE, CMD_OPTIONAL,
+	    "Volume Id to salvage");
+    cmd_AddParmAtOffset(ts, OPT_debug, "-debug", CMD_FLAG, CMD_OPTIONAL,
+	    "Run in Debugging mode");
+    cmd_AddParmAtOffset(ts, OPT_nowrite, "-nowrite", CMD_FLAG, CMD_OPTIONAL,
+	    "Run readonly/test mode");
+    cmd_AddParmAtOffset(ts, OPT_inodes, "-inodes", CMD_FLAG, CMD_OPTIONAL,
+	    "Just list affected afs inodes - debugging flag");
+    cmd_AddParmAtOffset(ts, OPT_oktozap, "-oktozap", CMD_FLAG, CMD_OPTIONAL,
+	    "Give permission to destroy bogus inodes/volumes - debugging flag");
+    cmd_AddParmAtOffset(ts, OPT_rootinodes, "-rootinodes", CMD_FLAG,
+	    CMD_OPTIONAL, "Show inodes owned by root - debugging flag");
+    cmd_AddParmAtOffset(ts, OPT_salvagedirs, "-salvagedirs", CMD_FLAG,
+	    CMD_OPTIONAL, "Force rebuild/salvage of all directories");
+    cmd_AddParmAtOffset(ts, OPT_blockreads, "-blockreads", CMD_FLAG,
+	    CMD_OPTIONAL, "Read smaller blocks to handle IO/bad blocks");
+    cmd_AddParmAtOffset(ts, OPT_parallel, "-parallel", CMD_SINGLE, CMD_OPTIONAL,
+	    "# of max parallel partition salvaging");
+    cmd_AddParmAtOffset(ts, OPT_tmpdir, "-tmpdir", CMD_SINGLE, CMD_OPTIONAL,
+	    "Name of dir to place tmp files ");
+    cmd_AddParmAtOffset(ts, OPT_orphans, "-orphans", CMD_SINGLE, CMD_OPTIONAL,
+	    "ignore | remove | attach");
 
-    cmd_AddParm(ts, "-client", CMD_FLAG, CMD_OPTIONAL,
+#ifdef HAVE_SYSLOG
+    cmd_AddParmAtOffset(ts, OPT_syslog, "-syslog", CMD_FLAG, CMD_OPTIONAL,
+	    "Write salvage log to syslogs");
+    cmd_AddParmAtOffset(ts, OPT_syslogfacility, "-syslogfacility", CMD_SINGLE,
+	    CMD_OPTIONAL, "Syslog facility number to use");
+#endif
+
+    cmd_AddParmAtOffset(ts, OPT_client, "-client", CMD_FLAG, CMD_OPTIONAL,
 		"Use SALVSYNC to ask salvageserver to salvage a volume");
+
+    cmd_AddParmAtOffset(ts, OPT_logfile, "-logfile", CMD_SINGLE, CMD_OPTIONAL,
+	    "Location of log file ");
+
+    cmd_AddParmAtOffset(ts, OPT_transarc_logs, "-transarc-logs", CMD_FLAG,
+			CMD_OPTIONAL, "enable Transarc style logging");
 
     err = cmd_Dispatch(argc, argv);
     Exit(err);
@@ -430,6 +449,9 @@ SalvageClient(VolumeId vid, char * pname)
     SYNC_response res;
     SALVSYNC_response_hdr sres;
     VolumePackageOptions opts;
+
+    /* Send Log() messages to stderr in client mode. */
+    ClientMode = 1;
 
     VOptDefaults(volumeUtility, &opts);
     if (VInitVolumePackage2(volumeUtility, &opts)) {
@@ -482,7 +504,7 @@ SalvageClient(VolumeId vid, char * pname)
 static int * child_slot;
 
 static void
-SalvageServer(int argc, char **argv)
+SalvageServer(int argc, char **argv, struct logOptions *logopts)
 {
     int pid, ret;
     struct SalvageQueueNode * node;
@@ -494,18 +516,10 @@ SalvageServer(int argc, char **argv)
     /* All entries to the log will be appended.  Useful if there are
      * multiple salvagers appending to the log.
      */
+    OpenLog(logopts);
+    SetupLogSignals();
 
-    CheckLogFile((char *)AFSDIR_SERVER_SALSRVLOG_FILEPATH);
-#ifndef AFS_NT40_ENV
-#ifdef AFS_LINUX20_ENV
-    fcntl(fileno(logFile), F_SETFL, O_APPEND);	/* Isn't this redundant? */
-#else
-    fcntl(fileno(logFile), F_SETFL, FAPPEND);	/* Isn't this redundant? */
-#endif
-#endif
-    setlinebuf(logFile);
-
-    fprintf(logFile, "%s\n", cml_version_number);
+    Log("%s\n", cml_version_number);
     LogCommandLine(argc, argv, "Online Salvage Server",
 		   SalvageVersion, "Starting OpenAFS", Log);
     /* Get and hold a lock for the duration of the salvage to make sure
@@ -520,9 +534,8 @@ SalvageServer(int argc, char **argv)
      * the salvager daemon */
     ObtainSharedSalvageLock();
 
-    child_slot = (int *) malloc(Parallel * sizeof(int));
-    osi_Assert(child_slot != NULL);
-    memset(child_slot, 0, Parallel * sizeof(int));
+    child_slot = calloc(Parallel, sizeof(int));
+    opr_Assert(child_slot != NULL);
 
     /* initialize things */
     VOptDefaults(salvageServer, &opts);
@@ -533,30 +546,25 @@ SalvageServer(int argc, char **argv)
     DInit(10);
     queue_Init(&pending_q);
     queue_Init(&log_cleanup_queue);
-    MUTEX_INIT(&worker_lock, "worker", MUTEX_DEFAULT, 0);
-    CV_INIT(&worker_cv, "worker", CV_DEFAULT, 0);
-    CV_INIT(&log_cleanup_queue.queue_change_cv, "queuechange", CV_DEFAULT, 0);
-    osi_Assert(pthread_attr_init(&attrs) == 0);
+    opr_mutex_init(&worker_lock);
+    opr_cv_init(&worker_cv);
+    opr_cv_init(&log_cleanup_queue.queue_change_cv);
+    opr_Verify(pthread_attr_init(&attrs) == 0);
 
     /* start up the reaper and log cleaner threads */
-    osi_Assert(pthread_attr_setdetachstate(&attrs, PTHREAD_CREATE_DETACHED) == 0);
-    osi_Assert(pthread_create(&tid,
-			  &attrs,
-			  &SalvageChildReaperThread,
-			  NULL) == 0);
-    osi_Assert(pthread_create(&tid,
-			  &attrs,
-			  &SalvageLogCleanupThread,
-			  NULL) == 0);
-    osi_Assert(pthread_create(&tid,
-			  &attrs,
-			  &SalvageLogScanningThread,
-			  NULL) == 0);
+    opr_Verify(pthread_attr_setdetachstate(&attrs,
+					   PTHREAD_CREATE_DETACHED) == 0);
+    opr_Verify(pthread_create(&tid, &attrs,
+			      &SalvageChildReaperThread, NULL) == 0);
+    opr_Verify(pthread_create(&tid, &attrs,
+			      &SalvageLogCleanupThread, NULL) == 0);
+    opr_Verify(pthread_create(&tid, &attrs,
+			      &SalvageLogScanningThread, NULL) == 0);
 
     /* loop forever serving requests */
     while (1) {
 	node = SALVSYNC_getWork();
-	osi_Assert(node != NULL);
+	opr_Assert(node != NULL);
 
 	Log("dispatching child to salvage volume %u...\n",
 	    node->command.sop.parent);
@@ -567,7 +575,7 @@ SalvageServer(int argc, char **argv)
 	  if (!child_slot[slot])
 	    break;
 	}
-	osi_Assert (slot < Parallel);
+	opr_Assert (slot < Parallel);
 
     do_fork:
 	pid = Fork();
@@ -584,17 +592,17 @@ SalvageServer(int argc, char **argv)
 	    node->pid = pid;
 	    VOL_UNLOCK;
 
-	    MUTEX_ENTER(&worker_lock);
+	    opr_mutex_enter(&worker_lock);
 	    current_workers++;
 
 	    /* let the reaper thread know another worker was spawned */
-	    CV_BROADCAST(&worker_cv);
+	    opr_cv_broadcast(&worker_cv);
 
 	    /* if we're overquota, wait for the reaper */
 	    while (current_workers >= Parallel) {
-		CV_WAIT(&worker_cv, &worker_lock);
+		opr_cv_wait(&worker_cv, &worker_lock);
 	    }
-	    MUTEX_EXIT(&worker_lock);
+	    opr_mutex_exit(&worker_lock);
 	}
     }
 }
@@ -602,24 +610,29 @@ SalvageServer(int argc, char **argv)
 static int
 DoSalvageVolume(struct SalvageQueueNode * node, int slot)
 {
-    char childLog[AFSDIR_PATH_MAX];
+    char *filename = NULL;
+    struct logOptions logopts;
     struct DiskPartition64 * partP;
 
     /* do not allow further forking inside salvager */
     canfork = 0;
 
-    /* do not attempt to close parent's logFile handle as
-     * another thread may have held the lock on the FILE
-     * structure when fork was called! */
-
-    afs_snprintf(childLog, sizeof(childLog), "%s.%d",
-		 AFSDIR_SERVER_SLVGLOG_FILEPATH, getpid());
-
-    logFile = afs_fopen(childLog, "a");
-    if (!logFile) {		/* still nothing, use stdout */
-	logFile = stdout;
-	ShowLog = 0;
+    /*
+     * Do not attempt to close parent's log file handle as
+     * another thread may have held the lock when fork was
+     * called!
+     */
+    memset(&logopts, 0, sizeof(logopts));
+    logopts.lopt_dest = logDest_file;
+    logopts.lopt_rotateStyle = logRotate_none;
+    if (asprintf(&filename, "%s.%d",
+		 AFSDIR_SERVER_SLVGLOG_FILEPATH, getpid()) < 0) {
+	fprintf(stderr, "out of memory\n");
+	return ENOMEM;
     }
+    logopts.lopt_filename = filename;
+    OpenLog(&logopts);
+    free(filename);
 
     if (node->command.sop.parent <= 0) {
 	Log("salvageServer: invalid volume id specified; salvage aborted\n");
@@ -641,7 +654,7 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
     /* Salvage individual volume; don't notify fs */
     SalvageFileSys1(partP, node->command.sop.parent);
 
-    fclose(logFile);
+    CloseLog();
     return 0;
 }
 
@@ -652,19 +665,19 @@ SalvageChildReaperThread(void * args)
     int slot, pid, status;
     struct log_cleanup_node * cleanup;
 
-    MUTEX_ENTER(&worker_lock);
+    opr_mutex_enter(&worker_lock);
 
     /* loop reaping our children */
     while (1) {
 	/* wait() won't block unless we have children, so
 	 * block on the cond var if we're childless */
 	while (current_workers == 0) {
-	    CV_WAIT(&worker_cv, &worker_lock);
+	    opr_cv_wait(&worker_cv, &worker_lock);
 	}
 
-	MUTEX_EXIT(&worker_lock);
+	opr_mutex_exit(&worker_lock);
 
-	cleanup = (struct log_cleanup_node *) malloc(sizeof(struct log_cleanup_node));
+	cleanup = malloc(sizeof(struct log_cleanup_node));
 
 	while (Reap_Child("salvageserver", &pid, &status) < 0) {
 	    /* try to prevent livelock if something goes wrong */
@@ -676,23 +689,23 @@ SalvageChildReaperThread(void * args)
 	    if (child_slot[slot] == pid)
 		break;
 	}
-	osi_Assert(slot < Parallel);
+	opr_Assert(slot < Parallel);
 	child_slot[slot] = 0;
 	VOL_UNLOCK;
 
 	SALVSYNC_doneWorkByPid(pid, status);
 
-	MUTEX_ENTER(&worker_lock);
+	opr_mutex_enter(&worker_lock);
 
 	if (cleanup) {
 	    cleanup->pid = pid;
 	    queue_Append(&log_cleanup_queue, cleanup);
-	    CV_SIGNAL(&log_cleanup_queue.queue_change_cv);
+	    opr_cv_signal(&log_cleanup_queue.queue_change_cv);
 	}
 
 	/* ok, we've reaped a child */
 	current_workers--;
-	CV_BROADCAST(&worker_cv);
+	opr_cv_broadcast(&worker_cv);
     }
 
     return NULL;
@@ -727,53 +740,62 @@ SalvageLogCleanupThread(void * arg)
 {
     struct log_cleanup_node * cleanup;
 
-    MUTEX_ENTER(&worker_lock);
+    opr_mutex_enter(&worker_lock);
 
     while (1) {
 	while (queue_IsEmpty(&log_cleanup_queue)) {
-	    CV_WAIT(&log_cleanup_queue.queue_change_cv, &worker_lock);
+	    opr_cv_wait(&log_cleanup_queue.queue_change_cv, &worker_lock);
 	}
 
 	while (queue_IsNotEmpty(&log_cleanup_queue)) {
 	    cleanup = queue_First(&log_cleanup_queue, log_cleanup_node);
 	    queue_Remove(cleanup);
-	    MUTEX_EXIT(&worker_lock);
+	    opr_mutex_exit(&worker_lock);
 	    SalvageLogCleanup(cleanup->pid);
 	    free(cleanup);
-	    MUTEX_ENTER(&worker_lock);
+	    opr_mutex_enter(&worker_lock);
 	}
     }
 
-    MUTEX_EXIT(&worker_lock);
+    opr_mutex_exit(&worker_lock);
     return NULL;
 }
 
 #define LOG_XFER_BUF_SIZE 65536
-static int
+static void
 SalvageLogCleanup(int pid)
 {
     int pidlog, len;
-    char fn[AFSDIR_PATH_MAX];
-    static char buf[LOG_XFER_BUF_SIZE];
+    char *fn = NULL;
+    char *buf = NULL;
 
-    afs_snprintf(fn, sizeof(fn), "%s.%d",
-		 AFSDIR_SERVER_SLVGLOG_FILEPATH, pid);
+    if (asprintf(&fn, "%s.%d", AFSDIR_SERVER_SLVGLOG_FILEPATH, pid) < 0) {
+	Log("Unable to write child log: out of memory\n");
+	goto done;
+    }
 
+    buf = calloc(1, LOG_XFER_BUF_SIZE);
+    if (buf == NULL) {
+	Log("Unable to write child log: out of memory\n");
+	goto done;
+    }
 
     pidlog = open(fn, O_RDONLY);
     unlink(fn);
     if (pidlog < 0)
-	return 1;
+	goto done;
 
     len = read(pidlog, buf, LOG_XFER_BUF_SIZE);
     while (len) {
-	fwrite(buf, len, 1, logFile);
+	WriteLogBuffer(buf, len);
 	len = read(pidlog, buf, LOG_XFER_BUF_SIZE);
     }
 
     close(pidlog);
 
-    return 0;
+ done:
+    free(fn);
+    free(buf);
 }
 
 /* wake up every five minutes to see if a non-child salvage has finished */
@@ -793,20 +815,18 @@ static void *
 SalvageLogScanningThread(void * arg)
 {
     struct rx_queue log_watch_queue;
+    char *prefix;
+    int prefix_len;
 
     queue_Init(&log_watch_queue);
 
-    {
+    prefix_len = asprintf(&prefix, "%s.", AFSDIR_SLVGLOG_FILE);
+    if (prefix_len >= 0) {
 	DIR *dp;
 	struct dirent *dirp;
-	char prefix[AFSDIR_PATH_MAX];
-	size_t prefix_len;
-
-	afs_snprintf(prefix, sizeof(prefix), "%s.", AFSDIR_SLVGLOG_FILE);
-	prefix_len = strlen(prefix);
 
 	dp = opendir(AFSDIR_LOGS_DIR);
-	osi_Assert(dp);
+	opr_Assert(dp);
 
 	while ((dirp = readdir(dp)) != NULL) {
 	    pid_t pid;
@@ -840,13 +860,12 @@ SalvageLogScanningThread(void * arg)
 		continue;
 	    }
 
-	    cleanup =
-		(struct log_cleanup_node *) malloc(sizeof(struct log_cleanup_node));
+	    cleanup = malloc(sizeof(struct log_cleanup_node));
 	    cleanup->pid = pid;
 
 	    queue_Append(&log_watch_queue, cleanup);
 	}
-
+	free(prefix);
 	closedir(dp);
     }
 
@@ -872,7 +891,7 @@ ScanLogs(struct rx_queue *log_watch_queue)
 {
     struct log_cleanup_node *cleanup, *next;
 
-    MUTEX_ENTER(&worker_lock);
+    opr_mutex_enter(&worker_lock);
 
     for (queue_Scan(log_watch_queue, cleanup, next, log_cleanup_node)) {
 	/* if a process is still running, assume it's the salvage process
@@ -880,9 +899,9 @@ ScanLogs(struct rx_queue *log_watch_queue)
 	if (kill(cleanup->pid, 0) < 0 && errno == ESRCH) {
 	    queue_Remove(cleanup);
 	    queue_Append(&log_cleanup_queue, cleanup);
-	    CV_SIGNAL(&log_cleanup_queue.queue_change_cv);
+	    opr_cv_signal(&log_cleanup_queue.queue_change_cv);
 	}
     }
 
-    MUTEX_EXIT(&worker_lock);
+    opr_mutex_exit(&worker_lock);
 }

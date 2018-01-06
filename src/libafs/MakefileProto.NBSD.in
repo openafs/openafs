@@ -15,6 +15,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 # OS specific object files:
 AFS_OS_OBJS = \
+	osi_crypto.o \
 	osi_gcpags.o \
 	osi_groups.o \
 	osi_file.o \
@@ -35,14 +36,17 @@ AFS_OS_NONFSOBJS = \
 # System specific build commands and flags
 KSRC = @BSD_KERNEL_PATH@
 KBLD = @BSD_KERNEL_BUILD@
-KARCHFLAGS = -march=pentiumpro -mtune=pentiumpro -mtune=pentiumpro
+KARCHFLAGS = -Di386 -march=pentiumpro -mtune=pentiumpro 
 KOPTFLAGS = -D_KERNEL -DLKM -D_LKM -DDEBUG -DLOCKDEBUG
 KDEFS=-Wall -ansi -nostdinc -I/usr/include \
 	${KARCHFLAGS} ${KOPTFLAGS} \
 	-ffreestanding -Wno-pointer-sign -Wno-strict-aliasing \
+<i386_nbsd50>
+	-std=gnu99 \
+<all>
 	-I${KSRC} -I${KSRC}/sys \
 	-I${KBLD} -I../afs
-DBUG = -O2
+DBUG = -O2 -g3
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 OPTF=${OPT} 
 OPTF2=${OPT2} 
@@ -75,6 +79,9 @@ setup:
 	-ln -fs ${KSRC}/ufs/ufs ufs
 	-ln -fs ${KSRC}/sys h
 	-ln -fs ${KSRC}/vm vm
+	-ln -fs ${KSRC}/arch/x86/include/via_padlock.h /usr/include/x86/via_padlock.h
+	-ln -fs ${KSRC}/arch/x86/include/cpufunc.h /usr/include/x86/cpufunc.h
+	-ln -fs ${KSRC}/arch/x86/include/pic.h /usr/include/machine/pic.h
 	-touch $(KOBJ)/sec_net.h
 
 
@@ -88,14 +95,15 @@ INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
 DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
-<i386_nbsd40>
+<i386_nbsd40 i386_nbsd50>
 # libafs:	$(LIBAFS) $(LIBAFSNONFS)
 libafs:	$(LIBAFSNONFS)
 # install_libafs:	$(INST_LIBAFS) $(INST_LIBAFSNONFS)
-install_libafs:	$(INST_LIBAFSNONFS)
+#install_libafs:	$(INST_LIBAFSNONFS)
+install_libafs:	
 # dest_libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
 dest_libafs:	$(DEST_LIBAFSNONFS)
-<all -i386_nbsd40>
+<all -i386_nbsd40 -i386_nbsd50>
 libafs:
 	echo WARNING: No kernel module for ${SYS_NAME}
 
@@ -108,7 +116,7 @@ dest_libafs:
 
 # for now, just skip it
 #${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
-#	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}
+#	$(LD) -r -z muldefs -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
-	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS}
+	$(LD) -r -z muldefs -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS}

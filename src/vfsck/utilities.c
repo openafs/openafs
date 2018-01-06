@@ -18,10 +18,28 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef AFS_HPUX_ENV
+/* We need the old directory type headers (included below), so don't include
+ * the normal dirent.h, or it will conflict. */
+# undef HAVE_DIRENT_H
+# include <sys/inode.h>
+# define	LONGFILENAMES	1
+# include <sys/sysmacros.h>
+# include <sys/ino.h>
+# include <sys/signal.h>
+# define	DIRSIZ_MACRO
+# ifdef HAVE_USR_OLD_USR_INCLUDE_NDIR_H
+#  include </usr/old/usr/include/ndir.h>
+# else
+#  include <ndir.h>
+# endif
+#endif
 
-#include <sys/param.h>
+#include <roken.h>
+
+#include <ctype.h>
+
 #define VICE			/* allow us to put our changes in at will */
-#include <sys/time.h>
 #ifdef	AFS_OSF_ENV
 #include <sys/vnode.h>
 #include <sys/mount.h>
@@ -37,9 +55,6 @@
 #ifdef AFS_VFSINCL_ENV
 #include <sys/vnode.h>
 #ifdef	  AFS_SUN5_ENV
-#include <stdio.h>
-#include <unistd.h>
-#include <signal.h>
 #include <sys/fs/ufs_inode.h>
 #include <sys/fs/ufs_fs.h>
 #define _KERNEL
@@ -53,33 +68,14 @@
 #endif
 #else /* AFS_VFSINCL_ENV */
 #include <sys/inode.h>
-#ifdef	AFS_HPUX_ENV
-#include <ctype.h>
-#define	LONGFILENAMES	1
-#include <sys/sysmacros.h>
-#include <sys/ino.h>
-#include <sys/signal.h>
-#define	DIRSIZ_MACRO
-#ifdef HAVE_USR_OLD_USR_INCLUDE_NDIR_H
-#include </usr/old/usr/include/ndir.h>
-#else
-#include <ndir.h>
-#endif
-#else
+#ifndef	AFS_HPUX_ENV
 #include <sys/dir.h>
 #endif
 #include <sys/fs.h>
 #endif /* AFS_VFSINCL_ENV */
 #endif /* AFS_OSF_ENV */
 
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
 #include "fsck.h"
-
-#if	defined(AFS_HPUX101_ENV)
-#include <unistd.h>
-#endif
 
 #if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV)
 #define AFS_NEWCG_ENV
@@ -91,7 +87,6 @@ long diskreads, totalreads;	/* Disk cache statistics */
 #if	!defined(AFS_HPUX101_ENV)
 long lseek();
 #endif
-char *malloc();
 #if	defined(AFS_SUN_ENV)
 extern int iscorrupt;
 #endif
@@ -101,7 +96,6 @@ extern int isdirty;
 #ifdef	AFS_SUN5_ENV
 #include <sys/mntent.h>
 #include <sys/mnttab.h>
-#include <sys/stat.h>
 #include <sys/vfstab.h>
 
 offset_t llseek();
@@ -200,7 +194,7 @@ bufinit()
     if (bufcnt < MINBUFS)
 	bufcnt = MINBUFS;
     for (i = 0; i < bufcnt; i++) {
-	bp = (struct bufarea *)malloc(sizeof(struct bufarea));
+	bp = malloc(sizeof(struct bufarea));
 	bufp = malloc((unsigned int)sblock.fs_bsize);
 	if (bp == NULL || bufp == NULL) {
 	    if (i >= MINBUFS)
@@ -309,7 +303,7 @@ flush(fd, bp)
 	       fsbtodb(&sblock, sblock.fs_csaddr));
     }
 #else
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     sip = (caddr_t) sblock.fs_u.fs_csp;
     for (i = 0, j = 0; i < sblock.fs_cssize; i += sblock.fs_bsize, j++) {
 	size =
@@ -326,7 +320,7 @@ flush(fd, bp)
 	       sblock.fs_cssize - i <
 	       sblock.fs_bsize ? sblock.fs_cssize - i : sblock.fs_bsize);
     }
-#endif /* AFS_SUN56_ENV */
+#endif /* AFS_SUN5_ENV */
 #endif /* AFS_HPUX101_ENV */
 }
 
@@ -370,7 +364,7 @@ ckfini()
 	flush(fswritefd, bp);
 	nbp = bp->b_prev;
 	free(bp->b_un.b_buf);
-	free((char *)bp);
+	free(bp);
     }
 #ifdef	AFS_SUN5_ENVX
     pbp = pdirbp = NULL;
@@ -817,7 +811,7 @@ updateclean()
     unsigned int size;
     unsigned int bno;
     unsigned int fsclean;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     offset_t sblkoff;
 #endif
 
@@ -868,7 +862,7 @@ updateclean()
     /* read private copy of superblock, update clean flag, and write it */
     bno = sblk.b_bno;
     size = sblk.b_size;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     sblkoff = (OFF_T) (bno) << DEV_BSHIFT;
     if (llseek(fsreadfd, sblkoff, 0) == -1)
 	return;
@@ -887,7 +881,7 @@ updateclean()
     fs_set_state(cleanbuf.b_un.b_fs, fs_get_state(&sblock));
 #endif
     cleanbuf.b_un.b_fs->fs_time = sblock.fs_time;
-#if	defined(AFS_SUN56_ENV)
+#if	defined(AFS_SUN5_ENV)
     if (llseek(fswritefd, sblkoff, 0) == -1)
 	return;
 #else
@@ -930,7 +924,7 @@ printclean()
 }
 #endif
 
-#ifdef	AFS_SUN52_ENV
+#ifdef	AFS_SUN5_ENV
 char *
 hasvfsopt(vfs, opt)
      struct vfstab *vfs;
@@ -942,7 +936,7 @@ hasvfsopt(vfs, opt)
     if (vfs->vfs_mntopts == NULL)
 	return (NULL);
     if (tmpopts == 0) {
-	tmpopts = (char *)calloc(256, sizeof(char));
+	tmpopts = calloc(256, sizeof(char));
 	if (tmpopts == 0)
 	    return (0);
     }
@@ -1021,7 +1015,6 @@ mounted(name)
 #if	defined(AFS_HPUX101_ENV)
 
 #include "libfs.h"
-#include <sys/stat.h>
 #include <sys/fcntl.h>
 
 int seek_options;

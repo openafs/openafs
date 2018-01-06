@@ -130,7 +130,7 @@ afs_root_nolock(struct vfs *afsp, struct vnode **avpp)
 	    if (tvp) {
 		afs_globalVp = tvp;
 	    } else
-		code = ENOENT;
+		code = EIO;
 	}
 	crfree(credp);
     }

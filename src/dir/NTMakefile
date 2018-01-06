@@ -29,13 +29,37 @@ DIR_LIBOBJS =\
 	$(OUT)\salvage.obj \
 	$(OUT)\AFS_component_version_number.obj
 
-$(DIR_LIBFILE): $(DIR_LIBOBJS) 
-	$(LIBARCH)  
+$(DIR_LIBFILE): $(DIR_LIBOBJS)
+	$(LIBARCH)
+
+
+############################################################################
+# build mtafsdir.lib
+
+MT_DIR_LIBFILE = $(DESTDIR)\lib\afs\mtafsdir.lib
+
+MT_DIR_LIBOBJS =\
+	$(OUT)\buffer_mt.obj \
+	$(OUT)\dir_mt.obj \
+	$(OUT)\salvage_mt.obj \
+	$(OUT)\AFS_component_version_number.obj
+
+$(OUT)\buffer_mt.obj:buffer.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\dir_mt.obj:dir.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\salvage_mt.obj:salvage.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(MT_DIR_LIBFILE): $(MT_DIR_LIBOBJS)
+	$(LIBARCH)
 
 
 ############################################################################
 # make and install library.
-install: $(DIR_LIBFILE) $(INCFILES)
+install: $(DIR_LIBFILE) $(MT_DIR_LIBFILE) $(INCFILES)
 
 
 ############################################################################
@@ -44,4 +68,4 @@ install: $(DIR_LIBFILE) $(INCFILES)
 clean::
 
 mkdir:
-	
+

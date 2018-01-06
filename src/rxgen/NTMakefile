@@ -9,7 +9,7 @@ RELDIR=rxgen
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
-INCFILEDIR = $(DESTDIR)\include\afs 
+INCFILEDIR = $(DESTDIR)\include\afs
 
 INCFILES =\
 	$(INCFILEDIR)\rxgen_consts.h
@@ -19,16 +19,17 @@ EXEFILE = $(DESTDIR)\bin\rxgen.exe
 
 EXERES = $(OUT)\rxgen.res
 
+EXELIBS =\
+    $(DESTDIR)\lib\afsroken.lib
+
 EXEOBJS =\
 	$(OUT)\rpc_main.obj \
 	$(OUT)\rpc_hout.obj \
 	$(OUT)\rpc_cout.obj \
 	$(OUT)\rpc_parse.obj \
 	$(OUT)\rpc_scan.obj \
-	$(OUT)\rpc_util.obj \
-	$(OUT)\rpc_svcout.obj \
-	$(OUT)\rpc_clntout.obj
-	
+	$(OUT)\rpc_util.obj
+
 $(EXEOBJS): $$(@B).c
     $(C2OBJ) $**
 
@@ -37,17 +38,15 @@ $(EXERES): rxgen.rc AFS_component_version_number.h
 $(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP) 
+	$(EXEPREP)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
 install: AFS_component_version_number.c $(EXEFILE) $(INCFILES)
-
-install9x: install
 
 clean::
 	$(DEL) $(EXEFILE)
 	$(DEL) $(EXERES)
 
 mkdir:
-	
+

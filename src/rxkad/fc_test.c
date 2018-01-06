@@ -33,6 +33,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+
+#include <roken.h>
+
 #include "rxkad.h"
 #include <rx/rx.h>
 #include "private_data.h"
@@ -43,11 +46,6 @@
 
 typedef afs_int32 int32;
 typedef afs_uint32 u_int32;
-
-#include <stdio.h>
-#include <string.h>
-
-#include <time.h>
 
 const char the_quick[] = "The quick brown fox jumps over the lazy dogs.\0\0";
 
@@ -161,30 +159,30 @@ main(void)
 	int i;
 
 	fc_keysched((struct ktc_encryptionKey *)key1, sched);
-	gettimeofday(&start, 0);
+	gettimeofday(&start, NULL);
 	for (i = 0; i < 1000000; i++)
 	    fc_keysched((struct ktc_encryptionKey *)key1, sched);
-	gettimeofday(&stop, 0);
+	gettimeofday(&stop, NULL);
 	printf("fc_keysched    = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +
 		(stop.tv_usec - start.tv_usec) / 1e6) * 1);
 
 	fc_ecb_encrypt(data, data, sched, ENCRYPT);
-	gettimeofday(&start, 0);
+	gettimeofday(&start, NULL);
 	for (i = 0; i < 1000000; i++)
 	    fc_ecb_encrypt(data, data, sched, ENCRYPT);
-	gettimeofday(&stop, 0);
+	gettimeofday(&stop, NULL);
 	printf("fc_ecb_encrypt = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +
 		(stop.tv_usec - start.tv_usec) / 1e6) * 1);
 
 	fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
 		       ENCRYPT);
-	gettimeofday(&start, 0);
+	gettimeofday(&start, NULL);
 	for (i = 0; i < 100000; i++)
 	    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
 			   ENCRYPT);
-	gettimeofday(&stop, 0);
+	gettimeofday(&stop, NULL);
 	printf("fc_cbc_encrypt = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +
 		(stop.tv_usec - start.tv_usec) / 1e6) * 10);

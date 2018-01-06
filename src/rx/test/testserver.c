@@ -11,27 +11,17 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <roken.h>
 
-
-#include <sys/types.h>
-#include <stdio.h>
-#ifdef AFS_NT40_ENV
-#include <io.h>
-#include <winsock2.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#else
-#include <netinet/in.h>
-#include <netdb.h>
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
-#include <sys/time.h>
 #endif
-#include <signal.h>
-#include <sys/stat.h>
-#include "rx_clock.h"
-#include "rx.h"
-#include "rx_globals.h"
-#include "rx_null.h"
+
+#include <afs/opr.h>
+#include <rx/rx_clock.h>
+#include <rx/rx.h>
+#include <rx/rx_globals.h>
+#include <rx/rx_null.h>
 
 int error;			/* Return this error number on a call */
 int print = 0, eventlog = 0, rxlog = 0;
@@ -40,8 +30,8 @@ FILE *debugFile;
 char *rcvFile;
 int logstdout = 0;
 
-void Abort(char *msg, int a, int b, int c, int d, int e);
-void Quit(char *msg, int a, int b, int c, int d, int e);
+void Abort(char *msg, ...);
+void Quit(char *msg);
 void OpenFD(int n);
 int  FileRequest(struct rx_call *call);
 int  SimpleRequest(struct rx_call *call);
@@ -49,7 +39,7 @@ int  SimpleRequest(struct rx_call *call);
 void
 intSignal(int ignore)
 {
-    Quit("Interrupted",0,0,0,0,0);
+    Quit("Interrupted");
 }
 
 void
@@ -57,7 +47,7 @@ quitSignal(int ignore)
 {
     static int quitCount = 0;
     if (++quitCount > 1)
-	Quit("rx_ctest: second quit signal, aborting",0,0,0,0,0);
+	Quit("rx_ctest: second quit signal, aborting");
     rx_debugFile = debugFile = fopen("rx_stest.db", "w");
     if (debugFile)
 	rx_PrintStats(debugFile);
@@ -150,7 +140,7 @@ main(argc, argv)
 	argv++, argc--;
     }
     if (err || argc != 0)
-	Quit("usage: rx_stest [-silent] [-rxlog] [-eventlog]",0,0,0,0,0);
+	Quit("usage: rx_stest [-silent] [-rxlog] [-eventlog]");
 
     if (rxlog || eventlog) {
 	if (logstdout)
@@ -158,7 +148,7 @@ main(argc, argv)
 	else
 	    debugFile = fopen("rx_stest.db", "w");
 	if (debugFile == NULL)
-	    Quit("Couldn't open rx_stest.db",0,0,0,0,0);
+	    Quit("Couldn't open rx_stest.db");
 	if (rxlog)
 	    rx_debugFile = debugFile;
 	if (eventlog)
@@ -195,7 +185,7 @@ main(argc, argv)
 			    1,	/*Execute request */
 			    rcvFile ? FileRequest : SimpleRequest);
     if (!service)
-	Abort("rx_NewService returned 0!\n",0,0,0,0,0);
+	Abort("rx_NewService returned 0!\n");
 
     rx_SetMinProcs(service, 2);
     rx_SetMaxProcs(service, 100);
@@ -227,7 +217,7 @@ int SimpleRequest(struct rx_call *call)
 	    t.tv_usec = computeTime.usec;
 #ifdef AFS_PTHREAD_ENV
 	    if (select(0, 0, 0, 0, &t) != 0)
-		Quit("Select didn't return 0",0,0,0,0,0);
+		Quit("Select didn't return 0");
 #else
 	    IOMGR_Sleep(t.tv_sec);
 #endif
@@ -251,8 +241,8 @@ int SimpleRequest(struct rx_call *call)
 		 strlen("So long, and thanks for all the fish!\n"));
     }
     if (debugFile)
-	rx_PrintPeerStats(debugFile, rx_PeerOf(call->conn));
-    rx_PrintPeerStats(stdout, rx_PeerOf(call->conn));
+	rx_PrintPeerStats(debugFile, rx_PeerOf(rx_ConnectionOf(call)));
+    rx_PrintPeerStats(stdout, rx_PeerOf(rx_ConnectionOf(call)));
     return 0;
 }
 
@@ -284,14 +274,14 @@ FileRequest(struct rx_call *call)
     blockSize = status.st_blksize;
 #endif
 #endif /* AFS_NT40_ENV */
-    buffer = (char *)malloc(blockSize);
+    buffer = malloc(blockSize);
 
     rx_SetLocalStatus(call, 79);	/* Emulation of file server's old "RCallBackReceivedStore" */
 
     while (nbytes = rx_Read(call, buffer, blockSize)) {
 	if (write(fd, buffer, nbytes) != nbytes) {
 	    perror("writev");
-	    Abort("Write Failed.\n",0,0,0,0,0);
+	    Abort("Write Failed.\n");
 	    break;
 	}
     }
@@ -300,28 +290,33 @@ FileRequest(struct rx_call *call)
     printf("Received file %s\n", rcvFile);
     close(fd);
     if (debugFile)
-	rx_PrintPeerStats(debugFile, rx_PeerOf(call->conn));
-    rx_PrintPeerStats(stdout, rx_PeerOf(call->conn));
+	rx_PrintPeerStats(debugFile, rx_PeerOf(rx_ConnectionOf(call)));
+    rx_PrintPeerStats(stdout, rx_PeerOf(rx_ConnectionOf(call)));
     return 0;
 }
 
 void
-Abort(char *msg, int a, int b, int c, int d, int e)
+Abort(char *msg, ...)
 {
-    printf((char *)msg, a, b, c, d, e);
+    va_list args;
+
+    va_start(args, msg);
+    printf((char *)msg, args);
+    va_end(args);
+
     printf("\n");
     if (debugFile) {
 	rx_PrintStats(debugFile);
 	fflush(debugFile);
     }
-    abort();
+    opr_abort();
+    exit(1);
 }
 
 void
-Quit(char *msg, int a, int b, int c, int d, int e)
+Quit(char *msg)
 {
-    printf((char *)msg, a, b, c, d, e);
-    printf("\n");
+    printf("%s\n", msg);
     if (debugFile) {
 	rx_PrintStats(debugFile);
 	fflush(debugFile);
@@ -335,7 +330,6 @@ Quit(char *msg, int a, int b, int c, int d, int e)
  *
  * Open file descriptors until file descriptor n or higher is returned.
  */
-#include <sys/stat.h>
 void
 OpenFD(int n)
 {
