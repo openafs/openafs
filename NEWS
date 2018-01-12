@@ -1,5 +1,21 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.22.2
+
+  Linux clients
+
+    * Support for mainline kernel 4.15 and distribution kernels with backports
+      from it (12834 12835)
+
+    * Use a more correct (less aggressive) scheme to react to downward
+      pressure on cache usage, avoiding d_invalidate(), which can cause
+      getcwd() failures on RHEL 7.4 (12854..12860)
+
+  macOS
+
+    * Support for release 10.13 "High Sierra" (12831..12833)
+
+
 OpenAFS 1.6.22.1
 
   Linux clients
