@@ -1451,13 +1451,13 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/akeyconvert.8.gz
 %{_mandir}/man8/asetkey.8.gz
 %endif
+%endif  # build_userspace
 
 %if %{build_modules}
 %files -f kmod-debuginfo.list -n %{name}-kernel-debuginfo
 %defattr(-,root,root)
 %endif
 
-%endif
 ##############################################################################
 ###
 ### openafs.spec change log
