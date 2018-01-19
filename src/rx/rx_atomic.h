@@ -330,14 +330,14 @@ typedef atomic_t rx_atomic_t;
 # endif
 
 #ifndef AFS_SUN510_ENV
-# define atomic_inc_32(X)    atomic_add_32((X), 1)
-# define atomic_inc_32_nv(X) atomic_add_32_nv((X), 1)
-# define atomic_dec_32(X)    atomic_add_32((X), -1)
-# define atomic_dec_32_nv(X) atomic_add_32_nv((X), -1)
+# define atomic_inc_ulong(X)    atomic_add_ulong((X), 1)
+# define atomic_inc_ulong_nv(X) atomic_add_ulong_nv((X), 1)
+# define atomic_dec_ulong(X)    atomic_add_ulong((X), -1)
+# define atomic_dec_ulong_nv(X) atomic_add_ulong_nv((X), -1)
 #endif
 
 typedef struct {
-    volatile unsigned int var;
+    volatile ulong_t var;
 } rx_atomic_t;
 
 static_inline void
@@ -352,37 +352,37 @@ rx_atomic_read(rx_atomic_t *atomic) {
 
 static_inline void
 rx_atomic_inc(rx_atomic_t *atomic) {
-    atomic_inc_32(&atomic->var);
+    atomic_inc_ulong(&atomic->var);
 }
 
 static_inline int
 rx_atomic_inc_and_read(rx_atomic_t *atomic) {
-    return atomic_inc_32_nv(&atomic->var);
+    return atomic_inc_ulong_nv(&atomic->var);
 }
 
 static_inline void
 rx_atomic_add(rx_atomic_t *atomic, int change) {
-    atomic_add_32(&atomic->var, change);
+    atomic_add_long(&atomic->var, change);
 }
 
 static_inline int
 rx_atomic_add_and_read(rx_atomic_t *atomic, int change) {
-    return atomic_add_32_nv(&atomic->var, change);
+    return atomic_add_long_nv(&atomic->var, change);
 }
 
 static_inline void
 rx_atomic_dec(rx_atomic_t *atomic) {
-    atomic_dec_32(&atomic->var);
+    atomic_dec_ulong(&atomic->var);
 }
 
 static_inline int
 rx_atomic_dec_and_read(rx_atomic_t *atomic) {
-    return atomic_dec_32_nv(&atomic->var);
+    return atomic_dec_ulong_nv(&atomic->var);
 }
 
 static_inline void
 rx_atomic_sub(rx_atomic_t *atomic, int change) {
-    atomic_add_32(&atomic->var, 0 - change);
+    atomic_add_long(&atomic->var, 0 - change);
 }
 
 static_inline int
@@ -392,12 +392,12 @@ rx_atomic_test_bit(rx_atomic_t *atomic, int bit) {
 
 static_inline void
 rx_atomic_set_bit(rx_atomic_t *atomic, int bit) {
-    atomic_or_32(&atomic->var, 1<<bit);
+    atomic_or_ulong(&atomic->var, 1<<bit);
 }
 
 static_inline void
 rx_atomic_clear_bit(rx_atomic_t *atomic, int bit) {
-    atomic_and_32(&atomic->var, ~(1<<bit));
+    atomic_and_ulong(&atomic->var, ~(1<<bit));
 }
 
 static_inline int
