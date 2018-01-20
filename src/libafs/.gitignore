@@ -20,10 +20,13 @@
 /export.exp
 /export64.exp
 /h
+/inet
 /linux
 /net
 /netinet
+/nfs
 /rpc
 /sys
 /rx
+/ufs
 /.makelog
