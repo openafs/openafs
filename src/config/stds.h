@@ -316,4 +316,13 @@ hdr_static_inline(unsigned long long) afs_printable_uint64_lu(afs_uint64 d) { re
 #define AFS_NONNULL(x)
 #endif
 
+/*
+ * Conditionally remove unreached statements under Solaris Studio.
+ */
+#if defined(__SUNPRO_C)
+# define AFS_UNREACHED(x)
+#else
+# define AFS_UNREACHED(x)  x
+#endif
+
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */

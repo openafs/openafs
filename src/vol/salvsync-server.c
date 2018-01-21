@@ -336,7 +336,7 @@ SALVSYNC_syncThread(void * args)
 	    CallHandler(&SALVSYNC_readfds);
     }
 
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 static void

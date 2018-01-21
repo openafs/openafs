@@ -331,7 +331,7 @@ FSYNC_sync(void * args)
 	    CallHandler(&FSYNC_readfds);
 #endif
     }
-    return NULL; /* hush now, little gcc */
+    AFS_UNREACHED(return(NULL)); /* hush now, little gcc */
 }
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -376,9 +376,8 @@ FSYNC_salvageThread(void * args)
 	VCancelReservation_r(vp);
     }
 
-    VOL_UNLOCK;
-
-    return NULL;
+    AFS_UNREACHED(VOL_UNLOCK);
+    AFS_UNREACHED(return(NULL));
 }
 
 /**
@@ -2128,7 +2127,7 @@ FindHandler(osi_socket afd)
 	}
     ReleaseReadLock(&FSYNC_handler_lock);	/* just in case */
     opr_abort();
-    return -1;			/* satisfy compiler */
+    AFS_UNREACHED(return(-1));			/* satisfy compiler */
 }
 
 static int
@@ -2140,7 +2139,7 @@ FindHandler_r(osi_socket afd)
 	    return i;
 	}
     opr_abort();
-    return -1;			/* satisfy compiler */
+    AFS_UNREACHED(return(-1));			/* satisfy compiler */
 }
 
 static int

@@ -440,8 +440,10 @@ FiveMinuteCheckLWP(void *unused)
     opr_cv_broadcast(&fs_state.worker_done_cv);
     FS_UNLOCK;
     FS_STATE_UNLOCK;
-#endif
     return NULL;
+#else
+    AFS_UNREACHED(return(NULL));
+#endif
 }				/*FiveMinuteCheckLWP */
 
 
@@ -488,8 +490,10 @@ HostCheckLWP(void *unused)
     opr_cv_broadcast(&fs_state.worker_done_cv);
     FS_UNLOCK;
     FS_STATE_UNLOCK;
-#endif
     return NULL;
+#else
+    AFS_UNREACHED(return(NULL));
+#endif
 }				/*HostCheckLWP */
 
 /* This LWP does fsync checks every 5 minutes:  it should not be used for
@@ -547,8 +551,10 @@ FsyncCheckLWP(void *unused)
     opr_cv_broadcast(&fs_state.worker_done_cv);
     FS_UNLOCK;
     FS_STATE_UNLOCK;
-#endif /* AFS_DEMAND_ATTACH_FS */
     return NULL;
+#else
+    AFS_UNREACHED(return(NULL));
+#endif /* !AFS_DEMAND_ATTACH_FS */
 }
 
 /*------------------------------------------------------------------------
@@ -2213,5 +2219,5 @@ main(int argc, char *argv[])
     while (1) {
 	sleep(1000);		/* long time */
     }
-    return 0;
+    AFS_UNREACHED(return(0));
 }

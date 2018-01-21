@@ -334,8 +334,7 @@ rx_ListenerProc(void *dummy)
 	rxi_ServerProc(threadID, newcall, &sock);
 	/* osi_Assert(sock != OSI_NULLSOCKET); */
     }
-    /* not reached */
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 /* This is the server process request loop. The server process loop
@@ -368,8 +367,7 @@ rx_ServerProc(void * unused)
 	/* osi_Assert(threadID != -1); */
 	/* osi_Assert(newcall != NULL); */
     }
-    /* not reached */
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 /*
