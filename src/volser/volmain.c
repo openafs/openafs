@@ -156,7 +156,7 @@ BKGLoop(void *unused)
 	}
     }
 
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 #if defined(AFS_NT40_ENV) || defined(AFS_DARWIN160_ENV)

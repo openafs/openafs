@@ -76,7 +76,7 @@ signalHandler(void *arg)
 	    handlers[receivedSignal].handler(receivedSignal);
 	}
     }
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 static void

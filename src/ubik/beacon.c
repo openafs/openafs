@@ -663,7 +663,7 @@ ubeacon_Interact(void *dummy)
 	}
 
     }				/* while loop */
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 /*!

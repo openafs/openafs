@@ -681,7 +681,7 @@ bproc(void *unused)
 	    }
 	}
     }
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 static afs_int32

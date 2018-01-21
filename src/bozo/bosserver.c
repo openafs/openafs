@@ -633,7 +633,7 @@ BozoDaemon(void *unused)
 	    bnode_ApplyInstance(bdrestart, 0);
 	}
     }
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 #ifdef AFS_AIX32_ENV

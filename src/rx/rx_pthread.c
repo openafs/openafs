@@ -182,7 +182,7 @@ event_handler(void *argp)
 #endif
 	rx_pthread_event_rescheduled = 0;
     }
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 
@@ -264,8 +264,7 @@ rx_ListenerProc(void *argp)
 	rxi_ServerProc(threadID, newcall, &sock);
 	/* osi_Assert(sock != OSI_NULLSOCKET); */
     }
-    /* not reached */
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 /* This is the server process request loop. The server process loop
@@ -312,8 +311,7 @@ rx_ServerProc(void * dummy)
 	/* osi_Assert(threadID != -1); */
 	/* osi_Assert(newcall != NULL); */
     }
-    /* not reached */
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 /*

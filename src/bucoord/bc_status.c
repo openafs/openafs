@@ -388,7 +388,7 @@ statusWatcher(void *unused)
 	    curPollPtr = 0;
 	}			/*done */
     }				/*w */
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 /* bc_jobNumber

@@ -874,7 +874,7 @@ urecovery_Interact(void *dummy)
 	}
 	DBRELE(ubik_dbase);
     }
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 /*!

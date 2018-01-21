@@ -583,7 +583,7 @@ static void *IOMGR(void *dummy)
 	}
 	LWP_DispatchProcess();
     }
-    return (void *)-1; /* keeps compilers happy. */
+    AFS_UNREACHED(return((void *)-1)); /* keeps compilers happy. */
 }
 
 /************************\
