@@ -47,9 +47,13 @@ DBUG= -Wu,-save_args
 KDEFS_32 = -xarch=v8
 KDEFS_64 = -xarch=v9 
 
-<sunx86_58 sunx86_59 sunx86_510 sunx86_511>
+<sunx86_58 sunx86_59 sunx86_510>
 KDEFS_32 = 
 KDEFS_64 = -xarch=amd64 -xmodel=kernel
+
+<sunx86_511>
+KDEFS_32 =
+KDEFS_64 = -m64 -xmodel=kernel
 
 <all>
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) @SOLARIS_CC_KOPTS@ ${DBUG}
