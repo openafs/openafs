@@ -37,6 +37,7 @@ rs_state.ini
 config.log
 
 !.gitignore
+!.gitreview
 !.cvsignore
 !.splintrc
 
