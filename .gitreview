@@ -1,0 +1,4 @@
+[gerrit]
+host=gerrit.openafs.org
+port=29418
+project=openafs
