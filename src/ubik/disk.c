@@ -869,6 +869,7 @@ udisk_commit(struct ubik_trans *atrans)
     struct ubik_dbase *dbase;
     afs_int32 code = 0;
     struct ubik_version oldversion, newversion;
+    afs_int32 now = FT_ApproxTime();
 
     if (atrans->flags & TRDONE)
 	return (UTWOENDS);
@@ -878,6 +879,12 @@ udisk_commit(struct ubik_trans *atrans)
 
 	/* On the first write to the database. We update the versions */
 	if (ubeacon_AmSyncSite() && !(urecovery_state & UBIK_RECLABELDB)) {
+	    if (ubik_epochTime < UBIK_MILESTONE || ubik_epochTime > now) {
+		ubik_print
+		    ("Ubik: New database label %d is out of the valid range (%d - %d)\n",
+		     ubik_epochTime, UBIK_MILESTONE, now);
+		panic("Writing Ubik DB label\n");
+	    }
 	    oldversion = dbase->version;
 	    newversion.epoch = ubik_epochTime;
 	    newversion.counter = 1;
