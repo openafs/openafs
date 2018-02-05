@@ -48,6 +48,8 @@ FSINCLUDES = @FSINCLUDES@
 GENCAT = @GENCAT@
 INCLUDE_LIBINTL = @INCLUDE_libintl@
 KERN_DBG = @KERN_DBG@
+CTFCONVERT = @CTFCONVERT@
+CTFMERGE = @CTFMERGE@
 KERN_OPTMZ = @KERN_OPTMZ@
 KRB5_LIBS = @KRB5_LIBS@
 LD = @LD@
@@ -144,6 +146,36 @@ COMMON_CFLAGS=${DBG} ${OPTMZ} ${COMMON_INCL} ${INCLUDE_LIBINTL}
 
 CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} $(CFLAGS_NOERROR)
 LDFLAGS=${XLDFLAGS} ${ARCHFLAGS}
+
+RUN_CTFCONVERT=@RUN_CTFCONVERT() { \
+    CTFLABEL=$$1 ; \
+    CTFDBG=$$2 ; \
+    shift ; shift ; \
+    if test "x$${CTFDBG}" = "x" ; then exit 0; fi; \
+    if test "x${CTFCONVERT}" = "x" ; then exit 0; fi; \
+    if test "x${CTFMERGE}" = "x" ; then \
+        echo "refusing to run ctfconvert; missing ctfmerge"; \
+        exit 1; \
+    fi; \
+    for t in $$@ ; do \
+        echo "${CTFCONVERT} -g -l $${CTFLABEL} $$t"; \
+        ${CTFCONVERT} -g -l $${CTFLABEL} $$t; \
+    done ; \
+} ; RUN_CTFCONVERT
+
+RUN_CTFMERGE=@RUN_CTFMERGE () { \
+    CTFLABEL=$$1 ; \
+    CTFDBG=$$2 ; \
+    shift ; shift ; \
+    if test "x$${CTFDBG}" = "x" ; then exit 0; fi; \
+    if test "x${CTFMERGE}" = "x" ; then exit 0; fi; \
+    if test "x${CTFCONVERT}" = "x" ; then \
+        echo "refusing to run ctfmerge; missing ctfconvert"; \
+        exit 1; \
+    fi; \
+    echo "$(CTFMERGE) -g -l $${CTFLABEL} -o $$@"; \
+    $(CTFMERGE) -g -l $${CTFLABEL} -o $$@; \
+} ; RUN_CTFMERGE
 
 .c.o:
 	$(CCOBJ) $(CFLAGS) -c $<
