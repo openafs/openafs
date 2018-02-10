@@ -5086,7 +5086,14 @@ rxi_SendCallAbort(struct rx_call *call, struct rx_packet *packet,
     if (rx_IsClientConn(call->conn))
 	force = 1;
 
-    if (call->abortCode != call->error) {
+    /*
+     * An opcode that has been deprecated or has yet to be implemented is not
+     * a misbehavior of the client.  Do not punish the client by introducing
+     * delays.
+     */
+    if (call->error == RXGEN_OPCODE) {
+	force = 1;
+    } else if (call->abortCode != call->error) {
 	call->abortCode = call->error;
 	call->abortCount = 0;
     }
@@ -5095,7 +5102,8 @@ rxi_SendCallAbort(struct rx_call *call, struct rx_packet *packet,
 	|| call->abortCount < rxi_callAbortThreshhold) {
 	rxi_CancelDelayedAbortEvent(call);
 	error = htonl(call->error);
-	call->abortCount++;
+	if (!force)
+	    call->abortCount++;
 	packet =
 	    rxi_SendSpecial(call, call->conn, packet, RX_PACKET_TYPE_ABORT,
 			    (char *)&error, sizeof(error), istack);
