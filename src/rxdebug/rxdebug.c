@@ -235,6 +235,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
     }
 
     if (version_flag) {
+        memset(version, 0, sizeof(version));
 
 	code = rx_GetServerVersion(s, host, port, length, version);
 	if (code < 0) {
@@ -242,6 +243,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 		   errno);
 	    exit(1);
 	}
+        version[sizeof(version) - 1] = '\0';
 	printf("AFS version: %s\n", version);
 	fflush(stdout);
 
