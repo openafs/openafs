@@ -768,14 +768,21 @@ Specifies the maximum amount of time the Cache Manager will cache volume
 information retrieved from VL Servers.
 
 By default, the Cache Manager will cache read-only volume information as long
-as a volume callback is held for a read-only volume. The callback may be held
-as long as files in the read-only volume are being accessed.  The Cache Manager
-will cache read/write volume information as long as volume level errors are not
-returned from fileservers while accessing files within the volume.
+as a volume callback is held for that volume. The callback may be held as long
+as files in the read-only volume are being accessed, with no upper limit. For
+read/write volumes, by default the Cache Manager will cache volume information
+forever, until a fileserver returns a volume-level error in response to
+accessing files in that volume.
 
-Use the B<-volume-ttl> to specify the maximum amount of time in seconds
-volume information will be cached, regardless of connectivity to the
-fileserers. The minimum valid value is 600 seconds (10 minutes).
+Use the B<-volume-ttl> option to specify the maximum amount of time in seconds
+that volume information will be cached, regardless of connectivity to the
+fileservers. Lowering this value can make the Cache Manager recover more
+quickly from certain volume/fileserver errors, but will increase the load on
+the VL Servers for contacted cells.
+
+A typical value is 7200 seconds (2 hours), which is the same as the default
+callback duration for read-only volumes. The minimum valid value is 600 seconds
+(10 minutes).
 
 =back
 
