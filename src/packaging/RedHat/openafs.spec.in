@@ -102,7 +102,7 @@ BuildRequires: krb5-devel
 BuildRequires: kernel-devel
 %endif
 
-ExclusiveArch: %{ix86} x86_64 ia64 s390 s390x sparc64 ppc ppc64
+ExclusiveArch: %{ix86} x86_64 ia64 s390 s390x sparc64 ppc ppc64 aarch64
 
 #    http://dl.openafs.org/dl/openafs/candidate/%{afsvers}/...
 Source0: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-src.tar.bz2
@@ -436,6 +436,7 @@ case %{_arch} in
        x86_64)                         sysname=amd64_linux26        ;;
        alpha*)                         sysname=alpha_linux_26       ;;
        i386|i486|i586|i686|athlon)     sysname=i386_linux26         ;;
+       aarch64)                        sysname=arm64_linux26        ;;
        *)                              sysname=%{_arch}_linux26     ;;
 esac
 
