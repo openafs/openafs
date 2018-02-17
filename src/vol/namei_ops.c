@@ -2505,6 +2505,8 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
     struct rx_queue resultlist;
 #endif
 
+    memset(&linkHandle, 0, sizeof(linkHandle));
+
     namei_HandleToVolDir(&name, &myIH);
     strlcpy(path1, name.n_path, sizeof(path1));
 
@@ -2778,6 +2780,8 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
     FdHandle_t linkHandle;
     char dirl;
     VolumeId volid = myIH->ih_vid;
+
+    memset(&linkHandle, 0, sizeof(linkHandle));
 
     snprintf(fpath, sizeof(fpath), "%s" OS_DIRSEP "%s", dpath, name);
 
