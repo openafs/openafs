@@ -1116,7 +1116,7 @@ Dumper(void *param)
     int nodumpvolumes = 0;
     char strlevel[5];
     char msg[20];
-    char finishedMsg1[50];
+    char finishedMsg1[128];
     char finishedMsg2[50];
     time_t startTime = 0;
     time_t endTime = 0;
