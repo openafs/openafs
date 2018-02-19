@@ -763,7 +763,7 @@ AclToString(struct Acl *acl)
 {
     static char mydata[AFS_PIOCTL_MAXSIZE];
     char tstring[AFS_PIOCTL_MAXSIZE];
-    char dfsstring[30];
+    char dfsstring[AFS_PIOCTL_MAXSIZE];
     struct AclEntry *tp;
 
     if (acl->dfs)
