@@ -463,6 +463,19 @@ afs_GetOnePage(struct vnode *vp, u_offset_t off, u_int alen, u_int *protp,
     return code;
 }
 
+/**
+ * Dummy pvn_vplist_dirty() handler for non-writable vnodes.
+ */
+static int
+afs_never_putapage(struct vnode *vp, struct page *pages, u_offset_t * offp,
+	     size_t * lenp, int flags, afs_ucred_t *credp)
+{
+    struct vcache *avc = VTOAFS(vp);
+    osi_Assert((avc->f.states & CRO) != 0);
+    osi_Panic("Dirty pages while flushing a read-only volume vnode.");
+    return EIO; /* unreachable */
+}
+
 int
 afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags, 
 	    afs_ucred_t *cred)
@@ -474,7 +487,7 @@ afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
     afs_offs_t endPos;
     afs_int32 NPages = 0;
     u_offset_t toff = off;
-    int didWriteLock;
+    int didLock = 0;
 
     AFS_STATCNT(afs_putpage);
     if (vp->v_flag & VNOMAP)	/* file doesn't allow mapping */
@@ -488,11 +501,11 @@ afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
 	       (afs_int32) vp, ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(off),
 	       ICL_TYPE_INT32, (afs_int32) len, ICL_TYPE_LONG, (int)flags);
     avc = VTOAFS(vp);
-    ObtainSharedLock(&avc->lock, 247);
-    didWriteLock = 0;
 
     /* Get a list of modified (or whatever) pages */
     if (len) {
+	ObtainSharedLock(&avc->lock, 247);
+	didLock = SHARED_LOCK;
 	endPos = (afs_offs_t) off + len;	/* position we're supposed to write up to */
 	while ((afs_offs_t) toff < endPos
 	       && (afs_offs_t) toff < avc->f.m.Length) {
@@ -507,9 +520,9 @@ afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
 	    if (!pages || !pvn_getdirty(pages, flags))
 		tlen = PAGESIZE;
 	    else {
-		if (!didWriteLock) {
+		if (didLock == SHARED_LOCK) {
 		    AFS_GLOCK();
-		    didWriteLock = 1;
+		    didLock = WRITE_LOCK;
 		    UpgradeSToWLock(&avc->lock, 671);
 		    AFS_GUNLOCK();
 		}
@@ -524,27 +537,50 @@ afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
 	    AFS_GLOCK();
 	}
     } else {
-	if (!didWriteLock) {
-	    UpgradeSToWLock(&avc->lock, 670);
-	    didWriteLock = 1;
+	/*
+	 * We normally arrive here due to a vm flush.
+	 *
+	 * If this vnode belongs to a writable volume, obtain a vcache lock
+	 * then call pvn_vplist_dirty to free, invalidate, or to write out
+	 * dirty pages with afs_putapage.  The afs_putapage routine requires a
+	 * vcache lock, so we obtain it here before any page locks are taken.
+	 * This locking order is done to avoid deadlocking due to races with
+	 * afs_getpage, which also takes vcache and page locks.
+	 *
+	 * If this vnode belongs to a non-writable volume, then it will not
+	 * contain dirty pages, so we do not need to lock the vcache and since
+	 * afs_putapage will not be called.  Instead, forgo the vcache lock and
+	 * call pvn_vplist_dirty to free, or invalidate pages. Pass a dummy
+	 * page out handler to pvn_vplist_dirty which we do not expect to be
+	 * called.  Panic if the dummy handler is called, since something went
+	 * horribly wrong.
+	 */
+	if ((avc->f.states & CRO) == 0) {
+	    ObtainWriteLock(&avc->lock, 670);
+	    didLock = WRITE_LOCK;
 	}
-
 	AFS_GUNLOCK();
-	code = pvn_vplist_dirty(vp, toff, afs_putapage, flags, cred);
+	if ((avc->f.states & CRO) == 0)
+	    code = pvn_vplist_dirty(vp, toff, afs_putapage, flags, cred);
+	else
+	    code = pvn_vplist_dirty(vp, toff, afs_never_putapage, flags, cred);
 	AFS_GLOCK();
     }
 
     if (code && !avc->vc_error) {
-	if (!didWriteLock) {
+	if (didLock == 0) {
+	    ObtainWriteLock(&avc->lock, 668);
+	    didLock = WRITE_LOCK;
+	} else if (didLock == SHARED_LOCK) {
 	    UpgradeSToWLock(&avc->lock, 669);
-	    didWriteLock = 1;
+	    didLock = WRITE_LOCK;
 	}
 	avc->vc_error = code;
     }
 
-    if (didWriteLock)
+    if (didLock == WRITE_LOCK)
 	ReleaseWriteLock(&avc->lock);
-    else
+    else if (didLock == SHARED_LOCK)
 	ReleaseSharedLock(&avc->lock);
     afs_Trace2(afs_iclSetp, CM_TRACE_PAGEOUTDONE, ICL_TYPE_LONG, code,
 	       ICL_TYPE_LONG, NPages);

@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.8.0pre3
+OpenAFS 1.8.0pre5
 
   All Platforms
 
@@ -80,6 +80,7 @@ OpenAFS 1.8.0pre3
       - Support the SOURCE_DATE_EPOCH environment variable to improve build
         reproducibility.
       - Modernize language specific SWIG typemaps for libuafs Perl bindings.
+      - Refactor acinclude.m4 into a set of smaller m4 files (12876, 12877, 12878)
 
     * Improvements to documentation:
       - Document the new KeyFileExt file.
@@ -115,12 +116,18 @@ OpenAFS 1.8.0pre3
       - Add tool to find Unix cache manager lock identification numbers.
       - Add an option for pretty build output.
 
-    * RPM packaging updated:
+    * RPM packaging updates:
       - Update the spec file to keep up with accumulated changes.
       - Move the klog.krb5 man page to the openafs-krb5 sub-package.
+      - Remove stray man pages. (12870, 12871)
       - Prevent double-starting client on RHEL7
       - Convert rpm spec file from deprecated 'make dest' to 'make install'.
       - Fix rpmbuild command line option default handling.
+      - Support older versions of rpmbuild which do not support the
+        rpmbuild %exclude directive. (12873)
+      - Move the legacy kaserver and related programs to separate sub-packages,
+        which are only built when rpmbuild is given the '--with kauth' option
+        (12600, 12872)
 
     * Add a new protection error code (PRNAMETOOLONG) instead of silently
       truncating names which exceed the maximum name length (PR_MAXNAMELEN).
@@ -159,6 +166,8 @@ OpenAFS 1.8.0pre3
     * Add user and build host in the version string returned by
       rxdebug -version.
 
+    * Support recent versions of gcc (7.2.1) (12897)
+
   All Server Platforms
 
     * Ubik servers using pthreads are now available and are used by default
@@ -167,6 +176,15 @@ OpenAFS 1.8.0pre3
       election cycle (about 60 seconds) may be needed before writes are
       permitted.  This is a conservative change that may be removed in
       the future.
+
+    * Avoid continually retransmitting the ubik database to remote sites when
+      a write transaction occurs as remote sites are attempting to rejoin the
+      ubik cluster. (12896)
+
+    * Ensure the ubik database version number is updated on remote sites at the
+      point the database is transferred to remote sites instead of waiting for
+      the next ubik beacon. This avoids write transaction failures during the
+      window between the database transfer and the next ubik beacon (12885).
 
     * Remove periodic background fsync by the fileserver (ihandle fsync thread).
 
@@ -310,6 +328,8 @@ OpenAFS 1.8.0pre3
 
     * Fix building gtx when ncurses is linked against libtinfo.
 
+    * Update to the GCO CellServDB update from 14 March 2017.
+
   Linux
 
     * Remove Linux 2.2 and 2.4 support.
@@ -340,6 +360,7 @@ OpenAFS 1.8.0pre3
 
     * In Red Hat packaging, use a separate rpm for kmod debuginfo,
       removing a needless tight version dependency on the userspace package.
+      (12822, 12875)
 
     * Use the RemainAfterExit systemd feature to avoid premature exit
       when -afsdb is not given, for RPM packages.
@@ -355,6 +376,9 @@ OpenAFS 1.8.0pre3
     * Fix Debian/Ubuntu build regression on kernel 3.16.39.
 
     * Fix --enable-kernel-debug for linux 4.8+.
+
+    * Fix a hang encountered when accessing a previously removed
+      directory entry (12811).
 
     * Support linux 4.10, 4.11, 4.12, 4.13, 4.14, 4.15
 
@@ -374,6 +398,11 @@ OpenAFS 1.8.0pre3
       deprecated _depends_on symbol to ELF dependencies.
 
     * Avoid BAD TRAP panic due to invalid opcodes on x86 with Studio 12.5.
+
+    * Add ctf debug records to Solaris kernel modules when debug builds
+      are enabled and the ctf tools are present (ctfconvert/ctfmerge).
+
+    * Save kernel module function arguments on x86 for debugging purposes.
 
   MacOS
 
@@ -403,6 +432,11 @@ OpenAFS 1.8.0pre3
     * Stay up to date with new FreeBSD releases (through 10.3).
 
     * Do not claim AFS_VM_RDWR_ENV
+
+    * Add sysnames and files for i386 and amd64 10.4, 11.1, and 12.0
+     (12-CURRENT, at present). (12887, 12888)
+
+    * Remove trailing semicolons to fix the build on FreeBSD (12899)
 
   NetBSD
 

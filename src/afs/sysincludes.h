@@ -406,7 +406,6 @@ MALLOC_DECLARE(M_AFS);
 #  endif
 # endif /* AFS_SUN5_ENV */
 
-# include "rpc/types.h"
 # include "rx/xdr.h"
 
 /* Miscellaneous headers */

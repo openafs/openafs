@@ -1,3 +1,4 @@
 krb5_locl.h
 context.c
 copy.c
+rfc3961.h

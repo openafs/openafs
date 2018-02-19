@@ -499,6 +499,13 @@ I  Other configure options
        xsltproc.  By default, the user's path is searched for those
        programs in that order, and the first one found is used.
 
+   --with-ctf-tools[=DIR]
+       Location of ctfconvert and ctfmerge. Defaults to detect. These
+       tools create a reduced form of debug information that describes
+       types and function prototypes. This option is only relevant to
+       platforms that provide CTF tools and, at the moment, it is only
+       functional on Solaris (onbld package must be installed).
+
    There are also some environment variables that you can set to control
    aspects of the build.  They can be set either on the configure command
    line (preferred) or in the environment.

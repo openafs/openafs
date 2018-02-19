@@ -51,6 +51,9 @@ AC_DEFUN([OPENAFS_SUMMARY],[
   AS_IF([test "${summary_doxygen}" = "yes" -a "${HAVE_DOT}" = "yes"],
     [summary_doxygen_graphs="yes"],
     [summary_doxygen_graphs="no"])
+  AS_IF([test "x$CTFCONVERT" != "x" -a "x$CTFMERGE" != "x"],
+    [summary_ctf_tools="yes"],
+    [summary_ctf_tools="no"])
 
   cat <<EOF
 ***************************************************************
@@ -62,6 +65,7 @@ OpenAFS configure summary
 debug:
   userspace              : ${enable_debug}
   kernel                 : ${enable_debug_kernel}
+  ctf-tools              : ${summary_ctf_tools}
 options:
   transarc paths         : ${enable_transarc_paths}
   namei fileserver       : ${openafs_cv_summary_check_namei}

@@ -21,8 +21,6 @@
 #  include "h/uio.h"
 #  ifdef AFS_LINUX20_ENV
 #   include "h/socket.h"
-#  else
-#   include "rpc/types.h"
 #  endif
 #  ifdef AFS_LINUX22_ENV
 #   ifndef quad_t

@@ -41,6 +41,8 @@ DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 #LORDER = /usr/ccs/bin/lorder
 #CC = /opt/SUNWspro/bin/cc
 KDEFS= -D_KERNEL -DSYSV -dn ${ARCH_DEFS}
+<sunx86_510 sunx86_511>
+DBUG= -Wu,-save_args
 
 <sun4x_58 sun4x_59 sun4x_510 sun4x_511>
 KDEFS_32 = -xarch=v8
@@ -146,9 +148,13 @@ dest_libafs: $(LIBAFS) $(LIBAFSNONFS)
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(RM) -f $@
+	$(RUN_CTFCONVERT) libafs "${KERN_DBG}" ${AFSAOBJS} ${AFSNFSOBJS}
 	$(LD) $(LDFLAGS) -o $@ $(AFSAOBJS) ${AFSNFSOBJS}
+	$(RUN_CTFMERGE) libafs "${KERN_DBG}" $@ $(AFSAOBJS) ${AFSNFSOBJS}
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(RM) -f $@
+	$(RUN_CTFCONVERT) libafs "${KERN_DBG}" ${AFSAOBJS} ${AFSNONFSOBJS}
 	$(LD) $(LDFLAGS) -o $@ $(AFSAOBJS) ${AFSNONFSOBJS}
+	$(RUN_CTFMERGE) libafs "${KERN_DBG}" $@ $(AFSAOBJS) ${AFSNONFSOBJS}
 
