@@ -1,4 +1,4 @@
-openafs (1.8.0~pre5-1) UNRELEASED; urgency=low
+openafs (1.8.0~pre5-1) unstable; urgency=low
 
   [ Russ Allbery ]
   * Remove myself from Uploaders.
@@ -17,7 +17,7 @@ openafs (1.8.0~pre5-1) UNRELEASED; urgency=low
   * Correct 1.8.0~pre4-1 changelog entry to reflect that it closed one more
     Mayhem-reported bug.  (Closes: #716446)
 
- -- Russ Allbery <rra@debian.org>  Fri, 29 Dec 2017 20:53:02 -0800
+ -- Benjamin Kaduk <kaduk@mit.edu>  Mon, 19 Feb 2018 10:51:08 -0600
 
 openafs (1.8.0~pre4-1) unstable; urgency=low
 
