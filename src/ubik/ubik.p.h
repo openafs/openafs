@@ -55,6 +55,11 @@
 #include <lwp.h>
 #endif
 
+/*! Sanity check: This macro represents an arbitrary date in the past
+ * (Tue Jun 20 15:36:43 2017). The database epoch must be greater or
+ * equal to this value. */
+#define	UBIK_MILESTONE	    1497987403
+
 /*!
  * \brief per-client structure for ubik
  */
