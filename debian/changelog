@@ -13,6 +13,7 @@ openafs (1.8.0~pre5-1) UNRELEASED; urgency=low
     - Remove includes of <rpc/types.h>, for compatibility with glibc 2.26
     - Do not include RXGEN_OPCODE when throttling clients that generate too
       many abort replies
+  * Update Vcs- entries in control to reflect the move from alioth to salsa
 
  -- Russ Allbery <rra@debian.org>  Fri, 29 Dec 2017 20:53:02 -0800
 
