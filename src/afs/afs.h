@@ -1398,10 +1398,6 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #define AFS_VOLCHECK_MTPTS	0x4	/* mount point invalidation also */
 #define AFS_VOLCHECK_FORCE	0x8	/* do all forcibly */
 
-/* For volume ttl expiry checks. */
-#define AFS_MIN_VOLUME_TTL 600
-#define AFS_MAX_VOLUME_TTL MAX_AFS_INT32
-
 #endif /* KERNEL */
 
 #define	AFS_FSPORT	    ((unsigned short) htons(7000))
