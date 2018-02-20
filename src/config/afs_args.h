@@ -184,6 +184,9 @@ enum {
     AFS_INUMCALC_MD5 = 1
 };
 
+/* Supported volume ttl range. */
+#define AFS_MIN_VOLUME_TTL 600
+#define AFS_MAX_VOLUME_TTL MAX_AFS_INT32
 
 /*
  * Note that the AFS_*ALLOCSIZ values should be multiples of sizeof(void*) to

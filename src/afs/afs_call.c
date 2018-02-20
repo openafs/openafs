@@ -1324,7 +1324,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	}
     } else if (parm == AFSOP_SET_VOLUME_TTL) {
 	if ((parm2 < AFS_MIN_VOLUME_TTL) || (parm2 > AFS_MAX_VOLUME_TTL)) {
-	    code = EINVAL;
+	    code = EFAULT;
 	} else {
 	    afs_volume_ttl = parm2;
 	    code = 0;
