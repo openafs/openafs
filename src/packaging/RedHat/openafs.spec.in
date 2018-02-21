@@ -96,7 +96,7 @@ BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, flex, bison
 BuildRequires: systemd-units
 %endif
 %if 0%{?fedora} >= 15 || 0%{?rhel} >= 6
-BuildRequires: perl-devel
+BuildRequires: perl-devel, swig
 %endif
 BuildRequires: perl(ExtUtils::Embed)
 %if %{krb5support}
@@ -610,6 +610,11 @@ export KRB5_CONFIG
 %if %{krb5support}
 	--with-krb5 \
 %endif
+%if 0%{?fedora} >= 15 || 0%{?rhel} >= 6
+    --with-swig \
+%else
+    --without-swig \
+%endif
        $config_opts \
        || exit 1
 
@@ -808,6 +813,9 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man1/pagsh.krb.1
 rm -f $RPM_BUILD_ROOT%{_mandir}/man1/tokens.krb.1
 rm -f $RPM_BUILD_ROOT%{_mandir}/man5/AuthLog.5
 rm -f $RPM_BUILD_ROOT%{_mandir}/man5/AuthLog.dir.5
+%endif
+%if !(0%{?fedora} >= 15 || 0%{?rhel} >= 6)
+rm -f %{_mandir}/man3/AFS::ukernel.3
 %endif
 
 #-----------------------------------------------------------------------------
@@ -1208,7 +1216,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %endif
 %{_mandir}/man1/cmdebug.1.gz
 %{_mandir}/man1/up.1.gz
-%{_mandir}/man3/AFS::ukernel.3.gz
 %{_mandir}/man5/afs.5.gz
 %{_mandir}/man5/afs_cache.5.gz
 %{_mandir}/man5/afs_volume_header.5.gz
@@ -1354,6 +1361,11 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_libdir}/libubik.a
 %{_mandir}/man1/rxgen.1.gz
 %{_mandir}/man1/afs_compile_et.1.gz
+%if 0%{?fedora} >= 15 || 0%{?rhel} >= 6
+%{_libdir}/perl/AFS/ukernel.pm
+%{_libdir}/perl/ukernel.so
+%{_mandir}/man3/AFS::ukernel.3.gz
+%endif
 
 %if %{build_dkmspkg}
 %files -n dkms-%{name}
