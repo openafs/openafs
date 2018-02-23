@@ -2552,7 +2552,8 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 /* Send a raw abort packet, without any call or connection structures */
 void
 rxi_SendRawAbort(osi_socket socket, afs_uint32 host, u_short port,
-		 afs_int32 error, struct rx_packet *source, int istack)
+		 afs_uint32 serial, afs_int32 error,
+		 struct rx_packet *source, int istack)
 {
     struct rx_header theader;
     struct sockaddr_in addr;
@@ -2561,7 +2562,7 @@ rxi_SendRawAbort(osi_socket socket, afs_uint32 host, u_short port,
     memset(&theader, 0, sizeof(theader));
     theader.epoch = htonl(source->header.epoch);
     theader.callNumber = htonl(source->header.callNumber);
-    theader.serial = htonl(1);
+    theader.serial = htonl(serial);
     theader.type = RX_PACKET_TYPE_ABORT;
     theader.serviceId = htons(source->header.serviceId);
     theader.securityIndex = source->header.securityIndex;
