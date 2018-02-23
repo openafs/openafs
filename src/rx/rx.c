@@ -3425,7 +3425,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
        don't abort an abort. */
     if (!conn) {
         if (unknownService && (np->header.type != RX_PACKET_TYPE_ABORT))
-	    rxi_SendRawAbort(socket, host, port, 1, RX_INVALID_OPERATION,
+	    rxi_SendRawAbort(socket, host, port, 0, RX_INVALID_OPERATION,
                              np, 0);
         return np;
     }
