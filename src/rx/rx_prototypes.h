@@ -426,8 +426,8 @@ extern void rxi_SendPacketList(struct rx_call *call,
 			       struct rx_connection *conn,
 			       struct rx_packet **list, int len, int istack);
 extern void rxi_SendRawAbort(osi_socket socket, afs_uint32 host, u_short port,
-			     afs_int32 error, struct rx_packet *source,
-			     int istack);
+			     afs_uint32 serial, afs_int32 error,
+			     struct rx_packet *source, int istack);
 extern struct rx_packet *rxi_SendSpecial(struct rx_call *call,
 					 struct rx_connection *conn,
 					 struct rx_packet *optionalPacket,

@@ -3165,10 +3165,15 @@ static_inline int
 rxi_AbortIfServerBusy(osi_socket socket, struct rx_connection *conn,
 		      struct rx_packet *np)
 {
+    afs_uint32 serial;
+
     if ((rx_BusyThreshold > 0) &&
 	(rx_atomic_read(&rx_nWaiting) > rx_BusyThreshold)) {
+	MUTEX_ENTER(&conn->conn_data_lock);
+	serial = ++conn->serial;
+	MUTEX_EXIT(&conn->conn_data_lock);
 	rxi_SendRawAbort(socket, conn->peer->host, conn->peer->port,
-			 rx_BusyError, np, 0);
+			 serial, rx_BusyError, np, 0);
 	if (rx_stats_active)
 	    rx_atomic_inc(&rx_stats.nBusies);
 	return 1;
@@ -3420,7 +3425,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
        don't abort an abort. */
     if (!conn) {
         if (unknownService && (np->header.type != RX_PACKET_TYPE_ABORT))
-            rxi_SendRawAbort(socket, host, port, RX_INVALID_OPERATION,
+	    rxi_SendRawAbort(socket, host, port, 1, RX_INVALID_OPERATION,
                              np, 0);
         return np;
     }
