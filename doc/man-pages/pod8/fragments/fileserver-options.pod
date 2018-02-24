@@ -282,6 +282,13 @@ restarted.  This option is provided for compatibility with older versions.
 Offer the SANEACLS capability for the fileserver.  This option is
 currently unimplemented.
 
+-item B<-cve-2018-7168-enforce>
+
+To address L<CVE-2018-7168|https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-7168>
+disable fileserver opcode RXAFS_StoreACL (134).  This opcode was replaced
+with RXAFS_StoreACL (164).  The opcode 164 is always available; this option serves
+only to disable the old opcode 134, for which client intent is unreliable.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are

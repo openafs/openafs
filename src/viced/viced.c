@@ -164,6 +164,7 @@ int abort_threshold = 10;
 int udpBufSize = 0;		/* UDP buffer size for receive */
 int sendBufSize = 16384;	/* send buffer size */
 int saneacls = 0;		/* Sane ACLs Flag */
+int enable_old_store_acl = 1;	/* -cve-2018-7168-enforce */
 static int unsafe_attach = 0;   /* avoid inUse check on vol attach? */
 static int offline_timeout = -1; /* -offline-timeout option */
 static int offline_shutdown_timeout = -1; /* -offline-shutdown-timeout option */
@@ -894,6 +895,7 @@ enum optionsList {
     OPT_readonly,
     OPT_adminwrite,
     OPT_saneacls,
+    OPT_cve_2018_7168,
     OPT_buffers,
     OPT_callbacks,
     OPT_vcsize,
@@ -991,6 +993,8 @@ ParseArgs(int argc, char *argv[])
 			"from system:administrators");
     cmd_AddParmAtOffset(opts, OPT_saneacls, "-saneacls", CMD_FLAG,
 		        CMD_OPTIONAL, "set the saneacls capability bit");
+    cmd_AddParmAtOffset(opts, OPT_cve_2018_7168, "-cve-2018-7168-enforce", CMD_FLAG,
+			CMD_OPTIONAL, "disable (unreliable) old store acls rpc (opcode 134)");
 
     cmd_AddParmAtOffset(opts, OPT_buffers, "-b", CMD_SINGLE,
 			CMD_OPTIONAL, "buffers");
@@ -1192,6 +1196,10 @@ ParseArgs(int argc, char *argv[])
     cmd_OptionAsFlag(opts, OPT_readonly, &readonlyServer);
     cmd_OptionAsFlag(opts, OPT_adminwrite, &adminwriteServer);
     cmd_OptionAsFlag(opts, OPT_saneacls, &saneacls);
+    optval = 0;
+    cmd_OptionAsFlag(opts, OPT_cve_2018_7168, &optval);
+    if (optval != 0)
+	enable_old_store_acl = 0;
     cmd_OptionAsInt(opts, OPT_buffers, &buffs);
 
     if (cmd_OptionAsInt(opts, OPT_callbacks, &numberofcbs) == 0) {

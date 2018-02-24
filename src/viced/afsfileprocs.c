@@ -3067,6 +3067,26 @@ SRXAFS_StoreData64(struct rx_call * acall, struct AFSFid * Fid,
     return code;
 }
 
+static char *
+printableACL(char *AccessList)
+{
+    char *s;
+    size_t i;
+    size_t len = strlen(AccessList);
+
+    s = calloc(1, len + 1);
+    if (s == NULL)
+	return NULL;
+
+    for (i = 0; i < len; i++) {
+	if (AccessList[i] == '\n')
+	    s[i] = ' ';
+	else
+	    s[i] = AccessList[i];
+    }
+    return s;
+}
+
 /**
  * Check if the given ACL blob is okay to use.
  *
@@ -3097,8 +3117,9 @@ check_acl(struct AFSOpaque *AccessList)
     return 0;
 }
 
-afs_int32
-SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
+static afs_int32
+common_StoreACL(afs_uint64 opcode,
+		struct rx_call * acall, struct AFSFid * Fid,
 		struct AFSOpaque *uncheckedACL,
 		struct AFSFetchStatus * OutStatus, struct AFSVolSync * Sync)
 {
@@ -3114,7 +3135,9 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
     struct client *t_client = NULL;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct fsstats fsstats;
+    char *displayACL = NULL;
     char *rawACL = NULL;
+    int newOpcode = (opcode == opcode_RXAFS_StoreACL);
 
     fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_STOREACL);
 
@@ -3130,9 +3153,12 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
     /* Get ptr to client data for user Id for logging */
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     logHostAddr.s_addr = rxr_HostOf(tcon);
-    ViceLog(1,
-	    ("SAFS_StoreACL, Fid = %u.%u.%u, ACL=%s, Host %s:%d, Id %d\n",
-	     Fid->Volume, Fid->Vnode, Fid->Unique, rawACL,
+    displayACL = printableACL(rawACL);
+    ViceLog(newOpcode ? 1 : 0,
+	    ("SAFS_StoreACL%s, Fid = %u.%u.%u, ACL=%s, Host %s:%d, Id %d\n",
+	     newOpcode ? "" : " CVE-2018-7168",
+	     Fid->Volume, Fid->Vnode, Fid->Unique,
+	     displayACL == NULL ? rawACL : displayACL,
 	     inet_ntoa(logHostAddr), ntohs(rxr_PortOf(tcon)), t_client->z.ViceId));
     FS_LOCK;
     AFSCallStats.StoreACL++, AFSCallStats.TotalCalls++;
@@ -3160,6 +3186,12 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
 	goto Bad_StoreACL;
     }
 
+    if (opcode == opcode_RXAFS_OldStoreACL && !enable_old_store_acl) {
+	/* CVE-2018-7168 - administratively prohibited */
+	errorCode = EPERM;
+	goto Bad_StoreACL;
+    }
+
     /* Build and store the new Access List for the dir */
     if ((errorCode = RXStore_AccessList(targetptr, rawACL))) {
 	goto Bad_StoreACL;
@@ -3181,18 +3213,43 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
     /* Update and store volume/vnode and parent vnodes back */
     PutVolumePackage(acall, parentwhentargetnotdir, targetptr, (Vnode *) 0,
 		     volptr, &client);
-    ViceLog(2, ("SAFS_StoreACL returns %d\n", errorCode));
+
+    ViceLog(2, ("%s returns %d\n",
+		opcode == opcode_RXAFS_StoreACL ? "SAFS_StoreACL"
+		 : "SAFS_OldStoreACL",
+		errorCode));
     errorCode = CallPostamble(tcon, errorCode, thost);
 
     fsstats_FinishOp(&fsstats, errorCode);
 
     osi_auditU(acall, StoreACLEvent, errorCode,
 	       AUD_ID, t_client ? t_client->z.ViceId : 0,
-	       AUD_FID, Fid, AUD_ACL, rawACL, AUD_END);
+	       AUD_FID, Fid, AUD_ACL,
+	       displayACL == NULL ? rawACL : displayACL,
+	       AUD_END);
+    free(displayACL);
     return errorCode;
 
 }				/*SRXAFS_StoreACL */
 
+/* SRXAFS_OldStoreACL (Deprecated - CVE-2018-7168 */
+afs_int32
+SRXAFS_OldStoreACL(struct rx_call *acall, struct AFSFid *Fid,
+		struct AFSOpaque *AccessList,
+		struct AFSFetchStatus *OutStatus, struct AFSVolSync *Sync)
+{
+    return common_StoreACL(opcode_RXAFS_OldStoreACL, acall, Fid, AccessList,
+			   OutStatus, Sync);
+}
+
+afs_int32
+SRXAFS_StoreACL(struct rx_call *acall, struct AFSFid *Fid,
+		struct AFSOpaque *AccessList,
+		struct AFSFetchStatus *OutStatus, struct AFSVolSync *Sync)
+{
+    return common_StoreACL(opcode_RXAFS_StoreACL, acall, Fid, AccessList,
+			   OutStatus, Sync);
+}
 
 /*
  * Note: This routine is called exclusively from SRXAFS_StoreStatus(), and
