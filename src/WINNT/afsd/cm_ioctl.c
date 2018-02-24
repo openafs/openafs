@@ -538,6 +538,8 @@ cm_IoctlSetACL(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp,
 
             rxconnp = cm_GetRxConn(connp);
             code = RXAFS_StoreACL(rxconnp, &fid, &acl, &fileStatus, &volSync);
+	    if (code == RXGEN_OPCODE)
+		code = RXAFS_OldStoreACL(rxconnp, &fid, &acl, &fileStatus, &volSync);
             rx_PutConnection(rxconnp);
 
         } while (cm_Analyze(connp, userp, reqp, &scp->fid, NULL, 1, &fileStatus, &volSync, NULL, NULL, code));

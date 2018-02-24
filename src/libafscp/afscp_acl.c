@@ -94,6 +94,9 @@ afscp_StoreACL(const struct afscp_venusfid *dir, struct AFSOpaque *acl)
 	if (server && server->naddrs > 0) {
 	    for (j = 0; j < server->naddrs; j++) {
 		code = RXAFS_StoreACL(server->conns[j], &df, acl, &dfst, &vs);
+		if (code == RXGEN_OPCODE)
+		    code = RXAFS_OldStoreACL(server->conns[j], &df, acl,
+					     &dfst, &vs);
 		if (code >= 0)
 		    break;
 	    }

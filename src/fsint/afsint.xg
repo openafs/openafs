@@ -310,7 +310,8 @@ StoreData(
   AFSVolSync *Sync
 ) split = 133;
 
-StoreACL(
+/* Deprecated - CVE-2018-7168 */
+OldStoreACL(
   IN  AFSFid *Fid,
   AFSOpaque *AccessList,
   OUT AFSFetchStatus *OutStatus,
@@ -519,6 +520,13 @@ DFSSymlink(
   AFSCallBack *CallBack,
   AFSVolSync *Sync
 ) = 163;
+
+StoreACL(
+  IN  AFSFid *Fid,
+  AFSOpaque *AccessList,
+  OUT AFSFetchStatus *OutStatus,
+  AFSVolSync *Sync
+) = 164;
 
 FsCmd(
   IN AFSFid *Fid,

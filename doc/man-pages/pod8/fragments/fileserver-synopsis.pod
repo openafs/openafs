@@ -40,6 +40,7 @@ B<fileserver>
     S<<< [B<-mrafslogs>] >>>
     S<<< [B<-transarc-logs>] >>>
     S<<< [B<-saneacls>] >>>
+    S<<< [B<-cve-2018-7168-enforce>] >>>
     S<<< [B<-help>] >>>
     S<<< [B<-vhandle-setaside> <I<fds reserved for non-cache io>>] >>>
     S<<< [B<-vhandle-max-cachesize> <I<max open files>>] >>>

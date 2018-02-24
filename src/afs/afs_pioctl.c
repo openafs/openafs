@@ -1457,9 +1457,12 @@ DECL_PIOCTL(PSetAcl)
 	if (tconn) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STOREACL);
 	    RX_AFS_GUNLOCK();
-	    code =
-		RXAFS_StoreACL(rxconn, (struct AFSFid *)&avc->f.fid.Fid,
-			       &acl, &OutStatus, &tsync);
+	    code = RXAFS_StoreACL(rxconn, (struct AFSFid *)&avc->f.fid.Fid,
+				  &acl, &OutStatus, &tsync);
+	    if (code == RXGEN_OPCODE)
+		code = RXAFS_OldStoreACL(rxconn,
+					 (struct AFSFid *)&avc->f.fid.Fid,
+					 &acl, &OutStatus, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else

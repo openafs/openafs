@@ -182,6 +182,7 @@ struct AFSStatistics {
 
 extern int busyonrst;
 extern int saneacls;
+extern int enable_old_store_acl;
 
 #define RESTART_ORDINARY 1
 #define RESTART_FAST 2
