@@ -75,7 +75,7 @@ struct rxgk_sconn {
     unsigned char tried_auth;
     unsigned char auth;
     rxgkTime expiration;
-    unsigned char challenge[20];
+    unsigned char challenge[RXGK_CHALLENGE_NONCE_LEN];
     struct rxgkStats stats;
     rxgkTime start_time;
     struct rx_identity *client;

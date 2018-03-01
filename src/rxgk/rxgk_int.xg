@@ -94,9 +94,11 @@ CombineTokens(IN RXGK_Data *token0, IN RXGK_Data *token1,
 
 /* Begin definitions for security class operation. */
 
+const RXGK_CHALLENGE_NONCE_LEN = 20;
+
 /* RX challenge and response structures */
 struct RXGK_Challenge {
-    opaque nonce[20];
+    opaque nonce[RXGK_CHALLENGE_NONCE_LEN];
 };
 const RXGK_MAXAUTHENTICATOR = 1416;	/* better fit in a packet! */
 struct RXGK_Response {
@@ -106,7 +108,7 @@ struct RXGK_Response {
 };
 
 struct RXGK_Authenticator {
-    opaque nonce[20];
+    opaque nonce[RXGK_CHALLENGE_NONCE_LEN];
     opaque appdata<>;
     RXGK_Level level;
     afs_uint32 epoch;
@@ -124,7 +126,12 @@ struct PrAuthName {
     opaque display<AUTHPRINTABLEMAX>;
 };
 
+/* PrAuthName 'kind' values */
+const PRAUTHTYPE_GSS = 2;
+
 /* RPC-L from draft-wilkinson-afs3-rxgk-afs. */
+
+const RXGK_NEVERDATE = 0;
 
 /* Begin authenticator appdata definition. */
 
