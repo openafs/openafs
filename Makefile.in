@@ -194,7 +194,7 @@ rxstat: rx rxstat_depinstall
 	+${COMPILE_PART1} rxstat ${COMPILE_PART2}
 
 rxtests: rxdebug
-rxdebug: rx sys
+rxdebug: rx sys rxgk
 	+${COMPILE_PART1} rxdebug ${COMPILE_PART2}
 
 fsint: cmd comerr rxgen rx lwp fsint_depinstall

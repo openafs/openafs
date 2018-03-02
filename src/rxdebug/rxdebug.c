@@ -22,6 +22,10 @@
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 
+#ifdef ENABLE_RXGK
+# include <rx/rxgk.h>
+#endif
+
 
 #define	TIMEOUT	    20
 
@@ -143,6 +147,10 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 
     if (as->parms[9].items) {
 	char *name = as->parms[9].items->data;
+        /* Note that this assumes that the security levels for rxkad and rxgk
+         * use the same constants (0, 1, and 2). Perhaps a little ugly, but the
+         * constants being identical makes it really convenient to do it this
+         * way. */
 	if (strcmp(name, "clear") == 0)
 	    onlyAuth = 0;
 	else if (strcmp(name, "auth") == 0)
@@ -309,8 +317,8 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 	    printf("Showing only client connections\n");
 	if (onlyAuth != 999) {
 	    static char *name[] =
-		{ "unauthenticated", "rxkad_clear", "rxkad_auth",
-		"rxkad_crypt"
+		{ "unauthenticated", "clear", "auth",
+		"crypt"
 	    };
 	    printf("Showing only %s connections\n", name[onlyAuth + 1]);
 	}
@@ -367,11 +375,20 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 		    if (tconn.securityIndex != RX_SECIDX_NULL)
 			continue;
 		} else {
-		    if (tconn.securityIndex != RX_SECIDX_KAD)
-			continue;
+		    if (tconn.securityIndex != RX_SECIDX_KAD) {
+#ifdef ENABLE_RXGK
+                        if (tconn.securityIndex != RX_SECIDX_GK)
+#endif
+                            continue;
+                    }
 		    if (withSecStats && (tconn.secStats.type == RX_SECTYPE_KAD)
 			&& (tconn.secStats.level != onlyAuth))
 			continue;
+#ifdef ENABLE_RXGK
+		    if (withSecStats && (tconn.secStats.type == RX_SECTYPE_GK)
+			&& (tconn.secStats.level != onlyAuth))
+			continue;
+#endif
 		}
 	    }
 
@@ -469,6 +486,41 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 			    printf("\n");
 			break;
 		    }
+#ifdef ENABLE_RXGK
+                case RX_SECTYPE_GK: {
+			char *level;
+			char flags = tconn.secStats.flags;
+			if (tconn.secStats.level == RXGK_LEVEL_CLEAR)
+			    level = "clear";
+			else if (tconn.secStats.level == RXGK_LEVEL_AUTH)
+			    level = "auth";
+			else if (tconn.secStats.level == RXGK_LEVEL_CRYPT)
+			    level = "crypt";
+			else
+			    level = "unknown";
+			printf("  rxgk: level %s", level);
+			if (flags)
+			    printf(", flags");
+			if ((flags & RXGK_STATS_UNALLOC))
+			    printf(" unalloc");
+			if ((flags & RXGK_STATS_AUTH))
+			    printf(" authenticated");
+			if (tconn.secStats.expires)
+			    printf(", expires in %.1f hours",
+				   ((afs_uint32) tconn.secStats.expires -
+				    time(0)) / 3600.0);
+			if (!(flags & RXGK_STATS_UNALLOC)) {
+			    printf("\n  Received %u bytes in %u packets\n",
+				   tconn.secStats.bytesReceived,
+				   tconn.secStats.packetsReceived);
+			    printf("  Sent %u bytes in %u packets\n",
+				   tconn.secStats.bytesSent,
+				   tconn.secStats.packetsSent);
+			} else
+			    printf("\n");
+			break;
+                    }
+#endif /* ENABLE_RXGK */
 
 		default:
 		    printf("  unknown\n");
