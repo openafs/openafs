@@ -5149,12 +5149,12 @@ DECL_PIOCTL(PSetCachingThreshold)
 DECL_PIOCTL(PCallBackAddr)
 {
 #ifndef UKERNEL
-    afs_uint32 addr, code;
+    afs_uint32 code;
     int srvAddrCount;
     struct server *ts;
     struct srvAddr *sa;
     struct afs_conn *tc;
-    afs_int32 i, j;
+    afs_int32 i, j, addr;
     struct unixuser *tu;
     struct srvAddr **addrs;
     struct rx_connection *rxconn;
