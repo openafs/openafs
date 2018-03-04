@@ -31,6 +31,10 @@
 #include "ktc.h"
 #include "auth.h"
 
+#ifdef AFS_RXGK_ENV
+# include <rx/rxgk.h>
+#endif
+
 /* return a null security object if nothing else can be done */
 static afs_int32
 QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
@@ -300,15 +304,11 @@ afsconf_BuildServerSecurityObjects(void *rock,
 {
     struct afsconf_dir *dir = rock;
 
-    if (dir->securityFlags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
-	*numClasses = 4;
-    else
-	*numClasses = 3;
+    *numClasses = RX_SECIDX_GK+1;
 
     *classes = calloc(*numClasses, sizeof(**classes));
 
     (*classes)[RX_SECIDX_NULL] = rxnull_NewServerSecurityObject();
-    (*classes)[RX_SECIDX_VAB] = NULL;
     (*classes)[RX_SECIDX_KAD] =
 	rxkad_NewKrb5ServerSecurityObject(0, dir, afsconf_GetKey,
 					  _afsconf_GetRxkadKrb5Key, NULL);
@@ -317,6 +317,10 @@ afsconf_BuildServerSecurityObjects(void *rock,
 	(*classes)[RX_SECIDX_KAE] =
 	    rxkad_NewKrb5ServerSecurityObject(rxkad_crypt, dir, afsconf_GetKey,
 					      _afsconf_GetRxkadKrb5Key, NULL);
+#ifdef AFS_RXGK_ENV
+    (*classes)[RX_SECIDX_GK] =
+        rxgk_NewServerSecurityObject(rock, afsconf_GetRXGKKey);
+#endif
 }
 
 /*!
