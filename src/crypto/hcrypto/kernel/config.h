@@ -95,6 +95,9 @@ static_inline int close(int d) {return -1;}
 #if defined(HAVE_GETUID)
 #undef HAVE_GETUID
 #endif
+#ifdef HAVE_ARC4RANDOM
+# undef HAVE_ARC4RANDOM
+#endif
 static_inline int gettimeofday(struct timeval *tp, void *tzp)
     {if (tp == NULL) return -1; tp->tv_sec = osi_Time(); tp->tv_usec = 0; return 0;}
 
