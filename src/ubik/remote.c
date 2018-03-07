@@ -482,9 +482,11 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     otherHost = ubikGetPrimaryInterfaceAddr(rx_HostOf(tpeer));
     if (offset && offset != otherHost) {
 	/* we *know* this is the wrong guy */
+        char sync_hoststr[16];
 	ubik_print
-	    ("Ubik: Refusing synchronization with server %s since it is not the sync-site.\n",
-	     afs_inet_ntoa_r(otherHost, hoststr));
+	    ("Ubik: Refusing synchronization with server %s since it is not the sync-site (%s).\n",
+	     afs_inet_ntoa_r(otherHost, hoststr),
+	     afs_inet_ntoa_r(offset, sync_hoststr));
 	return USYNC;
     }
 
