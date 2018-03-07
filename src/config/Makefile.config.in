@@ -260,8 +260,8 @@ LT_LDLIB_shlib_common=$(LIBTOOL) --quiet --mode=link --tag=CC \
 LT_LDLIB_shlib=$(LT_LDLIB_shlib_common) -export-symbols $(srcdir)/$@.sym
 
 LT_LDLIB_shlib_missing=$(LT_LDLIB_shlib_common) -export-symbols-regex \
-	"($$(sed -e 's/^/^/' -e 's/$$/$$/' $(srcdir)/$@.sym | tr '\n' '|' | \
-	sed -e 's/|$$//'))"
+	"($$(sed -e 's/^/^/' -e 's/$$/$$|/' -e '$$ s/|$$//' $(srcdir)/$@.sym | \
+	tr -d '\n'))"
 
 # Link a static convenience library (contains no PIC code)
 LT_LDLIB_static=$(LIBTOOL) --quiet --mode=link --tag=CC \
