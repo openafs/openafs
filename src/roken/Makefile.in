@@ -43,7 +43,7 @@ dest: librokenafs.la librokenafs.a
 
 clean:
 	$(LT_CLEAN)
-	$(RM) -f $(OBJECTS) librokenafs.a err.h
+	$(RM) -f $(OBJECTS) librokenafs.a err.h roken.h
 
 $(TOP_LIBDIR)/librokenafs.$(SHLIB_SUFFIX): librokenafs.la
 	$(LT_INSTALL_DATA) librokenafs.la $(TOP_LIBDIR)/librokenafs.la
@@ -65,7 +65,7 @@ $(TOP_INCDIR)/base64.h: ${UPSTREAM}/base64.h
 $(TOP_INCDIR)/err.h: ${UPSTREAM}/err.hin
 	$(INSTALL_DATA) $? $@
 
-$(TOP_INCDIR)/roken.h: $(UPSTREAM)/roken.h.in
+$(TOP_INCDIR)/roken.h: roken.h
 	$(INSTALL_DATA) $? $@
 
 $(TOP_INCDIR)/roken-common.h: $(UPSTREAM)/roken-common.h
@@ -73,6 +73,9 @@ $(TOP_INCDIR)/roken-common.h: $(UPSTREAM)/roken-common.h
 
 err.h: ${UPSTREAM}/err.hin
 	$(INSTALL_DATA) $? $@
+
+roken.h: $(UPSTREAM)/roken.h.in roken-post.h
+	cat $(UPSTREAM)/roken.h.in roken-post.h >$@
 
 # Here we have explicit rules for all the libtool objects we might need to
 # build.  The implicit rules don't work since the sources are in a different
