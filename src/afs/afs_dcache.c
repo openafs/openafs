@@ -2489,13 +2489,18 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 			ReleaseWriteLock(&tdc->lock);
 			afs_PutDCache(tdc);
 			tdc = 0;
-			ReleaseReadLock(&avc->lock);
 
-			if (tc) {
-			    /* If we have a connection, we must put it back,
-			     * since afs_Analyze will not be called here. */
-			    afs_PutConn(tc, rxconn, SHARED_LOCK);
-			}
+			/*
+			 * Call afs_Analyze to manage the connection references
+			 * and handle the error code (possibly mark servers
+			 * down, etc). We are going to retry getting the
+			 * dcache regardless, so we just ignore the retry hint
+			 * returned by afs_Analyze on this call.
+			 */
+			(void)afs_Analyze(tc, rxconn, code, &avc->f.fid, areq,
+					  AFS_STATS_FS_RPCIDX_FETCHDATA, SHARED_LOCK, NULL);
+
+			ReleaseReadLock(&avc->lock);
 
 			slowPass = 1;
 			goto RetryGetDCache;
