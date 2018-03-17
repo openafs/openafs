@@ -415,3 +415,15 @@ src/cf/lib-pathname.m4 are covered by the following license:
   THIS SOFTWARE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED
   WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+====================================================
+
+The file src/cf/ax_gcc_func_attribute.m4 covered by
+the following license:
+
+  Copyright (c) 2013 Gabriele Svelto <gabriele.svelto@gmail.com>
+
+  Copying and distribution of this file, with or without modification, are
+  permitted in any medium without royalty provided the copyright notice
+  and this notice are preserved.  This file is offered as-is, without any
+  warranty.
