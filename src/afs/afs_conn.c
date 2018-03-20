@@ -103,7 +103,6 @@ find_preferred_connection(struct sa_conn_vector *xcv, int create)
     } /* for cix < CVEC_LEN */
 
     if (bix < 0) {
-        afs_warn("find_preferred_connection: no connection and !create\n");
         tc = NULL;
         goto out;
     }
