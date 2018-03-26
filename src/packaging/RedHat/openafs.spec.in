@@ -403,17 +403,6 @@ krb4 lookalike services.
 ##############################################################################
 %if %{build_modules}
 
-# Make debuginfo for the kernel components into their own package
-# so we can upgrade kernel and userspace seperately and still debug each
-%package -n %{name}-kernel-debuginfo
-Summary: Debug information for %{name} kernel modules
-Group: Development/Debug
-AutoReqProv: no
-%description -n %{name}-kernel-debuginfo
-This package provides debug information for %{name} kernel modules.
-
-%{expand:%%global _find_debuginfo_opts %{?_find_debuginfo_opts} -p '.*openafs.ko(\.debug)?' -o kmod-debuginfo.list}
-
 %{expand:%(%{kmodtool} rpmtemplate %{kmod_name} %{kverrel} %{depmod} %{kvariants} 2>/dev/null)}
 
 %endif
@@ -1465,11 +1454,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/asetkey.8.gz
 %endif
 %endif  # build_userspace
-
-%if %{build_modules}
-%files -f kmod-debuginfo.list -n %{name}-kernel-debuginfo
-%defattr(-,root,root)
-%endif
 
 ##############################################################################
 ###
