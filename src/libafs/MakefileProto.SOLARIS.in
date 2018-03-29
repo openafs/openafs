@@ -38,7 +38,6 @@ AFS_OS_NONFSOBJS = \
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 #These are redundant
 #LD = /usr/ccs/bin/ld
-#LORDER = /usr/ccs/bin/lorder
 #CC = /opt/SUNWspro/bin/cc
 KDEFS= -D_KERNEL -DSYSV -dn ${ARCH_DEFS}
 <sunx86_510 sunx86_511>
