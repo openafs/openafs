@@ -88,7 +88,7 @@ is_afs_fh(fhandle_t * fhp)
 }
 
 afs_int32
-nfs2_to_afs_call(int which, caddr_t * args, fhandle_t ** fhpp,
+nfs2_to_afs_call(int which, void *args, fhandle_t ** fhpp,
 		 fhandle_t ** fh2pp)
 {
     struct vnode *vp;
@@ -97,84 +97,84 @@ nfs2_to_afs_call(int which, caddr_t * args, fhandle_t ** fhpp,
     int errorcode;
 
     afs_Trace1(afs_iclSetp, CM_TRACE_NFSIN, ICL_TYPE_INT32, which);
-    *fh2pp = (fhandle_t *) 0;
+    *fh2pp = NULL;
     switch (which) {
     case RFS_GETATTR:
     case RFS_READLINK:
     case RFS_STATFS:
-	fhp1 = (fhandle_t *) args;
+	fhp1 = args;
 	break;
     case RFS_SETATTR:
 	{
-	    struct nfssaargs *sargs = (struct nfssaargs *)args;
+	    struct nfssaargs *sargs = args;
 	    fhp1 = (fhandle_t *) & sargs->saa_fh;
 	    break;
 	}
     case RFS_LOOKUP:
 	{
-	    struct nfsdiropargs *sargs = (struct nfsdiropargs *)args;
+	    struct nfsdiropargs *sargs = args;
 	    fhp1 = sargs->da_fhandle;
 	    break;
 	}
     case RFS_READ:
 	{
-	    struct nfsreadargs *sargs = (struct nfsreadargs *)args;
+	    struct nfsreadargs *sargs = args;
 	    fhp1 = (fhandle_t *) & sargs->ra_fhandle;
 	    break;
 	}
     case RFS_WRITE:
 	{
-	    struct nfswriteargs *sargs = (struct nfswriteargs *)args;
+	    struct nfswriteargs *sargs = args;
 	    fhp1 = (fhandle_t *) & sargs->wa_fhandle;
 	    break;
 	}
     case RFS_CREATE:
 	{
-	    struct nfscreatargs *sargs = (struct nfscreatargs *)args;
+	    struct nfscreatargs *sargs = args;
 	    fhp1 = sargs->ca_da.da_fhandle;
 	    break;
 	}
     case RFS_REMOVE:
 	{
-	    struct nfsdiropargs *sargs = (struct nfsdiropargs *)args;
+	    struct nfsdiropargs *sargs = args;
 	    fhp1 = sargs->da_fhandle;
 	    break;
 	}
     case RFS_RENAME:
 	{
-	    struct nfsrnmargs *sargs = (struct nfsrnmargs *)args;
+	    struct nfsrnmargs *sargs = args;
 	    fhp1 = sargs->rna_from.da_fhandle;
 	    fhp2 = sargs->rna_to.da_fhandle;
 	    break;
 	}
     case RFS_LINK:
 	{
-	    struct nfslinkargs *sargs = (struct nfslinkargs *)args;
+	    struct nfslinkargs *sargs = args;
 	    fhp1 = sargs->la_from;
 	    fhp2 = sargs->la_to.da_fhandle;
 	    break;
 	}
     case RFS_SYMLINK:
 	{
-	    struct nfsslargs *sargs = (struct nfsslargs *)args;
+	    struct nfsslargs *sargs = args;
 	    fhp1 = sargs->sla_from.da_fhandle;
 	    break;
 	}
     case RFS_MKDIR:
 	{
-	    struct nfscreatargs *sargs = (struct nfscreatargs *)args;
+	    struct nfscreatargs *sargs = args;
 	    fhp1 = sargs->ca_da.da_fhandle;
 	    break;
 	}
     case RFS_RMDIR:
 	{
-	    struct nfsdiropargs *sargs = (struct nfsdiropargs *)args;
+	    struct nfsdiropargs *sargs = args;
 	    fhp1 = sargs->da_fhandle;
 	    break;
 	}
     case RFS_READDIR:
 	{
-	    struct nfsrddirargs *sargs = (struct nfsrddirargs *)args;
+	    struct nfsrddirargs *sargs = args;
 	    fhp1 = (fhandle_t *) & sargs->rda_fh;
 	    break;
 	}
@@ -198,7 +198,7 @@ nfs2_to_afs_call(int which, caddr_t * args, fhandle_t ** fhpp,
 }
 
 afs_int32
-acl2_to_afs_call(int which, caddr_t * args, fhandle_t ** fhpp)
+acl2_to_afs_call(int which, void *args, fhandle_t ** fhpp)
 {
     fhandle_t *fhp;
 
@@ -209,32 +209,32 @@ acl2_to_afs_call(int which, caddr_t * args, fhandle_t ** fhpp)
 	}
     case ACLPROC2_GETACL:
 	{
-	    struct GETACL2args *sargs = (struct GETACL2args *)args;
+	    struct GETACL2args *sargs = args;
 	    fhp = &sargs->fh;
 	    break;
 	}
     case ACLPROC2_SETACL:
 	{
-	    struct SETACL2args *sargs = (struct SETACL2args *)args;
+	    struct SETACL2args *sargs = args;
 	    fhp = &sargs->fh;
 	    break;
 	}
     case ACLPROC2_GETATTR:
 	{
-	    struct GETATTR2args *sargs = (struct GETATTR2args *)args;
+	    struct GETATTR2args *sargs = args;
 	    fhp = &sargs->fh;
 	    break;
 	}
     case ACLPROC2_ACCESS:
 	{
-	    struct ACCESS2args *sargs = (struct ACCESS2args *)args;
+	    struct ACCESS2args *sargs = args;
 	    fhp = &sargs->fh;
 	    break;
 	}
 #if defined(AFS_SUN510_ENV)
     case ACLPROC2_GETXATTRDIR:
 	{
-	    struct GETXATTRDIR2args *sargs = (struct GETXATTRDIR2args *)args;
+	    struct GETXATTRDIR2args *sargs = args;
 	    fhp = &sargs->fh;
 	    break;
 	}
@@ -252,7 +252,7 @@ acl2_to_afs_call(int which, caddr_t * args, fhandle_t ** fhpp)
 }
 
 int
-afs_nfs2_dispatcher(int type, afs_int32 which, char *argp,
+afs_nfs2_dispatcher(int type, afs_int32 which, void *argp,
 		    struct exportinfo *exp, struct svc_req *rp,
 		    afs_ucred_t *crp)
 {
@@ -260,8 +260,8 @@ afs_nfs2_dispatcher(int type, afs_int32 which, char *argp,
     afs_int32 code = 0;
     afs_int32 client = 0;
     struct sockaddr *sa;
-    fhandle_t *fh = (fhandle_t *) argp;
-    fhandle_t *fh2 = (fhandle_t *) 0;
+    fhandle_t *fh = argp;
+    fhandle_t *fh2 = NULL;
 
     if (!xlatorinit_v2_done)
 	return 2;
@@ -289,7 +289,7 @@ afs_nfs2_dispatcher(int type, afs_int32 which, char *argp,
 	static int once = 0;
 	struct SmallFid Sfid;
 
-	memcpy((char *)&Sfid, fh->fh_data, SIZEOF_SMALLFID);
+	memcpy(&Sfid, fh->fh_data, SIZEOF_SMALLFID);
 
 	afs_Trace2(afs_iclSetp, CM_TRACE_NFSIN1, ICL_TYPE_POINTER, client,
 		   ICL_TYPE_FID, &Sfid);
@@ -301,8 +301,7 @@ afs_nfs2_dispatcher(int type, afs_int32 which, char *argp,
 	    once = 1;
 	}
 	code =
-	    afs_nfsclient_reqhandler((struct afs_exporter *)0, &crp, client,
-				     &dummy, &out);
+	    afs_nfsclient_reqhandler(NULL, &crp, client, &dummy, &out);
 
 	if (!code && out)
 	    EXP_RELE(out);
@@ -324,10 +323,10 @@ afs_nfs2_smallfidder(struct nfsdiropres *dr)
 
 #if defined(AFS_SUN5_64BIT_ENV)
     /* See also afs_fid() */
-    memcpy((char *)addr, fhp->fh_data, SIZEOF_SMALLFID);
+    memcpy(addr, fhp->fh_data, SIZEOF_SMALLFID);
     addr[1] = (addr[1] >> 48) & 0xffff;
 #else
-    memcpy((char *)addr, fhp->fh_data, 2 * sizeof(long));
+    memcpy(addr, fhp->fh_data, 2 * sizeof(long));
 #endif
 
     AFS_GLOCK();
@@ -346,7 +345,7 @@ afs_nfs2_smallfidder(struct nfsdiropres *dr)
 	    afs_PutCell(tcell, READ_LOCK);
 	    Sfid.Vnode = (u_short) (vcp->f.fid.Fid.Vnode & 0xffff);
 	    fhp->fh_len = SIZEOF_SMALLFID;
-	    memcpy(dr->dr_fhandle.fh_data, (char *)&Sfid, fhp->fh_len);
+	    memcpy(dr->dr_fhandle.fh_data, &Sfid, fhp->fh_len);
 
 	    afs_Trace3(afs_iclSetp, CM_TRACE_NFSOUT, ICL_TYPE_INT32, 0,
 		       ICL_TYPE_POINTER, vcp, ICL_TYPE_FID, &Sfid);
@@ -366,29 +365,29 @@ afs_nfs2_noaccess(struct afs_nfs2_resp *resp)
 }
 
 void
-afs_nfs2_null(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_null(void *args, void *xp, void *exp, void *rp, void *crp)
 {
 }
 
 void
-afs_nfs2_root(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_root(void *args, void *xp, void *exp, void *rp, void *crp)
 {
 }
 
 void
-afs_nfs2_writecache(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_writecache(void *args, void *xp, void *exp, void *rp, void *crp)
 {
 }
 
 void
-afs_nfs2_getattr(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_getattr(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_GETATTR, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_GETATTR, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_rfs_disp_tbl[RFS_GETATTR].orig_proc) (args, xp, exp, rp, crp);
     curthread->t_cred = svcred;
@@ -396,14 +395,14 @@ afs_nfs2_getattr(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_setattr(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_setattr(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_SETATTR, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_SETATTR, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_rfs_disp_tbl[RFS_SETATTR].orig_proc) (args, xp, exp, rp, crp);
     curthread->t_cred = svcred;
@@ -411,14 +410,14 @@ afs_nfs2_setattr(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_lookup(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_lookup(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_LOOKUP, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_LOOKUP, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else {
 	(*afs_rfs_disp_tbl[RFS_LOOKUP].orig_proc) (args, xp, exp, rp, crp);
 	if (afs_NFSRootOnly && call)
@@ -429,14 +428,14 @@ afs_nfs2_lookup(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_readlink(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_readlink(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_READLINK, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_READLINK, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_rfs_disp_tbl[RFS_READLINK].orig_proc) (args, xp, exp, rp, crp);
     curthread->t_cred = svcred;
@@ -444,14 +443,14 @@ afs_nfs2_readlink(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_read(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_read(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_READ, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_READ, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_rfs_disp_tbl[RFS_READ].orig_proc) (args, xp, exp, rp, crp);
     curthread->t_cred = svcred;
@@ -459,14 +458,14 @@ afs_nfs2_read(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_write(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_write(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_WRITE, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_WRITE, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_rfs_disp_tbl[RFS_WRITE].orig_proc) (args, xp, exp, rp, crp);
     curthread->t_cred = svcred;
@@ -474,14 +473,14 @@ afs_nfs2_write(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_create(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_create(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_CREATE, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_CREATE, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else {
 	(*afs_rfs_disp_tbl[RFS_CREATE].orig_proc) (args, xp, exp, rp, crp);
 	if (afs_NFSRootOnly && call)
@@ -492,14 +491,14 @@ afs_nfs2_create(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_remove(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_remove(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_REMOVE, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_REMOVE, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_rfs_disp_tbl[RFS_REMOVE].orig_proc) (args, xp, exp, rp, crp);
     curthread->t_cred = svcred;
@@ -507,14 +506,14 @@ afs_nfs2_remove(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_rename(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_rename(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_RENAME, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_RENAME, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_rfs_disp_tbl[RFS_RENAME].orig_proc) (args, xp, exp, rp, crp);
     curthread->t_cred = svcred;
@@ -522,14 +521,14 @@ afs_nfs2_rename(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_link(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_link(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_LINK, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_LINK, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_rfs_disp_tbl[RFS_LINK].orig_proc) (args, xp, exp, rp, crp);
     curthread->t_cred = svcred;
@@ -537,14 +536,14 @@ afs_nfs2_link(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_symlink(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_symlink(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_SYMLINK, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_SYMLINK, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_rfs_disp_tbl[RFS_SYMLINK].orig_proc) (args, xp, exp, rp, crp);
     curthread->t_cred = svcred;
@@ -552,14 +551,14 @@ afs_nfs2_symlink(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_mkdir(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_mkdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_MKDIR, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_MKDIR, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else {
 	(*afs_rfs_disp_tbl[RFS_MKDIR].orig_proc) (args, xp, exp, rp, crp);
 	if (afs_NFSRootOnly && call)
@@ -570,14 +569,14 @@ afs_nfs2_mkdir(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_rmdir(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_rmdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_RMDIR, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_RMDIR, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_rfs_disp_tbl[RFS_RMDIR].orig_proc) (args, xp, exp, rp, crp);
     curthread->t_cred = svcred;
@@ -585,14 +584,14 @@ afs_nfs2_rmdir(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_readdir(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_readdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_READDIR, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_READDIR, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_rfs_disp_tbl[RFS_READDIR].orig_proc) (args, xp, exp, rp, crp);
     curthread->t_cred = svcred;
@@ -600,14 +599,14 @@ afs_nfs2_readdir(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs2_statfs(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs2_statfs(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs2_dispatcher(0, RFS_STATFS, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs2_dispatcher(0, RFS_STATFS, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_rfs_disp_tbl[RFS_STATFS].orig_proc) (args, xp, exp, rp, crp);
     curthread->t_cred = svcred;
@@ -636,15 +635,15 @@ struct afs_nfs_disp_tbl afs_rfs_disp_tbl[RFS_NPROC] = {
 };
 
 void
-afs_acl2_getacl(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_acl2_getacl(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs2_dispatcher(1, ACLPROC2_GETACL, (char *)args, exp, rp, crp);
+	afs_nfs2_dispatcher(1, ACLPROC2_GETACL, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_acl_disp_tbl[ACLPROC2_GETACL].orig_proc) (args, xp, exp, rp,
 							crp);
@@ -653,15 +652,15 @@ afs_acl2_getacl(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_acl2_setacl(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_acl2_setacl(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs2_dispatcher(1, ACLPROC2_SETACL, (char *)args, exp, rp, crp);
+	afs_nfs2_dispatcher(1, ACLPROC2_SETACL, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_acl_disp_tbl[ACLPROC2_SETACL].orig_proc) (args, xp, exp, rp,
 							crp);
@@ -670,15 +669,15 @@ afs_acl2_setacl(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_acl2_getattr(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_acl2_getattr(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs2_dispatcher(1, ACLPROC2_GETATTR, (char *)args, exp, rp, crp);
+	afs_nfs2_dispatcher(1, ACLPROC2_GETATTR, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_acl_disp_tbl[ACLPROC2_GETATTR].orig_proc) (args, xp, exp, rp,
 							 crp);
@@ -687,15 +686,15 @@ afs_acl2_getattr(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_acl2_access(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_acl2_access(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs2_dispatcher(1, ACLPROC2_ACCESS, (char *)args, exp, rp, crp);
+	afs_nfs2_dispatcher(1, ACLPROC2_ACCESS, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_acl_disp_tbl[ACLPROC2_ACCESS].orig_proc) (args, xp, exp, rp,
 							crp);
@@ -705,15 +704,15 @@ afs_acl2_access(char *args, char *xp, char *exp, char *rp, char *crp)
 
 #if defined(AFS_SUN510_ENV)
 void
-afs_acl2_getxattrdir(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_acl2_getxattrdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs2_dispatcher(1, ACLPROC2_GETXATTRDIR, (char *)args, exp, rp, crp);
+	afs_nfs2_dispatcher(1, ACLPROC2_GETXATTRDIR, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
+	afs_nfs2_noaccess(xp);
     else
 	(*afs_acl_disp_tbl[ACLPROC2_GETXATTRDIR].orig_proc) (args, xp, exp, rp,
 							crp);
@@ -799,7 +798,7 @@ afs_nfs3_notsupp(struct afs_nfs3_resp *resp)
 }
 
 afs_int32
-nfs3_to_afs_call(int which, caddr_t * args, nfs_fh3 ** fhpp, nfs_fh3 ** fh2pp)
+nfs3_to_afs_call(int which, void *args, nfs_fh3 ** fhpp, nfs_fh3 ** fh2pp)
 {
     struct vnode *vp;
     nfs_fh3 *fhp1 = 0;
@@ -807,133 +806,133 @@ nfs3_to_afs_call(int which, caddr_t * args, nfs_fh3 ** fhpp, nfs_fh3 ** fh2pp)
     int errorcode;
 
     afs_Trace1(afs_iclSetp, CM_TRACE_NFS3IN, ICL_TYPE_INT32, which);
-    *fh2pp = (nfs_fh3 *) 0;
+    *fh2pp = NULL;
     switch (which) {
     case NFSPROC3_GETATTR:
 	{
-	    GETATTR3args *arg = (GETATTR3args *) args;
+	    GETATTR3args *arg = args;
 	    fhp1 = (nfs_fh3 *) & arg->object;
 	    break;
 	}
     case NFSPROC3_SETATTR:
 	{
-	    SETATTR3args *arg = (SETATTR3args *) args;
+	    SETATTR3args *arg = args;
 	    fhp1 = (nfs_fh3 *) & arg->object;
 	    break;
 	}
     case NFSPROC3_LOOKUP:
 	{
-	    LOOKUP3args *arg = (LOOKUP3args *) args;
+	    LOOKUP3args *arg = args;
 	    fhp1 = (nfs_fh3 *) arg->what.dirp;
 	    break;
 	}
     case NFSPROC3_ACCESS:
 	{
-	    ACCESS3args *arg = (ACCESS3args *) args;
+	    ACCESS3args *arg = args;
 	    fhp1 = (nfs_fh3 *) & arg->object;
 	    break;
 	}
     case NFSPROC3_READLINK:
 	{
-	    READLINK3args *arg = (READLINK3args *) args;
+	    READLINK3args *arg = args;
 	    fhp1 = (nfs_fh3 *) & arg->symlink;
 	    break;
 	}
     case NFSPROC3_READ:
 	{
-	    READ3args *arg = (READ3args *) args;
+	    READ3args *arg = args;
 	    fhp1 = (nfs_fh3 *) & arg->file;
 	    break;
 	}
     case NFSPROC3_WRITE:
 	{
-	    WRITE3args *arg = (WRITE3args *) args;
+	    WRITE3args *arg = args;
 	    fhp1 = (nfs_fh3 *) & arg->file;
 	    break;
 	}
     case NFSPROC3_CREATE:
 	{
-	    CREATE3args *arg = (CREATE3args *) args;
+	    CREATE3args *arg = args;
 	    fhp1 = (nfs_fh3 *) arg->where.dirp;
 	    break;
 	}
     case NFSPROC3_MKDIR:
 	{
-	    MKDIR3args *arg = (MKDIR3args *) args;
+	    MKDIR3args *arg = args;
 	    fhp1 = (nfs_fh3 *) arg->where.dirp;
 	    break;
 	}
     case NFSPROC3_SYMLINK:
 	{
-	    SYMLINK3args *arg = (SYMLINK3args *) args;
+	    SYMLINK3args *arg = args;
 	    fhp1 = (nfs_fh3 *) arg->where.dirp;
 	    break;
 	}
     case NFSPROC3_MKNOD:
 	{
-	    MKNOD3args *arg = (MKNOD3args *) args;
+	    MKNOD3args *arg = args;
 	    fhp1 = (nfs_fh3 *) arg->where.dirp;
 	    break;
 	}
     case NFSPROC3_REMOVE:
 	{
-	    REMOVE3args *arg = (REMOVE3args *) args;
+	    REMOVE3args *arg = args;
 	    fhp1 = (nfs_fh3 *) arg->object.dirp;
 	    break;
 	}
     case NFSPROC3_RMDIR:
 	{
-	    RMDIR3args *arg = (RMDIR3args *) args;
+	    RMDIR3args *arg = args;
 	    fhp1 = (nfs_fh3 *) arg->object.dirp;
 	    break;
 	}
     case NFSPROC3_RENAME:
 	{
-	    RENAME3args *arg = (RENAME3args *) args;
+	    RENAME3args *arg = args;
 	    fhp1 = (nfs_fh3 *) arg->from.dirp;
 	    fhp2 = (nfs_fh3 *) arg->to.dirp;
 	    break;
 	}
     case NFSPROC3_LINK:
 	{
-	    LINK3args *arg = (LINK3args *) args;
+	    LINK3args *arg = args;
 	    fhp1 = (nfs_fh3 *) & arg->file;
 	    fhp2 = (nfs_fh3 *) arg->link.dirp;
 	    break;
 	}
     case NFSPROC3_READDIR:
 	{
-	    READDIR3args *arg = (READDIR3args *) args;
+	    READDIR3args *arg = args;
 	    fhp1 = (nfs_fh3 *) & arg->dir;
 	    break;
 	}
     case NFSPROC3_READDIRPLUS:
 	{
-	    READDIRPLUS3args *arg = (READDIRPLUS3args *) args;
+	    READDIRPLUS3args *arg = args;
 	    fhp1 = (nfs_fh3 *) & arg->dir;
 	    break;
 	}
     case NFSPROC3_FSSTAT:
 	{
-	    FSSTAT3args *arg = (FSSTAT3args *) args;
+	    FSSTAT3args *arg = args;
 	    fhp1 = (nfs_fh3 *) & arg->fsroot;
 	    break;
 	}
     case NFSPROC3_FSINFO:
 	{
-	    FSINFO3args *arg = (FSINFO3args *) args;
+	    FSINFO3args *arg = args;
 	    fhp1 = (nfs_fh3 *) & arg->fsroot;
 	    break;
 	}
     case NFSPROC3_PATHCONF:
 	{
-	    PATHCONF3args *arg = (PATHCONF3args *) args;
+	    PATHCONF3args *arg = args;
 	    fhp1 = (nfs_fh3 *) & arg->object;
 	    break;
 	}
     case NFSPROC3_COMMIT:
 	{
-	    COMMIT3args *arg = (COMMIT3args *) args;
+	    COMMIT3args *arg = args;
 	    fhp1 = (nfs_fh3 *) & arg->file;
 	    break;
 	}
@@ -956,27 +955,27 @@ nfs3_to_afs_call(int which, caddr_t * args, nfs_fh3 ** fhpp, nfs_fh3 ** fh2pp)
 }
 
 afs_int32
-acl3_to_afs_call(int which, caddr_t * args, nfs_fh3 ** fhpp)
+acl3_to_afs_call(int which, void *args, nfs_fh3 ** fhpp)
 {
     nfs_fh3 *fhp;
 
     switch (which) {
     case ACLPROC3_GETACL:
 	{
-	    struct GETACL3args *sargs = (struct GETACL3args *)args;
+	    struct GETACL3args *sargs = args;
 	    fhp = &sargs->fh;
 	    break;
 	}
     case ACLPROC3_SETACL:
 	{
-	    struct SETACL3args *sargs = (struct SETACL3args *)args;
+	    struct SETACL3args *sargs = args;
 	    fhp = &sargs->fh;
 	    break;
 	}
 #if defined(AFS_SUN510_ENV)
     case ACLPROC3_GETXATTRDIR:
 	{
-	    struct GETXATTRDIR3args *sargs = (struct GETXATTRDIR3args *)args;
+	    struct GETXATTRDIR3args *sargs = args;
 	    fhp = &sargs->fh;
 	    break;
 	}
@@ -994,7 +993,7 @@ acl3_to_afs_call(int which, caddr_t * args, nfs_fh3 ** fhpp)
 }
 
 int
-afs_nfs3_dispatcher(int type, afs_int32 which, char *argp,
+afs_nfs3_dispatcher(int type, afs_int32 which, void *argp,
 		    struct exportinfo *exp, struct svc_req *rp,
 		    afs_ucred_t *crp)
 {
@@ -1034,7 +1033,7 @@ afs_nfs3_dispatcher(int type, afs_int32 which, char *argp,
 	static int once = 0;
 	struct SmallFid Sfid;
 
-	memcpy((char *)&Sfid, fh->fh3_data, SIZEOF_SMALLFID);
+	memcpy(&Sfid, fh->fh3_data, SIZEOF_SMALLFID);
 
 	afs_Trace2(afs_iclSetp, CM_TRACE_NFS3IN1, ICL_TYPE_INT32, client,
 		   ICL_TYPE_FID, &Sfid);
@@ -1068,10 +1067,10 @@ afs_nfs3_smallfidder(struct nfs_fh3 *fhp, int status)
 
 #if defined(AFS_SUN5_64BIT_ENV)
     /* See also afs_fid() */
-    memcpy((char *)addr, fhp->fh3_data, 10);
+    memcpy(addr, fhp->fh3_data, 10);
     addr[1] = (addr[1] >> 48) & 0xffff;
 #else
-    memcpy((char *)addr, fhp->fh3_data, 2 * sizeof(long));
+    memcpy(addr, fhp->fh3_data, 2 * sizeof(long));
 #endif
 
     AFS_GLOCK();
@@ -1091,7 +1090,7 @@ afs_nfs3_smallfidder(struct nfs_fh3 *fhp, int status)
 	    afs_PutCell(tcell, READ_LOCK);
 	    Sfid.Vnode = (u_short) (vcp->f.fid.Fid.Vnode & 0xffff);
 	    fhp->fh3_len = SIZEOF_SMALLFID;
-	    memcpy(fhp->fh3_data, (char *)&Sfid, fhp->fh3_len);
+	    memcpy(fhp->fh3_data, &Sfid, fhp->fh3_len);
 
 	    afs_Trace3(afs_iclSetp, CM_TRACE_NFS3OUT, ICL_TYPE_INT32, status,
 		       ICL_TYPE_POINTER, vcp, ICL_TYPE_FID, &Sfid);
@@ -1105,16 +1104,16 @@ afs_nfs3_smallfidder(struct nfs_fh3 *fhp, int status)
 }
 
 void
-afs_nfs3_getattr(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_getattr(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_GETATTR, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_GETATTR, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_GETATTR].orig_proc) (args, xp, exp, rp,
 							  crp);
@@ -1123,16 +1122,16 @@ afs_nfs3_getattr(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_setattr(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_setattr(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_SETATTR, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_SETATTR, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_SETATTR].orig_proc) (args, xp, exp, rp,
 							  crp);
@@ -1141,21 +1140,21 @@ afs_nfs3_setattr(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_lookup(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_lookup(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_LOOKUP, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_LOOKUP, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else {
 	(*afs_rfs3_disp_tbl[NFSPROC3_LOOKUP].orig_proc) (args, xp, exp, rp,
 							 crp);
 	if (afs_NFSRootOnly && call) {
-	    LOOKUP3res *resp = (LOOKUP3res *) xp;
+	    LOOKUP3res *resp = xp;
 	    afs_nfs3_smallfidder(&resp->resok.object, resp->status);
 	}
     }
@@ -1164,16 +1163,16 @@ afs_nfs3_lookup(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_access(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_access(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_ACCESS, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_ACCESS, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_ACCESS].orig_proc) (args, xp, exp, rp,
 							 crp);
@@ -1182,17 +1181,17 @@ afs_nfs3_access(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_readlink(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_readlink(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_READLINK, (char *)args, exp, rp,
+	afs_nfs3_dispatcher(0, NFSPROC3_READLINK, args, exp, rp,
 			    crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_READLINK].orig_proc) (args, xp, exp, rp,
 							   crp);
@@ -1201,15 +1200,15 @@ afs_nfs3_readlink(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_read(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_read(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs3_dispatcher(0, NFSPROC3_READ, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs3_dispatcher(0, NFSPROC3_READ, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_READ].orig_proc) (args, xp, exp, rp,
 						       crp);
@@ -1218,16 +1217,16 @@ afs_nfs3_read(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_write(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_write(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_WRITE, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_WRITE, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_WRITE].orig_proc) (args, xp, exp, rp,
 							crp);
@@ -1236,16 +1235,16 @@ afs_nfs3_write(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_create(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_create(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_CREATE, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_CREATE, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else {
 	(*afs_rfs3_disp_tbl[NFSPROC3_CREATE].orig_proc) (args, xp, exp, rp,
 							 crp);
@@ -1259,16 +1258,16 @@ afs_nfs3_create(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_mkdir(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_mkdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_MKDIR, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_MKDIR, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else {
 	(*afs_rfs3_disp_tbl[NFSPROC3_MKDIR].orig_proc) (args, xp, exp, rp,
 							crp);
@@ -1282,16 +1281,16 @@ afs_nfs3_mkdir(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_symlink(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_symlink(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_SYMLINK, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_SYMLINK, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else {
 	(*afs_rfs3_disp_tbl[NFSPROC3_SYMLINK].orig_proc) (args, xp, exp, rp,
 							  crp);
@@ -1305,21 +1304,21 @@ afs_nfs3_symlink(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_mknod(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_mknod(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_MKNOD, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_MKNOD, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else {
 	(*afs_rfs3_disp_tbl[NFSPROC3_MKNOD].orig_proc) (args, xp, exp, rp,
 							crp);
 	if (afs_NFSRootOnly && call) {
-	    MKNOD3res *resp = (MKNOD3res *) xp;
+	    MKNOD3res *resp = xp;
 	    afs_nfs3_smallfidder(&resp->resok.obj.handle, resp->status);
 	}
     }
@@ -1328,16 +1327,16 @@ afs_nfs3_mknod(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_remove(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_remove(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_REMOVE, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_REMOVE, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_REMOVE].orig_proc) (args, xp, exp, rp,
 							 crp);
@@ -1346,16 +1345,16 @@ afs_nfs3_remove(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_rmdir(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_rmdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_RMDIR, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_RMDIR, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_RMDIR].orig_proc) (args, xp, exp, rp,
 							crp);
@@ -1364,16 +1363,16 @@ afs_nfs3_rmdir(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_rename(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_rename(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_RENAME, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_RENAME, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_RENAME].orig_proc) (args, xp, exp, rp,
 							 crp);
@@ -1382,15 +1381,15 @@ afs_nfs3_rename(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_link(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_link(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
-    call = afs_nfs3_dispatcher(0, NFSPROC3_LINK, (char *)args, exp, rp, crp);
+    curthread->t_cred = crp;
+    call = afs_nfs3_dispatcher(0, NFSPROC3_LINK, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_LINK].orig_proc) (args, xp, exp, rp,
 						       crp);
@@ -1399,16 +1398,16 @@ afs_nfs3_link(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_readdir(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_readdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_READDIR, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_READDIR, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_READDIR].orig_proc) (args, xp, exp, rp,
 							  crp);
@@ -1417,19 +1416,19 @@ afs_nfs3_readdir(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_readdirplus(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_readdirplus(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_READDIRPLUS, (char *)args, exp, rp,
+	afs_nfs3_dispatcher(0, NFSPROC3_READDIRPLUS, args, exp, rp,
 			    crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else if (call == 1)
-	afs_nfs3_notsupp((struct afs_nfs3_resp *)xp);
+	afs_nfs3_notsupp(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_READDIRPLUS].orig_proc) (args, xp, exp,
 							      rp, crp);
@@ -1438,16 +1437,16 @@ afs_nfs3_readdirplus(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_fsstat(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_fsstat(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_FSSTAT, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_FSSTAT, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_FSSTAT].orig_proc) (args, xp, exp, rp,
 							 crp);
@@ -1456,16 +1455,16 @@ afs_nfs3_fsstat(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_fsinfo(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_fsinfo(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_FSINFO, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_FSINFO, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_FSINFO].orig_proc) (args, xp, exp, rp,
 							 crp);
@@ -1474,17 +1473,17 @@ afs_nfs3_fsinfo(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_pathconf(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_pathconf(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_PATHCONF, (char *)args, exp, rp,
+	afs_nfs3_dispatcher(0, NFSPROC3_PATHCONF, args, exp, rp,
 			    crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_PATHCONF].orig_proc) (args, xp, exp, rp,
 							   crp);
@@ -1493,16 +1492,16 @@ afs_nfs3_pathconf(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_nfs3_commit(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_nfs3_commit(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(0, NFSPROC3_COMMIT, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(0, NFSPROC3_COMMIT, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_rfs3_disp_tbl[NFSPROC3_COMMIT].orig_proc) (args, xp, exp, rp,
 							 crp);
@@ -1536,15 +1535,15 @@ struct afs_nfs_disp_tbl afs_rfs3_disp_tbl[22] = {
 };
 
 void
-afs_acl3_getacl(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_acl3_getacl(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(1, ACLPROC3_GETACL, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(1, ACLPROC3_GETACL, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_acl3_disp_tbl[ACLPROC3_GETACL].orig_proc) (args, xp, exp, rp,
 							 crp);
@@ -1553,15 +1552,15 @@ afs_acl3_getacl(char *args, char *xp, char *exp, char *rp, char *crp)
 }
 
 void
-afs_acl3_setacl(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_acl3_setacl(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(1, ACLPROC3_SETACL, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(1, ACLPROC3_SETACL, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_acl3_disp_tbl[ACLPROC3_SETACL].orig_proc) (args, xp, exp, rp,
 							 crp);
@@ -1571,15 +1570,15 @@ afs_acl3_setacl(char *args, char *xp, char *exp, char *rp, char *crp)
 
 #if defined(AFS_SUN510_ENV)
 void
-afs_acl3_getxattrdir(char *args, char *xp, char *exp, char *rp, char *crp)
+afs_acl3_getxattrdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
     afs_ucred_t *svcred = curthread->t_cred;
-    curthread->t_cred = (afs_ucred_t *)crp;
+    curthread->t_cred = crp;
     call =
-	afs_nfs3_dispatcher(1, ACLPROC3_GETXATTRDIR, (char *)args, exp, rp, crp);
+	afs_nfs3_dispatcher(1, ACLPROC3_GETXATTRDIR, args, exp, rp, crp);
     if (call > 1)
-	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
+	afs_nfs3_noaccess(xp);
     else
 	(*afs_acl3_disp_tbl[ACLPROC3_GETXATTRDIR].orig_proc) (args, xp, exp, rp,
 							 crp);
