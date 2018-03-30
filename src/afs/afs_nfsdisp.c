@@ -1010,7 +1010,7 @@ afs_nfs3_dispatcher(int type, afs_int32 which, char *argp,
 
     sa = (struct sockaddr *)svc_getrpccaller(rp->rq_xprt)->buf;
     if (sa == NULL)
-	return;
+	return 3;
 
     if (sa->sa_family == AF_INET)
 	client = ((struct sockaddr_in *)sa)->sin_addr.s_addr;
