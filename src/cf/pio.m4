@@ -1,4 +1,4 @@
-AC_DEFUN([OPENAFS_HPUX_CHECKS],[
+AC_DEFUN([OPENAFS_PIO_CHECKS],[
 case $AFS_SYSNAME in
 *hp_ux* | *hpux*)
    AC_MSG_WARN([Some versions of HP-UX have a buggy positional I/O implementation. Forcing no positional I/O.])
