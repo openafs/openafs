@@ -74,5 +74,4 @@ if test "x$ac_cv_linux_func_page_get_link" != "xyes" -a "x$ac_cv_linux_struct_in
     AC_MSG_ERROR([Your kernel does not use follow_link - not supported without symlink cache API])
     exit 1
 fi
-: dnl remnant no-op
 ])
