@@ -12,14 +12,10 @@
 # Determine presence of rpmbuild command line --define arguments and set
 # defaults if not present.
 #
-%define kernvers_on_cmdline %{?kernvers:1}%{!?kernvers:0}
 %define build_userspace_on_cmdline %{?build_userspace:1}%{!?build_userspace:0}
 %define build_modules_on_cmdline %{?build_modules:1}%{!?build_modules:0}
 %define debugspec_on_cmdline %{?debugspec:1}%{!?debugspec:0}
 
-%if !%{kernvers_on_cmdline}
-%define kernvers %(uname -r)
-%endif
 %if !%{build_userspace_on_cmdline}
 %define build_userspace 1
 %endif
@@ -417,7 +413,7 @@ krb4 lookalike services.
 
 : @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 : @@@
-: @@@ kernel version:     %{kernvers}
+: @@@ kernel version:     %{kverrel}
 : @@@ kernel variations:  %{kvariants}
 : @@@ PAM modules dir:    %{pamdir}
 : @@@ build userspace:    %{build_userspace}
