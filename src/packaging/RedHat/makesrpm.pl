@@ -118,8 +118,7 @@ while (defined($file = $pkgdirh->read)) {
 }
 undef $dirh;
 
-# Some files need particular modes.
-chmod 0755, $tmpdir."/rpmdir/SOURCES/openafs-kernel-version.sh";
+# This file needs particular modes.
 chmod 0755, $tmpdir."/rpmdir/SOURCES/openafs-kvers-is.sh";
 
 # Create the specfile. Use sed for this, cos its easier
