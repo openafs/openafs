@@ -3,6 +3,7 @@ openafs (1.8.0-1) UNRELEASED; urgency=low
   * New upstream release.  Changes since pre5:
     - Fix issues with -Wpointer-sign
     - Edits to the afsd manpage regarding the -volume-ttl feature
+  * Update debian/README.source to reflect the move from Alioth to Salsa
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Thu, 05 Apr 2018 21:00:23 -0500
 

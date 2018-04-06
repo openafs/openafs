@@ -1,7 +1,7 @@
 General Maintenance
 
-    This package is maintained in Git via the Alioth pkg-k5-afs project.
-    Alioth is used only for repository access control and not for any of
+    This package is maintained in Git via the Salsa debian project.
+    Salsa is used only for repository access control and not for any of
     its other features.
 
     Since we often pull up many upstream fixes from the upstream stable
@@ -15,7 +15,7 @@ General Maintenance
     review, which makes it very easy for anyone who wishes to submit
     patches for review using Git.  See:
 
-        http://wiki.openafs.org/AFSLore/GitDevelopers
+        https://wiki.openafs.org/devel/GitDevelopers/
 
     for information on how to submit patches upstream.  Starting from
     OpenAFS 1.5, we're no longer carrying any substantial Debian-specific
