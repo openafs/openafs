@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.8.0pre5
+OpenAFS 1.8.0
 
   All Platforms
 
@@ -128,6 +128,7 @@ OpenAFS 1.8.0pre5
       - Move the legacy kaserver and related programs to separate sub-packages,
         which are only built when rpmbuild is given the '--with kauth' option
         (12600, 12872)
+      - Package the libuafs perl bindings (12921)
 
     * Add a new protection error code (PRNAMETOOLONG) instead of silently
       truncating names which exceed the maximum name length (PR_MAXNAMELEN).
@@ -347,6 +348,9 @@ OpenAFS 1.8.0pre5
     * Use a more correct (less aggressive) scheme to react to downward
       pressure on cache usage, avoiding d_invalidate(), which can cause
       getcwd() failures on RHEL 7.4.
+
+    * Apply a workaround to be compatible with RHEL 7.5's KABI preservation
+      strategy for reading directories.
 
     * Improve error reporting when encountering corrupt directories.
 
