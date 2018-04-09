@@ -53,7 +53,7 @@ AC_ARG_WITH([linux-kernel-headers],
     [AS_HELP_STRING([--with-linux-kernel-headers=path],
         [use the kernel headers found at path (optional, defaults to
          /lib/modules/`uname -r`/build, then /lib/modules/`uname -r`/source,
-         then /usr/src/linux-2.4, and lastly /usr/src/linux)])
+         and lastly /usr/src/linux)])
 ])
 AC_ARG_WITH([linux-kernel-build],
     [AS_HELP_STRING([--with-linux-kernel-build=path],
