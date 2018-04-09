@@ -78,7 +78,6 @@ build:
   scout/afsmonitor       : ${summary_build_scout}
   pam                    : ${HAVE_PAM}
   login                  : ${BUILD_LOGIN}
-  uss                    : ${BUILD_USS}
 doc generation:
   docbook stylesheets    : ${summary_docbook_stylesheets}
   doxygen                : ${summary_doxygen}
