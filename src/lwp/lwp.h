@@ -269,6 +269,11 @@ extern int LWP_QWait(void);
 extern int LWP_QSignal(PROCESS pid);
 #endif
 
+#ifdef AFS_SUN5_ENV
+extern int LWP_NoYieldSignal(void *event);
+extern int LWP_SignalProcess(void *event);
+#endif
+
 extern afs_int32 savecontext(void (*ep)(void),
 			     struct lwp_context *savearea, char *sp);
 extern void returnto(struct lwp_context *savearea);
