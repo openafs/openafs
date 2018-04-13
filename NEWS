@@ -1,5 +1,13 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.22.3
+
+  Red Hat Enterprise Linux 7.5+ clients
+
+    * Work around a distribution-specific change in the EL 7.5 kernel,
+      starting with the beta kernel 3.10.0-830.el7, which broke reading
+      directories in AFS space.
+
 OpenAFS 1.6.22.2
 
   Linux clients
