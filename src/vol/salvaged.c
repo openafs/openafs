@@ -438,7 +438,7 @@ main(int argc, char **argv)
 
     err = cmd_Dispatch(argc, argv);
     Exit(err);
-    return 0; /* not reached */
+    AFS_UNREACHED(return 0);
 }
 
 static void

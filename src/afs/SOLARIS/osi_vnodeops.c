@@ -473,7 +473,7 @@ afs_never_putapage(struct vnode *vp, struct page *pages, u_offset_t * offp,
     struct vcache *avc = VTOAFS(vp);
     osi_Assert((avc->f.states & CRO) != 0);
     osi_Panic("Dirty pages while flushing a read-only volume vnode.");
-    return EIO; /* unreachable */
+    AFS_UNREACHED(return EIO);
 }
 
 int

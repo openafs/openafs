@@ -115,8 +115,8 @@ panic(char *format, ...)
     va_end(ap);
 
     abort();
-    printf("BACK FROM ABORT\n");	/* shouldn't come back from floating pt exception */
-    exit(1);			/* never know, though */
+    AFS_UNREACHED(printf("BACK FROM ABORT\n"));	/* shouldn't come back from floating pt exception */
+    AFS_UNREACHED(exit(1));			/* never know, though */
 }
 
 int

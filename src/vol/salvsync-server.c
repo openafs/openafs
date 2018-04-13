@@ -832,7 +832,7 @@ FindHandler(osi_socket afd)
 	}
     ReleaseReadLock(&SALVSYNC_handler_lock);	/* just in case */
     osi_Panic("Failed to find handler\n");
-    return -1;			/* satisfy compiler */
+    AFS_UNREACHED(return -1);
 }
 
 static int
@@ -844,7 +844,7 @@ FindHandler_r(osi_socket afd)
 	    return i;
 	}
     osi_Panic("Failed to find handler\n");
-    return -1;			/* satisfy compiler */
+    AFS_UNREACHED(return -1);
 }
 
 static int

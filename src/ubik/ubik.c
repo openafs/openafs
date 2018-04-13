@@ -1392,8 +1392,8 @@ panic(char *format, ...)
     va_end(ap);
 
     abort();
-    ViceLog(0, ("BACK FROM ABORT\n"));	/* shouldn't come back */
-    exit(1);			/* never know, though  */
+    AFS_UNREACHED(ViceLog(0, ("BACK FROM ABORT\n")));
+    AFS_UNREACHED(exit(1));
 }
 
 /*!

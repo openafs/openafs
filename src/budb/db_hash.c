@@ -532,7 +532,7 @@ ht_minHBlocks(struct memoryHashTable *mht)
 
     default:
 	db_panic("Illegal hash function type");
-	retval = -1; /* not reached */
+	AFS_UNREACHED(return -1);
     }
     return (retval);
 }
@@ -567,7 +567,7 @@ ht_HashEntry(struct memoryHashTable *mht,
 
     default:
 	db_panic("illegal hash function");
-	retval = -1; /* not reached */
+	AFS_UNREACHED(return -1);
     }
 
     return (retval);
@@ -630,8 +630,7 @@ ht_KeyMatch(int type, char *key, char *e)
     default:
 	db_panic("illegal hash function");
     }
-    /* not reached */
-    return 0;
+    AFS_UNREACHED(return 0);
 }
 
 /* ht_LookupEntry

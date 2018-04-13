@@ -587,7 +587,7 @@ main(int argc, char **argv)
     if (!tdir) {
 	Abort("volser: could not open conf files in %s\n",
 	      configDir);
-	VS_EXIT(1);
+	AFS_UNREACHED(VS_EXIT(1));
     }
 
     /* initialize audit user check */
@@ -641,5 +641,5 @@ main(int argc, char **argv)
 
     osi_audit(VS_FinishEvent, (-1), AUD_END);
     Abort("StartServer returned?");
-    return 0; /* not reached */
+    AFS_UNREACHED(return 0);
 }

@@ -546,6 +546,6 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-f", CMD_FLAG, CMD_OPTIONAL, "Alias for -force");
     err = cmd_Dispatch(argc, argv);
     Exit(err);
-    return 0; /* not reached */
+    AFS_UNREACHED(return 0);
 }
 

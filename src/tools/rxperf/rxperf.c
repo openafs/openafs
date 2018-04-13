@@ -671,9 +671,10 @@ client_thread( void *vparams)
 
 #ifdef AFS_PTHREAD_ENV
     pthread_exit(NULL);
-#endif
-
+    AFS_UNREACHED(return NULL);
+#else
     return NULL;
+#endif
 }
 
 /*

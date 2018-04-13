@@ -95,7 +95,7 @@ DirOK(void *file)
 	if (DErrno != 0) {
 	    printf("Could not read first page in directory (%d)\n", DErrno);
 	    Die("dirok1");
-	    return 1;
+	    AFS_UNREACHED(return 1);
 	}
 	printf("First page in directory does not exist.\n");
 	return 0;
@@ -178,7 +178,7 @@ DirOK(void *file)
 		/* couldn't read page, but not because it wasn't there permanently */
 		printf("Failed to read dir page %d (errno %d)\n", i, DErrno);
 		Die("dirok2");
-		return 1;
+		AFS_UNREACHED(return 1);
 	    }
 	    printf("Directory shorter than alloMap indicates (page %d)\n", i);
 	    return 0;

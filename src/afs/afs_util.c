@@ -242,7 +242,7 @@ afs_badop(void)
 {
     AFS_STATCNT(afs_badop);
     osi_Panic("afs bad vnode op");
-    return 0;
+    AFS_UNREACHED(return 0);
 }
 
 /*
