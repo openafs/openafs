@@ -3252,7 +3252,8 @@ afs_StaleVCacheFlags(struct vcache *avc, afs_stalevc_flags_t flags,
     }
 
     if (do_dnlc) {
-	if ((avc->f.fid.Fid.Vnode & 1) || vType(avc) == VDIR ||
+	if ((avc->f.fid.Fid.Vnode & 1) ||
+	    AFSTOV(avc) == NULL || vType(avc) == VDIR ||
 	    (avc->f.states & CForeign)) {
 	    /* This vcache is (or could be) a directory. */
 	    osi_dnlc_purgedp(avc);
