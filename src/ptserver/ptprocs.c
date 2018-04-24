@@ -1238,7 +1238,7 @@ SPR_GetHostCPS(struct rx_call *call, afs_int32 ahost, prlist *alist,
 
     code = getHostCPS(call, ahost, alist, over, &cid);
     osi_auditU(call, PTS_GetHCPSEvent, code, AUD_HOST, htonl(ahost), AUD_END);
-    ViceLog(125, ("PTS_GetHostCPS: code %d ahost %d\n", code, ahost));
+    ViceLog(125, ("PTS_GetHostCPS: code %d ahost %u (0x%x)\n", code, ahost, ahost));
     return code;
 }
 
