@@ -93,7 +93,7 @@ get_rpmtemplate ()
 
     cat <<EOF
 
-%global _find_debuginfo_opts %{?_find_debuginfo_opts} -p '.*openafs.ko(\.debug)?' -o kmod-debuginfo.list
+%global _find_debuginfo_opts %{?_find_debuginfo_opts} -p '.*openafs\.ko.*' -o kmod-debuginfo.list
 
 %package       -n kmod-${kmod_name}${dashvariant}
 Summary:          ${kmod_name} kernel module(s)
