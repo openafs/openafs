@@ -1971,10 +1971,19 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	    }
 	    tdc = afs_AllocDCache(avc, chunk, aflags, NULL);
 	    if (!tdc) {
-		/* If we can't get space for 5 mins we give up and panic */
-		if (++downDCount > 300)
-		    osi_Panic("getdcache");
 		ReleaseWriteLock(&afs_xdcache);
+
+		/* If we can't get space for 5 mins we give up and bail out */
+		if (++downDCount > 300) {
+                    afs_warn("afs: Unable to get free cache space for file "
+                             "%u:%u.%u.%u for 5 minutes; failing with an i/o error\n",
+                             avc->f.fid.Cell,
+                             avc->f.fid.Fid.Volume,
+                             avc->f.fid.Fid.Vnode,
+                             avc->f.fid.Fid.Unique);
+		    goto done;
+                }
+
 		/*
 		 * Locks held:
 		 * avc->lock(R) if setLocks
