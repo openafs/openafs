@@ -1972,25 +1972,34 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	    tdc = afs_AllocDCache(avc, chunk, aflags, NULL);
 	    if (!tdc) {
 		ReleaseWriteLock(&afs_xdcache);
-
-		/* If we can't get space for 5 mins we give up and bail out */
-		if (++downDCount > 300) {
-                    afs_warn("afs: Unable to get free cache space for file "
-                             "%u:%u.%u.%u for 5 minutes; failing with an i/o error\n",
-                             avc->f.fid.Cell,
-                             avc->f.fid.Fid.Volume,
-                             avc->f.fid.Fid.Vnode,
-                             avc->f.fid.Fid.Unique);
-		    goto done;
+                if (afs_discardDCList == NULLIDX && afs_freeDCList == NULLIDX) {
+                    /* It looks like afs_AllocDCache failed because we don't
+                     * have any free dslots to use. Maybe if we wait a little
+                     * while, we'll be able to free up some slots, so try for 5
+                     * minutes, then bail out. */
+                    if (++downDCount > 300) {
+                        afs_warn("afs: Unable to get free cache space for file "
+                                 "%u:%u.%u.%u for 5 minutes; failing with an i/o error\n",
+                                 avc->f.fid.Cell,
+                                 avc->f.fid.Fid.Volume,
+                                 avc->f.fid.Fid.Vnode,
+                                 avc->f.fid.Fid.Unique);
+                        goto done;
+                    }
+                    afs_osi_Wait(1000, 0, 0);
+                    goto RetryLookup;
                 }
 
-		/*
-		 * Locks held:
-		 * avc->lock(R) if setLocks
-		 * avc->lock(W) if !setLocks
-		 */
-		afs_osi_Wait(1000, 0, 0);
-		goto RetryLookup;
+                /* afs_AllocDCache failed, but not because we're out of free
+                 * dslots. Something must be screwy with the cache, so bail out
+                 * immediately without waiting. */
+                afs_warn("afs: Error while alloc'ing cache slot for file "
+                         "%u:%u.%u.%u; failing with an i/o error\n",
+                         avc->f.fid.Cell,
+                         avc->f.fid.Fid.Volume,
+                         avc->f.fid.Fid.Vnode,
+                         avc->f.fid.Fid.Unique);
+                goto done;
 	    }
 
 	    /*
