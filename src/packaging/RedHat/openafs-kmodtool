@@ -100,7 +100,7 @@ Summary:          ${kmod_name} kernel module(s)
 Group:            System Environment/Kernel
 Provides:         kernel-modules = ${kname}
 Provides:         ${kmod_name}-kmod = %{?epoch:%{epoch}:}%{version}-%{release}
-Provides:         openafs-kernel = %{PACKAGE_VERSION}
+Provides:         openafs-kernel = %{version}
 Requires:         ${kdep}
 Requires:         ${kmod_name}-kmod-common >= %{?epoch:%{epoch}:}%{version}
 Requires(post):   ${depmod}
