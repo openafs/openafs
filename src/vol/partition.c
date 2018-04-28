@@ -289,6 +289,10 @@ VCheckPartition(char *part, char *devname, int logging)
     if (strncmp(part, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE)) {
 	return 0;
     }
+    if (volutil_GetPartitionID(part) == -1) {
+	Log("Warning: %s is a bad partition name; ignored.\n", part);
+	return 0;
+    }
     if (afs_stat(part, &status) < 0) {
 	Log("VInitVnodes: Couldn't find file system %s; ignored\n", part);
 	return 0;
