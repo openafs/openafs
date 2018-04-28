@@ -57,9 +57,11 @@ volutil_GetPartitionID(char *aname)
     if (strlen(aname) <= 2) {
 	strcpy(ascii, aname);
     } else if (!strncmp(aname, "/vicep", 6)) {
-	strncpy(ascii, aname + 6, 2);
+	if(strlcpy(ascii, aname + 6, sizeof(ascii)) >= sizeof(ascii))
+	    return -1;  /* bad partition name: trailing characters */
     } else if (!strncmp(aname, "vicep", 5)) {
-	strncpy(ascii, aname + 5, 2);
+	if(strlcpy(ascii, aname + 5, sizeof(ascii)) >= sizeof(ascii))
+	    return -1;  /* bad partition name: trailing characters */
     } else
 	return -1;		/* bad partition name */
     /* now partitions are named /vicepa ... /vicepz, /vicepaa, /vicepab, .../vicepzz,
