@@ -275,7 +275,7 @@ extern void afs_TryToSmush(struct vcache *avc,
 			   afs_ucred_t *acred, int sync);
 extern void updateV2DC(int lockVc, struct vcache *v, struct dcache *d,
 		       int src);
-extern void afs_WriteThroughDSlots(void);
+extern int afs_WriteThroughDSlots(void);
 extern struct dcache *afs_UFSGetDSlot(afs_int32 aslot, dslot_state type);
 extern int afs_WriteDCache(struct dcache *adc, int atime);
 extern int afs_wakeup(struct vcache *avc);
