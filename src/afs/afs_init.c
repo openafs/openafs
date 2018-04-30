@@ -330,6 +330,7 @@ afs_InitVolumeInfo(char *afile)
     if (code)
 	return code;
     tfile = afs_CFileOpen(&volumeInode);
+    osi_Assert(tfile);
     afs_CFileTruncate(tfile, 0);
     afs_CFileClose(tfile);
     return 0;

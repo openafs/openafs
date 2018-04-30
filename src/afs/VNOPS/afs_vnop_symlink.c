@@ -57,6 +57,7 @@ afs_DisconCreateSymlink(struct vcache *avc, char *aname,
     afs_AdjustSize(tdc, len);
     tdc->validPos = len;
     tfile = afs_CFileOpen(&tdc->f.inode);
+    osi_Assert(tfile);
     afs_CFileWrite(tfile, 0, aname, len);
     afs_CFileClose(tfile);
     ReleaseWriteLock(&tdc->lock);
