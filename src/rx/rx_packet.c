@@ -1896,7 +1896,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 
 			tconn.natMTU = htonl(tc->peer->natMTU);
 			tconn.error = htonl(tc->error);
-			tconn.flags = tc->flags;
+			tconn.flags = (u_char) (tc->flags & 0xff);  /* compat. */
 			tconn.type = tc->type;
 			tconn.securityIndex = tc->securityIndex;
 			if (tc->securityObject) {
