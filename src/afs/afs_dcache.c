@@ -1188,6 +1188,7 @@ afs_FreeDiscardedDCache(void)
      * Truncate the element to reclaim its space
      */
     tfile = afs_CFileOpen(&tdc->f.inode);
+    osi_Assert(tfile);
     afs_CFileTruncate(tfile, 0);
     afs_CFileClose(tfile);
     afs_AdjustSize(tdc, 0);
@@ -1619,6 +1620,7 @@ afs_AllocDiscardDSlot(afs_int32 lock)
     if ((lock & 2)) {
 	/* Truncate the chunk so zeroes get filled properly */
 	file = afs_CFileOpen(&tdc->f.inode);
+        osi_Assert(file);
 	afs_CFileTruncate(file, 0);
 	afs_CFileClose(file);
 	afs_AdjustSize(tdc, 0);
@@ -2076,6 +2078,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	    /* no data in file to read at this position */
 	    UpgradeSToWLock(&tdc->lock, 607);
 	    file = afs_CFileOpen(&tdc->f.inode);
+            osi_Assert(file);
 	    afs_CFileTruncate(file, 0);
 	    afs_CFileClose(file);
 	    afs_AdjustSize(tdc, 0);
@@ -2295,6 +2298,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	 */
 	DZap(tdc);	/* pages in cache may be old */
 	file = afs_CFileOpen(&tdc->f.inode);
+        osi_Assert(file);
 	afs_RemoveVCB(&avc->f.fid);
 	tdc->f.states |= DWriting;
 	tdc->dflags |= DFFetching;
@@ -3616,6 +3620,8 @@ afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
     /* Open the files. */
     tfile_src = afs_CFileOpen(&adc->f.inode);
     tfile_dst = afs_CFileOpen(&new_dc->f.inode);
+    osi_Assert(tfile_src);
+    osi_Assert(tfile_dst);
 
     /* And now copy dir dcache data into this dcache,
      * 4k at a time.

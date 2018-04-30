@@ -335,6 +335,7 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
 	    error = code;
 	    ZapDCE(tdc);	/* bad data */
 	    cfile = afs_CFileOpen(&tdc->f.inode);
+            osi_Assert(cfile);
 	    afs_CFileTruncate(cfile, 0);
 	    afs_CFileClose(cfile);
 	    afs_AdjustSize(tdc, 0);	/* sets f.chunkSize to 0 */
