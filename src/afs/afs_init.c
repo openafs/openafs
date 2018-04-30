@@ -693,7 +693,7 @@ void
 shutdown_cache(void)
 {
     AFS_STATCNT(shutdown_cache);
-    afs_WriteThroughDSlots();
+    osi_Assert(afs_WriteThroughDSlots() == 0);
     if (1/*afs_cold_shutdown*/) {
 	afs_cacheinit_flag = 0;
 	shutdown_dcache();

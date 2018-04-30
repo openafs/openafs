@@ -2663,11 +2663,12 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
  * Environment:
  *	The afs_xdcache is write-locked through this whole affair.
  */
-void
+int
 afs_WriteThroughDSlots(void)
 {
     struct dcache *tdc;
     afs_int32 i, touchedit = 0;
+    int code = 0;
 
     struct afs_q DirtyQ, *tq;
 
@@ -2703,7 +2704,7 @@ afs_WriteThroughDSlots(void)
 
 #define DQTODC(q)	((struct dcache *)(((char *) (q)) - sizeof(struct afs_q)))
 
-    for (tq = DirtyQ.prev; tq != &DirtyQ; tq = QPrev(tq)) {
+    for (tq = DirtyQ.prev; tq != &DirtyQ && code == 0; tq = QPrev(tq)) {
 	tdc = DQTODC(tq);
 	if (tdc->dflags & DFEntryMod) {
 	    int wrLock;
@@ -2714,15 +2715,25 @@ afs_WriteThroughDSlots(void)
 	    if (wrLock && (tdc->dflags & DFEntryMod)) {
 		tdc->dflags &= ~DFEntryMod;
 		ObtainWriteLock(&afs_xdcache, 620);
-		osi_Assert(afs_WriteDCache(tdc, 1) == 0);
+		code = afs_WriteDCache(tdc, 1);
 		ReleaseWriteLock(&afs_xdcache);
-		touchedit = 1;
+                if (code) {
+                    /* We didn't successfully write out the dslot; make sure we
+                     * try again later */
+                    tdc->dflags |= DFEntryMod;
+                } else {
+                    touchedit = 1;
+                }
 	    }
 	    if (wrLock)
 		ReleaseWriteLock(&tdc->lock);
 	}
 
 	afs_PutDCache(tdc);
+    }
+
+    if (code) {
+        return code;
     }
 
     ObtainWriteLock(&afs_xdcache, 617);
@@ -2737,6 +2748,7 @@ afs_WriteThroughDSlots(void)
 	afs_osi_Write(afs_cacheInodep, 0, &theader, sizeof(theader));
     }
     ReleaseWriteLock(&afs_xdcache);
+    return 0;
 }
 
 /*

@@ -189,7 +189,7 @@ afs_Daemon(void)
 	if (last1MinCheck + 60 < now) {
 	    /* things to do every minute */
 	    DFlush();		/* write out dir buffers */
-	    afs_WriteThroughDSlots();	/* write through cacheinfo entries */
+	    (void)afs_WriteThroughDSlots();	/* write through cacheinfo entries */
 	    ObtainWriteLock(&afs_xvcache, 736);
 	    afs_FlushReclaimedVcaches();
 	    ReleaseWriteLock(&afs_xvcache);
