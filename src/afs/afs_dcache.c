@@ -2298,7 +2298,14 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	 */
 	DZap(tdc);	/* pages in cache may be old */
 	file = afs_CFileOpen(&tdc->f.inode);
-        osi_Assert(file);
+        if (!file) {
+            /* We can't access the file in the disk cache backing this dcache;
+             * bail out. */
+            ReleaseWriteLock(&tdc->lock);
+            afs_PutDCache(tdc);
+            tdc = NULL;
+            goto done;
+        }
 	afs_RemoveVCB(&avc->f.fid);
 	tdc->f.states |= DWriting;
 	tdc->dflags |= DFFetching;
