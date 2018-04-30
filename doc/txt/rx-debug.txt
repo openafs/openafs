@@ -194,6 +194,8 @@ as follows:
         afs_int32 sparel[9];
     };
 
+Note: the char 'flags' member is no longer able to represent all possible values in the
+rx_connection 'flags' member, after the latter was enlarged from u_char to afs_uint32.
 
 An obsolete layout, which exhibited a problem with data alignment, was used in
 Version 'L'. This is defined as:
