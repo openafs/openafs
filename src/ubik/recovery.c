@@ -607,7 +607,8 @@ urecovery_Interact(void *dummy)
 	    UBIK_ADDR_LOCK;
 	    rxcall = rx_NewCall(bestServer->disk_rxcid);
 
-	    ViceLog(0, ("Ubik: Synchronize database via DISK_GetFile to server %s\n",
+	    ViceLog(0, ("Ubik: Synchronize database: receive (via GetFile) "
+			"from server %s begin\n",
 		       afs_inet_ntoa_r(bestServer->addr[0], hoststr)));
 	    UBIK_ADDR_UNLOCK;
 
@@ -724,10 +725,17 @@ urecovery_Interact(void *dummy)
 		ubik_dbase->version.epoch = 0;
 		ubik_dbase->version.counter = 0;
 		UBIK_VERSION_UNLOCK;
-		ViceLog(0, ("Ubik: Synchronize database failed (error = %d)\n",
-			   code));
+		ViceLog(0,
+		    ("Ubik: Synchronize database: receive (via GetFile) "
+		    "from server %s failed (error = %d)\n",
+		    afs_inet_ntoa_r(bestServer->addr[0], hoststr), code));
 	    } else {
-		ViceLog(0, ("Ubik: Synchronize database completed\n"));
+		ViceLog(0,
+		    ("Ubik: Synchronize database: receive (via GetFile) "
+		    "from server %s complete, version: %d.%d\n",
+		    afs_inet_ntoa_r(bestServer->addr[0], hoststr),
+		    ubik_dbase->version.epoch, ubik_dbase->version.counter));
+
 		urecovery_state |= UBIK_RECHAVEDB;
 	    }
 	    udisk_Invalidate(ubik_dbase, 0);	/* data has changed */
@@ -818,10 +826,11 @@ urecovery_Interact(void *dummy)
 		    continue;
 		}
 		UBIK_BEACON_UNLOCK;
-		ViceLog(5, ("recovery sending version to %s\n",
-			    afs_inet_ntoa_r(inAddr.s_addr, hoststr)));
+
 		if (vcmp(ts->version, ubik_dbase->version) != 0) {
-		    ViceLog(5, ("recovery stating local database\n"));
+		    ViceLog(0, ("Synchronize database: send (via SendFile) "
+				"to server %s begin\n",
+			    afs_inet_ntoa_r(inAddr.s_addr, hoststr)));
 
 		    /* Rx code to do the Bulk Store */
 		    code = (*ubik_dbase->stat) (ubik_dbase, 0, &ubikstat);
@@ -864,12 +873,24 @@ urecovery_Interact(void *dummy)
 		      StoreEndCall:
 			code = rx_EndCall(rxcall, code);
 		    }
+
 		    if (code == 0) {
 			/* we set a new file, process its header */
 			ts->version = ubik_dbase->version;
 			ts->currentDB = 1;
-		    } else
+			ViceLog(0,
+			    ("Ubik: Synchronize database: send (via SendFile) "
+			    "to server %s complete, version: %d.%d\n",
+			    afs_inet_ntoa_r(inAddr.s_addr, hoststr),
+			    ts->version.epoch, ts->version.counter));
+
+		    } else {
 			dbok = 0;
+			ViceLog(0,
+			    ("Ubik: Synchronize database: send (via SendFile) "
+			     "to server %s failed (error = %d)\n",
+			    afs_inet_ntoa_r(inAddr.s_addr, hoststr), code));
+		    }
 		} else {
 		    /* mark file up to date */
 		    ts->currentDB = 1;
