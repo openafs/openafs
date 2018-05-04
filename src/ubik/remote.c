@@ -396,45 +396,72 @@ SDISK_GetFile(struct rx_call *rxcall, afs_int32 file,
     char tbuffer[256];
     afs_int32 tlen;
     afs_int32 length;
+    struct rx_peer *tpeer;
+    struct rx_connection *tconn;
+    afs_uint32 otherHost = 0;
+    char hoststr[16];
 
     if ((code = ubik_CheckAuth(rxcall))) {
 	return code;
     }
+
+    tconn = rx_ConnectionOf(rxcall);
+    tpeer = rx_PeerOf(tconn);
+    otherHost = ubikGetPrimaryInterfaceAddr(rx_HostOf(tpeer));
+    ViceLog(0, ("Ubik: Synchronize database: send (via GetFile) "
+		"to server %s begin\n",
+	       afs_inet_ntoa_r(otherHost, hoststr)));
+
     dbase = ubik_dbase;
     DBHOLD(dbase);
     code = (*dbase->stat) (dbase, file, &ubikstat);
     if (code < 0) {
-	DBRELE(dbase);
-	return code;
+	ViceLog(0, ("database stat() error:%d\n", code));
+	goto failed;
     }
     length = ubikstat.size;
     tlen = htonl(length);
     code = rx_Write(rxcall, (char *)&tlen, sizeof(afs_int32));
     if (code != sizeof(afs_int32)) {
-	DBRELE(dbase);
 	ViceLog(0, ("Rx-write length error=%d\n", code));
-	return BULK_ERROR;
+	code = BULK_ERROR;
+	goto failed;
     }
     offset = 0;
     while (length > 0) {
 	tlen = (length > sizeof(tbuffer) ? sizeof(tbuffer) : length);
 	code = (*dbase->read) (dbase, file, tbuffer, offset, tlen);
 	if (code != tlen) {
-	    DBRELE(dbase);
 	    ViceLog(0, ("read failed error=%d\n", code));
-	    return UIOERROR;
+	    code = UIOERROR;
+	    goto failed;
 	}
 	code = rx_Write(rxcall, tbuffer, tlen);
 	if (code != tlen) {
-	    DBRELE(dbase);
-	    ViceLog(0, ("Rx-write length error=%d\n", code));
-	    return BULK_ERROR;
+	    ViceLog(0, ("Rx-write data error=%d\n", code));
+	    code = BULK_ERROR;
+	    goto failed;
 	}
 	length -= tlen;
 	offset += tlen;
     }
     code = (*dbase->getlabel) (dbase, file, version);	/* return the dbase, too */
+    if (code)
+	ViceLog(0, ("getlabel error=%d\n", code));
+
+ failed:
     DBRELE(dbase);
+    if (code) {
+	ViceLog(0,
+	    ("Ubik: Synchronize database: send (via GetFile) to "
+	     "server %s failed (error = %d)\n",
+	     afs_inet_ntoa_r(otherHost, hoststr), code));
+    } else {
+	ViceLog(0,
+	    ("Ubik: Synchronize database: send (via GetFile) to "
+	     "server %s complete, version: %d.%d\n",
+	    afs_inet_ntoa_r(otherHost, hoststr), version->epoch, version->counter));
+    }
     return code;
 }
 
@@ -495,7 +522,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     /* abort any active trans that may scribble over the database */
     urecovery_AbortAll(dbase);
 
-    ViceLog(0, ("Ubik: Synchronize database via DISK_SendFile from server %s\n",
+    ViceLog(0, ("Ubik: Synchronize database: receive (via SendFile) from server %s begin\n",
 	       afs_inet_ntoa_r(otherHost, hoststr)));
 
     offset = 0;
@@ -507,11 +534,13 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 	     (file<0)?-file:file);
     fd = open(pbuffer, O_CREAT | O_RDWR | O_TRUNC, 0600);
     if (fd < 0) {
+	ViceLog(0, ("Open error=%d\n", errno));
 	code = errno;
 	goto failed_locked;
     }
     code = lseek(fd, HDRSIZE, 0);
     if (code != HDRSIZE) {
+	ViceLog(0, ("lseek error=%d\n", code));
 	close(fd);
 	goto failed_locked;
     }
@@ -543,8 +572,10 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 	length -= tlen;
     }
     code = close(fd);
-    if (code)
+    if (code) {
+	ViceLog(0, ("close failed error=%d\n", code));
 	goto failed;
+    }
 
     /* sync data first, then write label and resync (resync done by setlabel call).
      * This way, good label is only on good database. */
@@ -594,11 +625,16 @@ failed:
 	    (*dbase->setlabel) (dbase, file, &tversion);
 	    UBIK_VERSION_UNLOCK;
 	}
-	ViceLog(0, ("Ubik: Synchronize database with server %s failed (error = %d)\n",
-	     afs_inet_ntoa_r(otherHost, hoststr), code));
+	ViceLog(0,
+	    ("Ubik: Synchronize database: receive (via SendFile) from "
+	     "server %s failed (error = %d)\n",
+	    afs_inet_ntoa_r(otherHost, hoststr), code));
     } else {
 	uvote_set_dbVersion(*avers);
-	ViceLog(0, ("Ubik: Synchronize database completed\n"));
+	ViceLog(0,
+	    ("Ubik: Synchronize database: receive (via SendFile) from "
+	     "server %s complete, version: %d.%d\n",
+	    afs_inet_ntoa_r(otherHost, hoststr), avers->epoch, avers->counter));
     }
     DBRELE(dbase);
     return code;
