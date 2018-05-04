@@ -223,7 +223,7 @@ ContactQuorum_rcode(int okcalls, afs_int32 rcode)
  * because it is sent the sync count along with the beacon message that
  * marks it as \b really up (\p beaconSinceDown).
  */
-afs_int32
+static afs_int32
 ContactQuorum_NoArguments(afs_int32 (*proc)(struct rx_connection *, ubik_tid *),
 	       		  struct ubik_trans *atrans, int aflags)
 {
@@ -242,7 +242,7 @@ ContactQuorum_NoArguments(afs_int32 (*proc)(struct rx_connection *, ubik_tid *),
 }
 
 
-afs_int32
+static afs_int32
 ContactQuorum_DISK_Lock(struct ubik_trans *atrans, int aflags,afs_int32 file,
 			afs_int32 position, afs_int32 length, afs_int32 type)
 {
@@ -260,7 +260,7 @@ ContactQuorum_DISK_Lock(struct ubik_trans *atrans, int aflags,afs_int32 file,
     return ContactQuorum_rcode(okcalls, rcode);
 }
 
-afs_int32
+static afs_int32
 ContactQuorum_DISK_Truncate(struct ubik_trans *atrans, int aflags,
 			    afs_int32 file, afs_int32 length)
 {
@@ -279,7 +279,7 @@ ContactQuorum_DISK_Truncate(struct ubik_trans *atrans, int aflags,
 }
 
 
-afs_int32
+static afs_int32
 ContactQuorum_DISK_WriteV(struct ubik_trans *atrans, int aflags,
 			  iovec_wrt * io_vector, iovec_buf *io_buffer)
 {
