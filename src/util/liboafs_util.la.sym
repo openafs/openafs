@@ -25,7 +25,7 @@ afs_uuid_equal
 afs_uuid_hash
 afs_uuid_is_nil
 flipbase64_to_int64
-getDirPath
+afs_getDirPath
 gettmpdir
 grmutex
 hostutil_GetHostByName

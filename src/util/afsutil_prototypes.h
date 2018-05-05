@@ -29,7 +29,7 @@ extern int base64_to_int(char *s);
 
 /* dirpath.c */
 extern unsigned int initAFSDirPath(void);
-extern const char *getDirPath(afsdir_id_t string_id);
+extern const char *afs_getDirPath(afsdir_id_t string_id);
 extern int ConstructLocalPath(const char *cpath, const char *relativeTo,
 			      char **fullPathBufp);
 extern int ConstructLocalBinPath(const char *cpath, char **fullPathBufp);

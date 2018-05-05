@@ -428,12 +428,12 @@ initDirPathArray(void)
     return;
 }
 
-/* getDirPath - returns a const char pointer to the requested string
+/* afs_getDirPath - returns a const char pointer to the requested string
  * from the internal path array.
  * string_id - index into the path array
  */
 const char *
-getDirPath(afsdir_id_t string_id)
+afs_getDirPath(afsdir_id_t string_id)
 {
     /* check if the array has been initialized */
     if (initFlag == 0) {	/* no it's not, so initialize */
@@ -445,6 +445,16 @@ getDirPath(afsdir_id_t string_id)
     }
     return (const char *)dirPathArray[string_id];
 }
+
+#ifdef AFS_NT40_ENV
+/* getDirPath - present for ABI compatibility on Windows systems;
+ * Unix systems should not use it. */
+const char *
+getDirPath(afsdir_id_t string_id)
+{
+    return afs_getDirPath(string_id);
+}
+#endif
 
 /*
  * LocalizePathHead() -- Make path relative to local part
