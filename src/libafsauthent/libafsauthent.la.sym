@@ -1,4 +1,5 @@
 afs_get_pag_from_groups
+afs_getDirPath
 afsconf_AddKey
 afsconf_AddUser
 afsconf_CellApply
