@@ -174,3 +174,4 @@ EXPORTS
         initialize_U_error_table			@173
         initialize_VL_error_table			@174
         initialize_VOLS_error_table			@175
+        afs_getDirPath					@176
