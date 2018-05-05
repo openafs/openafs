@@ -22,6 +22,13 @@ afsconf_SetCellInfo
 afsconf_SetNoAuthFlag
 afsconf_SetSecurityFlags
 afsconf_SuperUser
+initialize_ACFG_error_table
+initialize_KA_error_table
+initialize_KTC_error_table
+initialize_PT_error_table
+initialize_U_error_table
+initialize_VL_error_table
+initialize_VOLS_error_table
 ka_AuthServerConn
 ka_AuthSpecificServersConn
 ka_Authenticate

@@ -167,3 +167,10 @@ EXPORTS
         afsconf_GetAllKeys                              @166
 	afsconf_CheckRestrictedQuery			@167
         string_PR_IDToName				@168
+        initialize_ACFG_error_table			@169
+        initialize_KA_error_table			@170
+        initialize_KTC_error_table			@171
+        initialize_PT_error_table			@172
+        initialize_U_error_table			@173
+        initialize_VL_error_table			@174
+        initialize_VOLS_error_table			@175
