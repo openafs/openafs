@@ -642,7 +642,7 @@ done:
     if (!code)
 	afs_ProcessFS(avc, &tcallspec->OutStatus, areq);
 
-    osi_Free(areq, sizeof(struct vrequest));
+    afs_DestroyReq(areq);
     osi_Free(tcallspec, sizeof(struct tlocal1));
     osi_Free(bparms, sizeof(struct nocache_read_request));
 #ifndef UKERNEL
