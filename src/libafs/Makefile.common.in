@@ -712,8 +712,6 @@ osi_timeout.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_timeout.c
 	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_timeout.c
 osi_pagecopy.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_pagecopy.c
 	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_pagecopy.c
-osi_fetchstore.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_fetchstore.c
-	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_fetchstore.c
 osi_vcache.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vcache.c
 	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vcache.c
 osi_crypto.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_crypto.c

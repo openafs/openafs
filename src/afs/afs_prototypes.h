@@ -626,12 +626,6 @@ extern void osi_ReleaseVM(struct vcache *avc, afs_ucred_t *acred);
 #endif
 
 
-/* LINUX/osi_fetchstore.c */
-#ifdef AFS_LINUX26_ENV
-extern int afs_linux_storeproc(struct storeOps *, void *, struct dcache *,
-			       int *, afs_size_t *);
-#endif
-
 /* ARCH/osi_crypto.c */
 extern int osi_readRandom(void *, afs_size_t);
 
