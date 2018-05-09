@@ -473,11 +473,6 @@ extern afs_int32 ContactQuorum_DISK_Lock(struct ubik_trans *atrans,
 					 afs_int32 file, afs_int32 position,
 					 afs_int32 length, afs_int32 type);
 
-extern afs_int32 ContactQuorum_DISK_Write(struct ubik_trans *atrans,
-					  int aflags,
-					  afs_int32 file, afs_int32 position,
-					  bulkdata *data);
-
 extern afs_int32 ContactQuorum_DISK_Truncate(struct ubik_trans *atrans,
 					     int aflags,
 					     afs_int32 file, afs_int32 length);
