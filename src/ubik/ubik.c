@@ -260,26 +260,6 @@ ContactQuorum_DISK_Lock(struct ubik_trans *atrans, int aflags,afs_int32 file,
     return ContactQuorum_rcode(okcalls, rcode);
 }
 
-
-afs_int32
-ContactQuorum_DISK_Write(struct ubik_trans *atrans, int aflags,
-			 afs_int32 file, afs_int32 position, bulkdata *data)
-{
-    struct ubik_server *ts = NULL;
-    afs_int32 code = 0, rcode, okcalls;
-    struct rx_connection *conn;
-    int done;
-
-    done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
-    while (!done) {
-	if (conn)
-	    code = DISK_Write(conn, &atrans->tid, file, position, data);
-	done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
-    }
-    return ContactQuorum_rcode(okcalls, rcode);
-}
-
-
 afs_int32
 ContactQuorum_DISK_Truncate(struct ubik_trans *atrans, int aflags,
 			    afs_int32 file, afs_int32 length)
