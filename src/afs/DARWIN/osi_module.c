@@ -50,9 +50,9 @@ kern_return_t
 afs_modload(struct kmod_info *kmod_info, void *data)
 {
     int ret;
-    osi_Init();
 #ifdef AFS_DARWIN80_ENV
     MUTEX_SETUP();
+    osi_Init();
     afs_global_lock = lck_mtx_alloc_init(openafs_lck_grp, 0);
 
     if (ret = vfs_fsadd(&afs_vfsentry, &afs_vfstable)) {
@@ -82,6 +82,7 @@ afs_modload(struct kmod_info *kmod_info, void *data)
 	return KERN_FAILURE;
     }
 #else
+    osi_Init();
     memset(&afs_vfsconf, 0, sizeof(struct vfsconf));
     strcpy(afs_vfsconf.vfc_name, "afs");
     afs_vfsconf.vfc_vfsops = &afs_vfsops;
