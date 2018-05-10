@@ -34,7 +34,17 @@ static struct fdcache {
     int refCount;
 } fdcache[MAXFDCACHE];
 
+/* Cache a stdio handle for a given database file, for uphys_buf_append
+ * operations. We only use buf_append for one file at a time, so only try to
+ * cache a single file handle, since that's all we should need. */
+static struct buf_fdcache {
+    int fileID;
+    FILE *stream;
+} buf_fdcache;
+
 static char pbuffer[1024];
+
+static int uphys_buf_flush(struct ubik_dbase *adbase, afs_int32 afid);
 
 /*!
  * \warning Beware, when using this function, of the header in front of most files.
@@ -216,6 +226,13 @@ uphys_truncate(struct ubik_dbase *adbase, afs_int32 afile,
 	       afs_int32 asize)
 {
     afs_int32 code, fd;
+
+    /* Just in case there's memory-buffered data for this file, flush it before
+     * truncating. */
+    if (uphys_buf_flush(adbase, afile) < 0) {
+        return UIOERROR;
+    }
+
     fd = uphys_open(adbase, afile);
     if (fd < 0)
 	return UNOENT;
@@ -293,6 +310,12 @@ int
 uphys_sync(struct ubik_dbase *adbase, afs_int32 afile)
 {
     afs_int32 code, fd;
+
+    /* Flush any in-memory data, so we can sync it. */
+    if (uphys_buf_flush(adbase, afile) < 0) {
+        return -1;
+    }
+
     fd = uphys_open(adbase, afile);
     code = fsync(fd);
     uphys_close(fd);
@@ -316,4 +339,59 @@ uphys_invalidate(struct ubik_dbase *adbase, afs_int32 afid)
 	    return;
 	}
     }
+}
+
+static FILE *
+uphys_buf_append_open(struct ubik_dbase *adbase, afs_int32 afid)
+{
+    /* If we have a cached handle open for this file, just return it. */
+    if (buf_fdcache.stream && buf_fdcache.fileID == afid) {
+        return buf_fdcache.stream;
+    }
+
+    /* Otherwise, close the existing handle, and open a new handle for the
+     * given file. */
+
+    if (buf_fdcache.stream) {
+        fclose(buf_fdcache.stream);
+    }
+
+    snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d", adbase->pathName,
+	     (afid<0)?"SYS":"", (afid<0)?-afid:afid);
+    buf_fdcache.stream = fopen(pbuffer, "a");
+    buf_fdcache.fileID = afid;
+    return buf_fdcache.stream;
+}
+
+static int
+uphys_buf_flush(struct ubik_dbase *adbase, afs_int32 afid)
+{
+    if (buf_fdcache.stream && buf_fdcache.fileID == afid) {
+        int code = fflush(buf_fdcache.stream);
+        if (code) {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+/* Append the given data to the given database file, allowing the data to be
+ * buffered in memory. */
+int
+uphys_buf_append(struct ubik_dbase *adbase, afs_int32 afid, void *adata,
+                 afs_int32 alength)
+{
+    FILE *stream;
+    size_t code;
+
+    stream = uphys_buf_append_open(adbase, afid);
+    if (!stream) {
+        return -1;
+    }
+
+    code = fwrite(adata, alength, 1, stream);
+    if (code != 1) {
+        return -1;
+    }
+    return alength;
 }

@@ -159,6 +159,7 @@ struct ubik_dbase {
     int (*setlabel) (struct ubik_dbase * adbase, afs_int32 afile, struct ubik_version * aversion);	/*!< set the version label */
     int (*getlabel) (struct ubik_dbase * adbase, afs_int32 afile, struct ubik_version * aversion);	/*!< retrieve the version label */
     int (*getnfiles) (struct ubik_dbase * adbase);	/*!< find out number of files */
+    int (*buffered_append)(struct ubik_dbase *adbase, afs_int32 afid, void *adata, afs_int32 alength);
     short readers;		/*!< number of current read transactions */
     struct ubik_version cachedVersion;	/*!< version of caller's cached data */
     struct Lock cache_lock; /*!< protects cached application data */
@@ -448,6 +449,8 @@ extern int uphys_setlabel(struct ubik_dbase *adbase, afs_int32 afile,
 extern int uphys_sync(struct ubik_dbase *adbase, afs_int32 afile);
 extern void uphys_invalidate(struct ubik_dbase *adbase,
 			     afs_int32 afid);
+extern int uphys_buf_append(struct ubik_dbase *adbase, afs_int32 afid,
+                            void *buf, afs_int32 alength);
 
 /*! \name recovery.c */
 extern int urecovery_ResetState(void);

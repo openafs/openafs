@@ -421,6 +421,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     tdb->getlabel = uphys_getlabel;
     tdb->setlabel = uphys_setlabel;
     tdb->getnfiles = uphys_getnfiles;
+    tdb->buffered_append = uphys_buf_append;
     tdb->readers = 0;
     tdb->tidCounter = tdb->writeTidCounter = 0;
     *dbase = tdb;
