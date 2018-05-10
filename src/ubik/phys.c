@@ -159,7 +159,6 @@ uphys_stat(struct ubik_dbase *adbase, afs_int32 afid, struct ubik_stat *astat)
     if (code < 0) {
 	return code;
     }
-    astat->mtime = tstat.st_mtime;
     code = tstat.st_size - HDRSIZE;
     if (code < 0)
 	astat->size = 0;

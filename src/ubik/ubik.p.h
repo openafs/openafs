@@ -123,7 +123,6 @@ struct ubik_trunc {
 
 struct ubik_stat {
     afs_int32 size;
-    afs_int32 mtime;
 };
 
 #include <lock.h>		/* just to make sure we've got this */
