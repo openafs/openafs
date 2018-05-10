@@ -113,19 +113,11 @@ udisk_Debug(struct ubik_debug *aparm)
 static int
 udisk_LogOpcode(struct ubik_dbase *adbase, afs_int32 aopcode, int async)
 {
-    struct ubik_stat ustat;
     afs_int32 code;
-
-    /* figure out where to write */
-    code = (*adbase->stat) (adbase, LOGFILE, &ustat);
-    if (code < 0)
-	return code;
 
     /* setup data and do write */
     aopcode = htonl(aopcode);
-    code =
-	(*adbase->write) (adbase, LOGFILE, (char *)&aopcode, ustat.size,
-			  sizeof(afs_int32));
+    code = (*adbase->buffered_append)(adbase, LOGFILE, &aopcode, sizeof(afs_int32));
     if (code != sizeof(afs_int32))
 	return UIOERROR;
 
@@ -145,12 +137,6 @@ udisk_LogEnd(struct ubik_dbase *adbase, struct ubik_version *aversion)
 {
     afs_int32 code;
     afs_int32 data[3];
-    struct ubik_stat ustat;
-
-    /* figure out where to write */
-    code = (*adbase->stat) (adbase, LOGFILE, &ustat);
-    if (code)
-	return code;
 
     /* setup data */
     data[0] = htonl(LOGEND);
@@ -159,8 +145,7 @@ udisk_LogEnd(struct ubik_dbase *adbase, struct ubik_version *aversion)
 
     /* do write */
     code =
-	(*adbase->write) (adbase, LOGFILE, (char *)data, ustat.size,
-			  3 * sizeof(afs_int32));
+	(*adbase->buffered_append)(adbase, LOGFILE, data, 3 * sizeof(afs_int32));
     if (code != 3 * sizeof(afs_int32))
 	return UIOERROR;
 
@@ -178,12 +163,6 @@ udisk_LogTruncate(struct ubik_dbase *adbase, afs_int32 afile,
 {
     afs_int32 code;
     afs_int32 data[3];
-    struct ubik_stat ustat;
-
-    /* figure out where to write */
-    code = (*adbase->stat) (adbase, LOGFILE, &ustat);
-    if (code < 0)
-	return code;
 
     /* setup data */
     data[0] = htonl(LOGTRUNCATE);
@@ -192,8 +171,7 @@ udisk_LogTruncate(struct ubik_dbase *adbase, afs_int32 afile,
 
     /* do write */
     code =
-	(*adbase->write) (adbase, LOGFILE, (char *)data, ustat.size,
-			  3 * sizeof(afs_int32));
+	(*adbase->buffered_append)(adbase, LOGFILE, data, 3 * sizeof(afs_int32));
     if (code != 3 * sizeof(afs_int32))
 	return UIOERROR;
     return 0;
@@ -206,16 +184,8 @@ static int
 udisk_LogWriteData(struct ubik_dbase *adbase, afs_int32 afile, void *abuffer,
 		   afs_int32 apos, afs_int32 alen)
 {
-    struct ubik_stat ustat;
     afs_int32 code;
     afs_int32 data[4];
-    afs_int32 lpos;
-
-    /* find end of log */
-    code = (*adbase->stat) (adbase, LOGFILE, &ustat);
-    lpos = ustat.size;
-    if (code < 0)
-	return code;
 
     /* setup header */
     data[0] = htonl(LOGDATA);
@@ -225,13 +195,12 @@ udisk_LogWriteData(struct ubik_dbase *adbase, afs_int32 afile, void *abuffer,
 
     /* write header */
     code =
-	(*adbase->write) (adbase, LOGFILE, (char *)data, lpos, 4 * sizeof(afs_int32));
+	(*adbase->buffered_append)(adbase, LOGFILE, data, 4 * sizeof(afs_int32));
     if (code != 4 * sizeof(afs_int32))
 	return UIOERROR;
-    lpos += 4 * sizeof(afs_int32);
 
     /* write data */
-    code = (*adbase->write) (adbase, LOGFILE, abuffer, lpos, alen);
+    code = (*adbase->buffered_append)(adbase, LOGFILE, abuffer, alen);
     if (code != alen)
 	return UIOERROR;
     return 0;
