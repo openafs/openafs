@@ -184,21 +184,45 @@ rx_atomic_test_and_clear_bit(rx_atomic_t *atomic, int bit) {
 
 #elif defined(AFS_DARWIN80_ENV) || defined(AFS_USR_DARWIN80_ENV)
 
-# if defined (AFS_DARWIN160_ENV) || defined(AFS_USR_DARWIN160_ENV)
+# if (defined(AFS_DARWIN160_ENV) || defined(AFS_USR_DARWIN160_ENV)) && !defined(KERNEL)
 #  define OSATOMIC_USE_INLINED 1
-# else
-
-#  if defined(KERNEL) && !defined(UKERNEL)
-#   define OSAtomicIncrement32 OSIncrementAtomic
-#   define OSAtomicAdd32 OSAddAtomic
-#   define OSAtomicDecrement32 OSDecrementAtomic
-#   define OSAtomicOr32 OSBitOrAtomic
-#   define OSAtomicAnd32 OSBitAndAtomic
-#  endif
-
-# endif /* end defined DARWIN160 */
+# endif
 
 # include <libkern/OSAtomic.h>
+
+# if defined(KERNEL) && !defined(UKERNEL)
+static_inline int
+OSAtomicIncrement32(volatile int *value)
+{
+    return OSIncrementAtomic(value) + 1;
+}
+
+static_inline int
+OSAtomicAdd32(int amount, volatile int *value)
+{
+    return OSAddAtomic(amount, value) + amount;
+}
+
+static_inline int
+OSAtomicDecrement32(volatile int *value)
+{
+    return OSDecrementAtomic(value) - 1;
+}
+
+static_inline unsigned int
+OSAtomicOr32(unsigned int mask, volatile unsigned int *value)
+{
+    return OSBitOrAtomic(mask, value) | mask;
+}
+
+static_inline unsigned int
+OSAtomicAnd32(unsigned int mask, volatile unsigned int *value)
+{
+    return OSBitAndAtomic(mask, value) & mask;
+}
+#define OSAtomicOr32Orig  OSBitOrAtomic
+#define OSAtomicAnd32Orig OSBitAndAtomic
+# endif
 
 typedef struct {
     volatile int var;
