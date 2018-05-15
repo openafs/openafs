@@ -133,6 +133,10 @@ uvote_ShouldIRun(void)
 {
     afs_int32 now;
 
+    if (amIClone) {
+	return 0;		/* if we cannot be the sync-site, do not ask for votes */
+    }
+
     now = FT_ApproxTime();
     if (BIGTIME + ubik_lastYesTime < now)
 	return 1;		/* no valid guy even trying */
