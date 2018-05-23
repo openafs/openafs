@@ -33,9 +33,6 @@ afs_int32 afs_bulkStatsDone;
 static int bulkStatCounter = 0;	/* counter for bulk stat seq. numbers */
 int afs_fakestat_enable = 0;	/* 1: fakestat-all, 2: fakestat-crosscell */
 
-/* Dictates behavior of @sys path expansion. */
-int afs_atsys_type = AFS_ATSYS_INTERNAL;
-
 /* this would be faster if it did comparison as int32word, but would be 
  * dependant on byte-order and alignment, and I haven't figured out
  * what "@sys" is in binary... */
@@ -592,47 +589,64 @@ afs_ENameOK(char *aname)
 
 static int
 afs_getsysname(struct vrequest *areq, struct vcache *adp,
-	       char *bufp, size_t bufsize, int *num, char **sysnamelist[])
+	       char *bufp, size_t bufsize, int index)
 {
     struct unixuser *au = NULL;
-    afs_int32 error, code = -1;
+    afs_int32 error;
+    int code = -1;
     size_t rlen;
 
     AFS_STATCNT(getsysname);
 
-    *sysnamelist = afs_sysnamelist;
-
-    if (!afs_nfsexporter) {
-	rlen = strlcpy(bufp, (*sysnamelist)[0], bufsize);
-	if (rlen >= bufsize)
-	    goto done;
-    } else {
+    if (afs_nfsexporter != NULL) {
 	error = afs_GetUser(&au, areq->uid, adp->f.fid.Cell, READ_LOCK);
 	if (error != 0) {
 	    strlcpy(bufp, "@sys", bufsize);
 	    goto done;
 	}
-	if (au->exporter) {
-	    error = EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num, 0);
-	    if (error) {
-		strlcpy(bufp, "@sys", bufsize);
-		goto done;
-	    } else {
-		rlen = strlcpy(bufp, (*sysnamelist)[0], bufsize);
-		if (rlen >= bufsize)
-		    goto done;
-	    }
+    }
+    if (au != NULL && au->exporter != NULL) {
+	/* Get our sysname from the exporter */
+	char **sysnamelist[MAXNUMSYSNAMES];
+	int n_sysnames = 0;
+	error = EXP_SYSNAME(au->exporter, NULL, sysnamelist, &n_sysnames, 0);
+	if (error != 0 || index >= n_sysnames) {
+	    strlcpy(bufp, "@sys", bufsize);
+	    goto done;
 	} else {
-	    rlen = strlcpy(bufp, afs_sysname, bufsize);
+	    rlen = strlcpy(bufp, (*sysnamelist)[index], bufsize);
 	    if (rlen >= bufsize)
 		goto done;
 	}
+    } else {
+	struct afs_sysnames *sysnames;
+
+	AFS_GUNLOCK();
+	MUTEX_ENTER(&afs_sysname_lock);
+
+	sysnames = afs_global_sysnames;
+	if (index >= sysnames->namecount || sysnames->namelist[index] == NULL) {
+	    strlcpy(bufp, "@sys", bufsize);
+	    goto done_locked;
+	} else {
+	    rlen = strlcpy(bufp, sysnames->namelist[index], bufsize);
+	    if (rlen >= bufsize)
+		goto done_locked;
+	}
+
+	MUTEX_EXIT(&afs_sysname_lock);
+	AFS_GLOCK();
     }
     code = 0;
  done:
     if (au != NULL)
 	afs_PutUser(au, READ_LOCK);
     return code;
+
+ done_locked:
+    MUTEX_EXIT(&afs_sysname_lock);
+    AFS_GLOCK();
+    goto done;
 }
 
 /**
@@ -689,9 +703,6 @@ void
 Check_AtSys(struct vcache *avc, const char *aname,
 	    struct sysname_info *state, struct vrequest *areq)
 {
-    int num = 0;
-    char **sysnamelist[MAXNUMSYSNAMES];
-
     if (afs_atsys_type == AFS_ATSYS_NONE) {
 	Check_AtSysDisabled(aname, state);
 
@@ -699,9 +710,8 @@ Check_AtSys(struct vcache *avc, const char *aname,
 	state->offset = 0;
 	state->name_size = MAXSYSNAME;
 	state->name = osi_AllocLargeSpace(state->name_size);
-	state->index =
-	    afs_getsysname(areq, avc, state->name, state->name_size, &num,
-			   sysnamelist);
+	state->index = afs_getsysname(areq, avc, state->name, state->name_size, 0);
+
     } else {
 	state->offset = -1;
 	state->name_size = 0;
@@ -714,9 +724,9 @@ int
 Next_AtSys(struct vcache *avc, struct vrequest *areq,
 	   struct sysname_info *state)
 {
-    int num = afs_sysnamecount;
-    char **sysnamelist[MAXNUMSYSNAMES], *buf;
+    char *buf;
     size_t bsz;
+    int code;
 
     if (state->index == -1)
 	return 0;		/* No list */
@@ -744,8 +754,7 @@ Next_AtSys(struct vcache *avc, struct vrequest *areq,
 
 	    buf = tname + len;
 	    bsz = bufsize - len;
-	    num = 0;
-	    idx = afs_getsysname(areq, avc, buf, bsz, &num, sysnamelist);
+	    idx = afs_getsysname(areq, avc, buf, bsz, 0);
 	    if (idx == -1) {
 		osi_FreeLargeSpace(tname);
 		return 0;
@@ -762,29 +771,6 @@ Next_AtSys(struct vcache *avc, struct vrequest *areq,
 	    return 1;
 	} else
 	    return 0;		/* .*@sys doesn't match either */
-    } else {
-	struct unixuser *au;
-	afs_int32 error;
-
-	*sysnamelist = afs_sysnamelist;
-
-	if (afs_nfsexporter) {
-	    error = afs_GetUser(&au, areq->uid, avc->f.fid.Cell, READ_LOCK);
-	    if (error != 0) {
-		return 0;
-	    }
-	    if (au->exporter) {
-		error =
-		    EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, &num, 0);
-		if (error) {
-		    afs_PutUser(au, READ_LOCK);
-		    return 0;
-		}
-	    }
-	    afs_PutUser(au, READ_LOCK);
-	}
-	if (++(state->index) >= num || !(*sysnamelist)[(unsigned int)state->index])
-	    return 0;		/* end of list */
     }
     /*
      * If we got here, state->name was allocated by the AtSys iterator. In other
@@ -792,7 +778,10 @@ Next_AtSys(struct vcache *avc, struct vrequest *areq,
      */
     buf = state->name + state->offset;
     bsz = state->name_size - state->offset;
-    if (strlcpy(buf, (*sysnamelist)[(unsigned int)state->index], bsz) >= bsz) {
+    state->index++;
+    code = afs_getsysname(areq, avc, buf, bsz, state->index);
+    if (code < 0) {
+	/* end of list */
 	state->index = -1;
 	return 0;
     }

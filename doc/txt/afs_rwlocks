@@ -92,6 +92,10 @@ dcache mflags.
 19. DCache entry tlock -- used to make atomic reads or writes to
 the dcache refcount.
 
+20. afs_sysname_lock -- used to protect sysname lists. Note that this is an
+afs_kmutex_t, and so can be locked outside of GLOCK. But if you acquire this
+and GLOCK, you must acquire this before taking GLOCK.
+
 ***** RX_ENABLE_LOCKS
 
 Many fine grained locks are used by Rx on the AIX4.1 platform.  These

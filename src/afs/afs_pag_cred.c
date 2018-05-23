@@ -331,6 +331,7 @@ afspag_PSetSysName(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     int setsysname, count, t;
     char *cp, *setp;
+    struct afs_sysnames *sysnames;
 
     setp = ain;
     memcpy((char *)&setsysname, ain, sizeof(afs_int32));
@@ -355,13 +356,18 @@ afspag_PSetSysName(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
     }
 
     ObtainWriteLock(&afs_xpagsys, 824);
+    AFS_GUNLOCK();
+    MUTEX_ENTER(&afs_sysname_lock);
+    AFS_GLOCK();
+    sysnames = afs_global_sysnames;
     for (cp = ain, count = 0; count < setsysname; count++) {
 	t = strlen(cp);
-	memcpy(afs_sysnamelist[count], cp, t + 1);
+	memcpy(sysnames->namelist[count], cp, t + 1);
 	cp += t + 1;
     }
-    afs_sysnamecount = setsysname;
+    sysnames->namecount = setsysname;
     afs_sysnamegen++;
+    MUTEX_EXIT(&afs_sysname_lock);
     ReleaseWriteLock(&afs_xpagsys);
 
     /* Change the arguments so we pass the allpags flag to the server */
@@ -376,36 +382,45 @@ SPAGCB_GetSysName(struct rx_call *a_call, afs_int32 a_uid,
 		  SysNameList *a_sysnames)
 {
     int i = 0;
+    struct afs_sysnames *sysnames;
 
     RX_AFS_GLOCK();
 
     ObtainReadLock(&afs_xpagsys);
     memset(a_sysnames, 0, sizeof(struct SysNameList));
 
-    a_sysnames->SysNameList_len = afs_sysnamecount;
+    AFS_GUNLOCK();
+    MUTEX_ENTER(&afs_sysname_lock);
+    AFS_GLOCK();
+
+    sysnames = afs_global_sysnames;
+
+    a_sysnames->SysNameList_len = sysnames->namecount;
     a_sysnames->SysNameList_val =
-	afs_osi_Alloc(afs_sysnamecount * sizeof(SysNameEnt));
+	afs_osi_Alloc(sysnames->namecount * sizeof(SysNameEnt));
     if (!a_sysnames->SysNameList_val)
 	goto out;
 
-    for (i = 0; i < afs_sysnamecount; i++) {
-	a_sysnames->SysNameList_val[i].sysname = afs_strdup(afs_sysnamelist[i]);
+    for (i = 0; i < sysnames->namecount; i++) {
+	a_sysnames->SysNameList_val[i].sysname = afs_strdup(sysnames->namelist[i]);
 	if (!a_sysnames->SysNameList_val[i].sysname)
 	    goto out;
     }
 
+    MUTEX_EXIT(&afs_sysname_lock);
     ReleaseReadLock(&afs_xpagsys);
     RX_AFS_GUNLOCK();
     return 0;
 
 out:
+    MUTEX_EXIT(&afs_sysname_lock);
     if (a_sysnames->SysNameList_val) {
 	while (i-- > 0) {
 	    afs_osi_Free(a_sysnames->SysNameList_val[i].sysname,
 			 strlen(a_sysnames->SysNameList_val[i].sysname) + 1);
 	}
 	afs_osi_Free(a_sysnames->SysNameList_val,
-		     afs_sysnamecount * sizeof(SysNameEnt));
+		     sysnames->namecount * sizeof(SysNameEnt));
     }
 
     ReleaseWriteLock(&afs_xpagsys);

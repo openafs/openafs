@@ -383,10 +383,6 @@ extern int Afscall64_icl(int opcode, user_addr_t p1, user_addr_t p2,
 extern struct cm_initparams cm_initParams;
 extern int afs_resourceinit_flag;
 extern afs_rwlock_t afs_puttofileLock;
-extern char *afs_sysname;
-extern char *afs_sysnamelist[MAXNUMSYSNAMES];
-extern int afs_sysnamecount;
-extern int afs_sysnamegen;
 extern afs_int32 cacheInfoModTime;
 extern int afs_CacheInit(afs_int32 astatSize, afs_int32 afiles,
 			 afs_int32 ablocks, afs_int32 aDentries,
@@ -900,6 +896,17 @@ extern int Afs_syscall(void);
 extern asmlinkage long afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4);
 #endif
 
+/* afs_sysname.c */
+struct afs_sysnames;
+
+extern struct afs_sysnames *afs_global_sysnames;
+extern int afs_sysnamegen;
+extern int afs_atsys_type;
+extern afs_kmutex_t afs_sysname_lock;
+
+extern int afs_sysname_init(void);
+extern void afs_sysname_shutdown(void);
+
 /* afs_tokens.c */
 struct ktc_tokenUnion;
 struct ktc_setTokenData;
@@ -1215,7 +1222,6 @@ extern int afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
 #endif
 
 /* VNOPS/afs_vnop_lookup.c */
-extern int afs_atsys_type;
 extern int EvalMountPoint(struct vcache *avc, struct vcache *advc,
 			  struct volume **avolpp,
 			  struct vrequest *areq);

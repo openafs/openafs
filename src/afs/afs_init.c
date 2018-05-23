@@ -40,11 +40,6 @@ struct super_block *afs_cacheSBp = 0;
 struct vfs *afs_cacheVfsp = 0;
 #endif
 afs_rwlock_t afs_puttofileLock;	/* not used */
-char *afs_sysname = 0;		/* So that superuser may change the
-				 * local value of @sys */
-char *afs_sysnamelist[MAXNUMSYSNAMES];	/* For support of a list of sysname */
-int afs_sysnamecount = 0;
-int afs_sysnamegen = 0;
 struct volume *Initialafs_freeVolList;
 int afs_memvolumes = 0;
 #if defined(AFS_XBSD_ENV)
@@ -541,14 +536,7 @@ afs_ResourceInit(int preallocs)
 	afs_resourceinit_flag = 1;
 	for (i = 0; i < NFENTRIES; i++)
 	    fvTable[i] = 0;
-	for (i = 0; i < MAXNUMSYSNAMES; i++) {
-	    afs_sysnamelist[i] = afs_osi_Alloc(MAXSYSNAME);
-	    osi_Assert(afs_sysnamelist[i] != NULL);
-	}
-	afs_sysname = afs_sysnamelist[0];
-	osi_Assert(strlcpy(afs_sysname, SYS_NAME, MAXSYSNAME) < MAXSYSNAME);
-	afs_sysnamecount = 1;
-	afs_sysnamegen++;
+	afs_sysname_init();
     }
 
     secobj = rxnull_NewServerSecurityObject();
@@ -847,12 +835,7 @@ shutdown_AFS(void)
     for (i = 0; i < NFENTRIES; i++)
 	fvTable[i] = 0;
     /* Reinitialize local globals to defaults */
-    for (i = 0; i < MAXNUMSYSNAMES; i++) {
-	afs_osi_Free(afs_sysnamelist[i], MAXSYSNAME);
-	afs_sysnamelist[i] = NULL;
-    }
-    afs_sysname = NULL;
-    afs_sysnamecount = 0;
+    afs_sysname_shutdown();
     afs_marinerHost = 0;
     afs_volCounter = 1;
     afs_waitForever = afs_waitForeverCount = 0;

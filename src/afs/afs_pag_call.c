@@ -37,10 +37,6 @@ static struct rx_securityClass *clt_secobj;
 static struct rx_service *stats_svc;
 static struct rx_service *pagcb_svc;
 static struct rx_connection *rmtsys_conn;
-char *afs_sysname = 0;
-char *afs_sysnamelist[MAXNUMSYSNAMES];
-int afs_sysnamecount = 0;
-int afs_sysnamegen = 0;
 afs_int32 afs_showflags = GAGUSER | GAGCONSOLE; /* show all messages */
 
 
@@ -86,7 +82,6 @@ afspag_Init(afs_int32 nfs_server_addr)
     struct clientcred ccred;
     struct rmtbulk idata, odata;
     afs_int32 code, err, addr, obuf;
-    int i;
 
     afs_uuid_create(&afs_cb_interface.uuid);
 
@@ -106,14 +101,7 @@ afspag_Init(afs_int32 nfs_server_addr)
 
     afs_resourceinit_flag = 1;
     afs_nfs_server_addr = nfs_server_addr;
-    for (i = 0; i < MAXNUMSYSNAMES; i++) {
-	afs_sysnamelist[i] = afs_osi_Alloc(MAXSYSNAME);
-        osi_Assert(afs_sysnamelist[i] != NULL);
-    }
-    afs_sysname = afs_sysnamelist[0];
-    osi_Assert(strlcpy(afs_sysname, SYS_NAME, MAXSYSNAME) < MAXSYSNAME);
-    afs_sysnamecount = 1;
-    afs_sysnamegen++;
+    afs_sysname_init();
 
     srv_secobj = rxnull_NewServerSecurityObject();
     AFS_GUNLOCK();

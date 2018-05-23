@@ -1606,4 +1606,9 @@ struct afssysa {
 extern int Afs_syscall(struct afssysa *uap, rval_t *rvp);
 #endif /* AFS_SUN5_ENV */
 
+struct afs_sysnames {
+    char *namelist[MAXNUMSYSNAMES];
+    int namecount;
+};
+
 #endif /* _AFS_H_ */

@@ -108,6 +108,7 @@ AFSAOBJS = \
 	afs_server.o \
 	afs_stat.o \
 	afs_syscall.o \
+	afs_sysname.o \
 	afs_tokens.o \
 	afs_user.o \
 	afs_util.o \
@@ -240,6 +241,7 @@ AFSPAGOBJS = \
 	afs_pag_user.o \
 	afs_stat.o \
 	afs_syscall.o \
+	afs_sysname.o \
 	afs_tokens.o \
 	afs_warn.o \
 	xdr_update.o	\
@@ -338,6 +340,8 @@ afs_segments.o: $(TOP_SRC_AFS)/afs_segments.c
 	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_segments.c
 afs_server.o: $(TOP_SRC_AFS)/afs_server.c
 	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_server.c
+afs_sysname.o: $(TOP_SRC_AFS)/afs_sysname.c
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_sysname.c
 afs_tokens.o: $(TOP_SRC_AFS)/afs_tokens.c
 	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_tokens.c
 afs_user.o: $(TOP_SRC_AFS)/afs_user.c

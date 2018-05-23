@@ -3895,22 +3895,19 @@ DECL_PIOCTL(PGetVnodeXStatus2)
  * \notes
  * 	We require root for local sysname changes, but not for remote
  * 	(since we don't really believe remote uids anyway)
- * 	outname[] shouldn't really be needed- this is left as an
- * 	exercise for the reader.
  */
 DECL_PIOCTL(PSetSysName)
 {
-    char *inname = NULL;
-    char outname[MAXSYSNAME];
     afs_int32 setsysname;
     int foundname = 0;
     struct afs_exporter *exporter;
-    struct unixuser *au;
-    afs_int32 pag, error;
+    struct unixuser *au = NULL;
+    afs_int32 pag;
+    int code = EINVAL;
     int t, count, num = 0, allpags = 0;
     char **sysnamelist;
     struct afs_pdata validate;
-    size_t len;
+    int sysname_locked = 0;
 
     AFS_STATCNT(PSetSysName);
     if (!afs_globalVFS) {
@@ -3930,122 +3927,143 @@ DECL_PIOCTL(PSetSysName)
     if (setsysname) {
 
 	/* Check my args */
-	if (setsysname < 0 || setsysname > MAXNUMSYSNAMES)
-	    return EINVAL;
+	if (setsysname < 0 || setsysname > MAXNUMSYSNAMES) {
+	    code = EINVAL;
+	    goto done;
+	}
 	validate = *ain;
 	for (count = 0; count < setsysname; count++) {
-	    if (afs_pd_getStringPtr(&validate, &inname) != 0)
-	        return EINVAL;
+	    char *inname = NULL;
+	    if (afs_pd_getStringPtr(&validate, &inname) != 0) {
+		code = EINVAL;
+		goto done;
+	    }
 	    t = strlen(inname);
-	    if (t >= MAXSYSNAME || t <= 0)
-		return EINVAL;
+	    if (t >= MAXSYSNAME || t <= 0) {
+		code = EINVAL;
+		goto done;
+	    }
 	    /* check for names that can shoot us in the foot */
 	    if (inname[0] == '.' && (inname[1] == 0
-		|| (inname[1] == '.' && inname[2] == 0)))
-		return EINVAL;
+		|| (inname[1] == '.' && inname[2] == 0))) {
+		code = EINVAL;
+		goto done;
+	    }
 	}
-	/* args ok, so go back to the beginning of that section */
+	/* args ok */
 
-	if (afs_pd_getStringPtr(ain, &inname) != 0)
-	    return EINVAL;
 	num = count;
     }
     if (afs_rmtsys_enable && (afs_cr_gid(*acred) == RMTUSER_REQ ||
 	afs_cr_gid(*acred) == RMTUSER_REQ_PRIV)) {   /* Handles all exporters */
+	char *inname = NULL;
 	if (allpags && afs_cr_gid(*acred) != RMTUSER_REQ_PRIV) {
-	    return EPERM;
+	    code = EPERM;
+	    goto done;
 	}
 	pag = PagInCred(*acred);
 	if (pag == NOPAG) {
-	    return EINVAL;	/* Better than panicing */
+	    code = EINVAL;	/* Better than panicing */
+	    goto done;
 	}
 	if (!(au = afs_FindUser(pag, -1, READ_LOCK))) {
-	    return EINVAL;	/* Better than panicing */
+	    code = EINVAL;	/* Better than panicing */
+	    goto done;
 	}
 	if (!(exporter = au->exporter)) {
-	    afs_PutUser(au, READ_LOCK);
-	    return EINVAL;	/* Better than panicing */
+	    code = EINVAL;	/* Better than panicing */
+	    goto done;
 	}
-	error = EXP_SYSNAME(exporter, inname, &sysnamelist,
-			    &num, allpags);
-	if (error) {
-	    if (error == ENODEV)
+
+	if (setsysname) {
+	    if (afs_pd_getStringPtr(ain, &inname) != 0) {
+		code = EINVAL;
+		goto done;
+	    }
+	}
+	code = EXP_SYSNAME(exporter, inname, &sysnamelist, &num, allpags);
+	if (code != 0) {
+	    if (code == ENODEV) {
 		foundname = 0;	/* sysname not set yet! */
-	    else {
-		afs_PutUser(au, READ_LOCK);
-		return error;
+		code = 0;
+	    } else {
+		goto done;
 	    }
 	} else {
 	    foundname = num;
-	    len = sizeof(outname);
-	    if (strlcpy(outname, sysnamelist[0], len) >= len) {
-		afs_PutUser(au, READ_LOCK);
-		return E2BIG;
-	    }
 	}
-	afs_PutUser(au, READ_LOCK);
 	if (setsysname)
 	    afs_sysnamegen++;
     } else {
+	struct afs_sysnames *sysnames;
+
+	AFS_GUNLOCK();
+	sysname_locked = 1;
+	MUTEX_ENTER(&afs_sysname_lock);
+	AFS_GLOCK();
+
+	sysnames = afs_global_sysnames;
+
 	/* Not xlating, so local case */
-	if (!afs_sysname)
+	if (sysnames == NULL || sysnames->namelist[0] == NULL)
 	    osi_Panic("PSetSysName: !afs_sysname\n");
 	if (!setsysname) {	/* user just wants the info */
-	    len = sizeof(outname);
-	    if (strlcpy(outname, afs_sysname, len) >= len)
-		return E2BIG;
-	    foundname = afs_sysnamecount;
-	    sysnamelist = afs_sysnamelist;
+	    foundname = sysnames->namecount;
+	    sysnamelist = sysnames->namelist;
 	} else {		/* Local guy; only root can change sysname */
-	    if (!afs_osi_suser(*acred))
-		return EACCES;
+	    if (!afs_osi_suser(*acred)) {
+		code = EACCES;
+		goto done;
+	    }
 
 	    /* allpags makes no sense for local use */
-	    if (allpags)
-		return EINVAL;
+	    if (allpags) {
+		code = EINVAL;
+		goto done;
+	    }
 
-	    /* clear @sys entries from the dnlc, once afs_lookup can
-	     * do lookups of @sys entries and thinks it can trust them */
-	    /* privs ok, store the entry, ... */
+	    /* Okay, now go ahead and actually store the new sysnames. */
 
-	    if (strlen(inname) >= MAXSYSNAME-1)
-		return EINVAL;
-	    if (strlcpy(afs_sysname, inname, MAXSYSNAME) >= MAXSYSNAME)
-		return E2BIG;
-
-	    if (setsysname > 1) {	/* ... or list */
-		for (count = 1; count < setsysname; ++count) {
-		    if (!afs_sysnamelist[count])
-			osi_Panic
-			   ("PSetSysName: no afs_sysnamelist entry to write\n");
-		    if (afs_pd_getString(ain, afs_sysnamelist[count],
-					 MAXSYSNAME) != 0)
-			return EINVAL;
+	    for (count = 0; count < setsysname; ++count) {
+		if (sysnames->namelist[count] == NULL)
+		    osi_Panic("PSetSysName: no afs_sysnamelist entry to write\n");
+		if (afs_pd_getString(ain, sysnames->namelist[count],
+				     MAXSYSNAME) != 0) {
+		    code = EINVAL;
+		    goto done;
 		}
 	    }
-	    afs_sysnamecount = setsysname;
+	    sysnames->namecount = setsysname;
 	    afs_sysnamegen++;
 	}
     }
     if (!setsysname) {
-	if (afs_pd_putInt(aout, foundname) != 0)
-	    return E2BIG;
-	if (foundname) {
-	    if (afs_pd_putString(aout, outname) != 0)
-		return E2BIG;
-	    for (count = 1; count < foundname; ++count) {    /* ... or list. */
-		if (!sysnamelist[count])
-		    osi_Panic
-			("PSetSysName: no afs_sysnamelist entry to read\n");
-		t = strlen(sysnamelist[count]);
-		if (t >= MAXSYSNAME)
-		    osi_Panic("PSetSysName: sysname entry garbled\n");
-		if (afs_pd_putString(aout, sysnamelist[count]) != 0)
-		    return E2BIG;
+	if (afs_pd_putInt(aout, foundname) != 0) {
+	    code = E2BIG;
+	    goto done;
+	}
+	for (count = 0; count < foundname; ++count) {
+	    if (sysnamelist[count] == NULL)
+		osi_Panic("PSetSysName: no afs_sysnamelist entry to read\n");
+	    t = strlen(sysnamelist[count]);
+	    if (t >= MAXSYSNAME)
+		osi_Panic("PSetSysName: sysname entry garbled\n");
+	    if (afs_pd_putString(aout, sysnamelist[count]) != 0) {
+		code = E2BIG;
+		goto done;
 	    }
 	}
     }
-    return 0;
+    code = 0;
+
+ done:
+    if (sysname_locked) {
+	MUTEX_EXIT(&afs_sysname_lock);
+    }
+    if (au != NULL) {
+	afs_PutUser(au, READ_LOCK);
+    }
+    return code;
 }
 
 /* sequential search through the list of touched cells is not a good

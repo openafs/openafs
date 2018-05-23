@@ -40,6 +40,7 @@ LT_objs = \
 	afs_osi_pag.lo \
 	afs_segments.lo \
 	afs_server.lo \
+	afs_sysname.lo \
 	afs_stat.lo \
 	afs_syscall.lo \
 	afs_tokens.lo \
@@ -260,6 +261,8 @@ afs_segments.lo: $(TOP_SRC_AFS)/afs_segments.c
 	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_segments.c
 afs_server.lo: $(TOP_SRC_AFS)/afs_server.c
 	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_server.c
+afs_sysname.lo: $(TOP_SRC_AFS)/afs_sysname.c
+	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_sysname.c
 afs_tokens.lo: $(TOP_SRC_AFS)/afs_tokens.c
 	$(LT_CCRULE) $(TOP_SRC_AFS)/afs_tokens.c
 afs_user.lo: $(TOP_SRC_AFS)/afs_user.c
