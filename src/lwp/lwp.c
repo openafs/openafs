@@ -342,6 +342,7 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 	if ((stackmemory = malloc(stacksize + 7)) == NULL)
 #endif /* !AFS_DARWIN_ENV */
 	{
+	    free(temp);
 	    Set_LWP_RC();
 	    return LWP_ENOMEM;
 	}
@@ -353,6 +354,8 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 #endif /* !AFS_DARWIN_ENV */
 #endif
 	if (priority < 0 || priority >= MAX_PRIORITIES) {
+	    free(temp);
+	    free(stackmemory);
 	    Set_LWP_RC();
 	    return LWP_EBADPRI;
 	}
