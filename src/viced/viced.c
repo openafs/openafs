@@ -1913,8 +1913,9 @@ main(int argc, char *argv[])
     if (SawLock)
 	plock(PROCLOCK);
 #elif !defined(AFS_NT40_ENV)
-    if (nice(-5) < 0)
-	; /* don't care */
+    if (nice(-5) < 0) {
+	/* don't care */
+    }
 #endif
     DInit(buffs);
 #ifdef AFS_DEMAND_ATTACH_FS

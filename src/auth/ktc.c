@@ -180,8 +180,9 @@ SetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 			0)) {
 		    found = i;	/* replace existing entry */
 		    break;
-		} else		/* valid, but no match */
-		    ;
+		} else {
+		    /* valid, but no match */
+		}
 	    } else
 		found = i;	/* remember this empty slot */
 	if (found == -1)

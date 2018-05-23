@@ -149,8 +149,9 @@ WriteLogBuffer(char *buf, afs_uint32 len)
 {
     LOCK_SERVERLOG();
     if (serverLogFD >= 0) {
-	if (write(serverLogFD, buf, len) < 0)
-	    ; /* don't care */
+	if (write(serverLogFD, buf, len) < 0) {
+	    /* don't care */
+        }
     }
     UNLOCK_SERVERLOG();
 }
@@ -204,8 +205,9 @@ vFSLog(const char *format, va_list args)
     } else
 #endif
     if (serverLogFD >= 0) {
-	if (write(serverLogFD, tbuffer, len) < 0)
-	    ; /* don't care */
+	if (write(serverLogFD, tbuffer, len) < 0) {
+	    /* don't care */
+        }
     }
     UNLOCK_SERVERLOG();
 
@@ -523,8 +525,9 @@ InitServerLogMutex(void)
 static void
 RedirectStdStreams(const char *fileName)
 {
-    if (freopen(fileName, "a", stdout) == NULL)
-	; /* don't care */
+    if (freopen(fileName, "a", stdout) == NULL) {
+	/* don't care */
+    }
     if (freopen(fileName, "a", stderr) != NULL) {
 #ifdef HAVE_SETVBUF
 	setvbuf(stderr, NULL, _IONBF, 0);

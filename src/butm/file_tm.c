@@ -209,8 +209,9 @@ ForkIoctl(usd_handle_t fd, int op, int count)
 	 * If this fails, there's nothing we can do, but we must test
 	 * it in order to avoid complier warnings on some platforms.
 	 */
-	if (write(pipefd[1], &ioctl_rc, sizeof(int)) < 0)
-	    ; /* don't care */
+	if (write(pipefd[1], &ioctl_rc, sizeof(int)) < 0) {
+	    /* don't care */
+	}
 
 	exit(0);
     } else {			/* parent process */
@@ -337,8 +338,9 @@ ForkOpen(char *device)
 	 * If this fails, there's nothing we can do, but we must test
 	 * it in order to avoid complier warnings on some platforms.
 	 */
-	if (write(pipefd[1], &open_rc, sizeof(open_rc)) < 0)
-	    ; /* don't care */
+	if (write(pipefd[1], &open_rc, sizeof(open_rc)) < 0) {
+	    /* don't care */
+	}
 
 	exit(0);
     } else {			/* parent process */
@@ -468,8 +470,9 @@ ForkClose(usd_handle_t fd)
 	 * block until the parent is ready.  But we must do something
 	 * with the result, to avoid complier warnings on some platforms.
 	 */
-	if (read(ctlpipe[0], &close_rc, sizeof(int)) < 0)
-	    ; /* don't care */
+	if (read(ctlpipe[0], &close_rc, sizeof(int)) < 0) {
+	    /* don't care */
+	}
 	close(ctlpipe[0]);
 
 	/* do the close */
@@ -480,8 +483,9 @@ ForkClose(usd_handle_t fd)
 	 * If this fails, there's nothing we can do, but we must test
 	 * it in order to avoid complier warnings on some platforms.
 	 */
-	if (write(pipefd[1], &close_rc, sizeof(int)) < 0)
-	    ; /* don't care */
+	if (write(pipefd[1], &close_rc, sizeof(int)) < 0) {
+	    /* don't care */
+	}
 
 	exit(0);
     } else {			/* parent process */

@@ -1570,8 +1570,9 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	fflush(STDOUT);
 	if (fscanf(stdin, "%c", &in) < 1)
 	    in = 0;
-	if (fscanf(stdin, "%c", &lf) < 0)	/* toss away */
-	    ; /* don't care */
+	if (fscanf(stdin, "%c", &lf) < 0) {
+	    /* toss away; don't care */
+	}
 	if (in == 'y') {
 	    fprintf(STDOUT, "type control-c\n");
 	    while (1) {
@@ -1928,8 +1929,9 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	fflush(STDOUT);
 	if (fscanf(stdin, "%c", &in) < 1)
 	    in = 0;
-	if (fscanf(stdin, "%c", &lf) < 0)	/* toss away */
-	    ; /* don't care */
+	if (fscanf(stdin, "%c", &lf) < 0) {
+ 	    /* toss away, don't care */
+	}
 	if (in == 'y') {
 	    fprintf(STDOUT, "type control-c\n");
 	    while (1) {
@@ -1963,8 +1965,9 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	fflush(STDOUT);
 	if (fscanf(stdin, "%c", &in) < 1)
 	    in = 0;
-	if (fscanf(stdin, "%c", &lf) < 0)	/* toss away */
-	    ; /* don't care */
+	if (fscanf(stdin, "%c", &lf) < 0) {
+	    /* toss away; don't care */
+	}
 	if (in == 'y') {
 	    fprintf(STDOUT, "type control-c\n");
 	    while (1) {
@@ -2048,8 +2051,9 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	fflush(STDOUT);
 	if (fscanf(stdin, "%c", &in) < 1)
 	    in = 0;
-	if (fscanf(stdin, "%c", &lf) < 0)	/* toss away */
-	    ; /* don't care */
+	if (fscanf(stdin, "%c", &lf) < 0) {	/* toss away */
+	    /* don't care */
+	}
 	if (in == 'y') {
 	    fprintf(STDOUT, "type control-c\n");
 	    while (1) {
