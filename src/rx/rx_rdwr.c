@@ -772,7 +772,9 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 	/* might be out of space now */
 	if (!nbytes) {
 	    return requestCount;
-	} else;			/* more data to send, so get another packet and keep going */
+	} else {
+	    /* more data to send, so get another packet and keep going */
+	}
     } while (nbytes);
 
     return requestCount - nbytes;
