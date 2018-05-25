@@ -101,7 +101,7 @@ int VCHash(struct VenusFid *fid)
 /* Hash only on volume to speed up volume callbacks. */
 int VCHashV(struct VenusFid *fid)
 {
-    return opr_jhash_int(fid->Fid.Vnode, 0) & opr_jhash_mask(VCSIZEBITS);
+    return opr_jhash_int(fid->Fid.Volume, 0) & opr_jhash_mask(VCSIZEBITS);
 }
 
 /*!
