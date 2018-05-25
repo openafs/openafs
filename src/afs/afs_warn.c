@@ -164,6 +164,7 @@ afs_vwarnuser (char *fmt, va_list ap)
 	snprintf(buf, sizeof(buf), "warn$");
 	vsnprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), fmt, aq);
 	afs_MarinerLog(buf, NULL);
+	va_end(aq);
     }
     vprintf(fmt, ap);
 
