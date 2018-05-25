@@ -1804,6 +1804,185 @@ out:
     return afs_convert_code(code);
 }
 
+#ifdef AFS_ATSYS_VFS_ENV
+static inline int
+get_sysname_r(int index, char *buf, size_t size, int *a_eof)
+{
+    struct afs_sysnames *sysnames = afs_global_sysnames;
+
+    if (index >= sysnames->namecount) {
+	*a_eof = 1;
+	return 0;
+    }
+
+    if (strlcpy(buf, sysnames->namelist[index], size) >= size) {
+	return EIO;
+    }
+
+    return 0;
+}
+
+/**
+ * Find an atsys-expanded dentry for a path component.
+ *
+ * @pre parent->d_inode->i_mutex is locked
+ *
+ * @param[in] parent	The parent dentry to look in.
+ * @param[in] prefix	The path component to look up before the @sys (e.g. for
+ *			"foo.@sys", this is "foo.").
+ * @param[in] len	The length of 'prefix'.
+ * @param[out] a_dp On success, set to the expanded atsys dentry. NULL
+ *		    otherwise.
+ *
+ * @returns positive errno error codes
+ */
+static int
+find_atsys_dentry(struct dentry *parent, const char *prefix, int len,
+		  struct dentry **a_dp)
+{
+    struct dentry *dp;
+    char *buf = NULL;
+    char *atsys;
+    size_t atsys_size;
+    int sysname_i;
+    int lastgen = 0;
+    int safety;
+    int code;
+
+    *a_dp = NULL;
+
+    if (len >= AFS_LRALLOCSIZ) {
+	/* Just in case, make sure our given prefix is less than our scratch
+	 * buffer size. */
+	code = EIO;
+	goto done;
+    }
+
+    buf = kzalloc(AFS_LRALLOCSIZ, GFP_NOFS);
+    if (buf == NULL) {
+	code = ENOMEM;
+	goto done;
+    }
+
+    memcpy(buf, prefix, len);
+
+    /* If prefix is 'foo.', make 'atsys' point to just after the '.' in our
+     * scratch buffer. */
+    atsys = &buf[len];
+    atsys_size = AFS_LRALLOCSIZ - len;
+
+    /*
+     * We need to try to do a lookup on 'foo.@sys', but where '@sys' is
+     * replaced by one of our sysnames. We try this for every sysname in our
+     * sysname list, stopping if we encounter a valid (positive) entry, or if
+     * we get an error. For performance, we need to avoid taking GLOCK, but we
+     * also want to avoid holding afs_sysname_lock when calling back into the
+     * Linux VFS (in case it calls back into libafs code that takes more
+     * locks, or we block on something else).
+     *
+     * So to do this, we grab afs_sysname_lock just long enough to pull out a
+     * single sysname from the sysname list, and then we do the lookup without
+     * holding afs_sysname_lock. When trying the lookup with the next sysname,
+     * we look to see if the sysname list has changed (by looking at
+     * afs_sysnamegen). If it has, we restart the whole process over;
+     * otherwise, we just continue with the next sysname. This allows us to
+     * avoid holding afs_sysname_lock during the lookup, but we still guarantee
+     * that we work properly if somebody changed the sysname list in the
+     * meantime. We put a safety limit on how many times we go through the
+     * loop, but changing the sysname list is a very rare operation, and so
+     * should not impact us very much.
+     */
+    for (safety = 0, sysname_i = 0; safety < 1000; safety++, sysname_i++) {
+	int eof = 0;
+
+	MUTEX_ENTER(&afs_sysname_lock);
+	if (afs_sysnamegen != lastgen) {
+	    /* Somebody changed the sysname list while we were running; start
+	     * over. */
+	    sysname_i = 0;
+	    lastgen = afs_sysnamegen;
+	}
+	code = get_sysname_r(sysname_i, atsys, atsys_size, &eof);
+	MUTEX_EXIT(&afs_sysname_lock);
+
+	if (code != 0 || eof) {
+	    goto done;
+	}
+
+	dp = afs_lookup_noperm(buf, parent);
+	if (IS_ERR(dp)) {
+	    code = -PTR_ERR(dp);
+	    goto done;
+	}
+	if (dp->d_inode != NULL) {
+	    /* Found a non-negative dentry; return it. */
+	    *a_dp = dp;
+	    goto done;
+	}
+	dput(dp);
+    }
+
+    code = EIO;
+
+ done:
+    if (buf) {
+	kfree(buf);
+    }
+    return code;
+}
+
+static struct dentry *
+afs_linux_lookup_atsys(struct dentry *dp)
+{
+    int len;
+    int code;
+    const char *comp = dp->d_name.name;
+    struct dentry *newdp = NULL;
+
+    if (afs_atsys_type != AFS_ATSYS_VFS) {
+	/* We're not using the "vfs" @sys mode; afs_lookup() will do @sys
+	 * expansions for us. */
+	goto done;
+    }
+
+    if (dp->d_name.len < 4) {
+	/* dentry name is too short; can't possibly contain @sys */
+	goto done;
+    }
+
+    len = dp->d_name.len - 4;
+
+    if (!AFS_EQ_ATSYS(&comp[len])) {
+	/* dentry name doesn't end with @sys */
+	goto done;
+    }
+
+    code = find_atsys_dentry(dp->d_parent, comp, len, &newdp);
+    if (newdp == NULL) {
+	/*
+	 * If we cannot resolve the @sys to a real dentry, return an error. Do
+	 * not just return NULL, since that will cause the caller to fallback
+	 * to the normal afs_lookup() code path. We don't want that, since that
+	 * will, for example, cache ENOENT results in a negative dentry. We
+	 * don't want to cache a negative dentry, in case our results change in
+	 * the future (for another process, or the sysname list changes, etc).
+	 *
+	 * That means we will go through this code path every time for an
+	 * ENOENT @sys entry. But that shouldn't be a problem for performance,
+	 * since the lookups in find_atsys_dentry() itself will use cached
+	 * dentry's.
+	 */
+	if (code == 0) {
+	    code = ENOENT;
+	}
+	newdp = ERR_PTR(afs_convert_code(code));
+    }
+
+ done:
+    return newdp;
+}
+#endif /* AFS_ATSYS_VFS_ENV */
+
 /* afs_linux_lookup */
 static struct dentry *
 #if defined(IOP_LOOKUP_TAKES_UNSIGNED)
@@ -1816,12 +1995,28 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp,
 afs_linux_lookup(struct inode *dip, struct dentry *dp)
 #endif
 {
-    cred_t *credp = crref();
+    cred_t *credp;
     struct vcache *vcp = NULL;
     const char *comp = dp->d_name.name;
     struct inode *ip = NULL;
     struct dentry *newdp = NULL;
     int code;
+
+#ifdef AFS_ATSYS_VFS_ENV
+    newdp = afs_linux_lookup_atsys(dp);
+    if (newdp != NULL) {
+	/*
+	 * The '_atsys' code path found another atsys-substituted dentry for us
+	 * to use (or an error). We can just use that directly; don't attach
+	 * the dentry anywhere; we don't want the result cached (in case
+	 * there's already a cached dentry for it under a different name, and
+	 * in case our atsys resolution yields a different result next time).
+	 */
+	return newdp;
+    }
+#endif
+
+    credp = crref();
 
     AFS_GLOCK();
 

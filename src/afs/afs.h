@@ -1606,6 +1606,10 @@ struct afssysa {
 extern int Afs_syscall(struct afssysa *uap, rval_t *rvp);
 #endif /* AFS_SUN5_ENV */
 
+/* this would be faster if it did comparison as int32word, but would be
+ * dependant on byte-order and alignment. */
+#define AFS_EQ_ATSYS(name) (((name)[0]=='@')&&((name)[1]=='s')&&((name)[2]=='y')&&((name)[3]=='s')&&(!(name)[4]))
+
 struct afs_sysnames {
     char *namelist[MAXNUMSYSNAMES];
     int namecount;

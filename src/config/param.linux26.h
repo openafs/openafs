@@ -39,6 +39,12 @@
 #  define AFS_GLOBAL_SUNLOCK
 # endif
 
+# ifdef KERNEL
+#  if LINUX_VERSION_CODE >= KERNEL_VERSION(3,10,0)
+#   define AFS_ATSYS_VFS_ENV
+#  endif
+# endif
+
 # ifndef KERNEL
 #  define __USE_LARGEFILE64 1
 #  if !defined off64_t

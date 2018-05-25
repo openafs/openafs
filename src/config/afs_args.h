@@ -357,5 +357,8 @@ struct afs_pkt_hdr {
 /* Value constants for AFS_SETINT_ATSYS */
 #define AFS_ATSYS_INTERNAL  0x1
 #define AFS_ATSYS_NONE	    0x2
+#ifdef AFS_LINUX_ENV
+# define AFS_ATSYS_VFS	    0x3
+#endif
 
 #endif /* _AFS_ARGS_H_ */

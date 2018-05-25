@@ -805,6 +805,23 @@ Example behavior:
          81263 .
          81263 /afs/cell/sunx86_511
 
+=item vfs
+
+I<@sys> is expanded in paths like with the C<internal> mode, but in this mode,
+the kernel's VFS is aware of the expanded path name. This means that paths
+containing I<@sys> will look like their expanded name in e.g. L<getcwd(3)>, and
+will not contain the string C<@sys>.
+
+This mode is currently only available on Linux. On Linux, this mode may perform
+slightly better and behave more consistently than the C<internal> mode, but may
+yield different results from L<getcwd(3)>.
+
+Example behavior:
+
+    $ cd /afs/cell/@sys
+    $ /bin/pwd -P
+    /afs/cell/amd64_linux26
+
 =item none
 
 I<@sys> is not expanded in paths at all. This normally should not be used, but

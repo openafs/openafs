@@ -33,11 +33,6 @@ afs_int32 afs_bulkStatsDone;
 static int bulkStatCounter = 0;	/* counter for bulk stat seq. numbers */
 int afs_fakestat_enable = 0;	/* 1: fakestat-all, 2: fakestat-crosscell */
 
-/* this would be faster if it did comparison as int32word, but would be 
- * dependant on byte-order and alignment, and I haven't figured out
- * what "@sys" is in binary... */
-#define AFS_EQ_ATSYS(name) (((name)[0]=='@')&&((name)[1]=='s')&&((name)[2]=='y')&&((name)[3]=='s')&&(!(name)[4]))
-
 /* call under write lock, evaluate mvid.target_root field from a mt pt.
  * avc is the vnode of the mount point object; must be write-locked.
  * advc is the vnode of the containing directory (optional; if NULL and
@@ -667,6 +662,9 @@ afs_AtSys_SetType(afs_uint32 type)
     switch (type) {
     case AFS_ATSYS_INTERNAL:
     case AFS_ATSYS_NONE:
+#ifdef AFS_ATSYS_VFS_ENV
+    case AFS_ATSYS_VFS:
+#endif
 	break;
     default:
 	pid = MyPidxx2Pid(MyPidxx);
@@ -718,6 +716,24 @@ Check_AtSys(struct vcache *avc, const char *aname,
 	state->index = 0;
 	state->name = (char *)aname;
     }
+}
+
+/* Check_AtSys() variant just for being called from afs_lookup(). */
+static void
+Check_AtSysLookup(struct vcache *avc, const char *aname,
+		  struct sysname_info *state, struct vrequest *areq)
+{
+#ifdef AFS_ATSYS_VFS
+    if (afs_atsys_type == AFS_ATSYS_VFS) {
+	/*
+	 * If our atsys mode is "vfs", make sure we don't do any @sys
+	 * expansions in afs_lookup; someone else will handle @sys expansions.
+	 */
+	Check_AtSysDisabled(aname, state);
+	return;
+    }
+#endif
+    Check_AtSys(avc, aname, state, areq);
 }
 
 int
@@ -1787,7 +1803,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     }
 #endif
 
-    Check_AtSys(adp, aname, &sysState, treq);
+    Check_AtSysLookup(adp, aname, &sysState, treq);
     tname = sysState.name;
 
     /* 1st Check_AtSys and lookup by tname is required here, for now,

@@ -2371,6 +2371,10 @@ CheckOptions(struct cmd_syndesc *as)
 	    atsys_type = AFS_ATSYS_INTERNAL;
 	} else if (strcmp(atsys_str, "none") == 0) {
 	    atsys_type = AFS_ATSYS_NONE;
+#ifdef AFS_ATSYS_VFS
+	} else if (strcmp(atsys_str, "vfs") == 0) {
+	    atsys_type = AFS_ATSYS_VFS;
+#endif
 	} else {
 	    fprintf(stderr, "Unknown value for -atsys: %s\n", atsys_str);
 	    return -1;
@@ -3128,6 +3132,9 @@ afsd_init(void)
 			CMD_OPTIONAL,
 			"Set the vldb cache timeout value in seconds.");
     cmd_AddParmAtOffset(ts, OPT_atsys, "-atsys", CMD_SINGLE, CMD_OPTIONAL,
+#ifdef AFS_ATSYS_VFS
+			"vfs | "
+#endif
 			"internal | none");
 }
 
