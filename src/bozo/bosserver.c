@@ -1262,4 +1262,5 @@ bozo_Log(const char *format, ...)
 	    fclose(bozo_logFile);
 	}
     }
+    va_end(ap);
 }
