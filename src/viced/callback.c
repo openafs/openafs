@@ -1121,7 +1121,6 @@ BreakDelayedCallBacks_r(struct host *host)
 		}
 		host->z.hostFlags |= VENUSDOWN;	/* Failed */
 		ClearHostCallbacks_r(host, 1 /* locked */ );
-		nfids = 0;
 		break;
 	    }
 	    if (nfids < AFSCBMAX)

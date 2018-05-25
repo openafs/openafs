@@ -579,7 +579,7 @@ uss_fs_UnlogToken(char *celln)
 	       code);
 	exit(1);
     }
-    for (code = index = 0; index < count; index++) {
+    for (index = 0; index < count; index++) {
 	tp = tokenInfoP + index;
 	if (!(tp->deleted)) {
 	    code = ktc_SetToken(&tp->service, &tp->token, &tp->client, 0);
