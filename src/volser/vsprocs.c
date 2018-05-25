@@ -5512,7 +5512,6 @@ UV_ListVolumes(afs_uint32 aserver, afs_int32 apart, int all,
     afs_int32 code = 0;
     volEntries volumeInfo;
 
-    code = 0;
     *size = 0;
     *resultPtr = (volintInfo *) 0;
     volumeInfo.volEntries_val = (volintInfo *) 0;	/*this hints the stub to allocate space */
