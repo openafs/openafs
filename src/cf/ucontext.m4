@@ -4,7 +4,9 @@ dnl and return to the original user context.
 dnl
 AC_DEFUN([OPENAFS_WORKING_UCONTEXT],[
   AC_MSG_CHECKING([if user context manipulation is complete])
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+  AC_RUN_IFELSE(
+    [AC_LANG_SOURCE(
+      [[
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_UCONTEXT_H
@@ -47,5 +49,10 @@ main(int argc, char **argv)
 
 	free(alt_stack);
 	exit(EXIT_SUCCESS);
-}]])],[AC_MSG_RESULT(yes)
-   AC_DEFINE(HAVE_WORKING_SWAPCONTEXT,1,user context manipulation is complete)],[AC_MSG_RESULT(no)],[])])
+}
+      ]])],
+      [AC_MSG_RESULT(yes)
+       AC_DEFINE(HAVE_WORKING_SWAPCONTEXT, 1,
+         user context manipulation is complete)],
+      [AC_MSG_RESULT(no)],
+      [])])

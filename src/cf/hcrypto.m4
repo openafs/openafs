@@ -83,18 +83,24 @@ AC_DEFUN([OPENAFS_HCRYPTO], [
   AC_SUBST(hcrypto_install_target)
 
   AC_ARG_WITH([hcrypto],
-    [AS_HELP_STRING([--with-hcrypto=DIR],[Location of the hcrypto library, or 'internal'])],
+    [AS_HELP_STRING(
+      [--with-hcrypto=DIR],
+      [Location of the hcrypto library, or 'internal'])],
     [AS_IF([test x"$withval" = xno],
       [AC_MSG_ERROR("OpenAFS requires hcrypto to build")],
       [AS_IF([test x"$withval" != xyes],
 	[hcrypto_root="$withval"])])]
   )
   AC_ARG_WITH([hcrypto-include],
-    [AS_HELP_STRING([--with-hcrypto-include=DIR],[Location of hcrypto headers])],
+    [AS_HELP_STRING(
+      [--with-hcrypto-include=DIR],
+      [Location of hcrypto headers])],
     [AS_IF([test x"$withval" != xyes && test x"$withval" != xno],
       [hcrypto_includedir=$withval])])
   AC_ARG_WITH([hcrypto-lib],
-    [AS_HELP_STRING([--with-hcrypto-lib=DIR],[Location of the hcrypto library])],
+    [AS_HELP_STRING(
+      [--with-hcrypto-lib=DIR],
+      [Location of the hcrypto library])],
     [AS_IF([test x"$withval" != xyes && test x"$withval" != xno],
       [hcrypto_libdir=$withval])])
 

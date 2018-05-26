@@ -8,7 +8,9 @@ else
 
   dnl darwin wants it, aix hates it
   AC_MSG_CHECKING(for the useability of arpa/nameser_compat.h)
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+  AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM(
+      [[
   #include <stdlib.h>
   #include <stdio.h>
   #include <sys/types.h>
@@ -18,9 +20,12 @@ else
   #include <arpa/nameser.h>
   #include <arpa/nameser_compat.h>
   #include <resolv.h>
-  ]], [[static int i; i = 0;]])],[AC_MSG_RESULT(yes)
-   AC_DEFINE(HAVE_ARPA_NAMESER_COMPAT_H, 1, [define if arpa/nameser_compat.h exists])],[AC_MSG_RESULT(no)
-   ])
+      ]],
+      [[static int i; i = 0;]])],
+   [AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_ARPA_NAMESER_COMPAT_H, 1,
+     [define if arpa/nameser_compat.h exists])],
+   [AC_MSG_RESULT(no)])
 
   openafs_save_libs="$LIBS"
   AC_MSG_CHECKING([for res_search])
