@@ -5,7 +5,12 @@ AC_DEFUN([OPENAFS_GCC_SUPPORTS_MARCH], [
     [openafs_cv_gcc_supports_march],
     [save_CFLAGS="$CFLAGS"
      CFLAGS="-MARCH=pentium"
-     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int x;]])],[openafs_cv_gcc_supports_march=yes],[openafs_cv_gcc_supports_march=no])
+     AC_COMPILE_IFELSE(
+       [AC_LANG_PROGRAM(
+         [[]],
+         [[int x;]])],
+         [openafs_cv_gcc_supports_march=yes],
+         [openafs_cv_gcc_supports_march=no])
      CFLAGS="$save_CFLAGS"
     ])
   AS_IF([test x$openafs_cv_gcc_supports_march = xyes],
@@ -18,7 +23,12 @@ AC_DEFUN([OPENAFS_GCC_NEEDS_NO_STRICT_ALIASING], [
     [openafs_cv_gcc_needs_no_strict_aliasing],
     [save_CFLAGS="$CFLAGS"
      CFLAGS="-fno-strict-aliasing"
-     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int x;]])],[openafs_cv_gcc_needs_no_strict_aliasing=yes],[openafs_cv_gcc_needs_no_strict_aliasing=no])
+     AC_COMPILE_IFELSE(
+       [AC_LANG_PROGRAM(
+         [[]],
+         [[int x;]])],
+       [openafs_cv_gcc_needs_no_strict_aliasing=yes],
+       [openafs_cv_gcc_needs_no_strict_aliasing=no])
      CFLAGS="$save_CFLAGS"
   ])
   AS_IF([test x$openafs_cv_gcc_needs_no_strict_aliasing = xyes],
@@ -30,7 +40,12 @@ AC_DEFUN([OPENAFS_GCC_NEEDS_NO_STRENGTH_REDUCE], [
     [openafs_cv_gcc_needs_no_strength_reduce],
     [save_CFLAGS="$CFLAGS"
      CFLAGS="-fno-strength-reduce"
-     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int x;]])],[openafs_cv_gcc_needs_no_strength_reduce=yes],[openafs_cv_gcc_needs_no_strength_reduce=no])
+     AC_COMPILE_IFELSE(
+       [AC_LANG_PROGRAM(
+         [[]],
+         [[int x;]])],
+       [openafs_cv_gcc_needs_no_strength_reduce=yes],
+       [openafs_cv_gcc_needs_no_strength_reduce=no])
      CFLAGS="$save_CFLAGS"
   ])
   AS_IF([test x$openafs_cv_gcc_needs_no_strength_reduce = xyes],
@@ -42,7 +57,12 @@ AC_DEFUN([OPENAFS_GCC_SUPPORTS_NO_COMMON], [
     [openafs_cv_gcc_supports_no_common],
     [save_CFLAGS="$CFLAGS"
      CFLAGS="-fno-common"
-     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int x;]])],[openafs_cv_gcc_supports_no_common=yes],[openafs_cv_gcc_supports_no_common=no])
+     AC_COMPILE_IFELSE(
+       [AC_LANG_PROGRAM(
+         [[]],
+         [[int x;]])],
+       [openafs_cv_gcc_supports_no_common=yes],
+       [openafs_cv_gcc_supports_no_common=no])
 
      CFLAGS="$save_CFLAGS"
   ])
@@ -55,7 +75,12 @@ AC_DEFUN([OPENAFS_GCC_SUPPORTS_PIPE], [
     [openafs_cv_gcc_supports_pipe],
     [save_CFLAGS="$CFLAGS"
      CFLAGS="-pipe"
-     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[int x;]])],[openafs_cv_gcc_supports_pipe=yes],[openafs_cv_gcc_supports_pipe=no])
+     AC_COMPILE_IFELSE(
+       [AC_LANG_PROGRAM(
+         [[]],
+         [[int x;]])],
+       [openafs_cv_gcc_supports_pipe=yes],
+       [openafs_cv_gcc_supports_pipe=no])
   CFLAGS="$save_CFLAGS"
   ])
   AS_IF([test x$openafs_cv_gcc_supports_pipe = xyes],

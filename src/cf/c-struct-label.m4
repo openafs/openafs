@@ -10,7 +10,8 @@ struct labeltest struct_labeltest = {
    .open       = osi_UFSOpen,
 }
 ]])],[AC_MSG_RESULT(yes)
-    AC_DEFINE(HAVE_STRUCT_LABEL_SUPPORT, 1, [Define to 1 if your compiler supports labels in structs.])
+    AC_DEFINE(HAVE_STRUCT_LABEL_SUPPORT, 1,
+      [Define to 1 if your compiler supports labels in structs.])
 ],[AC_MSG_RESULT(no)
 ])
 ])

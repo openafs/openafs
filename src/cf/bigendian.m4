@@ -41,7 +41,10 @@ AC_CACHE_CHECK(whether byte ordering is bigendian, openafs_cv_c_bigendian,[
     } u;
     u.l = 1;
     exit (u.c[sizeof (long) - 1] == 1);
-  }]])],[openafs_cv_c_bigendian=no],[openafs_cv_c_bigendian=yes],[AC_MSG_ERROR(specify either --enable-bigendian or --enable-littleendian)])
+  }]])],
+      [openafs_cv_c_bigendian=no],
+      [openafs_cv_c_bigendian=yes],
+      [AC_MSG_ERROR(specify either --enable-bigendian or --enable-littleendian)])
   fi
 ])
 if test "$openafs_cv_c_bigendian" = "yes"; then
