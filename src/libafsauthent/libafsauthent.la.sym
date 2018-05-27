@@ -89,9 +89,12 @@ ka_VerifyUserToken
 ktc_ForgetAllTokens
 ktc_ForgetToken
 ktc_GetToken
+ktc_GetTokenEx
 ktc_ListTokens
+ktc_ListTokensEx
 ktc_OldPioctl
 ktc_SetToken
+ktc_SetTokenEx
 ktc_curpag
 pioctl
 pr_End
