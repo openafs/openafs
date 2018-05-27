@@ -194,3 +194,12 @@ EXPORTS
         afsconf_SuperIdentity				@193
         afsconf_typedKey_free				@194
         afsconf_typedKey_get				@195
+        token_SetsEquivalent				@196
+        token_addToken					@197
+        token_buildTokenJar				@198
+        token_findByType				@199
+        token_freeToken					@200
+        token_freeTokenContents				@201
+        token_replaceToken				@202
+        token_setPag					@203
+        token_setRxkadViceId				@204

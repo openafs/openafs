@@ -107,6 +107,17 @@ pr_NameToId
 pr_SNameToId
 setpag
 string_PR_IDToName
+token_FreeSet
+token_SetsEquivalent
+token_addToken
+token_buildTokenJar
+token_extractRxkad
+token_findByType
+token_freeToken
+token_freeTokenContents
+token_replaceToken
+token_setPag
+token_setRxkadViceId
 ubik_Call
 ubik_CallIter
 ubik_Call_New
