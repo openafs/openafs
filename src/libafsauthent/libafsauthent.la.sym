@@ -147,3 +147,7 @@ ubik_PR_SetFieldsEntry
 ubik_PR_SetMax
 ubik_PR_UpdateEntry
 ubik_PR_WhereIsIt
+ugen_ClientInit
+ugen_ClientInitCell
+ugen_ClientInitFlags
+ugen_ClientInitServer

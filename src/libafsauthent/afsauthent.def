@@ -203,3 +203,6 @@ EXPORTS
         token_replaceToken				@202
         token_setPag					@203
         token_setRxkadViceId				@204
+        ugen_ClientInitCell				@205
+        ugen_ClientInitFlags				@206
+        ugen_ClientInitServer				@207
