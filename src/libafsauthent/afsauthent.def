@@ -175,3 +175,22 @@ EXPORTS
         initialize_VL_error_table			@174
         initialize_VOLS_error_table			@175
         afs_getDirPath					@176
+        afsconf_AddIdentity				@177
+        afsconf_CellAliasApply				@178
+        afsconf_DeleteIdentity				@179
+        afsconf_DeleteKeyBySubType			@180
+        afsconf_DeleteKeyByType				@181
+        afsconf_FindIANAName				@182
+        afsconf_FindService				@183
+        afsconf_GetAfsdbInfo				@184
+        afsconf_GetKeyByTypes				@185
+        afsconf_GetKeysByType				@186
+        afsconf_GetLatestKeyByTypes			@187
+        afsconf_GetLatestKeysByType			@188
+        afsconf_GetNthIdentity				@189
+        afsconf_IsSuperIdentity				@190
+        afsconf_ParseNetRestrictFile			@191
+        afsconf_PutTypedKeyList				@192
+        afsconf_SuperIdentity				@193
+        afsconf_typedKey_free				@194
+        afsconf_typedKey_get				@195
