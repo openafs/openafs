@@ -206,3 +206,6 @@ EXPORTS
         ugen_ClientInitCell				@205
         ugen_ClientInitFlags				@206
         ugen_ClientInitServer				@207
+        xdr_idlist					@208
+        xdr_namelist					@209
+        xdr_prlist					@210
