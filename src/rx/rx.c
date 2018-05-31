@@ -7562,7 +7562,7 @@ rxi_DebugPrint(char *format, ...)
     va_start(ap, format);
 
     clock_GetTime(&now);
-    fprintf(rx_Log, " %d.%06d:", (unsigned int)now.sec,
+    fprintf(rx_Log, " %u.%06u:", (unsigned int)now.sec,
 	    (unsigned int)now.usec);
     vfprintf(rx_Log, format, ap);
     va_end(ap);

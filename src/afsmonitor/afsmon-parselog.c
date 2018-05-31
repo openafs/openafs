@@ -330,7 +330,7 @@ Print_fs_FullPerfInfo(a_fs_Results)
     if (code) {
 	numLongs = a_fs_Results->data.AFS_CollData_len;
 	printf(" ** Data size mismatch in full performance collection!\n");
-	printf(" ** Expecting %d, got %d\n", fullPerfLongs, numLongs);
+	printf(" ** Expecting %ld, got %ld\n", fullPerfLongs, numLongs);
 	return;
     }
 

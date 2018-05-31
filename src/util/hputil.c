@@ -38,6 +38,6 @@ setlinebuf(FILE * file)
 void
 psignal(unsigned int sig, char *s)
 {
-    fprintf(stderr, "%s: signal %d\n", s, sig);
+    fprintf(stderr, "%s: signal %u\n", s, sig);
 }
 #endif /* AFS_HPUX_ENV */

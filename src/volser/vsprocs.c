@@ -6304,7 +6304,7 @@ UV_SyncVldb(afs_uint32 aserver, afs_int32 apart, int flags, int force)
 
 	    if (verbose) {
 		fprintf(STDOUT,
-			"Processing volume entry %d: %s (%lu) on server %s %s...\n",
+			"Processing volume entry %u: %s (%lu) on server %s %s...\n",
 			j + 1, vi->name, (unsigned long)vi->volid,
                         noresolve ?
                         afs_inet_ntoa_r(aserver, hoststr) :
@@ -6329,7 +6329,7 @@ UV_SyncVldb(afs_uint32 aserver, afs_int32 apart, int flags, int force)
 		if (code) {
 		    fprintf(STDOUT, "...error encountered\n\n");
 		} else {
-		    fprintf(STDOUT, "...done entry %d\n\n", j + 1);
+		    fprintf(STDOUT, "...done entry %u\n\n", j + 1);
 		}
 	    }
 	}

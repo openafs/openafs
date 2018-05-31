@@ -359,7 +359,7 @@ ckfini()
     if (bufhead.b_size != cnt)
 	errexit("Panic: lost %d buffers\n", bufhead.b_size - cnt);
     if (debug)
-	printf("cache missed %d of %d (%d%%)\n", diskreads, totalreads,
+	printf("cache missed %ld of %ld (%ld%%)\n", diskreads, totalreads,
 	       diskreads * 100 / totalreads);
     (void)close(fsreadfd);
     (void)close(fswritefd);

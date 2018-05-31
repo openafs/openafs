@@ -311,12 +311,12 @@ afs_cdev_ioctl(dev_t dev, u_long cmd, caddr_t data, int fflag, struct proc *p) {
     if ((!is64) && retval && a->syscall != AFSCALL_CALL
 	&& a->param1 != AFSOP_CACHEINODE)
     {
-	printf("SSCall(%d,%d) is returning non-error value %d\n", a->syscall, a->param1, retval);
+	printf("SSCall(%d,%d) is returning non-error value %u\n", a->syscall, a->param1, retval);
     }
     if ((is64) && retval && a64->syscall != AFSCALL_CALL
 	&& a64->param1 != AFSOP_CACHEINODE)
     {
-	printf("SSCall(%d,%llx) is returning non-error value %d\n", a64->syscall, a64->param1, retval);
+	printf("SSCall(%d,%llx) is returning non-error value %u\n", a64->syscall, a64->param1, retval);
     }
 
     if (!is64)

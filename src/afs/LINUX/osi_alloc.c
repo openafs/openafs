@@ -248,7 +248,7 @@ osi_linux_alloc(unsigned int asize, int drop_glock)
     new = linux_alloc(asize, drop_glock);	/* get a chunk of memory of size asize */
 
     if (!new) {
-	printf("afs_osi_Alloc: Can't vmalloc %d bytes.\n", asize);
+	printf("afs_osi_Alloc: Can't vmalloc %u bytes.\n", asize);
 	return new;
     }
 
@@ -358,7 +358,7 @@ osi_linux_verify_alloced_memory(void)
     if (afs_linux_hash_verify_count != afs_linux_cur_allocs) {
 	/* hmm, some pieces of memory are missing. */
 	printf
-	    ("osi_linux_verify_alloced_memory: %d chunks of memory are not accounted for during verify!\n",
+	    ("osi_linux_verify_alloced_memory: %u chunks of memory are not accounted for during verify!\n",
 	     afs_linux_hash_verify_count - afs_linux_cur_allocs);
     }
 

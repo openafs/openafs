@@ -93,12 +93,12 @@ async_BulkProc(data)
 	clock_GetTime(&endTime);
 	msec = clock_ElapsedTime(&startTime, &endTime);
 	if (work->verbose && !error)
-	    printf("%s: %s %s, %d bytes in %d msec, %d bps\n", work->host,
+	    printf("%s: %s %s, %ld bytes in %ld msec, %ld bps\n", work->host,
 		   work->store ? "stored" : "fetched",
 		   work->store ? work->local : work->remote, length, msec,
 		   length * 1000 / msec);
 	else if (error)
-	    printf("%s: %s of %s failed: error %d\n", work->host,
+	    printf("%s: %s of %s failed: error %ld\n", work->host,
 		   work->store ? "store" : "fetch",
 		   work->store ? work->local : work->remote, error);
     }

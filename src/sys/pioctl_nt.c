@@ -1110,7 +1110,7 @@ Transceive(HANDLE handle, fs_ioctlRequest_t * reqp)
     if (rcount <= 0) {
         if ( ioctlDebug ) {
             save = errno;
-            fprintf(stderr, "pioctl Transceive rcount <= 0: %d\r\n",rcount);
+            fprintf(stderr, "pioctl Transceive rcount <= 0: %ld\r\n",rcount);
             errno = save;
         }
 	return EINVAL;		/* not supposed to happen */
@@ -1168,7 +1168,7 @@ UnmarshallLong(fs_ioctlRequest_t * reqp, long *valp)
     if (reqp->nbytes < 4) {
         if ( IoctlDebug() ) {
             save = errno;
-            fprintf(stderr, "pioctl UnmarshallLong reqp->nbytes < 4: %d\r\n",
+            fprintf(stderr, "pioctl UnmarshallLong reqp->nbytes < 4: %ld\r\n",
                      reqp->nbytes);
             errno = save;
         }

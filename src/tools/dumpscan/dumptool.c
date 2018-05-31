@@ -1116,7 +1116,7 @@ ScanVnodes(FILE * f, VolumeDiskData * vol, int sizescan)
 		    if (verbose)
 			fprintf(stderr,
 				"Unable to " "allocate space for "
-				"file data (%d)\n", length);
+				"file data (%u)\n", length);
 		    return -1;
 		}
 
@@ -1667,7 +1667,7 @@ CopyVnode(int argc, char *argv[], FILE * f)
 	return;
     }
 
-    ret = sscanf(argv[1], "%d.%d", &vnode, &uniquifier);
+    ret = sscanf(argv[1], "%u.%u", &vnode, &uniquifier);
 
     if (ret < 1) {
 	fprintf(stderr, "Invalid file identifier: %s\n", argv[1]);
@@ -1675,13 +1675,13 @@ CopyVnode(int argc, char *argv[], FILE * f)
     }
 
     if (!(vdata = GetVnode(vnode))) {
-	fprintf(stderr, "Vnode %d not in dump file\n", vnode);
+	fprintf(stderr, "Vnode %u not in dump file\n", vnode);
 	return;
     }
 
     if (ret == 2 && vdata->vnode->uniquifier != uniquifier) {
 	fprintf(stderr,
-		"Specified uniquifier %d did not match "
+		"Specified uniquifier %u did not match "
 		"uniquifier %d found in dump file!\n", uniquifier,
 		vdata->vnode->uniquifier);
 	return;
@@ -1850,7 +1850,7 @@ DumpAllResidencies(FILE * f, struct vnodeData *vdata,
     while (nextVnodeNum = vdata->vnode->NextVnodeId) {
 	if ((vdata = GetVnode(nextVnodeNum)) == NULL) {
 	    fprintf(stderr,
-		    "We had a pointer to %lu in it's "
+		    "We had a pointer to %u in it's "
 		    "vnode chain, but there\nisn't a record of "
 		    "it!  The dump might be corrupt.\n", nextVnodeNum);
 	    return;
@@ -2286,7 +2286,7 @@ DumpVnodeFile(FILE * f, struct VnodeDiskObject *vnode, VolumeDiskData * vol)
 	if (verbose)
 	    fprintf(stderr,
 		    "Ufs_GetFSInfo failed for DeviceTag "
-		    "%d, Residency %d\n", DeviceTag, VLkp_Residencies(vnode));
+		    "%u, Residency %d\n", DeviceTag, VLkp_Residencies(vnode));
 	return -1;
     }
 
@@ -2624,7 +2624,7 @@ UfsTagsToLevel(FileTag1, FileTag2, Algorithm, Size, Sections, vnode,
 	}
 	break;
     default:
-	fprintf(stderr, "UfsTagsToLevel: bad algorithm %lu!\n", Algorithm);
+	fprintf(stderr, "UfsTagsToLevel: bad algorithm %u!\n", Algorithm);
 	return -1;
     }
     return 0;

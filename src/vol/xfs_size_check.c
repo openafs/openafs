@@ -126,9 +126,9 @@ CheckPartitions()
 					   nAvail * sizeof(partInfo));
 		    if (!partList) {
 			printf
-			    ("Failed to %salloc %d bytes for partition list.\n",
+			    ("Failed to %salloc %u bytes for partition list.\n",
 			     (nAvail == ALLOC_STEP) ? "m" : "re",
-			     nAvail * sizeof(partInfo));
+			     (unsigned int) (nAvail * sizeof(partInfo)));
 			exit(1);
 		    }
 		}
