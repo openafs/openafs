@@ -38,6 +38,8 @@ multi_Finalize
 multi_Finalize_Ignore
 multi_Init
 multi_Select
+opr_AssertFailU
+opr_AssertionFailed
 osi_AssertFailU
 osi_Panic
 rx_ConnError
