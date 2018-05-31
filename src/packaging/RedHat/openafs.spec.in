@@ -112,7 +112,7 @@ Source1: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-doc.tar
 Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
-Source20: https://www.central.org/dl/cellservdb/CellServDB.2017-03-14
+Source20: https://www.central.org/dl/cellservdb/CellServDB.2018-05-14
 
 Source996: openafs-kvers-is.sh
 Source997: openafs-buildfedora.pl

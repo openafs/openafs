@@ -1,4 +1,4 @@
->grand.central.org      #GCO Public CellServDB 14 Mar 2017
+>grand.central.org      #GCO Public CellServDB 14 May 2018
 18.9.48.14                      #grand.mit.edu
 128.2.13.219                    #grand-old-opry.central.org
 >wu-wien.ac.at          #University of Economics, Vienna, Austria
@@ -270,10 +270,10 @@
 >acm.jhu.edu            #Johns Hopkins ACM chapter
 128.220.35.191                  #chicago.acm.jhu.edu
 128.220.70.76                   #typhon.acm.jhu.edu
->athena.mit.edu         #Cell Name
+>athena.mit.edu         #MIT/Athena cell
+18.7.45.11                      #leda.mit.edu
 18.9.48.11                      #castor.mit.edu
 18.9.48.12                      #pollux.mit.edu
-18.27.2.14                      #prill.mit.edu
 >csail.mit.edu          #MIT Computer Science & Artificial Intelligence Lab
 128.30.2.13                     #titanic.csail.mit.edu
 128.30.2.31                     #vasa.csail.mit.edu
@@ -286,12 +286,10 @@
 18.7.62.60                      #willy.mit.edu
 18.9.48.15                      #moby.mit.edu
 18.9.48.16                      #springer.mit.edu
->numenor.mit.edu        #Project Numenor
-18.243.2.49                     #numenor.mit.edu
 >sipb.mit.edu           #MIT/SIPB cell
-18.181.0.19                     #reynelda.mit.edu
-18.181.0.22                     #rosebud.mit.edu
-18.181.0.23                     #ronald-ann.mit.edu
+18.4.60.19                      #reynelda.mit.edu
+18.4.60.22                      #rosebud.mit.edu
+18.4.60.23                      #ronald-ann.mit.edu
 >msu.edu                #Michigan State University Main Cell
 35.9.7.10                       #afsdb0.cl.msu.edu
 35.9.7.11                       #afsdb1.cl.msu.edu
@@ -535,11 +533,11 @@
 >laroia.net             #Laroia Networks
 66.66.102.254                   #supercore.laroia.net
 >pallissard.net         #pallissard.net
-198.98.51.77                    #a001.pallissard.net
+35.184.35.247                   #files.pallissard.net
 >sinenomine.net         #Sine Nomine Associates
-199.167.73.142                  #afsdb1.sinenomine.net
-199.167.73.152                  #afsdb4.sinenomine.net
-199.167.73.153                  #afsdb5.sinenomine.net
+207.89.43.108                   #afsdb3.sinenomine.net
+207.89.43.109                   #afsdb4.sinenomine.net
+207.89.43.110                   #afsdb5.sinenomine.net
 >slackers.net           #The Slackers' Network
 199.4.150.159                   #alexandria.slackers.net
 >tproa.net              #The People's Republic of Ames
@@ -610,11 +608,9 @@
 130.237.233.143                 #castor.mech.kth.se
 130.237.233.144                 #pollux.mech.kth.se
 >nada.kth.se            #Royal Institute of Technology, NADA
-130.237.222.20                  #afsdb-1.csc.kth.se
 130.237.223.12                  #afsdb-2.csc.kth.se
 130.237.224.78                  #afsdb-3.csc.kth.se
 130.237.227.23                  #afsdb-4.csc.kth.se
-130.237.228.28                  #afsdb-5.csc.kth.se
 >pdc.kth.se             #Royal Institute of Technology, PDC
 130.237.232.29                  #crab.pdc.kth.se
 130.237.232.112                 #anna.pdc.kth.se
@@ -644,7 +640,6 @@
 194.190.165.201                 #fs0001.ihep.su
 194.190.165.202                 #fs0002.ihep.su
 >motherfsck.tech        #motherfsck.tech
-198.98.52.149                   #a001.motherfsck.tech
 >hep-ex.physics.metu.edu.tr #METU Department of Physics, Experimental HEP group, Ankara/Turke
 144.122.31.131                  #neutrino.physics.metu.edu.tr
 >phy.bris.ac.uk         #Bristol University - physics
