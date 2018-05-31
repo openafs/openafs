@@ -25,14 +25,22 @@ PAM_OPTMZ=
 
 dnl standard programs
 AC_PROG_RANLIB
-AC_CHECK_PROGS(AS, as, [${am_missing_run}as])
-AC_CHECK_PROGS(AR, ar, [${am_missing_run}ar])
-AC_CHECK_PROGS(MV, mv, [${am_missing_run}mv])
-AC_CHECK_PROGS(RM, rm, [${am_missing_run}rm])
-AC_CHECK_PROGS(LD, ld, [${am_missing_run}ld])
-AC_CHECK_PROGS(CP, cp, [${am_missing_run}cp])
-AC_CHECK_PROGS(STRIP, strip, [${am_missing_run}strip])
-AC_CHECK_PROGS(GENCAT, gencat, [${am_missing_run}gencat])
+AC_CHECK_PROGS(AS, as, [false])
+AC_CHECK_PROGS(MV, mv, [false])
+AC_CHECK_PROGS(RM, rm, [false])
+AC_CHECK_PROGS(LD, ld, [false])
+AC_CHECK_PROGS(CP, cp, [false])
+AC_CHECK_PROGS(GENCAT, gencat, [false])
+
+dnl if ar is not present, libtool.m4 (provided by libtool) sets AR to false
+dnl if strip is not present, libtool.m4 (provided by libtool) sets STRIP to :
+AS_IF([test "x$AR" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'ar'])])
+AS_IF([test "x$AS" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'as'])])
+AS_IF([test "x$MV" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'mv'])])
+AS_IF([test "x$RM" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'rm'])])
+AS_IF([test "x$LD" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'ld'])])
+AS_IF([test "x$CP" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'cp'])])
+AS_IF([test "x$GENCAT" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'gencat'])])
 
 dnl TODO - need to disable STRIP if we are doing debugging in any user space code
 
