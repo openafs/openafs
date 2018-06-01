@@ -114,7 +114,7 @@ CheckPartitions()
 		break;
 	    case VERIFY_ERROR:
 		printf("%s: Can't check XFS inode size: %s\n",
-		       strerror(errno));
+		       prog, strerror(errno));
 		break;
 	    case VERIFY_FIX:
 		if (nAvail <= nParts) {
@@ -172,7 +172,7 @@ main(int ac, char **av)
 #else /* AFS_SGI_XFS_IOPS_ENV */
 main()
 {
-    printf("%s only runs on XFS platforms.\n, prog");
+    printf("%s only runs on XFS platforms.\n", prog);
     exit(1);
 }
 #endif /* AFS_SGI_XFS_IOPS_ENV */

@@ -1559,7 +1559,7 @@ GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP
 	    didsomething ? "TRUE" : "FALSE");
     if (predictflagged && didsomething != predictfound)
 	fprintf(stderr, "**** for gid=%d, didsomething=%d predictfound=%d\n",
-		didsomething, predictfound);
+		gid, didsomething, predictfound);
 #endif
     if (didsomething)
 	sg_found = add_map(sg_found, -gid);

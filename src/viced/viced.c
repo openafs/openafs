@@ -1218,7 +1218,7 @@ ParseArgs(int argc, char *argv[])
 #if defined(AFS_AIX32_ENV)
     if (cmd_OptionAsInt(opts, OPT_minspare, &aixlow_water) == 0) {
 	if ((aixlow_water < 0) || (aixlow_water > 30)) {
-	    printf("space reserved %d%% invalid; must be between 0-30%\n",
+	    printf("space reserved %d%% invalid; must be between 0-30%%\n",
 		   aixlow_water);
 	    return -1;
 	}

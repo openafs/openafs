@@ -73,7 +73,7 @@ main(int argc, char **argv)
 	printf
 	    ("Inode status: dev=%d, ino=%d, mode=%o, nlink=%d, uid=%d, gid=%d, size=%d, mtime=%d, blocks=%d\n",
 	     status.st_dev, status.st_ino, status.st_mode, status.st_nlink,
-	     status.st_uid, status.st_gid, status.st_size, status.st_mtime);
+	     status.st_uid, status.st_gid, status.st_size, status.st_mtime, status.st_blocks);
     } else {
 	/* Send the inode to standard out */
 	char buf[4096];
