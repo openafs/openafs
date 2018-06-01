@@ -271,7 +271,7 @@ Path_Build(XFILE * X, path_hashinfo * phi, afs_uint32 vnode, char **his_path,
 	   int fast)
 {
     vhash_ent *vhe;
-    char *name, *path = 0, fastbuf[12];
+    char *name, *path = 0, *oldpath = 0, fastbuf[12];
     char *x, *y;
     afs_uint32 parent, r;
     int nl, pl = 0;
@@ -362,8 +362,10 @@ Path_Build(XFILE * X, path_hashinfo * phi, afs_uint32 vnode, char **his_path,
 
 	nl = strlen(name);
 	if (path) {
+	    oldpath = path;
 	    path = realloc(path, nl + pl + 2);
 	    if (!path) {
+		free(oldpath);
 		if (phi->p->cb_error)
 		    (phi->p->cb_error) (ENOMEM, 1, phi->p->err_refcon,
 					"No memory for pathname of vnode 1");

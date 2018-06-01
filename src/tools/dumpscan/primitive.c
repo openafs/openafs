@@ -75,7 +75,7 @@ afs_uint32
 ReadString(XFILE * X, unsigned char **val)
 {
     static unsigned char buf[BUFSIZE];
-    unsigned char *result = 0;
+    unsigned char *result = NULL, *old_result = NULL;
     afs_uint32 r;
     int i, l = 0;
 
@@ -92,9 +92,12 @@ ReadString(XFILE * X, unsigned char **val)
 		break;
 	}
 	/* iff we found a null, i < BUFSIZE and buf[i] holds the NUL */
-	if (result)
-	    result = realloc(result, l + i + 1);
-	else
+	if (result) {
+	    old_result = result;
+	    result = realloc(old_result, l + i + 1);
+	    if (!result) /* realloc failed, manually free old mem */
+		free(old_result);
+	} else
 	    result = (unsigned char *)malloc(i + 1);
 	if (!result)
 	    return ENOMEM;
