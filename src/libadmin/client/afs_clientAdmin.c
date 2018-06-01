@@ -205,7 +205,7 @@ afsclient_TokenGetExisting(const char *cellName, void **tokenHandle,
 					  t_handle->afs_token.ticketLen,
 					  t_handle->afs_token.ticket);
 	if ((t_handle->afs_sc[t_handle->sc_index] == NULL)
-	    || (t_handle->afs_sc[t_handle->sc_index] == NULL)) {
+	    || (t_handle->afs_encrypt_sc[t_handle->sc_index] == NULL)) {
 	    tst = ADMCLIENTTOKENHANDLENOSECURITY;
 	    goto fail_afsclient_TokenGetExisting;
 	} else {

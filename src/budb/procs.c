@@ -1645,7 +1645,7 @@ ListDumps(struct rx_call *call, afs_int32 sflags, afs_int32 groupid,
 					count * sizeof(afs_int32));
 			}
 			if (!dumps->budb_dumpsList_val
-			    || !dumps->budb_dumpsList_val)
+                            || !flags->budb_dumpsList_val)
 			    ABORT(BUDB_NOMEM);
 		    }
 

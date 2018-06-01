@@ -4090,8 +4090,7 @@ UV_SetVolume(struct rx_connection *server, afs_int32 partition,
 
     if (tid) {
 	etst = AFSVolEndTrans(server, tid, &rcode);
-	/* FIXME: this looks like a typo */
-	if (etst || etst) {
+	if (etst || rcode) {
 	    if (!tst)
 		tst = (etst ? etst : rcode);
 	}
