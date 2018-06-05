@@ -332,14 +332,11 @@ xdr_bool(XDR * xdrs, bool_t * bp)
 bool_t
 xdr_enum(XDR * xdrs, enum_t * ep)
 {
-    enum sizecheck { SIZEVAL };	/* used to find the size of an enum */
-
     /*
      * enums are treated as ints
      */
 
     return (xdr_int(xdrs, ep));
-
 }
 
 /*
