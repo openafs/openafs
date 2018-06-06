@@ -116,8 +116,9 @@ static void dump_log (void) {
              "---------------------------\n");
     for (i = 0; i < num_log_records; i ++)
     {
-        char padding[40];
-        strcpy(padding, "                                        ");
+        char padding[41];
+        memset(padding, ' ', sizeof(padding) - 1);
+        padding[40] = '\0';
         if (30-strlen(log_records[i].name) >= 0){
             padding[30-strlen(log_records[i].name)] = '\0';
         }
