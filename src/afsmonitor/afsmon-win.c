@@ -15,8 +15,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #include <stdio.h>
+#include <string.h>
 #include <signal.h>
 #include <math.h>
 #include <afs/cmd.h>
@@ -36,6 +36,7 @@
 #include <afs/xstat_fs.h>
 #include <afs/xstat_cm.h>
 
+#include <roken.h>
 
 #include "afsmonitor.h"
 #include "afsmon-labels.h"
@@ -325,8 +326,6 @@ initLightObject(char *a_name, int a_x, int a_y, int a_width,
 {				/*initLightObject */
     struct onode *newlightp;	/*Ptr to new light onode */
     struct gator_light_crparams light_crparams;	/*Light creation params */
-    char *truncname;		/*Truncated name, if needed */
-    int name_len;		/*True length of name */
 
 /* the following debug statement floods the debug file */
 #ifdef DEBUG_DETAILED
@@ -345,20 +344,17 @@ initLightObject(char *a_name, int a_x, int a_y, int a_width,
      * received.
      */
     light_crparams.onode_params.cr_type = GATOR_OBJ_LIGHT;
-    name_len = strlen(a_name);
 
-    if (name_len <= a_width)
-	sprintf(light_crparams.onode_params.cr_name, "%s", a_name);
-    else {
-	/*
-	 * We need to truncate the given name, leaving a `*' at the end to
-	 * show us it's been truncated.
-	 */
-	truncname = light_crparams.onode_params.cr_name;
-	strncpy(truncname, a_name, a_width - 1);
-	truncname[a_width - 1] = '*';
-	truncname[a_width] = 0;
-    }
+    if (a_width >= sizeof(light_crparams.onode_params.cr_name))
+	a_width = sizeof(light_crparams.onode_params.cr_name) - 1;
+
+    if (a_width < 1)
+	a_width = 1;
+
+    if (strlcpy(light_crparams.onode_params.cr_name, a_name, a_width + 1) >= a_width + 1)
+	/* The name is truncated, put a '*' at the end to note */
+	light_crparams.onode_params.cr_name[a_width - 1] = '*';
+
     light_crparams.onode_params.cr_x = a_x;
     light_crparams.onode_params.cr_y = a_y;
     light_crparams.onode_params.cr_width = a_width;

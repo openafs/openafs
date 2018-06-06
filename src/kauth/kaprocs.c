@@ -1827,8 +1827,8 @@ GetTicket(int version,
     }
 
     if (import) {
-	strcpy(caller.userID.name, name);
-	strcpy(caller.userID.instance, instance);
+	strlcpy(caller.userID.name, name, sizeof(caller.userID.name));
+	strlcpy(caller.userID.instance, instance, sizeof(caller.userID.instance));
 	caller.max_ticket_lifetime = htonl(MAXKTCTICKETLIFETIME);
 	caller.flags = htonl(KAFNORMAL);
 	caller.user_expiration = htonl(NEVERDATE);

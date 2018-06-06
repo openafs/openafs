@@ -31,6 +31,8 @@
 #include <afs/fsprobe.h>		/*Interface for fsprobe module */
 #include <afs/afsutil.h>
 
+#include <string.h>
+
 /*
  * Command line parameter indicies.
  */
@@ -266,7 +268,6 @@ mini_initLightObject(char *a_name, int a_x, int a_y, int a_width, struct gwin *a
     struct onode *newlightp;	/*Ptr to new light onode */
     /*We only support curses right now */
     struct gator_light_crparams light_crparams;	/*Light creation params */
-    char *truncname;		/*Truncated name, if needed */
     int name_len;		/*True length of name */
 
     if (scout_debug) {
@@ -286,18 +287,14 @@ mini_initLightObject(char *a_name, int a_x, int a_y, int a_width, struct gwin *a
     if (scout_debug)
 	fprintf(scout_debugfd, "[%s] Name '%s' has %d chars\n", rn, a_name,
 		name_len);
-    if (name_len <= a_width)
-	sprintf(light_crparams.onode_params.cr_name, "%s", a_name);
-    else {
-	/*
-	 * We need to truncate the given name, leaving a `*' at the end to
-	 * show us it's been truncated.
-	 */
-	truncname = light_crparams.onode_params.cr_name;
-	strncpy(truncname, a_name, a_width - 1);
-	truncname[a_width - 1] = '*';
-	truncname[a_width] = 0;
-    }
+
+    if (a_width >= sizeof(light_crparams.onode_params.cr_name))
+	a_width = sizeof(light_crparams.onode_params.cr_name) - 1;
+
+    if (strlcpy(light_crparams.onode_params.cr_name, a_name, a_width + 1) >= a_width + 1)
+	/* The name is truncated, put a '*' at the end to note */
+	light_crparams.onode_params.cr_name[a_width - 1] = '*';
+
     light_crparams.onode_params.cr_x = a_x;
     light_crparams.onode_params.cr_y = a_y;
     light_crparams.onode_params.cr_width = a_width;
