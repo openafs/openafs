@@ -454,8 +454,8 @@ afsmon_Exit(int a_exitVal)	/* exit code */
 		        /* free xstat_cm_Results data */
 		        free(tmp_xstat_cmPR->data.AFSCB_CollData_val);
 		        free(tmp_xstat_cmPR->connP);
+		        free(tmp_xstat_cmPR);
 		    }
-		    free(tmp_cmlist->cmResults);
 
 		    /* free the cm list item */
 		    free(tmp_cmlist);
