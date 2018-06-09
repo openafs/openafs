@@ -11,7 +11,7 @@ LIBS = ../tap/libtap.a \
        $(abs_top_builddir)/lib/util.a \
        $(abs_top_builddir)/lib/libopr.a
 
-tests = ktime-t exec-alt-t
+tests = ktime-t exec-alt-t volutil-t
 
 all check test tests: $(tests)
 
@@ -20,6 +20,9 @@ ktime-t: ktime-t.o $(LIBS)
 
 exec-alt-t: exec-alt-t.o $(LIBS)
 	$(AFS_LDRULE) exec-alt-t.o $(LIBS) $(XLIBS)
+
+volutil-t: volutil-t.o $(LIBS)
+	$(AFS_LDRULE) volutil-t.o $(LIBS) $(LIB_roken) $(XLIBS)
 
 install:
 
