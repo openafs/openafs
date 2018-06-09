@@ -231,7 +231,7 @@ After /vicepz (for which the index is 25) comes
 
 and so on through
 
-   /vicepiv    =     vicepiv     =      iv     =      255
+   /vicepiu    =     vicepiu     =      iu     =      254
 
 The B<-frompartition> and B<-topartition> arguments to the
 L<B<vos move>|vos_move(1)> command also accept this notation.

@@ -168,7 +168,7 @@ After F</vicepz> (for which the index is 25) comes
 
 and so on through
 
-   /vicepiv    =     vicepiv     =      iv     =      255
+   /vicepiu    =     vicepiu     =      iu     =      254
 
 =item B<-volume> <I<salvage volume id or name>>
 

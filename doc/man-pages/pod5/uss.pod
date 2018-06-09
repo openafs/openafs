@@ -618,7 +618,7 @@ After F</vicepz> (for which the index is 25) comes
 
 and so on through
 
-   /vicepiv    =     vicepiv     =      iv     =      255
+   /vicepiu    =     vicepiu     =      iu     =      254
 
 To read in the value from the B<uss add> command's B<-partition> argument,
 specify the value $PART.

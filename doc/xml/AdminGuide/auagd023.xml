@@ -349,8 +349,8 @@
         <para>and so on through</para>
 
         <programlisting>
-<emphasis role="bold">/vicepiv</emphasis>    =     <emphasis role="bold">vicepiv</emphasis>     =      <emphasis role="bold">iv</emphasis>     =      <emphasis
-            role="bold">255</emphasis>
+<emphasis role="bold">/vicepiu</emphasis>    =     <emphasis role="bold">vicepiu</emphasis>     =      <emphasis role="bold">iu</emphasis>     =      <emphasis
+            role="bold">254</emphasis>
 </programlisting>
       </sect3>
 

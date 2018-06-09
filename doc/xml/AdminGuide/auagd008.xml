@@ -4671,7 +4671,7 @@
     convention, the first partition on a machine is mounted at <emphasis role="bold">/vicepa</emphasis>, the second at <emphasis
     role="bold">/vicepb</emphasis>, and so on to the twenty-sixth at <emphasis role="bold">/vicepz</emphasis>. Additional partitions
     are mounted at <emphasis role="bold">/vicepaa</emphasis> through <emphasis role="bold">/vicepaz</emphasis> and so on up to
-    <emphasis role="bold">/vicepiv</emphasis>. Using the letters consecutively is not required, but is simpler.</para>
+    <emphasis role="bold">/vicepiu</emphasis>. Using the letters consecutively is not required, but is simpler.</para>
 
     <para>Mount each <emphasis role="bold">/vicep</emphasis> directory directly under the local file system's root directory (
     <emphasis role="bold">/</emphasis> ), not as a subdirectory of any other directory; for example, <emphasis

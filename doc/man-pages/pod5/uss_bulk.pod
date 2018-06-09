@@ -159,7 +159,7 @@ After F</vicepz> (for which the index is 25) comes
 
 and so on through
 
-   /vicepiv    =     vicepiv     =      iv     =      255
+   /vicepiu    =     vicepiu     =      iu     =      254
 
 Corresponding argument to the B<uss add> command: B<-partition>.
 Corresponding variable in template: $PART.
