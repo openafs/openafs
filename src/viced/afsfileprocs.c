@@ -5360,18 +5360,19 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
     afs_int32 dataBytes;	/*Bytes in data buffer */
     struct fsstats fsstats;
 
+    /*
+     * Note: This function intentionally omits CallPreamble()
+     *       to avoid issuing TellMeAboutYourself() calls to
+     *       simple clients which are only gathering stats.
+     */
+
     fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_GETXSTATS);
 
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
-    /*
-     * Record the time of day and the server version number.
-     */
+
+    /* Return the server's time of day and xstat version number. */
     *a_srvVersionNumP = AFS_XSTAT_VERSION;
     *a_timeP = (afs_int32) time(NULL);
-
-    /*
-     * Stuff the appropriate data in there (assume victory)
-     */
     code = 0;
 
     osi_auditU(a_call, GetXStatsEvent,
@@ -5379,60 +5380,27 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	       AUD_INT, a_clientVersionNum,
 	       AUD_INT, a_collectionNumber, AUD_END);
 
-#if 0
-    /*
-     * We're not keeping stats, so just return successfully with
-     * no data.
-     */
-    a_dataP->AFS_CollData_len = 0;
-    a_dataP->AFS_CollData_val = NULL;
-#endif /* 0 */
-
     switch (a_collectionNumber) {
     case AFS_XSTATSCOLL_CALL_INFO:
-	/*
-	 * Pass back all the call-count-related data.
-	 *
-	 * >>> We are forced to allocate a separate area in which to
-	 * >>> put this stuff in by the RPC stub generator, since it
-	 * >>> will be freed at the tail end of the server stub code.
-	 */
-#if 0
-	/*
-	 * I don't think call-level stats are being collected yet
-	 * for the File Server.
-	 */
-	dataBytes = sizeof(struct afs_Stats);
-	dataBuffP = malloc(dataBytes);
-	memcpy(dataBuffP, &afs_cmstats, dataBytes);
-	a_dataP->AFS_CollData_len = dataBytes >> 2;
-	a_dataP->AFS_CollData_val = dataBuffP;
-#else
+	/*  The call info collection type is not implemented. */
 	a_dataP->AFS_CollData_len = 0;
 	a_dataP->AFS_CollData_val = NULL;
-#endif /* 0 */
 	break;
 
     case AFS_XSTATSCOLL_PERF_INFO:
 	/*
 	 * Pass back all the regular performance-related data.
 	 *
-	 * >>> We are forced to allocate a separate area in which to
-	 * >>> put this stuff in by the RPC stub generator, since it
-	 * >>> will be freed at the tail end of the server stub code.
+	 * Allocate a separate area in which to put this stuff in
+	 * by the RPC stub generator, since it will be freed at the
+	 * tail end of the server stub code.
 	 */
-
 	afs_perfstats.numPerfCalls++;
 	FillPerfValues(&afs_perfstats);
-
-	/*
-	 * Don't overwrite the spares at the end.
-	 */
-
 	dataBytes = sizeof(struct afs_PerfStats);
-	dataBuffP = malloc(dataBytes);
+	dataBuffP = calloc(1, dataBytes);
 	memcpy(dataBuffP, &afs_perfstats, dataBytes);
-	a_dataP->AFS_CollData_len = dataBytes >> 2;
+	a_dataP->AFS_CollData_len = dataBytes / sizeof(afs_int32);
 	a_dataP->AFS_CollData_val = dataBuffP;
 	break;
 
@@ -5442,23 +5410,17 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	 * We have to stuff the basic, overall numbers in, but the
 	 * detailed numbers are kept in the structure already.
 	 *
-	 * >>> We are forced to allocate a separate area in which to
-	 * >>> put this stuff in by the RPC stub generator, since it
-	 * >>> will be freed at the tail end of the server stub code.
+	 * Allocate a separate area in which to put this stuff in
+	 * by the RPC stub generator, since it will be freed at the
+	 * tail end of the server stub code.
 	 */
-
 	afs_perfstats.numPerfCalls++;
 	afs_FullPerfStats.overall.numPerfCalls = afs_perfstats.numPerfCalls;
 	FillPerfValues(&afs_FullPerfStats.overall);
-
-	/*
-	 * Don't overwrite the spares at the end.
-	 */
-
 	dataBytes = sizeof(struct fs_stats_FullPerfStats);
-	dataBuffP = malloc(dataBytes);
+	dataBuffP = calloc(1, dataBytes);
 	memcpy(dataBuffP, &afs_FullPerfStats, dataBytes);
-	a_dataP->AFS_CollData_len = dataBytes >> 2;
+	a_dataP->AFS_CollData_len = dataBytes / sizeof(afs_int32);
 	a_dataP->AFS_CollData_val = dataBuffP;
 	break;
 
@@ -5466,7 +5428,7 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	afs_perfstats.numPerfCalls++;
 
 	dataBytes = sizeof(struct cbcounters);
-	dataBuffP = malloc(dataBytes);
+	dataBuffP = calloc(1, dataBytes);
 	{
 	    extern struct cbcounters cbstuff;
 	    dataBuffP[0]=cbstuff.DeleteFiles;
@@ -5487,15 +5449,12 @@ SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	    dataBuffP[15]=cbstuff.GSS5;
 	}
 
-	a_dataP->AFS_CollData_len = dataBytes >> 2;
+	a_dataP->AFS_CollData_len = dataBytes / sizeof(afs_int32);
 	a_dataP->AFS_CollData_val = dataBuffP;
 	break;
 
-
     default:
-	/*
-	 * Illegal collection number.
-	 */
+	/* Illegal collection number. */
 	a_dataP->AFS_CollData_len = 0;
 	a_dataP->AFS_CollData_val = NULL;
 	code = 1;
