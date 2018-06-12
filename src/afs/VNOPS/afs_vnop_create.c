@@ -451,7 +451,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    if (origCBs == finalCBs && origZaps == finalZaps) {
 		tvc->f.states |= CStatd;	/* we've fake entire thing, so don't stat */
 		tvc->f.states &= ~CBulkFetching;
-		if (!AFS_IS_DISCON_RW) {
+		if (!AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
 		    tvc->cbExpires = CallBack.ExpirationTime;
 		    afs_QueueCallback(tvc, CBHash(CallBack.ExpirationTime), volp);
 		}
