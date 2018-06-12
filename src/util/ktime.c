@@ -390,6 +390,8 @@ ktime_next(struct ktime * aktime, afs_int32 afrom)
      * daylight savings time day */
     for (probe = start;; probe += (23 * 3600)) {
 	tsp = localtime(&probe);	/* find out what UTC time "probe" is */
+	if (!tsp)
+	    return KTIME_NEVERTIME;
 
 	tdate.year = tsp->tm_year;
 	tdate.month = tsp->tm_mon + 1;
@@ -405,7 +407,10 @@ ktime_next(struct ktime * aktime, afs_int32 afrom)
 	    continue;		/* "probe" time is already past */
 	if ((tmask & KTIME_DAY) == 0)	/* don't care about day, we're done */
 	    break;
+
 	tsp = localtime(&time_next);
+	if (!tsp)
+	    return KTIME_NEVERTIME;
 	if (tsp->tm_wday == aktime->day)
 	    break;		/* day matches, we're done */
     }
@@ -637,6 +642,8 @@ ktime_InterpretDate(struct ktime_date * akdate)
     while (tbit > 0) {
 	temp = tresult + tbit;	/* see if adding this bit keeps us < akdate */
 	tsp = localtime(&temp);
+	if (!tsp)
+	    return KTIMEDATE_NEVERDATE;
 	tsp->tm_mon++;
 	if (KDateCmp(akdate, tsp) >= 0) {
 	    /* if temp still represents earlier than date than we're searching

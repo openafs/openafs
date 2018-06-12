@@ -28,9 +28,13 @@ pr_TimeToString(time_t clock)
     if (!this_year) {
 	time_t now = time(0);
 	tm = localtime(&now);
+	if (!tm)
+	    return "time-not-set  ";
 	this_year = tm->tm_year;
     }
     tm = localtime(&clock);
+    if (!tm)
+	return "time-not-set  ";
     if (tm->tm_year != this_year)
 	strftime(buffer, 32, "%m/%d/%Y %H:%M:%S", tm);
     else
