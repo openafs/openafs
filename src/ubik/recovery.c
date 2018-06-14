@@ -611,7 +611,7 @@ urecovery_Interact(void *dummy)
 	    nbytes = rx_Read(rxcall, (char *)&length, sizeof(afs_int32));
 	    length = ntohl(length);
 	    if (nbytes != sizeof(afs_int32)) {
-		ViceLog(5, ("Rx-read length error=%d\n", code = BULK_ERROR));
+		ViceLog(5, ("Rx-read length error=%d\n", BULK_ERROR));
 		code = EIO;
 		goto FetchEndCall;
 	    }
@@ -648,7 +648,7 @@ urecovery_Interact(void *dummy)
 #endif
 		nbytes = rx_Read(rxcall, tbuffer, tlen);
 		if (nbytes != tlen) {
-		    ViceLog(5, ("Rx-read bulk error=%d\n", code = BULK_ERROR));
+		    ViceLog(5, ("Rx-read bulk error=%d\n", BULK_ERROR));
 		    code = EIO;
 		    close(fd);
 		    goto FetchEndCall;
@@ -833,14 +833,14 @@ urecovery_Interact(void *dummy)
 				(*ubik_dbase->read) (ubik_dbase, file,
 						     tbuffer, offset, tlen);
 			    if (nbytes != tlen) {
-				ViceLog(5, ("Local disk read error=%d\n",
-					    code = UIOERROR));
+				code = UIOERROR;
+				ViceLog(5, ("Local disk read error=%d\n", code));
 				goto StoreEndCall;
 			    }
 			    nbytes = rx_Write(rxcall, tbuffer, tlen);
 			    if (nbytes != tlen) {
-				ViceLog(5, ("Rx-write bulk error=%d\n", code =
-					    BULK_ERROR));
+				code = BULK_ERROR;
+				ViceLog(5, ("Rx-write bulk error=%d\n", code));
 				goto StoreEndCall;
 			    }
 			    offset += tlen;
