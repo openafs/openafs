@@ -501,7 +501,7 @@ struct afs_MeanStats {
     AFS_CS(fprf)		/* afs_resource.c */ \
     AFS_CS(fprint)		/* afs_resource.c */ \
     AFS_CS(fprintn)		/* afs_resource.c */ \
-    AFS_CS(afs_CheckLocks)	/* afs_resource.c */ \
+    AFS_CS(afs_CheckLocks)	/* UNUSED */ \
     AFS_CS(puttofile)		/* afs_resource.c */ \
     AFS_CS(shutdown_AFS)	/* afs_resource.c */ \
     AFS_CS(afs_CheckCacheResets)	/* afs_resource.c */ \

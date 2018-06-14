@@ -4144,7 +4144,6 @@ print_cmstats(struct afs_CMStats *cmp)
     printf("\t%10d afs_ConnByHost\n", cmp->callInfo.C_afs_ConnByHost);
     printf("\t%10d afs_ConnByMHosts\n", cmp->callInfo.C_afs_ConnByMHosts);
     printf("\t%10d afs_Analyze\n", cmp->callInfo.C_afs_Analyze);
-    printf("\t%10d afs_CheckLocks\n", cmp->callInfo.C_afs_CheckLocks);
     printf("\t%10d CheckVLServer\n", cmp->callInfo.C_CheckVLServer);
     printf("\t%10d afs_CheckCacheResets\n",
 	   cmp->callInfo.C_afs_CheckCacheResets);

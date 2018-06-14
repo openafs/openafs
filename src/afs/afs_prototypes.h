@@ -1032,7 +1032,6 @@ extern void print_internet_address(char *preamble, struct srvAddr *sa,
 				   struct rx_connection *rxconn);
 extern afs_int32 afs_data_pointer_to_int32(const void *p);
 
-extern void afs_CheckLocks(void);
 extern int afs_badop(void);
 extern int afs_noop(void);
 extern afs_int32 afs_data_pointer_to_int32(const void *p);
