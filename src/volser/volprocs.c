@@ -159,44 +159,6 @@ VPFullUnlock(void)
     return code;
 }
 
-/* get partition id from a name */
-afs_int32
-PartitionID(char *aname)
-{
-    char tc;
-    int code = 0;
-    char ascii[3];
-
-    tc = *aname;
-    if (tc == 0)
-	return -1;		/* unknown */
-
-    /* otherwise check for vicepa or /vicepa, or just plain "a" */
-    ascii[2] = 0;
-    if (!strncmp(aname, "/vicep", 6)) {
-	strncpy(ascii, aname + 6, 2);
-    } else
-	return -1;		/* bad partition name */
-    /* now partitions are named /vicepa ... /vicepz, /vicepaa, /vicepab, .../vicepzz, and are numbered
-     * from 0.  Do the appropriate conversion */
-    if (ascii[1] == 0) {
-	/* one char name, 0..25 */
-	if (ascii[0] < 'a' || ascii[0] > 'z')
-	    return -1;		/* wrongo */
-	return ascii[0] - 'a';
-    } else {
-	/* two char name, 26 .. <whatever> */
-	if (ascii[0] < 'a' || ascii[0] > 'z')
-	    return -1;		/* wrongo */
-	if (ascii[1] < 'a' || ascii[1] > 'z')
-	    return -1;		/* just as bad */
-	code = (ascii[0] - 'a') * 26 + (ascii[1] - 'a') + 26;
-	if (code > VOLMAXPARTS)
-	    return -1;
-	return code;
-    }
-}
-
 static int
 ConvertVolume(VolumeId avol, char *aname, afs_int32 asize)
 {
