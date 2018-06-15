@@ -28,15 +28,3 @@ opr_AssertionFailed(const char *file, int line)
     fflush(stderr);
     opr_abort();
 }
-
-void
-opr_AssertFailU(const char *expr, const char *file, int line)
-{
-    fprintf(stderr, "Fatal Rx error: assertion failed: %s, "
-		    "file: %s, line: %d\n",
-	    expr, file, line);
-    fflush(stderr);
-    fflush(stdout);
-    opr_abort();
-}
-
