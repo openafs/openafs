@@ -1,5 +1,58 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.1 (in progress)
+
+  All Platforms
+
+    * Improve the usability and consistency of the public API: install missing
+      headers, and add additional symbols to the export list for shared libraries.
+
+    * Improved Rx abort generation: use the proper serial number for an existing
+      connection if possible, and 0 otherwise (to improve debugging).
+
+    * Assorted minor fixes in response to static analysis of the codebase.
+
+    * Fix memory-safety error in XDR decoding of enumerated types.
+
+  All Server Platforms
+
+    * Assorted cleanups and efficiency improvements in the ubik implementation.
+
+    * Return a valid InlineBulkStatus response in error cases.
+
+    * The fileserver now rejects invalid partition names when attaching partitions.
+
+  All Client Platforms
+
+    * Fix volume callbacks (e.g., when running 'vos release').
+
+    * Improve error messages for invalid values with -volume-ttl.
+
+    * Remove useless error message:
+      "find_preferred_connection: no connection and !create"
+
+  Linux
+
+    * Add support for 64-bit ARM clients ("arm64").
+
+    * Fix panic when cache bypass is enabled.
+
+    * Improve cache manager behavior when unable to open cache files.
+
+    * Improvements to the RPM packaging.
+
+  Solaris
+
+    * Fix various issues in the build process for recent Solaris versions.
+
+  MacOS
+
+    * Fix clients on OS X 10.13.
+
+  FreeBSD / NetBSD / OpenBSD
+
+    * Fix panic triggered during periodic cleanup operations and shutdown.
+
 OpenAFS 1.8.0
 
   All Platforms
