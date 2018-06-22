@@ -57,8 +57,7 @@ LWPOBJS = $(OUT)\lock.obj $(OUT)\fasttime.obj $(OUT)\threadname.obj
 FSINTBJS = $(OUT)\afsint.cs.obj \
            $(OUT)\afsint.xdr.obj \
            $(OUT)\afscbint.cs.obj \
-           $(OUT)\afscbint.xdr.obj \
-	   $(OUT)\afsaux.obj
+           $(OUT)\afscbint.xdr.obj
 
 DLLOBJS = $(MULTIOBJS) $(RXOBJS) $(XDROBJS) $(RXSTATBJS) $(LIBRXKAD_OBJS) \
 	$(LIBRXKAD_REGOBJS) $(UTILOBJS) $(COMERRBJS) \

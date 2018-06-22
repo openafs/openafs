@@ -82,7 +82,6 @@ LT_objs = \
 	osi_groups.lo \
 	osi_gcpags.lo \
 	osi_vcache.lo \
-	afsaux.lo \
 	Kvice.xdr.lo \
 	xdr_array.lo \
 	xdr_arrayn.lo \
@@ -416,8 +415,6 @@ Kvice.xdr.lo: $(TOP_OBJ_FSINT)/Kvice.xdr.c
 	$(LT_CCRULE) $(TOP_OBJ_FSINT)/Kvice.xdr.c
 Kvice.cs.lo: $(TOP_OBJ_FSINT)/Kvice.cs.c
 	$(LT_CCRULE) $(TOP_OBJ_FSINT)/Kvice.cs.c
-afsaux.lo: $(TOP_SRC_FSINT)/afsaux.c
-	$(LT_CCRULE) $(TOP_SRC_FSINT)/afsaux.c
 xdr_arrayn.lo: $(TOP_SRC_RX)/xdr_arrayn.c
 	$(LT_CCRULE) $(TOP_SRC_RX)/xdr_arrayn.c
 xdr_array.lo: $(TOP_SRC_RX)/xdr_array.c

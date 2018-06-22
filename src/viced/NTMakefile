@@ -41,7 +41,7 @@ LWPOBJS = $(OUT)\lock.obj $(OUT)\fasttime.obj $(OUT)\threadname.obj
 
 LIBACLOBJS = $(OUT)\aclprocs.obj $(OUT)\netprocs.obj
 
-FSINTOBJS = $(OUT)\afsaux.obj $(OUT)\afscbint.cs.obj $(OUT)\afsint.ss.obj $(OUT)\afsint.xdr.obj
+FSINTOBJS = $(OUT)\afscbint.cs.obj $(OUT)\afsint.ss.obj $(OUT)\afsint.xdr.obj
 
 EXEOBJS = $(EXERES) $(VICEDOBJS) $(LWPOBJS) $(LIBACLOBJS) \
 	  $(FSINTOBJS) $(RXOBJS)

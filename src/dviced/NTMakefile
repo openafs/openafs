@@ -34,7 +34,7 @@ LIBACLOBJS = $(OUT)\aclprocs.obj $(OUT)\netprocs.obj
 
 DIROBJS = $(OUT)\buffer.obj $(OUT)\dir.obj $(OUT)\salvage.obj
 
-FSINTOBJS = $(OUT)\afsaux.obj $(OUT)\afscbint.cs.obj $(OUT)\afsint.ss.obj $(OUT)\afsint.xdr.obj
+FSINTOBJS = $(OUT)\afscbint.cs.obj $(OUT)\afsint.ss.obj $(OUT)\afsint.xdr.obj
 
 EXEOBJS = $(VICEDOBJS) $(TVICEDOBJS) $(DAFS_VICEDRES) $(LIBACLOBJS) \
 	  $(DIROBJS) $(FSINTOBJS) $(RXOBJS)

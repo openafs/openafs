@@ -18,23 +18,6 @@
 %#define VICETOKENDEAD	1235
 %#define AFS_LOCKWAIT	(5*60)
 
-customized struct CBS {
-    afs_int32 SeqLen;
-    char *SeqBody;
-};
-
-customized struct BBS {
-    afs_int32 MaxSeqLen;
-    afs_int32 SeqLen;
-    char *SeqBody;
-};
-
-customized struct AFSAccessList {
-    afs_int32 MaxSeqLen;
-    afs_int32 SeqLen;
-    char *SeqBody;
-};
-
 typedef afs_int32 ViceDataType;
 
 %#define Invalid 0
@@ -46,12 +29,6 @@ typedef afs_int32 ViceDataType;
 %#define      afs_xdr_array(a,b,c,d,e,f)  afs_xdr_arrayN(a,b,c,d,e,f)
 %#endif
 
-struct BD {
-    afs_int32 host;
-    afs_int32 portal;
-    afs_int32 session;
-};
-
 struct AFSVolSync {
     afs_uint32 spare1;
     afs_uint32 spare2;
@@ -59,25 +36,6 @@ struct AFSVolSync {
     afs_uint32 spare4;
     afs_uint32 spare5;
     afs_uint32 spare6;
-};
-
-struct AFSOldFetchStatus {
-    afs_uint32 InterfaceVersion;
-    afs_uint32 FileType;
-    afs_uint32 LinkCount;
-    afs_uint32 Length;
-    afs_uint32 DataVersion;
-    afs_uint32 Author;
-    afs_uint32 Owner;
-    afs_uint32 CallerAccess;
-    afs_uint32 AnonymousAccess;
-    afs_uint32 UnixModeBits;
-    afs_uint32 ParentVnode;
-    afs_uint32 ParentUnique;
-    afs_uint32 SegSize;
-    afs_uint32 ClientModTime;
-    afs_uint32 ServerModTime;
-    afs_uint32 Group;
 };
 
 struct AFSFetchStatus {

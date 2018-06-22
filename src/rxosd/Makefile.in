@@ -133,9 +133,6 @@ osddb.xdr.c: ${OSDDBSRC}/osddb.xg osddb.h
 osddbuser.o: ${OSDDBSRC}/osddbuser.c
 	${AFS_CCRULE} ${OSDDBSRC}/osddbuser.c
 
-afsaux.o: ${FSINT}/afsaux.c
-	${AFS_CCRULE} ${FSINT}/afsaux.c
-
 rxosd.ss.c: rxosd.xg rxosd.h
 	${RXGEN} -x -S -o $@ ${srcdir}/rxosd.xg
 

@@ -11,7 +11,6 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 include @TOP_OBJDIR@/src/config/Makefile.lwptool
 
 LT_objs = \
-	afsaux.lo \
 	afscbint.cs.lo \
 	afsint.cs.lo \
 	afsint.xdr.lo
@@ -62,8 +61,6 @@ ${TOP_INCDIR}/afs/afscbint.h: afscbint.h
 
 ${TOP_INCDIR}/afs/pagcb.h: pagcb.h
 	${INSTALL_DATA} $? $@
-
-afsaux.lo: afsaux.c afsint.h
 
 Kcallback.cs.c: common.xg afscbint.xg Kvice.h Kcallback.h
 	${RXGEN} -A -x -k -C -o Kcallback.cs.c ${srcdir}/afscbint.xg

@@ -32,7 +32,7 @@ RXOBJS = $(OUT)\xdr_int64.obj \
 
 RTLOBJS= $(OUT)\rpc_test_procs.obj $(OUT)\rpc_test_cb_procs.obj
 
-FSINTOBJS = $(OUT)\afsaux.obj $(OUT)\afscbint.ss.obj $(OUT)\afsint.cs.obj \
+FSINTOBJS = $(OUT)\afscbint.ss.obj $(OUT)\afsint.cs.obj \
 	$(OUT)\afscbint.xdr.obj $(OUT)\afsint.xdr.obj
 
 LIBOBJS = $(RTLOBJS) $(FSINTOBJS) $(RXOBJS)

@@ -30,7 +30,6 @@ LIBOBJS =\
 	$(OUT)\afsint.cs.obj 	\
 	$(OUT)\afsint.ss.obj 	\
 	$(OUT)\afsint.xdr.obj 	\
-	$(OUT)\afsaux.obj      \
 	$(OUT)\AFS_component_version_number.obj
 
 $(LIBFILE): $(LIBOBJS)
@@ -73,7 +72,6 @@ MT_LIBOBJS =\
 	$(OUT)\afsint.cs_mt.obj 	\
 	$(OUT)\afsint.ss_mt.obj 	\
 	$(OUT)\afsint.xdr_mt.obj 	\
-	$(OUT)\afsaux_mt.obj      \
 	$(OUT)\AFS_component_version_number.obj
 
 
@@ -93,9 +91,6 @@ $(OUT)\afsint.ss_mt.obj:afsint.ss.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(OUT)\afsint.xdr_mt.obj:afsint.xdr.c
-	$(C2OBJ) $** -DAFS_PTHREAD_ENV
-
-$(OUT)\afsaux_mt.obj:afsaux.c
 	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(MT_LIBFILE): $(MT_LIBOBJS)

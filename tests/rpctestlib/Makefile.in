@@ -26,7 +26,7 @@ headers= ${RTL}/rpc_test_procs.h
 
 RTLOBJS= rpc_test_procs.o rpc_test_cb_procs.o
 
-FSINTOBJS= afsaux.o afscbint.ss.o afsint.cs.o afscbint.xdr.o \
+FSINTOBJS= afscbint.ss.o afsint.cs.o afscbint.xdr.o \
 	afsint.xdr.o
 
 RXOBJS = rx_pthread.o
@@ -47,9 +47,6 @@ rpc_test_main.o: ${RTL}/rpc_test_main.c ${headers}
 rpc_test_procs.o: ${RTL}/rpc_test_procs.c ${headers}
 rpc_test_cb_procs.o: ${RTL}/rpc_test_cb_procs.c ${headers}
 
-CFLAGS_afsaux.o = -I{FSINT}
-afsaux.o: ${FSINT}/afsaux.c
-	$(AFS_CCRULE) ${FSINT}/afsaux.c
 afscbint.ss.o: ${FSINT}/afscbint.ss.c
 	$(AFS_CCRULE) ${FSINT}/afscbint.ss.c
 afsint.cs.o: ${FSINT}/afsint.cs.c

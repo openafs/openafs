@@ -6067,7 +6067,6 @@ SRXAFS_GetRootVolume(struct rx_call * acall, char **VolumeName)
 }				/*SRXAFS_GetRootVolume */
 
 
-/* still works because a struct CBS is the same as a struct AFSOpaque */
 afs_int32
 SRXAFS_CheckToken(struct rx_call * acall, afs_int32 AfsId,
 		  struct AFSOpaque * Token)
