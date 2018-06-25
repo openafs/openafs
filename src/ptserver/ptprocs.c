@@ -651,7 +651,7 @@ idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid)
 	return 0;
     if (size < 0 || size > INT_MAX / PR_MAXNAMELEN)
 	return PRTOOMANY;
-    aname->namelist_val = malloc(size * PR_MAXNAMELEN);
+    aname->namelist_val = calloc(size, PR_MAXNAMELEN);
     aname->namelist_len = 0;
     if (aname->namelist_val == 0)
 	return PRNOMEM;
