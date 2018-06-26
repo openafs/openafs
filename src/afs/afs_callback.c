@@ -309,6 +309,7 @@ SRXAFSCB_GetLock(struct rx_call *a_call, afs_int32 a_index,
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_GETLOCK);
 
     AFS_STATCNT(SRXAFSCB_GetLock);
+    memset(a_result, 0, sizeof(*a_result));
     nentries = sizeof(ltable) / sizeof(struct ltable);
     if (a_index < 0 || a_index >= nentries+afs_cellindex) {
 	/*
