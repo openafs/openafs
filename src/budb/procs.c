@@ -424,6 +424,7 @@ FillDumpEntry(struct ubik_trans *ut, dbadr da, void *rock)
     struct budb_dumpEntry *dump = (struct budb_dumpEntry *)rock;
     struct dump d, ad;
 
+    memset(dump, 0, sizeof(*dump));
     if (dbread(ut, da, &d, sizeof(d)))
 	return BUDB_IO;
     dump->id = ntohl(d.id);
