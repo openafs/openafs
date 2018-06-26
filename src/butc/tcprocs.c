@@ -372,6 +372,7 @@ STC_ReadLabel(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *task
 {
     afs_int32 code;
 
+    memset(label, 0, sizeof(*label));
 #ifdef xbsa
     if (CONF_XBSA)
 	return (TC_BADTASK);	/* ReadLabel does not apply if XBSA */
