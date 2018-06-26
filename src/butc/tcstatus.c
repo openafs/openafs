@@ -56,14 +56,13 @@ STC_GetStatus(struct rx_call *call, afs_uint32 taskId,
     statusP ptr;
     int retval = 0;
 
+    memset(statusPtr, 0, sizeof(*statusPtr));
     if (callPermitted(call) == 0)
 	return (TC_NOTPERMITTED);
 
     lock_Status();
     ptr = findStatus(taskId);
     if (ptr) {
-	/* strcpy(statusPtr->status, ptr->status); */
-
 	strcpy(statusPtr->taskName, ptr->taskName);
 	strcpy(statusPtr->volumeName, ptr->volumeName);
 	statusPtr->taskId = ptr->taskId;
@@ -143,6 +142,7 @@ STC_ScanStatus(struct rx_call *call, afs_uint32 *taskId,
     statusP ptr = 0;
     dlqlinkP dlqPtr;
 
+    memset(statusPtr, 0, sizeof(*statusPtr));
     if (callPermitted(call) == 0)
 	return (TC_NOTPERMITTED);
 
