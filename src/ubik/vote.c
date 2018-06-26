@@ -412,6 +412,7 @@ SVOTE_Debug(struct rx_call * rxcall, struct ubik_debug * aparm)
     /* fill in the basic debug structure.  Note the the RPC protocol transfers,
      * integers in host order. */
 
+    memset(aparm, 0, sizeof(*aparm));
     aparm->now = FT_ApproxTime();
     aparm->lastYesTime = ubik_lastYesTime;
     aparm->lastYesHost = ntohl(lastYesHost);
