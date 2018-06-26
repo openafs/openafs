@@ -2846,6 +2846,7 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 	goto done;		/*no active transactions */
     for (tt = allTrans; tt; tt = nt) {	/*copy relevant info into pntr */
 	nt = tt->next;
+	memset(pntr, 0, sizeof(*pntr));
         VTRANS_OBJ_LOCK(tt);
 	pntr->tid = tt->tid;
 	pntr->time = tt->time;
