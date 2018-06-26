@@ -382,6 +382,7 @@ SAFSVolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition
     afs_int32 code;
     struct diskPartition64 *dp = malloc(sizeof(struct diskPartition64));
 
+    memset(partition, 0, sizeof(*partition));
     code = VolPartitionInfo(acid, pname, dp);
     if (!code) {
 	strncpy(partition->name, dp->name, 32);
@@ -401,6 +402,7 @@ SAFSVolPartitionInfo64(struct rx_call *acid, char *pname, struct diskPartition64
 {
     afs_int32 code;
 
+    memset(partition, 0, sizeof(*partition));
     code = VolPartitionInfo(acid, pname, partition);
     osi_auditU(acid, VS_ParInfEvent, code, AUD_STR, pname, AUD_END);
     return code;
