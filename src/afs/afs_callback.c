@@ -1633,6 +1633,7 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call,
     ObtainReadLock(&afs_xinterface);
 
     /* return all network interface addresses */
+    memset(addr, 0, sizeof(*addr));
     addr->numberOfInterfaces = afs_cb_interface.numberOfInterfaces;
     addr->uuid = afs_cb_interface.uuid;
     for (i = 0; i < afs_cb_interface.numberOfInterfaces; i++) {
