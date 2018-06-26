@@ -1256,6 +1256,7 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
     }
 
     /* return all network interface addresses */
+    memset(addr, 0, sizeof(*addr));
     addr->numberOfInterfaces = cm_noIPAddr;
     addr->uuid = cm_data.Uuid;
     for ( i=0; i < cm_noIPAddr; i++ ) {
