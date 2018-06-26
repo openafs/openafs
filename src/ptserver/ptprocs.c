@@ -1647,6 +1647,7 @@ put_prentries(struct prentry *tentry, prentries *bulkentries)
     entry = (struct prlistentries *)bulkentries->prentries_val;
     entry += bulkentries->prentries_len;
 
+    memset(entry, 0, sizeof(*entry));
     entry->flags = tentry->flags >> PRIVATE_SHIFT;
     if (entry->flags == 0) {
 	entry->flags =
@@ -1661,7 +1662,6 @@ put_prentries(struct prentry *tentry, prentries *bulkentries)
     entry->nusers = tentry->nusers;
     entry->count = tentry->count;
     strncpy(entry->name, tentry->name, PR_MAXNAMELEN);
-    memset(entry->reserved, 0, sizeof(entry->reserved));
     bulkentries->prentries_len++;
     return 0;
 }
