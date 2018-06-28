@@ -1674,7 +1674,7 @@ afs_AllocDiscardDSlot(afs_int32 lock)
  *
  * \return The new dcache.
  */
-struct dcache *
+static struct dcache *
 afs_AllocDCache(struct vcache *avc, afs_int32 chunk, afs_int32 lock,
 		struct VenusFid *ashFid)
 {
