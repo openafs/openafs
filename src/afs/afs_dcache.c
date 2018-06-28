@@ -1121,29 +1121,39 @@ afs_DiscardDCache(struct dcache *adc)
 /**
  * Get a dcache entry from the discard or free list
  *
+ * @param[out] adc    On success, a dcache from the given list. Otherwise, NULL.
  * @param[in] indexp  A pointer to the head of the dcache free list or discard
  *                    list (afs_freeDCList, or afs_discardDCList)
  *
- * @return A dcache from that list, or NULL if none could be retrieved.
+ * @return 0 on success. If there are no dcache slots available, return ENOSPC.
+ *         If we encountered an error in disk i/o while trying to find a
+ *         dcache, return EIO.
  *
  * @pre afs_xdcache is write-locked
  */
-static struct dcache *
-afs_GetDSlotFromList(afs_int32 *indexp)
+static int
+afs_GetDSlotFromList(struct dcache **adc, afs_int32 *indexp)
 {
     struct dcache *tdc;
 
-    if (*indexp != NULLIDX) {
-	tdc = afs_GetUnusedDSlot(*indexp);
-	if (tdc) {
-	    osi_Assert(tdc->refCount == 1);
-	    ReleaseReadLock(&tdc->tlock);
-	    *indexp = afs_dvnextTbl[tdc->index];
-	    afs_dvnextTbl[tdc->index] = NULLIDX;
-	    return tdc;
-	}
+    *adc = NULL;
+
+    if (*indexp == NULLIDX) {
+        return ENOSPC;
     }
-    return NULL;
+
+    tdc = afs_GetUnusedDSlot(*indexp);
+    if (tdc == NULL) {
+        return EIO;
+    }
+
+    osi_Assert(tdc->refCount == 1);
+    ReleaseReadLock(&tdc->tlock);
+    *indexp = afs_dvnextTbl[tdc->index];
+    afs_dvnextTbl[tdc->index] = NULLIDX;
+
+    *adc = tdc;
+    return 0;
 }
 
 /*!
@@ -1170,7 +1180,7 @@ afs_FreeDiscardedDCache(void)
     /*
      * Get an entry from the list of discarded cache elements
      */
-    tdc = afs_GetDSlotFromList(&afs_discardDCList);
+    (void)afs_GetDSlotFromList(&tdc, &afs_discardDCList);
     if (!tdc) {
 	ReleaseWriteLock(&afs_xdcache);
 	return -1;
@@ -1583,31 +1593,34 @@ afs_FindDCache(struct vcache *avc, afs_size_t abyte)
 }				/*afs_FindDCache */
 
 /* only call these from afs_AllocDCache() */
-static struct dcache *
-afs_AllocFreeDSlot(void)
+static int
+afs_AllocFreeDSlot(struct dcache **adc)
 {
+    int code;
     struct dcache *tdc;
 
-    tdc = afs_GetDSlotFromList(&afs_freeDCList);
-    if (!tdc) {
-	return NULL;
+    code = afs_GetDSlotFromList(&tdc, &afs_freeDCList);
+    if (code) {
+	return code;
     }
     afs_indexFlags[tdc->index] &= ~IFFree;
     ObtainWriteLock(&tdc->lock, 604);
     afs_freeDCCount--;
 
-    return tdc;
+    *adc = tdc;
+    return 0;
 }
-static struct dcache *
-afs_AllocDiscardDSlot(afs_int32 lock)
+static int
+afs_AllocDiscardDSlot(struct dcache **adc, afs_int32 lock)
 {
+    int code;
     struct dcache *tdc;
     afs_uint32 size = 0;
     struct osi_file *file;
 
-    tdc = afs_GetDSlotFromList(&afs_discardDCList);
-    if (!tdc) {
-	return NULL;
+    code = afs_GetDSlotFromList(&tdc, &afs_discardDCList);
+    if (code) {
+	return code;
     }
     afs_indexFlags[tdc->index] &= ~IFDiscarded;
     ObtainWriteLock(&tdc->lock, 605);
@@ -1628,12 +1641,14 @@ afs_AllocDiscardDSlot(afs_int32 lock)
 	afs_AdjustSize(tdc, 0);
     }
 
-    return tdc;
+    *adc = tdc;
+    return 0;
 }
 
 /*!
  * Get a fresh dcache from the free or discarded list.
  *
+ * \param adc Set to the new dcache on success, and NULL on error.
  * \param avc Who's dcache is this going to be?
  * \param chunk The position where it will be placed in.
  * \param lock How are locks held.
@@ -1645,29 +1660,34 @@ afs_AllocDiscardDSlot(afs_int32 lock)
  * 	- avc (R if (lock & 1) set and W otherwise)
  * \note It write locks the new dcache. The caller must unlock it.
  *
- * \return The new dcache.
+ * \return If we're out of dslots, ENOSPC. If we encountered disk errors, EIO.
+ *         On success, return 0.
  */
-static struct dcache *
-afs_AllocDCache(struct vcache *avc, afs_int32 chunk, afs_int32 lock,
-		struct VenusFid *ashFid)
+static int
+afs_AllocDCache(struct dcache **adc, struct vcache *avc, afs_int32 chunk,
+                afs_int32 lock, struct VenusFid *ashFid)
 {
+    int code;
     struct dcache *tdc = NULL;
 
+    *adc = NULL;
+
     /* if (lock & 2), prefer 'free' dcaches; otherwise, prefer 'discard'
-     * dcaches. In either case, try both if our first choice doesn't work. */
+     * dcaches. In either case, try both if our first choice doesn't work due
+     * to ENOSPC. */
     if ((lock & 2)) {
-	tdc = afs_AllocFreeDSlot();
-	if (!tdc) {
-	    tdc = afs_AllocDiscardDSlot(lock);
+	code = afs_AllocFreeDSlot(&tdc);
+	if (code == ENOSPC) {
+	    code = afs_AllocDiscardDSlot(&tdc, lock);
 	}
     } else {
-	tdc = afs_AllocDiscardDSlot(lock);
-	if (!tdc) {
-	    tdc = afs_AllocFreeDSlot();
+	code = afs_AllocDiscardDSlot(&tdc, lock);
+	if (code == ENOSPC) {
+	    code = afs_AllocFreeDSlot(&tdc);
 	}
     }
-    if (!tdc) {
-	return NULL;
+    if (code) {
+	return code;
     }
 
     /*
@@ -1704,7 +1724,8 @@ afs_AllocDCache(struct vcache *avc, afs_int32 chunk, afs_int32 lock,
     if (tdc->lruq.prev == &tdc->lruq)
 	osi_Panic("lruq 1");
 
-    return tdc;
+    *adc = tdc;
+    return 0;
 }
 
 /*
@@ -1972,10 +1993,10 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 		if (!setLocks)
 		    avc->f.states &= ~CDCLock;
 	    }
-	    tdc = afs_AllocDCache(avc, chunk, aflags, NULL);
-	    if (!tdc) {
+	    code = afs_AllocDCache(&tdc, avc, chunk, aflags, NULL);
+	    if (code) {
 		ReleaseWriteLock(&afs_xdcache);
-                if (afs_discardDCList == NULLIDX && afs_freeDCList == NULLIDX) {
+                if (code == ENOSPC) {
                     /* It looks like afs_AllocDCache failed because we don't
                      * have any free dslots to use. Maybe if we wait a little
                      * while, we'll be able to free up some slots, so try for 5
@@ -3621,7 +3642,7 @@ afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
     ObtainWriteLock(&afs_xdcache, 716);
 
     /* Get a fresh dcache. */
-    new_dc = afs_AllocDCache(avc, 0, 0, &shadow_fid);
+    (void)afs_AllocDCache(&new_dc, avc, 0, 0, &shadow_fid);
     osi_Assert(new_dc);
 
     ObtainReadLock(&adc->mflock);
