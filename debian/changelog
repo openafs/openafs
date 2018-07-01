@@ -1,4 +1,4 @@
-openafs (1.8.1~pre2-1) UNRELEASED; urgency=medium
+openafs (1.8.1~pre2-1) unstable; urgency=medium
 
   * New upstream prerelease:
     - Add support for arm64
@@ -15,7 +15,7 @@ openafs (1.8.1~pre2-1) UNRELEASED; urgency=medium
   * Update Dutch debconf translation; thanks Frans Spiesschaert.
     (Closes: #895459)
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 01 Jul 2018 14:39:03 -0500
+ -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 01 Jul 2018 18:42:26 -0500
 
 openafs (1.8.0-1) unstable; urgency=low
 
