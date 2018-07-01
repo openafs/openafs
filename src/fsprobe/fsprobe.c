@@ -367,9 +367,8 @@ fsprobe_LWP(void *unused)
 	if (code)
 	    fprintf(stderr, "[%s] IOMGR_Select returned code %d\n", rn, code);
     }				/*Service loop */
-    free(stats64.ViceStatistics64_val);
-
-    return NULL;
+    AFS_UNREACHED(free(stats64.ViceStatistics64_val));
+    AFS_UNREACHED(return(NULL));
 }				/*fsprobe_LWP */
 
 /*list all the partitions on <aserver> */

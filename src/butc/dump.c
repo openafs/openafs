@@ -81,12 +81,6 @@ afs_int32 tapeblocks;		/* Number of 16K tape datablocks in buffer (!CONF_XBSA) *
  *	least something usable.
  */
 
-#define DUMPNAME(dumpname, name, dbDumpId) \
-   if (dbDumpId == 0) \
-     sprintf(dumpname, "%s", name); \
-   else \
-     sprintf(dumpname, "%s (DumpId %u)", name, dbDumpId);
-
 struct dumpRock {
     /* status only */
     int tapeSeq;
@@ -538,7 +532,6 @@ xbsaDumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
     afs_uint32 statuscount = statusSize, tsize = 0, esize;
     afs_hyper_t estSize;
 
-    char dumpIdStr[XBSA_MAX_OSNAME];
     char volumeNameStr[XBSA_MAX_PATHNAME];
     static char *dumpDescription = "AFS volume dump";
     static char *objectDescription = "XBSA - butc";
@@ -598,14 +591,12 @@ xbsaDumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
     dparamsPtr->curVolStartPos = tapeInfoPtr->position;
 
     /* Tell XBSA what the name and size of volume to write */
-    strcpy(dumpIdStr, butcdumpIdStr);	/* "backup_afs_volume_dumps" */
-    sprintf(volumeNameStr, "/%d", dparamsPtr->databaseDumpId);
-    strcat(volumeNameStr, "/");
-    strcat(volumeNameStr, curDump->name);	/* <dumpid>/<volname> */
+    snprintf(volumeNameStr, sizeof(volumeNameStr), "/%d/%s",
+	     dparamsPtr->databaseDumpId, curDump->name);
     hset32(estSize, esize);
     hshlft(estSize, 10);	/* Multiply by 1024 so its in KB */
 
-    rc = xbsa_WriteObjectBegin(&butxInfo, dumpIdStr, volumeNameStr,
+    rc = xbsa_WriteObjectBegin(&butxInfo, butcdumpIdStr, volumeNameStr,
 			       xbsalGName, estSize, dumpDescription,
 			       objectDescription);
     if (rc != XBSA_SUCCESS) {
@@ -1115,9 +1106,9 @@ Dumper(void *param)
     int dumpedvolumes = 0;
     int nodumpvolumes = 0;
     char strlevel[5];
-    char msg[20];
-    char finishedMsg1[50];
-    char finishedMsg2[50];
+    char msg[128];
+    char finishedMsg1[128];
+    char finishedMsg2[128];
     time_t startTime = 0;
     time_t endTime = 0;
     afs_int32 allocbufferSize;
@@ -1186,7 +1177,7 @@ Dumper(void *param)
      * Used when requesting a tape. Done now because once we create the dump, the
      * routine will then find the newly created dump.
      */
-    sprintf(strlevel, "%d", nodePtr->level);
+    snprintf(strlevel, sizeof(strlevel), "%d", nodePtr->level);
     code =
 	bcdb_FindLatestDump(nodePtr->volumeSetName, strlevel,
 			    &dparams.lastDump);
@@ -1291,15 +1282,21 @@ Dumper(void *param)
 
     lastPass = 1;		/* In case we aborted */
 
-    DUMPNAME(finishedMsg1, nodePtr->dumpSetName, dparams.databaseDumpId);
-    sprintf(finishedMsg2, "%d volumes dumped", dumpedvolumes);
+    /* Format and log finished message. */
+    snprintf(finishedMsg1, sizeof(finishedMsg1), "%s", nodePtr->dumpSetName);
+    if (dparams.databaseDumpId != 0) {
+	snprintf(msg, sizeof(msg), " (DumpId %u)", dparams.databaseDumpId);
+	strlcat(finishedMsg1, msg, sizeof(finishedMsg1));
+    }
+    snprintf(finishedMsg2, sizeof(finishedMsg2),
+	     "%d volumes dumped", dumpedvolumes);
     if (failedvolumes) {
-	sprintf(msg, ", %d failed", failedvolumes);
-	strcat(finishedMsg2, msg);
+	snprintf(msg, sizeof(msg), ", %d failed", failedvolumes);
+	strlcat(finishedMsg2, msg, sizeof(finishedMsg2));
     }
     if (nodumpvolumes) {
-	sprintf(msg, ", %d unchanged", nodumpvolumes);
-	strcat(finishedMsg2, msg);
+	snprintf(msg, sizeof(msg), ", %d unchanged", nodumpvolumes);
+	strlcat(finishedMsg2, msg, sizeof(finishedMsg2));
     }
 
     if (code == TC_ABORTEDBYREQUEST) {
@@ -1320,7 +1317,7 @@ Dumper(void *param)
     if (centralLogIO && startTime) {
 	long timediff;
 	afs_int32 hrs, min, sec, tmp;
-	char line[1024];
+	char *line = NULL;
 	struct tm tmstart, tmend;
 
 	localtime_r(&startTime, &tmstart);
@@ -1331,7 +1328,7 @@ Dumper(void *param)
 	min = tmp / 60;
 	sec = tmp % 60;
 
-	sprintf(line,
+	code = asprintf(&line,
 		"%-5d  %02d/%02d/%04d %02d:%02d:%02d  "
 		"%02d/%02d/%04d %02d:%02d:%02d  " "%02d:%02d:%02d  "
 		"%s %d of %d volumes dumped (%lu KB)\n", taskId,
@@ -1342,9 +1339,13 @@ Dumper(void *param)
 		nodePtr->volumeSetName, dumpedvolumes,
 		dumpedvolumes + failedvolumes,
 		afs_printable_uint32_lu(dparams.tapeInfoPtr->kBytes + 1));
-
-	fwrite(line, strlen(line), 1, centralLogIO);
-	fflush(centralLogIO);
+	if (code < 0)
+	    line = NULL;
+	if (line != NULL) {
+	    fwrite(line, strlen(line), 1, centralLogIO);
+	    fflush(centralLogIO);
+	}
+	free(line);
     }
 
     setStatus(taskId, TASK_DONE);
@@ -1694,7 +1695,7 @@ getDumpTape(struct dumpRock *dparamsPtr, int interactiveFlag,
 			code = bcdb_FindDumpByID(dmp, &de);
 			if (code)
 			    break;
-			sprintf(strlevel, "%d", de.level);
+			snprintf(strlevel, sizeof(strlevel), "%d", de.level);
 			code =
 			    bcdb_FindLatestDump(de.volumeSetName, strlevel,
 						&de2);
@@ -2128,15 +2129,14 @@ DeleteDump(void *param)
 	for (i = 0; i < vl.budb_volumeList_len; i++) {
 	    if (dumpEntry.flags & BUDB_DUMP_BUTA) {
 		/* dump was from buta, use old buta style names */
-		sprintf(dumpIdStr, "/%d", dumpid);
-		strcpy(volumeNameStr, "/");
-		strcat(volumeNameStr, (char *)vl.budb_volumeList_val[i].name);
+		snprintf(dumpIdStr, sizeof(dumpIdStr), "/%d", dumpid);
+		snprintf(volumeNameStr, sizeof(volumeNameStr), "/%s",
+			 (char *)vl.budb_volumeList_val[i].name);
 	    } else {		/* BUDB_DUMP_ADSM */
 		/* dump was from butc to ADSM, use butc names */
-		strcpy(dumpIdStr, butcdumpIdStr);
-		sprintf(volumeNameStr, "/%d", dumpid);
-		strcat(volumeNameStr, "/");
-		strcat(volumeNameStr, (char *)vl.budb_volumeList_val[i].name);
+		snprintf(dumpIdStr, sizeof(dumpIdStr), "%s", butcdumpIdStr);
+		snprintf(volumeNameStr, sizeof(volumeNameStr), "/%d/%s",
+			 dumpid, (char *)vl.budb_volumeList_val[i].name);
 	    }
 
 	    rc = xbsa_DeleteObject(&butxInfo, dumpIdStr, volumeNameStr);

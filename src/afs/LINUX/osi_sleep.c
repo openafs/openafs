@@ -140,7 +140,7 @@ int
 afs_osi_SleepSig(void *event)
 {
     struct afs_event *evp;
-    int seq, retval;
+    int seq;
     int code;
 
     evp = afs_getevent(event);
@@ -150,7 +150,6 @@ afs_osi_SleepSig(void *event)
     }
 
     seq = evp->seq;
-    retval = 0;
 
     AFS_GUNLOCK();
     code = wait_event_freezable(evp->cond, seq != evp->seq);

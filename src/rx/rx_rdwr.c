@@ -772,7 +772,9 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 	/* might be out of space now */
 	if (!nbytes) {
 	    return requestCount;
-	} else;			/* more data to send, so get another packet and keep going */
+	} else {
+	    /* more data to send, so get another packet and keep going */
+	}
     } while (nbytes);
 
     return requestCount - nbytes;
@@ -1015,7 +1017,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 #ifdef RX_TRACK_PACKETS
     struct opr_queue *cursor;
 #endif
-    int nextio;
+    int nextio = 0;
     int requestCount;
     struct opr_queue tmpq;
 #ifdef RXDEBUG_PACKET
@@ -1023,7 +1025,6 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 #endif
 
     requestCount = nbytes;
-    nextio = 0;
 
     MUTEX_ENTER(&call->lock);
     if (call->error) {
@@ -1060,7 +1061,6 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
      * to send. Set RX_PROTOCOL_ERROR if any problems are found in
      * the iovec. We put the loop condition at the end to ensure that
      * a zero length write will push a short packet. */
-    nextio = 0;
     opr_queue_Init(&tmpq);
 #ifdef RXDEBUG_PACKET
     tmpqc = 0;

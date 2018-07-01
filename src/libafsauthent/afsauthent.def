@@ -167,3 +167,45 @@ EXPORTS
         afsconf_GetAllKeys                              @166
 	afsconf_CheckRestrictedQuery			@167
         string_PR_IDToName				@168
+        initialize_ACFG_error_table			@169
+        initialize_KA_error_table			@170
+        initialize_KTC_error_table			@171
+        initialize_PT_error_table			@172
+        initialize_U_error_table			@173
+;        initialize_VL_error_table			@174
+;        initialize_VOLS_error_table			@175
+        afs_getDirPath					@176
+        afsconf_AddIdentity				@177
+        afsconf_CellAliasApply				@178
+        afsconf_DeleteIdentity				@179
+        afsconf_DeleteKeyBySubType			@180
+        afsconf_DeleteKeyByType				@181
+        afsconf_FindIANAName				@182
+        afsconf_FindService				@183
+        afsconf_GetAfsdbInfo				@184
+        afsconf_GetKeyByTypes				@185
+        afsconf_GetKeysByType				@186
+        afsconf_GetLatestKeyByTypes			@187
+        afsconf_GetLatestKeysByType			@188
+        afsconf_GetNthIdentity				@189
+        afsconf_IsSuperIdentity				@190
+        afsconf_ParseNetRestrictFile			@191
+        afsconf_PutTypedKeyList				@192
+        afsconf_SuperIdentity				@193
+        afsconf_typedKey_free				@194
+        afsconf_typedKey_get				@195
+        token_SetsEquivalent				@196
+        token_addToken					@197
+        token_buildTokenJar				@198
+        token_findByType				@199
+        token_freeToken					@200
+        token_freeTokenContents				@201
+        token_replaceToken				@202
+        token_setPag					@203
+        token_setRxkadViceId				@204
+        ugen_ClientInitCell				@205
+        ugen_ClientInitFlags				@206
+        ugen_ClientInitServer				@207
+        xdr_idlist					@208
+        xdr_namelist					@209
+        xdr_prlist					@210

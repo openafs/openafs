@@ -1013,7 +1013,11 @@ afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, size_t len
     AFS_GUNLOCK();
     as_rangelock(as);
     if ((flags & MAP_FIXED) == 0) {
+#ifdef MAPADDR_LACKS_VACALIGN
+	map_addr(addr, len, off, flags);
+#else
 	map_addr(addr, len, off, 1, flags);
+#endif
 	if (*addr == NULL) {
 	    as_rangeunlock(as);
 	    code = ENOMEM;

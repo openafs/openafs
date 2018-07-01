@@ -60,8 +60,9 @@ rxi_flushtrace(void)
     rxi_tracepos = 0;
     if (rxi_logfd < 0)
 	return;
-    if (write(rxi_logfd, rxi_tracebuf, len) < 0)
-	; /* don't care */
+    if (write(rxi_logfd, rxi_tracebuf, len) < 0) {
+	/* don't care */
+    }
 }
 
 void

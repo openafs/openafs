@@ -270,6 +270,7 @@ afs_GenericStoreProc(struct storeOps *ops, void *rock,
     size = tdc->f.chunkBytes;
 
     tfile = afs_CFileOpen(&tdc->f.inode);
+    osi_Assert(tfile);
 
     while ( size > 0 ) {
 	code = (*ops->prepare)(rock, size, &tlen);
@@ -323,11 +324,7 @@ struct storeOps rxfs_storeUfsOps = {
     .padd =	rxfs_storePadd,
     .close =	rxfs_storeClose,
     .destroy =	rxfs_storeDestroy,
-#if 0 && defined(AFS_LINUX26_ENV)
-    .storeproc = afs_linux_storeproc
-#else
     .storeproc = afs_GenericStoreProc
-#endif
 #endif
 };
 

@@ -112,6 +112,10 @@ uvote_ShouldIRun(void)
     afs_int32 now;
     int code = 1; /* default to yes */
 
+    if (amIClone) {
+	return 0;		/* if we cannot be the sync-site, do not ask for votes */
+    }
+
     UBIK_VOTE_LOCK;
     now = FT_ApproxTime();
     if (BIGTIME + vote_globals.ubik_lastYesTime < now)

@@ -109,7 +109,7 @@ udisk_Debug(struct ubik_debug *aparm)
  * Abort transaction: opcode \n
  * Write data: opcode, file, position, length, <length> data bytes \n
  */
-int
+static int
 udisk_LogOpcode(struct ubik_dbase *adbase, afs_int32 aopcode, int async)
 {
     struct ubik_stat ustat;
@@ -139,7 +139,7 @@ udisk_LogOpcode(struct ubik_dbase *adbase, afs_int32 aopcode, int async)
 /*!
  * \brief Log a commit, never syncing.
  */
-int
+static int
 udisk_LogEnd(struct ubik_dbase *adbase, struct ubik_version *aversion)
 {
     afs_int32 code;
@@ -171,7 +171,7 @@ udisk_LogEnd(struct ubik_dbase *adbase, struct ubik_version *aversion)
 /*!
  * \brief Log a truncate operation, never syncing.
  */
-int
+static int
 udisk_LogTruncate(struct ubik_dbase *adbase, afs_int32 afile,
 		  afs_int32 alength)
 {
@@ -201,7 +201,7 @@ udisk_LogTruncate(struct ubik_dbase *adbase, afs_int32 afile,
 /*!
  * \brief Write some data to the log, never syncing.
  */
-int
+static int
 udisk_LogWriteData(struct ubik_dbase *adbase, afs_int32 afile, void *abuffer,
 		   afs_int32 apos, afs_int32 alen)
 {
@@ -807,7 +807,6 @@ udisk_write(struct ubik_trans *atrans, afs_int32 afile, void *abuffer,
 	    bp = DNew(atrans, afile, apos >> UBIK_LOGPAGESIZE);
 	    if (!bp)
 		return UIOERROR;
-	    memset(bp, 0, UBIK_PAGESIZE);
 	}
 	/* otherwise, min of remaining bytes and end of buffer to user mode */
 	offset = apos & (UBIK_PAGESIZE - 1);

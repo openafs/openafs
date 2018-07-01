@@ -32,7 +32,6 @@ AC_CHECK_PROGS(RM, rm, [${am_missing_run}rm])
 AC_CHECK_PROGS(LD, ld, [${am_missing_run}ld])
 AC_CHECK_PROGS(CP, cp, [${am_missing_run}cp])
 AC_CHECK_PROGS(STRIP, strip, [${am_missing_run}strip])
-AC_CHECK_PROGS(LORDER, lorder, [${am_missing_run}lorder])
 AC_CHECK_PROGS(GENCAT, gencat, [${am_missing_run}gencat])
 
 dnl TODO - need to disable STRIP if we are doing debugging in any user space code
@@ -69,7 +68,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
-	arm_linux_24 | arm_linux26)
+	arm_linux_24 | arm_linux26 | arm64_linux26)
 		CCOBJ="\$(CC) -fPIC"
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2

@@ -95,10 +95,22 @@ static_inline int close(int d) {return -1;}
 #if defined(HAVE_GETUID)
 #undef HAVE_GETUID
 #endif
+#ifdef HAVE_ARC4RANDOM
+# undef HAVE_ARC4RANDOM
+#endif
 static_inline int gettimeofday(struct timeval *tp, void *tzp)
     {if (tp == NULL) return -1; tp->tv_sec = osi_Time(); tp->tv_usec = 0; return 0;}
 
-#ifdef AFS_SUN5_ENV
-/* workaround to allow --disable-optimize-kernel on Solaris */
-#define double int
+#if defined(KERNEL) && (defined(AFS_SUN5_ENV) || defined(AFS_ARM64_LINUX26_ENV))
+/*
+ * Some functions such as RAND_add take a 'double' as an argument, but floating
+ * point code generally cannot be used in kernelspace. We never actually use
+ * that argument in kernel code, but just that it exists as an argument is
+ * enough to break the kernel code on Linux (on arm64) and Solaris (depending
+ * on the compiler version and flags). Change all instances of double to void*
+ * to avoid this; if someone does try to use that argument, hopefully the fact
+ * that it is now a void* will flag an error at compile time before it causes
+ * any further problems.
+ */
+# define double void*
 #endif

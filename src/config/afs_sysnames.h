@@ -385,6 +385,8 @@
 #define SYS_NAME_ID_amd64_obsd53        4022
 #define SYS_NAME_ID_amd64_obsd54        4023
 
+#define SYS_NAME_ID_arm64_linux2	4100
+#define SYS_NAME_ID_arm64_linux26	4103
 
 #define	AFS_REALM_SZ	64
 

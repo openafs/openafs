@@ -2433,8 +2433,20 @@ afsd_run(void)
 	if (afsd_verbose)
 	    printf("%s: Calling AFSOP_SET_VOLUME_TTL with '%d'\n", rn, volume_ttl);
 	code = afsd_syscall(AFSOP_SET_VOLUME_TTL, volume_ttl);
-	if (code != 0)
-	    printf("%s: Error setting volume ttl to %d seconds; code=%d.\n", rn, volume_ttl, code);
+	if (code == EFAULT) {
+	    if (volume_ttl < AFS_MIN_VOLUME_TTL)
+		printf("%s: Failed to set volume ttl to %d seconds; "
+		       "value is too low.\n", rn, volume_ttl);
+	    else if (volume_ttl > AFS_MAX_VOLUME_TTL)
+		printf("%s: Failed to set volume ttl to %d seconds; "
+		       "value is too high.\n", rn, volume_ttl);
+	    else
+		printf("%s: Failed to set volume ttl to %d seconds; "
+		       "value is out of range.\n", rn, volume_ttl);
+	} else if (code != 0) {
+	    printf("%s: Failed to set volume ttl to %d seconds; "
+		   "code=%d.\n", rn, volume_ttl, code);
+	}
     }
 
     /*

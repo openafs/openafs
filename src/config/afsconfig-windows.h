@@ -163,7 +163,7 @@
 #undef HAVE_VFS_DQRWLOCK
 
 /* define if you have pread() and pwrite() */
-#define HAVE_PIO 1
+#undef HAVE_PIO
 
 #undef PACKAGE
 #undef VERSION

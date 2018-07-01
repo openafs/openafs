@@ -66,10 +66,6 @@ int
 urecovery_ResetState(void)
 {
     urecovery_state = 0;
-#if !defined(AFS_PTHREAD_ENV)
-    /*  No corresponding LWP_WaitProcess found anywhere for this -- klm */
-    LWP_NoYieldSignal(&urecovery_state);
-#endif
     return 0;
 }
 
@@ -86,10 +82,6 @@ int
 urecovery_LostServer(struct ubik_server *ts)
 {
     ubeacon_ReinitServer(ts);
-#if !defined(AFS_PTHREAD_ENV)
-    /*  No corresponding LWP_WaitProcess found anywhere for this -- klm */
-    LWP_NoYieldSignal(&urecovery_state);
-#endif
     return 0;
 }
 
@@ -874,7 +866,7 @@ urecovery_Interact(void *dummy)
 	}
 	DBRELE(ubik_dbase);
     }
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 /*!

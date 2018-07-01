@@ -708,7 +708,7 @@ SalvageChildReaperThread(void * args)
 	opr_cv_broadcast(&worker_cv);
     }
 
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 static int
@@ -757,8 +757,8 @@ SalvageLogCleanupThread(void * arg)
 	}
     }
 
-    opr_mutex_exit(&worker_lock);
-    return NULL;
+    AFS_UNREACHED(opr_mutex_exit(&worker_lock));
+    AFS_UNREACHED(return(NULL));
 }
 
 #define LOG_XFER_BUF_SIZE 65536

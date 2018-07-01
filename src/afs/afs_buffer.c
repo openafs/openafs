@@ -239,6 +239,7 @@ DRead(struct dcache *adc, int page, struct DirBuffer *entry)
 	return ENOENT; /* past the end */
     }
     tfile = afs_CFileOpen(&adc->f.inode);
+    osi_Assert(tfile);
     code =
 	afs_CFileRead(tfile, tb->page * AFS_BUFFER_PAGESIZE, tb->data,
 		      AFS_BUFFER_PAGESIZE);
@@ -372,6 +373,7 @@ afs_newslot(struct dcache *adc, afs_int32 apage, struct buffer *lp)
     if (lp->dirty) {
 	/* see DFlush for rationale for not getting and locking the dcache */
         tfile = afs_CFileOpen(&lp->inode);
+        osi_Assert(tfile);
 	afs_CFileWrite(tfile, lp->page * AFS_BUFFER_PAGESIZE, lp->data,
 		       AFS_BUFFER_PAGESIZE);
 	lp->dirty = 0;
@@ -461,6 +463,7 @@ DFlushBuffer(struct buffer *ab)
     struct osi_file *tfile;
 
     tfile = afs_CFileOpen(&ab->inode);
+    osi_Assert(tfile);
     afs_CFileWrite(tfile, ab->page * AFS_BUFFER_PAGESIZE,
 		   ab->data, AFS_BUFFER_PAGESIZE);
     ab->dirty = 0;	/* Clear the dirty flag */

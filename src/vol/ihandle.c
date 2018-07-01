@@ -433,7 +433,7 @@ ih_open(IHandle_t * ihP)
 	     * cannot reuse it; it will be closed soon. */
 	    continue;
 	}
-#ifndef HAVE_PIO
+#ifndef AFS_IHANDLE_PIO_ENV
 	/*
 	 * If we don't have positional i/o, don't try to share fds, since
 	 * we can't do so in a threadsafe way.
@@ -442,9 +442,9 @@ ih_open(IHandle_t * ihP)
 	    continue;
 	}
 	opr_Assert(fdP->fd_status == FD_HANDLE_OPEN);
-#else /* HAVE_PIO */
+#else /* AFS_IHANDLE_PIO_ENV */
 	opr_Assert(fdP->fd_status != FD_HANDLE_AVAIL);
-#endif /* HAVE_PIO */
+#endif /* AFS_IHANDLE_PIO_ENV */
 
 	fdP->fd_refcnt++;
 	if (fdP->fd_status == FD_HANDLE_OPEN) {
@@ -1092,7 +1092,7 @@ ih_size(FD_t fd)
 #endif
 }
 
-#ifndef HAVE_PIO
+#ifndef AFS_IHANDLE_PIO_ENV
 ssize_t
 ih_pread(int fd, void * buf, size_t count, afs_foff_t offset)
 {
@@ -1112,7 +1112,7 @@ ih_pwrite(int fd, const void * buf, size_t count, afs_foff_t offset)
 	    return code;
 	return OS_WRITE(fd, buf, count);
 }
-#endif /* !HAVE_PIO */
+#endif /* !AFS_IHANDLE_PIO_ENV */
 
 #ifndef AFS_NT40_ENV
 int

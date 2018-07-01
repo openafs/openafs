@@ -651,6 +651,7 @@ afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq)
 	    toAdd = AFS_CHUNKTOSIZE(tdc->f.chunk) - offset;
 	}
         tfile = afs_CFileOpen(&tdc->f.inode);
+        osi_Assert(tfile);
 	while(tdc->validPos < avc->f.m.Length + toAdd) {
 	     afs_size_t towrite;
 
@@ -819,6 +820,7 @@ afs_TruncateAllSegments(struct vcache *avc, afs_size_t alen,
 	    UpgradeSToWLock(&tdc->lock, 673);
 	    tdc->f.states |= DWriting;
 	    tfile = afs_CFileOpen(&tdc->f.inode);
+            osi_Assert(tfile);
 	    afs_CFileTruncate(tfile, (afs_int32)newSize);
 	    afs_CFileClose(tfile);
 	    afs_AdjustSize(tdc, (afs_int32)newSize);

@@ -40,6 +40,7 @@ rx_GetIFInfo
 rx_GetNetworkError
 rx_GetSecurityData
 rx_GetSecurityHeaderSize
+rx_GetServiceSpecific
 rx_GetSpecific
 rx_GetStatistics
 rx_GetThreadNum
@@ -88,6 +89,7 @@ rx_SetSecurityConfiguration
 rx_SetSecurityData
 rx_SetSecurityHeaderSize
 rx_SetSecurityMaxTrailerSize
+rx_SetServiceSpecific
 rx_SetSpecific
 rx_SetThreadNum
 rx_SlowGetInt32

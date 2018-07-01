@@ -4,7 +4,6 @@ if test "x$with_linux_kernel_headers" != "x"; then
 else
   for utsdir in "/lib/modules/`uname -r`/build" \
                 "/lib/modules/`uname -r`/source" \
-                "/usr/src/linux-2.4" \
                 "/usr/src/linux"; do
     LINUX_KERNEL_PATH="$utsdir"
     for utsfile in "include/generated/utsrelease.h" \

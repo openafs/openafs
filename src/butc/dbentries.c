@@ -483,5 +483,5 @@ dbWatcher(void *unused)
 	IOMGR_Sleep(2);
 #endif
     }
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
