@@ -16,6 +16,9 @@ OpenAFS 1.8.1 (in progress)
 
   All Server Platforms
 
+    * Fix reference counting error that could cause an assertion failure
+      in some workloads.
+
     * Assorted cleanups and efficiency improvements in the ubik implementation.
 
     * Return a valid InlineBulkStatus response in error cases.
