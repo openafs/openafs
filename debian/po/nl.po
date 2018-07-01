@@ -1,14 +1,14 @@
 # Dutch translation of openafs debconf templates.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the openafs package.
-# Frans Spiesschaert <Frans.Spiesschaert@yucom.be>, 2014, 2017.
+# Frans Spiesschaert <Frans.Spiesschaert@yucom.be>, 2014, 2018.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: openafs_1.6.21-1\n"
+"Project-Id-Version: openafs_1.6.21-3\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
 "POT-Creation-Date: 2017-07-10 15:27-0500\n"
-"PO-Revision-Date: 2017-08-10 14:30+0200\n"
+"PO-Revision-Date: 2018-03-29 20:49+0200\n"
 "Last-Translator: Frans Spiesschaert <Frans.Spiesschaert@yucom.be>\n"
 "Language-Team: Debian Dutch l10n Team <debian-l10n-dutch@lists.debian.org>\n"
 "Language: nl\n"
@@ -113,13 +113,13 @@ msgid ""
 "you choose not to start AFS at boot, run service openafs-client force-start "
 "to start the client when you wish to run it."
 msgstr ""
-"Gebruikers die het pakket 'openafs-client' installeren, verwachten meestal "
-"dat AFS automatisch aangekoppeld wordt tijdens het opstarten. Als u echter "
-"van plan bent een nieuwe cel op te zetten, of als u een laptop gebruikt, "
-"wilt u AFS mogelijk niet starten bij het opstarten van de computer. Als u "
-"ervoor opteert om AFS niet te starten bij het opstarten van de computer, "
-"moet u het commando service openafs-client force-start uitvoeren om de "
-"client op te starten wanneer u dat wenst."
+"De meeste gebruikers die het pakket 'openafs-client' installeren verwachten "
+"gewoonlijk dat AFS automatisch aangekoppeld wordt tijdens het opstarten. Als "
+"u echter van plan bent een nieuwe cel op te zetten, of als u een laptop "
+"gebruikt, wilt u het wellicht niet starten bij het opstarten. Indien u er "
+"voor opteert AFS niet te starten bij het opstarten van de computer, moet u "
+"het commando 'service openafs-client force-start' gebruiken om het "
+"cliëntprogramma te starten wanneer u het wenst uit te voeren."
 
 #. Type: boolean
 #. Description

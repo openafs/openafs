@@ -12,6 +12,8 @@ openafs (1.8.1~pre2-1) UNRELEASED; urgency=medium
     - Improve cache manager behavior when unable to open cache files (e.g.,
       if the cache partition is remounted readonly)
     - Improve some error messages
+  * Update Dutch debconf translation; thanks Frans Spiesschaert.
+    (Closes: #895459)
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 01 Jul 2018 14:39:03 -0500
 
