@@ -15,7 +15,7 @@ Vcs-Git: https://salsa.debian.org/debian/openafs.git
 Vcs-Browser: https://salsa.debian.org/debian/openafs
 
 Package: openafs-client
-Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm arm64 armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}, lsb-base (>= 3.0-6)
 Recommends: lsof, openafs-modules-dkms (>= ${source:Version})
  | openafs-modules-source (>= ${source:Version})
@@ -34,7 +34,7 @@ Description: AFS distributed filesystem client support
 
 Package: openafs-fuse
 Priority: optional
-Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm arm64 armel armhf i386 ia64 powerpc ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends},
  openafs-client (= ${binary:Version})
 Description: AFS distributed file system experimental FUSE client
@@ -49,7 +49,7 @@ Description: AFS distributed file system experimental FUSE client
  access is sufficient and the kernel module cannot be built.
 
 Package: openafs-fileserver
-Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm arm64 armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}, lsb-base (>= 3.0-6), openafs-client
 Recommends: ntp | time-daemon
 Suggests: openafs-doc
@@ -62,7 +62,7 @@ Description: AFS distributed filesystem file server
  installed on any machine that will export files into AFS.
 
 Package: openafs-dbserver
-Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm arm64 armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${perl:Depends}, ${misc:Depends},
  openafs-fileserver
 Recommends: openafs-client
@@ -90,7 +90,7 @@ Description: AFS distributed filesystem documentation
  protocol documentation, and other OpenAFS documentation.
 
 Package: openafs-krb5
-Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm arm64 armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Breaks: openafs-client (<< 1.4.7.dfsg1-1)
 Description: AFS distributed filesystem Kerberos 5 integration
@@ -105,7 +105,7 @@ Description: AFS distributed filesystem Kerberos 5 integration
 
 Package: libkopenafs2
 Section: libs
-Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm arm64 armel armhf i386 ia64 powerpc ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: AFS distributed file system runtime library (PAGs)
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -118,7 +118,7 @@ Description: AFS distributed file system runtime library (PAGs)
 
 Package: libafsauthent2
 Section: libs
-Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm arm64 armel armhf i386 ia64 powerpc ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: AFS distributed file system runtime library (authentication)
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -130,7 +130,7 @@ Description: AFS distributed file system runtime library (authentication)
 
 Package: libafsrpc2
 Section: libs
-Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm arm64 armel armhf i386 ia64 powerpc ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: AFS distributed file system runtime library (RPC layer)
  AFS is a distributed filesystem allowing cross-platform sharing of
@@ -143,7 +143,7 @@ Description: AFS distributed file system runtime library (RPC layer)
 Package: libopenafs-dev
 Section: libdevel
 Priority: optional
-Architecture: alpha amd64 arm armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
+Architecture: alpha amd64 arm arm64 armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends},
  libafsauthent2 (= ${binary:Version}), libafsrpc2 (= ${binary:Version}),
  libkopenafs2 (= ${binary:Version}),
