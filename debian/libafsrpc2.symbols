@@ -39,17 +39,21 @@ libafsrpc.so.2 libafsrpc2 #MINVER#
  multi_Finalize_Ignore@Base 1.8.0~pre1
  multi_Init@Base 1.8.0~pre1
  multi_Select@Base 1.8.0~pre1
+ opr_AssertionFailed@Base 1.8.1~pre2
  osi_AssertFailU@Base 1.8.0~pre1
  osi_Panic@Base 1.8.0~pre1
  rx_ConnError@Base 1.8.0~pre1
  rx_ConnectionOf@Base 1.8.0~pre1
  rx_DestroyConnection@Base 1.8.0~pre1
  rx_EndCall@Base 1.8.0~pre1
+ rx_Error@Base 1.8.1~pre2
  rx_Finalize@Base 1.8.0~pre1
  rx_FlushWrite@Base 1.8.0~pre1
  rx_FreeRPCStats@Base 1.8.0~pre1
+ rx_FreeStatistics@Base 1.8.1~pre2
  rx_GetCachedConnection@Base 1.8.0~pre1
  rx_GetCall@Base 1.8.0~pre1
+ rx_GetCallAbortCode@Base 1.8.1~pre2
  rx_GetConnectionEpoch@Base 1.8.0~pre1
  rx_GetConnectionId@Base 1.8.0~pre1
  rx_GetIFInfo@Base 1.8.0~pre1
@@ -58,6 +62,7 @@ libafsrpc.so.2 libafsrpc2 #MINVER#
  rx_GetMaxSendWindow@Base 1.8.0~pre1
  rx_GetMinPeerTimeout@Base 1.8.0~pre1
  rx_GetNetworkError@Base 1.8.0~pre1
+ rx_GetRemoteStatus@Base 1.8.1~pre2
  rx_GetSecurityData@Base 1.8.0~pre1
  rx_GetSecurityHeaderSize@Base 1.8.0~pre1
  rx_GetServerConnections@Base 1.8.0~pre1
@@ -65,7 +70,9 @@ libafsrpc.so.2 libafsrpc2 #MINVER#
  rx_GetServerPeers@Base 1.8.0~pre1
  rx_GetServerStats@Base 1.8.0~pre1
  rx_GetServerVersion@Base 1.8.0~pre1
+ rx_GetServiceSpecific@Base 1.8.1~pre2
  rx_GetSpecific@Base 1.8.0~pre1
+ rx_GetStatistics@Base 1.8.1~pre2
  rx_HostOf@Base 1.8.0~pre1
  rx_IncrementTimeAndCount@Base 1.8.0~pre1
  rx_Init@Base 1.8.0~pre1
@@ -84,6 +91,7 @@ libafsrpc.so.2 libafsrpc2 #MINVER#
  rx_ReadProc@Base 1.8.0~pre1
  rx_RecordCallStatistics@Base 1.8.0~pre1
  rx_ReleaseCachedConnection@Base 1.8.0~pre1
+ rx_ReleaseRPCStats@Base 1.8.1~pre2
  rx_RetrievePeerRPCStats@Base 1.8.0~pre1
  rx_RetrieveProcessRPCStats@Base 1.8.0~pre1
  rx_SecurityClassOf@Base 1.8.0~pre1
@@ -91,9 +99,13 @@ libafsrpc.so.2 libafsrpc2 #MINVER#
  rx_ServerProc@Base 1.8.0~pre1
  rx_ServiceIdOf@Base 1.8.0~pre1
  rx_ServiceOf@Base 1.8.0~pre1
+ rx_SetCallAbortCode@Base 1.8.1~pre2
  rx_SetConnDeadTime@Base 1.8.0~pre1
  rx_SetConnHardDeadTime@Base 1.8.0~pre1
  rx_SetConnIdleDeadTime@Base 1.8.0~pre1
+ rx_SetConnSecondsUntilNatPing@Base 1.8.1~pre2
+ rx_SetLocalStatus@Base 1.8.1~pre2
+ rx_SetMaxMTU@Base 1.8.1~pre2
  rx_SetMaxReceiveWindow@Base 1.8.0~pre1
  rx_SetMaxSendWindow@Base 1.8.0~pre1
  rx_SetMinPeerTimeout@Base 1.8.0~pre1
@@ -101,10 +113,12 @@ libafsrpc.so.2 libafsrpc2 #MINVER#
  rx_SetSecurityData@Base 1.8.0~pre1
  rx_SetSecurityHeaderSize@Base 1.8.0~pre1
  rx_SetSecurityMaxTrailerSize@Base 1.8.0~pre1
+ rx_SetServiceSpecific@Base 1.8.1~pre2
  rx_SetSpecific@Base 1.8.0~pre1
  rx_SlowReadPacket@Base 1.8.0~pre1
  rx_SlowWritePacket@Base 1.8.0~pre1
  rx_StartServer@Base 1.8.0~pre1
+ rx_StatsOnOff@Base 1.8.1~pre2
  rx_UdpBufSize@Base 1.8.0~pre1
  rx_WriteProc@Base 1.8.0~pre1
  rx_connDeadTime@Base 1.8.0~pre1
@@ -165,10 +179,12 @@ libafsrpc.so.2 libafsrpc2 #MINVER#
  tkt_DeriveDesKey@Base 1.8.0~pre1
  tkt_MakeTicket5@Base 1.8.0~pre1
  tkt_MakeTicket@Base 1.8.0~pre1
+ xdr_Capabilities@Base 1.8.1~pre2
  xdr_afsUUID@Base 1.8.0~pre1
  xdr_afs_int32@Base 1.8.0~pre1
  xdr_afs_int64@Base 1.8.0~pre1
  xdr_afs_uint32@Base 1.8.0~pre1
  xdr_afs_uint64@Base 1.8.0~pre1
+ xdr_rpcStats@Base 1.8.1~pre2
  xdrlen_create@Base 1.8.0~pre1
  xdrrx_create@Base 1.8.0~pre1

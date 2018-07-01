@@ -1,28 +1,69 @@
 libafsauthent.so.2 libafsauthent2 #MINVER#
+ afs_getDirPath@Base 1.8.1~pre2
  afs_get_pag_from_groups@Base 1.8.0~pre1
+ afsconf_AddIdentity@Base 1.8.1~pre2
  afsconf_AddKey@Base 1.8.0~pre1
+ afsconf_AddTypedKey@Base 1.8.1~pre2
  afsconf_AddUser@Base 1.8.0~pre1
+ afsconf_BuildServerSecurityObjects@Base 1.8.1~pre2
+ afsconf_CellAliasApply@Base 1.8.1~pre2
  afsconf_CellApply@Base 1.8.0~pre1
  afsconf_CheckAuth@Base 1.8.0~pre1
  afsconf_CheckRestrictedQuery@Base 1.8.0~pre1
  afsconf_ClientAuth@Base 1.8.0~pre1
  afsconf_ClientAuthSecure@Base 1.8.0~pre1
+ afsconf_ClientAuthToken@Base 1.8.1~pre2
  afsconf_Close@Base 1.8.0~pre1
+ afsconf_DeleteIdentity@Base 1.8.1~pre2
  afsconf_DeleteKey@Base 1.8.0~pre1
+ afsconf_DeleteKeyBySubType@Base 1.8.1~pre2
+ afsconf_DeleteKeyByType@Base 1.8.1~pre2
  afsconf_DeleteUser@Base 1.8.0~pre1
+ afsconf_FindIANAName@Base 1.8.1~pre2
+ afsconf_FindService@Base 1.8.1~pre2
+ afsconf_GetAfsdbInfo@Base 1.8.1~pre2
+ afsconf_GetAllKeys@Base 1.8.1~pre2
  afsconf_GetCellInfo@Base 1.8.0~pre1
+ afsconf_GetExtendedCellInfo@Base 1.8.1~pre2
  afsconf_GetKey@Base 1.8.0~pre1
+ afsconf_GetKeyByTypes@Base 1.8.1~pre2
  afsconf_GetKeys@Base 1.8.0~pre1
+ afsconf_GetKeysByType@Base 1.8.1~pre2
  afsconf_GetLatestKey@Base 1.8.0~pre1
+ afsconf_GetLatestKeyByTypes@Base 1.8.1~pre2
+ afsconf_GetLatestKeysByType@Base 1.8.1~pre2
  afsconf_GetLocalCell@Base 1.8.0~pre1
  afsconf_GetNoAuthFlag@Base 1.8.0~pre1
+ afsconf_GetNthIdentity@Base 1.8.1~pre2
  afsconf_GetNthUser@Base 1.8.0~pre1
+ afsconf_IsLocalRealmMatch@Base 1.8.1~pre2
+ afsconf_IsSuperIdentity@Base 1.8.1~pre2
  afsconf_Open@Base 1.8.0~pre1
+ afsconf_ParseNetFiles@Base 1.8.1~pre2
+ afsconf_ParseNetRestrictFile@Base 1.8.1~pre2
+ afsconf_PickClientSecObj@Base 1.8.1~pre2
+ afsconf_PutTypedKeyList@Base 1.8.1~pre2
  afsconf_ServerAuth@Base 1.8.0~pre1
  afsconf_SetCellInfo@Base 1.8.0~pre1
+ afsconf_SetExtendedCellInfo@Base 1.8.1~pre2
+ afsconf_SetLocalRealm@Base 1.8.1~pre2
  afsconf_SetNoAuthFlag@Base 1.8.0~pre1
  afsconf_SetSecurityFlags@Base 1.8.0~pre1
+ afsconf_SuperIdentity@Base 1.8.1~pre2
  afsconf_SuperUser@Base 1.8.0~pre1
+ afsconf_UpToDate@Base 1.8.1~pre2
+ afsconf_typedKey_free@Base 1.8.1~pre2
+ afsconf_typedKey_get@Base 1.8.1~pre2
+ afsconf_typedKey_new@Base 1.8.1~pre2
+ afsconf_typedKey_put@Base 1.8.1~pre2
+ afsconf_typedKey_values@Base 1.8.1~pre2
+ initialize_ACFG_error_table@Base 1.8.1~pre2
+ initialize_KA_error_table@Base 1.8.1~pre2
+ initialize_KTC_error_table@Base 1.8.1~pre2
+ initialize_PT_error_table@Base 1.8.1~pre2
+ initialize_U_error_table@Base 1.8.1~pre2
+ initialize_VL_error_table@Base 1.8.1~pre2
+ initialize_VOLS_error_table@Base 1.8.1~pre2
  ka_AuthServerConn@Base 1.8.0~pre1
  ka_AuthSpecificServersConn@Base 1.8.0~pre1
  ka_Authenticate@Base 1.8.0~pre1
@@ -49,9 +90,12 @@ libafsauthent.so.2 libafsauthent2 #MINVER#
  ktc_ForgetAllTokens@Base 1.8.0~pre1
  ktc_ForgetToken@Base 1.8.0~pre1
  ktc_GetToken@Base 1.8.0~pre1
+ ktc_GetTokenEx@Base 1.8.1~pre2
  ktc_ListTokens@Base 1.8.0~pre1
+ ktc_ListTokensEx@Base 1.8.1~pre2
  ktc_OldPioctl@Base 1.8.0~pre1
  ktc_SetToken@Base 1.8.0~pre1
+ ktc_SetTokenEx@Base 1.8.1~pre2
  ktc_curpag@Base 1.8.0~pre1
  pioctl@Base 1.8.0~pre1
  pr_End@Base 1.8.0~pre1
@@ -64,9 +108,50 @@ libafsauthent.so.2 libafsauthent2 #MINVER#
  pr_SNameToId@Base 1.8.0~pre1
  setpag@Base 1.8.0~pre1
  string_PR_IDToName@Base 1.8.0~pre1
+ token_FreeSet@Base 1.8.1~pre2
+ token_SetsEquivalent@Base 1.8.1~pre2
+ token_addToken@Base 1.8.1~pre2
+ token_buildTokenJar@Base 1.8.1~pre2
+ token_extractRxkad@Base 1.8.1~pre2
+ token_findByType@Base 1.8.1~pre2
+ token_freeToken@Base 1.8.1~pre2
+ token_freeTokenContents@Base 1.8.1~pre2
+ token_replaceToken@Base 1.8.1~pre2
+ token_setPag@Base 1.8.1~pre2
+ token_setRxkadViceId@Base 1.8.1~pre2
  ubik_Call@Base 1.8.0~pre1
  ubik_CallIter@Base 1.8.0~pre1
  ubik_Call_New@Base 1.8.0~pre1
  ubik_ClientDestroy@Base 1.8.0~pre1
  ubik_ClientInit@Base 1.8.0~pre1
+ ubik_PR_AddToGroup@Base 1.8.1~pre2
+ ubik_PR_ChangeEntry@Base 1.8.1~pre2
+ ubik_PR_Delete@Base 1.8.1~pre2
+ ubik_PR_DumpEntry@Base 1.8.1~pre2
+ ubik_PR_GetCPS2@Base 1.8.1~pre2
+ ubik_PR_GetCPS@Base 1.8.1~pre2
+ ubik_PR_GetHostCPS@Base 1.8.1~pre2
+ ubik_PR_IDToName@Base 1.8.1~pre2
+ ubik_PR_INewEntry@Base 1.8.1~pre2
+ ubik_PR_IsAMemberOf@Base 1.8.1~pre2
+ ubik_PR_ListElements@Base 1.8.1~pre2
+ ubik_PR_ListEntries@Base 1.8.1~pre2
+ ubik_PR_ListEntry@Base 1.8.1~pre2
+ ubik_PR_ListMax@Base 1.8.1~pre2
+ ubik_PR_ListOwned@Base 1.8.1~pre2
+ ubik_PR_ListSuperGroups@Base 1.8.1~pre2
+ ubik_PR_NameToID@Base 1.8.1~pre2
+ ubik_PR_NewEntry@Base 1.8.1~pre2
+ ubik_PR_RemoveFromGroup@Base 1.8.1~pre2
+ ubik_PR_SetFieldsEntry@Base 1.8.1~pre2
+ ubik_PR_SetMax@Base 1.8.1~pre2
+ ubik_PR_UpdateEntry@Base 1.8.1~pre2
+ ubik_PR_WhereIsIt@Base 1.8.1~pre2
  ubik_ParseClientList@Base 1.8.0~pre1
+ ugen_ClientInit@Base 1.8.1~pre2
+ ugen_ClientInitCell@Base 1.8.1~pre2
+ ugen_ClientInitFlags@Base 1.8.1~pre2
+ ugen_ClientInitServer@Base 1.8.1~pre2
+ xdr_idlist@Base 1.8.1~pre2
+ xdr_namelist@Base 1.8.1~pre2
+ xdr_prlist@Base 1.8.1~pre2
