@@ -1,6 +1,17 @@
 openafs (1.8.1~pre2-1) UNRELEASED; urgency=medium
 
-  * New upstream prerelease.
+  * New upstream prerelease:
+    - Add support for arm64
+    - Improve usability of the shared libraries and public API
+    - Fix volume callbacks so clients see updates after volume releases
+    - Fix Rx connection refcount error that could lead to server crashes
+    - Fix panic when cahe bypass is enabled
+    - Use valid serial number for Rx aborts if possible (and 0 otherwise)
+    - Return valid InlineBulkStatus responses in error cases
+    - The fileserver rejects invalid partition names when attaching partitions
+    - Improve cache manager behavior when unable to open cache files (e.g.,
+      if the cache partition is remounted readonly)
+    - Improve some error messages
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 01 Jul 2018 14:39:03 -0500
 
