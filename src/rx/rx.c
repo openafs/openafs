@@ -3165,10 +3165,15 @@ static_inline int
 rxi_AbortIfServerBusy(osi_socket socket, struct rx_connection *conn,
 		      struct rx_packet *np)
 {
+    afs_uint32 serial;
+
     if ((rx_BusyThreshold > 0) &&
 	(rx_atomic_read(&rx_nWaiting) > rx_BusyThreshold)) {
+	MUTEX_ENTER(&conn->conn_data_lock);
+	serial = ++conn->serial;
+	MUTEX_EXIT(&conn->conn_data_lock);
 	rxi_SendRawAbort(socket, conn->peer->host, conn->peer->port,
-			 rx_BusyError, np, 0);
+			 serial, rx_BusyError, np, 0);
 	if (rx_stats_active)
 	    rx_atomic_inc(&rx_stats.nBusies);
 	return 1;
@@ -3420,7 +3425,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
        don't abort an abort. */
     if (!conn) {
         if (unknownService && (np->header.type != RX_PACKET_TYPE_ABORT))
-            rxi_SendRawAbort(socket, host, port, RX_INVALID_OPERATION,
+	    rxi_SendRawAbort(socket, host, port, 0, RX_INVALID_OPERATION,
                              np, 0);
         return np;
     }
@@ -6697,27 +6702,30 @@ rxi_SendDelayedCallAbort(struct rxevent *event, void *arg1, void *dummy,
  *
  * This routine is both an event handler and a function called directly;
  * when called directly the passed |event| is NULL and the
- * conn->conn->data>lock must must not be held.
+ * conn->conn->data>lock must must not be held.  Also, when called as an
+ * an event handler, we must putConnection before we exit; but when called
+ * directly (the first challenge), we must NOT putConnection.
  */
 static void
 rxi_ChallengeEvent(struct rxevent *event,
 		   void *arg0, void *arg1, int tries)
 {
     struct rx_connection *conn = arg0;
+    int event_raised = 0;	/* assume we were called directly */
 
     MUTEX_ENTER(&conn->conn_data_lock);
-    if (event != NULL && event == conn->challengeEvent)
+    if (event != NULL && event == conn->challengeEvent) {
+	event_raised = 1;	/* called as an event */
 	rxevent_Put(&conn->challengeEvent);
+    }
     MUTEX_EXIT(&conn->conn_data_lock);
 
     /* If there are no active calls it is not worth re-issuing the
      * challenge.  If the client issues another call on this connection
      * the challenge can be requested at that time.
      */
-    if (!rxi_HasActiveCalls(conn)) {
-	putConnection(conn);
-        return;
-    }
+    if (!rxi_HasActiveCalls(conn))
+	goto done;
 
     if (RXS_CheckAuthentication(conn->securityObject, conn) != 0) {
 	struct rx_packet *packet;
@@ -6743,8 +6751,7 @@ rxi_ChallengeEvent(struct rxevent *event,
 		}
 	    }
 	    MUTEX_EXIT(&conn->conn_call_lock);
-	    putConnection(conn);
-	    return;
+	    goto done;
 	}
 
 	packet = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
@@ -6769,7 +6776,9 @@ rxi_ChallengeEvent(struct rxevent *event,
 	}
 	MUTEX_EXIT(&conn->conn_data_lock);
     }
-    putConnection(conn);
+ done:
+    if (event_raised)
+	putConnection(conn);
 }
 
 /* Call this routine to start requesting the client to authenticate

@@ -12,14 +12,10 @@
 # Determine presence of rpmbuild command line --define arguments and set
 # defaults if not present.
 #
-%define kernvers_on_cmdline %{?kernvers:1}%{!?kernvers:0}
 %define build_userspace_on_cmdline %{?build_userspace:1}%{!?build_userspace:0}
 %define build_modules_on_cmdline %{?build_modules:1}%{!?build_modules:0}
 %define debugspec_on_cmdline %{?debugspec:1}%{!?debugspec:0}
 
-%if !%{kernvers_on_cmdline}
-%define kernvers %(uname -r)
-%endif
 %if !%{build_userspace_on_cmdline}
 %define build_userspace 1
 %endif
@@ -106,7 +102,7 @@ BuildRequires: krb5-devel
 BuildRequires: kernel-devel
 %endif
 
-ExclusiveArch: %{ix86} x86_64 ia64 s390 s390x sparc64 ppc ppc64
+ExclusiveArch: %{ix86} x86_64 ia64 s390 s390x sparc64 ppc ppc64 aarch64
 
 #    http://dl.openafs.org/dl/openafs/candidate/%{afsvers}/...
 Source0: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-src.tar.bz2
@@ -118,7 +114,6 @@ Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
 Source20: https://www.central.org/dl/cellservdb/CellServDB.2017-03-14
 
-Source30: openafs-kernel-version.sh
 Source996: openafs-kvers-is.sh
 Source997: openafs-buildfedora.pl
 Source998: openafs-buildall.sh
@@ -403,17 +398,6 @@ krb4 lookalike services.
 ##############################################################################
 %if %{build_modules}
 
-# Make debuginfo for the kernel components into their own package
-# so we can upgrade kernel and userspace seperately and still debug each
-%package -n %{name}-kernel-debuginfo
-Summary: Debug information for %{name} kernel modules
-Group: Development/Debug
-AutoReqProv: no
-%description -n %{name}-kernel-debuginfo
-This package provides debug information for %{name} kernel modules.
-
-%{expand:%%global _find_debuginfo_opts %{?_find_debuginfo_opts} -p '.*openafs.ko(\.debug)?' -o kmod-debuginfo.list}
-
 %{expand:%(%{kmodtool} rpmtemplate %{kmod_name} %{kverrel} %{depmod} %{kvariants} 2>/dev/null)}
 
 %endif
@@ -428,7 +412,7 @@ This package provides debug information for %{name} kernel modules.
 
 : @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 : @@@
-: @@@ kernel version:     %{kernvers}
+: @@@ kernel version:     %{kverrel}
 : @@@ kernel variations:  %{kvariants}
 : @@@ PAM modules dir:    %{pamdir}
 : @@@ build userspace:    %{build_userspace}
@@ -452,6 +436,7 @@ case %{_arch} in
        x86_64)                         sysname=amd64_linux26        ;;
        alpha*)                         sysname=alpha_linux_26       ;;
        i386|i486|i586|i686|athlon)     sysname=i386_linux26         ;;
+       aarch64)                        sysname=arm64_linux26        ;;
        *)                              sysname=%{_arch}_linux26     ;;
 esac
 
@@ -1464,11 +1449,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/asetkey.8.gz
 %endif
 %endif  # build_userspace
-
-%if %{build_modules}
-%files -f kmod-debuginfo.list -n %{name}-kernel-debuginfo
-%defattr(-,root,root)
-%endif
 
 ##############################################################################
 ###

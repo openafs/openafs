@@ -25,10 +25,8 @@ afs_uuid_equal
 afs_uuid_hash
 afs_uuid_is_nil
 flipbase64_to_int64
-getDirPath
-getDirPath
+afs_getDirPath
 gettmpdir
-grmutex
 grmutex
 hostutil_GetHostByName
 hostutil_GetNameByINet
@@ -36,8 +34,6 @@ initAFSDirPath
 int64_to_flipbase64
 ktime_DateToInt32
 pthread_recursive_mutex_lock
-pthread_recursive_mutex_lock
-pthread_recursive_mutex_unlock
 pthread_recursive_mutex_unlock
 util_GetHumanInt32
 util_GetInt32

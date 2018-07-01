@@ -509,5 +509,5 @@ findRowIndex(struct util_Table* Table, struct util_TableRow *aRow){
                 return lower;
         }
     }  while(1);
-    return 0;
+    AFS_UNREACHED(return(0));
 }

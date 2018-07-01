@@ -113,7 +113,7 @@ FiveMinuteCheckLWP(void *unused)
 	/* close the log so it can be removed */
 	ReOpenLog();	/* no trunc, just append */
     }
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 

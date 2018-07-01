@@ -836,7 +836,7 @@ static_inline void panic(const char *format, ...)
     vfprintf(stderr, format, ap);
     va_end(ap);
     assert(0);
-};
+}
 #define abort()			assert(0)
 #define usr_assert(A)		assert(A)
 

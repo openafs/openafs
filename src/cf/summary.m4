@@ -75,10 +75,10 @@ options:
   install kauth          : ${INSTALL_KAUTH}
   ubik read while write  : ${enable_ubik_read_while_write}
 build:
+  kernel module          : ${enable_kernel_module}
   scout/afsmonitor       : ${summary_build_scout}
   pam                    : ${HAVE_PAM}
   login                  : ${BUILD_LOGIN}
-  uss                    : ${BUILD_USS}
 doc generation:
   docbook stylesheets    : ${summary_docbook_stylesheets}
   doxygen                : ${summary_doxygen}

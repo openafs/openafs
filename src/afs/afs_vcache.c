@@ -101,7 +101,7 @@ int VCHash(struct VenusFid *fid)
 /* Hash only on volume to speed up volume callbacks. */
 int VCHashV(struct VenusFid *fid)
 {
-    return opr_jhash_int(fid->Fid.Vnode, 0) & opr_jhash_mask(VCSIZEBITS);
+    return opr_jhash_int(fid->Fid.Volume, 0) & opr_jhash_mask(VCSIZEBITS);
 }
 
 /*!
@@ -3252,7 +3252,8 @@ afs_StaleVCacheFlags(struct vcache *avc, afs_stalevc_flags_t flags,
     }
 
     if (do_dnlc) {
-	if ((avc->f.fid.Fid.Vnode & 1) || vType(avc) == VDIR ||
+	if ((avc->f.fid.Fid.Vnode & 1) ||
+	    AFSTOV(avc) == NULL || vType(avc) == VDIR ||
 	    (avc->f.states & CForeign)) {
 	    /* This vcache is (or could be) a directory. */
 	    osi_dnlc_purgedp(avc);

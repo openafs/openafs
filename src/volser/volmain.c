@@ -156,7 +156,7 @@ BKGLoop(void *unused)
 	}
     }
 
-    return NULL;
+    AFS_UNREACHED(return(NULL));
 }
 
 #if defined(AFS_NT40_ENV) || defined(AFS_DARWIN160_ENV)
@@ -172,6 +172,13 @@ volser_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 	err = code;
     }
     return err;
+}
+#elif !defined(AFS_SYSCALL)
+int
+volser_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
+{
+    errno = ENOSYS;
+    return -1;
 }
 #else
 int

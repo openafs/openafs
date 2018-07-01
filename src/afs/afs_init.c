@@ -330,6 +330,7 @@ afs_InitVolumeInfo(char *afile)
     if (code)
 	return code;
     tfile = afs_CFileOpen(&volumeInode);
+    osi_Assert(tfile);
     afs_CFileTruncate(tfile, 0);
     afs_CFileClose(tfile);
     return 0;
@@ -692,7 +693,7 @@ void
 shutdown_cache(void)
 {
     AFS_STATCNT(shutdown_cache);
-    afs_WriteThroughDSlots();
+    osi_Assert(afs_WriteThroughDSlots() == 0);
     if (1/*afs_cold_shutdown*/) {
 	afs_cacheinit_flag = 0;
 	shutdown_dcache();

@@ -38,7 +38,7 @@ A  Configuring
          amd64_fbsd_93, amd64_fbsd_100, amd64_fbsd_101
       amd64_linux26
       amd64_nbsd20, amd64_nbsd30, amd64_nbsd40
-      arm_linux26
+      arm_linux26, arm64_linux26
       hp_ux11i, hp_ux110, hp_ux1123 (See notes below for information on
          getting missing header)
       hp_ux102 (Client port possible, but db servers and utilities work)

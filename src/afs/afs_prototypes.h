@@ -275,7 +275,7 @@ extern void afs_TryToSmush(struct vcache *avc,
 			   afs_ucred_t *acred, int sync);
 extern void updateV2DC(int lockVc, struct vcache *v, struct dcache *d,
 		       int src);
-extern void afs_WriteThroughDSlots(void);
+extern int afs_WriteThroughDSlots(void);
 extern struct dcache *afs_UFSGetDSlot(afs_int32 aslot, dslot_state type);
 extern int afs_WriteDCache(struct dcache *adc, int atime);
 extern int afs_wakeup(struct vcache *avc);
@@ -625,12 +625,6 @@ extern int osi_VMDirty_p(struct vcache *avc);
 extern void osi_ReleaseVM(struct vcache *avc, afs_ucred_t *acred);
 #endif
 
-
-/* LINUX/osi_fetchstore.c */
-#ifdef AFS_LINUX26_ENV
-extern int afs_linux_storeproc(struct storeOps *, void *, struct dcache *,
-			       int *, afs_size_t *);
-#endif
 
 /* ARCH/osi_crypto.c */
 extern int osi_readRandom(void *, afs_size_t);

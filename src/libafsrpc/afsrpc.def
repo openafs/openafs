@@ -343,6 +343,10 @@ EXPORTS
 	rxkad_NewKrb5ServerSecurityObject       @348
 	tkt_MakeTicket5                         @349
 	tkt_DeriveDesKey                        @350
+;	opr_AssertFailU                         @351
+;	opr_AssertionFailed                     @352
+;	xdr_Capabilities                        @353
+	xdr_rpcStats                            @354
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

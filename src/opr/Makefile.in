@@ -84,15 +84,21 @@ clean:
 	$(LT_CLEAN)
 	rm -f libopr.a *.o
 
-install: libopr.a
+install: libopr.a ${srcdir}/opr.h ${srcdir}/opr_lock.h
 	$(INSTALL_DATA) libopr.a $(DESTDIR)$(libdir)/libopr.a
 	$(INSTALL) -d $(DESTDIR)$(includedir)/opr
 	$(INSTALL_DATA) ${srcdir}/queue.h $(DESTDIR)$(includedir)/opr/queue.h
+	$(INSTALL_DATA) ${srcdir}/opr_lock.h $(DESTDIR)$(includedir)/opr/lock.h
+	$(INSTALL) -d $(DESTDIR)$(includedir)/afs
+	$(INSTALL_DATA) ${srcdir}/opr.h $(DESTDIR)$(includedir)/afs/opr.h
 
-dest: libopr.a
+dest: libopr.a ${srcdir}/opr.h ${srcdir}/opr_lock.h
 	$(INSTALL_DATA) libopr.a $(DEST)/lib/libopr.a
 	$(INSTALL) -d $(DEST)/include/opr
 	$(INSTALL_DATA) ${srcdir}/queue.h $(DEST)/include/opr/queue.h
+	$(INSTALL_DATA) ${srcdir}/opr_lock.h $(DEST)/include/opr/lock.h
+	$(INSTALL) -d $(DEST)/include/afs
+	$(INSTALL_DATA) ${srcdir}/opr.h $(DEST)/include/afs/opr.h
 
 buildtools: $(HEADERS) $(TOP_LIBDIR)/libopr.a
 

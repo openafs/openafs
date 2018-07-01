@@ -241,6 +241,9 @@ else
                 arm*-linux*)
                         AFS_SYSNAME="arm_linuxXX"
                         ;;
+                aarch64*-linux*)
+                        AFS_SYSNAME="arm64_linuxXX"
+                        ;;
                 parisc-*-linux-gnu|hppa-*-linux-gnu)
                         AFS_SYSNAME="parisc_linuxXX"
                         enable_pam="no"
