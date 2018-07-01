@@ -12,7 +12,7 @@ to link against a more modern libroken, and must use the new names.
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/auth/userok.c b/src/auth/userok.c
-index fdb3038..caa9ab6 100644
+index 8a7d4a4..b54d106 100644
 --- a/src/auth/userok.c
 +++ b/src/auth/userok.c
 @@ -470,7 +470,7 @@ ParseLine(char *buffer, struct rx_identity *user)
@@ -24,7 +24,7 @@ index fdb3038..caa9ab6 100644
  	if (len<0) {
  	    free(decodedName);
  	    return EINVAL;
-@@ -568,7 +568,7 @@ afsconf_AddIdentity(struct afsconf_dir *adir, struct rx_identity *user)
+@@ -571,7 +571,7 @@ afsconf_AddIdentity(struct afsconf_dir *adir, struct rx_identity *user)
      if (user->kind == RX_ID_KRB4) {
  	fprintf(tf, "%s\n", user->displayName);
      } else {
