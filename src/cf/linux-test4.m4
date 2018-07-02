@@ -197,7 +197,17 @@ AC_DEFUN([LINUX_INODE_SETATTR_RETURN_TYPE], [
 		       [])
 ])
 
-
+AC_DEFUN([LINUX_IATTR_64BIT_TIME], [
+  AC_CHECK_LINUX_BUILD([whether struct iattr->ia_ctime takes struct timespec64 or 32-bit struct timespec],
+                       [ac_cv_linux_func_iattr_ctime_takes_timespec64],
+                       [#include <linux/fs.h>
+                        #include <linux/timekeeping.h>],
+                       [struct iattr _attrs;
+                        _attrs.ia_ctime = current_kernel_time64();],
+                       [IATTR_TAKES_64BIT_TIME],
+                       [define if struct iattr->ia_ctime takes struct timespec64],
+                       [])
+])
 
 AC_DEFUN([LINUX_AOP_WRITEBACK_CONTROL], [
   AC_CHECK_LINUX_BUILD([whether aop.writepage takes a writeback_control],
