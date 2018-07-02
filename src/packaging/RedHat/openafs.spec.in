@@ -1331,6 +1331,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_includedir}/timer.h
 %{_includedir}/ubik.h
 %{_includedir}/ubik_int.h
+%{_includedir}/opr/lock.h
 %{_includedir}/opr/queue.h
 %{_libdir}/afs
 %{_libdir}/libafshcrypto.a
