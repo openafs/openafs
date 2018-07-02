@@ -591,6 +591,8 @@ export KRB5_CONFIG
        --with-linux-kernel-packaging \
 %if %{build_modules}
        --with-linux-kernel-headers=${ksrc} \
+%else
+       --disable-kernel-module \
 %endif
 %if %{krb5support}
 	--with-krb5 \
