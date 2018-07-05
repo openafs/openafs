@@ -3082,6 +3082,10 @@ afs_linux_write_begin(struct file *file, struct address_space *mapping,
     int code;
 
     page = grab_cache_page_write_begin(mapping, index, flags);
+    if (!page) {
+        return -ENOMEM;
+    }
+
     *pagep = page;
 
     code = afs_linux_prepare_write(file, page, from, from + len);
