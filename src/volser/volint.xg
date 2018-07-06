@@ -65,6 +65,7 @@ statindex 16
 %#define     VOLDUMPV2_OMITDIRS 1
 
 const SIZE = 1024;
+const NMAXNSERVERS = 13;
 
 struct volser_status {
 	afs_uint32 volID;		/* Volume id--unique over all systems */
@@ -247,7 +248,7 @@ struct volintSize {
     afs_uint64 dump_size;
 };
 
-typedef  replica manyDests<>;
+typedef  replica manyDests<NMAXNSERVERS>;
 typedef  afs_int32 manyResults<>;
 typedef  transDebugInfo transDebugEntries<>;
 typedef  volintInfo volEntries<>;
