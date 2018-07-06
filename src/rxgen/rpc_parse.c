@@ -411,6 +411,9 @@ get_declaration(declaration * dec, defkind dkind)
 	}
 	dec->rel = REL_ARRAY;
 	if (peekscan(TOK_RANGLE, &tok)) {
+	    if ((dkind == DEF_INPARAM) || (dkind == DEF_INOUTPARAM)) {
+		error("input arrays must specify a max size");
+	    }
 	    dec->array_max = "~0u";	/* unspecified size, use max */
 	} else {
 	    scan_num(&tok);
@@ -953,7 +956,7 @@ hdle_param_tok(definition * defp, declaration * dec, token * tokp,
     Proc_list->component_kind = DEF_PARAM;
     Proc_list->code = alloc(250);
     Proc_list->scode = alloc(250);
-    get_declaration(dec, DEF_PARAM);
+    get_declaration(dec, par_kind);
     Proc_list->pl.param_name = dec->name;
     get1_param_type(defp, dec, &Proc_list->pl.param_type);
     print_param(dec);
