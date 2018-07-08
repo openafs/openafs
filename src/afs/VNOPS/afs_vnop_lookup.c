@@ -695,6 +695,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     struct VenusFid dotdot = {0, {0, 0, 0}};
     int flagIndex = 0;		/* First file with bulk fetch flag set */
     struct rx_connection *rxconn;
+    int attempt_i;
     XSTATS_DECLS;
     dotdot.Cell = 0;
     dotdot.Fid.Unique = 0;
@@ -788,7 +789,18 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     /* now we have dir data in the cache, so scan the dir page */
     fidIndex = 0;
     flagIndex = 0;
-    while (1) {			/* Should probably have some constant bound */
+
+    /*
+     * Only examine at most the next 'nentries*4' entries to find dir entries
+     * to stat. This is an arbitrary limit that we set so we don't waste time
+     * scanning an entire dir that contains stat'd entries. For example, if a
+     * dir contains 10k entries, and all or almost all of them are stat'd, then
+     * we'll examine 10k entries for no benefit. For each entry, we run
+     * afs_FindVCache, and grab and release afs_xvcache; doing this e.g. 10k
+     * times can have significant impact if the client is under a lot of load.
+     */
+    for (attempt_i = 0; attempt_i < nentries * 4; attempt_i++) {
+
 	/* look for first safe entry to examine in the directory.  BlobScan
 	 * looks for a the 1st allocated dir after the dirCookie slot.
 	 */
@@ -924,7 +936,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	if (temp <= 0)
 	    break;
 	dirCookie += temp;
-    }				/* while loop over all dir entries */
+    }				/* for loop over dir entries */
 
     /* now release the dir lock and prepare to make the bulk RPC */
     ReleaseReadLock(&dcp->lock);
