@@ -109,6 +109,8 @@ extern enum afs_shutdown_state afs_shuttingdown;
 
 #define AFS_MAXCBRSCALL	32	/* max to return in a given call (must be <= AFSCBMAX) */
 #define	VCACHE_FREE	5
+#define VCACHE_DYNAMIC_STRESSED 10000
+#define VCACHE_STRESS_LOGINTERVAL (60*60*4) /* 4 hours */
 #define	AFS_NRXPACKETS	80
 #define	AFS_RXDEADTIME	50
 #define AFS_HARDDEADTIME	120
