@@ -1321,12 +1321,43 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     return code;
 }
 
-/* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
 #ifdef AFS_DARWIN80_ENV
 int AFSDOBULK = 0;
-#else
-static int AFSDOBULK = 1;
 #endif
+
+static int
+afs_ShouldTryBulkStat(struct vcache *adp)
+{
+#ifdef AFS_DARWIN80_ENV
+    if (!AFSDOBULK) {
+	return 0;
+    }
+#endif
+    if (AFS_IS_DISCONNECTED) {
+	/* We can't prefetch entries if we're offline. */
+	return 0;
+    }
+    if (adp->opens < 1) {
+	/* Don't bother prefetching entries if nobody is holding the dir open
+	 * while we're doing a lookup. */
+	return 0;
+    }
+    if ((adp->f.states & CForeign)) {
+	/* Don't bulkstat for dfs xlator dirs. */
+	return 0;
+    }
+    if (afs_IsDynroot(adp)) {
+	/* Don't prefetch dynroot entries; that's pointless, since we generate
+	 * those locally. */
+	return 0;
+    }
+    if (afs_InReadDir(adp)) {
+	/* Don't bulkstat if we're in the middle of servicing a readdir() in
+	 * the same process. */
+	return 0;
+    }
+    return 1;
+}
 
 static_inline int
 osi_lookup_isdot(const char *aname)
@@ -1731,9 +1762,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	/* prefetch some entries, if the dir is currently open.  The variable
 	 * dirCookie tells us where to start prefetching from.
 	 */
-	if (!AFS_IS_DISCONNECTED && 
-	    AFSDOBULK && adp->opens > 0 && !(adp->f.states & CForeign)
-	    && !afs_IsDynroot(adp) && !afs_InReadDir(adp)) {
+	if (afs_ShouldTryBulkStat(adp)) {
 	    afs_int32 retry;
 	    /* if the entry is not in the cache, or is in the cache,
 	     * but hasn't been statd, then do a bulk stat operation.
