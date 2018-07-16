@@ -1357,6 +1357,11 @@ afs_ShouldTryBulkStat(struct vcache *adp)
 	 * while we're doing a lookup. */
 	return 0;
     }
+    if (afs_VCacheStressed()) {
+	/* If we already have too many vcaches, don't create more vcaches we
+	 * may not even use. */
+	return 0;
+    }
     if ((adp->f.states & CForeign)) {
 	/* Don't bulkstat for dfs xlator dirs. */
 	return 0;
