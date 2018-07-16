@@ -746,6 +746,56 @@ afs_PostPopulateVCache(struct vcache *avc, struct VenusFid *afid, int seq)
     afs_osi_Wakeup(&avc->f.states);
 }
 
+/*
+ * afs_VCacheStressed() is intended to determine if the stat cache looks
+ * stressed / full-ish. Due to the different strategies of allocating vcaches
+ * on different platforms, the definition of "stressed" varies, and is somewhat
+ * arbitrary. We just try to make a reasonable guess here.
+ *
+ * Returns 1 if the stat cache looks stressed, and 0 otherwise.
+ */
+#ifdef AFS_LINUX26_ENV
+int
+afs_VCacheStressed(void)
+{
+    if (afsd_dynamic_vcaches) {
+	/*
+	 * For dynamic vcaches, the number of vcaches in use can vary wildly.
+	 * Consider us stressed if we're significantly above the configured
+	 * threshold. VCACHE_DYNAMIC_STRESSED is the arbitrary point at which
+	 * we're considered "significantly" over the threshold.
+	 */
+	if (afs_vcount > afs_cacheStats + VCACHE_DYNAMIC_STRESSED) {
+	    return 1;
+	}
+	return 0;
+
+    } else {
+	/*
+	 * For non-dynamic vcaches, we should never go above the configured
+	 * limit, and ShakeLooseVCaches should try to get us to VCACHE_FREE
+	 * under the limit. So if we're closer then VCACHE_FREE/2, then we're
+	 * very close to the limit, so consider us stressed.
+	 */
+	if (afs_vcount > afs_cacheStats || afs_cacheStats - afs_vcount < VCACHE_FREE/2) {
+	    return 1;
+	}
+	return 0;
+    }
+}
+#else /* AFS_LINUX26_ENV */
+int
+afs_VCacheStressed(void)
+{
+    /* If we don't have any vcaches in the free list, then consider the stat
+     * cache stressed. */
+    if (freeVCList != NULL) {
+	return 0;
+    }
+    return 1;
+}
+#endif /* AFS_LINUX26_ENV */
+
 int
 afs_ShakeLooseVCaches(afs_int32 anumber)
 {
@@ -755,7 +805,6 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
     struct afs_q *tq, *uq;
     int fv_slept, defersleep = 0;
     int limit;
-    afs_int32 target = anumber;
 
     loop = 0;
 
@@ -805,9 +854,27 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
 	    break;
 	}
     }
-    if (!afsd_dynamic_vcaches && anumber == target) {
-	afs_warn("afs_ShakeLooseVCaches: warning none freed, using %d of %d\n",
-	       afs_vcount, afs_maxvcount);
+
+    if (afs_VCacheStressed()) {
+	/*
+	 * If it looks like we have too many vcaches, right after
+	 * ShakeLooseVCaches has tried to trim down the number of vcaches, then
+	 * maybe -stat should be increased. Log a warning, so if this is
+	 * causing problems the user has a chance at noticing.
+	 */
+	static afs_uint32 last_warned;
+	afs_uint32 now = osi_Time();
+
+	/* Warn about this at most once every VCACHE_STRESS_LOGINTERVAL secs */
+	if (now - last_warned > VCACHE_STRESS_LOGINTERVAL) {
+	    last_warned = now;
+	    afs_warn("afs: Warning: We are having trouble keeping the AFS stat "
+		     "cache trimmed down under the configured limit (current "
+		     "-stat setting: %d, current vcache usage: %d).\n",
+		     afs_cacheStats, afs_vcount);
+	    afs_warn("afs: If AFS access seems slow, consider raising the "
+		     "-stat setting for afsd.\n");
+	}
     }
 
     return 0;
