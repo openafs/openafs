@@ -40,7 +40,7 @@ extern struct dentry_operations afs_dentry_operations;
 
 /* Forward declarations */
 static int afs_root(struct super_block *afsp);
-int afs_fill_super(struct super_block *sb, void *data, int silent);
+static int afs_fill_super(struct super_block *sb, void *data, int silent);
 
 
 /*
@@ -52,19 +52,22 @@ int afs_fill_super(struct super_block *sb, void *data, int silent);
 #if defined(STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT)
 static struct dentry *
 afs_mount(struct file_system_type *fs_type, int flags,
-           const char *dev_name, void *data) {
+	  const char *dev_name, void *data)
+{
     return mount_nodev(fs_type, flags, data, afs_fill_super);
 }
 #elif defined(GET_SB_HAS_STRUCT_VFSMOUNT)
 static int
 afs_get_sb(struct file_system_type *fs_type, int flags,
-	   const char *dev_name, void *data, struct vfsmount *mnt) {
+	   const char *dev_name, void *data, struct vfsmount *mnt)
+{
     return get_sb_nodev(fs_type, flags, data, afs_fill_super, mnt);
 }
 #else
 static struct super_block *
 afs_get_sb(struct file_system_type *fs_type, int flags,
-	   const char *dev_name, void *data) {
+	   const char *dev_name, void *data)
+{
     return get_sb_nodev(fs_type, flags, data, afs_fill_super);
 }
 #endif
@@ -83,7 +86,7 @@ struct file_system_type afs_fs_type = {
 
 struct backing_dev_info *afs_backing_dev_info;
 
-int
+static int
 afs_fill_super(struct super_block *sb, void *data, int silent)
 {
     int code = 0;
@@ -372,7 +375,7 @@ afs_put_super(struct super_block *sbp)
  * statp is in user space, so we need to cobble together a statfs, then
  * copy it.
  */
-int
+static int
 #if defined(STATFS_TAKES_DENTRY)
 afs_statfs(struct dentry *dentry, struct kstatfs *statp)
 #else
