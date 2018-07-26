@@ -802,7 +802,7 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man5/AuthLog.5
 rm -f $RPM_BUILD_ROOT%{_mandir}/man5/AuthLog.dir.5
 %endif
 %if !(0%{?fedora} >= 15 || 0%{?rhel} >= 6)
-rm -f %{_mandir}/man3/AFS::ukernel.3
+rm -f $RPM_BUILD_ROOT%{_mandir}/man3/AFS::ukernel.3
 %endif
 
 #-----------------------------------------------------------------------------
