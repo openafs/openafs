@@ -19,9 +19,6 @@
 #include <afs/afsint.h>
 
 #if !defined(AFS_SGI_ENV)
-#ifdef	AFS_OSF_ENV
-#include <ufs/fs.h>
-#else /* AFS_OSF_ENV */
 #ifdef AFS_VFSINCL_ENV
 #define VFS
 #ifdef	AFS_SUN5_ENV
@@ -39,7 +36,6 @@
 #include <sys/fs.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */
-#endif /* AFS_OSF_ENV */
 #endif /* AFS_SGI_ENV */
 #include <sys/file.h>
 #ifdef	AFS_AIX_ENV

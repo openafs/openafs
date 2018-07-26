@@ -18,7 +18,7 @@
 
 #include "lwp.h"
 
-#if defined(AFS_OSF_ENV) || defined(AFS_S390_LINUX20_ENV)
+#if defined(AFS_S390_LINUX20_ENV)
 extern int PRE_Block;		/* used in lwp.c and process.s */
 #else
 extern char PRE_Block;		/* used in lwp.c and process.s */

@@ -118,9 +118,7 @@ int afs_tf_dest_tkt(void);
 static void ktc_LocalCell(void);
 #endif /* AFS_KERBEROS_ENV */
 
-#ifdef AFS_DUX40_ENV
-#define PIOCTL afs_pioctl
-#elif defined(UKERNEL)
+#if defined(UKERNEL)
 #define PIOCTL(A,B,C,D) (errno = (call_syscall(AFSCALL_PIOCTL,A,B,C,D)), errno?-1:0)
 #else
 #define PIOCTL pioctl

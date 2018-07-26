@@ -3400,7 +3400,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
 	addr.sin_len = sizeof(addr);
-#endif /* AFS_OSF_ENV */
+#endif
 	drop = (*rx_justReceived) (np, &addr);
 	/* drop packet if return value is non-zero */
 	if (drop)

@@ -45,9 +45,6 @@
 
 #ifndef AFS_NT40_ENV
 #if !defined(AFS_SGI_ENV)
-#ifdef	AFS_OSF_ENV
-#include <ufs/fs.h>
-#else /* AFS_OSF_ENV */
 #ifdef AFS_VFSINCL_ENV
 #define VFS
 #ifdef	AFS_SUN5_ENV
@@ -65,7 +62,6 @@
 #include <sys/fs.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */
-#endif /* AFS_OSF_ENV */
 #endif /* AFS_SGI_ENV */
 #endif /* !AFS_NT40_ENV */
 
@@ -141,10 +137,6 @@ static volatile sig_atomic_t vol_disallow_salvsync = 0;
  * has VShutdown_r been called / is VShutdown_r running?
  */
 static int vol_shutting_down = 0;
-
-#ifdef	AFS_OSF_ENV
-extern void *calloc(), *realloc();
-#endif
 
 /* Forward declarations */
 static Volume *attach2(Error * ec, VolumeId volumeId, char *path,
