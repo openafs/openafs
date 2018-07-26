@@ -31,7 +31,7 @@
 #  endif
 #  include "h/socket.h"
 #  if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
-#   if	!defined(AFS_OSF_ENV) && !defined(AFS_AIX41_ENV)
+#   if	!defined(AFS_AIX41_ENV)
 #    include "sys/mount.h"		/* it gets pulled in by something later anyway */
 #   endif
 #   include "h/mbuf.h"

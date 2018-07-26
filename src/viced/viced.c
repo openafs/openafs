@@ -865,7 +865,6 @@ ParseRights(char *arights)
  * AIX:         sysconf() limit is real
  * HP-UX:       sysconf() limit is real
  * IRIX:        sysconf() limit is apparently NOT real -- too small
- * DUX:         sysconf() limit is apparently NOT real -- too big
  * Linux:       sysconf() limit is apparently NOT real -- too big
  * Solaris:     no sysconf() limit
  */

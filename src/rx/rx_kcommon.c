@@ -589,7 +589,7 @@ rxi_Findcbi(afs_uint32 addr)
 
 #else /* AFS_USERSPACE_IP_ADDR */
 
-#if !defined(AFS_AIX41_ENV) && !defined(AFS_DUX40_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
+#if !defined(AFS_AIX41_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #define IFADDR2SA(f) (&((f)->ifa_addr))
 #else /* AFS_AIX41_ENV */
 #define IFADDR2SA(f) ((f)->ifa_addr)
@@ -936,11 +936,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 	goto bad;
     }
 #else /* defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) */
-#ifdef  AFS_OSF_ENV
-    nam = m_getclr(M_WAIT, MT_SONAME);
-#else /* AFS_OSF_ENV */
     nam = m_get(M_WAIT, MT_SONAME);
-#endif
     if (nam == NULL) {
 #if defined(KERNEL_HAVE_UERROR)
 	setuerror(ENOBUFS);

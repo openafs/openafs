@@ -72,8 +72,6 @@ AIX:  afs_aixops.c -> osi_vnodeops.c
       aix_vfs.h    -> osi_vfs.h
       misc.s       -> osi_assem.s
 
-DUX:  afs_vnodeops.c -> osi_vnodeops.c (DUX specific code)
-
 HPUX: afs_vnodeops.c -> osi_vnodeops.c (HPUX specific code)
       afs_hp_debug.c -> osi_debug.c
       hpux_proc_private.h -> osi_proc_private.h

@@ -25,10 +25,10 @@ MODULE_CFLAGS=${VFSCK_CFLAGS}
 
 SRCS= dir.c inode.c main.c pass1.c pass1b.c pass2.c pass3.c \
 	pass4.c pass5.c setup.c utilities.c ufs_subr.c \
-	ufs_tables.c dirutils.c vprintf.c proplist.c
+	ufs_tables.c dirutils.c vprintf.c
 
 OBJS= dir.o inode.o main.o pass1.o pass1b.o pass2.o pass3.o pass4.o \
-	pass5.o setup.o utilities.o dirutils.o vprintf.o proplist.o \
+	pass5.o setup.o utilities.o dirutils.o vprintf.o \
 	ufs_subr.o ufs_tables.o
 
 all: vfsck

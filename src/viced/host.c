@@ -677,11 +677,7 @@ h_Alloc_r(struct rx_connection *r_con)
     h_AddHostToAddrHashTable_r(host->z.host, host->z.port, host);
 
     if (consolePort == 0) {	/* find the portal number for console */
-#if	defined(AFS_OSF_ENV)
-	serverentry = getservbyname("ropcons", "");
-#else
 	serverentry = getservbyname("ropcons", 0);
-#endif
 	if (serverentry)
 	    consolePort = serverentry->s_port;
 	else

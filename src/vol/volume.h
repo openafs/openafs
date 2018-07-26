@@ -413,11 +413,7 @@ typedef struct VolumeDiskData {
 				 * this volume; it is bogus (left over from an aborted  volume move,
 				 * for example).  Note:  if this flag is on, then inService should
 				 * be OFF--only the salvager checks this flag */
-#ifdef ALPHA_DUX40_ENV
-#define DONT_SALVAGE	0xE6
-#else				/* ALPHA_DUX40_ENV */
 #define DONT_SALVAGE	0xE5
-#endif				/* ALPHA_DUX40_ENV */
     byte dontSalvage;		/* If this is on, then don't bother salvaging this volume */
     byte reserveb3;
 

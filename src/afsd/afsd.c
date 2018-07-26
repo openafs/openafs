@@ -1133,12 +1133,6 @@ doSweepAFSCache(int *vFilesFound,
 	    SetNoBackupAttr(fullpn_CellInfoFile);
 	} else if ((strcmp(currp->d_name, ".") == 0)
 		   || (strcmp(currp->d_name, "..") == 0) ||
-#ifdef AFS_DECOSF_ENV
-		   /* these are magic AdvFS files */
-		   (strcmp(currp->d_name, ".tags") == 0)
-		   || (strcmp(currp->d_name, "quota.user") == 0)
-		   || (strcmp(currp->d_name, "quota.group") == 0) ||
-#endif
 #ifdef AFS_LINUX22_ENV
 		   /* this is the ext3 journal file */
 		   (strcmp(currp->d_name, ".journal") == 0) ||
