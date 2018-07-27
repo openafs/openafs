@@ -508,6 +508,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     fd = open(pbuffer, O_CREAT | O_RDWR | O_TRUNC, 0600);
     if (fd < 0) {
 	code = errno;
+	ViceLog(0, ("Open error=%d\n", code));
 	goto failed_locked;
     }
     code = lseek(fd, HDRSIZE, 0);
