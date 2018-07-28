@@ -1,5 +1,6 @@
-openafs (1.8.1~pre2-2) UNRELEASED; urgency=medium
+openafs (1.8.1-1) UNRELEASED; urgency=medium
 
+  * New upstream release.
   * Supply sysname generation for arm64 to get further in the build.
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 04 Jul 2018 12:04:30 -0500
