@@ -1,4 +1,4 @@
-openafs (1.8.1-1) UNRELEASED; urgency=medium
+openafs (1.8.1-1) unstable; urgency=medium
 
   * New upstream release.  In addition to changes in pre2:
     - Fix issue where `vldb_check -fix` would corrupt databases with multiple
@@ -7,7 +7,7 @@ openafs (1.8.1-1) UNRELEASED; urgency=medium
     - Improved error handling when page allocation fails
   * Supply sysname generation for arm64 to get further in the build.
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 04 Jul 2018 12:04:30 -0500
+ -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 29 Jul 2018 10:35:12 -0500
 
 openafs (1.8.1~pre2-1) unstable; urgency=medium
 
