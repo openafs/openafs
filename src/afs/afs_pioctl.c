@@ -3444,7 +3444,7 @@ DECL_PIOCTL(PSetCellStatus)
     return 0;
 }
 
-static void
+static int
 FlushVolumeData(struct VenusFid *afid, afs_ucred_t * acred)
 {
     afs_int32 i;
@@ -3455,6 +3455,7 @@ FlushVolumeData(struct VenusFid *afid, afs_ucred_t * acred)
     afs_int32 cell = 0;
     afs_int32 volume = 0;
     struct afs_q *tq, *uq;
+    int code = 0;
 #ifdef AFS_DARWIN80_ENV
     vnode_t vp;
 #endif
@@ -3523,7 +3524,8 @@ FlushVolumeData(struct VenusFid *afid, afs_ucred_t * acred)
 	    continue;		/* never had any data */
 	tdc = afs_GetValidDSlot(i);
 	if (!tdc) {
-	    continue;
+            code = EIO;
+            break;
 	}
 	if (tdc->refCount <= 1) {    /* too high, in use by running sys call */
 	    ReleaseReadLock(&tdc->tlock);
@@ -3564,6 +3566,7 @@ FlushVolumeData(struct VenusFid *afid, afs_ucred_t * acred)
     /* probably, a user is doing this, probably, because things are screwed up.
      * maybe it's the dnlc's fault? */
     osi_dnlc_purge();
+    return code;
 }
 
 /*!
@@ -3594,8 +3597,7 @@ DECL_PIOCTL(PFlushVolumeData)
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
-    FlushVolumeData(&avc->f.fid, *acred);
-    return 0;
+    return FlushVolumeData(&avc->f.fid, *acred);
 }
 
 /*!
@@ -3625,8 +3627,7 @@ DECL_PIOCTL(PFlushAllVolumeData)
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
-    FlushVolumeData(NULL, *acred);
-    return 0;
+    return FlushVolumeData(NULL, *acred);
 }
 
 /*!

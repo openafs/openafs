@@ -1133,7 +1133,7 @@ afs_GetDSlotFromList(afs_int32 *indexp)
 {
     struct dcache *tdc;
 
-    for ( ; *indexp != NULLIDX; indexp = &afs_dvnextTbl[*indexp]) {
+    if (*indexp != NULLIDX) {
 	tdc = afs_GetUnusedDSlot(*indexp);
 	if (tdc) {
 	    osi_Assert(tdc->refCount == 1);
@@ -1409,9 +1409,9 @@ afs_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 	    tdc = afs_GetValidDSlot(index);
 	    if (!tdc) {
 		/* afs_TryToSmush is best-effort; we may not actually discard
-		 * everything, so failure to discard a dcache due to an i/o
+		 * everything, so failure to discard dcaches due to an i/o
 		 * error is okay. */
-		continue;
+		break;
 	    }
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 		if (sync) {
@@ -1502,13 +1502,14 @@ afs_DCacheMissingChunks(struct vcache *avc)
         i = afs_dvnextTbl[index];
         if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
             tdc = afs_GetValidDSlot(index);
-	    if (tdc) {
-		if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
-		    totalChunks--;
-		}
-		ReleaseReadLock(&tdc->tlock);
-		afs_PutDCache(tdc);
-	    }
+            if (!tdc) {
+                break;
+            }
+            if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
+                totalChunks--;
+            }
+            ReleaseReadLock(&tdc->tlock);
+            afs_PutDCache(tdc);
         }
     }
     ReleaseWriteLock(&afs_xdcache);
@@ -1561,7 +1562,8 @@ afs_FindDCache(struct vcache *avc, afs_size_t abyte)
 		/* afs_FindDCache is best-effort; we may not find the given
 		 * file/offset, so if we cannot find the given dcache due to
 		 * i/o errors, that is okay. */
-		continue;
+                index = NULLIDX;
+		break;
 	    }
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid) && chunk == tdc->f.chunk) {
@@ -1908,12 +1910,13 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	    if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 		tdc = afs_GetValidDSlot(index);
 		if (!tdc) {
-		    /* we got an i/o error when trying to get the given dslot,
-		     * but do not bail out just yet; it is possible the dcache
-		     * we're looking for is elsewhere, so it doesn't matter if
-		     * we can't load this one. */
+                    /* we got an i/o error when trying to get the given dslot.
+                     * it's possible the dslot we're looking for is elsewhere,
+                     * but most likely the disk cache is currently unusable, so
+                     * all afs_GetValidDSlot calls will fail, so just bail out. */
 		    dslot_error = 1;
-		    continue;
+                    index = NULLIDX;
+		    break;
 		}
 		ReleaseReadLock(&tdc->tlock);
 		/*

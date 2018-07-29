@@ -63,7 +63,7 @@ void
 afs_osi_Free(void *x, size_t asize)
 {
     AFS_STATCNT(osi_Free);
-    if (x == &memZero)
+    if (x == &memZero || x == NULL)
 	return;			/* check for putting memZero back */
 
     AFS_STATS(afs_stats_cmperf.OutStandingAllocs--);

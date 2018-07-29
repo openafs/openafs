@@ -479,9 +479,13 @@ writeMH(afs_int32 addr, int block, struct extentaddr *mhblockP)
     if (verbose) {
 	quiet_println("Writing back MH block % at addr %u\n", block,  addr);
     }
+    mhblockP->ex_hdrflags = htonl(mhblockP->ex_hdrflags);
     if (block == 0) {
+	/*
+	 * These header fields are only used in the first mh block, so were
+	 * converted to host byte order only when the first mh block was read.
+	 */
 	mhblockP->ex_count = htonl(mhblockP->ex_count);
-	mhblockP->ex_hdrflags = htonl(mhblockP->ex_hdrflags);
 	for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
 	    mhblockP->ex_contaddrs[i] = htonl(mhblockP->ex_contaddrs[i]);
 	}

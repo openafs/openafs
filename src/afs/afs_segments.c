@@ -380,7 +380,7 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 			 * be updated so we don't be able to use that cached
 			 * chunk in the future. That's inefficient, but not
 			 * an error. */
-			continue;
+			break;
 		    }
 		    ReleaseReadLock(&tdc->tlock);
 

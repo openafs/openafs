@@ -591,6 +591,8 @@ export KRB5_CONFIG
        --with-linux-kernel-packaging \
 %if %{build_modules}
        --with-linux-kernel-headers=${ksrc} \
+%else
+       --disable-kernel-module \
 %endif
 %if %{krb5support}
 	--with-krb5 \
@@ -604,7 +606,7 @@ export KRB5_CONFIG
        || exit 1
 
 # Build the libafs tree
-make only_libafs_tree || exit 1
+make %{_smp_mflags} only_libafs_tree || exit 1
 
 %if %{krb5support}
 %if %{?krb5config:1}%{!?krb5config:0}
@@ -653,7 +655,7 @@ done
 
 %if %{build_userspace}
 # Build the user-space AFS stuff
-make all_nolibafs
+make %{_smp_mflags} all_nolibafs
 %endif
 
 %if %{build_modules}
@@ -661,10 +663,10 @@ for kvariant in %{kvariants}
 do
   if [ -n "${kvariant}" ] ; then
     pushd _kmod_build_$kvariant;
-    make all
+    make %{_smp_mflags} all
     popd
   else
-    make libafs
+    make %{_smp_mflags} libafs
   fi
 done
 %endif
@@ -691,7 +693,7 @@ export DONT_GPRINTIFY=1 # Do not modify initscripts.
 #-----------------------------------------------------------------------------
 # Install userspace files
 #-----------------------------------------------------------------------------
-make install_nolibafs DESTDIR="$RPM_BUILD_ROOT"
+make %{_smp_mflags} install_nolibafs DESTDIR="$RPM_BUILD_ROOT"
 
 # Set the executable bit on libraries in libdir, so rpmbuild knows to
 # create "Provides" entries in the package metadata for the libraries
@@ -800,7 +802,7 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man5/AuthLog.5
 rm -f $RPM_BUILD_ROOT%{_mandir}/man5/AuthLog.dir.5
 %endif
 %if !(0%{?fedora} >= 15 || 0%{?rhel} >= 6)
-rm -f %{_mandir}/man3/AFS::ukernel.3
+rm -f $RPM_BUILD_ROOT%{_mandir}/man3/AFS::ukernel.3
 %endif
 
 #-----------------------------------------------------------------------------
@@ -1331,6 +1333,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_includedir}/timer.h
 %{_includedir}/ubik.h
 %{_includedir}/ubik_int.h
+%{_includedir}/opr/lock.h
 %{_includedir}/opr/queue.h
 %{_libdir}/afs
 %{_libdir}/libafshcrypto.a
