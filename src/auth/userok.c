@@ -470,7 +470,7 @@ ParseLine(char *buffer, struct rx_identity *user)
 	if (decodedName == NULL)
 	    return ENOMEM;
 
-	len = rk_base64_decode(ename, decodedName);
+	len = base64_decode(ename, decodedName);
 	if (len<0) {
 	    free(decodedName);
 	    return EINVAL;
@@ -571,7 +571,7 @@ afsconf_AddIdentity(struct afsconf_dir *adir, struct rx_identity *user)
     if (user->kind == RX_ID_KRB4) {
 	fprintf(tf, "%s\n", user->displayName);
     } else {
-	rk_base64_encode(user->exportedName.val, user->exportedName.len,
+	base64_encode(user->exportedName.val, user->exportedName.len,
 		      &ename);
 	fprintf(tf, " %d %s %s\n", user->kind, ename, user->displayName);
 	free(ename);

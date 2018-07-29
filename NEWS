@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.8.1 (in progress)
+OpenAFS 1.8.1
 
   All Platforms
 
@@ -19,6 +19,8 @@ OpenAFS 1.8.1 (in progress)
     * Fix reference counting error that could cause an assertion failure
       in some workloads.
 
+    * vldb_check -fix will no longer corrupt the vldb when multiple MH blocks are present.
+
     * Assorted cleanups and efficiency improvements in the ubik implementation.
 
     * Return a valid InlineBulkStatus response in error cases.
@@ -29,10 +31,17 @@ OpenAFS 1.8.1 (in progress)
 
     * Fix volume callbacks (e.g., when running 'vos release').
 
+    * Treat failure to obtain a DSlot as a hard error for that cache partition,
+      avoiding a flood of "disk cache read error in CacheItems" log messages,
+      and reducing the chance of subsequent panic.
+
     * Improve error messages for invalid values with -volume-ttl.
 
     * Remove useless error message:
-      "find_preferred_connection: no connection and !create"
+      "find_preferred_connection: no connection and !create".
+
+    * Avoid passing NULL to a kernel memory deallocator, which is not guaranteed
+      to be safe on all systems.
 
   Linux
 
@@ -43,6 +52,8 @@ OpenAFS 1.8.1 (in progress)
     * Improve cache manager behavior when unable to open cache files.
 
     * Improvements to the RPM packaging.
+
+    * Detect out-of-memory when using kernel pages for writing.
 
   Solaris
 
