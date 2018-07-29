@@ -1,6 +1,10 @@
 openafs (1.8.1-1) UNRELEASED; urgency=medium
 
-  * New upstream release.
+  * New upstream release.  In addition to changes in pre2:
+    - Fix issue where `vldb_check -fix` would corrupt databases with multiple
+      MH blocks
+    - Improved error handling when the cache partition is inaccessible
+    - Improved error handling when page allocation fails
   * Supply sysname generation for arm64 to get further in the build.
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Wed, 04 Jul 2018 12:04:30 -0500
