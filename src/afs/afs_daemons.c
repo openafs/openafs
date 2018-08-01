@@ -1012,8 +1012,7 @@ afs_BackgroundDaemon(void)
         for (i = 0; i < NBRS; i++, tb++) {
             if (tb->ts == uspc->ts) {
                 /* copy the userspace status back in */
-                ((struct afs_uspc_param *) tb->ptr_parm[0])->retval =
-                    uspc->retval;
+                tb->code_raw = tb->code_checkcode = uspc->retval;
                 /* mark it valid and notify our caller */
                 tb->flags |= BUVALID;
                 if (tb->flags & BUWAIT) {

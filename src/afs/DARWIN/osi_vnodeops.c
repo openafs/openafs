@@ -1535,7 +1535,7 @@ afs_vop_rename(ap)
                 afs_osi_Sleep(tb);
             }
             /* if we succeeded, clear the error. otherwise, EXDEV */
-            if (mvReq.retval == 0)
+            if (tb->code_raw == 0)
                 error = 0;
 
             afs_BRelease(tb);
