@@ -3298,7 +3298,7 @@ afs_InitCacheFile(char *afile, ino_t ainode)
  * \param aflags
  *
  */
-void
+int
 afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
 {
     struct dcache *tdp;
@@ -3425,6 +3425,7 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
 	    afs_warn("afsd: memory cache too large for available memory.\n");
 	    afs_warn("afsd: AFS files cannot be accessed.\n\n");
 	    dcacheDisabled = 1;
+            return code;
 	} else
 	    afs_warn("Memory cache: Allocating %d dcache entries...",
 		   aDentries);
@@ -3432,6 +3433,7 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
 	cacheDiskType = AFS_FCACHE_TYPE_UFS;
 	afs_cacheType = &afs_UfsCacheOps;
     }
+    return 0;
 }
 
 /*!

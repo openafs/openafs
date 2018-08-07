@@ -247,8 +247,8 @@ extern afs_dcache_id_t cacheInode;
 extern struct osi_file *afs_cacheInodep;
 extern int DCHash(struct VenusFid *fid, afs_int32 chunk);
 extern int DVHash(struct VenusFid *fid);
-extern void afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk,
-			   int aflags);
+extern int afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk,
+			  int aflags);
 extern int afs_PutDCache(struct dcache *adc);
 extern void afs_FlushDCache(struct dcache *adc);
 extern void shutdown_dcache(void);
