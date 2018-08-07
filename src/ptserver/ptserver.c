@@ -541,12 +541,13 @@ main(int argc, char **argv)
 	}
 	if (ccode == 1) {
 	    host = SHostAddrs[0];
-	    /* the following call is idempotent so if/when it gets called
-	     * again by the ubik init stuff, it doesn't really matter
-	     * -- klm
-	     */
-	    rx_InitHost(host, htons(AFSCONF_PROTPORT));
 	}
+    }
+
+    code = rx_InitHost(host, htons(AFSCONF_PROTPORT));
+    if (code < 0) {
+	ViceLog(0, ("ptserver: Rx init failed: %d\n", code));
+	PT_EXIT(1);
     }
 
     /* Disable jumbograms */

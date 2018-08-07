@@ -531,8 +531,14 @@ main(int argc, char **argv)
         }
         if (ccode == 1) {
             host = SHostAddrs[0];
-	    rx_InitHost(host, htons(AFSCONF_BUDBPORT));
 	}
+    }
+
+    code = rx_InitHost(host, htons(AFSCONF_BUDBPORT));
+    if (code) {
+	LogError(code, "rx init failed\n");
+	afs_com_err(whoami, code, "rx init failed");
+	ERROR(code);
     }
 
     /* Disable jumbograms */

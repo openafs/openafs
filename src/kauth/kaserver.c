@@ -410,8 +410,13 @@ main(int argc, char *argv[])
         }
         if (ccode == 1) {
             host = SHostAddrs[0];
-	    rx_InitHost(host, htons(AFSCONF_KAUTHPORT));
 	}
+    }
+
+    code = rx_InitHost(host, htons(AFSCONF_KAUTHPORT));
+    if (code) {
+	afs_com_err(whoami, code, "rx init failed");
+	exit(2);
     }
 
     /* Disable jumbograms */

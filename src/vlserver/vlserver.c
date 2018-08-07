@@ -463,7 +463,6 @@ main(int argc, char **argv)
         }
         if (ccode == 1) {
             host = SHostAddrs[0];
-	    rx_InitHost(host, htons(AFSCONF_VLDBPORT));
 	}
     }
 
@@ -477,7 +476,7 @@ main(int argc, char **argv)
 	}
     }
 
-    code = rx_Init(htons(AFSCONF_VLDBPORT));
+    code = rx_InitHost(host, htons(AFSCONF_VLDBPORT));
     if (code < 0) {
         VLog(0, ("vlserver: Rx init failed: %d\n", code));
         exit(1);
