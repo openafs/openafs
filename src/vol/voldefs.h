@@ -69,7 +69,7 @@
 #define	VHDRNAMELEN (VFORMATDIGITS + 1 + sizeof(VHDREXT) - 1) /* must match VFORMAT */
 
 /* Maximum length (including trailing NUL) of a volume external path name. */
-#define VMAXPATHLEN 64
+#define VMAXPATHLEN 512
 
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
 

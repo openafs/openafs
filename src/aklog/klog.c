@@ -214,7 +214,7 @@ whoami(struct ktc_token *atoken,
     int *vicep)
 {
     int code;
-    char tempname[PR_MAXNAMELEN + 1];
+    char tempname[2*PR_MAXNAMELEN];
 
     code = pr_Initialize(0, AFSDIR_CLIENT_ETC_DIRPATH, cellconfig->name);
     if (code)
