@@ -231,7 +231,7 @@ whoami(struct ktc_token *atoken,
     struct rx_connection *conns[MAXSERVERS+1];
     idlist lids[1];
     namelist lnames[1];
-    char tempname[PR_MAXNAMELEN + 1];
+    char tempname[2*PR_MAXNAMELEN];
 
     memset(lnames, 0, sizeof *lnames);
     memset(lids, 0, sizeof *lids);

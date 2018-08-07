@@ -46,7 +46,7 @@
 #define VFORMAT "V%010lu.vol"
 #define	VHDREXT	".vol"
 #endif
-#define VMAXPATHLEN 64		/* Maximum length (including null) of a volume
+#define VMAXPATHLEN 512		/* Maximum length (including null) of a volume
 				 * external path name */
 
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)

@@ -808,8 +808,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     afs_int32 type, count, vcount;
     DIR *dirP, *dirQ;
     struct dirent *dirE, *dirF;
-    char name[MAXNAMELEN];
-    char thisdir[MAXPATHLEN], *t;
+    char name[2*MAXNAMELEN+1];
+    char thisdir[MAXPATHLEN+4], *t;
     struct DumpHeader dh;	/* Defined in dump.h */
 #if 0/*ndef HAVE_GETCWD*/	/* XXX enable when autoconf happens */
     extern char *getwd();
