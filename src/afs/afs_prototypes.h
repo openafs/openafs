@@ -265,6 +265,7 @@ extern struct dcache *afs_FindDCache(struct vcache *avc,
 extern void afs_StoreWarn(afs_int32 acode, afs_int32 avolume,
 			  afs_int32 aflags);
 extern void afs_MaybeWakeupTruncateDaemon(void);
+extern void afs_MaybeWaitForCacheDrain(void);
 extern void afs_CacheTruncateDaemon(void);
 extern void afs_AdjustSize(struct dcache *adc,
 			   afs_int32 newSize);
