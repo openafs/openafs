@@ -408,6 +408,21 @@ afs_MaybeWakeupTruncateDaemon(void)
 }
 
 /*!
+ * Wait for cache drain if conditions warrant.
+ *   */
+void
+afs_MaybeWaitForCacheDrain(void)
+{
+    if (afs_blocksUsed - afs_blocksDiscarded >
+	PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
+	if (afs_WaitForCacheDrain == 0)
+	    afs_WaitForCacheDrainCount++;
+	afs_WaitForCacheDrain = 1;
+	afs_osi_Sleep(&afs_WaitForCacheDrain);
+    }
+}
+
+/*!
  * /struct CTD_stats
  *
  * Keep statistics on run time for afs_CacheTruncateDaemon. This is a
@@ -2258,10 +2273,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	    ReleaseReadLock(&avc->lock);
 	    while ((afs_blocksUsed - afs_blocksDiscarded) >
 		   PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-		if (afs_WaitForCacheDrain == 0)
-		    afs_WaitForCacheDrainCount++;
-		afs_WaitForCacheDrain = 1;
-		afs_osi_Sleep(&afs_WaitForCacheDrain);
+		afs_MaybeWaitForCacheDrain();
 	    }
 	    afs_MaybeFreeDiscardedDCache();
 	    /* need to check if someone else got the chunk first. */
@@ -3592,13 +3604,7 @@ afs_ObtainDCacheForWriting(struct vcache *avc, afs_size_t filePos,
 	    while (afs_blocksUsed >
 		   PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
 		ReleaseWriteLock(&avc->lock);
-		if (afs_blocksUsed - afs_blocksDiscarded >
-		    PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-		    if (afs_WaitForCacheDrain == 0)
-		        afs_WaitForCacheDrainCount++;
-		    afs_WaitForCacheDrain = 1;
-		    afs_osi_Sleep(&afs_WaitForCacheDrain);
-		}
+		afs_MaybeWaitForCacheDrain();
 		afs_MaybeFreeDiscardedDCache();
 		afs_MaybeWakeupTruncateDaemon();
 		ObtainWriteLock(&avc->lock, 509);
