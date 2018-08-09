@@ -70,8 +70,8 @@ extern void opr_AssertionFailed(const char *, int) AFS_NORETURN;
 
 extern char *opr_lcstring(char *d, const char *s, int n) AFS_NONNULL((1,2));
 extern char *opr_ucstring(char *d, const char *s, int n) AFS_NONNULL((1,2));
-extern void opr_stolower(char *s) AFS_NONNULL(());
-extern void opr_stoupper(char *s) AFS_NONNULL(());
+extern void opr_stolower(char *s) AFS_NONNULL((1));
+extern void opr_stoupper(char *s) AFS_NONNULL((1));
 extern char *opr_strcompose(char *buf, size_t len, ...) AFS_NONNULL((1));
 
 #endif
