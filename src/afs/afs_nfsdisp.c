@@ -87,7 +87,7 @@ is_afs_fh(fhandle_t * fhp)
     return 0;
 }
 
-afs_int32
+static afs_int32
 nfs2_to_afs_call(int which, void *args, fhandle_t ** fhpp,
 		 fhandle_t ** fh2pp)
 {
@@ -197,7 +197,7 @@ nfs2_to_afs_call(int which, void *args, fhandle_t ** fhpp,
     return NULL;
 }
 
-afs_int32
+static afs_int32
 acl2_to_afs_call(int which, void *args, fhandle_t ** fhpp)
 {
     fhandle_t *fhp;
@@ -251,7 +251,7 @@ acl2_to_afs_call(int which, void *args, fhandle_t ** fhpp)
     return NULL;
 }
 
-int
+static int
 afs_nfs2_dispatcher(int type, afs_int32 which, void *argp,
 		    struct exportinfo *exp, struct svc_req *rp,
 		    afs_ucred_t *crp)
@@ -314,7 +314,7 @@ afs_nfs2_dispatcher(int type, afs_int32 which, void *argp,
     return call;
 }
 
-void
+static void
 afs_nfs2_smallfidder(struct nfsdiropres *dr)
 {
     fhandle_t *fhp = (fhandle_t *) & dr->dr_fhandle;
@@ -358,28 +358,28 @@ afs_nfs2_smallfidder(struct nfsdiropres *dr)
     AFS_GUNLOCK();
 }
 
-void
+static void
 afs_nfs2_noaccess(struct afs_nfs2_resp *resp)
 {
     resp->status = NFSERR_ACCES;
 }
 
-void
+static void
 afs_nfs2_null(void *args, void *xp, void *exp, void *rp, void *crp)
 {
 }
 
-void
+static void
 afs_nfs2_root(void *args, void *xp, void *exp, void *rp, void *crp)
 {
 }
 
-void
+static void
 afs_nfs2_writecache(void *args, void *xp, void *exp, void *rp, void *crp)
 {
 }
 
-void
+static void
 afs_nfs2_getattr(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -394,7 +394,7 @@ afs_nfs2_getattr(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_setattr(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -409,7 +409,7 @@ afs_nfs2_setattr(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_lookup(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -427,7 +427,7 @@ afs_nfs2_lookup(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_readlink(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -442,7 +442,7 @@ afs_nfs2_readlink(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_read(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -457,7 +457,7 @@ afs_nfs2_read(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_write(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -472,7 +472,7 @@ afs_nfs2_write(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_create(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -490,7 +490,7 @@ afs_nfs2_create(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_remove(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -505,7 +505,7 @@ afs_nfs2_remove(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_rename(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -520,7 +520,7 @@ afs_nfs2_rename(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_link(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -535,7 +535,7 @@ afs_nfs2_link(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_symlink(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -550,7 +550,7 @@ afs_nfs2_symlink(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_mkdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -568,7 +568,7 @@ afs_nfs2_mkdir(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_rmdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -583,7 +583,7 @@ afs_nfs2_rmdir(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_readdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -598,7 +598,7 @@ afs_nfs2_readdir(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs2_statfs(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -634,7 +634,7 @@ struct afs_nfs_disp_tbl afs_rfs_disp_tbl[RFS_NPROC] = {
     {afs_nfs2_statfs}
 };
 
-void
+static void
 afs_acl2_getacl(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -651,7 +651,7 @@ afs_acl2_getacl(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_acl2_setacl(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -668,7 +668,7 @@ afs_acl2_setacl(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_acl2_getattr(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -685,7 +685,7 @@ afs_acl2_getattr(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_acl2_access(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -703,7 +703,7 @@ afs_acl2_access(void *args, void *xp, void *exp, void *rp, void *crp)
 }
 
 #if defined(AFS_SUN510_ENV)
-void
+static void
 afs_acl2_getxattrdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -783,21 +783,21 @@ is_afs_fh3(nfs_fh3 * fhp)
     return 0;
 }
 
-void
+static void
 afs_nfs3_noaccess(struct afs_nfs3_resp *resp)
 {
     resp->status = NFS3ERR_ACCES;
     resp->flags = FALSE;
 }
 
-void
+static void
 afs_nfs3_notsupp(struct afs_nfs3_resp *resp)
 {
     resp->status = NFS3ERR_NOTSUPP;
     resp->flags = FALSE;
 }
 
-afs_int32
+static afs_int32
 nfs3_to_afs_call(int which, void *args, nfs_fh3 ** fhpp, nfs_fh3 ** fh2pp)
 {
     struct vnode *vp;
@@ -954,7 +954,7 @@ nfs3_to_afs_call(int which, void *args, nfs_fh3 ** fhpp, nfs_fh3 ** fh2pp)
     return NULL;
 }
 
-afs_int32
+static afs_int32
 acl3_to_afs_call(int which, void *args, nfs_fh3 ** fhpp)
 {
     nfs_fh3 *fhp;
@@ -992,7 +992,7 @@ acl3_to_afs_call(int which, void *args, nfs_fh3 ** fhpp)
     return NULL;
 }
 
-int
+static int
 afs_nfs3_dispatcher(int type, afs_int32 which, void *argp,
 		    struct exportinfo *exp, struct svc_req *rp,
 		    afs_ucred_t *crp)
@@ -1059,7 +1059,7 @@ afs_nfs3_dispatcher(int type, afs_int32 which, void *argp,
     return call;
 }
 
-void
+static void
 afs_nfs3_smallfidder(struct nfs_fh3 *fhp, int status)
 {
     afs_int32 addr[2];
@@ -1103,7 +1103,7 @@ afs_nfs3_smallfidder(struct nfs_fh3 *fhp, int status)
     AFS_GUNLOCK();
 }
 
-void
+static void
 afs_nfs3_getattr(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1121,7 +1121,7 @@ afs_nfs3_getattr(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_setattr(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1139,7 +1139,7 @@ afs_nfs3_setattr(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_lookup(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1162,7 +1162,7 @@ afs_nfs3_lookup(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_access(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1180,7 +1180,7 @@ afs_nfs3_access(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_readlink(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1199,7 +1199,7 @@ afs_nfs3_readlink(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_read(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1216,7 +1216,7 @@ afs_nfs3_read(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_write(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1234,7 +1234,7 @@ afs_nfs3_write(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_create(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1257,7 +1257,7 @@ afs_nfs3_create(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_mkdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1280,7 +1280,7 @@ afs_nfs3_mkdir(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_symlink(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1303,7 +1303,7 @@ afs_nfs3_symlink(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_mknod(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1326,7 +1326,7 @@ afs_nfs3_mknod(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_remove(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1344,7 +1344,7 @@ afs_nfs3_remove(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_rmdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1362,7 +1362,7 @@ afs_nfs3_rmdir(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_rename(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1380,7 +1380,7 @@ afs_nfs3_rename(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_link(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1397,7 +1397,7 @@ afs_nfs3_link(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_readdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1415,7 +1415,7 @@ afs_nfs3_readdir(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_readdirplus(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1436,7 +1436,7 @@ afs_nfs3_readdirplus(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_fsstat(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1454,7 +1454,7 @@ afs_nfs3_fsstat(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_fsinfo(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1472,7 +1472,7 @@ afs_nfs3_fsinfo(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_pathconf(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1491,7 +1491,7 @@ afs_nfs3_pathconf(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_nfs3_commit(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1534,7 +1534,7 @@ struct afs_nfs_disp_tbl afs_rfs3_disp_tbl[22] = {
     {afs_nfs3_commit}
 };
 
-void
+static void
 afs_acl3_getacl(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1551,7 +1551,7 @@ afs_acl3_getacl(void *args, void *xp, void *exp, void *rp, void *crp)
     return;
 }
 
-void
+static void
 afs_acl3_setacl(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
@@ -1569,7 +1569,7 @@ afs_acl3_setacl(void *args, void *xp, void *exp, void *rp, void *crp)
 }
 
 #if defined(AFS_SUN510_ENV)
-void
+static void
 afs_acl3_getxattrdir(void *args, void *xp, void *exp, void *rp, void *crp)
 {
     u_int call;
