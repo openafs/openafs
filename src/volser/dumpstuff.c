@@ -1265,8 +1265,11 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
 	Log("1 Volser: RestoreVolume: Volume header missing from dump; not restored\n");
 	return VOLSERREAD_DUMPERROR;
     }
-    if (ReadVolumeHeader(iodp, &vol) == VOLSERREAD_DUMPERROR)
+    if (ReadVolumeHeader(iodp, &vol) == VOLSERREAD_DUMPERROR) {
+	Log("1 Volser: RestoreVolume: Error reading volume header (id: %u); aborted\n",
+	    V_id(vp));
 	return VOLSERREAD_DUMPERROR;
+    }
 
     if (!delo)
 	delo = ProcessIndex(vp, vLarge, &b1, &s1, 0);
@@ -1288,6 +1291,8 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
     tdelo = delo;
     while (1) {
 	if (ReadVnodes(iodp, vp, 0, b1, s1, b2, s2, tdelo)) {
+	    Log("1 Volser: RestoreVolume: Error reading vnodes (id: %u); aborted\n",
+		V_id(vp));
 	    error = VOLSERREAD_DUMPERROR;
 	    goto clean;
 	}
@@ -1296,6 +1301,8 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
 	    break;
 
 	if (ReadVolumeHeader(iodp, &vol) == VOLSERREAD_DUMPERROR) {
+	    Log("1 Volser: RestoreVolume: Error reading volume header (id: %u); aborted\n",
+		V_id(vp));
 	    error = VOLSERREAD_DUMPERROR;
 	    goto out;
 	}
