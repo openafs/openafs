@@ -3367,4 +3367,37 @@ FreeZLCList(void)
 }
 #endif
 
+/**
+ * Remove empty directories associated with the volume received
+ * as an argument.
+ *
+ * @param[in] pname    vice partition path
+ * @param[in] vid      volume id
+ *
+ * @return 0 on success
+ */
+int
+namei_RemoveDirectories(char *pname, afs_int32 vid)
+{
+    IHandle_t dirIH;
+    namei_t name;
+
+    memset(&dirIH, 0, sizeof(dirIH));
+
+    dirIH.ih_vid = vid;
+
+#ifdef AFS_NT40_ENV
+    dirIH.ih_dev = nt_DriveToDev(pname);
+#else
+    dirIH.ih_dev = volutil_GetPartitionID(pname);
+#endif
+    if (dirIH.ih_dev == -1) {
+	return -1;
+    }
+
+    namei_HandleToVolDir(&name, &dirIH);
+
+    return namei_RemoveDataDirectories(&name);
+}
+
 #endif /* AFS_NAMEI_ENV */

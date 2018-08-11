@@ -88,6 +88,8 @@ int namei_replace_file_by_hardlink(IHandle_t *hLink, IHandle_t *hTarget);
 extern void namei_SetWorkQueue(struct afs_work_queue *wq);
 # endif
 
+int namei_RemoveDirectories(char *pname, afs_int32 vid);
+
 #endif /* AFS_NAMEI_ENV */
 
 #endif /* _AFS_NAMEI_OPS_H_H_ */
