@@ -1247,6 +1247,7 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
     int s1 = 0, s2 = 0, delo = 0, tdelo;
     int tag;
     VolumeDiskData saved_header;
+    afs_uint32 uptime, crtime;
 
     iod_Init(iodp, call);
 
@@ -1334,6 +1335,8 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
 	 * prevent it from getting overwritten. */
 	vol.needsSalvaged = V_needsSalvaged(vp);
     }
+    crtime = V_creationDate(vp);
+    uptime = V_updateDate(vp);
     CopyVolumeHeader(&vol, &V_disk(vp));
     V_destroyMe(vp) = 0;
     VUpdateVolume(&vupdate, vp);
@@ -1341,6 +1344,20 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
 	Log("1 Volser: RestoreVolume: Unable to rewrite volume header; restore aborted\n");
 	error = VOLSERREAD_DUMPERROR;
 	goto out;
+    } else {
+	/*
+	 * If the volume was not a new empty volume and the restored dump was
+	 * older than the volume in question, this is probably a mistake, and
+	 * may mean the resulting volume is corrupted. Log the following message
+	 * to give a clue as to why this volume suddenly looks strange or corrupt.
+	 */
+	if ((crtime != uptime) && (uptime > V_updateDate(vp))) {
+	    Log("1 Volser: RestoreVolume: volume %s (%u) appears to have been partially or "
+		"completely restored to an earlier version (updateDate went from %u to %u). "
+		"This is allowed, but may indicate a mistake in whatever tool is restoring "
+		"this volume. If this volume appears corrupted, this is probably why.\n",
+		V_name(vp), V_id(vp), uptime, V_updateDate(vp));
+	}
     }
   out:
     /* Free the malloced space above */
