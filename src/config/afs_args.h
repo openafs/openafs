@@ -143,6 +143,7 @@ struct afs_umv_param {
 };
 
 #define AFS_USPC_UMV 1
+#define AFS_USPC_SHUTDOWN 2
 
 struct afs_uspc_param {
     afs_int32 retval;
