@@ -145,7 +145,9 @@ struct afs_umv_param {
     afs_int32 dUnique;
 };
 
-#define AFS_USPC_UMV 1
+#ifdef AFS_DARWIN_ENV
+# define AFS_USPC_UMV 1
+#endif
 #define AFS_USPC_SHUTDOWN 2
 
 struct afs_uspc_param {

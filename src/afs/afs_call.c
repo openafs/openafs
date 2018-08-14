@@ -706,6 +706,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	if (!code) {
 	    mvParam->retval = 0;
 	    /* for reqs where pointers are strings: */
+#  ifdef AFS_DARWIN_ENV
 	    if (mvParam->reqtype == AFS_USPC_UMV) {
 		/* don't copy out random kernel memory */
 		AFS_COPYOUT(param2, AFSKPTR(parm4),
@@ -713,6 +714,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 		AFS_COPYOUT(param1, AFSKPTR(parm3),
 			    MIN(namebufsz, strlen((char *)param1)+1), code);
 	    }
+#  endif /* AFS_DARWIN_ENV */
 	    AFS_COPYOUT((caddr_t)mvParam, AFSKPTR(parm2),
 		       sizeof(struct afs_uspc_param), code);
 	}

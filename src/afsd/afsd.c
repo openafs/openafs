@@ -1543,11 +1543,6 @@ BkgHandler(void)
     uspc->ts = -1;
 
     while (1) {
-	pid_t child = 0;
-	int status;
-	char srcpath[BUFSIZ];
-	char dstpath[BUFSIZ];
-
 	/* pushing in a buffer this large */
 	uspc->bufSz = 256;
 
@@ -1573,72 +1568,80 @@ BkgHandler(void)
 	    /* Client is shutting down */
 	    return;
 
+# ifdef AFS_DARWIN_ENV
 	case AFS_USPC_UMV:
-	    snprintf(srcpath, BUFSIZ, "/afs/.:mount/%d:%d:%d:%d/%s",
-		     uspc->req.umv.sCell, uspc->req.umv.sVolume,
-		     uspc->req.umv.sVnode, uspc->req.umv.sUnique, srcName);
-	    snprintf(dstpath, BUFSIZ, "/afs/.:mount/%d:%d:%d:%d/%s",
-		     uspc->req.umv.dCell, uspc->req.umv.dVolume,
-		     uspc->req.umv.dVnode, uspc->req.umv.dUnique, dstName);
-	    if ((child = fork()) == 0) {
-		/* first child does cp; second, rm. mv would re-enter. */
+            {
+                pid_t child = 0;
+                int status;
+                char srcpath[BUFSIZ];
+                char dstpath[BUFSIZ];
+                snprintf(srcpath, BUFSIZ, "/afs/.:mount/%d:%d:%d:%d/%s",
+                         uspc->req.umv.sCell, uspc->req.umv.sVolume,
+                         uspc->req.umv.sVnode, uspc->req.umv.sUnique, srcName);
+                snprintf(dstpath, BUFSIZ, "/afs/.:mount/%d:%d:%d:%d/%s",
+                         uspc->req.umv.dCell, uspc->req.umv.dVolume,
+                         uspc->req.umv.dVnode, uspc->req.umv.dUnique, dstName);
+                if ((child = fork()) == 0) {
+                    /* first child does cp; second, rm. mv would re-enter. */
 
-		switch (uspc->req.umv.idtype) {
-		case IDTYPE_UID:
-		    if (setuid(uspc->req.umv.id) != 0) {
-			exit(-1);
-		    }
-		    break;
-		default:
-		    exit(-1);
-		    break; /* notreached */
-		}
-		execl("/bin/cp", "(afsd EXDEV helper)", "-PRp", "--", srcpath,
-		      dstpath, (char *) NULL);
-	    }
-	    if (child == (pid_t) -1) {
-		uspc->retval = -1;
-		continue;
-	    }
+                    switch (uspc->req.umv.idtype) {
+                    case IDTYPE_UID:
+                        if (setuid(uspc->req.umv.id) != 0) {
+                            exit(-1);
+                        }
+                        break;
+                    default:
+                        exit(-1);
+                        break; /* notreached */
+                    }
+                    execl("/bin/cp", "(afsd EXDEV helper)", "-PRp", "--", srcpath,
+                          dstpath, (char *) NULL);
+                }
+                if (child == (pid_t) -1) {
+                    uspc->retval = -1;
+                    continue;
+                }
 
-	    if (waitpid(child, &status, 0) == -1)
-		uspc->retval = EIO;
-	    else if (WIFEXITED(status) != 0 && WEXITSTATUS(status) == 0) {
-		if ((child = fork()) == 0) {
-		    switch (uspc->req.umv.idtype) {
-		    case IDTYPE_UID:
-			if (setuid(uspc->req.umv.id) != 0) {
-			    exit(-1);
-			}
-			break;
-		    default:
-			exit(-1);
-			break; /* notreached */
-		    }
-		    execl("/bin/rm", "(afsd EXDEV helper)", "-rf", "--",
-			  srcpath, (char *) NULL);
-		}
-		if (child == (pid_t) -1) {
-		    uspc->retval = -1;
-		    continue;
-		}
-		if (waitpid(child, &status, 0) == -1)
-		    uspc->retval = EIO;
-		else if (WIFEXITED(status) != 0) {
-		    /* rm exit status */
-		    uspc->retval = WEXITSTATUS(status);
-		} else {
-		    /* rm signal status */
-		    uspc->retval = -(WTERMSIG(status));
-		}
-	    } else {
-		/* error from cp: exit or signal status */
-		uspc->retval = (WIFEXITED(status) != 0) ?
-		    WEXITSTATUS(status) : -(WTERMSIG(status));
-	    }
+                if (waitpid(child, &status, 0) == -1)
+                    uspc->retval = EIO;
+                else if (WIFEXITED(status) != 0 && WEXITSTATUS(status) == 0) {
+                    if ((child = fork()) == 0) {
+                        switch (uspc->req.umv.idtype) {
+                        case IDTYPE_UID:
+                            if (setuid(uspc->req.umv.id) != 0) {
+                                exit(-1);
+                            }
+                            break;
+                        default:
+                            exit(-1);
+                            break; /* notreached */
+                        }
+                        execl("/bin/rm", "(afsd EXDEV helper)", "-rf", "--",
+                              srcpath, (char *) NULL);
+                    }
+                    if (child == (pid_t) -1) {
+                        uspc->retval = -1;
+                        continue;
+                    }
+                    if (waitpid(child, &status, 0) == -1)
+                        uspc->retval = EIO;
+                    else if (WIFEXITED(status) != 0) {
+                        /* rm exit status */
+                        uspc->retval = WEXITSTATUS(status);
+                    } else {
+                        /* rm signal status */
+                        uspc->retval = -(WTERMSIG(status));
+                    }
+                } else {
+                    /* error from cp: exit or signal status */
+                    uspc->retval = (WIFEXITED(status) != 0) ?
+                        WEXITSTATUS(status) : -(WTERMSIG(status));
+                }
+            }
 	    memset(srcName, 0, sizeof(srcName));
 	    memset(dstName, 0, sizeof(dstName));
 	    break;
+# endif /* AFS_DARWIN_ENV */
 
 	default:
 	    /* unknown req type */

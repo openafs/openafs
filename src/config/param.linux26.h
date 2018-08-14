@@ -37,6 +37,7 @@
 #define AFS_VM_RDWR_ENV		1	/* read/write implemented via VM */
 #define AFS_USE_GETTIMEOFDAY	1	/* use gettimeofday to implement rx clock */
 #define AFS_MAXVCOUNT_ENV       1
+#define AFS_NEW_BKG             1
 
 #define AFS_PRIVATE_OSI_ALLOCSPACES	1
 
