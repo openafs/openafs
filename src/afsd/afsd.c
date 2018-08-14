@@ -1553,8 +1553,15 @@ BkgHandler(void)
 
 	code = afsd_syscall(AFSOP_BKG_HANDLER, uspc, srcName, dstName);
 	if (code) {		/* Something is wrong? */
-	    if (code == -2) /* shutting down */
-		break;
+	    if (code == -2) {
+		/*
+		 * Before AFS_USPC_SHUTDOWN existed, the kernel module used to
+		 * indicate it was shutting down by returning -2. Treat this
+		 * like a AFS_USPC_SHUTDOWN, in case we're running with an
+		 * older kernel module.
+		 */
+		return;
+	    }
 
 	    sleep(1);
 	    uspc->retval = -1;
@@ -1562,6 +1569,10 @@ BkgHandler(void)
 	}
 
 	switch (uspc->reqtype) {
+	case AFS_USPC_SHUTDOWN:
+	    /* Client is shutting down */
+	    return;
+
 	case AFS_USPC_UMV:
 	    snprintf(srcpath, BUFSIZ, "/afs/.:mount/%d:%d:%d:%d/%s",
 		     uspc->req.umv.sCell, uspc->req.umv.sVolume,

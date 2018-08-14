@@ -1043,7 +1043,9 @@ afs_BackgroundDaemon(void)
 	    ReleaseWriteLock(&afs_xbrs);
 	    afs_osi_Wakeup(&afs_termState);
 #ifdef AFS_NEW_BKG
-	    return -2;
+	    memset(uspc, 0, sizeof(*uspc));
+	    uspc->reqtype = AFS_USPC_SHUTDOWN;
+	    return 0;
 #else
 	    return;
 #endif
