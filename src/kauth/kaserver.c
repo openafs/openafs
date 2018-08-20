@@ -169,6 +169,7 @@ main(int argc, char *argv[])
     int level;			/* security level for Ubik */
     afs_int32 i;
     char clones[MAXHOSTSPERCELL];
+    char hoststr[16];
     afs_uint32 host = ntohl(INADDR_ANY);
     char *auditFileName = NULL;
     struct logOptions logopts;
@@ -413,6 +414,8 @@ main(int argc, char *argv[])
 	}
     }
 
+    ViceLog(0, ("kaserver binding rx to %s:%d\n",
+            afs_inet_ntoa_r(host, hoststr), AFSCONF_KAUTHPORT));
     code = rx_InitHost(host, htons(AFSCONF_KAUTHPORT));
     if (code) {
 	afs_com_err(whoami, code, "rx init failed");

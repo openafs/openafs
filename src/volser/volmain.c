@@ -443,6 +443,7 @@ main(int argc, char **argv)
     afs_int32 numClasses;
     struct rx_service *service;
     int rxpackets = 100;
+    char hoststr[16];
     afs_uint32 host = ntohl(INADDR_ANY);
     VolumePackageOptions opts;
     struct afsconf_bsso_info bsso;
@@ -544,6 +545,8 @@ main(int argc, char **argv)
             host = SHostAddrs[0];
     }
 
+    Log("Volserver binding rx to %s:%d\n",
+        afs_inet_ntoa_r(host, hoststr), AFSCONF_VOLUMEPORT);
     code = rx_InitHost(host, (int)htons(AFSCONF_VOLUMEPORT));
     if (code) {
 	fprintf(stderr, "rx init failed on socket AFSCONF_VOLUMEPORT %u\n",
