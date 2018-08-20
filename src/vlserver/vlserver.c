@@ -176,6 +176,7 @@ main(int argc, char **argv)
     char hostname[VL_MAXNAMELEN];
     int noAuth = 0;
     char clones[MAXHOSTSPERCELL];
+    char hoststr[16];
     afs_uint32 host = ntohl(INADDR_ANY);
     struct cmd_syndesc *opts;
     struct logOptions logopts;
@@ -476,6 +477,8 @@ main(int argc, char **argv)
 	}
     }
 
+    VLog(0, ("vlserver binding rx to %s:%d\n",
+         afs_inet_ntoa_r(host, hoststr), AFSCONF_VLDBPORT));
     code = rx_InitHost(host, htons(AFSCONF_VLDBPORT));
     if (code < 0) {
         VLog(0, ("vlserver: Rx init failed: %d\n", code));

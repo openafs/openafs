@@ -370,6 +370,7 @@ main(int argc, char **argv)
     struct afsconf_cell *cellinfo = NULL;
     time_t currentTime;
     afs_int32 code = 0;
+    char hoststr[16];
     afs_uint32 host = ntohl(INADDR_ANY);
     int r;
 
@@ -534,6 +535,8 @@ main(int argc, char **argv)
 	}
     }
 
+    Log("buserver binding rx to %s:%d\n",
+        afs_inet_ntoa_r(host, hoststr), AFSCONF_BUDBPORT);
     code = rx_InitHost(host, htons(AFSCONF_BUDBPORT));
     if (code) {
 	LogError(code, "rx init failed\n");

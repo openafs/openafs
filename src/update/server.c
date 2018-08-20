@@ -198,6 +198,7 @@ main(int argc, char *argv[])
     struct rx_securityClass **securityClasses;
     afs_int32 numClasses;
     struct rx_service *service;
+    char hoststr[16];
     afs_uint32 host = htonl(INADDR_ANY);
 
     int a = 0;
@@ -308,6 +309,8 @@ main(int argc, char *argv[])
 
     /* Initialize Rx, telling it port number this server will use for its
      * single service */
+    fprintf(stderr, "upserver binding rx to %s:%d\n",
+            afs_inet_ntoa_r(host, hoststr), AFSCONF_UPDATEPORT);
     if (rx_InitHost(host, htons(AFSCONF_UPDATEPORT)) < 0)
 	Quit("rx_init");
 

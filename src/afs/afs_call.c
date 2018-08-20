@@ -99,6 +99,7 @@ static int
 afs_InitSetup(int preallocs)
 {
     int code;
+    afs_uint32 host;
 
     if (afs_InitSetup_done)
 	return EAGAIN;
@@ -127,6 +128,14 @@ afs_InitSetup(int preallocs)
     /* start RX */
     if(!afscall_set_rxpck_received)
     rx_extraPackets = AFS_NRXPACKETS;	/* smaller # of packets */
+
+    host = ntohl(rx_bindhost);
+    afs_warn("afs: Binding rx to %d.%d.%d.%d:%d\n",
+             (host >> 24),
+             (host >> 16) & 0xff,
+             (host >>  8) & 0xff,
+             (host)       & 0xff,
+             7001);
     code = rx_InitHost(rx_bindhost, htons(7001));
     if (code) {
 	afs_warn("AFS: RX failed to initialize %d).\n", code);

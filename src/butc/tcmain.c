@@ -859,6 +859,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 #else
     PROCESS dbWatcherPid;
 #endif
+    char hoststr[16];
     afs_uint32 host = htonl(INADDR_ANY);
     char *auditFileName = NULL;
     char *auditInterface = NULL;
@@ -1096,6 +1097,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
             host = SHostAddrs[0];
     }
 
+    TLog(0, "butc binding rx to %s:%d\n",
+         afs_inet_ntoa_r(host, hoststr), BC_TAPEPORT + portOffset);
     code = rx_InitHost(host, htons(BC_TAPEPORT + portOffset));
     if (code) {
 	TapeLog(0, 0, code, 0, "rx init failed on port %u\n",
