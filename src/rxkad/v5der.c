@@ -35,7 +35,7 @@
  */
 
 
-/* RCSID("$Id$"); */
+#define ASN1_MAX_YEAR	2000
 
 static int
 is_leap(unsigned y)
@@ -43,6 +43,10 @@ is_leap(unsigned y)
     y += 1900;
     return (y % 4) == 0 && ((y % 100) != 0 || (y % 400) == 0);
 }
+
+static const unsigned ndays[2][12] ={
+    {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+    {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}};
 
 /*
  * This is a simplifed version of timegm(3) that doesn't accept out of
@@ -53,17 +57,20 @@ is_leap(unsigned y)
 time_t
 _der_timegm (struct tm *tm)
 {
-  static const unsigned ndays[2][12] ={
-    {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
-    {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}};
   time_t res = 0;
-  unsigned i;
+  int i;
+
+  /*
+   * See comment in _der_gmtime
+   */
+  if (tm->tm_year > ASN1_MAX_YEAR)
+      return 0;
 
   if (tm->tm_year < 0)
       return -1;
   if (tm->tm_mon < 0 || tm->tm_mon > 11)
       return -1;
-  if (tm->tm_mday < 1 || tm->tm_mday > ndays[is_leap(tm->tm_year)][tm->tm_mon])
+  if (tm->tm_mday < 1 || tm->tm_mday > (int)ndays[is_leap(tm->tm_year)][tm->tm_mon])
       return -1;
   if (tm->tm_hour < 0 || tm->tm_hour > 23)
       return -1;
@@ -85,6 +92,49 @@ _der_timegm (struct tm *tm)
   res *= 60;
   res += tm->tm_sec;
   return res;
+}
+
+struct tm *
+_der_gmtime(time_t t, struct tm *tm)
+{
+    time_t secday = t % (3600 * 24);
+    time_t days = t / (3600 * 24);
+
+    memset(tm, 0, sizeof(*tm));
+
+    tm->tm_sec = secday % 60;
+    tm->tm_min = (secday % 3600) / 60;
+    tm->tm_hour = (int)(secday / 3600);
+
+    /*
+     * Refuse to calculate time ~ 2000 years into the future, this is
+     * not possible for systems where time_t is a int32_t, however,
+     * when time_t is a int64_t, that can happen, and this becomes a
+     * denial of sevice.
+     */
+    if (days > (ASN1_MAX_YEAR * 365))
+	return NULL;
+
+    tm->tm_year = 70;
+    while(1) {
+	unsigned dayinyear = (is_leap(tm->tm_year) ? 366 : 365);
+	if (days < dayinyear)
+	    break;
+	tm->tm_year += 1;
+	days -= dayinyear;
+    }
+    tm->tm_mon = 0;
+
+    while (1) {
+	unsigned daysinmonth = ndays[is_leap(tm->tm_year)][tm->tm_mon];
+	if (days < daysinmonth)
+	    break;
+	days -= daysinmonth;
+	tm->tm_mon++;
+    }
+    tm->tm_mday = (int)(days + 1);
+
+    return tm;
 }
 /*
  * Copyright (c) 1997 - 2007 Kungliga Tekniska Högskolan
@@ -135,9 +185,28 @@ der_get_unsigned (const unsigned char *p, size_t len,
     unsigned val = 0;
     size_t oldlen = len;
 
-    if (len == sizeof(unsigned) + 1 && p[0] == 0)
+    if (len == sizeof(val) + 1 && p[0] == 0)
 	;
-    else if (len > sizeof(unsigned))
+    else if (len > sizeof(val))
+	return ASN1_OVERRUN;
+
+    while (len--)
+	val = val * 256 + *p++;
+    *ret = val;
+    if(size) *size = oldlen;
+    return 0;
+}
+
+int
+der_get_unsigned64 (const unsigned char *p, size_t len,
+                   uint64_t *ret, size_t *size)
+{
+    uint64_t val = 0;
+    size_t oldlen = len;
+
+    if (len == sizeof(val) + 1 && p[0] == 0)
+       ;
+    else if (len > sizeof(val))
 	return ASN1_OVERRUN;
 
     while (len--)
@@ -154,7 +223,7 @@ der_get_integer (const unsigned char *p, size_t len,
     int val = 0;
     size_t oldlen = len;
 
-    if (len > sizeof(int))
+    if (len > sizeof(val))
 	return ASN1_OVERRUN;
 
     if (len > 0) {
@@ -166,6 +235,27 @@ der_get_integer (const unsigned char *p, size_t len,
     if(size) *size = oldlen;
     return 0;
 }
+
+int
+der_get_integer64 (const unsigned char *p, size_t len,
+		   int64_t *ret, size_t *size)
+{
+    int64_t val = 0;
+    size_t oldlen = len;
+
+    if (len > sizeof(val))
+        return ASN1_OVERRUN;
+
+    if (len > 0) {
+       val = (signed char)*p++;
+       while (--len)
+           val = val * 256 + *p++;
+    }
+    *ret = val;
+    if(size) *size = oldlen;
+    return 0;
+}
+
 
 int
 der_get_length (const unsigned char *p, size_t len,
@@ -228,20 +318,24 @@ der_get_general_string (const unsigned char *p, size_t len,
 	 * an strings in the NEED_PREAUTH case that includes a
 	 * trailing NUL.
 	 */
-	while (p1 - p < len && *p1 == '\0')
+	while ((size_t)(p1 - p) < len && *p1 == '\0')
 	    p1++;
-       if (p1 - p != len)
+	if ((size_t)(p1 - p) != len) {
+	    *str = NULL;
 	    return ASN1_BAD_CHARACTER;
+	}
     }
-    if (len > len + 1)
+    if (len == SIZE_MAX) {
+	*str = NULL;
 	return ASN1_BAD_LENGTH;
+    }
 
-    s = malloc (len + 1);
+    *str = s = malloc (len + 1);
     if (s == NULL)
 	return ENOMEM;
     memcpy (s, p, len);
     s[len] = '\0';
-    *str = s;
+
     if(size) *size = len;
     return 0;
 }
@@ -253,18 +347,34 @@ der_get_utf8string (const unsigned char *p, size_t len,
     return der_get_general_string(p, len, str, size);
 }
 
+#define gen_data_zero(_data) \
+	do { (_data)->length = 0; (_data)->data = NULL; } while(0)
+
 int
-der_get_printable_string (const unsigned char *p, size_t len,
-			  heim_printable_string *str, size_t *size)
+der_get_printable_string(const unsigned char *p, size_t len,
+			 heim_printable_string *str, size_t *size)
 {
-    return der_get_general_string(p, len, str, size);
+    if (len == SIZE_MAX) {
+	gen_data_zero(str);
+	return ASN1_BAD_LENGTH;
+    }
+    str->length = len;
+    str->data = malloc(len + 1);
+    if (str->data == NULL) {
+	gen_data_zero(str);
+	return ENOMEM;
+    }
+    memcpy(str->data, p, len);
+    ((char *)str->data)[len] = '\0';
+    if(size) *size = len;
+    return 0;
 }
 
 int
-der_get_ia5_string (const unsigned char *p, size_t len,
-		    heim_ia5_string *str, size_t *size)
+der_get_ia5_string(const unsigned char *p, size_t len,
+		   heim_ia5_string *str, size_t *size)
 {
-    return der_get_general_string(p, len, str, size);
+    return der_get_printable_string(p, len, str, size);
 }
 
 int
@@ -273,14 +383,20 @@ der_get_bmp_string (const unsigned char *p, size_t len,
 {
     size_t i;
 
-    if (len & 1)
+    if (len & 1) {
+	gen_data_zero(data);
 	return ASN1_BAD_FORMAT;
+    }
     data->length = len / 2;
-    if (data->length > UINT_MAX/sizeof(data->data[0]))
+    if (data->length > UINT_MAX/sizeof(data->data[0])) {
+	gen_data_zero(data);
 	return ERANGE;
+    }
     data->data = malloc(data->length * sizeof(data->data[0]));
-    if (data->data == NULL && data->length != 0)
+    if (data->data == NULL && data->length != 0) {
+	gen_data_zero(data);
 	return ENOMEM;
+    }
 
     for (i = 0; i < data->length; i++) {
 	data->data[i] = (p[0] << 8) | p[1];
@@ -288,8 +404,7 @@ der_get_bmp_string (const unsigned char *p, size_t len,
 	/* check for NUL in the middle of the string */
 	if (data->data[i] == 0 && i != (data->length - 1)) {
 	    free(data->data);
-	    data->data = NULL;
-	    data->length = 0;
+	    gen_data_zero(data);
 	    return ASN1_BAD_CHARACTER;
 	}
     }
@@ -304,14 +419,20 @@ der_get_universal_string (const unsigned char *p, size_t len,
 {
     size_t i;
 
-    if (len & 3)
+    if (len & 3) {
+	gen_data_zero(data);
 	return ASN1_BAD_FORMAT;
+    }
     data->length = len / 4;
-    if (data->length > UINT_MAX/sizeof(data->data[0]))
+    if (data->length > UINT_MAX/sizeof(data->data[0])) {
+	gen_data_zero(data);
 	return ERANGE;
+    }
     data->data = malloc(data->length * sizeof(data->data[0]));
-    if (data->data == NULL && data->length != 0)
+    if (data->data == NULL && data->length != 0) {
+	gen_data_zero(data);
 	return ENOMEM;
+    }
 
     for (i = 0; i < data->length; i++) {
 	data->data[i] = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
@@ -319,8 +440,7 @@ der_get_universal_string (const unsigned char *p, size_t len,
 	/* check for NUL in the middle of the string */
 	if (data->data[i] == 0 && i != (data->length - 1)) {
 	    free(data->data);
-	    data->data = NULL;
-	    data->length = 0;
+	    gen_data_zero(data);
 	    return ASN1_BAD_CHARACTER;
 	}
     }
@@ -354,7 +474,7 @@ der_get_octet_string_ber (const unsigned char *p, size_t len,
 {
     int e;
     Der_type type;
-    Der_class class;
+    Der_class cls;
     unsigned int tag, depth = 0;
     size_t l, datalen, oldlen = len;
 
@@ -362,9 +482,9 @@ der_get_octet_string_ber (const unsigned char *p, size_t len,
     data->data = NULL;
 
     while (len) {
-	e = der_get_tag (p, len, &class, &type, &tag, &l);
+	e = der_get_tag (p, len, &cls, &type, &tag, &l);
 	if (e) goto out;
-	if (class != ASN1_C_UNIV) {
+	if (cls != ASN1_C_UNIV) {
 	    e = ASN1_BAD_ID;
 	    goto out;
 	}
@@ -510,7 +630,7 @@ der_get_time (const unsigned char *p, size_t len,
     char *times;
     int e;
 
-    if (len > len + 1 || len == 0)
+    if (len == SIZE_MAX || len == 0)
 	return ASN1_BAD_LENGTH;
 
     times = malloc(len + 1);
@@ -548,7 +668,7 @@ der_get_oid (const unsigned char *p, size_t len,
     if (len < 1)
 	return ASN1_OVERRUN;
 
-    if (len > len + 1)
+    if (len == SIZE_MAX)
 	return ASN1_BAD_LENGTH;
 
     if (len + 1 > UINT_MAX/sizeof(data->components[0]))
@@ -588,13 +708,13 @@ der_get_oid (const unsigned char *p, size_t len,
 
 int
 der_get_tag (const unsigned char *p, size_t len,
-	     Der_class *class, Der_type *type,
+	     Der_class *cls, Der_type *type,
 	     unsigned int *tag, size_t *size)
 {
     size_t ret = 0;
     if (len < 1)
 	return ASN1_OVERRUN;
-    *class = (Der_class)(((*p) >> 6) & 0x03);
+    *cls = (Der_class)(((*p) >> 6) & 0x03);
     *type = (Der_type)(((*p) >> 5) & 0x01);
     *tag = (*p) & 0x1f;
     p++; len--; ret++;
@@ -620,13 +740,13 @@ der_get_tag (const unsigned char *p, size_t len,
 
 int
 der_match_tag (const unsigned char *p, size_t len,
-	       Der_class class, Der_type type,
+	       Der_class cls, Der_type type,
 	       unsigned int tag, size_t *size)
 {
     Der_type thistype;
     int e;
 
-    e = der_match_tag2(p, len, class, &thistype, tag, size);
+    e = der_match_tag2(p, len, cls, &thistype, tag, size);
     if (e) return e;
     if (thistype != type) return ASN1_BAD_ID;
     return 0;
@@ -634,7 +754,7 @@ der_match_tag (const unsigned char *p, size_t len,
 
 int
 der_match_tag2 (const unsigned char *p, size_t len,
-		Der_class class, Der_type *type,
+		Der_class cls, Der_type *type,
 		unsigned int tag, size_t *size)
 {
     size_t l;
@@ -644,7 +764,7 @@ der_match_tag2 (const unsigned char *p, size_t len,
 
     e = der_get_tag (p, len, &thisclass, type, &thistag, &l);
     if (e) return e;
-    if (class != thisclass)
+    if (cls != thisclass)
 	return ASN1_BAD_ID;
     if(tag > thistag)
 	return ASN1_MISPLACED_FIELD;
@@ -656,13 +776,13 @@ der_match_tag2 (const unsigned char *p, size_t len,
 
 int
 der_match_tag_and_length (const unsigned char *p, size_t len,
-			  Der_class class, Der_type *type, unsigned int tag,
+			  Der_class cls, Der_type *type, unsigned int tag,
 			  size_t *length_ret, size_t *size)
 {
     size_t l, ret = 0;
     int e;
 
-    e = der_match_tag2 (p, len, class, type, tag, &l);
+    e = der_match_tag2 (p, len, cls, type, tag, &l);
     if (e) return e;
     p += l;
     len -= l;
@@ -713,14 +833,19 @@ der_get_bit_string (const unsigned char *p, size_t len,
      * any of them will cause a interger overrun */
     if ((len - 1) >> (sizeof(len) * 8 - 3))
 	return ASN1_OVERRUN;
-    data->length = (len - 1) * 8;
-    data->data = malloc(len - 1);
-    if (data->data == NULL && (len - 1) != 0)
-	return ENOMEM;
-    /* copy data is there is data to copy */
-    if (len - 1 != 0) {
-      memcpy (data->data, p + 1, len - 1);
-      data->length -= p[0];
+    /*
+     * If there is data to copy, do that now.
+     */
+    if (len - 1 > 0) {
+	data->length = (len - 1) * 8;
+	data->data = malloc(len - 1);
+	if (data->data == NULL)
+	    return ENOMEM;
+	memcpy (data->data, p + 1, len - 1);
+	data->length -= p[0];
+    } else {
+	data->data = NULL;
+	data->length = 0;
     }
     if(size) *size = len;
     return 0;
@@ -802,6 +927,38 @@ der_put_unsigned (unsigned char *p, size_t len, const unsigned *v, size_t *size)
 }
 
 int
+der_put_unsigned64 (unsigned char *p, size_t len, const uint64_t *v, size_t *size)
+{
+    unsigned char *base = p;
+    uint64_t val = *v;
+
+    if (val) {
+       while (len > 0 && val) {
+           *p-- = val % 256;
+           val /= 256;
+           --len;
+       }
+       if (val != 0)
+           return ASN1_OVERFLOW;
+       else {
+           if(p[1] >= 128) {
+               if(len < 1)
+                   return ASN1_OVERFLOW;
+               *p-- = 0;
+           }
+           *size = base - p;
+           return 0;
+       }
+    } else if (len < 1)
+       return ASN1_OVERFLOW;
+    else {
+       *p    = 0;
+       *size = 1;
+       return 0;
+    }
+}
+
+int
 der_put_integer (unsigned char *p, size_t len, const int *v, size_t *size)
 {
     unsigned char *base = p;
@@ -836,6 +993,46 @@ der_put_integer (unsigned char *p, size_t len, const int *v, size_t *size)
 	    *p-- = 0xff;
 	    len--;
 	}
+    }
+    *size = base - p;
+    return 0;
+}
+
+int
+der_put_integer64 (unsigned char *p, size_t len, const int64_t *v, size_t *size)
+{
+    unsigned char *base = p;
+    int64_t val = *v;
+
+    if(val >= 0) {
+       do {
+           if(len < 1)
+               return ASN1_OVERFLOW;
+           *p-- = val % 256;
+           len--;
+           val /= 256;
+       } while(val);
+       if(p[1] >= 128) {
+           if(len < 1)
+               return ASN1_OVERFLOW;
+           *p-- = 0;
+           len--;
+       }
+    } else {
+       val = ~val;
+       do {
+           if(len < 1)
+               return ASN1_OVERFLOW;
+           *p-- = ~(val % 256);
+           len--;
+           val /= 256;
+       } while(val);
+       if(p[1] < 128) {
+           if(len < 1)
+               return ASN1_OVERFLOW;
+           *p-- = 0xff;
+           len--;
+       }
     }
     *size = base - p;
     return 0;
@@ -907,14 +1104,14 @@ int
 der_put_printable_string (unsigned char *p, size_t len,
 			  const heim_printable_string *str, size_t *size)
 {
-    return der_put_general_string(p, len, str, size);
+    return der_put_octet_string(p, len, str, size);
 }
 
 int
 der_put_ia5_string (unsigned char *p, size_t len,
 		    const heim_ia5_string *str, size_t *size)
 {
-    return der_put_general_string(p, len, str, size);
+    return der_put_octet_string(p, len, str, size);
 }
 
 int
@@ -993,7 +1190,8 @@ der_put_heim_integer (unsigned char *p, size_t len,
     len -= data->length;
 
     if (data->negative) {
-	int i, carry;
+	ssize_t i;
+	int carry;
 	for (i = data->length - 1, carry = 1; i >= 0; i--) {
 	    *p = buf[i] ^ 0xff;
 	    if (carry)
@@ -1069,7 +1267,7 @@ der_put_oid (unsigned char *p, size_t len,
 	     const heim_oid *data, size_t *size)
 {
     unsigned char *base = p;
-    int n;
+    size_t n;
 
     for (n = data->length - 1; n >= 2; --n) {
 	unsigned u = data->components[n];
@@ -1152,22 +1350,25 @@ der_put_length_and_tag (unsigned char *p, size_t len, size_t len_val,
 int
 _heim_time2generalizedtime (time_t t, heim_octet_string *s, int gtimep)
 {
-     struct tm *tm;
+     struct tm tm;
      const size_t len = gtimep ? 15 : 13;
 
+     s->data = NULL;
+     s->length = 0;
+     if (_der_gmtime(t, &tm) == NULL)
+	 return ASN1_BAD_TIMEFORMAT;
      s->data = malloc(len + 1);
      if (s->data == NULL)
 	 return ENOMEM;
      s->length = len;
-     tm = gmtime (&t);
      if (gtimep)
 	 snprintf (s->data, len + 1, "%04d%02d%02d%02d%02d%02dZ",
-		   tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-		   tm->tm_hour, tm->tm_min, tm->tm_sec);
+		   tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+		   tm.tm_hour, tm.tm_min, tm.tm_sec);
      else
 	 snprintf (s->data, len + 1, "%02d%02d%02d%02d%02d%02dZ",
-		   tm->tm_year % 100, tm->tm_mon + 1, tm->tm_mday,
-		   tm->tm_hour, tm->tm_min, tm->tm_sec);
+		   tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
+		   tm.tm_hour, tm.tm_min, tm.tm_sec);
 
      return 0;
 }
@@ -1193,14 +1394,14 @@ der_put_bit_string (unsigned char *p, size_t len,
 int
 _heim_der_set_sort(const void *a1, const void *a2)
 {
-    const struct heim_octet_string *s1 = a1, *s2 = a2;
+    const heim_octet_string *s1 = a1, *s2 = a2;
     int ret;
 
     ret = memcmp(s1->data, s2->data,
 		 s1->length < s2->length ? s1->length : s2->length);
     if(ret)
 	return ret;
-    return s1->length - s2->length;
+    return (int)(s1->length - s2->length);
 }
 /*
  * Copyright (c) 1997 - 2005 Kungliga Tekniska Högskolan
@@ -1254,7 +1455,19 @@ der_free_integer (int *i)
 }
 
 void
+der_free_integer64 (int64_t *i)
+{
+    *i = 0;
+}
+
+void
 der_free_unsigned (unsigned *u)
+{
+    *u = 0;
+}
+
+void
+der_free_unsigned64 (uint64_t *u)
 {
     *u = 0;
 }
@@ -1282,15 +1495,13 @@ der_free_utf8string (heim_utf8_string *str)
 void
 der_free_printable_string (heim_printable_string *str)
 {
-    free(*str);
-    *str = NULL;
+    der_free_octet_string(str);
 }
 
 void
 der_free_ia5_string (heim_ia5_string *str)
 {
-    free(*str);
-    *str = NULL;
+    der_free_octet_string(str);
 }
 
 void
@@ -1404,7 +1615,52 @@ _heim_len_unsigned (unsigned val)
 }
 
 size_t
+_heim_len_unsigned64 (uint64_t val)
+{
+    size_t ret = 0;
+    int last_val_gt_128;
+
+    do {
+	++ret;
+	last_val_gt_128 = (val >= 128);
+	val /= 256;
+    } while (val);
+
+    if(last_val_gt_128)
+	ret++;
+
+    return ret;
+}
+
+size_t
 _heim_len_int (int val)
+{
+    unsigned char q;
+    size_t ret = 0;
+
+    if (val >= 0) {
+	do {
+	    q = val % 256;
+	    ret++;
+	    val /= 256;
+	} while(val);
+	if(q >= 128)
+	    ret++;
+    } else {
+	val = ~val;
+	do {
+	    q = ~(val % 256);
+	    ret++;
+	    val /= 256;
+	} while(val);
+	if(q < 128)
+	    ret++;
+    }
+    return ret;
+}
+
+size_t
+_heim_len_int64 (int64_t val)
 {
     unsigned char q;
     size_t ret = 0;
@@ -1434,7 +1690,7 @@ static size_t
 len_oid (const heim_oid *oid)
 {
     size_t ret = 1;
-    int n;
+    size_t n;
 
     for (n = 2; n < oid->length; ++n) {
 	unsigned u = oid->components[n];
@@ -1483,9 +1739,21 @@ der_length_integer (const int *data)
 }
 
 size_t
+der_length_integer64 (const int64_t *data)
+{
+    return _heim_len_int64 (*data);
+}
+
+size_t
 der_length_unsigned (const unsigned *data)
 {
     return _heim_len_unsigned(*data);
+}
+
+size_t
+der_length_unsigned64 (const uint64_t *data)
+{
+    return _heim_len_unsigned64(*data);
 }
 
 size_t
@@ -1509,13 +1777,13 @@ der_length_utf8string (const heim_utf8_string *data)
 size_t
 der_length_printable_string (const heim_printable_string *data)
 {
-    return strlen(*data);
+    return data->length;
 }
 
 size_t
 der_length_ia5_string (const heim_ia5_string *data)
 {
-    return strlen(*data);
+    return data->length;
 }
 
 size_t
@@ -1650,7 +1918,21 @@ der_copy_integer (const int *from, int *to)
 }
 
 int
+der_copy_integer64 (const int64_t *from, int64_t *to)
+{
+    *to = *from;
+    return 0;
+}
+
+int
 der_copy_unsigned (const unsigned *from, unsigned *to)
+{
+    *to = *from;
+    return 0;
+}
+
+int
+der_copy_unsigned64 (const uint64_t *from, uint64_t *to)
 {
     *to = *from;
     return 0;
@@ -1680,14 +1962,20 @@ int
 der_copy_printable_string (const heim_printable_string *from,
 		       heim_printable_string *to)
 {
-    return der_copy_general_string(from, to);
+    to->length = from->length;
+    to->data   = malloc(to->length + 1);
+    if(to->data == NULL)
+	return ENOMEM;
+    memcpy(to->data, from->data, to->length);
+    ((char *)to->data)[to->length] = '\0';
+    return 0;
 }
 
 int
-der_copy_ia5_string (const heim_printable_string *from,
-		     heim_printable_string *to)
+der_copy_ia5_string (const heim_ia5_string *from,
+		     heim_ia5_string *to)
 {
-    return der_copy_general_string(from, to);
+    return der_copy_printable_string(from, to);
 }
 
 int

@@ -234,9 +234,9 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 
     /* Check that the key type really fit into 8 bytes */
     switch (t5.enc_part.etype) {
-    case ETYPE_DES_CBC_CRC:
-    case ETYPE_DES_CBC_MD4:
-    case ETYPE_DES_CBC_MD5:
+    case KRB5_ENCTYPE_DES_CBC_CRC:
+    case KRB5_ENCTYPE_DES_CBC_MD4:
+    case KRB5_ENCTYPE_DES_CBC_MD5:
 	/* check ticket */
 	if (t5.enc_part.cipher.length > sizeof(plain)
 	    || t5.enc_part.cipher.length % 8 != 0)
@@ -494,17 +494,17 @@ krb5_des_decrypt(struct ktc_encryptionKey *key, int etype, void *in,
 #define CONFOUNDERSZ 8
 
     switch (etype) {
-    case ETYPE_DES_CBC_CRC:
+    case KRB5_ENCTYPE_DES_CBC_CRC:
 	memcpy(&ivec, key, sizeof(ivec));
 	cksumsz = 4;
 	cksum_func = verify_checksum_crc;
 	break;
-    case ETYPE_DES_CBC_MD4:
+    case KRB5_ENCTYPE_DES_CBC_MD4:
 	memset(&ivec, 0, sizeof(ivec));
 	cksumsz = 16;
 	cksum_func = verify_checksum_md4;
 	break;
-    case ETYPE_DES_CBC_MD5:
+    case KRB5_ENCTYPE_DES_CBC_MD5:
 	memset(&ivec, 0, sizeof(ivec));
 	cksumsz = 16;
 	cksum_func = verify_checksum_md5;
@@ -554,7 +554,7 @@ tkt_MakeTicket5(char *ticket, int *ticketLen, int enctype, int *kvno,
     memset(&data, 0, sizeof(data));
 
     data.flags.transited_policy_checked = 1;
-    data.key.keytype=ETYPE_DES_CBC_CRC;
+    data.key.keytype=KRB5_ENCTYPE_DES_CBC_CRC;
     data.key.keyvalue.data=sessionKey->data;
     data.key.keyvalue.length=8;
     data.crealm=cell;
@@ -718,16 +718,16 @@ tkt_DeriveDesKey(int enctype, void *keydata, size_t keylen,
 		 struct ktc_encryptionKey *output)
 {
     switch (enctype) {
-    case ETYPE_DES_CBC_CRC:
-    case ETYPE_DES_CBC_MD4:
-    case ETYPE_DES_CBC_MD5:
+    case KRB5_ENCTYPE_DES_CBC_CRC:
+    case KRB5_ENCTYPE_DES_CBC_MD4:
+    case KRB5_ENCTYPE_DES_CBC_MD5:
 	if (keylen != 8)
 	    return 1;
 
 	/* Extract session key */
 	memcpy(output, keydata, 8);
 	break;
-    case ETYPE_NULL:
+    case KRB5_ENCTYPE_NULL:
     case 4:
     case 6:
     case 8:
@@ -741,9 +741,9 @@ tkt_DeriveDesKey(int enctype, void *keydata, size_t keylen,
 	return 1;
 	/*In order to become a "Cryptographic Key" as specified in
 	 * SP800-108, it must be indistinguishable from a random bitstring. */
-    case ETYPE_DES3_CBC_MD5:
-    case ETYPE_OLD_DES3_CBC_SHA1:
-    case ETYPE_DES3_CBC_SHA1:
+    case KRB5_ENCTYPE_DES3_CBC_MD5:
+    case KRB5_ENCTYPE_OLD_DES3_CBC_SHA1:
+    case KRB5_ENCTYPE_DES3_CBC_SHA1:
 	if (compress_parity_bits(keydata, &keylen))
 	    return 1;
 	/* FALLTHROUGH */

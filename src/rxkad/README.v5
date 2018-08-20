@@ -33,7 +33,7 @@ htree=/home/lha/src/cvs/heimdal
 hotree=/sources/obj/heimdal
 otree=/sources/afs/openafs-rxkad5
 
-export htree otree
+export htree hotree otree
 
 (cd $htree/lib/asn1 ; \
  echo '#include "asn1_err.h"'; \
@@ -45,12 +45,12 @@ export htree otree
  der_free.c \
  der_length.c \
  der_copy.c \
-    )  \
+)  \
 | grep -v 'include "der_locl.h"' \
 | grep -v 'include <version.h>' \
 | sed 's!\(RCSID.*\)!/* \1 */!' \
 | sed 's!$Id: !Heimdal: !' \
-| cat > $otree/src/rxkad/v5der.c
+> $otree/src/rxkad/v5der.c
 
 grep -v 'struct units'  $hotree/lib/asn1/krb5_asn1.h \
  | sed s/uint16_t/afs_uint16/ \
@@ -58,49 +58,41 @@ grep -v 'struct units'  $hotree/lib/asn1/krb5_asn1.h \
    > $otree/src/rxkad/v5gen.h
 
 cp  $hotree/lib/asn1/der-protos.h \
-   > $otree/src/rxkad/der-protos.h
+    $otree/src/rxkad/der-protos.h
 
-cp  $hotree/lib/asn1/asn1_err.h \
-   > $otree/src/rxkad/asn1_err.h
+< $hotree/lib/asn1/asn1_err.h \
+ sed 's!#include <et/com_err[.]h>!struct et_list;!' \
+ > $otree/src/rxkad/asn1_err.h
 
 (cd $hotree/lib/asn1 ; \
- cat asn1_krb5int32.c \
-    asn1_Ticket.c \
-    asn1_AuthorizationDataElement.c \
-    asn1_EncryptedData.c \
-    asn1_PrincipalName.c \
-    asn1_HostAddresses.c \
-    asn1_HostAddress.c \
-    asn1_AuthorizationData.c \
-    asn1_EncTicketPart.c \
-    asn1_KerberosTime.c \
-    asn1_TransitedEncoding.c \
-    asn1_EncryptionKey.c \
-    asn1_TicketFlags.c \
-    asn1_Realm.c \
-    asn1_ENCTYPE.c \
-    asn1_NAME_TYPE.c \
-    ) \
+ echo '#define HEIMDAL_UNUSED_ATTRIBUTE AFS_UNUSED' ; \
+ cat krb5_asn1-priv.h ; \
+ cat asn1_krb5_asn1.x ) \
  | grep -v 'include <krb5-types.h>' \
- | grep -v 'include <krb5_asn1.h>' \
- | grep -v 'include <krb5_asn1-priv.h>' \
+ | grep -v 'include "krb5_asn1.h"' \
+ | grep -v 'include "krb5_asn1-priv.h"' \
  | grep -v 'include <der.h>' \
  | grep -v 'include <der-private.h>' \
  | grep -v 'include <parse_units.h>' \
  | grep -v 'include <asn1-template.h>' \
  | perl \
    -e '$f=0; while(<>){$f=1 if(/struct units/);print if($f eq 0);$f=0 if(/^}/);}' \
- | indent -npro -nbad -bap -nbc -br -ce -cd4 -brs -ncdb -di2 -ndj -nfc1 -i4 -lp -npcs -psl -sc -nsob \
- | cat > $otree/src/rxkad/v5gen.c
+ | sed -n '/^encode_Checksum[(]/q;p' \
+ | head -n -2 \
+ > $otree/src/rxkad/v5gen.c
 
 ( \
  perl -p -e 's/^(encode_|decode_|free_|copy_|length_)([^(]*)\([^)]*\)\n$/#define $1$2 _rxkad_v5_$1$2\n/' $otree/src/rxkad/v5gen.c ; \
-  perl -p -e 's/^(der_|copy_|encode_|decode_|len_|length_|free_|fix_dce|time2generalizedtime)([^(]*).*/#define $1$2 _rxkad_v5_$1$2/' /sources/afs/openafs-krb5/src/rxkad/v5der.c ; \
+  perl -p -e 's/^(der_|copy_|encode_|decode_|len_|length_|free_|fix_dce|time2generalizedtime)([^( ]*).*/#define $1$2 _rxkad_v5_$1$2/' $otree/src/rxkad/v5der.c ; \
   echo '#define TicketFlags2int _rxkad_v5_TicketFlags2int' ; \
   echo '#define int2TicketFlags _rxkad_v5_int2TicketFlags' ; \
   : ) | \
- (grep _rxkad_v5 ; \
-  echo '#ifndef HAVE_TIMEGM' ; \
-  echo '#define timegm	_rxkad_timegm' ; \
-  echo '#endif' ; \
-  :) > $otree/src/rxkad/v5gen-rewrite.h
+  grep _rxkad_v5 \
+  > $otree/src/rxkad/v5gen-rewrite.h
+
+( \
+  < $otree/src/rxkad/v5gen.c \
+  indent -npro -nbad -bap -nbc -br -ce -cd4 -brs -ncdb -di2 -ndj -nfc1 -i4 -lp -npcs -psl -sc -nsob \
+  > $otree/src/rxkad/v5gen.c.indent ; \
+  mv $otree/src/rxkad/v5gen.c.indent $otree/src/rxkad/v5gen.c \
+)
