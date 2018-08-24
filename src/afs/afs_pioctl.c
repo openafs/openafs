@@ -1119,7 +1119,9 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #endif
     }
 #endif /* AFS_NEED_CLIENTCONTEXT */
-    if ((com & 0xff) == 15) {
+
+    /* VIOCPREFETCH */
+    if ((com & 0xff00) >> 8 == 'V' && (com & 0xff) == 15) {
 	/* special case prefetch so entire pathname eval occurs in helper process.
 	 * otherwise, the pioctl call is essentially useless */
 #if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
