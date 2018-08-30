@@ -373,6 +373,8 @@ STC_ReadLabel(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *task
     afs_int32 code;
 
     memset(label, 0, sizeof(*label));
+    /* Synchronous, so no "real" ID; don't send stack garbage on the wire */
+    *taskId = 0;
 #ifdef xbsa
     if (CONF_XBSA)
 	return (TC_BADTASK);	/* ReadLabel does not apply if XBSA */
