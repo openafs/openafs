@@ -110,7 +110,7 @@ static afs_int32 listEntry(struct rx_call *call, afs_int32 aid,
 static afs_int32 listEntries(struct rx_call *call, afs_int32 flag,
 			     afs_int32 startindex, prentries *bulkentries,
 			     afs_int32 *nextstartindex, afs_int32 *cid);
-static afs_int32 put_prentries(struct prentry *tentry, prentries *bulkentries);
+static void put_prentries(struct prentry *tentry, prentries *bulkentries);
 static afs_int32 changeEntry(struct rx_call *call, afs_int32 aid, char *name,
 			     afs_int32 oid, afs_int32 newid, afs_int32 *cid);
 static afs_int32 setFieldsEntry(struct rx_call *call, afs_int32 id,
@@ -1440,6 +1440,7 @@ SPR_ListEntries(struct rx_call *call, afs_int32 flag, afs_int32 startindex,
     return code;
 }
 
+#define PR_MAXENTRIES 500
 static afs_int32
 listEntries(struct rx_call *call, afs_int32 flag, afs_int32 startindex,
 	    prentries *bulkentries, afs_int32 *nextstartindex, afs_int32 *cid)
@@ -1470,6 +1471,12 @@ listEntries(struct rx_call *call, afs_int32 flag, afs_int32 startindex,
 
     eof = ntohl(cheader.eofPtr) - sizeof(cheader);
     maxentries = eof / sizeof(struct prentry);
+
+    bulkentries->prentries_val = calloc(PR_MAXENTRIES,
+					sizeof(bulkentries->prentries_val[0]));
+    if (!bulkentries->prentries_val)
+	ABORT_WITH(tt, PRNOMEM);
+
     for (i = startindex; i < maxentries; i++) {
 	pos = i * sizeof(struct prentry) + sizeof(cheader);
 	code = pr_ReadEntry(tt, 0, pos, &tentry);
@@ -1486,11 +1493,9 @@ listEntries(struct rx_call *call, afs_int32 flag, afs_int32 startindex,
 	f = (tentry.flags & PRTYPE);
 	if (((flag & PRUSERS) && (f == 0)) ||	/* User  entry */
 	    ((flag & PRGROUPS) && (f & PRGRP))) {	/* Group entry */
-	    code = put_prentries(&tentry, bulkentries);
-	    if (code == -1)
-		break;		/* Filled return array */
-	    if (code)
-		goto done;
+	    put_prentries(&tentry, bulkentries);
+	    if (bulkentries->prentries_len >= PR_MAXENTRIES)
+		break;
 	}
     }
     code = 0;
@@ -1512,29 +1517,14 @@ listEntries(struct rx_call *call, afs_int32 flag, afs_int32 startindex,
     return PRSUCCESS;
 }
 
-#define PR_MAXENTRIES 500
-static afs_int32
+static void
 put_prentries(struct prentry *tentry, prentries *bulkentries)
 {
     struct prlistentries *entry;
 
-    if (bulkentries->prentries_val == 0) {
-	bulkentries->prentries_len = 0;
-	bulkentries->prentries_val = malloc(PR_MAXENTRIES *
-					    sizeof(struct prlistentries));
-	if (!bulkentries->prentries_val) {
-	    return (PRNOMEM);
-	}
-    }
-
-    if (bulkentries->prentries_len >= PR_MAXENTRIES) {
-	return (-1);
-    }
-
     entry = bulkentries->prentries_val;
     entry += bulkentries->prentries_len;
 
-    memset(entry, 0, sizeof(*entry));
     entry->flags = tentry->flags >> PRIVATE_SHIFT;
     if (entry->flags == 0) {
 	entry->flags =
@@ -1550,7 +1540,6 @@ put_prentries(struct prentry *tentry, prentries *bulkentries)
     entry->count = tentry->count;
     strncpy(entry->name, tentry->name, PR_MAXNAMELEN);
     bulkentries->prentries_len++;
-    return 0;
 }
 
 afs_int32
