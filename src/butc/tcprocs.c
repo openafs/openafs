@@ -353,7 +353,7 @@ STC_PerformRestore(struct rx_call *call, char *dumpSetName,
 
 static afs_int32
 SPerformRestore(struct rx_call *acid, char *dumpSetName,
-	        tc_restoreArray *arestores, afs_int32 *taskID)
+	        tc_restoreArray *arestores, afs_int32 *taskId)
 {
     struct dumpNode *newNode;
     statusP statusPtr;
@@ -366,7 +366,7 @@ SPerformRestore(struct rx_call *acid, char *dumpSetName,
     PROCESS pid;
 #endif
 
-    *taskID = 0;
+    *taskId = 0;
 
     if (callPermitted(acid) == 0)
 	return (TC_NOTPERMITTED);
@@ -380,7 +380,7 @@ SPerformRestore(struct rx_call *acid, char *dumpSetName,
 		               arestores->tc_restoreArray_len);
     newNode->arraySize = arestores->tc_restoreArray_len;
     CopyRestoreDesc(newNode->restores, arestores);
-    *taskID = newNode->taskID;
+    *taskId = newNode->taskID;
 
     /* should log the intent */
 
