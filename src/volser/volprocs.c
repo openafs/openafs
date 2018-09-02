@@ -2789,6 +2789,7 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 {
     transDebugInfo *pntr;
     afs_int32 allocSize = 50;
+    afs_int32 code = 0;
     struct volser_trans *tt, *nt, *allTrans;
 
     if (!afsconf_CheckRestrictedQuery(tdir, acid, restrictedQueryLevel))
@@ -2832,6 +2833,10 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 	    allocSize = (allocSize * 3) / 2;
 	    pntr = realloc(transInfo->transDebugEntries_val,
 			   allocSize * sizeof(transDebugInfo));
+	    if (pntr == NULL) {
+		code = ENOMEM;
+		goto done;
+	    }
 	    transInfo->transDebugEntries_val = pntr;
 	    pntr =
 		transInfo->transDebugEntries_val +
@@ -2843,7 +2848,7 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 done:
     VTRANS_UNLOCK;
 
-    return 0;
+    return code;
 }
 
 afs_int32
