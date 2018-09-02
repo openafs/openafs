@@ -91,10 +91,11 @@ static afs_int32 addToGroup(struct rx_call *call, afs_int32 aid, afs_int32 gid,
 			    afs_int32 *cid);
 static afs_int32 nameToID(struct rx_call *call, namelist *aname, idlist *aid);
 static afs_int32 idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid);
-static afs_int32 IDToName(struct ubik_trans *at, afs_int32 aid,
-			  char aname[PR_MAXNAMELEN]);
-static afs_int32 NameToID(struct ubik_trans *at, char aname[PR_MAXNAMELEN],
-			  afs_int32 *aid);
+static afs_int32 lookup_name_from_id(struct ubik_trans *at, afs_int32 aid,
+				     char aname[PR_MAXNAMELEN]);
+static afs_int32 lookup_id_from_name(struct ubik_trans *at,
+				     char aname[PR_MAXNAMELEN],
+				     afs_int32 *aid);
 static afs_int32 Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid);
 static afs_int32 UpdateEntry(struct rx_call *call, afs_int32 aid, char *name,
 			     struct PrUpdateEntry *uentry, afs_int32 *cid);
@@ -589,9 +590,10 @@ nameToID(struct rx_call *call, namelist *aname, idlist *aid)
 		     code, nameinst, cell));
 	}
 	if (islocal)
-	    code = NameToID(tt, nameinst, &aid->idlist_val[i]);
+	    code = lookup_id_from_name(tt, nameinst, &aid->idlist_val[i]);
 	else
-	    code = NameToID(tt, aname->namelist_val[i], &aid->idlist_val[i]);
+	    code = lookup_id_from_name(tt, aname->namelist_val[i],
+				       &aid->idlist_val[i]);
 
 	if (code != PRSUCCESS)
 	    aid->idlist_val[i] = ANONYMOUSID;
@@ -667,7 +669,8 @@ idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid)
 	ABORT_WITH(tt, PRPERM);
 
     for (i = 0; i < aid->idlist_len; i++) {
-	code = IDToName(tt, aid->idlist_val[i], aname->namelist_val[i]);
+	code = lookup_name_from_id(tt, aid->idlist_val[i],
+				   aname->namelist_val[i]);
 	if (code != PRSUCCESS)
 	    sprintf(aname->namelist_val[i], "%d", aid->idlist_val[i]);
         osi_audit(PTS_IdToNmEvent, code, AUD_ID, aid->idlist_val[i],
@@ -690,7 +693,8 @@ idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid)
 }
 
 static afs_int32
-IDToName(struct ubik_trans *at, afs_int32 aid, char aname[PR_MAXNAMELEN])
+lookup_name_from_id(struct ubik_trans *at, afs_int32 aid,
+		    char aname[PR_MAXNAMELEN])
 {
     afs_int32 temp;
     struct prentry tentry;
@@ -707,7 +711,8 @@ IDToName(struct ubik_trans *at, afs_int32 aid, char aname[PR_MAXNAMELEN])
 }
 
 static afs_int32
-NameToID(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid)
+lookup_id_from_name(struct ubik_trans *at, char aname[PR_MAXNAMELEN],
+		    afs_int32 *aid)
 {
     afs_int32 temp;
     struct prentry tentry;
@@ -1233,7 +1238,8 @@ getCPS2(struct rx_call *call, afs_int32 aid, afs_uint32 ahost, prlist *alist,
 	    || !AccessOK(tt, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
 	    ABORT_WITH(tt, PRPERM);
     }
-    code = NameToID(tt, afs_inet_ntoa_r(iaddr.s_addr, hoststr), &hostid);
+    code = lookup_id_from_name(tt, afs_inet_ntoa_r(iaddr.s_addr, hoststr),
+			       &hostid);
     if (code == PRSUCCESS && hostid != 0) {
 	temp = FindByID(tt, hostid);
 	if (temp) {
@@ -1298,7 +1304,8 @@ getHostCPS(struct rx_call *call, afs_uint32 ahost, prlist *alist,
     if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
 	ABORT_WITH(tt, PRPERM);
 
-    code = NameToID(tt, afs_inet_ntoa_r(iaddr.s_addr, hoststr), &hostid);
+    code = lookup_id_from_name(tt, afs_inet_ntoa_r(iaddr.s_addr, hoststr),
+			       &hostid);
     if (code == PRSUCCESS && hostid != 0) {
 	temp = FindByID(tt, hostid);
 	if (temp) {
@@ -1990,7 +1997,8 @@ addWildCards(struct ubik_trans *tt, prlist *alist, afs_uint32 host)
     while ((host = (host & wild))) {
 	wild = htonl(ntohl(wild) << 8);
 	iaddr.s_addr = host;
-	code = NameToID(tt, afs_inet_ntoa_r(iaddr.s_addr, hoststr), &hostid);
+	code = lookup_id_from_name(tt, afs_inet_ntoa_r(iaddr.s_addr, hoststr),
+				   &hostid);
 	if (code == PRSUCCESS && hostid != 0) {
 	    temp = FindByID(tt, hostid);
 	    if (temp) {
@@ -2068,7 +2076,7 @@ WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid,
 	    strcat(vname, "@");
 	    strcat(vname, tcell);
 	    lcstring(vname, vname, sizeof(vname));
-	    NameToID(at, vname, aid);
+	    lookup_id_from_name(at, vname, aid);
 	    if (aname)
 		strcpy(aname, vname);
 	    return 2;
@@ -2078,7 +2086,7 @@ WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid,
 	    *aid = SYSADMINID;	/* special case for the fileserver */
 	else {
 	    lcstring(vname, vname, sizeof(vname));
-	    code = NameToID(at, vname, aid);
+	    code = lookup_id_from_name(at, vname, aid);
 	}
 
     } else {
