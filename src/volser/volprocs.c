@@ -407,7 +407,7 @@ SAFSVolPartitionInfo64(struct rx_call *acid, char *pname, struct diskPartition64
     return code;
 }
 
-afs_int32
+static afs_int32
 VolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition64
 		 *partition)
 {
