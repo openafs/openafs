@@ -166,62 +166,62 @@ struct tciStatusS
 
 proc PerformDump(IN struct tc_dumpInterface *tcdiPtr,
 		 tc_dumpArray *dumps,
-		 OUT afs_int32 *dumpID);
+		 OUT afs_int32 *dumpID) = 0;
 
 /* Start a restore, given a dump set name, a tape set name and the volumes to
  * dump.
  */
 proc PerformRestore(IN string dumpSetName<TC_MAXNAMELEN>,
     tc_restoreArray *restores,
-    OUT afs_int32 *dumpID);
+    OUT afs_int32 *dumpID) = 1;
 
 proc LabelTape
  ( IN struct tc_tapeLabel *label,
    OUT afs_uint32 *taskId
- );
+ ) = 2;
 
 proc ReadLabel
  ( OUT struct tc_tapeLabel *label,
    OUT afs_uint32 *taskId
- );
+ ) = 3;
 
 proc ScanDumps
  ( IN afs_int32 addDbFlag,
   OUT afs_uint32 *taskId
- );
+ ) = 4;
 
 /* For returning information about the butc interface.
  * Currently this is just the version number
  */
 
-proc TCInfo(OUT struct tc_tcInfo *tciptr);
+proc TCInfo(OUT struct tc_tcInfo *tciptr) = 5;
 
 /* for database dump/restores */
 
-proc SaveDb(IN afs_uint32 archiveTime, OUT afs_uint32 *taskId );
+proc SaveDb(IN afs_uint32 archiveTime, OUT afs_uint32 *taskId ) = 6;
 
-proc RestoreDb( OUT afs_uint32 *taskId );
+proc RestoreDb( OUT afs_uint32 *taskId ) = 7;
 
 
 /* new status management - PA */
 
-proc EndStatus( IN  afs_uint32 taskId );
+proc EndStatus( IN  afs_uint32 taskId ) = 8;
 
 proc GetStatus
  ( IN  afs_uint32 taskId,
    OUT struct tciStatusS *statusPtr
- );
+ ) = 9;
 
-proc RequestAbort( IN  afs_uint32 taskId );
+proc RequestAbort( IN  afs_uint32 taskId ) = 10;
 
 proc ScanStatus
  ( INOUT afs_uint32 	*taskId,
    OUT struct tciStatusS *statusPtr,
    INOUT afs_uint32 	*flags
- );
+ ) = 11;
 
 proc DeleteDump
  ( IN afs_uint32  aDumpId,
    OUT afs_uint32 *taskId
- );
+ ) = 12;
 
