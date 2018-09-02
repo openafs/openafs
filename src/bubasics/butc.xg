@@ -175,42 +175,10 @@ proc PerformRestore(IN string dumpSetName<TC_MAXNAMELEN>,
     tc_restoreArray *restores,
     OUT afs_int32 *dumpID);
 
-/* check the status of a dump; the tape coordinator is assumed to sit on
- * the status of completed dumps for a reasonable period (2 - 12 hours)
- * so that they can be examined later
- */
-/*
- * proc CheckDump(IN afs_int32 dumpID, OUT struct tc_dumpStat *status);
- */
-
-/* abort a dump */
-/*
- * proc AbortDump(IN afs_int32 dumpID);
- */
-
-/* this call waits for a dump to complete; it ties up an LWP on the tape
-coordinator */
-/*
- * proc WaitForDump(IN afs_int32 dumpID);
- */
-
-/* close a dump normally (not abort) */
-/*
- * proc EndDump(IN afs_int32 dumpID);
- */
-
-/*
- * proc GetTMInfo(OUT struct tc_TMInfo *info);
- */
-
 proc LabelTape
  ( IN struct tc_tapeLabel *label,
    OUT afs_uint32 *taskId
  );
-
-/*
- * proc ScanNodes(IN afs_int32 index, OUT afs_int32 *nodeID);
- */
 
 proc ReadLabel
  ( OUT struct tc_tapeLabel *label,
