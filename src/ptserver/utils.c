@@ -390,36 +390,6 @@ AllocID(struct ubik_trans *at, afs_int32 flag, afs_int32 *aid)
     }
 }
 
-afs_int32
-IDToName(struct ubik_trans *at, afs_int32 aid, char aname[PR_MAXNAMELEN])
-{
-    afs_int32 temp;
-    struct prentry tentry;
-    afs_int32 code;
-
-    temp = FindByID(at, aid);
-    if (temp == 0)
-	return PRNOENT;
-    code = pr_Read(at, 0, temp, (char *)&tentry, sizeof(tentry));
-    if (code)
-	return code;
-    strncpy(aname, tentry.name, PR_MAXNAMELEN);
-    return PRSUCCESS;
-}
-
-afs_int32
-NameToID(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid)
-{
-    afs_int32 temp;
-    struct prentry tentry;
-
-    temp = FindByName(at, aname, &tentry);
-    if (!temp)
-	return PRNOENT;
-    *aid = tentry.id;
-    return PRSUCCESS;
-}
-
 int
 IDCmp(const void *a, const void *b)
 {

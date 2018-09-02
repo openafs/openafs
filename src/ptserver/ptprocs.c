@@ -91,6 +91,10 @@ static afs_int32 addToGroup(struct rx_call *call, afs_int32 aid, afs_int32 gid,
 			    afs_int32 *cid);
 static afs_int32 nameToID(struct rx_call *call, namelist *aname, idlist *aid);
 static afs_int32 idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid);
+static afs_int32 IDToName(struct ubik_trans *at, afs_int32 aid,
+			  char aname[PR_MAXNAMELEN]);
+static afs_int32 NameToID(struct ubik_trans *at, char aname[PR_MAXNAMELEN],
+			  afs_int32 *aid);
 static afs_int32 Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid);
 static afs_int32 UpdateEntry(struct rx_call *call, afs_int32 aid, char *name,
 			     struct PrUpdateEntry *uentry, afs_int32 *cid);
@@ -682,6 +686,36 @@ idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid)
     code = ubik_EndTrans(tt);
     if (code)
 	return code;
+    return PRSUCCESS;
+}
+
+static afs_int32
+IDToName(struct ubik_trans *at, afs_int32 aid, char aname[PR_MAXNAMELEN])
+{
+    afs_int32 temp;
+    struct prentry tentry;
+    afs_int32 code;
+
+    temp = FindByID(at, aid);
+    if (temp == 0)
+	return PRNOENT;
+    code = pr_Read(at, 0, temp, (char *)&tentry, sizeof(tentry));
+    if (code)
+	return code;
+    strncpy(aname, tentry.name, PR_MAXNAMELEN);
+    return PRSUCCESS;
+}
+
+static afs_int32
+NameToID(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid)
+{
+    afs_int32 temp;
+    struct prentry tentry;
+
+    temp = FindByName(at, aname, &tentry);
+    if (!temp)
+	return PRNOENT;
+    *aid = tentry.id;
     return PRSUCCESS;
 }
 

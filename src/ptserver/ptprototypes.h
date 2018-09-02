@@ -47,10 +47,6 @@ extern afs_int32 FindByName(struct ubik_trans *at,
 			    char aname[PR_MAXNAMELEN], struct prentry *tentryp);
 extern afs_int32 AllocID(struct ubik_trans *at, afs_int32 flag,
 			 afs_int32 *aid);
-extern afs_int32 IDToName(struct ubik_trans *at, afs_int32 aid,
-			  char aname[PR_MAXNAMELEN]);
-extern afs_int32 NameToID(struct ubik_trans *at,
-			  char aname[PR_MAXNAMELEN], afs_int32 *aid);
 extern int IDCmp(const void *a, const void *b);
 extern afs_int32 RemoveFromIDHash(struct ubik_trans *tt, afs_int32 aid,
 				  afs_int32 *loc);
