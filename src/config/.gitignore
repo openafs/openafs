@@ -14,6 +14,7 @@
 /Makefile.version-CML
 /afsconfig.h
 /afsconfig.h.in
+/cc-wrapper
 /config
 /mkvers
 /param.h.new
