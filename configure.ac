@@ -171,6 +171,7 @@ AC_CONFIG_FILES([
     src/config/Makefile.pthread
     src/config/Makefile.version-CML
     src/config/Makefile.version-NOCML
+    src/config/cc-wrapper
     src/config/shlib-build
     src/config/shlib-install
     src/crypto/hcrypto/Makefile
@@ -283,7 +284,8 @@ AC_CONFIG_FILES([
     tests/util/Makefile
     tests/volser/Makefile])
 AC_CONFIG_COMMANDS([default],[chmod a+x src/config/shlib-build
- chmod a+x src/config/shlib-install],[])
+ chmod a+x src/config/shlib-install
+ chmod a+x src/config/cc-wrapper],[])
 AC_OUTPUT
 
 # print a final summary
