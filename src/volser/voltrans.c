@@ -187,9 +187,7 @@ GCTrans(void)
 		((tt->refCount > 0) ? "is older" : "has been idle for more"),
 		(((now - tt->time) / GCWAKEUP) * GCWAKEUP));
 	}
-	if (tt->refCount > 0)
-	    continue;
-	if (tt->time + OLDTRANSTIME < now) {
+	if ((tt->refCount <= 0) && (tt->time + OLDTRANSTIME < now)) {
 	    Log("trans %u on volume %" AFS_VOLID_FMT " has timed out\n", tt->tid, afs_printable_VolumeId_lu(tt->volid));
 
 	    tt->refCount++;	/* we're using it now */
