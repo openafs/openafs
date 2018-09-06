@@ -62,12 +62,12 @@ int
 callPermitted(struct rx_call *call)
 {
     /*
-     * Before this code can be used, the rx connection, on the bucoord side,
-     * must be changed so that it will set up for token passing instead of
-     * using a simple rx connection that, below, returns a value of
-     * RX_SECIDX_NULL from rx_SecurityClassOf.
+     * If in backwards compat mode, allow anyone; otherwise, only
+     * superusers are allowed.
      */
-    return 1;
+    if (allow_unauth)
+	return 1;
+    return afsconf_SuperIdentity(butc_confdir, call, NULL);
 }
 
 /* -----------------------------
