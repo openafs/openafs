@@ -109,6 +109,7 @@ char *centralLogFile;
 afs_int32 lastLog;		/* Log last pass info */
 int rxBind = 0;
 struct afsconf_dir *butc_confdir;
+int allow_unauth = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -838,8 +839,8 @@ xbsa_shutdown(int x)
 static int
 WorkerBee(struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 code;
-    struct rx_securityClass *(securityObjects[1]);
+    afs_int32 code, numClasses;
+    struct rx_securityClass *(nullObjects[1]), **secObjs, **allObjs;
     struct rx_service *service;
     time_t tokenExpires;
     char cellName[64];
@@ -1064,6 +1065,13 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
     localauth = (as->parms[5].items ? 1 : 0);
     rxBind = (as->parms[8].items ? 1 : 0);
+    allow_unauth = (as->parms[11].items ? 1 : 0);
+
+    if (!allow_unauth && !localauth) {
+	const char *errstr = "Neither -localauth nor -allow_unauthenticated was provided; refusing to start in unintended insecure configuration\n";
+	TLog(0, "%s", (char *)errstr);
+	exit(1);
+    }
 
     if (rxBind) {
         afs_int32 ccode;
@@ -1109,19 +1117,48 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
     /* initialize database support, volume support, and logs */
 
-    /* Create a single security object, in this case the null security
-     * object, for unauthenticated connections, which will be used to control
-     * security on connections made to this server
+    /*
+     * Create security objects for the Rx server functionality.  Historically
+     * this was a single rxnull security object, since the tape controller was
+     * run by an operator that had local access to the tape device and some
+     * administrative privilege in the cell (to be able to perform volume-level
+     * accesses), but on a machine that was not necessarily trusted to hold the
+     * cell-wide key.
+     *
+     * Such a configuration is, of course, insecure because anyone can make
+     * inbound RPCs and manipulate the database, including creating bogus
+     * dumps and restoring them!  Additionally, in modern usage, butc is
+     * frequently run with -localauth to authenticate its outbound connections
+     * to the volservers and budb with the cell-wide key, in which case the
+     * cell-wide key is present and could be used to authenticate incoming
+     * connections as well.
+     *
+     * If -localauth is in use, create the full barrage of server security
+     * objects, including rxkad, so that inbound connections can be verified
+     * to only be made by authenticated clients.  Otherwise, only the rxnull
+     * class is in use with a single server security object.  Note that butc
+     * will refuse to start in this configuration unless the
+     * "-allow_unauthenticated" flag is provided, indicating that the operator
+     * has ensured that incoming connections are appropriately restricted by
+     * firewall configuration or network topology.
      */
 
-    securityObjects[0] = rxnull_NewServerSecurityObject();
-    if (!securityObjects[0]) {
-	TLog(0, "rxnull_NewServerSecurityObject");
-	exit(1);
+    if (allow_unauth) {
+	nullObjects[RX_SECIDX_NULL] = rxnull_NewServerSecurityObject();
+	if (!nullObjects[RX_SECIDX_NULL]) {
+	    TLog(0, "rxnull_NewServerSecurityObject");
+	    exit(1);
+	}
+	numClasses = 1;
+	secObjs = nullObjects;
+    } else {
+	/* Must be -localauth, so the cell keys are available. */
+	afsconf_BuildServerSecurityObjects(butc_confdir, 0, &allObjs, &numClasses);
+	secObjs = allObjs;
     }
 
     service =
-	rx_NewServiceHost(host, 0, 1, "BUTC", securityObjects, 1, TC_ExecuteRequest);
+	rx_NewServiceHost(host, 0, 1, "BUTC", secObjs, numClasses, TC_ExecuteRequest);
     if (!service) {
 	TLog(0, "rx_NewService");
 	exit(1);
@@ -1227,6 +1264,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-auditlog", CMD_SINGLE, CMD_OPTIONAL, "location of audit log");
     cmd_AddParm(ts, "-audit-interface", CMD_SINGLE, CMD_OPTIONAL,
 		"interface to use for audit logging");
+    cmd_AddParm(ts, "-allow_unauthenticated", CMD_FLAG, CMD_OPTIONAL,
+		"allow unauthenticated inbound RPCs (requires firewalling)");
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
