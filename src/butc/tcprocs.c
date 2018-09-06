@@ -74,10 +74,13 @@ static afs_int32 SDeleteDump(struct rx_call *acid, afs_uint32 dumpID,
 int
 callPermitted(struct rx_call *call)
 {
-    /* before this code can be used, the rx connection, on the bucoord side, must */
-    /* be changed so that it will set up for token passing instead of using  a    */
-    /* simple rx connection that, below, returns a value of 0 from rx_SecurityClassOf */
-    return 1;
+    /*
+     * If in backwards compat mode, allow anyone; otherwise, only
+     * superusers are allowed.
+     */
+    if (allow_unauth)
+	return 1;
+    return afsconf_SuperUser(butc_confdir, call, NULL);
 }
 
 /* -----------------------------
