@@ -858,8 +858,6 @@ afs_icl_CopyOut(struct afs_icl_log *logp, afs_int32 * bufferp,
 	memcpy((char *)bufferp, (char *)&logp->datap[ix],
 	       sizeof(afs_int32) * nwords);
 	outWords += nwords;
-	inWords -= nwords;
-	bufferp += nwords;
     }
 
     ReleaseWriteLock(&logp->lock);

@@ -133,7 +133,6 @@ GetTokens(afs_int32 ahost, afs_int32 auid)
 	memcpy(tbuffer, pheader, sizeof(pheader));
 	tp = tbuffer + sizeof(pheader);
 	memcpy(tp, &index, sizeof(afs_int32));
-	tp += sizeof(afs_int32);
 	iob.in = tbuffer;
 	iob.in_size = sizeof(afs_int32) + sizeof(pheader);
 	iob.out = tbuffer;
