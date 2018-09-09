@@ -172,6 +172,7 @@ SLabelTape(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *taskId)
     statusP statusPtr = NULL;
     afs_int32 code;
 
+    *taskId = 0;
 #ifdef xbsa
     if (CONF_XBSA)
 	return (TC_BADTASK);	/* LabelTape does not apply if XBSA */
@@ -261,11 +262,11 @@ SPerformDump(struct rx_call *rxCallId, struct tc_dumpInterface *tcdiPtr,
 #endif
     afs_int32 code = 0;
 
-    if (callPermitted(rxCallId) == 0)
-	return (TC_NOTPERMITTED);
-
     /* should be verifying parameter validity */
     *taskId = 0;
+
+    if (callPermitted(rxCallId) == 0)
+	return (TC_NOTPERMITTED);
 
     /* this creates a node in list, alots an id for it and prepares it for locking */
     CreateNode(&newNode);
@@ -364,6 +365,8 @@ SPerformRestore(struct rx_call *acid, char *dumpSetName,
 #else
     PROCESS pid;
 #endif
+
+    *taskID = 0;
 
     if (callPermitted(acid) == 0)
 	return (TC_NOTPERMITTED);
@@ -482,6 +485,8 @@ SRestoreDb(struct rx_call *rxCall, afs_uint32 *taskId)
     statusP statusPtr;
     afs_int32 code = 0;
 
+    *taskId = 0;
+
 #ifdef xbsa
     if (CONF_XBSA)
 	return (TC_BADTASK);	/* LabelTape does not apply if XBSA */
@@ -559,6 +564,8 @@ SSaveDb(struct rx_call *rxCall, Date archiveTime, afs_uint32 *taskId)
     statusP statusPtr = NULL;
     afs_int32 code = 0;
     struct saveDbIf *ptr;
+
+    *taskId = 0;
 
 #ifdef xbsa
     if (CONF_XBSA)
@@ -650,6 +657,8 @@ SScanDumps(struct rx_call *acid, afs_int32 addDbFlag, afs_uint32 *taskId)
     statusP statusPtr = NULL;
     afs_int32 code = 0;
 
+    *taskId = 0;
+
 #ifdef xbsa
     if (CONF_XBSA)
 	return (TC_BADTASK);	/* ScanDumps does not apply if XBSA */
@@ -724,6 +733,8 @@ STC_TCInfo(struct rx_call *call, struct tc_tcInfo *ti)
 static afs_int32
 STCInfo(struct rx_call *acid, struct tc_tcInfo *tciptr)
 {
+    memset(tciptr, 0, sizeof(*tciptr));
+
     if (callPermitted(acid) == 0)
 	return (TC_NOTPERMITTED);
 
@@ -761,6 +772,7 @@ SDeleteDump(struct rx_call *acid, afs_uint32 dumpID, afs_uint32 *taskId)
 #endif
 
     *taskId = 0;
+
     if (!CONF_XBSA)
 	return (TC_BADTASK);	/* Only do if butc is started as XBSA */
 
