@@ -111,14 +111,6 @@ int rxBind = 0;
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
 
-/* dummy routine for the audit work.  It should do nothing since audits */
-/* occur at the server level and bos is not a server. */
-int
-osi_audit(void)
-{
-    return 0;
-}
-
 static afs_int32
 SafeATOL(char *anum)
 {
