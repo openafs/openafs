@@ -157,7 +157,7 @@ util: opr $(DIR_roken) procmgmt hcrypto lwp
 libafscp: util afs volser vlserver rx auth fsint
 	+${COMPILE_PART1} libafscp ${COMPILE_PART2}
 
-audit: util rx rxkad fsint
+audit: util rx rxkad fsint bubasics
 	+${COMPILE_PART1} audit ${COMPILE_PART2} #TODO
 
 comerr: util $(DIR_roken)
