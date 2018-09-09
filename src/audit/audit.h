@@ -23,6 +23,12 @@
 #define AUD_RESID 20		/* resid         in variable list */
 #define AUD_RSSIZERANGE 21	/* rssizerange   in variable list */
 #define AUD_LOOKUPINFO 22	/* LookupInfo    in variable list */
+/* next 5 lines for butc */
+#define AUD_TLBL 30             /* Tape Controller label */
+#define AUD_TDI  31             /* Tape Controller dump interface */
+#define AUD_TDA  32             /* Tape Controller dump array */
+#define AUD_TRA  33             /* Tape Controller restore array */
+#define AUD_TSTT 34             /* Tape Controller status struct */
 
 /*
  * Note: the master definitions of these error codes come from *.et
