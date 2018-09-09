@@ -41,6 +41,7 @@
 #include <afs/keys.h>
 #include <afs/volser.h>
 #include <ubik.h>
+#include <afs/audit.h>
 #include <afs/com_err.h>
 #include <afs/cmd.h>
 #include <afs/tcdata.h>
@@ -105,6 +106,7 @@ afs_int32 BufferSize;		/* Size in B stored for data */
 char *centralLogFile;
 afs_int32 lastLog;		/* Log last pass info */
 int rxBind = 0;
+struct afsconf_dir *butc_confdir;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -824,6 +826,21 @@ xbsa_shutdown(int x)
 #endif
 
 static int
+tc_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
+{
+    struct afsconf_dir *dir = (struct afsconf_dir *)rock;
+    afs_int32 islocal = 0;	/* default to no */
+    int code;
+
+    code = afsconf_IsLocalRealmMatch(dir, &islocal, name, inst, cell);
+    if (code) {
+	TLog(0, ("Failed local realm check; code=%d, name=%s, inst=%s, cell=%s\n",
+		 code, name, inst, cell));
+    }
+    return islocal;
+}
+
+static int
 WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
@@ -842,6 +859,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     PROCESS dbWatcherPid;
 #endif
     afs_uint32 host = htonl(INADDR_ANY);
+    char *auditFileName = NULL;
+    char *auditInterface = NULL;
 
     debugLevel = 0;
 
@@ -986,6 +1005,30 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    fflush(centralLogIO);
 	}
     }
+
+    /* Open the configuration directory */
+    butc_confdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+    if (butc_confdir == NULL) {
+	TLog(0, "Failed to open server configuration directory");
+	exit(1);
+    }
+
+    /* Start auditing */
+    osi_audit_init();
+    if (as->parms[9].items) {
+	auditFileName = as->parms[9].items->data;
+    }
+    if (auditFileName != NULL)
+	osi_audit_file(auditFileName);
+    if (as->parms[10].items) {
+	auditInterface = as->parms[10].items->data;
+	if (osi_audit_interface(auditInterface)) {
+	    TLog(0, "Invalid audit interface '%s'\n", auditInterface);
+	    exit(1);
+	}
+    }
+    osi_audit(TC_StartEvent, 0, AUD_END);
+    osi_audit_set_user_check(butc_confdir, tc_IsLocalRealmMatch);
 
     if (as->parms[1].items) {
 	debugLevel = SafeATOL(as->parms[1].items->data);
@@ -1186,6 +1229,9 @@ main(int argc, char **argv)
 		"Force multiple XBSA server support");
     cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
 		"bind Rx socket");
+    cmd_AddParm(ts, "-auditlog", CMD_SINGLE, CMD_OPTIONAL, "location of audit log");
+    cmd_AddParm(ts, "-audit-interface", CMD_SINGLE, CMD_OPTIONAL,
+		"interface to use for audit logging");
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
