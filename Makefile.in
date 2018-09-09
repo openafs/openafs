@@ -157,7 +157,7 @@ util: procmgmt des lwp_depinstall rx_depinstall
 libafscp: util afs volser vlserver rx auth fsint
 	+${COMPILE_PART1} libafscp ${COMPILE_PART2}
 
-audit: util rx rxkad fsint
+audit: util rx rxkad fsint bubasics
 	+${COMPILE_PART1} audit ${COMPILE_PART2} #TODO
 
 comerr: util
