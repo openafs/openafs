@@ -24,6 +24,7 @@
 
 #include <afs/opr.h>
 #include "afs/afsint.h"
+#include "afs/butc.h"
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include "audit.h"
@@ -138,6 +139,95 @@ audmakebuf(char *audEvent, va_list vaList)
 		bufferPtr += sizeof(struct AFSFid);
 		break;
 	    }
+	/* butc tape label */
+	case AUD_TLBL:
+	    {
+		struct tc_tapeLabel *label;
+
+		label = (struct tc_tapeLabel *)va_arg(vaList,
+						      struct tc_tapeLabel *);
+		if (label)
+		    memcpy(bufferPtr, label, sizeof(*label));
+		else
+		    memset(bufferPtr, 0, sizeof(*label));
+		bufferPtr += sizeof(label);
+		break;
+	    }
+	/* butc dump interface */
+	case AUD_TDI:
+	    {
+		struct tc_dumpInterface *di;
+
+		di = (struct tc_dumpInterface *)
+			va_arg(vaList, struct tc_dumpInterface *);
+		if (di)
+		    memcpy(bufferPtr, di, sizeof(*di));
+		else
+		    memset(bufferPtr, 0, sizeof(*di));
+		bufferPtr += sizeof(*di);
+		break;
+	    }
+	/*
+	 * butc dump array
+	 * An array of dump descriptions, but the AIX audit package assumes fixed
+	 * length, so we can only do the first one for now.
+	 */
+	case AUD_TDA:
+	    {
+		struct tc_dumpArray *da;
+
+		da = (struct tc_dumpArray *)
+			va_arg(vaList, struct tc_dumpArray *);
+		if (da && da->tc_dumpArray_len) {
+		    memcpy(bufferPtr, &da->tc_dumpArray_len, sizeof(u_int));
+		    bufferPtr += sizeof(u_int);
+		    memcpy(bufferPtr, da->tc_dumpArray_val,
+			   sizeof(da->tc_dumpArray_val[0]));
+		} else {
+		    memset(bufferPtr, 0, sizeof(u_int));
+		    bufferPtr += sizeof(u_int);
+		    memset(bufferPtr, 0, sizeof(da->tc_dumpArray_val[0]));
+		}
+		bufferPtr += sizeof(da->tc_dumpArray_val[0]);
+		break;
+	    }
+	/*
+	 * butc restore array
+	 * An array of restore descriptions, but the AIX audit package assumes
+	 * fixed length, so we can only do the first one for now.
+	 */
+	case AUD_TRA:
+	    {
+		struct tc_restoreArray *ra;
+
+		ra = (struct tc_restoreArray *)
+			va_arg(vaList, struct tc_restoreArray *);
+		if (ra && ra->tc_restoreArray_len) {
+		    memcpy(bufferPtr, &ra->tc_restoreArray_len, sizeof(u_int));
+		    bufferPtr += sizeof(u_int);
+		    memcpy(bufferPtr, ra->tc_restoreArray_val,
+			   sizeof(ra->tc_restoreArray_val[0]));
+		} else {
+		    memset(bufferPtr, 0, sizeof(u_int));
+		    bufferPtr += sizeof(u_int);
+		    memset(bufferPtr, 0, sizeof(ra->tc_restoreArray_val[0]));
+		}
+		bufferPtr += sizeof(ra->tc_restoreArray_val[0]);
+		break;
+	    }
+	/* butc tape controller status */
+	    {
+		struct tciStatusS *status;
+
+		status = (struct tciStatusS *)va_arg(vaList,
+						     struct tciStatusS *);
+		if (status)
+		    memcpy(bufferPtr, status, sizeof(*status));
+		else
+		    memset(bufferPtr, 0, sizeof(*status));
+		bufferPtr += sizeof(*status);
+		break;
+	    }
 	default:
 #ifdef AFS_AIX32_ENV
 	    code =
@@ -163,6 +253,11 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
     char *vaStr;
     struct AFSFid *vaFid;
     struct AFSCBFids *vaFids;
+    struct tc_tapeLabel *vaLabel;
+    struct tc_dumpInterface *vaDI;
+    struct tc_dumpArray *vaDA;
+    struct tc_restoreArray *vaRA;
+    struct tciStatusS *vaTCstatus;
     int num = LogThreadNum();
     struct in_addr hostAddr;
     time_t currenttime;
@@ -257,6 +352,102 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
                     audit_ops->append_msg("FIDS 0 FID 0:0:0 ");
 
             }
+	    break;
+	case AUD_TLBL:		/* butc tape label */
+	    vaLabel = va_arg(vaList, struct tc_tapeLabel *);
+
+	    if (vaLabel) {
+		audit_ops->append_msg("TAPELABEL %d:%.*s:%.*s:%u ",
+				      vaLabel->size,
+				      TC_MAXTAPELEN, vaLabel->afsname,
+				      TC_MAXTAPELEN, vaLabel->pname,
+				      vaLabel->tapeId);
+	    } else {
+		audit_ops->append_msg("TAPELABEL <null>");
+	    }
+	    break;
+	case AUD_TDI:
+	    vaDI = va_arg(vaList, struct tc_dumpInterface *);
+
+	    if (vaDI) {
+		audit_ops->append_msg(
+    "TCDUMPINTERFACE %.*s:%.*s:%.*s:%d:%d:%d:$d:%.*s:%.*s:%d:%d:%d:%d:%d ",
+    TC_MAXDUMPPATH, vaDI->dumpPath, TC_MAXNAMELEN, vaDI->volumeSetName,
+    TC_MAXNAMELEN, vaDI->dumpName, vaDI->parentDumpId, vaDI->dumpLevel,
+    vaDI->doAppend,
+    vaDI->tapeSet.id, TC_MAXHOSTLEN, vaDI->tapeSet.tapeServer,
+    TC_MAXFORMATLEN, vaDI->tapeSet.format, vaDI->tapeSet.maxTapes,
+    vaDI->tapeSet.a, vaDI->tapeSet.b, vaDI->tapeSet.expDate,
+    vaDI->tapeSet.expType);
+	    } else {
+		audit_ops->append_msg("TCDUMPINTERFACE <null>");
+	    }
+	    break;
+	case AUD_TDA:
+	    vaDA = va_arg(vaList, struct tc_dumpArray *);
+
+	    if (vaDA) {
+		u_int i;
+		struct tc_dumpDesc *desc;
+		struct in_addr hostAddr;
+
+		desc = vaDA->tc_dumpArray_val;
+		if (desc) {
+		    audit_ops->append_msg("DUMPS %d ", vaDA->tc_dumpArray_len);
+		    for (i = 0; i < vaDA->tc_dumpArray_len; i++, desc++) {
+			hostAddr.s_addr = desc->hostAddr;
+			audit_ops->append_msg("DUMP %d:%d:%.*s:$d:%d:%d:%s ",
+			    desc->vid, desc->vtype, TC_MAXNAMELEN, desc->name,
+			    desc->partition, desc->date, desc->cloneDate,
+			    inet_ntoa(hostAddr));
+		    }
+		} else {
+		    audit_ops->append_msg("DUMPS 0 DUMP 0:0::0:0:0:0.0.0.0");
+		}
+	    }
+	    break;
+	case AUD_TRA:
+	    vaRA = va_arg(vaList, struct tc_restoreArray *);
+
+	    if (vaRA) {
+		u_int i;
+		struct tc_restoreDesc *desc;
+		struct in_addr hostAddr;
+
+		desc = vaRA->tc_restoreArray_val;
+		if (desc) {
+		    audit_ops->append_msg("RESTORES %d ",
+					  vaRA->tc_restoreArray_len);
+		    for(i = 0; i < vaRA->tc_restoreArray_len; i++, desc++) {
+			hostAddr.s_addr = desc->hostAddr;
+			audit_ops->append_msg(
+			    "RESTORE %d:%.*s:%d:%d:%d:%d:%d:%d:%d:%s:%.*s:%.*s ",
+			    desc->flags, TC_MAXTAPELEN, desc->tapeName,
+			    desc->dbDumpId, desc->initialDumpId,
+			    desc->position, desc->origVid, desc->vid,
+			    desc->partition, desc->dumpLevel,
+			    inet_ntoa(hostAddr), TC_MAXNAMELEN,
+			    desc->oldName, TC_MAXNAMELEN, desc->newName);
+		    }
+		} else {
+		    audit_ops->append_msg(
+			"RESTORES 0 RESTORE 0::0:0:0:0:0:0:0:0.0.0.0::: ");
+		}
+	    }
+	    break;
+	case AUD_TSTT:
+	    vaTCstatus = va_arg(vaList, struct tciStatusS *);
+
+	    if (vaTCstatus)
+		audit_ops->append_msg("TCSTATUS %.*s:%d:%d:%d:%d:%.*s:%d:%d ",
+				      TC_MAXNAMELEN, vaTCstatus->taskName,
+				      vaTCstatus->taskId, vaTCstatus->flags,
+				      vaTCstatus->dbDumpId, vaTCstatus->nKBytes,
+				      TC_MAXNAMELEN, vaTCstatus->volumeName,
+				      vaTCstatus->volsFailed,
+				      vaTCstatus->lastPolled);
+	    else
+		audit_ops->append_msg("TCSTATUS <null>");
 	    break;
 	default:
 	    audit_ops->append_msg("--badval-- ");
