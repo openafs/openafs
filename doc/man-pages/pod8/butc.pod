@@ -8,10 +8,12 @@ butc - Initializes the Tape Coordinator process
 <div class="synopsis">
 
 B<butc> S<<< [B<-port> <I<port offset>>] >>> S<<< [B<-debuglevel> (0 | 1 | 2)] >>>
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-noautoquery>] [B<-localauth>] [B<-help>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noautoquery>] [B<-localauth>]
+    [B<-auditlog> <I<file | sysvmq>> [B<-audit-interface> <I<interface>>]] [B<-help>]
 
 B<butc> S<<< [B<-p> <I<port offset>>] >>> S<<< [B<-d> (0 | 1 | 2)] >>>
-    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-h>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>]
+    [B<-auditl> <I<file | sysvmq>> [-B<-audit-i> <I<interface>>]] [B<-h>]
 
 =for html
 </div>
@@ -178,6 +180,19 @@ authentication.
 Do not combine this argument with the B<-cell> flag, and use it only when
 logged on to a server machine as the local superuser C<root>; client
 machines do not have F</usr/afs/etc/KeyFile> file.
+
+=item B<-auditlog> <I<log path>>
+
+Turns on audit logging, and sets the path for the audit log.  The audit
+log records information about RPC calls, including the name of the RPC
+call, the host that submitted the call, the authenticated entity (user)
+that issued the call, the parameters for the call, and if the call
+succeeded or failed.
+
+=item B<-audit-interface> <(file | sysvmq)>
+
+Specifies what audit interface to use. Defaults to C<file>. See
+L<fileserver(8)> for an explanation of each interface.
 
 =item B<-help>
 

@@ -301,6 +301,21 @@
 #define SREMIORemoteGetHSMdata  "AFS_RE_HSMdata"
 #define SREMIOPrefetch          "AFS_RE_Prefetch"
 
+#define TC_StartEvent           "AFS_TC_Start"
+#define TC_LabelTapeEvent       "AFS_TC_LabelTape"
+#define TC_PerformDumpEvent     "AFS_TC_PerformDump"
+#define TC_PerformRestoreEvent  "AFS_TC_PerformRestore"
+#define TC_ReadLabelEvent       "AFS_TC_ReadLabel"
+#define TC_RestoreDbEvent       "AFS_TC_RestoreDb"
+#define TC_SaveDbEvent          "AFS_TC_SaveDb"
+#define TC_ScanDumpsEvent       "AFS_TC_ScanDumps"
+#define TC_TCInfoEvent          "AFS_TC_TCInfo"
+#define TC_DeleteDumpEvent      "AFS_TC_DeleteDump"
+#define TC_GetStatusEvent       "AFS_TC_GetStatus"
+#define TC_EndStatusEvent       "AFS_TC_EndStatus"
+#define TC_RequestAbortEvent    "AFS_TC_RequestAbort"
+#define TC_ScanStatusEvent      "AFS_TC_ScanStatus"
+
 
 /* prototypes for audit functions */
 int osi_audit(char *audEvent, afs_int32 errCode, ...);
