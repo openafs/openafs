@@ -119,6 +119,8 @@ struct cmd_parmdesc;
 extern afs_int32 bc_ParseExpiration(struct cmd_parmdesc *paramPtr,
 		                    afs_int32 *expType, afs_int32 *expDate);
 /* main.c */
+extern int localauth, nobutcauth;
+extern char tcell[];
 extern time_t tokenExpires;
 extern afs_int32 doDispatch(afs_int32, char *[], afs_int32);
 extern void bc_HandleMisc(afs_int32 code);
