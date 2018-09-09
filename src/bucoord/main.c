@@ -54,7 +54,7 @@
 #include "bucoord_internal.h"
 #include "bucoord_prototypes.h"
 
-int localauth, interact;
+int localauth, interact, nobutcauth;
 char tcell[64];
 
 /*
@@ -305,6 +305,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     /* Handling the command line opcode */
     if (!bcInit) {
 	localauth = ((as && as->parms[14].items) ? 1 : 0);
+	nobutcauth = ((as && as->parms[16].items) ? 1 : 0);
 	if (as && as->parms[15].items)
 	    strcpy(tcell, as->parms[15].items->data);
 	else
@@ -445,6 +446,8 @@ add_std_args(struct cmd_syndesc *ts)
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 		"local authentication");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
+    cmd_AddParm(ts, "-nobutcauth", CMD_FLAG, CMD_OPTIONAL,
+		"no authentication to butc");
 }
 
 int
