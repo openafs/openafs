@@ -1,6 +1,6 @@
 AC_DEFUN([OPENAFS_CTF_TOOLS_CHECKS],[
 
-CTF_DEFAULT_PATH="$PATH:/usr/bin:/opt/onbld/bin/$HOST_CPU"
+CTF_DEFAULT_PATH="$PATH:/usr/bin:/opt/onbld/bin/$(uname -p)"
 
 AC_ARG_WITH([ctf-tools],
         AS_HELP_STRING([--with-ctf-tools@<:@=DIR@:>@],
