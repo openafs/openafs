@@ -43,6 +43,7 @@ struct ktime {
     short day;			/* 0 is sunday */
 };
 
+/* ktime masks */
 #define	KTIME_HOUR	1	/* hour should match */
 #define	KTIME_MIN	2
 #define	KTIME_SEC	4
@@ -50,6 +51,10 @@ struct ktime {
 #define	KTIME_DAY	8	/* day should match */
 #define	KTIME_NEVER	0x10	/* special case: never */
 #define	KTIME_NOW	0x20	/* special case: right now */
+
+/* ktime special values */
+#define KTIME_NEVERTIME  0x7fffffff  /* never */
+#define KTIME_NOWTIME    0           /* right now */
 
 #define	ktime_DateToLong	ktime_DateToInt32	/* XXX */
 #define	ktimeRelDate_ToLong	ktimeRelDate_ToInt32	/* XXX */

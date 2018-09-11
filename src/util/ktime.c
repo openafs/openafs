@@ -381,9 +381,9 @@ ktime_next(struct ktime * aktime, afs_int32 afrom)
 
     /* handle some special cases */
     if (tmask & KTIME_NEVER)
-	return 0x7fffffff;
+	return KTIME_NEVERTIME;
     if (tmask & KTIME_NOW)
-	return 0;
+	return KTIME_NOWTIME;
 
     /* Use probe to fill in members of *tsp. Add 23 hours each iteration until
      * time_next is correct. Only add 23 hrs to avoid skipping spring
