@@ -835,8 +835,8 @@ tc_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
 
     code = afsconf_IsLocalRealmMatch(dir, &islocal, name, inst, cell);
     if (code) {
-	TLog(0, ("Failed local realm check; code=%d, name=%s, inst=%s, cell=%s\n",
-		 code, name, inst, cell));
+	TLog(0, "Failed local realm check; code=%d, name=%s, inst=%s, cell=%s\n",
+		 code, name, inst, cell);
     }
     return islocal;
 }
