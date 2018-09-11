@@ -1,5 +1,37 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.2
+
+  All platforms
+
+    * Fix OPENAFS-SA-2018-002: information leakage in RPC output variables
+      Various RPC routines did not always initialize all output fields,
+      exposing memory contents to network attackers.  The relevant RPCs include
+      an AFSCB_ RPC, so cache managers are affected as well as servers.
+
+  All server platforms
+
+    * Fix OPENAFS-SA-2018-003: denial of service due to excess resource consumption
+      Various RPCs were defined as allowing unbounded arrays as input, allowing
+      an unauthenticated attacker to cause excess memory allocation and tie up
+      network bandwidth by sending (or claiming to send) large input arrays.
+
+    * Fix OPENAFS-SA-2018-001: unauthenticated volume operations via butc
+      On systems using the in-tree backup system, the butc process was running
+      with administrative credentials, but accepted incoming RPCs over
+      unauthenticated connections; these incoming RPCs in turn triggered
+      outgoing RPCs using the administrative credentials.  Unauthenticated
+      attackers could construct volue dumps containing arbitrary contents
+      and cause these dumps to be restored and overwrite arbitrary volume
+      contents; afterward, the backup database could be restored to its
+      initial state, hiding evidence of the unauthorized changes.
+
+      Running butc with -localauth now requires authenticated incoming
+      connections, and the backup utility makes authenticated connections to
+      the butc.  Audit capabilities have been added to the butc RPC handlers.
+      Command-line arguments are provided to retain the (insecure) historical
+      behavior until all systems have been upgraded.
+
 OpenAFS 1.8.1.1
 
   Linux Clients
