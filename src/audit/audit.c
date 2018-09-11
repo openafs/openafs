@@ -371,7 +371,7 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
 
 	    if (vaDI) {
 		audit_ops->append_msg(
-    "TCDUMPINTERFACE %.*s:%.*s:%.*s:%d:%d:%d:$d:%.*s:%.*s:%d:%d:%d:%d:%d ",
+    "TCDUMPINTERFACE %.*s:%.*s:%.*s:%d:%d:%d:%d:%.*s:%.*s:%d:%d:%d:%d:%d ",
     TC_MAXDUMPPATH, vaDI->dumpPath, TC_MAXNAMELEN, vaDI->volumeSetName,
     TC_MAXNAMELEN, vaDI->dumpName, vaDI->parentDumpId, vaDI->dumpLevel,
     vaDI->doAppend,
@@ -396,7 +396,7 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
 		    audit_ops->append_msg("DUMPS %d ", vaDA->tc_dumpArray_len);
 		    for (i = 0; i < vaDA->tc_dumpArray_len; i++, desc++) {
 			hostAddr.s_addr = desc->hostAddr;
-			audit_ops->append_msg("DUMP %d:%d:%.*s:$d:%d:%d:%s ",
+			audit_ops->append_msg("DUMP %d:%d:%.*s:%d:%d:%d:%s ",
 			    desc->vid, desc->vtype, TC_MAXNAMELEN, desc->name,
 			    desc->partition, desc->date, desc->cloneDate,
 			    inet_ntoa(hostAddr));
