@@ -127,6 +127,7 @@ main(int argc, char *argv[])
     cmd_AddParm(ts, "-pipe", CMD_FLAG, CMD_OPTIONAL,
 		"read password from stdin");
     cmd_AddParm(ts, "-silent", CMD_FLAG, CMD_OPTIONAL, "silent operation");
+    /* Note: -lifetime is not implemented in this version of klog. */
     cmd_AddParm(ts, "-lifetime", CMD_SINGLE, CMD_OPTIONAL,
 		"ticket lifetime in hh[:mm[:ss]]");
     cmd_AddParm(ts, "-setpag", CMD_FLAG, CMD_OPTIONAL,
@@ -361,7 +362,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     int authtype;
 #endif
     krb5_data enc_part[1];
-    time_t lifetime;		/* requested ticket lifetime */
     krb5_prompter_fct pf = NULL;
     char *pass = 0;
     void *pa = 0;
@@ -512,36 +512,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	       strlen(as->parms[aPASSWORD].items->data));
 	pass = passwd;
     }
-
-    if (as->parms[aLIFETIME].items) {
-	char *life = as->parms[aLIFETIME].items->data;
-	char *sp;		/* string ptr to rest of life */
-	lifetime = 3600 * strtol(life, &sp, 0);	/* hours */
-	if (sp == life) {
-	  bad_lifetime:
-	    if (!Silent)
-		fprintf(stderr, "%s: translating '%s' to lifetime failed\n",
-			rn, life);
-	    return 1;
-	}
-	if (*sp == ':') {
-	    life = sp + 1;	/* skip the colon */
-	    lifetime += 60 * strtol(life, &sp, 0);	/* minutes */
-	    if (sp == life)
-		goto bad_lifetime;
-	    if (*sp == ':') {
-		life = sp + 1;
-		lifetime += strtol(life, &sp, 0);	/* seconds */
-		if (sp == life)
-		    goto bad_lifetime;
-		if (*sp)
-		    goto bad_lifetime;
-	    } else if (*sp)
-		goto bad_lifetime;
-	} else if (*sp)
-	    goto bad_lifetime;
-    } else
-	lifetime = 0;
 
     /* Get the password if it wasn't provided. */
     if (!pass) {

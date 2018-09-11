@@ -61,11 +61,6 @@ the following:
 
 =item *
 
-The lifetime specified by the issuer with the B<-lifetime> argument if
-that argument was given.
-
-=item *
-
 The maximum ticket lifetime recorded for the C<afs/I<cell>> principal in
 thet Kerberos database.
 
@@ -192,8 +187,7 @@ major problems encountered.
 
 =item B<-lifetime> <I<ticket lifetime>
 
-Requests a specific lifetime for the token.  Provide a number of hours and
-optionally minutes and seconds in the format I<hh>[B<:>I<mm>[B<:>I<ss>]].
+This option is not implemented by B<klog.krb5> and has no effect.
 
 =item B<-setpag>
 
@@ -263,12 +257,6 @@ Corporation's test cell:
 
    % klog.krb5 -principal admin -cell test.example.com
    Password for admin@EXAMPLE.COM:
-
-In the following, the issuer requests a ticket lifetime of 104 hours 30
-minutes (4 days 8 hours 30 minutes).
-
-   % klog.krb5 -lifetime 104:30
-   Password for user@EXAMPLE.ORG:
 
 =head1 PRIVILEGE REQUIRED
 
