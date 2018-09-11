@@ -2230,7 +2230,9 @@ FindLatestDump(struct rx_call *call, char *vsname, char *dumpPath,
 
   finished:
     /* return the dump found */
-    FillDumpEntry(ut, retdbaddr, dumpentry);
+    eval = FillDumpEntry(ut, retdbaddr, dumpentry);
+    if (eval)
+	ABORT(eval);
 
     code = ubik_EndTrans(ut);
     return (code);
