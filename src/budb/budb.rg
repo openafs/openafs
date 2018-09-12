@@ -224,7 +224,7 @@ typedef struct budb_volumeEntry budb_volumeList<BUDB_MAX_RETURN_LIST>;
 typedef struct budb_dumpEntry budb_dumpList<BUDB_MAX_RETURN_LIST>;
 typedef struct budb_tapeEntry budb_tapeList<BUDB_MAX_RETURN_LIST>;
 typedef afs_int32                  budb_dumpsList<BUDB_MAX_RETURN_LIST>;
-typedef char charListT<>;
+typedef char charListT<4096>;
 
 %#define BUDB_TEXT_COMPLETE	1
 

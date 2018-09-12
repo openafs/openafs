@@ -33,21 +33,41 @@
 #include "butc_xbsa.h"
 #include "butc_prototypes.h"
 #include "butc_internal.h"
+#include "afs/audit.h"
 
 static int CopyDumpDesc(struct tc_dumpDesc *, tc_dumpArray *);
 static int CopyRestoreDesc(struct tc_restoreDesc *, tc_restoreArray *);
 static int CopyTapeSetDesc(struct tc_tapeSet *, struct tc_tapeSet *);
 
+/* Helpers implementing RPC backends */
+static afs_int32 SLabelTape(struct rx_call *acid, struct tc_tapeLabel *label,
+			    afs_uint32 *taskId);
+static afs_int32 SPerformDump(struct rx_call *rxCallId,
+			      struct tc_dumpInterface *tcdiPtr,
+			      tc_dumpArray *tc_dumpArrayPtr, afs_int32 *taskId);
+static afs_int32 SPerformRestore(struct rx_call *acid, char *dumpSetName,
+				 tc_restoreArray *arestores, afs_int32 *taskId);
+static afs_int32 SReadLabel(struct rx_call *acid, struct tc_tapeLabel *label,
+			    afs_uint32 *taskId);
+static afs_int32 SRestoreDb(struct rx_call *rxCall, afs_uint32 *taskId);
+static afs_int32 SSaveDb(struct rx_call *rxCall, Date archiveTime,
+			 afs_uint32 *taskId);
+static afs_int32 SScanDumps(struct rx_call *acid, afs_int32 addDbFlag,
+			    afs_uint32 *taskId);
+static afs_int32 STCInfo(struct rx_call *acid, struct tc_tcInfo *tciptr);
+static afs_int32 SDeleteDump(struct rx_call *acid, afs_uint32 dumpID,
+			     afs_uint32 *taskId);
+
 int
 callPermitted(struct rx_call *call)
 {
     /*
-     * Before this code can be used, the rx connection, on the bucoord side,
-     * must be changed so that it will set up for token passing instead of
-     * using a simple rx connection that, below, returns a value of
-     * RX_SECIDX_NULL from rx_SecurityClassOf.
+     * If in backwards compat mode, allow anyone; otherwise, only
+     * superusers are allowed.
      */
-    return 1;
+    if (allow_unauth)
+	return 1;
+    return afsconf_SuperIdentity(butc_confdir, call, NULL);
 }
 
 /* -----------------------------
@@ -130,6 +150,17 @@ CopyTapeSetDesc(struct tc_tapeSet *toPtr, struct tc_tapeSet *fromPtr)
 afs_int32
 STC_LabelTape(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *taskId)
 {
+    afs_int32 code;
+
+    code = SLabelTape(acid, label, taskId);
+    osi_auditU(acid, TC_LabelTapeEvent, code,
+	       AUD_TLBL, label, AUD_INT, *taskId, AUD_END);
+    return code;
+}
+
+static afs_int32
+SLabelTape(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *taskId)
+{
 #ifdef AFS_PTHREAD_ENV
     pthread_t pid;
     pthread_attr_t tattr;
@@ -204,7 +235,20 @@ STC_LabelTape(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *task
  */
 
 afs_int32
-STC_PerformDump(struct rx_call *rxCallId, struct tc_dumpInterface *tcdiPtr, tc_dumpArray *tc_dumpArrayPtr, afs_int32 *taskId)
+STC_PerformDump(struct rx_call *call, struct tc_dumpInterface *di,
+		tc_dumpArray *da, afs_int32 *taskId)
+{
+    afs_int32 code;
+
+    code = SPerformDump(call, di, da, taskId);
+    osi_auditU(call, TC_PerformDumpEvent, code,
+	       AUD_TDI, di, AUD_TDA, da, AUD_INT, *taskId, AUD_END);
+    return code;
+}
+
+static afs_int32
+SPerformDump(struct rx_call *rxCallId, struct tc_dumpInterface *tcdiPtr,
+	     tc_dumpArray *tc_dumpArrayPtr, afs_int32 *taskId)
 {
     struct dumpNode *newNode = 0;
     statusP statusPtr = 0;
@@ -295,7 +339,20 @@ STC_PerformDump(struct rx_call *rxCallId, struct tc_dumpInterface *tcdiPtr, tc_d
 }
 
 afs_int32
-STC_PerformRestore(struct rx_call *acid, char *dumpSetName, tc_restoreArray *arestores, afs_int32 *taskID)
+STC_PerformRestore(struct rx_call *call, char *dumpSetName,
+		   tc_restoreArray *ra, afs_int32 *taskId)
+{
+    afs_int32 code;
+
+    code = SPerformRestore(call, dumpSetName, ra, taskId);
+    osi_auditU(call, TC_PerformRestoreEvent, code,
+	       AUD_STR, dumpSetName, AUD_TRA, ra, AUD_INT, *taskId, AUD_END);
+    return code;
+}
+
+static afs_int32
+SPerformRestore(struct rx_call *acid, char *dumpSetName,
+	        tc_restoreArray *arestores, afs_int32 *taskID)
 {
     struct dumpNode *newNode;
     statusP statusPtr;
@@ -368,10 +425,24 @@ STC_PerformRestore(struct rx_call *acid, char *dumpSetName, tc_restoreArray *are
 }
 
 afs_int32
-STC_ReadLabel(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *taskId)
+STC_ReadLabel(struct rx_call *call, struct tc_tapeLabel *label, afs_uint32 *taskId)
 {
     afs_int32 code;
 
+    code = SReadLabel(call, label, taskId);
+    osi_auditU(call, TC_ReadLabelEvent, code,
+	       AUD_TLBL, label, AUD_INT, *taskId, AUD_END);
+    return code;
+}
+
+static afs_int32
+SReadLabel(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *taskId)
+{
+    afs_int32 code;
+
+    memset(label, 0, sizeof(*label));
+    /* Synchronous, so no "real" ID; don't send stack garbage on the wire */
+    *taskId = 0;
 #ifdef xbsa
     if (CONF_XBSA)
 	return (TC_BADTASK);	/* ReadLabel does not apply if XBSA */
@@ -389,7 +460,17 @@ STC_ReadLabel(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *task
  */
 
 afs_int32
-STC_RestoreDb(struct rx_call *rxCall, afs_uint32 *taskId)
+STC_RestoreDb(struct rx_call *call, afs_uint32 *taskId)
+{
+    afs_int32 code;
+
+    code = SRestoreDb(call, taskId);
+    osi_auditU(call, TC_RestoreDbEvent, code, AUD_INT, *taskId, AUD_END);
+    return code;
+}
+
+static afs_int32
+SRestoreDb(struct rx_call *rxCall, afs_uint32 *taskId)
 {
 #ifdef AFS_PTHREAD_ENV
     pthread_t pid;
@@ -455,7 +536,18 @@ STC_RestoreDb(struct rx_call *rxCall, afs_uint32 *taskId)
  */
 
 afs_int32
-STC_SaveDb(struct rx_call *rxCall, Date archiveTime, afs_uint32 *taskId)
+STC_SaveDb(struct rx_call *call, Date archiveTime, afs_uint32 *taskId)
+{
+    afs_int32 code;
+
+    code = SSaveDb(call, archiveTime, taskId);
+    osi_auditU(call, TC_SaveDbEvent, code,
+	       AUD_DATE, archiveTime, AUD_INT, *taskId, AUD_END);
+    return code;
+}
+
+static afs_int32
+SSaveDb(struct rx_call *rxCall, Date archiveTime, afs_uint32 *taskId)
 {
 #ifdef AFS_PTHREAD_ENV
     pthread_t pid;
@@ -534,7 +626,18 @@ STC_SaveDb(struct rx_call *rxCall, Date archiveTime, afs_uint32 *taskId)
  */
 
 afs_int32
-STC_ScanDumps(struct rx_call *acid, afs_int32 addDbFlag, afs_uint32 *taskId)
+STC_ScanDumps(struct rx_call *call, afs_int32 addDbFlag, afs_uint32 *taskId)
+{
+    afs_int32 code;
+
+    code = SScanDumps(call, addDbFlag, taskId);
+    osi_auditU(call, TC_ScanDumpsEvent, code,
+	       AUD_INT, addDbFlag, AUD_INT, *taskId, AUD_END);
+    return code;
+}
+
+static afs_int32
+SScanDumps(struct rx_call *acid, afs_int32 addDbFlag, afs_uint32 *taskId)
 {
 #ifdef AFS_PTHREAD_ENV
     pthread_t pid;
@@ -609,7 +712,17 @@ STC_ScanDumps(struct rx_call *acid, afs_int32 addDbFlag, afs_uint32 *taskId)
  */
 
 afs_int32
-STC_TCInfo(struct rx_call *acid, struct tc_tcInfo *tciptr)
+STC_TCInfo(struct rx_call *call, struct tc_tcInfo *ti)
+{
+    afs_int32 code;
+
+    code = STCInfo(call, ti);
+    osi_auditU(call, TC_TCInfoEvent, code, AUD_INT, ti->tcVersion, AUD_END);
+    return code;
+}
+
+static afs_int32
+STCInfo(struct rx_call *acid, struct tc_tcInfo *tciptr)
 {
     if (callPermitted(acid) == 0)
 	return (TC_NOTPERMITTED);
@@ -621,7 +734,18 @@ STC_TCInfo(struct rx_call *acid, struct tc_tcInfo *tciptr)
 /* STC_DeleteDump
  */
 afs_int32
-STC_DeleteDump(struct rx_call *acid, afs_uint32 dumpID, afs_uint32 *taskId)
+STC_DeleteDump(struct rx_call *call, afs_uint32 dumpID, afs_uint32 *taskId)
+{
+    afs_int32 code;
+
+    code = SDeleteDump(call, dumpID, taskId);
+    osi_auditU(call, TC_DeleteDumpEvent, code,
+	       AUD_DATE, dumpID, AUD_INT, *taskId, AUD_END);
+    return code;
+}
+
+static afs_int32
+SDeleteDump(struct rx_call *acid, afs_uint32 dumpID, afs_uint32 *taskId)
 {
     afs_int32 code = TC_BADTASK;	/* If not compiled -Dxbsa then fail */
 #ifdef xbsa

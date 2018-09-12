@@ -32,5 +32,10 @@ extern void *saveDbToTape(void *);
 extern void *restoreDbFromTape(void *);
 extern void *KeepAlive(void *);
 
+/* tcmain.c */
+
+extern struct afsconf_dir *butc_confdir;
+extern int allow_unauth;
+
 #endif
 

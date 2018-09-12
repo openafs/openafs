@@ -23,7 +23,11 @@
 #include "osi_compat.h"
 
 #ifndef CURRENT_TIME
-#define CURRENT_TIME		(current_kernel_time())
+# ifdef IATTR_TAKES_64BIT_TIME
+#  define CURRENT_TIME		(current_kernel_time64())
+# else
+#  define CURRENT_TIME            (current_kernel_time())
+# endif
 #endif
 
 int cache_fh_type = -1;

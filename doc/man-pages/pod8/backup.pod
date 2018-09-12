@@ -194,6 +194,18 @@ interactive mode. The local identity and AFS tokens with which the
 B<backup> command interpreter enters interactive mode apply to all
 commands issued during the interactive session.
 
+=item B<-nobutcauth>
+
+Prior to the fix for OPENAFS-SA-2018-001, B<butc> did not allow incoming
+connections to be authenticated.  As part of that fix, B<backup> was modified
+to authenticate to the B<butc> services when possible, but a B<backup> utility
+with the security fix will not interoperate with a B<butc> that lacks the fix
+unless this option is passed, which forces the use of unauthenticated
+connections to the B<butc>.  Use of this option is strongly disrecommended,
+and it is provided only for backwards compatibility in environments where
+B<backup> and B<butc> communicate over a secure network environment that denies
+access to untrusted parties.
+
 =item B<-portoffset> <I<TC port offset>>
 
 Specifies the port offset number of the Tape Coordinator that is to

@@ -1700,6 +1700,7 @@ kamListEntry(struct rx_call *call,
     afs_int32 caller;
     struct kaentry tentry;
 
+    memset(name, 0, sizeof(*name));
     COUNT_REQ(ListEntry);
     if ((code = InitAuthServ(&tt, LOCKREAD, this_op)))
 	return code;

@@ -17,6 +17,7 @@
 #include <roken.h>
 
 #include <afs/cmd.h>
+#include <afs/cellconfig.h>
 #include <lwp.h>
 #include <rx/rx.h>
 #include <afs/bubasics.h>
@@ -470,15 +471,40 @@ bc_GetConn(struct bc_config *aconfig, afs_int32 aport,
 	   struct rx_connection **tconn)
 {
     afs_uint32 host;
+    afs_int32 code;
     unsigned short port;
     static struct rx_securityClass *rxsc;
+    static afs_int32 scIndex;
     struct bc_hostEntry *te;
 
     *tconn = (struct rx_connection *)0;
 
     /* use non-secure connections to butc */
-    if (!rxsc)
-	rxsc = rxnull_NewClientSecurityObject();
+    if (!rxsc) {
+	struct afsconf_dir *dir;
+	afsconf_secflags flags = AFSCONF_SECOPTS_FALLBACK_NULL;
+	char *cname;
+
+	if (nobutcauth)
+	    flags |= AFSCONF_SECOPTS_NOAUTH;
+	if (localauth) {
+	    flags |= AFSCONF_SECOPTS_LOCALAUTH;
+	    dir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+	} else {
+	    dir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
+	}
+	if (tcell[0] == '\0')
+	    cname = NULL;
+	else
+	    cname = tcell;
+	/* No need for cell info since butc is not a registered service */
+	code = afsconf_PickClientSecObj(dir, flags, NULL, cname, &rxsc, &scIndex,
+					NULL);
+	if (dir)
+	    afsconf_Close(dir);
+	if (code)
+	    return -1;
+    }
     if (!rxsc || !aconfig)
 	return (-1);
 
@@ -491,8 +517,8 @@ bc_GetConn(struct bc_config *aconfig, afs_int32 aport,
 
 	    port = htons(BC_TAPEPORT + aport);
 
-	    /* servers is 1; sec index is 0 */
-	    *tconn = rx_NewConnection(host, port, 1, rxsc, 0);
+	    /* servers is 1 */
+	    *tconn = rx_NewConnection(host, port, 1, rxsc, scIndex);
 	    return ((*tconn ? 0 : -1));
 	}
     }
