@@ -23,6 +23,7 @@
 #include "butc_internal.h"
 #include "error_macros.h"
 #include "butc_xbsa.h"
+#include "afs/audit.h"
 
 /* tape coordinator - task status management */
 extern afs_int32 xbsaType;
@@ -30,6 +31,13 @@ extern afs_int32 xbsaType;
 dlqlinkT statusHead;
 struct Lock statusQueueLock;
 struct Lock cmdLineLock;
+
+static afs_int32 SGetStatus(struct rx_call *call, afs_uint32 taskId,
+			    struct tciStatusS *statusPtr);
+static afs_int32 SEndStatus(struct rx_call *call, afs_uint32 taskId);
+static afs_int32 SRequestAbort(struct rx_call *call, afs_uint32 taskId);
+static afs_int32 SScanStatus(struct rx_call *call, afs_uint32 *taskId,
+			     struct tciStatusS *statusPtr, afs_uint32 *flags);
 
 /* STC_GetStatus
  *	get the status of a task
@@ -41,19 +49,30 @@ struct Lock cmdLineLock;
 
 afs_int32
 STC_GetStatus(struct rx_call *call, afs_uint32 taskId,
-	      struct tciStatusS *statusPtr)
+	      struct tciStatusS *status)
+{
+    afs_int32 code;
+
+    code = SGetStatus(call, taskId, status);
+    osi_auditU(call, TC_GetStatusEvent, code,
+	       AUD_INT, taskId, AUD_TSTT, status, AUD_END);
+    return code;
+}
+
+static afs_int32
+SGetStatus(struct rx_call *call, afs_uint32 taskId,
+	   struct tciStatusS *statusPtr)
 {
     statusP ptr;
     int retval = 0;
 
+    memset(statusPtr, 0, sizeof(*statusPtr));
     if (callPermitted(call) == 0)
 	return (TC_NOTPERMITTED);
 
     lock_Status();
     ptr = findStatus(taskId);
     if (ptr) {
-	/* strcpy(statusPtr->status, ptr->status); */
-
 	strcpy(statusPtr->taskName, ptr->taskName);
 	strcpy(statusPtr->volumeName, ptr->volumeName);
 	statusPtr->taskId = ptr->taskId;
@@ -72,6 +91,16 @@ STC_GetStatus(struct rx_call *call, afs_uint32 taskId,
 
 afs_int32
 STC_EndStatus(struct rx_call *call, afs_uint32 taskId)
+{
+    afs_int32 code;
+
+    code = SEndStatus(call, taskId);
+    osi_auditU(call, TC_EndStatusEvent, code, AUD_INT, taskId, AUD_END);
+    return code;
+}
+
+static afs_int32
+SEndStatus(struct rx_call *call, afs_uint32 taskId)
 {
     statusP ptr;
     int retval = 0;
@@ -93,6 +122,16 @@ STC_EndStatus(struct rx_call *call, afs_uint32 taskId)
 
 afs_int32
 STC_RequestAbort(struct rx_call *call, afs_uint32 taskId)
+{
+    afs_int32 code;
+
+    code = SRequestAbort(call, taskId);
+    osi_auditU(call, TC_RequestAbortEvent, code, AUD_INT, taskId, AUD_END);
+    return code;
+}
+
+static afs_int32
+SRequestAbort(struct rx_call *call, afs_uint32 taskId)
 {
     statusP ptr;
     int retval = 0;
@@ -128,11 +167,24 @@ STC_RequestAbort(struct rx_call *call, afs_uint32 taskId)
 
 afs_int32
 STC_ScanStatus(struct rx_call *call, afs_uint32 *taskId,
-	       struct tciStatusS *statusPtr, afs_uint32 *flags)
+	       struct tciStatusS *status, afs_uint32 *flags)
+{
+    afs_int32 code;
+
+    code = SScanStatus(call, taskId, status, flags);
+    osi_auditU(call, TC_ScanStatusEvent, code,
+	       AUD_INT, *taskId, AUD_TSTT, status, AUD_INT, *flags, AUD_END);
+    return code;
+}
+
+static afs_int32
+SScanStatus(struct rx_call *call, afs_uint32 *taskId,
+	    struct tciStatusS *statusPtr, afs_uint32 *flags)
 {
     statusP ptr = 0;
     dlqlinkP dlqPtr;
 
+    memset(statusPtr, 0, sizeof(*statusPtr));
     if (callPermitted(call) == 0)
 	return (TC_NOTPERMITTED);
 

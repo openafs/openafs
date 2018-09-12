@@ -23,6 +23,12 @@
 #define AUD_RESID 20		/* resid         in variable list */
 #define AUD_RSSIZERANGE 21	/* rssizerange   in variable list */
 #define AUD_LOOKUPINFO 22	/* LookupInfo    in variable list */
+/* next 5 lines for butc */
+#define AUD_TLBL 30             /* Tape Controller label */
+#define AUD_TDI  31             /* Tape Controller dump interface */
+#define AUD_TDA  32             /* Tape Controller dump array */
+#define AUD_TRA  33             /* Tape Controller restore array */
+#define AUD_TSTT 34             /* Tape Controller status struct */
 
 /*
  * Note: the master definitions of these error codes come from *.et
@@ -295,6 +301,21 @@
 #define SREMIORemoteImportFile  "AFS_RE_Import"
 #define SREMIORemoteGetHSMdata  "AFS_RE_HSMdata"
 #define SREMIOPrefetch          "AFS_RE_Prefetch"
+
+#define TC_StartEvent           "AFS_TC_Start"
+#define TC_LabelTapeEvent       "AFS_TC_LabelTape"
+#define TC_PerformDumpEvent     "AFS_TC_PerformDump"
+#define TC_PerformRestoreEvent  "AFS_TC_PerformRestore"
+#define TC_ReadLabelEvent       "AFS_TC_ReadLabel"
+#define TC_RestoreDbEvent       "AFS_TC_RestoreDb"
+#define TC_SaveDbEvent          "AFS_TC_SaveDb"
+#define TC_ScanDumpsEvent       "AFS_TC_ScanDumps"
+#define TC_TCInfoEvent          "AFS_TC_TCInfo"
+#define TC_DeleteDumpEvent      "AFS_TC_DeleteDump"
+#define TC_GetStatusEvent       "AFS_TC_GetStatus"
+#define TC_EndStatusEvent       "AFS_TC_EndStatus"
+#define TC_RequestAbortEvent    "AFS_TC_RequestAbort"
+#define TC_ScanStatusEvent      "AFS_TC_ScanStatus"
 
 
 /* prototypes for audit functions */

@@ -651,7 +651,7 @@ idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid)
 	return 0;
     if (size < 0 || size > INT_MAX / PR_MAXNAMELEN)
 	return PRTOOMANY;
-    aname->namelist_val = malloc(size * PR_MAXNAMELEN);
+    aname->namelist_val = calloc(size, PR_MAXNAMELEN);
     aname->namelist_len = 0;
     if (aname->namelist_val == 0)
 	return PRNOMEM;
@@ -1538,6 +1538,7 @@ put_prentries(struct prentry *tentry, prentries *bulkentries)
     entry = bulkentries->prentries_val;
     entry += bulkentries->prentries_len;
 
+    memset(entry, 0, sizeof(*entry));
     entry->flags = tentry->flags >> PRIVATE_SHIFT;
     if (entry->flags == 0) {
 	entry->flags =
@@ -1552,7 +1553,6 @@ put_prentries(struct prentry *tentry, prentries *bulkentries)
     entry->nusers = tentry->nusers;
     entry->count = tentry->count;
     strncpy(entry->name, tentry->name, PR_MAXNAMELEN);
-    memset(entry->reserved, 0, sizeof(entry->reserved));
     bulkentries->prentries_len++;
     return 0;
 }

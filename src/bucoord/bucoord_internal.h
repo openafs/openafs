@@ -117,6 +117,8 @@ extern afs_int32 bc_UpdateDumpSchedule(void);
 extern int bc_SaveDumpSchedule(void);
 
 /* main.c */
+extern int localauth, nobutcauth;
+extern char tcell[];
 extern time_t tokenExpires;
 extern afs_int32 doDispatch(afs_int32, char *[], afs_int32);
 extern void bc_HandleMisc(afs_int32 code);
