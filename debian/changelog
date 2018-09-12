@@ -1,4 +1,4 @@
-openafs (1.8.2-1) UNRELEASED; urgency=high
+openafs (1.8.2-1) unstable; urgency=high
 
   * New upstream release 1.8.1.1:
     - Support Linux 4.18.
@@ -10,7 +10,7 @@ openafs (1.8.2-1) UNRELEASED; urgency=high
     - Fix OPENAFS-SA-2018-003: denial of service due to excess resource
       consumption (CVE-2018-16949).
 
- -- Anders Kaseorg <andersk@mit.edu>  Tue, 11 Sep 2018 18:08:42 -0700
+ -- Anders Kaseorg <andersk@mit.edu>  Tue, 11 Sep 2018 22:53:43 -0700
 
 openafs (1.8.1-1) unstable; urgency=medium
 
