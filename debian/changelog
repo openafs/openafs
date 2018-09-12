@@ -1,3 +1,17 @@
+openafs (1.8.2-1) UNRELEASED; urgency=high
+
+  * New upstream release 1.8.1.1:
+    - Support Linux 4.18.
+  * New upstream security release 1.8.2 (Closes: #908616):
+    - Fix OPENAFS-SA-2018-001: unauthenticated volume operations via butc
+      (CVE-2018-16947).
+    - Fix OPENAFS-SA-2018-002: information leakage in RPC output variables
+      (CVE-2018-16948).
+    - Fix OPENAFS-SA-2018-003: denial of service due to excess resource
+      consumption (CVE-2018-16949).
+
+ -- Anders Kaseorg <andersk@mit.edu>  Tue, 11 Sep 2018 18:08:42 -0700
+
 openafs (1.8.1-1) unstable; urgency=medium
 
   * New upstream release.  In addition to changes in pre2:
