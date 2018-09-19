@@ -1,3 +1,8 @@
+AC_DEFUN([OPENAFS_AUTOHEADER_TOP],[
+    AH_TOP([
+#ifndef __AFSCONFIG_H
+#define __AFSCONFIG_H 1])
+])
 AC_DEFUN([OPENAFS_AUTOHEADER_BOTTOM],[
     AH_BOTTOM([
 #undef HAVE_RES_SEARCH
@@ -57,5 +62,6 @@ AC_DEFUN([OPENAFS_AUTOHEADER_BOTTOM],[
 #undef ENABLE_REDHAT_BUILDSYS
 #if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
 # include "redhat-fix.h"
-#endif])
+#endif
+#endif /* __AFSCONFIG_H */])
 ])
