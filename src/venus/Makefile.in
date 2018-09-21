@@ -172,8 +172,6 @@ kdump: kdump.o
 		$(MAKE) kdump-alpha_linux-@LINUX_VERSION@ ;; \
 	*linux* ) \
 		$(MAKE) kdump-linux-@LINUX_VERSION@ ;; \
-	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux??) \
-		${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} -ll -lmld;; \
 	ncrx86_* ) ${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a -lelf ${XLIBS} ;; \
 	*bsd*) touch kdump ;; \
 	* )     ${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} ;; \
@@ -197,8 +195,6 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 			$(MAKE) kdump-alpha_linux-${LINUX_VERSION}.o ;; \
 		*linux* ) \
 			$(MAKE) kdump-linux-${LINUX_VERSION}.o ;; \
-		alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c| alpha_dux?? ) \
-			${CC} ${AFS_CFLAGS} -I/usr/sys/include -I/usr/sys/BINARY -I/usr/sys/AFS -DDEBUGGER -c ${srcdir}/kdump.c ;;\
 		sgi_6? ) \
 			for f in ../libafs/STATIC.IP*/CPU_KDEFS; \
 			do	IP=`expr "$$f" : '../libafs/STATIC.\(IP..\)'`; \

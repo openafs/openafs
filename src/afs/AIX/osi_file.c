@@ -36,7 +36,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	osi_Panic("UFSOpen called for non-UFS cache\n");
     }
     if (!afs_osicred_initialized) {
-	/* valid for alpha_osf, SunOS, Ultrix */
+	/* valid for SunOS, Ultrix */
 	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
 	crhold(&afs_osi_cred);	/* don't let it evaporate, since it is static */
 	afs_osicred_initialized = 1;

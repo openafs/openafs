@@ -97,7 +97,7 @@ clean:
 install: butc read_tape
 	${INSTALL} -d ${DESTDIR}${sbindir}
 	@case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux*) \
+	sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*_darwin_[1-6][0-9]) \
 		echo ${INSTALL_PROGRAM} butc ${DESTDIR}${sbindir}/butc ; \
@@ -113,7 +113,7 @@ install: butc read_tape
 dest: butc read_tape
 	${INSTALL} -d ${DEST}/etc
 	@case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux*) \
+	sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*_darwin_[1-6][0-9]) \
 		echo ${INSTALL_PROGRAM} butc ${DEST}/etc/butc ; \

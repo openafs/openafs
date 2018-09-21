@@ -45,27 +45,6 @@ AS_IF([test "x$GENCAT" = "xfalse"], [AC_MSG_ERROR([cannot find required command 
 dnl TODO - need to disable STRIP if we are doing debugging in any user space code
 
 case $AFS_SYSNAME in
-	alpha_dux40)
-		CC="cc"
-		CSTATIC="-non_shared"
-		DBG="-g3"
-		MT_CFLAGS='-D_REENTRANT=1 -pthread'
-		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
-		XCFLAGS="-D_NO_PROTO -DOSF"
-		SHLIB_LINKER="${CC} -all -shared -expect_unresolved \"*\""
-		;;
-
-	alpha_dux50 | alpha_dux51)
-		CC="cc"
-		DBG="-g3"
-		CSTATIC="-non_shared"
-		LWP_OPTMZ="-O2"
-		MT_CFLAGS='-D_REENTRANT=1 -pthread'
-		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
-		XCFLAGS="-D_NO_PROTO -DOSF"
-		SHLIB_LINKER="${CC} -all -shared -expect_unresolved \"*\""
-		;;
-
 	alpha_linux_22 | alpha_linux_24 | alpha_linux_26)
 		CCOBJ="\$(CC) -fPIC"
 		MT_CFLAGS='-pthread -D_REENTRANT'

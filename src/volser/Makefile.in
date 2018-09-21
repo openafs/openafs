@@ -198,7 +198,7 @@ install: restorevol voldump volser.h volint.h vos volserver libvolser.a
 	${INSTALL_PROGRAM} vos ${DESTDIR}${afssrvsbindir}/vos
 	${INSTALL_DATA} libvolser.a ${DESTDIR}${libdir}/afs/libvolser.a
 	@case ${SYS_NAME} in \
-	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
+	*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
 		echo "Don't install volserver for ${SYS_NAME}" ;; \
 	*_darwin_[1-6][0-9]) \
 		echo ${INSTALL} volserver \
@@ -228,7 +228,7 @@ dest: restorevol voldump volser.h volint.h vos volserver libvolser.a
 	${INSTALL_PROGRAM} vos ${DEST}/root.server/usr/afs/bin/vos
 	${INSTALL_DATA} libvolser.a ${DEST}/lib/afs/libvolser.a
 	@case ${SYS_NAME} in \
-	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
+	*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
 		echo "Don't install volserver for ${SYS_NAME}" ;; \
 	*_darwin_[1-6][0-9]) \
 		echo ${INSTALL} volserver \

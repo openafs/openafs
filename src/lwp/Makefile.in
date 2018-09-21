@@ -165,9 +165,6 @@ process.o	: process.default.s process.i386.s process.amd64.s process.c lwp.o
 		$(RM) process.s ;; \
 	hp* | *_linux* | *_umlinux* | sgi_64 | sgi_65 ) \
 		$(AFS_CCRULE_NOQ) -c ${srcdir}/process.c;; \
-	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
-		${AS} -v  -P -DOSF -I${TOP_INCDIR} -DASSEMBLER ${srcdir}/process.default.s; \
-		${AS} -v process.i -o process.o;; \
 	ia64_hpux11* | hp_ux11* ) \
 		$(AFS_CCRULE_NOQ) -c ${srcdir}/process.c;; \
 	i386_*) \

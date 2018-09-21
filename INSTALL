@@ -30,7 +30,6 @@ A  Configuring
       A directory will be automatically created for binaries to be written
       into with this name when you build.
 
-      alpha_dux40, alpha_dux50, alpha_dux51 (client does not work)
       alpha_linux26
       alpha_nbsd15, alpha_nbsd16
       amd64_fbsd_80, amd64_fbsd_81, amd64_fbsd_82, amd64_fbsd_83,

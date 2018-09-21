@@ -227,7 +227,7 @@ ubik: cmd comerr auth ubik_depinstall sys
 
 tubik: ubik libafsrpc libafsauthent
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
+	sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
 		${COMPILE_PART1} tubik ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT ubik for ${SYS_NAME} ;; \
@@ -240,7 +240,7 @@ ptserver: cmd comerr ubik cmd comerr auth audit ptserver_depinstall
 
 tptserver: cmd comerr ptserver tubik libafsrpc libafsauthent
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
+	sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
 		${COMPILE_PART1} tptserver ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT ptserver for ${SYS_NAME} ;; \
@@ -261,7 +261,7 @@ vol: cmd comerr dir afs $(DIR_roken)
 
 tsalvaged: vol libafsrpc libafsauthent cmd util
 	+case ${SYS_NAME} in \
-		alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[fn]bsd*|*_darwin_*) \
+		sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[fn]bsd*|*_darwin_*) \
 			${COMPILE_PART1} tsalvaged ${COMPILE_PART2} ;; \
 		*_darwin_*) \
 			${COMPILE_PART1} tsalvaged  ${COMPILE_PART2} ;; \
@@ -276,7 +276,7 @@ vlserver: cmd comerr vol audit vlserver_depinstall
 tvlserver: cmd comerr vol audit tubik libafsrpc libafsauthent \
 	tvlserver_depinstall
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
+	sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
 		${COMPILE_PART1} tvlserver ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT tvlserver for ${SYS_NAME} ;; \
@@ -288,7 +288,7 @@ viced: cmd comerr vlserver tvlserver libafsrpc libafsauthent audit
 
 dviced: cmd comerr viced vlserver tvlserver libafsrpc libafsauthent
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
+	sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
 		${COMPILE_PART1} dviced ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building DAFS viced for ${SYS_NAME} ;; \
@@ -299,7 +299,7 @@ volser: cmd comerr usd kauth vlserver audit
 
 tvolser: project viced usd libafsrpc libafsauthent volser
 	+@case ${SYS_NAME} in						\
-	*_darwin_*|alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*)   \
+	*_darwin_*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*)   \
 		${COMPILE_PART1} tvolser ${COMPILE_PART2} ;;            \
 	*)                                                              \
 		echo Not building MT volser for ${SYS_NAME} ;;          \
@@ -307,7 +307,7 @@ tvolser: project viced usd libafsrpc libafsauthent volser
 
 dvolser: project viced usd libafsrpc libafsauthent volser
 	+@case ${SYS_NAME} in						\
-	*_darwin_*|alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*)   \
+	*_darwin_*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*)   \
 		${COMPILE_PART1} dvolser ${COMPILE_PART2} ;;            \
 	*)                                                              \
 		echo Not building DAFS volser for ${SYS_NAME} ;;          \
@@ -519,7 +519,7 @@ butc: cmd comerr bubasics butm budb bucoord cmd rxgen rx
 
 tbutc: cmd comerr bubasics butm budb bucoord cmd butc libadmin
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*_darwin_*) \
+	sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*_darwin_*) \
 		${COMPILE_PART1} tbutc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT butc for ${SYS_NAME} ;; \
@@ -530,7 +530,7 @@ budb: cmd comerr bubasics uss
 
 tbudb: budb tubik
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
+	sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*|*_darwin_*) \
 		${COMPILE_PART1} tbudb ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT budb for ${SYS_NAME} ;; \
@@ -555,7 +555,7 @@ tests: rxtests ubiktests rpctestlib viced
 # pthread based user space RX library
 libafsrpc: comerr fsint hcrypto lwp rx rxkad rxstat sys util
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*) \
+	sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*) \
 	${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \
 	*_darwin_[1-6][0-9]) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
@@ -567,7 +567,7 @@ libafsrpc: comerr fsint hcrypto lwp rx rxkad rxstat sys util
 
 libafsauthent: audit auth kauth ubik util sys ptserver volser vlserver libafsrpc
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*) \
+	sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*[nof]bsd*) \
 	${COMPILE_PART1} libafsauthent ${COMPILE_PART2} ;; \
 	*_darwin_[1-6][0-9]) \
 		echo Not building MT libafsauthent for ${SYS_NAME} ;; \
@@ -594,7 +594,7 @@ libadmin_real:
 
 libadmin: libafsauthent bozo bubasics
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+	sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 			$(MAKE) libadmin_real ;; \
 	*_darwin_[1-6][0-9]) \
 		echo Not building MT libadmin for ${SYS_NAME} ;; \
@@ -606,7 +606,7 @@ libadmin: libafsauthent bozo bubasics
 
 libjafs: libadmin
 	+case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
+	sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
 	${COMPILE_PART1} JAVA/libjafs  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libjafs for ${SYS_NAME} ;; \
