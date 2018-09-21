@@ -114,9 +114,6 @@ dest: afsd vsys @ENABLE_FUSE_CLIENT@
 		sun*_511 ) \
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload ; \
 			${INSTALL_SCRIPT} ${srcdir}/afs.rc.solaris.2.11 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
-		alpha_osf* ) \
-			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/dkload ; \
-			${INSTALL_SCRIPT} ${srcdir}/afs.rc.alpha ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;;\
 		hp_ux1122 ) \
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/dkload ; \
 			${INSTALL_SCRIPT} ${srcdir}/afs.rc.hpux10 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;\
@@ -125,9 +122,6 @@ dest: afsd vsys @ENABLE_FUSE_CLIENT@
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/dkload ; \
 			${INSTALL_SCRIPT} ${srcdir}/afs.rc.hpux10 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;\
 			${INSTALL_DATA} ${srcdir}/afs.hpux102.driver ${DEST}/root.client/usr/vice/etc/afs.driver ;;\
-		alpha_dux* ) \
-			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/dkload ; \
-			${INSTALL_SCRIPT} ${srcdir}/afs.rc.alpha_dux40 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;;\
 	        hp?00_ux10? ) \
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/dkload ; \
 			${INSTALL_SCRIPT} ${srcdir}/afs.rc.hpux10 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;;\
