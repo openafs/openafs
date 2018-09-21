@@ -7,7 +7,7 @@ AS_IF([test "x$MKAFS_OSTYPE" = xDFBSD],
 AS_IF([test "x$PTHREAD_LIBS" = xerror],
   [AC_CHECK_LIB([pthread], [pthread_attr_init],
                 [PTHREAD_LIBS="-lpthread"])])
-AS_IF(["x$PTHREAD_LIBS" = xerror],
+AS_IF([test "x$PTHREAD_LIBS" = xerror],
   [AC_CHECK_LIB([pthreads], [pthread_attr_init],
                 [PTHREAD_LIBS="-lpthreads"])])
 AS_IF([test "x$PTHREAD_LIBS" = xerror],
