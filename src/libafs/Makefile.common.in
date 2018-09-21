@@ -42,10 +42,6 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 	-I${TOP_INCDIR}/afs 
 
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
-.SUFFIXES:	.i
-.c.i:
-	$(CC) $(COMMON_INCLUDE) $(CFLAGS) -P -c $<
-
 .c.o:
 	$(RUN_CC) $(CC) $(COMMON_INCLUDE) $(CFLAGS) $(CFLAGS-$(@)) $(KERN_DBG) -c $<
 CRULE_NOOPT=	$(RUN_CC) $(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS) $(CFLAGS-$(@)) -o $@ -c
