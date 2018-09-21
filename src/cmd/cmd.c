@@ -176,7 +176,7 @@ ParmHelpString(struct cmd_parmdesc *aparm)
 		     aparm->help?aparm->help:"arg",
 		     aparm->type == CMD_LIST?"+":"",
 		     aparm->type == CMD_SINGLE_OR_FLAG?"]":"") < 0)
-	    return "<< OUT OF MEMORY >>";
+	    return NULL;
 	return str;
     }
 }
@@ -220,6 +220,10 @@ PrintSyntax(struct cmd_syndesc *as)
 	/* The parameter name is the real name, plus any aliases */
 	if (!tp->aliases) {
 	    name = strdup(tp->name);
+	    if (!name) {
+		fprintf(stderr, "Out of memory.\n");
+		return;
+	    }
 	} else {
 	    size_t namelen;
 	    struct cmd_item *alias;
@@ -228,6 +232,10 @@ PrintSyntax(struct cmd_syndesc *as)
 		namelen+=strlen(alias->data) + 3;
 
 	    name = malloc(namelen);
+	    if (!name) {
+		fprintf(stderr, "Out of memory.\n");
+		return;
+	    }
 	    strlcpy(name, tp->name, namelen);
 
 	    for (alias = tp->aliases; alias != NULL; alias = alias->next) {
@@ -239,6 +247,11 @@ PrintSyntax(struct cmd_syndesc *as)
 	/* Work out if we can fit what we want to on this line, or if we need to
 	 * start a new one */
 	str = ParmHelpString(tp);
+	if (!str) {
+	    fprintf(stderr, "Out of memory.\n");
+	    free(name);
+	    return;
+	}
 	xtralen = 1 + strlen(name) + strlen(str) +
 		  ((tp->flags & CMD_OPTIONAL)? 2: 0);
 
