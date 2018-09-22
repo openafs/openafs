@@ -100,7 +100,7 @@ setup:
 ## This is the target for a Solaris 7. Here we build both the 32 bit and
 ## the 64 bit libafs in MODLOAD32 and MODLOAD64 directories respectively
 
-${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}: setup
 	for t in ${KOBJ} ; do \
 		echo Building directory: $$t ; \
 		case $$t in \
@@ -113,9 +113,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 		esac ; \
 		export ARCH_DEFS ; \
 		export BITS ; \
-		cd $$t  ; \
-		$(MAKE) $@_libafs || exit $$? ; \
-		cd ../ ;\
+		( cd $$t && $(MAKE) $@_libafs ) || exit $$? ; \
 	done
 
 solaris_compdirs_libafs: depsrcs libafs
