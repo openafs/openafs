@@ -65,7 +65,7 @@ LDFLAGS=-r -dy -N drv/ip -N drv/udp -N strmod/rpcmod
 LDFLAGS=-r -dy -N drv/ip -N drv/udp -N strmod/rpcmod -N fs/ufs
 
 # Name of directory to hold object files and libraries.
-<all -sun4x_510 sun4x_511 sunx86_511>
+<all -sun4x_510 -sun4x_511 -sunx86_511>
 KOBJ = MODLOAD32 MODLOAD64
 <sun4x_510 sun4x_511 sunx86_511>
 KOBJ = MODLOAD64
