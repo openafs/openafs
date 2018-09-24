@@ -87,11 +87,6 @@ cnvldb: cnvldb.o ${LIBS}
 
 cnvldb.o: cnvldb.c cnvldb.h AFS_component_version_number.o
 
-sascnvldb: sascnvldb.o ${LIBS}
-	$(AFS_LDRULE) sascnvldb.o ${LIBS} $(LIB_roken) ${XLIBS}
-
-sascnvldb.o: sascnvldb.c cnvldb.h AFS_component_version_number.o
-
 vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.lo $(LIBS)
 	$(AFS_LDRULE) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
 		.lwp/vldbint.xdr.o \

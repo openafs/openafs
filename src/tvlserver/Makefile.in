@@ -66,13 +66,6 @@ cnvldb: cnvldb.o $(LIBS_client)
 cnvldb.o: ${VLSERVER}/cnvldb.c
 	$(AFS_CCRULE) $(VLSERVER)/cnvldb.c
 
-sascnvldb: sascnvldb.o $(LIBS_client)
-	$(LT_LDRULE_static) sascnvldb.o \
-		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
-
-sascnvldb.o: ${VLSERVER}/sascnvldb.c
-	$(AFS_CCRULE) $(VLSERVER)/sascnvldb.c
-
 vlserver: vlserver.o vlutils.o vlprocs.o vldbint.ss.o vldbint.xdr.o $(LIBS_server)
 	$(LT_LDRULE_static) vlserver.o vlutils.o vlprocs.o vldbint.ss.o \
 		vldbint.xdr.o \
