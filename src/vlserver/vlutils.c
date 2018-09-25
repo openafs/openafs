@@ -393,7 +393,7 @@ CheckInit(struct ubik_trans *trans, int builddb)
 
 
 afs_int32
-GetExtentBlock(struct vl_ctx *ctx, register afs_int32 base)
+GetExtentBlock(struct vl_ctx *ctx, afs_int32 base)
 {
     afs_int32 blockindex, code, error = 0;
 
