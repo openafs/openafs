@@ -33,7 +33,6 @@
 int cache_fh_type = -1;
 int cache_fh_len = -1;
 
-afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct vfsmount *afs_cacheMnt;
 extern struct super_block *afs_cacheSBp;
@@ -154,12 +153,10 @@ int
 afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
 {
     AFS_STATCNT(osi_Stat);
-    ObtainWriteLock(&afs_xosi, 320);
     astat->size = i_size_read(OSIFILE_INODE(afile));
     astat->mtime = OSIFILE_INODE(afile)->i_mtime.tv_sec;
     astat->atime = OSIFILE_INODE(afile)->i_atime.tv_sec;
 
-    ReleaseWriteLock(&afs_xosi);
     return 0;
 }
 
@@ -192,7 +189,6 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     code = afs_osi_Stat(afile, &tstat);
     if (code || tstat.size <= asize)
 	return code;
-    ObtainWriteLock(&afs_xosi, 321);
     AFS_GUNLOCK();
     afs_linux_lock_inode(inode);
 #ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
@@ -218,7 +214,6 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
 #endif
     afs_linux_unlock_inode(inode);
     AFS_GLOCK();
-    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 

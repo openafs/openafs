@@ -19,7 +19,6 @@
 
 int afs_osicred_initialized = 0;
 afs_ucred_t afs_osi_cred;
-afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;
 int afs_CacheFSType = -1;
@@ -204,7 +203,6 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
     afs_int32 code;
     struct vattr tvattr;
     AFS_STATCNT(osi_Stat);
-    ObtainWriteLock(&afs_xosi, 320);
     AFS_GUNLOCK();
 #ifdef AFS_DARWIN80_ENV
     VATTR_INIT(&tvattr);
@@ -224,7 +222,6 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
 	astat->mtime = tvattr.va_mtime.tv_sec;
 	astat->atime = tvattr.va_atime.tv_sec;
     }
-    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 
@@ -260,7 +257,6 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     code = afs_osi_Stat(afile, &tstat);
     if (code || tstat.size <= asize)
 	return code;
-    ObtainWriteLock(&afs_xosi, 321);
     AFS_GUNLOCK();
 #ifdef AFS_DARWIN80_ENV
     VATTR_INIT(&tvattr);
@@ -272,7 +268,6 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     code = VOP_SETATTR(afile->vnode, &tvattr, &afs_osi_cred, current_proc());
 #endif
     AFS_GLOCK();
-    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 

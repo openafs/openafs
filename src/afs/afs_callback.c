@@ -52,10 +52,6 @@ static struct ltable {
     "afs_xcbhash", (char *)&afs_xcbhash}, {
     "afs_xaxs", (char *)&afs_xaxs}, {
     "afs_xinterface", (char *)&afs_xinterface},
-#ifndef UKERNEL
-    {
-    "afs_xosi", (char *)&afs_xosi},
-#endif
     {
       "afs_xsrvAddr", (char *)&afs_xsrvAddr},
     {
