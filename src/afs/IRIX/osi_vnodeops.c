@@ -1902,15 +1902,12 @@ struct vnodeops *afs_ops = &Afs_vnodeops;
 /* Initialized in osi_InitCacheFSType(). Used to determine inode type. */
 vnodeops_t *afs_xfs_vnodeopsp;
 
-extern afs_lock_t afs_xosi;	/* lock is for tvattr */
-
 ino_t
 VnodeToIno(vnode_t * vp)
 {
     int code;
     struct vattr vattr;
 
-    ObtainWriteLock(&afs_xosi, 579);
     vattr.va_mask = AT_FSID | AT_NODEID;	/* quick return using this mask. */
     AFS_GUNLOCK();
     AFS_VOP_GETATTR(vp, &vattr, 0, OSI_GET_CURRENT_CRED(), code);
@@ -1918,7 +1915,6 @@ VnodeToIno(vnode_t * vp)
     if (code) {
 	osi_Panic("VnodeToIno");
     }
-    ReleaseWriteLock(&afs_xosi);
     return vattr.va_nodeid;
 }
 
@@ -1928,7 +1924,6 @@ VnodeToDev(vnode_t * vp)
     int code;
     struct vattr vattr;
 
-    ObtainWriteLock(&afs_xosi, 580);
     vattr.va_mask = AT_FSID | AT_NODEID;	/* quick return using this mask. */
     AFS_GUNLOCK();
     AFS_VOP_GETATTR(vp, &vattr, 0, OSI_GET_CURRENT_CRED(), code);
@@ -1936,7 +1931,6 @@ VnodeToDev(vnode_t * vp)
     if (code) {
 	osi_Panic("VnodeToDev");
     }
-    ReleaseWriteLock(&afs_xosi);
     return (dev_t) vattr.va_fsid;
 }
 
@@ -1946,7 +1940,6 @@ VnodeToSize(vnode_t * vp)
     int code;
     struct vattr vattr;
 
-    ObtainWriteLock(&afs_xosi, 581);
     vattr.va_mask = AT_SIZE;
     AFS_GUNLOCK();
     AFS_VOP_GETATTR(vp, &vattr, 0, OSI_GET_CURRENT_CRED(), code);
@@ -1954,7 +1947,6 @@ VnodeToSize(vnode_t * vp)
     if (code) {
 	osi_Panic("VnodeToSize");
     }
-    ReleaseWriteLock(&afs_xosi);
     return vattr.va_size;
 }
 #endif /* AFS_SGI62_ENV */
