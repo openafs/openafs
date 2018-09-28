@@ -41,11 +41,7 @@
 # include <mach/thread_act.h>
 #endif
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV)
-#define	AFS_MINBUFFERS	100
-#else
-#define	AFS_MINBUFFERS	50
-#endif
+#define AFS_MINBUFFERS 2048
 
 #if (defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
 /* If AFS_DAEMONOP_ENV is defined, it indicates we run "daemon" AFS syscalls by
