@@ -32,7 +32,7 @@ extern struct afs_lock afs_xvcache;
 
 dnlcstats_t dnlcstats;
 
-#define NCSIZE 300
+#define NCSIZE 4096
 #define NHSIZE 256		/* must be power of 2. == NHASHENT in dir package */
 struct nc *ncfreelist = NULL;
 static struct nc nameCache[NCSIZE];
