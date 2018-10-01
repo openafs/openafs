@@ -1,6 +1,7 @@
 openafs (1.8.2-2) UNRELEASED; urgency=medium
 
   * d/control: Removing redundant Priority field in binary package
+  * d/changelog: Remove trailing whitespaces
 
  -- Ondřej Nový <onovy@debian.org>  Mon, 01 Oct 2018 10:31:05 +0200
 
@@ -839,7 +840,7 @@ openafs (1.6.2~pre2-1) experimental; urgency=low
     NMUs get regular version-numbered patches.
   * Update Vcs-* URLs for the new anonscm.debian.org URL layout.
   * Update standards version to 3.9.4 (no changes required).
-  
+
  -- Russ Allbery <rra@debian.org>  Thu, 03 Jan 2013 10:07:39 -0800
 
 openafs (1.6.1-2) unstable; urgency=low
@@ -1059,7 +1060,7 @@ openafs (1.6.0~pre5-1) unstable; urgency=low
   * Change to Debian source format 3.0 (quilt).  Force a single Debian
     patch for simplicity since the packaging is maintained in Git using
     branches, and include a patch header explaining why.
-  
+
  -- Russ Allbery <rra@debian.org>  Sat, 14 May 2011 11:52:40 -0700
 
 openafs (1.6.0~pre4-1) unstable; urgency=low
@@ -1729,7 +1730,7 @@ openafs (1.4.8.dfsg1-3) unstable; urgency=low
     - STABLE14-uphys-invalidate-returns-void-20081130: fix apparent Ubik
       synchronization errors due to incorrect use of a void return value.
   * Update package sections for the new archive organization.
-  
+
  -- Russ Allbery <rra@debian.org>  Fri, 27 Mar 2009 08:08:49 -0700
 
 openafs (1.4.8.dfsg1-2) unstable; urgency=low
@@ -2168,7 +2169,7 @@ openafs (1.4.4.dfsg1-2) unstable; urgency=low
     with i386 and amd64, and (following an upstream patch) always use
     ucontext on ia64.  Newer versions of glibc change internal structures
     in ways that cause the old LWP code to have stack overflows.
-    (Closes: #419903) 
+    (Closes: #419903)
   * Apply upstream patch to crashes on contention in afs_xuser when a
     process in a PAG exits.  Thanks, Chaskiel Grundman.
   * When determining the AFS sysname for kernel module builds, add
@@ -2709,7 +2710,7 @@ openafs (1.3.80-1) UNRELEASED; urgency=low
       - Enable debugging
       - Some callbacks later stuff and fix short bitfield
       - Fix permissions on /etc/openafs/server-local, Closes: #271460
-  
+
   * Versions 1.3.79 an newer work on amd64, Closes: #262382
 
  -- Sam Hartman <hartmans@debian.org>  Mon,  4 Apr 2005 00:32:42 -0400
@@ -2737,7 +2738,7 @@ openafs (1.3.73-1) experimental; urgency=low
   * Remove call to dh_suidregister
   * Update sysname to prefer 2.4 on more arches for largefile issues
   * Patch from pnelson@ANDREW.CMU.EDU to add x86_64 support to sysname scripts
-  * debian/sysname: Use installation architecture 
+  * debian/sysname: Use installation architecture
 
  -- Sam Hartman <hartmans@debian.org>  Wed, 27 Oct 2004 20:42:12 -0400
 
@@ -2787,7 +2788,7 @@ openafs (1.2.12-1) unstable; urgency=medium
     bug.  Windows clients, particularly greater than version 1.3.70 tend
     to crash openafs servers.
   * Cause openafs-kpasswd to conflict  with kerberos4kth-clients, Closes:
-    #277844 
+    #277844
   * Conflict between libopenafs-dev and arla-dev, Closes: #274788
 
  -- Sam Hartman <hartmans@debian.org>  Fri, 22 Oct 2004 16:21:29 -0400
@@ -2820,7 +2821,7 @@ openafs (1.2.11-1) unstable; urgency=high
 openafs (1.2.10-3) unstable; urgency=low
 
   * Fix Openafs not to include kernel headers from /usr/include,
-  Closes: #220600 
+  Closes: #220600
   * Fix typo in openafs templates, Closes: #215714
   * New French translations, Closes: #216158
   * Build-depend on e2fslibs-dev to get appropriate headers
@@ -2854,8 +2855,8 @@ openafs (1.2.10-1) unstable; urgency=low
 
 openafs (1.2.9-3) unstable; urgency=low
 
-  * Add support for kernel headers, thanks to Patrick Sodre, 
-    Closes: #173137 
+  * Add support for kernel headers, thanks to Patrick Sodre,
+    Closes: #173137
   * Add patch to support the Debian 2.4.21 Kernel sources, thanks to amu,
     Closes: #198774
   * Add chronyd to list of programs we assume set the clock, thanks RISKO
@@ -2908,7 +2909,7 @@ openafs (1.2.8-3) unstable; urgency=medium
   * Patch from Eduard Bloch <blade@debian.org> to build the PAM module for
     kaserver users; the main thing this patch does in create a bunch of
     PIC object files so it is a policy-conformant shared library, Closes:
-    #174668 
+    #174668
   * Do not include -I/usr/include and especially -I/usr/include/sys in the
     PAM Makefile so gcc 3.2 works; already fixed upstream, Closes: #176538
 
@@ -2937,7 +2938,7 @@ openafs (1.2.7-3) unstable; urgency=low
   * Fix bosserver  shutdown on restart after upgrade, Closes :#155586
   * Install translate_et, Closes: #138672
   * Allow byacc instead of bison
-  
+
  -- Sam Hartman <hartmans@debian.org>  Tue,  3 Dec 2002 22:30:44 -0500
 
 openafs (1.2.7-2) unstable; urgency=low
@@ -2954,7 +2955,7 @@ openafs (1.2.7-2) unstable; urgency=low
 openafs (1.2.7-1) unstable; urgency=low
 
   * Fix typo in templates, Closes: #150356
-  
+
   * New upstream version
 
  -- Sam Hartman <hartmans@debian.org>  Thu, 26 Sep 2002 16:11:25 -0400
@@ -3063,7 +3064,7 @@ openafs (1.2.2-2) unstable; urgency=low
     that works, closes: #119452
   * Fix message  output on server failed to start, closes: #119461
   * Fix openafs to deal if /etc/openafs/server/ThisCell has a newline,
-    closes: #118086 
+    closes: #118086
 
  -- Sam Hartman <hartmans@debian.org>  Sun, 25 Nov 2001 20:03:01 -0500
 
@@ -3083,7 +3084,7 @@ openafs (1.2.1-1) unstable; urgency=low
 
   * New upstream version.
   * Document that you may need to append a version for newer kernels,
-    closes: #112246 
+    closes: #112246
 
  -- Sam Hartman <hartmans@debian.org>  Thu, 20 Sep 2001 03:10:54 -0400
 
@@ -3098,7 +3099,7 @@ openafs (1.2.0-3) unstable; urgency=high
 openafs (1.2.0-2) unstable; urgency=high
 
   * Fix PPC makefile so that it finds install; this time actually
-    submitted upstream. 
+    submitted upstream.
   * Have openafs-modules-source depend on libpam0g-dev because upstream
     seems to need it.  Bug opened upstream asking if this is really necessary.
   * Include German template, closes: #110087
@@ -3132,7 +3133,7 @@ openafs (1.1.1-2) unstable; urgency=medium
     looping rxdebug and version amongst each other.
   * Install rxdebug (oops)
   * Fix lintian overrides to get Lintian to stop complaining about
-    non-problems. 
+    non-problems.
 
  -- Sam Hartman <hartmans@debian.org>  Sat, 21 Jul 2001 08:53:10 -0400
 
@@ -3144,7 +3145,7 @@ openafs (1.1.1-1) unstable; urgency=low
   * Patch to give better error messages when  copyonwrite fails in the
     fileserver (contributed upstream)
   * New CellServDB
-  
+
  -- Sam Hartman <hartmans@debian.org>  Fri, 20 Jul 2001 08:12:24 -0400
 
 openafs (1.1.0-1) unstable; urgency=low
@@ -3224,7 +3225,7 @@ openafs (1.0.2-3) unstable; urgency=low
 
   * Apply patch from  Stefan Kluth  <skluth@mppmu.mpg.de> for ppc_linux22
   * Back out architecture change from last version; no good way to
-    actually solve that problem apparently. 
+    actually solve that problem apparently.
 
 
  -- Sam Hartman <hartmans@debian.org>  Sat, 17 Feb 2001 23:45:06 -0500
@@ -3234,7 +3235,7 @@ openafs (1.0.2-2) unstable; urgency=low
   * Provide openafs-ptutil in hope that apt will deal better with upgrade,
     closes: #84303
   * Make thiscell default to dnsdomainname so things don't break quite as
-    bad if you don't enter it, closes: #81149 
+    bad if you don't enter it, closes: #81149
   * Include source architecture line, Closes: #84530
   * Rebuild with new debhelper to fix dh_installinit not shutting down on
     removal (Thanks Joey) (now requires debhelper 2.2.20)
@@ -3277,7 +3278,7 @@ openafs (1.0.1-1) unstable; urgency=low
 
   * New upstream version
   * Fix typo in openafs-client templates.
-  * Clarify that afs-newcell sets up for afs-rootvol 
+  * Clarify that afs-newcell sets up for afs-rootvol
 
  -- Sam Hartman <hartmans@mit.edu>  Sun,  3 Dec 2000 02:04:50 -0500
 
@@ -3350,7 +3351,7 @@ openafs (1.0.snap20001106-3) unstable; urgency=low
   * New script: afs-rootvol--creates the root.afs and root.cell.  Works
     fairly well except that it is overly verbose and that it has my test
     cell hardcoded.  This script will evolve into part of a new cell
-    config tool. 
+    config tool.
 
 
   --
