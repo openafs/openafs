@@ -477,6 +477,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     int tlen;
     struct rx_peer *tpeer;
     struct rx_connection *tconn;
+    afs_uint32 syncHost = 0;
     afs_uint32 otherHost = 0;
     char hoststr[16];
     char pbuffer[1028];
@@ -503,17 +504,17 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
      * screwup.  Thus, we only object if we're sure we know who the sync site
      * is, and it ain't the guy talking to us.
      */
-    offset = uvote_GetSyncSite();
+    syncHost = uvote_GetSyncSite();
     tconn = rx_ConnectionOf(rxcall);
     tpeer = rx_PeerOf(tconn);
     otherHost = ubikGetPrimaryInterfaceAddr(rx_HostOf(tpeer));
-    if (offset && offset != otherHost) {
+    if (syncHost && syncHost != otherHost) {
 	/* we *know* this is the wrong guy */
         char sync_hoststr[16];
 	ViceLog(0,
 	    ("Ubik: Refusing synchronization with server %s since it is not the sync-site (%s).\n",
 	     afs_inet_ntoa_r(otherHost, hoststr),
-	     afs_inet_ntoa_r(offset, sync_hoststr)));
+	     afs_inet_ntoa_r(syncHost, sync_hoststr)));
 	return USYNC;
     }
 
