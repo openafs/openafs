@@ -515,6 +515,8 @@ ForceAllNewConnections(void)
         sa = addrs[i];
 	ForceNewConnections(sa);
     }
+
+    afs_osi_Free(addrs, srvAddrCount * sizeof(*addrs));
 }
 
 static void
