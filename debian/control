@@ -33,7 +33,6 @@ Description: AFS distributed filesystem client support
  want to install openafs-krb5.
 
 Package: openafs-fuse
-Priority: optional
 Architecture: alpha amd64 arm arm64 armel armhf i386 ia64 powerpc ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends},
  openafs-client (= ${binary:Version})
@@ -142,7 +141,6 @@ Description: AFS distributed file system runtime library (RPC layer)
 
 Package: libopenafs-dev
 Section: libdevel
-Priority: optional
 Architecture: alpha amd64 arm arm64 armel armhf i386 ia64 powerpc powerpcspe ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends},
  libafsauthent2 (= ${binary:Version}), libafsrpc2 (= ${binary:Version}),
@@ -159,7 +157,6 @@ Description: AFS distributed filesystem development libraries
 
 Package: openafs-modules-source
 Section: kernel
-Priority: optional
 Architecture: all
 Depends: ${misc:Depends}, debhelper (>= 8),
  module-assistant | kernel-package, perl
@@ -174,7 +171,6 @@ Description: AFS distributed filesystem kernel module source
 
 Package: openafs-modules-dkms
 Section: kernel
-Priority: optional
 Architecture: all
 Depends: ${misc:Depends}, ${perl:Depends}, dkms, libc6-dev
 Recommends: openafs-client (>= ${source:Version})
