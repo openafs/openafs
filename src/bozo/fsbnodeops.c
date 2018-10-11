@@ -881,7 +881,7 @@ SetNeedsClock(struct fsbnode *ab)
 	}
     } else if ((ab->b.goal == 0) && !ab->fileRunning && !ab->volRunning
 	       && !ab->salRunning && !ab->scanRunning && !ab->salsrvRunning) {
-	if (ab->b.flags & BNODE_ERRORSTOP && ab->b.errorStopDelay) {
+	if (bnode_IsErrorRetrying(&ab->b)) {
 	    ViceLog(0, ("%s will retry start in %d seconds\n", ab->b.name,
 			ab->b.errorStopDelay));
 	    ab->needsClock = 1;	/* halted for errors, retry later */

@@ -537,6 +537,18 @@ bnode_Delete(struct bnode *abnode)
     return code;
 }
 
+/* Are we still doing error retries ? */
+int
+bnode_IsErrorRetrying(struct bnode *abnode)
+{
+    if ((abnode->flags & BNODE_ERRORSTOP) != 0
+	    && abnode->errorStopDelay != 0) {
+	return 1;   /* still doing error retries */
+    } else {
+	return 0;   /* no error retries */
+    }
+}
+
 /* function to tell if there's a timeout coming up */
 int
 bnode_PendingTimeout(struct bnode *abnode)

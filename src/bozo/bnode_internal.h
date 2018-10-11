@@ -158,3 +158,4 @@ extern int bnode_SetStat(struct bnode *abnode, int agoal);
 extern int bnode_CreatePidFile(struct bnode *abnode, struct bnode_proc *aproc, char *name);
 extern int bnode_DestroyPidFile(struct bnode *abnode, struct bnode_proc *aproc);
 extern int bnode_ResetErrorCount(struct bnode *abnode);
+extern int bnode_IsErrorRetrying(struct bnode *abnode);

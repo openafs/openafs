@@ -158,7 +158,7 @@ ez_getstat(struct bnode *bn, afs_int32 * astatus)
 	temp = BSTAT_SHUTTINGDOWN;
     else if (abnode->running)
 	temp = BSTAT_NORMAL;
-    else if (abnode->b.flags & BNODE_ERRORSTOP)
+    else if (bnode_IsErrorRetrying(bn))
 	temp = BSTAT_STARTINGUP;
     else
 	temp = BSTAT_SHUTDOWN;
@@ -225,7 +225,7 @@ ez_procexit(struct bnode *bn, struct bnode_proc *aproc)
     bnode_SetTimeout((struct bnode *) abnode, 0);	/* clear timer */
     if (abnode->b.goal)
 	code = ez_setstat((struct bnode *) abnode, BSTAT_NORMAL);
-    else if (abnode->b.flags & BNODE_ERRORSTOP && abnode->b.errorStopDelay) {
+    else if (bnode_IsErrorRetrying(bn)) {
 	ViceLog(0, ("%s will retry start in %d seconds\n", abnode->b.name,
 		    abnode->b.errorStopDelay));
 	bnode_SetTimeout(bn, abnode->b.errorStopDelay);
