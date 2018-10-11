@@ -5,8 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-PACKAGE=@PACKAGE@
-VERSION=@VERSION@
+PACKAGE=@PACKAGE_TARNAME@
+VERSION=@PACKAGE_VERSION@
 
 AFS_component_version_number.o: AFS_component_version_number.c $(TOP_SRCDIR)/config/mkvers
 version.xml version.txt: $(TOP_SRCDIR)/config/mkvers

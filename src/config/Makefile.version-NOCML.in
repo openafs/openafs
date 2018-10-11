@@ -5,12 +5,12 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-PACKAGE=@PACKAGE@
+PACKAGE=@PACKAGE_TARNAME@
 
 AFS_component_version_number.o: AFS_component_version_number.c
 
 AFS_component_version_number.c: @TOP_OBJDIR@/src/config/Makefile.version
-	( VERSION=`@abs_top_srcdir@/build-tools/git-version @abs_top_srcdir@ "@VERSION@"` && \
+	( VERSION=`@abs_top_srcdir@/build-tools/git-version @abs_top_srcdir@ "@PACKAGE_VERSION@"` && \
 	if [ "$$SOURCE_DATE_EPOCH" ]; then \
 	     echo 'char cml_version_number[]="@(#)OpenAFS '$$VERSION `date -u -d "@$$SOURCE_DATE_EPOCH" +"%Y-%m-%d" 2>/dev/null || date -u -r "$$SOURCE_DATE_EPOCH" +"%Y-%m-%d"`'";'; \
 	else \
@@ -22,7 +22,7 @@ AFS_component_version_number.c: @TOP_OBJDIR@/src/config/Makefile.version
 	rm -f AFS_component_version_number.c.NEW
 
 version.xml:
-	VERSION=`@abs_top_srcdir@/build-tools/git-version @abs_top_srcdir@ "@VERSION@"` && \
+	VERSION=`@abs_top_srcdir@/build-tools/git-version @abs_top_srcdir@ "@PACKAGE_VERSION@"` && \
 	echo '<?xml version="1.0" encoding="UTF-8"?>' >version.xml && \
 	echo '<revision>' >>version.xml && \
 	echo '<revnumber>'$$VERSION'</revnumber>' >>version.xml && \
