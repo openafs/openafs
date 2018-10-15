@@ -406,11 +406,8 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 
     initialize_U_error_table();
 
-    tdb = malloc(sizeof(struct ubik_dbase));
+    tdb = calloc(1, sizeof(*tdb));
     tdb->pathName = strdup(pathName);
-    tdb->activeTrans = (struct ubik_trans *)0;
-    memset(&tdb->version, 0, sizeof(struct ubik_version));
-    memset(&tdb->cachedVersion, 0, sizeof(struct ubik_version));
 #ifdef AFS_PTHREAD_ENV
     opr_mutex_init(&tdb->versionLock);
     opr_mutex_init(&beacon_globals.beacon_lock);
@@ -421,7 +418,6 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     Lock_Init(&tdb->versionLock);
 #endif
     Lock_Init(&tdb->cache_lock);
-    tdb->flags = 0;
     tdb->read = uphys_read;
     tdb->write = uphys_write;
     tdb->truncate = uphys_truncate;
@@ -432,8 +428,6 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     tdb->setlabel = uphys_setlabel;
     tdb->getnfiles = uphys_getnfiles;
     tdb->buffered_append = uphys_buf_append;
-    tdb->readers = 0;
-    tdb->tidCounter = tdb->writeTidCounter = 0;
     *dbase = tdb;
     ubik_dbase = tdb;		/* for now, only one db per server; can fix later when we have names for the other dbases */
 
