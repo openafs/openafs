@@ -59,7 +59,7 @@ AC_DEFUN([OPENAFS_SUMMARY],[
 ***************************************************************
 OpenAFS configure summary
 
-  version : ${VERSION}
+  version : ${PACKAGE_VERSION}
   sysname : ${AFS_SYSNAME}
 
 debug:
