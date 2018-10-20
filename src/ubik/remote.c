@@ -605,11 +605,6 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 #endif
     memcpy(&ubik_dbase->version, avers, sizeof(struct ubik_version));
     udisk_Invalidate(dbase, file);	/* new dbase, flush disk buffers */
-#ifdef AFS_PTHREAD_ENV
-    opr_Assert(pthread_cond_broadcast(&dbase->version_cond) == 0);
-#else
-    LWP_NoYieldSignal(&dbase->version);
-#endif
 
 failed_locked:
     UBIK_VERSION_UNLOCK;

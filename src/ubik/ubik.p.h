@@ -164,7 +164,6 @@ struct ubik_dbase {
     struct ubik_version cachedVersion;	/*!< version of caller's cached data */
     struct Lock cache_lock; /*!< protects cached application data */
 #ifdef AFS_PTHREAD_ENV
-    pthread_cond_t version_cond;    /*!< condition variable to manage changes to version */
     pthread_cond_t flags_cond;      /*!< condition variable to manage changes to flags */
 #endif
 };

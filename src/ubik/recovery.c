@@ -382,11 +382,6 @@ InitializeDB(struct ubik_dbase *adbase)
 	    adbase->version.counter = 0;
 	    (*adbase->setlabel) (adbase, 0, &adbase->version);
 	}
-#ifdef AFS_PTHREAD_ENV
-	opr_cv_broadcast(&adbase->version_cond);
-#else
-	LWP_NoYieldSignal(&adbase->version);
-#endif
 	UBIK_VERSION_UNLOCK;
     }
     return 0;
@@ -739,11 +734,6 @@ urecovery_Interact(void *dummy)
 		urecovery_state |= UBIK_RECHAVEDB;
 	    }
 	    udisk_Invalidate(ubik_dbase, 0);	/* data has changed */
-#ifdef AFS_PTHREAD_ENV
-	    opr_cv_broadcast(&ubik_dbase->version_cond);
-#else
-	    LWP_NoYieldSignal(&ubik_dbase->version);
-#endif
 	}
 	if (!(urecovery_state & UBIK_RECHAVEDB)) {
 	    DBRELE(ubik_dbase);
@@ -764,11 +754,6 @@ urecovery_Interact(void *dummy)
 		(*ubik_dbase->setlabel) (ubik_dbase, 0, &ubik_dbase->version);
 	    UBIK_VERSION_UNLOCK;
 	    udisk_Invalidate(ubik_dbase, 0);	/* data may have changed */
-#ifdef AFS_PTHREAD_ENV
-	    opr_cv_broadcast(&ubik_dbase->version_cond);
-#else
-	    LWP_NoYieldSignal(&ubik_dbase->version);
-#endif
 	}
 
 	/* Check the other sites and send the database to them if they

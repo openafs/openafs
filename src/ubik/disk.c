@@ -877,11 +877,6 @@ udisk_commit(struct ubik_trans *atrans)
 
 	UBIK_VERSION_LOCK;
 	dbase->version.counter++;	/* bump commit count */
-#ifdef AFS_PTHREAD_ENV
-	opr_cv_broadcast(&dbase->version_cond);
-#else
-	LWP_NoYieldSignal(&dbase->version);
-#endif
 	code = udisk_LogEnd(dbase, &dbase->version);
 	if (code) {
 	    dbase->version.counter--;

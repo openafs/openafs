@@ -438,7 +438,6 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     ubik_dbase = tdb;		/* for now, only one db per server; can fix later when we have names for the other dbases */
 
 #ifdef AFS_PTHREAD_ENV
-    opr_cv_init(&tdb->version_cond);
     opr_cv_init(&tdb->flags_cond);
 #endif /* AFS_PTHREAD_ENV */
 
