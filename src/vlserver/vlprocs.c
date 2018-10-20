@@ -205,11 +205,8 @@ Init_VLdbase(struct vl_ctx *ctx,
 	    code = ubik_BeginTrans(VL_dbase, UBIK_WRITETRANS, &ctx->trans);
 	    wl = 1;
 	} else if (locktype == LOCKREAD) {
-#ifdef UBIK_READ_WHILE_WRITE
-	    code = ubik_BeginTransReadAnyWrite(VL_dbase, UBIK_READTRANS, &ctx->trans);
-#else
-	    code = ubik_BeginTransReadAny(VL_dbase, UBIK_READTRANS, &ctx->trans);
-#endif
+	    code = ubik_BeginTransReadAny(VL_dbase, UBIK_READTRANS,
+					  &ctx->trans);
 	    wl = 0;
 	} else {
 	    code = ubik_BeginTrans(VL_dbase, UBIK_WRITETRANS, &ctx->trans);

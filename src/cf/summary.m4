@@ -113,7 +113,6 @@ Options
   ptserver supergroups   : ${enable_supergroups}
   pthreaded ubik         : ${enable_pthreaded_ubik}
   install kauth          : ${INSTALL_KAUTH}
-  ubik read while write  : ${enable_ubik_read_while_write}
 
 Build components
   kernel module          : ${summary_kernel_module}

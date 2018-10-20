@@ -42,11 +42,6 @@ AC_ARG_ENABLE([pthreaded-ubik],
          enabled)])],
     [],
     [enable_pthreaded_ubik="yes"])
-AC_ARG_ENABLE([ubik-read-while-write],
-    [AS_HELP_STRING([--enable-ubik-read-while-write],
-        [enable vlserver read from db cache during write locks (EXPERIMENTAL)])],
-    [],
-    [enable_ubik_read_while_write="no"])
 AC_ARG_ENABLE([pthreaded-bos],
     [AS_HELP_STRING([--enable-pthreaded-bos],
 	[enable installation of pthreaded bos applications (defaults to
@@ -298,10 +293,6 @@ else
         USE_UNIX_SOCKETS="no"
 fi
 AC_SUBST(USE_UNIX_SOCKETS)
-
-if test "$enable_ubik_read_while_write" = "yes"; then
-        AC_DEFINE(UBIK_READ_WHILE_WRITE, 1, [define if you want to enable ubik read while write])
-fi
 
 if test "$enable_namei_fileserver" = "yes"; then
         AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
