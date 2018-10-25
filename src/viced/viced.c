@@ -1057,11 +1057,11 @@ ParseArgs(int argc, char *argv[])
     cmd_AddParmAtOffset(opts, OPT_vlrudisable, "-vlrudisable",
 			CMD_FLAG, CMD_OPTIONAL, "disable VLRU functionality");
     cmd_AddParmAtOffset(opts, OPT_vlruthresh, "-vlruthresh",
-			CMD_FLAG, CMD_OPTIONAL,
+			CMD_SINGLE, CMD_OPTIONAL,
 			"mins before unused vols become eligible for detach");
     cmd_AddParmAtOffset(opts, OPT_vlruinterval, "-vlruinterval",
-			CMD_FLAG, CMD_OPTIONAL, "secs between VLRU scans");
-    cmd_AddParmAtOffset(opts, OPT_vlrumax, "-vlrumax", CMD_FLAG, CMD_OPTIONAL,
+			CMD_SINGLE, CMD_OPTIONAL, "secs between VLRU scans");
+    cmd_AddParmAtOffset(opts, OPT_vlrumax, "-vlrumax", CMD_SINGLE, CMD_OPTIONAL,
 		        "max volumes to detach in one scan");
     cmd_AddParmAtOffset(opts, OPT_unsafe_nosalvage, "-unsafe-nosalvage",
 			CMD_FLAG, CMD_OPTIONAL,
@@ -1071,7 +1071,7 @@ ParseArgs(int argc, char *argv[])
     /* unrecommend options - should perhaps be CMD_HIDE */
     cmd_AddParmAtOffset(opts, OPT_cbwait, "-w", CMD_SINGLE, CMD_OPTIONAL,
 			"callback wait interval");
-    cmd_AddParmAtOffset(opts, OPT_novbc, "-novbc", CMD_SINGLE, CMD_FLAG,
+    cmd_AddParmAtOffset(opts, OPT_novbc, "-novbc", CMD_FLAG, CMD_OPTIONAL,
 			"disable callback breaks on reattach");
 
     /* general options */
