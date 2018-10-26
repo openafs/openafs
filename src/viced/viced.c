@@ -1064,7 +1064,7 @@ ParseArgs(int argc, char *argv[])
 		        "max volumes to detach in one scan");
     cmd_AddParmAtOffset(opts, OPT_unsafe_nosalvage, "-unsafe-nosalvage",
 			CMD_FLAG, CMD_OPTIONAL,
-			"bybass safety checks on volume attach");
+			"bypass safety checks on volume attach");
 #endif
 
     /* unrecommend options - should perhaps be CMD_HIDE */
