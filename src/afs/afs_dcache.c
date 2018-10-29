@@ -1282,8 +1282,6 @@ afs_GetDownDSlot(int anumber)
 	if (tdc->refCount == 0) {
 	    if ((ix = tdc->index) == NULLIDX)
 		osi_Panic("getdowndslot");
-	    /* pull the entry out of the lruq and put it on the free list */
-	    QRemove(&tdc->lruq);
 
 	    /* write-through if modified */
 	    if (tdc->dflags & DFEntryMod) {
@@ -1305,12 +1303,23 @@ afs_GetDownDSlot(int anumber)
 		    AFS_GLOCK();
 		}
 #else
+		int code;
+
+		code = afs_WriteDCache(tdc, 1);
+		if (code) {
+		    /*
+		     * We couldn't flush it at this time; return early because
+		     * if afs_WriteDCache() failed once it is likely to
+		     * continue failing for subsequent dcaches.
+		     */
+		    return;
+		}
 		tdc->dflags &= ~DFEntryMod;
-		osi_Assert(afs_WriteDCache(tdc, 1) == 0);
 #endif
 	    }
 
-	    /* finally put the entry in the free list */
+	    /* pull the entry out of the lruq and put it on the free list */
+	    QRemove(&tdc->lruq);
 	    afs_indexTable[ix] = NULL;
 	    afs_indexFlags[ix] &= ~IFEverUsed;
 	    tdc->index = NULLIDX;
