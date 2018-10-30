@@ -383,19 +383,24 @@ get_cellconfig(const char *config, char *cell,
 	exit(AKLOG_AFS);
     }
 
-    if (afsconf_GetLocalCell(configdir, *local_cell, MAXCELLCHARS)) {
-	fprintf(stderr, "%s: can't determine local cell.\n", progname);
-	exit(AKLOG_AFS);
+    if (cell != NULL && cell[0] == '\0') {
+	/* Use the local cell */
+	cell = NULL;
     }
-
-    if ((cell == NULL) || (cell[0] == 0))
-	cell = *local_cell;
 
     /* XXX - This function modifies 'cell' by passing it through lcstring */
     if (afsconf_GetCellInfo(configdir, cell, NULL, cellconfig)) {
-	fprintf(stderr, "%s: Can't get information about cell %s.\n",
-		progname, cell);
+	if (cell != NULL) {
+	    fprintf(stderr, "%s: Can't get information about cell %s.\n",
+		    progname, cell);
+	} else {
+	    fprintf(stderr, "%s: Can't get information about the local cell.\n",
+		    progname);
+	}
 	status = AKLOG_AFS;
+    } else if (afsconf_GetLocalCell(configdir, *local_cell, MAXCELLCHARS)) {
+	fprintf(stderr, "%s: can't determine local cell.\n", progname);
+	exit(AKLOG_AFS);
     }
 
     afsconf_Close(configdir);
