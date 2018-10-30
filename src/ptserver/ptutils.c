@@ -286,8 +286,17 @@ AccessOK(struct ubik_trans *ut, afs_int32 cid,		/* caller id */
 	return 1;
     if (cid == SYSADMINID)
 	return 1;		/* special case fileserver */
-    if (restricted && ((mem == PRP_ADD_MEM) || (mem == PRP_REMOVE_MEM)) && (any == 0))
-	return 0;
+    if (restricted) {
+        if (mem == PRP_ADD_MEM || mem == PRP_REMOVE_MEM) {
+            /* operation is for adding/removing members from a group */
+            return 0;
+        }
+        if (mem == 0 && any == 0) {
+            /* operation is for modifying an entry (or some administrative
+             * global operations) */
+            return 0;
+        }
+    }
     if (tentry) {
 	flags = tentry->flags;
 	oid = tentry->owner;
