@@ -286,7 +286,7 @@ AccessOK(struct ubik_trans *ut, afs_int32 cid,		/* caller id */
 	return 1;
     if (cid == SYSADMINID)
 	return 1;		/* special case fileserver */
-    if (restricted) {
+    if (restricted && !IsAMemberOf(ut, cid, SYSADMINID)) {
         if (mem == PRP_ADD_MEM || mem == PRP_REMOVE_MEM) {
             /* operation is for adding/removing members from a group */
             return 0;
