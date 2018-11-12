@@ -901,6 +901,7 @@ UnthreadVLentry(struct vl_ctx *ctx, afs_int32 blockindex,
 			 aentry->name, blockindex, aentry->volumeId[typeindex], typeindex));
 		VLog(0, ("... The VLDB may be partly corrupted; see vldb_check "
 			 "for how to check for and fix errors.\n"));
+		return VL_DBBAD;
 	    }
 	    return errorcode;
 	}
@@ -913,6 +914,7 @@ UnthreadVLentry(struct vl_ctx *ctx, afs_int32 blockindex,
 		     "hash chain.\n", aentry->name, blockindex));
 	    VLog(0, ("... The VLDB may be partly corrupted; see vldb_check "
 		     "for how to check for and fix errors.\n"));
+	    return VL_DBBAD;
 	}
 	return errorcode;
     }
