@@ -894,13 +894,28 @@ UnthreadVLentry(struct vl_ctx *ctx, afs_int32 blockindex,
 
     /* Take the RO/RW entries of their respective hash linked lists. */
     for (typeindex = ROVOL; typeindex <= BACKVOL; typeindex++) {
-	if ((errorcode = UnhashVolid(ctx, typeindex, blockindex, aentry)))
+	if ((errorcode = UnhashVolid(ctx, typeindex, blockindex, aentry))) {
+	    if (errorcode == VL_NOENT) {
+		VLog(0, ("Unable to unhash vlentry '%s' (address %d) from hash "
+			 "chain for volid %u (type %d).\n",
+			 aentry->name, blockindex, aentry->volumeId[typeindex], typeindex));
+		VLog(0, ("... The VLDB may be partly corrupted; see vldb_check "
+			 "for how to check for and fix errors.\n"));
+	    }
 	    return errorcode;
+	}
     }
 
     /* Take it out of the Volname hash list */
-    if ((errorcode = UnhashVolname(ctx, blockindex, aentry)))
+    if ((errorcode = UnhashVolname(ctx, blockindex, aentry))) {
+	if (errorcode == VL_NOENT) {
+	    VLog(0, ("Unable to unhash vlentry '%s' (address %d) from name "
+		     "hash chain.\n", aentry->name, blockindex));
+	    VLog(0, ("... The VLDB may be partly corrupted; see vldb_check "
+		     "for how to check for and fix errors.\n"));
+	}
 	return errorcode;
+    }
 
     /* Update cheader entry */
     write_vital_vlheader(ctx);
