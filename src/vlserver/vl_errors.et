@@ -43,4 +43,5 @@ error_table VL
   ec VL_INDEXERANGE, "Index out of range"
   ec VL_MULTIPADDR, "Servers have the same ip address"
   ec VL_BADMASK, "Illegal attribute mask value"
+  ec VL_DBBAD, "Database is inconsistent"
 end
