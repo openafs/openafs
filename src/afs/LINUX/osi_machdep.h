@@ -75,7 +75,14 @@
 #if defined(HAVE_LINUX_CRED_H)
 #include "h/cred.h"
 #endif
-#if defined(HAVE_LINUX_CURRENT_KERNEL_TIME)
+
+#if defined(HAVE_LINUX_KTIME_GET_COARSE_REAL_TS64)
+static inline time_t osi_Time(void) {
+    struct timespec64 xtime;
+    ktime_get_coarse_real_ts64(&xtime);
+    return xtime.tv_sec;
+}
+#elif defined(HAVE_LINUX_CURRENT_KERNEL_TIME)
 static inline time_t osi_Time(void) {
     struct timespec xtime;
     xtime = current_kernel_time();
