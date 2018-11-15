@@ -8,13 +8,16 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
+include @TOP_OBJDIR@/src/config/Makefile.libtool
+top_builddir=@top_builddir@
 
 LT_deps = \
 	$(TOP_OBJDIR)/src/auth/liboafs_auth.la \
 	$(TOP_OBJDIR)/src/sys/liboafs_sys.la \
 	$(TOP_OBJDIR)/src/rx/liboafs_rx.la \
 	$(TOP_OBJDIR)/src/util/liboafs_util.la \
-	$(TOP_OBJDIR)/src/opr/liboafs_opr.la
+	$(TOP_OBJDIR)/src/opr/liboafs_opr.la \
+	$(TOP_OBJDIR)/src/cmd/liboafs_cmd.la
 LT_libs = $(LDFLAGS_roken) $(LIB_roken)
 
 tests all: testcellconf ktctest testnetrestrict
@@ -25,12 +28,12 @@ testcellconf: testcellconf.lo
 ktctest: ktctest.lo
 	$(LT_LDRULE_static) ktctest.lo $(LT_deps) $(LT_libs)
 
-testnetrestrict: testnetrestrict.o
-	$(AFS_LDRULE) testnetrestrict.o $(TOP_LIBDIR)/libauth.a $(TOP_LIBDIR)/libopr.a
+testnetrestrict: testnetrestrict.lo
+	$(LT_LDRULE_static) testnetrestrict.lo $(LT_deps) $(LT_libs)
 
 clean:
 	$(LT_CLEAN)
-	$(RM) -f copyauth testcellconf ktctest setkey auth.h cellconfig.h acfg_errors.c ktc_errors.c core
+	$(RM) -f *.o copyauth testcellconf ktctest testnetrestrict core
 
 install:
 

@@ -17,6 +17,10 @@
 
 char *interfaceList, *filenameNetInfo, *filenameNetRestrict;
 
+/* Prototype for a deprecated function. */
+int afsconf_ParseNetInfoFile(afs_uint32 outAddrs[], afs_uint32 outMask[], afs_uint32 outMtu[],
+			 int max, char reason[], const char *fileName);
+
 int
 rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[],
 		     afs_uint32 maskBuffer[],
