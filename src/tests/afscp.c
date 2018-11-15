@@ -189,6 +189,13 @@ get_sc(char *cellname)
 #endif
 }
 
+static volatile int loop_stop = 1;
+static void
+int_handler(int sig)
+{
+    loop_stop = 1;
+}
+
 #define scindex_NULL 0
 #define scindex_RXKAD 2
 
@@ -208,16 +215,21 @@ main(int argc, char **argv)
     struct AFSFid sf, dd, df;
 
     int filesz = 0;
+    unsigned long total_xfer = 0;
     int ch, blksize, bytesremaining, bytes;
     struct timeval start, finish;
     struct rx_securityClass *ssc = 0, *dsc = 0;
     int sscindex, dscindex;
     struct rx_connection *sconn = NULL, *dconn = NULL;
     struct rx_call *scall = NULL, *dcall = NULL;
+    struct rx_call *scall_2 = NULL, *dcall_2 = NULL;
     int code = 0, fetchcode, storecode, printcallerrs = 0;
     int slcl = 0, dlcl = 0, unlock = 0;
     int sfd = 0, dfd = 0, unauth = 0;
     int sleeptime = 0;
+    int did_start = 0;
+    int loop_seconds = 0;
+    int first;
 
     struct AFSCBFids theFids;
     struct AFSCBs theCBs;
@@ -225,7 +237,7 @@ main(int argc, char **argv)
 
     blksize = 8 * 1024;
 
-    while ((ch = getopt(argc, argv, "iouUb:s:")) != -1) {
+    while ((ch = getopt(argc, argv, "iouUb:s:l:")) != -1) {
 	switch (ch) {
 	case 'b':
 	    blksize = atoi(optarg);
@@ -245,6 +257,15 @@ main(int argc, char **argv)
 	case 'U':
 	    unlock = 1;
 	    break;
+	case 'l': {
+	    struct sigaction sa;
+	    loop_stop = 0;
+	    loop_seconds = atoi(optarg);
+	    memset(&sa, 0, sizeof(sa));
+	    sa.sa_handler = int_handler;
+	    sigaction(SIGINT, &sa, NULL);
+	    break;
+	}
 	default:
 	    printf("Unknown option '%c'\n", ch);
 	    exit(1);
@@ -254,13 +275,14 @@ main(int argc, char **argv)
 
     if (argc - optind + unlock < 2) {
 	fprintf(stderr,
-		"Usage: afscp [-i|-o]] [-b xfersz] [-s time] [-u] [-U] source [dest]\n");
+		"Usage: afscp [-i|-o]] [-b xfersz] [-s time] [-l n] [-u] [-U] source [dest]\n");
 	fprintf(stderr, "  -b   Set block size\n");
 	fprintf(stderr, "  -i   Source is local (copy into AFS)\n");
 	fprintf(stderr, "  -o   Dest is local (copy out of AFS)\n");
 	fprintf(stderr, "  -s   Set the seconds to sleep before reading/writing data\n");
 	fprintf(stderr, "  -u   Run unauthenticated\n");
 	fprintf(stderr, "  -U   Send an unlock request for source. (dest path not required)\n");
+	fprintf(stderr, "  -l   repeat request for N seconds (0 for forever)\n");
 	fprintf(stderr, "source and dest can be paths or specified as:\n");
 	fprintf(stderr, "     @afs:cellname:servername:volume:vnode:uniq\n");
 	exit(1);
@@ -358,13 +380,22 @@ main(int argc, char **argv)
 	}
     }
 
+    first = 2;
+ repeat:
+    if (first == 2) {
+	first = 1;
+    } else if (first == 1) {
+	first = 0;
+    }
 
     memset(&sst, 0, sizeof(struct AFSStoreStatus));
 
     if (dlcl && !unlock) {
 	dfd = open(destpath, O_RDWR | O_CREAT | O_EXCL, 0666);
 	if (dfd < 0 && errno == EEXIST) {
-	    printf("%s already exists, overwriting\n", destpath);
+	    if (first) {
+		printf("%s already exists, overwriting\n", destpath);
+	    }
 	    dfd = open(destpath, O_RDWR | O_TRUNC, 0666);
 	    if (dfd < 0) {
 		fprintf(stderr, "Cannot open %s (%s)\n", destpath,
@@ -381,7 +412,9 @@ main(int argc, char **argv)
 	     RXAFS_CreateFile(dconn, &dd, destf, &sst, &df, &fst, &dfst, &dcb,
 			      &vs))) {
 	    if (code == EEXIST) {
-		printf("%s already exits, overwriting\n", destpath);
+		if (first) {
+		    printf("%s already exits, overwriting\n", destpath);
+		}
 		if (statfile(destpath, dcell, &dsrv, &df))
 		    fprintf(stderr, "Cannot get attributes of %s\n",
 			    destpath);
@@ -424,15 +457,31 @@ main(int argc, char **argv)
     } else {
 	filesz = fst.Length;
     }
+    total_xfer += filesz;
 
     printcallerrs = 0;
     fetchcode = 0;
     storecode = 0;
-    if (!slcl && !unlock)
-	scall = rx_NewCall(sconn);
-    if (!dlcl && !unlock)
-	dcall = rx_NewCall(dconn);
-    gettimeofday(&start, NULL);
+    if (!slcl && !unlock) {
+	if (first) {
+	    scall = rx_NewCall(sconn);
+	} else {
+	    scall = scall_2;
+	}
+	scall_2 = rx_NewCall(sconn);
+    }
+    if (!dlcl && !unlock) {
+	if (first) {
+	    dcall = rx_NewCall(dconn);
+	} else {
+	    dcall = dcall_2;
+	}
+	dcall_2 = rx_NewCall(dconn);
+    }
+    if (!did_start) {
+	gettimeofday(&start, NULL);
+	did_start = 1;
+    }
     if (unlock) {
 	if (fst.lockCount) {
 	    printf("Sending 1 unlock for %s (%d locks)\n", srcf, fst.lockCount);
@@ -551,6 +600,19 @@ main(int argc, char **argv)
     }
     if (storecode)
 	printf("Error returned from store: %s\n", afs_error_message(storecode));
+
+    if (!loop_stop) {
+	struct timeval cur;
+	double elapsed;
+	if (loop_seconds == 0) {
+	    goto repeat;
+	}
+	gettimeofday(&cur, NULL);
+	elapsed = cur.tv_sec - start.tv_sec + (cur.tv_usec - start.tv_usec) / 1e+06;
+	if (elapsed < loop_seconds) {
+	    goto repeat;
+	}
+    }
 Finish:
     gettimeofday(&finish, NULL);
 
@@ -599,19 +661,19 @@ Finish:
     if (printcallerrs && !unlock) {
 	double rate, size, time;
 	if (finish.tv_sec == start.tv_sec) {
-	    printf("Copied %d bytes in %d microseconds\n", filesz,
+	    printf("Copied %lu bytes in %d microseconds\n", total_xfer,
 		   (int)(finish.tv_usec - start.tv_usec));
 	} else {
-	    printf("Copied %d bytes in %d seconds\n", filesz,
+	    printf("Copied %lu bytes in %d seconds\n", total_xfer,
 		   (int)(finish.tv_sec - start.tv_sec));
 	}
 
-	size = filesz / 1024.0;
+	size = total_xfer / 1024.0;
 	time =
 	    finish.tv_sec - start.tv_sec + (finish.tv_usec -
 					    start.tv_usec) / 1e+06;
 	rate = size / time;
-	printf("Transfer rate %g Kbytes/sec\n", rate);
+	printf("Transfer rate %.4g Kbytes/sec\n", rate);
 
     }
 
