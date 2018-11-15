@@ -629,9 +629,6 @@ extern void osi_ReleaseVM(struct vcache *avc, afs_ucred_t *acred);
 /* ARCH/osi_crypto.c */
 extern int osi_readRandom(void *, afs_size_t);
 
-/* ARCH/osi_misc.c */
-extern void afs_osi_SetTime(osi_timeval_t * atv);
-
 /* LINUX/osi_misc.c */
 #ifdef AFS_LINUX20_ENV
 #ifdef AFS_LINUX24_ENV

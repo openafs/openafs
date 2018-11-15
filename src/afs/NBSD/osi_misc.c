@@ -100,21 +100,3 @@ afs_syscall_iincdec(int dev, int inode, int inode_p1, int amount)
 {
     return EINVAL;
 }
-
-/*
- * just calls kern_time.c:settime()
- */
-void
-afs_osi_SetTime(osi_timeval_t *atv)
-{
-#if 0
-    printf("afs attempted to set clock; use \"afsd -nosettime\"\n");
-#else
-    struct timespec ts;
-    AFS_GUNLOCK();
-    ts.tv_sec = atv->tv_sec;
-    ts.tv_nsec = atv->tv_usec * 1000;
-    settime(osi_curproc()->l_proc, &ts); /* really takes a process */
-    AFS_GLOCK();
-#endif
-}

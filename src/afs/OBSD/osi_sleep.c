@@ -61,12 +61,6 @@ osi_Time()
     return now.tv_sec;
 }
 
-void
-afs_osi_SetTime(osi_timeval_t * atv)
-{
-    printf("afs attempted to set clock; use \"afsd -nosettime\"\n");
-}
-
 /* cancel osi_Wait */
 void
 afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
