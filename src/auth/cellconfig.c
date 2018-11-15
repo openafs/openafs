@@ -73,10 +73,9 @@ static int TrimLine(char *abuffer, int abufsize);
 static int GetCellNT(struct afsconf_dir *adir);
 #endif
 static int GetCellUnix(struct afsconf_dir *adir);
-static int afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
-				char clones[]);
+static int afsconf_OpenInternal(struct afsconf_dir *adir);
 static int ParseHostLine(char *aline, struct sockaddr_in *addr,
-			 char *aname, char *aclone);
+			 char *aname, char *aclone /* boolean */);
 static int ParseCellLine(char *aline, char *aname,
 			 char *alname);
 static int afsconf_CloseInternal(struct afsconf_dir *adir);
@@ -433,7 +432,7 @@ afsconf_Open(const char *adir)
     tdir = calloc(1, sizeof(struct afsconf_dir));
     tdir->name = strdup(adir);
 
-    code = afsconf_OpenInternal(tdir, 0, 0);
+    code = afsconf_OpenInternal(tdir);
     if (code) {
 	char *afsconf_path, afs_confdir[128];
 
@@ -481,7 +480,7 @@ afsconf_Open(const char *adir)
 	    afsconf_path = afs_confdir;
 	}
 	tdir->name = strdup(afsconf_path);
-	code = afsconf_OpenInternal(tdir, 0, 0);
+	code = afsconf_OpenInternal(tdir);
 	if (code) {
 	    free(tdir->name);
 	    goto fail;
@@ -609,8 +608,7 @@ cm_enumCellRegistryProc(void *rockp, char * cellNamep)
 
 
 static int
-afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
-		     char clones[])
+afsconf_OpenInternal(struct afsconf_dir *adir)
 {
     afsconf_FILE *tf;
     char *tp, *bp;
@@ -711,18 +709,10 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 	    }
 	    i = curEntry->cellInfo.numServers;
 	    if (i < MAXHOSTSPERCELL) {
-		if (cell && !strcmp(cell, curEntry->cellInfo.name))
-		    code =
-			ParseHostLine(tbuffer,
-				      &curEntry->cellInfo.hostAddr[i],
-				      curEntry->cellInfo.hostName[i],
-				      &clones[i]);
-		else
-		    code =
-			ParseHostLine(tbuffer,
-				      &curEntry->cellInfo.hostAddr[i],
-				      curEntry->cellInfo.hostName[i], 0);
-
+		code = ParseHostLine(tbuffer,
+				     &curEntry->cellInfo.hostAddr[i],
+				     curEntry->cellInfo.hostName[i],
+				     &curEntry->cellInfo.clone[i]);
 		if (code) {
 		    if (code == AFSCONF_SYNTAX) {
 			for (bp = tbuffer; *bp != '\n'; bp++) {	/* Take out the <cr> from the buffer */
@@ -829,7 +819,7 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
  */
 static int
 ParseHostLine(char *aline, struct sockaddr_in *addr, char *aname,
-	      char *aclone)
+	      char *aclone /* boolean */)
 {
     int i;
     int c[4];
@@ -943,18 +933,15 @@ afsconf_GetExtendedCellInfo(struct afsconf_dir *adir, char *acellName,
 			    char clones[])
 {
     afs_int32 code;
-    char *cell;
+    int i;
 
     code = afsconf_GetCellInfo(adir, acellName, aservice, acellInfo);
     if (code)
 	return code;
 
-    if (acellName)
-	cell = acellName;
-    else
-	cell = (char *)&acellInfo->name;
-
-    code = afsconf_OpenInternal(adir, cell, clones);
+    for (i = 0; i < acellInfo->numServers; i++) {
+	clones[i] = acellInfo->clone[i];
+    }
     return code;
 }
 
@@ -1404,9 +1391,11 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
             short numServers=0;		                        /*Num active servers for the cell */
             struct sockaddr_in hostAddr[MAXHOSTSPERCELL];	/*IP addresses for cell's servers */
             char hostName[MAXHOSTSPERCELL][MAXHOSTCHARS];	/*Names for cell's servers */
+            char clone[MAXHOSTSPERCELL];			/*Indicates which ones are clones. */
 
             memset(&hostAddr, 0, sizeof(hostAddr));
             memset(&hostName, 0, sizeof(hostName));
+            memset(&clone, 0, sizeof(clone));
 
             for ( j=0; j<acellInfo->numServers && numServers < MAXHOSTSPERCELL; j++ ) {
                 struct hostent *he = gethostbyname(acellInfo->hostName[j]);
@@ -1435,6 +1424,7 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
 #endif
                         memcpy(&hostAddr[numServers].sin_addr.s_addr, he->h_addr_list[i], sizeof(afs_uint32));
                         strcpy(hostName[numServers], acellInfo->hostName[j]);
+                        clone[numServers] = acellInfo->clone[j];
                         foundAddr = 1;
                         numServers++;
                     }
@@ -1442,6 +1432,7 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
                 if (!foundAddr) {
                     hostAddr[numServers] = acellInfo->hostAddr[j];
                     strcpy(hostName[numServers], acellInfo->hostName[j]);
+                    clone[numServers] = acellInfo->clone[j];
                     numServers++;
                 }
             }
@@ -1449,6 +1440,7 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
             for (i=0; i<numServers; i++) {
                 acellInfo->hostAddr[i] = hostAddr[i];
                 strcpy(acellInfo->hostName[i], hostName[i]);
+                acellInfo->clone[i] = clone[i];
             }
             acellInfo->numServers = numServers;
             acellInfo->flags |= AFSCONF_CELL_FLAG_DNS_QUERIED;
@@ -1588,6 +1580,6 @@ afsconf_Reopen(struct afsconf_dir *adir)
     code = afsconf_CloseInternal(adir);
     if (code)
 	return code;
-    code = afsconf_OpenInternal(adir, 0, 0);
+    code = afsconf_OpenInternal(adir);
     return code;
 }
