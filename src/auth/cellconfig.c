@@ -73,12 +73,12 @@ static int TrimLine(char *abuffer, int abufsize);
 static int GetCellNT(struct afsconf_dir *adir);
 #endif
 static int GetCellUnix(struct afsconf_dir *adir);
-static int afsconf_OpenInternal(struct afsconf_dir *adir);
+static int LoadConfig(struct afsconf_dir *adir);
 static int ParseHostLine(char *aline, struct sockaddr_in *addr,
 			 char *aname, char *aclone /* boolean */);
 static int ParseCellLine(char *aline, char *aname,
 			 char *alname);
-static int afsconf_CloseInternal(struct afsconf_dir *adir);
+static int UnloadConfig(struct afsconf_dir *adir);
 static int afsconf_Reopen(struct afsconf_dir *adir);
 
 #ifndef T_AFSDB
@@ -421,6 +421,115 @@ _afsconf_Touch(struct afsconf_dir *adir)
     return code;
 }
 
+/**
+ * Read a single line from a file.
+ *
+ * Retreive the first line of a file if present. The trailing new
+ * line is stripped.
+ *
+ * @note The returned string must be freed by the caller.
+ *
+ * @param[in]  pathname    pathname to the file
+ * @param[out] aline       address of a string
+ *
+ * @return 0            success
+ *         ENOENT       unable to open file
+ *         EIO          empty file or read error
+ *         ENOMEM       unable to allocate output
+ *         ENAMETOOLONG first line of file exceeds MAXPATHLEN
+ */
+static int
+ReadFirstLine(const char *pathname, char **aline)
+{
+    char *line = NULL;
+    char buffer[MAXPATHLEN + 2]; /* Extra char for truncation check. */
+    afsconf_FILE *fp;
+    size_t len = 0;
+
+    fp = fopen(pathname, "r");
+    if (!fp)
+	return ENOENT;
+    if (fgets(buffer, sizeof(buffer), fp) != NULL)
+	len = strlen(buffer);
+    fclose(fp);
+    if (len == 0)
+	return EIO;
+    /* Trim the trailing newline, if one. */
+    if (buffer[len - 1] == '\n') {
+	buffer[len - 1] = '\0';
+	len--;
+    }
+    /* Truncation check. */
+    if (len > MAXPATHLEN)
+        return ENAMETOOLONG;
+    line = strdup(buffer);
+    if (line == NULL)
+	return ENOMEM;
+    *aline = line;
+    return 0;
+}
+
+/**
+ * Find an alternative path to the configuration directory.
+ *
+ * Attempt to find an alternative configuration directory pathname.  First
+ * check for the presence of the AFSCONF environment variable, then check for
+ * the contents of the $HOME/.AFSCONF file, then check for the contents of the
+ * /.AFSCONF file.
+ *
+ * The AFSCONF environment, or contents of $HOME/.AFSCONF, or /.AFSCONF will be
+ * typically set to something like /afs/<cell>/common/etc where, by convention,
+ * the default files for ThisCell and CellServDB will reside. Note that a major
+ * drawback is that a given afs client on that cell may NOT contain the same
+ * contents.
+ *
+ * @param[out] aconfdir  pointer to an allocated string if a path was found
+ *
+ * @return 0 on success
+ *
+ * @note The returned string in pathp must be freed by the caller.
+ */
+static int
+GetAlternatePath(char **aconfdir)
+{
+    int code;
+    char *confdir = NULL;
+    char *afsconf_path = getenv("AFSCONF");
+
+    if (afsconf_path) {
+	confdir = strdup(afsconf_path);
+	if (!confdir)
+	    return ENOMEM;
+    }
+
+    if (!confdir) {
+	char *home_dir = getenv("HOME");
+	if (home_dir) {
+	    char *pathname = NULL;
+	    int r = asprintf(&pathname, "%s/%s", home_dir, ".AFSCONF");
+	    if (r < 0 || !pathname)
+		return ENOMEM;
+	    code = ReadFirstLine(pathname, &confdir);
+	    free(pathname);
+	    pathname = NULL;
+	    if (code && code != ENOENT)
+		return code;
+	}
+    }
+
+    if (!confdir) {
+	code = ReadFirstLine("/.AFSCONF", &confdir);
+	if (code && code != ENOENT)
+	    return code;
+    }
+
+    if (!confdir)
+	return ENOENT;
+
+    *aconfdir = confdir;
+    return 0;
+}
+
 struct afsconf_dir *
 afsconf_Open(const char *adir)
 {
@@ -428,61 +537,23 @@ afsconf_Open(const char *adir)
     afs_int32 code;
 
     LOCK_GLOBAL_MUTEX;
-    /* zero structure and fill in name; rest is done by internal routine */
-    tdir = calloc(1, sizeof(struct afsconf_dir));
+    /* Zero structure and fill in name, the rest is done by LoadConfig. */
+    tdir = calloc(1, sizeof(*tdir));
+    if (!tdir)
+	goto fail;
     tdir->name = strdup(adir);
+    if (!tdir->name)
+	goto fail;
 
-    code = afsconf_OpenInternal(tdir);
+    code = LoadConfig(tdir);
     if (code) {
-	char *afsconf_path, afs_confdir[128];
-
 	free(tdir->name);
-	/* Check global place only when local Open failed for whatever reason */
-	if (!(afsconf_path = getenv("AFSCONF"))) {
-	    /* The "AFSCONF" environment (or contents of "/.AFSCONF") will be typically set to something like "/afs/<cell>/common/etc" where, by convention, the default files for "ThisCell" and "CellServDB" will reside; note that a major drawback is that a given afs client on that cell may NOT contain the same contents... */
-	    char *home_dir;
-	    afsconf_FILE *fp;
-	    size_t len = 0;
-	    int r;
-
-	    if (!(home_dir = getenv("HOME"))) {
-		/* Our last chance is the "/.AFSCONF" file */
-		fp = fopen("/.AFSCONF", "r");
-		if (fp == 0)
-		    goto fail;
-
-	    } else {
-		char *pathname = NULL;
-
-		r = asprintf(&pathname, "%s/%s", home_dir, ".AFSCONF");
-		if (r < 0 || pathname == NULL)
-		    goto fail;
-
-		fp = fopen(pathname, "r");
-		free(pathname);
-
-		if (fp == 0) {
-		    /* Our last chance is the "/.AFSCONF" file */
-		    fp = fopen("/.AFSCONF", "r");
-		    if (fp == 0)
-			goto fail;
-		}
-	    }
-	    if (fgets(afs_confdir, 128, fp) != NULL)
-		len = strlen(afs_confdir);
-	    fclose(fp);
-	    if (len == 0)
-		goto fail;
-
-	    if (afs_confdir[len - 1] == '\n') {
-		afs_confdir[len - 1] = 0;
-	    }
-	    afsconf_path = afs_confdir;
-	}
-	tdir->name = strdup(afsconf_path);
-	code = afsconf_OpenInternal(tdir);
+	tdir->name = NULL;
+	code = GetAlternatePath(&tdir->name);
+	if (code)
+	    goto fail;
+	code = LoadConfig(tdir);
 	if (code) {
-	    free(tdir->name);
 	    goto fail;
 	}
     }
@@ -490,6 +561,8 @@ afsconf_Open(const char *adir)
     return tdir;
 
 fail:
+    if (tdir)
+	free(tdir->name);
     free(tdir);
     UNLOCK_GLOBAL_MUTEX;
     return NULL;
@@ -606,9 +679,25 @@ cm_enumCellRegistryProc(void *rockp, char * cellNamep)
 }
 #endif /* AFS_NT40_ENV */
 
-
+/**
+ * Load the cell configuration into memory.
+ *
+ * Read the cell configuration into a newly allocated or cleared afsconf_dir
+ * structure. Reads the CellServDB file, and if present, the cell alias file,
+ * the key files, and kerberos related files.
+ *
+ * If the configuration cannot be loaded for any reason, any partial changes
+ * are freed. The name member is preserved.
+ *
+ * @param[in,out] adir  pointer to the cell configuration
+ *                      the name member must be set to the pathname of the
+ *                      cell configuration to be loaded. All other members
+ *                      must be unassigned.
+ *
+ * @returns 0 on success
+ */
 static int
-afsconf_OpenInternal(struct afsconf_dir *adir)
+LoadConfig(struct afsconf_dir *adir)
 {
     afsconf_FILE *tf;
     char *tp, *bp;
@@ -623,7 +712,7 @@ afsconf_OpenInternal(struct afsconf_dir *adir)
     cm_enumCellRegistry_t enumCellRegistry = {0, 0};
 #endif /* AFS_NT40_ENV */
 
-    /* init the keys queue before any call to afsconf_CloseInternal() */
+    /* init the keys queue before any call to UnloadConfig() */
     _afsconf_InitKeys(adir);
 
     /* figure out the local cell name */
@@ -693,7 +782,7 @@ afsconf_OpenInternal(struct afsconf_dir *adir)
 	    code =
 		ParseCellLine(tbuffer, curEntry->cellInfo.name, linkedcell);
 	    if (code) {
-		afsconf_CloseInternal(adir);
+		UnloadConfig(adir);
 		fclose(tf);
 		free(curEntry);
 		return -1;
@@ -703,7 +792,7 @@ afsconf_OpenInternal(struct afsconf_dir *adir)
 	} else {
 	    /* new host in the current cell */
 	    if (!curEntry) {
-		afsconf_CloseInternal(adir);
+		UnloadConfig(adir);
 		fclose(tf);
 		return -1;
 	    }
@@ -726,7 +815,7 @@ afsconf_OpenInternal(struct afsconf_dir *adir)
 		    }
 		    free(curEntry);
 		    fclose(tf);
-		    afsconf_CloseInternal(adir);
+		    UnloadConfig(adir);
 		    return -1;
 		}
 		curEntry->cellInfo.numServers = ++i;
@@ -1527,7 +1616,7 @@ afsconf_Close(struct afsconf_dir *adir)
     }
 
     LOCK_GLOBAL_MUTEX;
-    afsconf_CloseInternal(adir);
+    UnloadConfig(adir);
     if (adir->name)
 	free(adir->name);
     free(adir);
@@ -1535,8 +1624,20 @@ afsconf_Close(struct afsconf_dir *adir)
     return 0;
 }
 
+/**
+ * Free members of a cell configuration, except the name.
+ *
+ * Free all of the memory allocated by the LoadConfig function and
+ * reset the afsconf_dir to zeros.  The pathname to the configuration
+ * is preserved to allow for a subquent call the LoadConfig to load
+ * a new configuration.
+ *
+ * @param[in,out] adir  pointer to the cell configuration
+ *
+ * @returns 0 on success
+ */
 static int
-afsconf_CloseInternal(struct afsconf_dir *adir)
+UnloadConfig(struct afsconf_dir *adir)
 {
     struct afsconf_entry *td, *nd;
     struct afsconf_aliasentry *ta, *na;
@@ -1577,9 +1678,9 @@ static int
 afsconf_Reopen(struct afsconf_dir *adir)
 {
     afs_int32 code;
-    code = afsconf_CloseInternal(adir);
+    code = UnloadConfig(adir);
     if (code)
 	return code;
-    code = afsconf_OpenInternal(adir);
+    code = LoadConfig(adir);
     return code;
 }
