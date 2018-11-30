@@ -31,13 +31,20 @@ afs_ucred_t afs_osi_cred;
 void
 afs_osi_SetTime(osi_timeval_t * tvp)
 {
+#ifdef HAVE_LINUX_DO_SETTIMEOFDAY
     struct timespec tv;
     tv.tv_sec = tvp->tv_sec;
     tv.tv_nsec = tvp->tv_usec * NSEC_PER_USEC;
 
     AFS_STATCNT(osi_SetTime);
-
     do_settimeofday(&tv);
+#else
+    /*
+     * Don't attempt to support -settime on Linux versions that no longer
+     * have 32-bit time APIs.
+     */
+    afs_warn("afs attempted to set clock; use \"afsd -nosettime\"\n");
+#endif
 }
 
 void

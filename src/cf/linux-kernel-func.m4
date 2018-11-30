@@ -39,6 +39,9 @@ AC_CHECK_LINUX_FUNC([d_count],
 AC_CHECK_LINUX_FUNC([d_make_root],
                     [#include <linux/fs.h>],
                     [d_make_root(NULL);])
+AC_CHECK_LINUX_FUNC([do_settimeofday],
+                    [#include <linux/time.h>],
+                    [do_settimeofday(NULL);])
 AC_CHECK_LINUX_FUNC([do_sync_read],
                     [#include <linux/fs.h>],
                     [do_sync_read(NULL, NULL, 0, NULL);])
