@@ -614,13 +614,19 @@ CkSrv_SetTime(int nconns, struct rx_connection **rxconns,
 		    deltas[i] = end - tv.tv_sec;
 		break;
 	    }
+	    /*
+	     * Beware - if no matching conn is found for
+	     * afs_setTimeHost, we will leave this loop with i out of
+	     * bounds for the conns[] array.
+	     */
 	}
     }
     AFS_GLOCK();
 
     if ( afs_setTimeHost == NULL )
 	CkSrv_MarkUpDown(conns, nconns, results);
-    else /* We lack info for other than this host */
+    else if ( i < nconns )	/* ensure we actually found the settime host */
+	/* We lack info for other than this specific host. */
 	CkSrv_MarkUpDown(&conns[i], 1, &results[i]);
 
     /*
