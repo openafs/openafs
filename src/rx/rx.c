@@ -131,8 +131,7 @@ static struct rx_connection
 static struct rx_packet
 	*rxi_ReceiveDataPacket(struct rx_call *call, struct rx_packet *np,
 			       int istack, osi_socket socket,
-			       afs_uint32 host, u_short port, int *tnop,
-			       struct rx_call **newcallp);
+			       int *tnop, struct rx_call **newcallp);
 static struct rx_packet
 	*rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 			      int istack, int *a_invalid);
@@ -3613,8 +3612,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	if (type == RX_CLIENT_CONNECTION && !opr_queue_IsEmpty(&call->tq))
 	    rxi_AckAllInTransmitQueue(call);
 
-	np = rxi_ReceiveDataPacket(call, np, 1, socket, host, port, tnop,
-				   newcallp);
+	np = rxi_ReceiveDataPacket(call, np, 1, socket, tnop, newcallp);
 	break;
     case RX_PACKET_TYPE_ACK:
 	/* Respond immediately to ack packets requesting acknowledgement
@@ -3896,8 +3894,7 @@ TryAttach(struct rx_call *acall, osi_socket socket,
 static struct rx_packet *
 rxi_ReceiveDataPacket(struct rx_call *call,
 		      struct rx_packet *np, int istack,
-		      osi_socket socket, afs_uint32 host, u_short port,
-		      int *tnop, struct rx_call **newcallp)
+		      osi_socket socket, int *tnop, struct rx_call **newcallp)
 {
     int ackNeeded = 0;		/* 0 means no, otherwise ack_reason */
     int newPackets = 0;
@@ -3956,7 +3953,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	/* The RX_JUMBO_PACKET is set in all but the last packet in each
 	 * AFS 3.5 jumbogram. */
 	if (flags & RX_JUMBO_PACKET) {
-	    tnp = rxi_SplitJumboPacket(np, host, port, isFirst);
+	    tnp = rxi_SplitJumboPacket(np);
 	} else {
 	    tnp = NULL;
 	}

@@ -75,3 +75,4 @@ extern int rxi_SendIovecs(struct rx_connection *conn, struct iovec *iov,
 			  int iovcnt, size_t length, int istack);
 extern void rxi_SendRaw(struct rx_call *call, struct rx_connection *conn,
 			int type, char *data, int bytes, int istack);
+extern struct rx_packet *rxi_SplitJumboPacket(struct rx_packet *p);
