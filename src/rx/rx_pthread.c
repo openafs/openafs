@@ -208,6 +208,12 @@ rxi_ListenerProc(osi_socket sock, int *tnop, struct rx_call **newcallp)
     u_short port;
     struct rx_packet *p = (struct rx_packet *)0;
 
+    if (!(rx_enable_hot_thread && newcallp)) {
+	/* Don't do this for hot threads, since we might stop being the
+	 * listener. */
+	opr_threadname_set("rx_Listener");
+    }
+
     MUTEX_ENTER(&listener_mutex);
     while (!listeners_started) {
 	CV_WAIT(&rx_listener_cond, &listener_mutex);
