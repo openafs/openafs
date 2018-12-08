@@ -140,8 +140,7 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
     }
 
     /* write CellServDB */
-    strcompose(tbuffer, 1024, apath, "/", AFSDIR_CELLSERVDB_FILE, (char *)NULL);
-    tf = fopen(tbuffer, "w");
+    tf = fopen(adir->cellservDB, "w");
     if (!tf) {
 	UNLOCK_GLOBAL_MUTEX;
 	return AFSCONF_NOTFOUND;

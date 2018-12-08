@@ -349,7 +349,6 @@ _afsconf_CellServDBPath(struct afsconf_dir *adir, char **path)
 int
 _afsconf_UpToDate(struct afsconf_dir *adir)
 {
-    char *cellservDB;
     struct stat tstat;
     int code;
     time_t now = time(0);
@@ -359,12 +358,10 @@ _afsconf_UpToDate(struct afsconf_dir *adir)
     }
     adir->timeCheck = now;
 
-    _afsconf_CellServDBPath(adir, &cellservDB);
-    if (cellservDB == NULL)
+    if (adir->cellservDB == NULL)
 	return 0;
 
-    code = stat(cellservDB, &tstat);
-    free(cellservDB);
+    code = stat(adir->cellservDB, &tstat);
     if (code < 0)
 	return 0; /* Can't throw the error, so just say we're not up to date */
 
@@ -403,7 +400,6 @@ _afsconf_Check(struct afsconf_dir *adir)
 int
 _afsconf_Touch(struct afsconf_dir *adir)
 {
-    char *cellservDB;
     int code;
 #ifndef AFS_NT40_ENV
     struct timeval tvp[2];
@@ -412,18 +408,16 @@ _afsconf_Touch(struct afsconf_dir *adir)
     adir->timeRead = 0;		/* just in case */
     adir->timeCheck = 0;
 
-    _afsconf_CellServDBPath(adir, &cellservDB);
-    if (cellservDB == NULL)
+    if (adir->cellservDB == NULL)
 	return ENOMEM;
 
 #ifdef AFS_NT40_ENV
-    code = _utime(cellservDB, NULL);
+    code = _utime(adir->cellservDB, NULL);
 #else
     gettimeofday(&tvp[0], NULL);
     tvp[1] = tvp[0];
-    code = utimes(cellservDB, tvp);
+    code = utimes(adir->cellservDB, tvp);
 #endif /* AFS_NT40_ENV */
-    free(cellservDB);
 
     return code;
 }
@@ -626,7 +620,6 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
     afs_int32 i;
     char tbuffer[256];
     struct stat tstat;
-    char *cellservDB;
 
 #ifdef AFS_NT40_ENV
     cm_enumCellRegistry_t enumCellRegistry = {0, 0};
@@ -652,20 +645,20 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
     /* now parse the individual lines */
     curEntry = 0;
 
-    _afsconf_CellServDBPath(adir, &cellservDB);
+    _afsconf_CellServDBPath(adir, &adir->cellservDB);
 
 #ifdef AFS_NT40_ENV
     if (_afsconf_IsClientConfigDirectory(adir->name))
         enumCellRegistry.client = 1;
 #endif /* AFS_NT40_ENV */
 
-    if (!stat(cellservDB, &tstat)) {
+    if (!stat(adir->cellservDB, &tstat)) {
 	adir->timeRead = tstat.st_mtime;
     } else {
 	adir->timeRead = 0;
     }
 
-    tf = fopen(cellservDB, "r");
+    tf = fopen(adir->cellservDB, "r");
     if (!tf) {
 	return -1;
     }
@@ -739,7 +732,7 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 			*bp = '\0';
 			fprintf(stderr,
 				"Can't properly parse host line \"%s\" in configuration file %s\n",
-				tbuffer, cellservDB);
+				tbuffer, adir->cellservDB);
 		    }
 		    free(curEntry);
 		    fclose(tf);
@@ -750,12 +743,11 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 	    } else {
 		fprintf(stderr,
 			"Too many hosts for cell %s in configuration file %s\n",
-			curEntry->cellInfo.name, cellservDB);
+			curEntry->cellInfo.name, adir->cellservDB);
 	    }
 	}
     }
     fclose(tf);			/* close the file now */
-    free(cellservDB);
 
     /* end the last partially-completed cell */
     if (curEntry) {
@@ -1567,6 +1559,8 @@ afsconf_CloseInternal(struct afsconf_dir *adir)
     /* free everything we can find */
     if (adir->cellName)
 	free(adir->cellName);
+    if (adir->cellservDB)
+	free(adir->cellservDB);
     for (td = adir->entries; td; td = nd) {
 	nd = td->next;
 	if (td->cellInfo.linkedCell)

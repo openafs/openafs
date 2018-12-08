@@ -91,6 +91,7 @@ typedef afs_uint32 afsconf_secflags;
 struct afsconf_dir {
     char *name;			/* pointer to dir prefix */
     char *cellName;		/* cell name, if any, we're in */
+    char *cellservDB;		/* pathname of the CellServDB file */
     struct afsconf_entry *entries;	/* list of cell entries */
     struct opr_queue keyList;		/* list of keys */
     afs_int32 timeRead;		/* time stamp of file last read */

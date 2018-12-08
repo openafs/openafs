@@ -815,8 +815,8 @@ vldbClientInit(int noAuthFlag, int localauth, char *cellName,
 
     code = afsconf_GetCellInfo(acdir, cellName, AFSCONF_VLDBSERVICE, &info);
     if (code) {
-	afs_com_err(whoami, code, "; Can't find cell %s's hosts in %s/%s",
-		    cellName, confdir, AFSDIR_CELLSERVDB_FILE);
+	afs_com_err(whoami, code, "; Can't find cell %s's hosts in %s",
+		    cellName, acdir->cellservDB);
 	ERROR(BC_NOCELLCONFIG);
     }
 
@@ -888,8 +888,8 @@ udbClientInit(int noAuthFlag, int localauth, char *cellName)
 
     code = afsconf_GetCellInfo(acdir, cellName, 0, &info);
     if (code) {
-	afs_com_err(whoami, code, "; Can't find cell %s's hosts in %s/%s",
-		    cellName, confdir, AFSDIR_CELLSERVDB_FILE);
+	afs_com_err(whoami, code, "; Can't find cell %s's hosts in %s",
+		    cellName, acdir->cellservDB);
 	ERROR(BC_NOCELLCONFIG);
     }
 

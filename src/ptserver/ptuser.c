@@ -250,8 +250,8 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 
 	code = afsconf_GetCellInfo(tdir, cell, "afsprot", &info);
 	if (code) {
-	    fprintf(stderr, "libprot: Could not locate cell %s in %s/%s\n",
-		    cell, confDir, AFSDIR_CELLSERVDB_FILE);
+	    fprintf(stderr, "libprot: Could not locate cell %s in %s\n",
+		    cell, tdir->cellservDB);
 	    return code;
 	}
     }
