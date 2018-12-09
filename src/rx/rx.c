@@ -3109,6 +3109,44 @@ rxi_FindPeer(afs_uint32 host, u_short port, int create)
     return pp;
 }
 
+static_inline int
+rxi_ConnectionMatch(struct rx_connection *conn,
+		    afs_uint32 host, u_short port, afs_uint32 cid,
+		    afs_uint32 epoch, int type, u_int securityIndex,
+		    int *a_badSecurityIndex)
+{
+    struct rx_peer *pp;
+    if (conn->type != type) {
+	return 0;
+    }
+    if (conn->cid != (cid & RX_CIDMASK)) {
+	return 0;
+    }
+    if (conn->epoch != epoch) {
+	return 0;
+    }
+    if (conn->securityIndex != securityIndex) {
+	if (a_badSecurityIndex) {
+	    *a_badSecurityIndex = 1;
+	}
+	return 0;
+    }
+    pp = conn->peer;
+    if (pp->host == host && pp->port == port) {
+	return 1;
+    }
+    if (type == RX_CLIENT_CONNECTION && pp->port == port) {
+	/* For client conns, we allow packets from any host to be associated
+	 * with the conn. */
+	return 1;
+    }
+    if ((conn->epoch & 0x80000000)) {
+	/* If the epoch high bit is set, we ignore the host/port of any packets
+	 * coming in for the conn. */
+	return 1;
+    }
+    return 0;
+}
 
 /* Find the connection at (host, port) started at epoch, and with the
  * given connection id.  Creates the server connection if necessary.
@@ -3138,25 +3176,18 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
 						  rx_connHashTable[hashindex],
 						  flag = 1);
     for (; conn;) {
-	if ((conn->type == type) && ((cid & RX_CIDMASK) == conn->cid)
-	    && (epoch == conn->epoch)) {
-	    struct rx_peer *pp = conn->peer;
-	    if (securityIndex != conn->securityIndex) {
-		/* this isn't supposed to happen, but someone could forge a packet
-		 * like this, and there seems to be some CM bug that makes this
-		 * happen from time to time -- in which case, the fileserver
-		 * asserts. */
-		MUTEX_EXIT(&rx_connHashTable_lock);
-		return (struct rx_connection *)0;
-	    }
-	    if (pp->host == host && pp->port == port)
-		break;
-	    if (type == RX_CLIENT_CONNECTION && pp->port == port)
-		break;
-	    /* So what happens when it's a callback connection? */
-	    if (		/*type == RX_CLIENT_CONNECTION && */
-		   (conn->epoch & 0x80000000))
-		break;
+	int bad_sec = 0;
+	if (rxi_ConnectionMatch(conn, host, port, cid, epoch, type,
+				securityIndex, &bad_sec)) {
+	    break;
+	}
+	if (bad_sec) {
+	    /*
+	     * This isn't supposed to happen, but someone could forge a packet
+	     * like this, and bugs causing such packets are not unheard of.
+	     */
+	    MUTEX_EXIT(&rx_connHashTable_lock);
+	    return NULL;
 	}
 	if (!flag) {
 	    /* the connection rxLastConn that was used the last time is not the
