@@ -235,8 +235,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	afs_Trace3(afs_iclSetp, CM_TRACE_WRITEFAILED, ICL_TYPE_INT32, asize,
 		   ICL_TYPE_INT32, resid, ICL_TYPE_INT32, code);
 	if (code == ENOSPC)
-	    afs_warnuser
-		("\n\n\n*** Cache partition is FULL - Decrease cachesize!!! ***\n\n");
+            afs_WarnENOSPC();
 	setuerror(code);
 	if (code > 0) {
 	    code = -code;

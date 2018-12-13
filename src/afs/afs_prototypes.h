@@ -1044,6 +1044,7 @@ extern void afs_warnuser(char *fmt, ...)
 extern void afs_warnall(char *fmt, ...)
 	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 #endif
+extern void afs_WarnENOSPC(void);
 
 /* afs_vcache.c */
 extern int VCHash(struct VenusFid *fid);
