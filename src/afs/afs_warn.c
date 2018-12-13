@@ -254,3 +254,18 @@ afs_warnall(char *fmt, ...)
 # endif /* AFS_LINUX20_ENV */
 }
 #endif /* AFS_AIX_ENV */
+
+/*
+ * Log a warning when we encounter an ENOSPC error when writing to the cache
+ * partition. We should not normally encounter ENOSPC errors, since we limit
+ * our space usage according to the client config, which should be configured
+ * such that we never run out of space.
+ */
+void
+afs_WarnENOSPC(void)
+{
+    afs_warnuser("afs: Cache partition is FULL! This should not happen, and "
+                 "can result in errors in userspace applications. To avoid "
+                 "this, reduce the configured cache size so we do not run out "
+                 "of space.\n");
+}
