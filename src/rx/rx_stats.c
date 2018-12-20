@@ -33,8 +33,8 @@
 
 #if !defined(KERNEL)
 #include <roken.h>
-#include <afs/opr.h>
 #endif
+#include <afs/opr.h>
 
 #ifdef KERNEL
 /* no kmutex, no atomic emulation...*/
@@ -67,7 +67,9 @@ struct rx_statisticsAtomic rx_stats;
 struct rx_statistics *
 rx_GetStatistics(void) {
     struct rx_statistics *stats = rxi_Alloc(sizeof(struct rx_statistics));
+
     MUTEX_ENTER(&rx_stats_mutex);
+    opr_StaticAssert(sizeof(*stats) == sizeof(rx_stats));
     memcpy(stats, &rx_stats, sizeof(struct rx_statistics));
     MUTEX_EXIT(&rx_stats_mutex);
 
