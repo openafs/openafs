@@ -177,8 +177,9 @@ dest: libauth.a libauth.krb.a auth.h cellconfig.h
 #
 # Misc. targets
 #
+.PHONY: test
 test:
-	cd test; $(MAKE)
+	cd test && $(MAKE)
 
 clean:
 	$(LT_CLEAN)

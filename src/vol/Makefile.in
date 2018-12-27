@@ -245,8 +245,9 @@ clean:
 	$(RM) -f *.o *.a AFS_component_version_number.c
 	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo volscan gi fssync-debug
 
+.PHONY: test
 test:
-	cd test; $(MAKE)
+	cd test && $(MAKE)
 
 include ../config/Makefile.version
 

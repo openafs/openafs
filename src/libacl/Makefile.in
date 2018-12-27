@@ -64,8 +64,9 @@ dest: libacl.a acl.h prs_fs.h
 #
 # Misc. targets
 #
+.PHONY: test
 test:
-	cd test; $(MAKE)
+	cd test && $(MAKE)
 
 clean:
 	$(LT_CLEAN)

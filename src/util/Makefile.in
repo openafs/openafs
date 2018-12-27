@@ -212,8 +212,9 @@ clean:
 	$(RM) -f sys dirpath.h
 	$(RM) -f util.a *.o core AFS_component_version_number.c
 
+.PHONY: test
 test:
-	cd test; $(MAKE)
+	cd test && $(MAKE)
 
 include ../config/Makefile.version
 
