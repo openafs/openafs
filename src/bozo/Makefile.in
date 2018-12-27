@@ -163,8 +163,9 @@ clean:
 		bosint.cs.c bosint.ss.c bosint.xdr.c bosint.h \
 		core boserr.c bnode.h AFS_component_version_number.c
 
+.PHONY: test
 test:
-	cd test; $(MAKE)
+	cd test && $(MAKE)
 
 include ../config/Makefile.version
 

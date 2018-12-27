@@ -89,8 +89,9 @@ clean:
 		et_lex.lex.c test1.h test1.c test2.h test2.c \
 		eddep makedep core AFS_component_version_number.c
 
+.PHONY: test
 test:
-	cd test; $(MAKE)
+	cd test && $(MAKE)
 
 compile_et.o:  AFS_component_version_number.c
 # specify yacc build product as a dependency so our .c.o rule will apply

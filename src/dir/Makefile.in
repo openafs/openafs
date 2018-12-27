@@ -28,8 +28,9 @@ libdir.a: buffer.o dir.o salvage.o AFS_component_version_number.o
 	$(AR) crv $@ buffer.o dir.o salvage.o  AFS_component_version_number.o
 	$(RANLIB) $@
 
+.PHONY: test
 test:
-	cd test; $(MAKE)
+	cd test && $(MAKE)
 
 buffer.o: buffer.c dir.h
 

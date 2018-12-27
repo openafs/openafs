@@ -102,7 +102,8 @@ clean:
 	$(RM) -f *.o unlog tokens kseal pagsh pagsh.krb \
 		core AFS_component_version_number.c tokens.krb
 
+.PHONY: test
 test:
-	cd test; $(MAKE)
+	cd test && $(MAKE)
 
 include ../config/Makefile.version
