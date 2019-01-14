@@ -355,7 +355,9 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 #endif
 	if (priority < 0 || priority >= MAX_PRIORITIES) {
 	    free(temp);
+#ifndef AFS_AIX32_ENV
 	    free(stackmemory);
+#endif
 	    Set_LWP_RC();
 	    return LWP_EBADPRI;
 	}
