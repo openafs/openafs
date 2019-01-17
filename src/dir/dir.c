@@ -99,13 +99,18 @@ afs_dir_Create(dir_file_t dir, char *entry, void *voidfid)
     struct DirBuffer entrybuf, prevbuf, headerbuf;
     struct DirEntry *ep;
     struct DirHeader *dhp;
+    int code;
 
     /* check name quality */
     if (*entry == 0)
 	return EINVAL;
 
     /* First check if file already exists. */
-    if (FindItem(dir, entry, &prevbuf, &entrybuf) == 0) {
+    code = FindItem(dir, entry, &prevbuf, &entrybuf);
+    if (code && code != ENOENT) {
+        return code;
+    }
+    if (code == 0) {
 	DRelease(&entrybuf, 0);
 	DRelease(&prevbuf, 0);
 	return EEXIST;
@@ -175,9 +180,12 @@ afs_dir_Delete(dir_file_t dir, char *entry)
     struct DirBuffer entrybuf, prevbuf;
     struct DirEntry *firstitem;
     unsigned short *previtem;
+    int code;
 
-    if (FindItem(dir, entry, &prevbuf, &entrybuf) != 0)
-	return ENOENT;
+    code = FindItem(dir, entry, &prevbuf, &entrybuf);
+    if (code) {
+        return code;
+    }
 
     firstitem = (struct DirEntry *)entrybuf.data;
     previtem = (unsigned short *)prevbuf.data;
@@ -361,9 +369,12 @@ afs_dir_Lookup(dir_file_t dir, char *entry, void *voidfid)
     afs_int32 *fid = (afs_int32 *) voidfid;
     struct DirBuffer firstbuf, prevbuf;
     struct DirEntry *firstitem;
+    int code;
 
-    if (FindItem(dir, entry, &prevbuf, &firstbuf) != 0)
-	return ENOENT;
+    code = FindItem(dir, entry, &prevbuf, &firstbuf);
+    if (code) {
+        return code;
+    }
     DRelease(&prevbuf, 0);
     firstitem = (struct DirEntry *)firstbuf.data;
 
@@ -382,9 +393,12 @@ afs_dir_LookupOffset(dir_file_t dir, char *entry, void *voidfid,
     afs_int32 *fid = (afs_int32 *) voidfid;
     struct DirBuffer firstbuf, prevbuf;
     struct DirEntry *firstitem;
+    int code;
 
-    if (FindItem(dir, entry, &prevbuf, &firstbuf) != 0)
-	return ENOENT;
+    code = FindItem(dir, entry, &prevbuf, &firstbuf);
+    if (code) {
+        return code;
+    }
     DRelease(&prevbuf, 0);
     firstitem = (struct DirEntry *)firstbuf.data;
 
@@ -607,16 +621,15 @@ FindItem(dir_file_t dir, char *ename, struct DirBuffer *prevbuf,
     i = afs_dir_DirHash(ename);
     if (dhp->hashTable[i] == 0) {
 	/* no such entry */
-	DRelease(&prev, 0);
-	return ENOENT;
+	code = ENOENT;
+	goto out;
     }
 
     code = afs_dir_GetVerifiedBlob(dir,
 				   (u_short) ntohs(dhp->hashTable[i]),
 				   &curr);
     if (code) {
-	DRelease(&prev, 0);
-	return code;
+	goto out;
     }
 
     prev.data = &(dhp->hashTable[i]);
@@ -639,8 +652,11 @@ FindItem(dir_file_t dir, char *ename, struct DirBuffer *prevbuf,
 	prev = curr;
 	prev.data = &(tp->next);
 
-	if (tp->next == 0)
-	    goto out; /* The end of the line */
+	if (tp->next == 0) {
+	    /* The end of the line */
+	    code = ENOENT;
+	    goto out;
+	}
 
 	code = afs_dir_GetVerifiedBlob(dir, (u_short) ntohs(tp->next),
 				       &curr);
@@ -648,9 +664,13 @@ FindItem(dir_file_t dir, char *ename, struct DirBuffer *prevbuf,
 	    goto out;
     }
 
+    /* If we've reached here, we've hit our loop limit. Something is weird with
+     * the directory; maybe a circular hash chain? */
+    code = EIO;
+
 out:
     DRelease(&prev, 0);
-    return ENOENT;
+    return code;
 }
 
 static int
@@ -725,8 +745,10 @@ afs_dir_InverseLookup(void *dir, afs_uint32 vnode, afs_uint32 unique,
     struct DirEntry *entry;
     int code = 0;
 
-    if (FindFid(dir, vnode, unique, &entrybuf) != 0)
-	return ENOENT;
+    code = FindFid(dir, vnode, unique, &entrybuf);
+    if (code) {
+        return code;
+    }
     entry = (struct DirEntry *)entrybuf.data;
 
     if (strlen(entry->name) >= length)
@@ -754,10 +776,13 @@ afs_dir_ChangeFid(dir_file_t dir, char *entry, afs_uint32 *old_fid,
     struct DirEntry *firstitem;
     struct MKFid *fid_old = (struct MKFid *) old_fid;
     struct MKFid *fid_new = (struct MKFid *) new_fid;
+    int code;
 
     /* Find entry. */
-    if (FindItem(dir, entry, &prevbuf, &entrybuf) != 0)
-	return ENOENT;
+    code = FindItem(dir, entry, &prevbuf, &entrybuf);
+    if (code) {
+        return code;
+    }
     firstitem = (struct DirEntry *)entrybuf.data;
     DRelease(&prevbuf, 1);
 
