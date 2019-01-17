@@ -1483,8 +1483,13 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 
     /* check that the file is in the directory */
     SetDirHandle(dir, parentptr);
-    if (afs_dir_Lookup(dir, Name, fileFid))
-	return (ENOENT);
+    errorCode = afs_dir_Lookup(dir, Name, fileFid);
+    if (errorCode && errorCode != ENOENT) {
+        errorCode = EIO;
+    }
+    if (errorCode) {
+	return errorCode;
+    }
     fileFid->Volume = V_id(volptr);
 
     /* just-in-case check for something causing deadlock */
@@ -3655,8 +3660,11 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     SetDirHandle(&newdir, newvptr);
 
     /* Lookup the file to delete its vnode */
-    if (afs_dir_Lookup(&olddir, OldName, &fileFid)) {
-	errorCode = ENOENT;
+    errorCode = afs_dir_Lookup(&olddir, OldName, &fileFid);
+    if (errorCode && errorCode != ENOENT) {
+        errorCode = EIO;
+    }
+    if (errorCode) {
 	goto Bad_Rename;
     }
     if (fileFid.Vnode == oldvptr->vnodeNumber
@@ -3695,7 +3703,12 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     }
 
     /* Lookup the new file  */
-    if (!(afs_dir_Lookup(&newdir, NewName, &newFileFid))) {
+    code = afs_dir_Lookup(&newdir, NewName, &newFileFid);
+    if (code && code != ENOENT) {
+        errorCode = EIO;
+        goto Bad_Rename;
+    }
+    if (!code) {
 	if (readonlyServer) {
 	    errorCode = VREADONLY;
 	    goto Bad_Rename;
@@ -3804,6 +3817,10 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	    struct AFSFid unused;
 
 	    code = afs_dir_Lookup(&filedir, "..", &unused);
+            if (code && code != ENOENT) {
+                errorCode = EIO;
+                goto Bad_Rename;
+            }
 	    if (code == ENOENT) {
 		/* only update .. if it doesn't already exist */
 		updatefile = 1;
