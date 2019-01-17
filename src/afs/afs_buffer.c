@@ -231,12 +231,20 @@ DRead(struct dcache *adc, int page, struct DirBuffer *entry)
     ObtainWriteLock(&tb->lock, 260);
     tb->lockers++;
     ReleaseWriteLock(&afs_bufferLock);
-    if (page * AFS_BUFFER_PAGESIZE >= adc->f.chunkBytes) {
+    code = 0;
+    if (adc->f.chunk == 0 && adc->f.chunkBytes == 0) {
+        /* The directory blob is empty, apparently. This is not a valid dir
+         * blob, so throw an error. */
+        code = EIO;
+    } else if (page * AFS_BUFFER_PAGESIZE >= adc->f.chunkBytes) {
+        code = ENOENT; /* past the end */
+    }
+    if (code) {
 	tb->fid = NULLIDX;
 	afs_reset_inode(&tb->inode);
 	tb->lockers--;
 	ReleaseWriteLock(&tb->lock);
-	return ENOENT; /* past the end */
+	return code;
     }
     tfile = afs_CFileOpen(&adc->f.inode);
     osi_Assert(tfile);
