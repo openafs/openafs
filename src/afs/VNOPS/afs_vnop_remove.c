@@ -235,7 +235,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
      * received a callback while we were waiting for the write lock.
      */
     if (!(adp->f.states & CStatd)
-	|| (tdc && !hsame(adp->f.m.DataVersion, tdc->f.versionNo))) {
+	|| (tdc && !afs_IsDCacheFresh(tdc, adp))) {
 	ReleaseWriteLock(&adp->lock);
 	if (tdc) {
 	    ReleaseSharedLock(&tdc->lock);

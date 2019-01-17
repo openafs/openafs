@@ -349,7 +349,7 @@ redo:
      */
     while ((adp->f.states & CStatd)
 	   && (tdc->dflags & DFFetching)
-	   && hsame(adp->f.m.DataVersion, tdc->f.versionNo)) {
+	   && afs_IsDCacheFresh(tdc, adp)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseSharedLock(&adp->lock);
 	afs_osi_Sleep(&tdc->validPos);
@@ -357,7 +357,7 @@ redo:
 	ObtainReadLock(&tdc->lock);
     }
     if (!(adp->f.states & CStatd)
-	|| !hsame(adp->f.m.DataVersion, tdc->f.versionNo)) {
+	|| !afs_IsDCacheFresh(tdc, adp)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseSharedLock(&adp->lock);
 	afs_PutDCache(tdc);
@@ -770,7 +770,7 @@ redo:
      */
     while ((vcp->f.states & CStatd)
 	   && (tdc->dflags & DFFetching)
-	   && hsame(vcp->f.m.DataVersion, tdc->f.versionNo)) {
+	   && afs_IsDCacheFresh(tdc, vcp)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&vcp->lock);
 	afs_osi_Sleep(&tdc->validPos);
@@ -778,7 +778,7 @@ redo:
 	ObtainReadLock(&tdc->lock);
     }
     if (!(vcp->f.states & CStatd)
-	|| !hsame(vcp->f.m.DataVersion, tdc->f.versionNo)) {
+	|| !afs_IsDCacheFresh(tdc, vcp)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&vcp->lock);
 	afs_PutDCache(tdc);

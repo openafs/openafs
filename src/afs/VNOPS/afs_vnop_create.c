@@ -149,7 +149,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
      * received a callback while we were waiting for the write lock.
      */
     if (!(adp->f.states & CStatd)
-	|| (tdc && !hsame(adp->f.m.DataVersion, tdc->f.versionNo))) {
+	|| (tdc && !afs_IsDCacheFresh(tdc, adp))) {
 	ReleaseWriteLock(&adp->lock);
 	if (tdc) {
 	    ReleaseSharedLock(&tdc->lock);
@@ -543,7 +543,7 @@ afs_LocalHero(struct vcache *avc, struct dcache *adc,
     if (adc) {
 	/* does what's in the dcache *now* match what's in the vcache *now*,
 	 * and do we have a valid callback? if not, our local copy is not "ok" */
-	ok = (hsame(avc->f.m.DataVersion, adc->f.versionNo) && avc->callback
+	ok = (afs_IsDCacheFresh(adc, avc) && avc->callback
 	      && (avc->f.states & CStatd) && avc->cbExpires >= osi_Time());
     } else {
 	ok = 0;

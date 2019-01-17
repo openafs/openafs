@@ -447,7 +447,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
      */
     while ((avc->f.states & CStatd)
 	   && (tdc->dflags & DFFetching)
-	   && hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
+	   && afs_IsDCacheFresh(tdc, avc)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseWriteLock(&avc->lock);
 	afs_osi_Sleep(&tdc->validPos);
@@ -455,7 +455,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	ObtainReadLock(&tdc->lock);
     }
     if (!(avc->f.states & CStatd)
-	|| !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
+	|| !afs_IsDCacheFresh(tdc, avc)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseWriteLock(&avc->lock);
 	afs_PutDCache(tdc);
@@ -2386,7 +2386,7 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
 	ObtainReadLock(&tdc->lock);
 
     /* Is the dcache we've been given currently up to date */
-    if (!hsame(avc->f.m.DataVersion, tdc->f.versionNo) ||
+    if (!afs_IsDCacheFresh(tdc, avc) ||
 	(tdc->dflags & DFFetching))
 	goto out;
 
@@ -2802,7 +2802,7 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 	    AFS_GLOCK();
 	    if ((tdc = afs_FindDCache(avc, offset))) {
 		ObtainReadLock(&tdc->lock);
-		if (!hsame(avc->f.m.DataVersion, tdc->f.versionNo) ||
+		if (!afs_IsDCacheFresh(tdc, avc) ||
 		    (tdc->dflags & DFFetching)) {
 		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);

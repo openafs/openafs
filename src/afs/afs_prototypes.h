@@ -295,6 +295,7 @@ extern struct dcache *afs_ObtainDCacheForWriting(struct vcache *avc,
 						 int noLock);
 extern void afs_PopulateDCache(struct vcache *avc, afs_size_t apos,
 			       struct vrequest *areq);
+extern int afs_IsDCacheFresh(struct dcache *adc, struct vcache *avc);
 
 /* afs_disconnected.c */
 

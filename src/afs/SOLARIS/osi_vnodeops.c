@@ -350,7 +350,7 @@ afs_GetOnePage(struct vnode *vp, u_offset_t off, u_int alen, u_int *protp,
 
     /* Check to see whether the cache entry is still valid */
     if (!(avc->f.states & CStatd)
-	|| !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
+	|| !afs_IsDCacheFresh(tdc, avc)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&avc->lock);
 	afs_PutDCache(tdc);
@@ -882,12 +882,12 @@ afs_nfsrdwr(struct vcache *avc, struct uio *auio, enum uio_rw arw,
 		AFS_GLOCK();
 		dcp_newpage = afs_FindDCache(avc, pageBase);
 		if (dcp_newpage
-		    && hsame(avc->f.m.DataVersion, dcp_newpage->f.versionNo)) {
+		    && afs_IsDCacheFresh(dcp_newpage, avc)) {
 		    ObtainWriteLock(&avc->lock, 251);
 		    ObtainWriteLock(&avc->vlock, 576);
 		    ObtainReadLock(&dcp_newpage->lock);
 		    if ((avc->activeV == 0)
-			&& hsame(avc->f.m.DataVersion, dcp_newpage->f.versionNo)
+			&& afs_IsDCacheFresh(dcp_newpage, avc)
 			&& !(dcp_newpage->dflags & (DFFetching))) {
 			AFS_GUNLOCK();
 			segmap_pagecreate(segkmap, raddr, rsize, 1);

@@ -188,7 +188,7 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
 	     * 2 requests never return a null dcache entry, btw.
 	     */
 	    if (!(tdc->dflags & DFFetching)
-		&& !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
+		&& !afs_IsDCacheFresh(tdc, avc)) {
 		/* have cache entry, it is not coming in now,
 		 * and we'll need new data */
 	      tagain:
@@ -268,7 +268,7 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
 	    } else {
 		/* no longer fetching, verify data version 
 		 * (avoid new GetDCache call) */
-		if (hsame(avc->f.m.DataVersion, tdc->f.versionNo)
+		if (afs_IsDCacheFresh(tdc, avc)
 		    && ((len = tdc->validPos - filePos) > 0)) {
 		    offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 		} else {

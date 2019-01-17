@@ -702,7 +702,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
      */
     while ((avc->f.states & CStatd)
 	   && (tdc->dflags & DFFetching)
-	   && hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
+	   && afs_IsDCacheFresh(tdc, avc)) {
 	afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT, ICL_TYPE_STRING,
 		   __FILE__, ICL_TYPE_INT32, __LINE__, ICL_TYPE_POINTER, tdc,
 		   ICL_TYPE_INT32, tdc->dflags);
@@ -713,7 +713,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	ObtainReadLock(&tdc->lock);
     }
     if (!(avc->f.states & CStatd)
-	|| !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
+	|| !afs_IsDCacheFresh(tdc, avc)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&avc->lock);
 	afs_PutDCache(tdc);

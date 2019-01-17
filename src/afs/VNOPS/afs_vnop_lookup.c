@@ -752,7 +752,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
      */
     while ((adp->f.states & CStatd)
 	   && (dcp->dflags & DFFetching)
-	   && hsame(adp->f.m.DataVersion, dcp->f.versionNo)) {
+	   && afs_IsDCacheFresh(dcp, adp)) {
 	afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT, ICL_TYPE_STRING,
 		   __FILE__, ICL_TYPE_INT32, __LINE__, ICL_TYPE_POINTER, dcp,
 		   ICL_TYPE_INT32, dcp->dflags);
@@ -763,7 +763,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	ObtainReadLock(&dcp->lock);
     }
     if (!(adp->f.states & CStatd)
-	|| !hsame(adp->f.m.DataVersion, dcp->f.versionNo)) {
+	|| !afs_IsDCacheFresh(dcp, adp)) {
 	ReleaseReadLock(&dcp->lock);
 	ReleaseReadLock(&adp->lock);
 	afs_PutDCache(dcp);
@@ -1685,7 +1685,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	if (!afs_InReadDir(adp)) {
 	    while ((adp->f.states & CStatd)
 		   && (tdc->dflags & DFFetching)
-		   && hsame(adp->f.m.DataVersion, tdc->f.versionNo)) {
+		   && afs_IsDCacheFresh(tdc, adp)) {
 		ReleaseReadLock(&tdc->lock);
 		ReleaseReadLock(&adp->lock);
 		afs_osi_Sleep(&tdc->validPos);
@@ -1693,7 +1693,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		ObtainReadLock(&tdc->lock);
 	    }
 	    if (!(adp->f.states & CStatd)
-		|| !hsame(adp->f.m.DataVersion, tdc->f.versionNo)) {
+		|| !afs_IsDCacheFresh(tdc, adp)) {
 		ReleaseReadLock(&tdc->lock);
 		ReleaseReadLock(&adp->lock);
 		afs_PutDCache(tdc);
