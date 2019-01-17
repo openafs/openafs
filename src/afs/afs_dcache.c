@@ -1737,6 +1737,24 @@ afs_AllocDCache(struct dcache **adc, struct vcache *avc, afs_int32 chunk,
     return 0;
 }
 
+/*!
+ * Check if a dcache is "fresh". That is, if the dcache's DV matches the DV of
+ * the vcache for that file.
+ *
+ * \param adc The dcache to check
+ * \param avc The vcache for adc
+ *
+ * \return 1 if the dcache does match avc's DV; 0 otherwise.
+ */
+int
+afs_IsDCacheFresh(struct dcache *adc, struct vcache *avc)
+{
+    if (!hsame(adc->f.versionNo, avc->f.m.DataVersion)) {
+	return 0;
+    }
+    return 1;
+}
+
 /*
  * afs_GetDCache
  *
@@ -1775,7 +1793,7 @@ void
 updateV2DC(int lockVc, struct vcache *v, struct dcache *d, int src)
 {
     if (!lockVc || 0 == NBObtainWriteLock(&v->lock, src)) {
-	if (hsame(v->f.m.DataVersion, d->f.versionNo) && v->callback)
+	if (afs_IsDCacheFresh(d, v) && v->callback)
 	    v->dchint = d;
 	if (lockVc)
 	    ReleaseWriteLock(&v->lock);
@@ -1885,7 +1903,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	    ReleaseReadLock(&afs_xdcache);
 	    shortcut = 1;
 
-	    if (hsame(tdc->f.versionNo, avc->f.m.DataVersion)
+	    if (afs_IsDCacheFresh(tdc, avc)
 		&& !(tdc->dflags & DFFetching)) {
 
 		afs_stats_cmperf.dcacheHits++;
@@ -2122,7 +2140,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	if (AFS_CHUNKTOBASE(chunk) >= avc->f.m.Length &&
 #endif
 #endif /* defined(AFS_AIX32_ENV) || defined(AFS_SGI_ENV) */
-	    !hsame(avc->f.m.DataVersion, tdc->f.versionNo))
+	    !afs_IsDCacheFresh(tdc, avc))
 	    doReallyAdjustSize = 1;
 
 	if (doReallyAdjustSize || overWriteWholeChunk) {
@@ -2186,7 +2204,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
      * avc->lock(W) if !setLocks || slowPass
      * tdc->lock(S)
      */
-    if (!hsame(avc->f.m.DataVersion, tdc->f.versionNo) && !overWriteWholeChunk) {
+    if (!afs_IsDCacheFresh(tdc, avc) && !overWriteWholeChunk) {
 	/*
 	 * Version number mismatch.
 	 */
@@ -2256,7 +2274,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	 */
 
 	/* Watch for standard race condition around osi_FlushText */
-	if (hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
+	if (afs_IsDCacheFresh(tdc, avc)) {
 	    updateV2DC(setLocks, avc, tdc, 569);	/* set hint */
 	    afs_stats_cmperf.dcacheHits++;
 	    ConvertWToSLock(&tdc->lock);
@@ -3575,7 +3593,7 @@ afs_ObtainDCacheForWriting(struct vcache *avc, afs_size_t filePos,
 	tdc = afs_FindDCache(avc, filePos);
 	if (tdc) {
 	    ObtainWriteLock(&tdc->lock, 658);
-	    if (!hsame(tdc->f.versionNo, avc->f.m.DataVersion)
+	    if (!afs_IsDCacheFresh(tdc, avc)
 		|| (tdc->dflags & DFFetching)) {
 		ReleaseWriteLock(&tdc->lock);
 		afs_PutDCache(tdc);

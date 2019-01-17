@@ -135,7 +135,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
      */
     if (tdc1) {
 	if (!(aodp->f.states & CStatd)
-	    || !hsame(aodp->f.m.DataVersion, tdc1->f.versionNo)) {
+	    || !afs_IsDCacheFresh(tdc1, aodp)) {
 
 	    ReleaseWriteLock(&aodp->lock);
 	    if (!oneDir) {
