@@ -1737,14 +1737,81 @@ afs_AllocDCache(struct dcache **adc, struct vcache *avc, afs_int32 chunk,
     return 0;
 }
 
+static int
+IsDCacheSizeOK(struct dcache *adc, struct vcache *avc, afs_int32 chunk_bytes,
+	       afs_size_t file_length, afs_uint32 versionNo, int from_net)
+{
+    afs_size_t expected_bytes;
+    afs_size_t chunk_start = AFS_CHUNKTOBASE(adc->f.chunk);
+
+    if (file_length < chunk_start) {
+	expected_bytes = 0;
+
+    } else {
+	expected_bytes = file_length - chunk_start;
+
+	if (vType(avc) != VDIR && expected_bytes > AFS_CHUNKTOSIZE(adc->f.chunk)) {
+	    /* A non-dir chunk cannot have more bytes than the chunksize. */
+	    expected_bytes = AFS_CHUNKTOSIZE(adc->f.chunk);
+	}
+    }
+
+    if (chunk_bytes != expected_bytes) {
+	static const afs_uint32 one_hour = 60 * 60;
+	static afs_uint32 last_warn;
+	afs_uint32 now = osi_Time();
+
+	if (now < last_warn) {
+	    /* clock went backwards */
+	    last_warn = now;
+	}
+
+	if (now - last_warn > one_hour) {
+	    unsigned int mtime = adc->f.modTime;
+
+	    last_warn = now;
+
+	    if (from_net) {
+		/*
+		 * The dcache we're looking at didn't come from the cache, but is
+		 * being populated from the net. Don't print out its mtime in that
+		 * case; that would be misleading since that's the mtime from the
+		 * last time this dcache slot was written to.
+		 */
+		mtime = 0;
+	    }
+
+	    afs_warn("afs: Detected corrupt dcache for file %d.%u.%u.%u: chunk %d "
+		     "(offset %lu) has %d bytes, but it should have %lu bytes (file "
+		     "length %lu, DV %u, dcache mtime %u)\n",
+		     adc->f.fid.Cell,
+		     adc->f.fid.Fid.Volume,
+		     adc->f.fid.Fid.Vnode,
+		     adc->f.fid.Fid.Unique,
+		     adc->f.chunk,
+		     (unsigned long)chunk_start,
+		     chunk_bytes,
+		     (unsigned long)expected_bytes,
+		     (unsigned long)file_length,
+		     versionNo,
+		     mtime);
+	    afs_warn("afs: Ignoring the dcache for now, but this may indicate "
+		     "corruption in the AFS cache\n");
+	}
+	return 0;
+    }
+    return 1;
+}
+
 /*!
  * Check if a dcache is "fresh". That is, if the dcache's DV matches the DV of
- * the vcache for that file.
+ * the vcache for that file, and the dcache looks "sane" (its length makes
+ * sense, when considering the length of the given avc).
  *
  * \param adc The dcache to check
  * \param avc The vcache for adc
  *
- * \return 1 if the dcache does match avc's DV; 0 otherwise.
+ * \return 1 if the dcache is "fresh". 0 otherwise.
  */
 int
 afs_IsDCacheFresh(struct dcache *adc, struct vcache *avc)
@@ -1752,6 +1819,20 @@ afs_IsDCacheFresh(struct dcache *adc, struct vcache *avc)
     if (!hsame(adc->f.versionNo, avc->f.m.DataVersion)) {
 	return 0;
     }
+
+    /*
+     * If we've reached here, the DV in adc matches the DV of our avc. Check if
+     * the number of bytes in adc agrees with the avc file length, as a sanity
+     * check. If they don't match, we'll pretend the DVs don't match, so the
+     * bad dcache data will not be used, and we'll probably re-fetch the chunk
+     * data, replacing the bad chunk.
+     */
+
+    if (!IsDCacheSizeOK(adc, avc, adc->f.chunkBytes, avc->f.m.Length,
+			hgetlo(adc->f.versionNo), 0)) {
+	return 0;
+    }
+
     return 1;
 }
 
@@ -2501,7 +2582,16 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 		    if (size < 0)
 			size = 0;
 		    afs_CFileTruncate(file, size);	/* prune it */
-		} else {
+
+		    /* Check that the amount of data that we fetched for the
+		     * dcache makes sense. */
+		    if (!IsDCacheSizeOK(tdc, avc, size,
+					tsmall->OutStatus.Length,
+					tsmall->OutStatus.DataVersion, 1)) {
+			code = EIO;
+		    }
+		}
+		if (code) {
 		    if (!setLocks || slowPass) {
 			afs_StaleVCacheFlags(avc, AFS_STALEVC_CLEARCB, CUnique);
 		    } else {
