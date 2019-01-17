@@ -104,7 +104,11 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
    __module_get(THIS_MODULE);
 
     afs_globalVFS = sb;
+#if defined(SB_NOATIME)
+    sb->s_flags |= SB_NOATIME;
+#else
     sb->s_flags |= MS_NOATIME;
+#endif
     sb->s_blocksize = 1024;
     sb->s_blocksize_bits = 10;
     sb->s_magic = AFS_VFSMAGIC;
