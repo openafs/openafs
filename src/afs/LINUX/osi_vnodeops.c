@@ -401,11 +401,17 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     offset = (int) fp->f_pos;
 #endif
     while (1) {
+        dirpos = 0;
 	code = BlobScan(tdc, offset, &dirpos);
-	if (code || !dirpos)
-	    break;
+        if (code == 0 && dirpos == 0) {
+            /* We've reached EOF of the dir blob, so we can stop looking for
+             * entries. */
+            break;
+        }
 
-	code = afs_dir_GetVerifiedBlob(tdc, dirpos, &entry);
+        if (code == 0) {
+            code = afs_dir_GetVerifiedBlob(tdc, dirpos, &entry);
+        }
 	if (code) {
 	    if (!(avc->f.states & CCorrupt)) {
 		struct cell *tc = afs_GetCellStale(avc->f.fid.Cell, READ_LOCK);
