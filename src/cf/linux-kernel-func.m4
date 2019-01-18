@@ -73,7 +73,7 @@ AC_CHECK_LINUX_FUNC([kernel_setsockopt],
                     [#include <linux/net.h>],
                     [kernel_setsockopt(NULL, 0, 0, NULL, 0);])
 AC_CHECK_LINUX_FUNC([ktime_get_coarse_real_ts64],
-                    [#include <linux/time.h>],
+                    [#include <linux/ktime.h>],
                     [struct timespec64 *s;
                     ktime_get_coarse_real_ts64(s);])
 AC_CHECK_LINUX_FUNC([ktime_get_real_ts64],
