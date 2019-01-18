@@ -76,6 +76,10 @@ AC_CHECK_LINUX_FUNC([ktime_get_coarse_real_ts64],
                     [#include <linux/time.h>],
                     [struct timespec64 *s;
                     ktime_get_coarse_real_ts64(s);])
+AC_CHECK_LINUX_FUNC([ktime_get_real_ts64],
+                    [#include <linux/ktime.h>],
+                    [struct timespec64 *s;
+                    ktime_get_real_ts64(s);])
 AC_CHECK_LINUX_FUNC([locks_lock_file_wait],
                     [#include <linux/fs.h>],
                     [locks_lock_file_wait(NULL, NULL);])
