@@ -23,11 +23,17 @@
 #include "osi_compat.h"
 
 #ifndef CURRENT_TIME
-# ifdef IATTR_TAKES_64BIT_TIME
-#  define CURRENT_TIME		(current_kernel_time64())
+# if defined(HAVE_LINUX_KTIME_GET_COARSE_REAL_TS64)
+#   define AFS_CURRENT_TIME(x) (ktime_get_coarse_real_ts64((x)))
 # else
-#  define CURRENT_TIME            (current_kernel_time())
+#  ifdef IATTR_TAKES_64BIT_TIME
+#    define AFS_CURRENT_TIME(x) do {*(x) = current_kernel_time64();} while (0)
+#  else
+#    define AFS_CURRENT_TIME(x) do {*(x) = current_kernel_time();} while (0)
+#  endif
 # endif
+#else
+# define AFS_CURRENT_TIME(x) do {*(x) = CURRENT_TIME;} while(0)
 #endif
 
 int cache_fh_type = -1;
@@ -200,7 +206,7 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
 #endif
     newattrs.ia_size = asize;
     newattrs.ia_valid = ATTR_SIZE | ATTR_CTIME;
-    newattrs.ia_ctime = CURRENT_TIME;
+    AFS_CURRENT_TIME(&newattrs.ia_ctime);
 
     /* avoid notify_change() since it wants to update dentry->d_parent */
 #ifdef HAVE_LINUX_SETATTR_PREPARE
