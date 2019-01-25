@@ -1,5 +1,63 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.3 (in progress)
+
+  All platforms
+
+    * Improved diagnostics and error messages (13186 13411 13417)
+
+    * Avoid sending RX packets with random garbage in the userStatus field
+      (13332)
+
+    * Fixed detection of the RX initialization status (13416)
+
+    * Assorted fixes to avoid segmentation faults and other potential problems
+      by detecting internal errors rather than letting them go unnoticed
+      (13329 13372)
+
+  All server platforms
+
+    * Fixed a build problem accidentally introduced in release 1.8.2 (13328)
+
+    * Assorted efficiency improvements in the ubik implementation (13153 13218
+      13188 13353)
+
+    * Fixed locking around transaction list processing in volserver to avoid
+      segmentation faults and other potential problems (13336 13337)
+
+    * When the volserver attempts to remove a temporary volume after a
+      transaction, but the volume was already removed, e.g., by the salvager,
+      this is no longer treated as an error (13235)
+
+  All client platforms
+
+    * Update the CellServDB to the latest version from grand.central.org from
+      May 14th 2018 (13409)
+
+    * Avoid a panic during cache initialization when allocating the required
+      memory fails (13307)
+
+    * Add back the packet counters and timestamps to "vos status" output
+      which had been missing since release 1.8.0 (13421)
+
+    * Correctly handle errors encountered while reading data from the server
+      and writing it to the cache, e.g., due to a full cache partition (13443)
+
+    * Avoid a panic due to a recoverable error while flushing cache items
+      (13503)
+
+  Linux clients
+
+    * Support mainline kernels 4.20 and 5.0 and distribution kernels with
+      backports from those (13405 13406 13440 13441 13442)
+
+    * DKMS-related fixes in Red Hat packaging (13438 13479)
+
+  macOS
+
+    * Support building and packaging on macOS 10.14 "Mojave" (13412 13413)
+
+
 OpenAFS 1.8.2
 
   All platforms
