@@ -8,7 +8,7 @@ AC_CONFIG_SRCDIR([src/libafs/Makefile.common.in])
 AM_INIT_AUTOMAKE([foreign])
 
 AC_CONFIG_HEADER([src/config/afsconfig.h])
-MACOS_VERSION=1.8.2
+MACOS_VERSION=1.8.3fc1
 
 AC_SUBST([MACOS_VERSION])
 
