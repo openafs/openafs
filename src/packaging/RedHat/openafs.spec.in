@@ -851,7 +851,7 @@ PACKAGE_VERSION="%{dkms_version}"
 # Items below here should not have to change with each driver version.
 PACKAGE_NAME="%{name}"
 MAKE[0]='./configure --with-linux-kernel-headers=${kernel_source_dir} --with-linux-kernel-packaging && make && case "${kernelver_array[0]}${kernelver[0]}" in 2.4.*) mv src/libafs/MODLOAD-*/libafs-* openafs.o ;; *) mv src/libafs/MODLOAD-*/openafs.ko . ;; esac'
-CLEAN="make -C src/libafs clean"
+CLEAN="if [ -e src/libafs/Makefile ]; then make -C src/libafs clean; else true; fi"
 
 BUILT_MODULE_NAME[0]="$PACKAGE_NAME"
 DEST_MODULE_LOCATION[0]="/extra/$PACKAGE_NAME/"
