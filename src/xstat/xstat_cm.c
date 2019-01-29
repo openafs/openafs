@@ -197,7 +197,6 @@ xstat_cm_LWP(void *unused)
 {
     static char rn[] = "xstat_cm_LWP";	/*Routine name */
     afs_int32 code;	/*Results of calls */
-    int oneShotCode;		/*Result of one-shot signal */
     struct timeval tv;		/*Time structure */
     struct timespec wait;	/*Time to wait */
     int conn_idx;		/*Connection index */
