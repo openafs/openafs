@@ -15,6 +15,7 @@
 #include <afs/param.h>
 
 #include <roken.h>
+#include <opr/softsig.h>
 
 #undef	IN
 #include <afs/gtxwindows.h>		/*Generic window package */
