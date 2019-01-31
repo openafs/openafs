@@ -34,8 +34,7 @@ struct iod {
 extern int DumpVolume(struct rx_call *call, Volume *vp, afs_int32, int);
 extern int DumpVolMulti(struct rx_call **, int, Volume *, afs_int32, int,
 		        int *);
-extern int RestoreVolume(struct rx_call *, Volume *, int,
-			 struct restoreCookie *);
+extern int RestoreVolume(struct rx_call *, Volume *, struct restoreCookie *);
 extern int SizeDumpVolume(struct rx_call *, Volume *, afs_int32, int,
 			  struct volintSize *);
 

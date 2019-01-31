@@ -64,9 +64,9 @@ static int DumpVnodeIndex(struct iod *iodp, Volume * vp,
 static int DumpVnode(struct iod *iodp, struct VnodeDiskObject *v,
 		     VolumeId volid, int vnodeNumber, int dumpEverything);
 static int ReadDumpHeader(struct iod *iodp, struct DumpHeader *hp);
-static int ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
-		      afs_foff_t * Lbuf, afs_int32 s1, afs_foff_t * Sbuf,
-		      afs_int32 s2, afs_int32 delo);
+static int ReadVnodes(struct iod *iodp, Volume * vp, afs_foff_t * Lbuf,
+                      afs_int32 s1, afs_foff_t * Sbuf, afs_int32 s2,
+                      afs_int32 delo);
 static afs_fsize_t volser_WriteFile(int vn, struct iod *iodp,
 				    FdHandle_t * handleP, int tag,
 				    Error * status);
@@ -1233,8 +1233,7 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 
 
 int
-RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
-	      struct restoreCookie *cookie)
+RestoreVolume(struct rx_call *call, Volume * avp, struct restoreCookie *cookie)
 {
     VolumeDiskData vol;
     struct DumpHeader header;
@@ -1290,7 +1289,7 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
 
     tdelo = delo;
     while (1) {
-	if (ReadVnodes(iodp, vp, 0, b1, s1, b2, s2, tdelo)) {
+	if (ReadVnodes(iodp, vp, b1, s1, b2, s2, tdelo)) {
 	    Log("1 Volser: RestoreVolume: Error reading vnodes (id: %u); aborted\n",
 		V_id(vp));
 	    error = VOLSERREAD_DUMPERROR;
@@ -1376,9 +1375,8 @@ RestoreVolume(struct rx_call *call, Volume * avp, int incremental,
 }
 
 static int
-ReadVnodes(struct iod *iodp, Volume * vp, int incremental,
-	   afs_foff_t * Lbuf, afs_int32 s1, afs_foff_t * Sbuf, afs_int32 s2,
-	   afs_int32 delo)
+ReadVnodes(struct iod *iodp, Volume * vp, afs_foff_t * Lbuf, afs_int32 s1,
+           afs_foff_t * Sbuf, afs_int32 s2, afs_int32 delo)
 {
     afs_int32 vnodeNumber;
     char buf[SIZEOF_LARGEDISKVNODE];
