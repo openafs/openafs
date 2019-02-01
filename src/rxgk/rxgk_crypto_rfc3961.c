@@ -232,7 +232,9 @@ rxgk_make_key(rxgk_key *key_out, void *raw_key, afs_uint32 length,
     *key_out = keyblock2key(new_key);
  done:
     if (ret != 0 && new_key != NULL) {
-	krb5_free_context(new_key->init_ctx);
+        if (new_key->init_ctx != NULL) {
+            krb5_free_context(new_key->init_ctx);
+        }
 	rxi_Free(new_key, sizeof(*new_key));
     }
     return ktor(ret);
@@ -311,7 +313,9 @@ rxgk_release_key(rxgk_key *key)
     keyblock = key2keyblock(*key);
 
     krb5_free_keyblock_contents(keyblock->init_ctx, &keyblock->key);
-    krb5_free_context(keyblock->init_ctx);
+    if (keyblock->init_ctx != NULL) {
+        krb5_free_context(keyblock->init_ctx);
+    }
     rxi_Free(keyblock, sizeof(*keyblock));
     *key = NULL;
 }
@@ -351,7 +355,9 @@ rxgk_mic_length(rxgk_key key, size_t *out)
     *out = len;
 
  done:
-    krb5_free_context(ctx);
+    if (ctx != NULL) {
+        krb5_free_context(ctx);
+    }
     return ktor(ret);
 }
 
@@ -419,7 +425,9 @@ rxgk_mic_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
     free_Checksum(&cksum);
     if (crypto != NULL)
 	krb5_crypto_destroy(ctx, crypto);
-    krb5_free_context(ctx);
+    if (ctx != NULL) {
+        krb5_free_context(ctx);
+    }
     return ktor(ret);
 }
 
@@ -474,7 +482,9 @@ rxgk_check_mic_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
     free_Checksum(&cksum);
     if (crypto != NULL)
 	krb5_crypto_destroy(ctx, crypto);
-    krb5_free_context(ctx);
+    if (ctx != NULL) {
+        krb5_free_context(ctx);
+    }
     return ktor(ret);
 }
 
@@ -526,7 +536,9 @@ rxgk_encrypt_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
     if (crypto != NULL)
 	krb5_crypto_destroy(ctx, crypto);
     krb5_data_free(&kd_out);
-    krb5_free_context(ctx);
+    if (ctx != NULL) {
+        krb5_free_context(ctx);
+    }
     return ktor(ret);
 }
 
@@ -580,7 +592,9 @@ rxgk_decrypt_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
     if (crypto != NULL)
 	krb5_crypto_destroy(ctx, crypto);
     krb5_data_free(&kd_out);
-    krb5_free_context(ctx);
+    if (ctx != NULL) {
+        krb5_free_context(ctx);
+    }
     return ktor(ret);
 }
 
@@ -646,7 +660,9 @@ PRFplus(krb5_data *out, krb5_enctype enctype, rxgk_key k0,
     if (crypto != NULL)
 	krb5_crypto_destroy(ctx, crypto);
     krb5_data_free(&prf_out);
-    krb5_free_context(ctx);
+    if (ctx != NULL) {
+        krb5_free_context(ctx);
+    }
     rxi_Free(prf_in.data, prf_in.length);
     if (pre_key != NULL)
 	rxi_Free(pre_key, iterations * block_len);
@@ -762,7 +778,9 @@ rxgk_cipher_expansion(rxgk_key k0, afs_uint32 *len_out)
  done:
     if (crypto != NULL)
 	krb5_crypto_destroy(ctx, crypto);
-    krb5_free_context(ctx);
+    if (ctx != NULL) {
+        krb5_free_context(ctx);
+    }
     return ktor(ret);
 }
 
