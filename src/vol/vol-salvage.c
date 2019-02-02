@@ -972,7 +972,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 void
 DeleteExtraVolumeHeaderFile(struct SalvInfo *salvinfo, struct VolumeSummary *vsp)
 {
-    char path[64];
+    char path[VMAXPATHLEN + 10];
     char filename[VMAXPATHLEN];
 
     if (vsp->deleted) {
@@ -2429,7 +2429,7 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
     }
 
     if (isp->volSummary == NULL) {
-	char path[64];
+	char path[VMAXPATHLEN];
 	char headerName[64];
 	snprintf(headerName, sizeof headerName, VFORMAT,
 		 afs_printable_VolumeId_lu(isp->volumeId));
@@ -2447,7 +2447,7 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 
 	writefunc = VCreateVolumeDiskHeader;
     } else {
-	char path[64];
+	char path[VMAXPATHLEN];
 	char headerName[64];
 	/* hack: these two fields are obsolete... */
 	isp->volSummary->header.volumeAcl = 0;
@@ -4367,7 +4367,7 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	    }
 	    if (!Testing) {
 		afs_int32 code;
-		char path[64];
+		char path[VMAXPATHLEN + 10];
 		char filename[VMAXPATHLEN];
 		VolumeExternalName_r(isp->volumeId, filename, sizeof(filename));
 		sprintf(path, "%s" OS_DIRSEP "%s", salvinfo->fileSysPath, filename);
