@@ -1801,14 +1801,18 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 	    snprintf(attn_label, sizeof(attn_label), "%s: < %d blocks free",
 		     scout_label[5], scout_attn_disk_minfree);
 	}
-	snprintf(scout_Banner, sizeof(scout_Banner),
-		 "%*s %*s %*s %*s %*s %s",
-		 scout_col_width[0], scout_label[0],
-		 scout_col_width[1], scout_label[1],
-		 scout_col_width[2], scout_label[2],
-		 scout_col_width[3], scout_label[3],
-		 scout_col_width[4], scout_label[4],
-		 attn_label);
+	code = snprintf(scout_Banner, sizeof(scout_Banner),
+		        "%*s %*s %*s %*s %*s %s",
+		        scout_col_width[0], scout_label[0],
+		        scout_col_width[1], scout_label[1],
+		        scout_col_width[2], scout_label[2],
+		        scout_col_width[3], scout_label[3],
+		        scout_col_width[4], scout_label[4],
+		        attn_label);
+	if (code < 0 || code >= sizeof(scout_Banner)) {
+	    fprintf(stderr, "[%s] Truncation while generating banner\n", rn);
+	    return -1;
+	}
 
 	lightdata = (struct gator_lightobj *)(scout_banner1_lp->o_data);
 	mini_justify(scout_Banner, lightdata->label, scout_frameDims.maxx,
