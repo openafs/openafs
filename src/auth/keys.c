@@ -1006,6 +1006,10 @@ afsconf_PutTypedKeyList(struct afsconf_typedKeyList **keys)
 {
      int i;
 
+     if (*keys == NULL) {
+        return;
+     }
+
      for (i=0;i<(*keys)->nkeys;i++)
 	afsconf_typedKey_put(&((*keys)->keys[i]));
 
