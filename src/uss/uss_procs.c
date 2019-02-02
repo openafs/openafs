@@ -664,7 +664,7 @@ uss_procs_PickADir(char *path, char *cp)
     int i, count, MinIndex = 0, mina = 10000;
     struct dirent *dp;
     DIR *dirp;
-    char dirname[300];
+    char dirname[301];
 
     if (uss_NumGroups == 0) {
 	fprintf(stderr, "%s: No choice yet given to replace $AUTO\n",
@@ -698,7 +698,7 @@ uss_procs_PickADir(char *path, char *cp)
      * each and pick the minimum.
      */
     for (i = 0; i < uss_NumGroups; i++) {
-	sprintf(dirname, "%s/%s", cd, uss_DirPool[i]);
+	snprintf(dirname, sizeof(dirname), "%s/%s", cd, uss_DirPool[i]);
 	if ((dirp = opendir(dirname)) == NULL) {
 	    if (errno != ENOTDIR)
 		fprintf(stderr,
