@@ -2605,8 +2605,14 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 
 #ifndef AFS_NT40_ENV /* This level missing on Windows */
 	    /* Now we've got a next level subdir. */
-	    snprintf(path2, sizeof(path2), "%s" OS_DIRSEP "%s",
-		     path1, dp1->d_name);
+	    code = snprintf(path2, sizeof(path2), "%s" OS_DIRSEP "%s",
+			    path1, dp1->d_name);
+	    if (code < 0 || code >= sizeof(path2)) {
+		/* error, or truncated */
+		closedir(dirp1);
+		ret = -1;
+		goto error;
+	    }
 	    dirp2 = opendir(path2);
 	    if (dirp2) {
 		while ((dp2 = readdir(dirp2))) {
@@ -2614,13 +2620,22 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 			continue;
 
 		    /* Now we've got to the actual data */
-		    snprintf(path3, sizeof(path3), "%s" OS_DIRSEP "%s",
-			     path2, dp2->d_name);
+		    code = snprintf(path3, sizeof(path3), "%s" OS_DIRSEP "%s",
+				    path2, dp2->d_name);
 #else
 		    /* Now we've got to the actual data */
-		    snprintf(path3, sizeof(path3), "%s" OS_DIRSEP "%s",
-			     path1, dp1->d_name);
+		    code = snprintf(path3, sizeof(path3), "%s" OS_DIRSEP "%s",
+				    path1, dp1->d_name);
 #endif
+		    if (code < 0 || code >= sizeof(path3)) {
+			/* error, or truncated */
+#ifndef AFS_NT40_ENV
+			closedir(dirp2);
+#endif
+			closedir(dirp1);
+			ret = -1;
+			goto error;
+		    }
 		    dirp3 = opendir(path3);
 		    if (dirp3) {
 			while ((dp3 = readdir(dirp3))) {
@@ -3128,8 +3143,13 @@ namei_ConvertROtoRWvolume(char *pname, VolumeId volumeId)
     t_ih.ih_dev = ih->ih_dev;
     t_ih.ih_vid = ih->ih_vid;
 
-    snprintf(oldpath, sizeof oldpath, "%s" OS_DIRSEP "%s", dir_name,
-	     infoName);
+    code = snprintf(oldpath, sizeof oldpath, "%s" OS_DIRSEP "%s", dir_name,
+		    infoName);
+    if (code < 0 || code >= sizeof(oldpath)) {
+	/* error, or truncated */
+	code = -1;
+	goto done;
+    }
     fd = OS_OPEN(oldpath, O_RDWR, 0);
     if (fd == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not open RO info file: %s\n",
@@ -3159,8 +3179,13 @@ namei_ConvertROtoRWvolume(char *pname, VolumeId volumeId)
 
     t_ih.ih_ino = namei_MakeSpecIno(ih->ih_vid, VI_SMALLINDEX);
     namei_HandleToName(&n, &t_ih);
-    snprintf(newpath, sizeof newpath, "%s" OS_DIRSEP "%s", dir_name,
-	     smallName);
+    code = snprintf(newpath, sizeof newpath, "%s" OS_DIRSEP "%s", dir_name,
+		    smallName);
+    if (code < 0 || code >= sizeof(newpath)) {
+	/* error, or truncated */
+	code = -1;
+	goto done;
+    }
     fd = OS_OPEN(newpath, O_RDWR, 0);
     if (fd == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not open SmallIndex file: %s\n", newpath);
@@ -3182,8 +3207,13 @@ namei_ConvertROtoRWvolume(char *pname, VolumeId volumeId)
 
     t_ih.ih_ino = namei_MakeSpecIno(ih->ih_vid, VI_LARGEINDEX);
     namei_HandleToName(&n, &t_ih);
-    snprintf(newpath, sizeof newpath, "%s" OS_DIRSEP "%s", dir_name,
-	     largeName);
+    code = snprintf(newpath, sizeof newpath, "%s" OS_DIRSEP "%s", dir_name,
+		    largeName);
+    if (code < 0 || code >= sizeof(newpath)) {
+	/* error, or truncated */
+	code = -1;
+	goto done;
+    }
     fd = OS_OPEN(newpath, O_RDWR, 0);
     if (fd == INVALID_FD) {
 	Log("1 namei_ConvertROtoRWvolume: could not open LargeIndex file: %s\n", newpath);
