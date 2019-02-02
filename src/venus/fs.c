@@ -761,7 +761,7 @@ QuickPrintSpace(VolumeStatus * status, char *name, int human)
 static char *
 AclToString(struct Acl *acl)
 {
-    static char mydata[AFS_PIOCTL_MAXSIZE];
+    static char mydata[AFS_PIOCTL_MAXSIZE + 24];
     char tstring[AFS_PIOCTL_MAXSIZE];
     char dfsstring[AFS_PIOCTL_MAXSIZE];
     struct AclEntry *tp;
