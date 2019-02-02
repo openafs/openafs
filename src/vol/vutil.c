@@ -115,7 +115,7 @@ VCreateVolume_r(Error * ec, char *partname, VolumeId volumeId, VolumeId parentId
 				 * no parent */
     VolumeDiskData vol;
     int i, rc;
-    char headerName[VMAXPATHLEN], volumePath[VMAXPATHLEN];
+    char headerName[VMAXPATHLEN], volumePath[VMAXPATHLEN + 1];
     Device device;
     struct DiskPartition64 *partition;
     struct VolumeDiskHeader diskHeader;
