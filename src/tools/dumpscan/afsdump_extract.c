@@ -237,7 +237,7 @@ static char *month[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 static char *
 datestr(time_t date)
 {
-    static char str[13];
+    static char str[20];
     time_t clock = time(0);
     struct tm *now, *then;
     int diff;
