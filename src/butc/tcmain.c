@@ -69,9 +69,9 @@
 struct ubik_client *cstruct;
 FILE *logIO, *ErrorlogIO, *centralLogIO, *lastLogIO;
 char lFile[AFSDIR_PATH_MAX];
-char logFile[256];
-char ErrorlogFile[256];
-char lastLogFile[256];
+char logFile[AFSDIR_PATH_MAX + 256];
+char ErrorlogFile[AFSDIR_PATH_MAX + 256];
+char lastLogFile[AFSDIR_PATH_MAX + 256];
 char eFile[AFSDIR_PATH_MAX];
 char tapeConfigFile[AFSDIR_PATH_MAX];
 char pFile[AFSDIR_PATH_MAX];
@@ -403,7 +403,7 @@ GetDeviceConfig(char *filename, struct tapeConfig *config, afs_int32 portOffset)
 static afs_int32
 GetConfigParams(char *filename, afs_int32 port)
 {
-    char paramFile[256];
+    char paramFile[AFSDIR_PATH_MAX + 257];
     FILE *devFile = 0;
     char line[LINESIZE], cmd[LINESIZE], value[LINESIZE];
     afs_int32 code = 0;
@@ -437,13 +437,13 @@ GetConfigParams(char *filename, afs_int32 port)
     groupId = 0;		/* Group id for multiple dumps */
 
     /* Try opening the CFG_<port> file */
-    sprintf(paramFile, "%s_%d", filename, port);
+    snprintf(paramFile, sizeof(paramFile), "%s_%d", filename, port);
     devFile = fopen(paramFile, "r");
     if (devFile) {
 	/* Set log names to TL_<port>, TL_<port>.lp and TE_<port> */
-	sprintf(logFile, "%s_%d", lFile, port);
-	sprintf(lastLogFile, "%s_%d.lp", lFile, port);
-	sprintf(ErrorlogFile, "%s_%d", eFile, port);
+	snprintf(logFile, sizeof(logFile), "%s_%d", lFile, port);
+	snprintf(lastLogFile, sizeof(lastLogFile), "%s_%d.lp", lFile, port);
+	snprintf(ErrorlogFile, sizeof(ErrorlogFile), "%s_%d", eFile, port);
     } else if (CONF_XBSA) {
 	/* If configured as XBSA, a configuration file CFG_<port> must exist */
 	printf("Cannot open configuration file %s", paramFile);
