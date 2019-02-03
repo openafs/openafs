@@ -641,7 +641,7 @@ uss_kauth_SetFields(char *username, char *expirestring, char *reuse,
 	fprintf(stderr, "Zero represents unlimited login attempts.\n");
 	fprintf(stderr, "Continuing with limit == 254 for user %s.\n",
 		username);
-	misc_auth_bytes[2] = 255;
+	misc_auth_bytes[2] = 0xff;
     } else
 	misc_auth_bytes[2] = nfailures + 1;
 
