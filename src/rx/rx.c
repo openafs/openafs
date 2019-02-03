@@ -2380,7 +2380,7 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	call->abortCount = 0;
     }
 
-    call->arrivalProc = (void (*)())0;
+    call->arrivalProc = NULL;
     if (rc && call->error == 0) {
 	rxi_CallError(call, rc);
         call->app.mode = RX_MODE_ERROR;
@@ -3961,7 +3961,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	    if (call->arrivalProc) {
 		(*call->arrivalProc) (call, call->arrivalProcHandle,
 				      call->arrivalProcArg);
-		call->arrivalProc = (void (*)())0;
+		call->arrivalProc = NULL;
 	    }
 
 	    /* Update last packet received */
@@ -5307,7 +5307,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     if (call->arrivalProc) {
 	(*call->arrivalProc) (call, call->arrivalProcHandle,
 			      call->arrivalProcArg);
-	call->arrivalProc = (void (*)())0;
+	call->arrivalProc = NULL;
     }
 
 

@@ -432,7 +432,7 @@ xstat_fs_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 		a_ProbeFreqInSecs);
 	arg_errfound = 1;
     }
-    if (a_ProbeHandler == (int (*)())0) {
+    if (a_ProbeHandler == NULL) {
 	fprintf(stderr, "[%s] Null probe handler function argument\n", rn);
 	arg_errfound = 1;
     }
