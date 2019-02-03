@@ -824,10 +824,12 @@ afs_random(void)
 	osi_timeval_t t;
 	osi_GetTime(&t);
 	/*
-	 * 0xfffffff0 was changed to (~0 << 4) since it works no matter how many
-	 * bits are in a tv_usec
+	 * Clear the low byte of tv_usec in a size-independent manner before adding
+	 * in the rest of the state.
 	 */
-	state = (t.tv_usec & (~0 << 4)) + (rxi_getaddr() & 0xff);
+	state = t.tv_usec;
+	state ^= (state & 0xff);
+	state += rxi_getaddr() & 0xff;
 	state += (t.tv_sec & 0xff);
 	for (i = 0; i < 30; i++) {
 	    ranstage(state);
