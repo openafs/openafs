@@ -164,10 +164,7 @@ GenericAuth(struct afsconf_dir *adir,
 	return QuickAuth(astr, aindex);
     }
 
-    /* Next, we have ticket, kvno and session key, authenticate the connection.
-     * We use a magic # instead of a constant because of basic compilation
-     * order when compiling the system from scratch (rx/rxkad.h isn't installed
-     * yet). */
+    /* Next, we have ticket, kvno and session key, authenticate the connection.*/
     tclass = (struct rx_securityClass *)
 	rxkad_NewClientSecurityObject(enclevel, &session, kvno, ticketLen,
 				      tbuffer);
