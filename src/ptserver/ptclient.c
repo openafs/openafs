@@ -168,6 +168,7 @@ main(int argc, char **argv)
     char *foo;
     afs_int32 over;
     char *cell;
+    afs_int32 rxgk_level = 0;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -201,15 +202,17 @@ main(int argc, char **argv)
 	    strncpy(confdir, AFSDIR_CLIENT_ETC_DIRPATH, sizeof(confdir));
 	else if (IsArg("server"))
 	    strncpy(confdir, AFSDIR_SERVER_ETC_DIRPATH, sizeof(confdir));
-	else if (IsArg("0") || IsArg("1") || IsArg("2"))
+	else if (IsArg("0") || IsArg("1") || IsArg("2") || IsArg("3"))
 	    security = atoi(argv[n]);
+	else if (IsArg("-rxgk"))
+	    rxgk_level = atoi(argv[++n]);
 	else if (IsArg("-ignoreexist"))
 	    ignoreExist++;
 	else if (IsArg("-cell"))
 	    cell = argv[++n];
 	else {
 	    printf
-		("Usage is: 'prclient [-testconfdir <dir> | server | client] [0 | 1 | 2] [-ignoreExist] [-cell <cellname>]\n");
+		("Usage is: 'prclient [-testconfdir <dir> | server | client] [0 | 1 | 2 | 3] [-rxgk 0 | 1 | 2] [-ignoreExist] [-cell <cellname>]\n");
 	    exit(1);
 	}
 	n++;
@@ -219,7 +222,7 @@ main(int argc, char **argv)
     if (security == 0)
 	printf("Making unauthenticated connection to prserver\n");
 
-    code = pr_Initialize(security, confdir, cell);
+    code = pr_Initialize2(security, confdir, cell, rxgk_level);
     if (code) {
 	afs_com_err(whoami, code, "Couldn't initialize protection library");
 	exit(1);
