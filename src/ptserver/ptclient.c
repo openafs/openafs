@@ -34,11 +34,9 @@ char confdir[AFSDIR_PATH_MAX];
 
 char *whoami;
 
-#ifndef AFS_PTHREAD_ENV
 extern struct ubik_client *pruclient;
 static void skip(char **);
 static void PrintHelp(void);
-#endif
 
 static int ignoreExist = 0;
 static char line[256];
@@ -46,7 +44,6 @@ static char *lineProgress;
 
 #define WHITESPACE " \t\n"
 
-#ifndef AFS_PTHREAD_ENV
 int
 osi_audit(void)
 {
@@ -56,7 +53,6 @@ osi_audit(void)
  */
     return 0;
 }
-#endif /* !AFS_PTHREAD_ENV */
 
 int
 GetToken(char *format, afs_int32 *l)
@@ -147,7 +143,6 @@ PrintEntry(afs_int32 ea, struct prentry *e, int indent)
     return pr_PrintEntry(stdout, /*host order */ 1, ea, e, indent);
 }
 
-#ifndef AFS_PTHREAD_ENV
 
 /* main program */
 
@@ -740,4 +735,3 @@ skip(char **s)
     while (**s == ' ')
 	(*s)++;
 }
-#endif /* !AFS_PTHREAD_ENV */
