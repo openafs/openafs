@@ -203,7 +203,7 @@ struct VenusFid {
     struct AFSFid Fid;
 };
 
-/* Temporary struct to be passed between afs_fid and afs_vget; in SunOS4.x we can only pass a maximum of 10 bytes for a handle (we ideally need 16!) */
+/* Temporary struct to be passed between afs_fid and afs_vget */
 struct SmallFid {
     afs_int32 Volume;
     afs_int32 CellAndUnique;
@@ -654,7 +654,7 @@ struct SimpleLocks {
 #define CCore		0x00000010	/* storing a core file, needed since we don't get an open */
 #define CDirty		0x00000020	/* file has been modified since first open (... O_RDWR) */
 #define CSafeStore	0x00000040	/* close must wait for store to finish (should be in fd) */
-#define CMAPPED		0x00000080	/* Mapped files; primarily used by SunOS 4.0.x */
+#define CMAPPED		0x00000080	/* Mapped files */
 #define CNSHARE		0x00000100	/* support O_NSHARE semantics */
 #define CLied		0x00000200
 #define CTruth		0x00000400
@@ -1609,7 +1609,7 @@ extern int Afs_syscall(struct afssysa *uap, rval_t *rvp);
 
 /*
  * Various definitions for osi_sleep and its event hash table
- * DFBSD and SUNOS have no osi_sleep, and HPUX has its own hack for this stuff
+ * DFBSD has no osi_sleep, and HPUX has its own hack for this stuff
  */
 #define AFS_EVHASHSIZE	128	/* size of afs_evhasht, must be power of 2 */
 

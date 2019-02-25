@@ -317,7 +317,7 @@ afs_InactiveVCache(struct vcache *avc, afs_ucred_t *acred)
 	/* we can't keep trying to push back dirty data forever.  Give up. */
 	afs_InvalidateAllSegments(avc);	/* turns off dirty bit */
     }
-    avc->f.states &= ~CMAPPED;	/* mainly used by SunOS 4.0.x */
+    avc->f.states &= ~CMAPPED;
     avc->f.states &= ~CDirty;	/* Turn it off */
     if (avc->f.states & CUnlinked) {
 	if (CheckLock(&afs_xvcache) || CheckLock(&afs_xdcache)) {

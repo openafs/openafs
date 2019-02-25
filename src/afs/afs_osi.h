@@ -233,7 +233,7 @@ typedef struct {
 
 /* On an MP that uses multithreading, splnet is not sufficient to provide
  * mutual exclusion because the other processors will not see it.  On some
- * early multiprocessors (SunOS413 & SGI5.2) splnet actually obtains a global
+ * early multiprocessors (SGI5.2) splnet actually obtains a global
  * mutex, which this works in the UP expected way, it means that the whole MP
  * can only take one interrupt at a time; a serious performance penalty. */
 

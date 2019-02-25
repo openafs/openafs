@@ -37,7 +37,7 @@ static int lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
 		      struct SimpleLocks *alp, int onlymine,
 		      int clid);
 
-/* int clid;  * non-zero on SGI, OSF, SunOS, Darwin, xBSD ** XXX ptr type */
+/* int clid;  * non-zero on SGI, Darwin, xBSD ** XXX ptr type */
 
 #if defined(AFS_SUN5_ENV)
 void
@@ -238,7 +238,7 @@ lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
     If called when disconnected support is unabled, the discon_lock must
     be held
 */
-/* clid - nonzero on sgi sunos osf1 only */
+/* clid - nonzero on sgi only */
 int
 HandleFlock(struct vcache *avc, int acom, struct vrequest *areq,
 	    pid_t clid, int onlymine)
