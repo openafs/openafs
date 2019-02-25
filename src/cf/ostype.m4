@@ -18,11 +18,6 @@ case $system in
                 AC_MSG_RESULT(sun4)
                 OPENAFS_SOLARIS_OSTYPE
                 ;;
-        *-sunos*)
-                MKAFS_OSTYPE=SUNOS
-                enable_kernel_module=no
-                AC_MSG_RESULT(sun4)
-                ;;
         *-hpux*)
                 MKAFS_OSTYPE=HPUX
                 AC_MSG_RESULT(hp_ux)
