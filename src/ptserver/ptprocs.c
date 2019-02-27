@@ -62,6 +62,7 @@
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
+#include <rx/rx_identity.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 
@@ -2069,6 +2070,25 @@ WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid,
 	    lcstring(vname, vname, sizeof(vname));
 	    code = NameToID(at, vname, aid);
 	}
+
+    } else {
+        /* If we reached here, we don't understand the security class of the
+         * given call. But if the calling user is RX_ID_SUPERUSER, we can check
+         * that without even needing to understand the security class. Remember
+         * to only check for RX_ID_SUPERUSER specifically; we do not use
+         * SYSADMINID for other admins. */
+        int is_super;
+        struct rx_identity *id = NULL;
+        is_super = afsconf_SuperIdentity(prdir, acall, &id);
+        if (is_super && id->kind == RX_ID_SUPERUSER) {
+            *aid = SYSADMINID;
+            code = 0;
+        } else {
+            code = -1;
+        }
+        if (id != NULL) {
+            rx_identity_free(&id);
+        }
     }
   done:
     if (code && !pr_noAuth)
