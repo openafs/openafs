@@ -400,8 +400,8 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc,
 	code = -1;
     RX_AFS_GLOCK();
     if (code) {
-	osi_FreeSmallSpace(v);
-        return code;
+        *rock = v;
+        return rxfs_storeDestroy(rock, code);
     }
     if (cacheDiskType == AFS_FCACHE_TYPE_UFS) {
 	v->tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
@@ -1067,8 +1067,8 @@ rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
     }
 
     if (code) {
-	osi_FreeSmallSpace(v);
-        return code;
+        *rock = v;
+        return rxfs_fetchDestroy(rock, code);
     }
     if (cacheDiskType == AFS_FCACHE_TYPE_UFS) {
 	v->tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
