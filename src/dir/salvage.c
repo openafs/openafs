@@ -437,7 +437,6 @@ int
 DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 	   afs_int32 pvn, afs_int32 pvu)
 {
-    /* First do a MakeDir on the target. */
     afs_int32 dot[3], dotdot[3], lfid[3], code, usedPages;
     char tname[256];
     int i;
@@ -448,6 +447,7 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
     int entry;
     int physerr;
 
+    /* First do a MakeDir on the target. */
     memset(dot, 0, sizeof(dot));
     memset(dotdot, 0, sizeof(dotdot));
     dot[1] = vn;
@@ -455,7 +455,11 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
     dotdot[1] = pvn;
     dotdot[2] = pvu;
 
-    afs_dir_MakeDir(toFile, dot, dotdot);	/* Returns no error code. */
+    code = afs_dir_MakeDir(toFile, dot, dotdot);
+    if (code) {
+	printf("Failed to create target directory\n");
+	return code;
+    }
 
     /* Find out how many pages are valid. */
     code = DReadWithErrno(fromFile, 0, &headerbuf, &physerr);
