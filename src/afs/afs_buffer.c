@@ -147,6 +147,16 @@ DInit(int abuffers)
     return;
 }
 
+/*!
+ * Read and return the requested directory page.
+ *
+ * \param[in]   adc	pointer to directory dcache
+ * \param[in]	page	number of the desired directory page
+ * \param[out]	entry	buffer to return requested page
+ *
+ * \retval 0	    success
+ * \retval non-zero invalid directory or internal IO error
+ */
 int
 DRead(struct dcache *adc, int page, struct DirBuffer *entry)
 {
@@ -158,6 +168,15 @@ DRead(struct dcache *adc, int page, struct DirBuffer *entry)
     AFS_STATCNT(DRead);
 
     memset(entry, 0, sizeof(struct DirBuffer));
+
+    if (adc->f.chunk == 0 && adc->f.chunkBytes == 0) {
+        /* The directory blob is empty, apparently. This is not a valid dir
+         * blob, so throw an error. */
+        return EIO;
+    }
+    if (page * AFS_BUFFER_PAGESIZE >= adc->f.chunkBytes) {
+        return ENOENT; /* past the end */
+    }
 
     ObtainWriteLock(&afs_bufferLock, 256);
 
@@ -231,17 +250,6 @@ DRead(struct dcache *adc, int page, struct DirBuffer *entry)
     ObtainWriteLock(&tb->lock, 260);
     tb->lockers++;
     ReleaseWriteLock(&afs_bufferLock);
-    code = 0;
-    if (adc->f.chunk == 0 && adc->f.chunkBytes == 0) {
-        /* The directory blob is empty, apparently. This is not a valid dir
-         * blob, so throw an error. */
-        code = EIO;
-	goto error;
-    } else if (page * AFS_BUFFER_PAGESIZE >= adc->f.chunkBytes) {
-        code = ENOENT; /* past the end */
-	goto error;
-    }
-
     tfile = afs_CFileOpen(&adc->f.inode);
     if (!tfile) {
 	code = EIO;
