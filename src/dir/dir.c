@@ -326,10 +326,17 @@ FreeBlobs(dir_file_t dir, int firstblob, int nblobs)
     DRelease(&pagehdbuf, 1);
 }
 
-/*
+/*!
  * Format an empty directory properly.  Note that the first 13 entries in a
  * directory header page are allocated, 1 to the page header, 4 to the
  * allocation map and 8 to the hash table.
+ *
+ * \param dir	    pointer to the directory object
+ * \param me	    fid (vnode+uniq) for new dir
+ * \param parent    fid (vnode+uniq) for parent dir
+ *
+ * \retval 0	    success
+ * \retval nonzero  error code
  */
 int
 afs_dir_MakeDir(dir_file_t dir, afs_int32 * me, afs_int32 * parent)
@@ -337,6 +344,7 @@ afs_dir_MakeDir(dir_file_t dir, afs_int32 * me, afs_int32 * parent)
     int i;
     struct DirBuffer buffer;
     struct DirHeader *dhp;
+    int code;
 
     DNew(dir, 0, &buffer);
     dhp = (struct DirHeader *)buffer.data;
@@ -354,8 +362,12 @@ afs_dir_MakeDir(dir_file_t dir, afs_int32 * me, afs_int32 * parent)
     for (i = 0; i < NHASHENT; i++)
 	dhp->hashTable[i] = 0;
     DRelease(&buffer, 1);
-    afs_dir_Create(dir, ".", me);
-    afs_dir_Create(dir, "..", parent);	/* Virtue is its own .. */
+    code = afs_dir_Create(dir, ".", me);
+    if (code)
+	return code;
+    code = afs_dir_Create(dir, "..", parent);
+    if (code)
+	return code;
     return 0;
 }
 
