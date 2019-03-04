@@ -186,7 +186,6 @@ AC_CONFIG_FILES([
     src/vlserver/Makefile
     src/tvlserver/Makefile
     src/vol/Makefile
-    src/vol/test/Makefile
     src/volser/Makefile
     src/xstat/Makefile
     src/helper-splint.sh

@@ -933,7 +933,6 @@ distclean: clean
 	src/vlserver/Makefile \
 	src/tvlserver/Makefile \
 	src/vol/Makefile \
-	src/vol/test/Makefile \
 	src/volser/Makefile \
 	src/xstat/Makefile  \
 	tests/Makefile \
