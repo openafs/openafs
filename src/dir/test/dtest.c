@@ -158,7 +158,7 @@ CRTest(char *dname, char *ename, int count)
 	}
 	if (code) {
 	    printf("code for '%s' is %d\n", tbuffer, code);
-	    return;
+	    break;
 	}
     }
     DFlush();
