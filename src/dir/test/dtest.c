@@ -46,7 +46,7 @@ static void
 LookupDir(char *dname, char *ename)
 {
     dirhandle dir;
-    long fid[3];
+    afs_int32 fid[3];
     int code;
 
     OpenDir(dname, &dir);
@@ -54,7 +54,7 @@ LookupDir(char *dname, char *ename)
     if (code)
 	printf("lookup code %d\n", code);
     else {
-	printf("Found fid %ld.%ld for file '%s'\n", fid[1], fid[2], ename);
+	printf("Found fid %d.%d for file '%s'\n", fid[1], fid[2], ename);
     }
     DFlush();
 }
@@ -63,7 +63,7 @@ static void
 AddEntry(char *dname, char *ename)
 {
     dirhandle dir;
-    long fid[3];
+    afs_int32 fid[3];
     int code;
 
     fid[1] = fidCounter++;
@@ -221,7 +221,7 @@ FidZap(dirhandle *dir)
 }
 
 void
-FidZero(long *afid)
+FidZero(afs_int32 *afid)
 {
     *afid = 0;
 }
@@ -233,7 +233,7 @@ FidEq(dirhandle *dir1, dirhandle *dir2)
 }
 
 int
-FidVolEq(long *afid, long *bfid)
+FidVolEq(afs_int32 *afid, afs_int32 *bfid)
 {
     return 1;
 }
