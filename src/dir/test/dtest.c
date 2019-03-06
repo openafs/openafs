@@ -14,6 +14,7 @@
 #include <roken.h>
 
 #include <afs/dir.h>
+#include <afs/opr.h>
 
 long fidCounter = 0;
 
@@ -244,9 +245,10 @@ FidCpy(dirhandle *todir, dirhandle *fromdir)
 }
 
 void
-Die(char *msg)
+Die(const char *msg)
 {
     printf("Something died with this message:  %s\n", msg);
+    opr_abort();
 }
 
 void

@@ -12,7 +12,8 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 all: \
 	${TOP_LIBDIR}/libdir.a \
-	depinstall
+	depinstall \
+	test
 
 depinstall: \
 	${TOP_INCDIR}/afs/dir.h
@@ -29,7 +30,7 @@ libdir.a: buffer.o dir.o salvage.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 .PHONY: test
-test:
+test: ${TOP_LIBDIR}/libdir.a
 	cd test && $(MAKE)
 
 buffer.o: buffer.c dir.h
