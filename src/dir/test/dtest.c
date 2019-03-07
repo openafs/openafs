@@ -146,7 +146,11 @@ CRTest(char *dname, char *ename, int count)
 
     CreateDir(dname, &dir);
     memset(fid, 0, sizeof(fid));
-    afs_dir_MakeDir(&dir, fid, fid);
+    code = afs_dir_MakeDir(&dir, fid, fid);
+    if (code) {
+	printf("code for MakeDir '%s' is %d\n", dname, code);
+	goto done;
+    }
     for (i = 0; i < count; i++) {
 	sprintf(tbuffer, "%s%d", ename, i);
 	fid[1] = fidCounter++;
@@ -157,10 +161,11 @@ CRTest(char *dname, char *ename, int count)
 	    fflush(stdout);
 	}
 	if (code) {
-	    printf("code for '%s' is %d\n", tbuffer, code);
+	    printf("code for Create '%s' is %d\n", tbuffer, code);
 	    break;
 	}
     }
+ done:
     DFlush();
 }
 
