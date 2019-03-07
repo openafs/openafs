@@ -2851,6 +2851,9 @@ p = (char *)
 void
 rxi_Free(void *addr, size_t size)
 {
+    if (!addr) {
+        return;
+    }
     if (rx_stats_active) {
 	rx_atomic_sub(&rxi_Allocsize, (int) size);
         rx_atomic_dec(&rxi_Alloccnt);
