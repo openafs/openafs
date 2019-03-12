@@ -98,7 +98,9 @@ pack_token(RXGK_Token *token, struct rx_opaque *out)
     ret = 0;
 
  done:
-    xdr_destroy(&xdrs);
+    if (xdrs.x_ops) {
+        xdr_destroy(&xdrs);
+    }
     return ret;
 }
 
@@ -138,7 +140,9 @@ pack_container(RXGK_TokenContainer *container, struct rx_opaque *out)
     ret = 0;
 
  done:
-    xdr_destroy(&xdrs);
+    if (xdrs.x_ops) {
+        xdr_destroy(&xdrs);
+    }
     return ret;
 }
 
