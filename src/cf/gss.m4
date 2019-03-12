@@ -16,10 +16,10 @@ dnl Determine if we should build rxgk
   BUILD_RXGK=no
   AS_IF([test x"$BUILD_GSSAPI" = xyes],
     [BUILD_RXGK=yes
-dnl At this point, rxgk only needs gssapi in general, and gss_pseudo_random()
+dnl At this point, we're not using any GSS-API bits yet, but we'll need
+dnl gss_pseudo_random() in the future
      AS_IF([test x"$ac_cv_func_gss_pseudo_random" != xyes],
-       [BUILD_RXGK=no
-        AC_MSG_NOTICE([disabling rxgk due to unusable GSS-API library])])])
+       [AC_MSG_NOTICE([GSS-API does not have gss_pseudo_random, this may break in the future])])])
   AC_SUBST([BUILD_RXGK])
   AS_IF([test x"$BUILD_RXGK" = xyes],
         [AC_DEFINE([BUILD_RXGK], [1], [Build rxgk])])
