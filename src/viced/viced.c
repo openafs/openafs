@@ -2045,8 +2045,12 @@ main(int argc, char *argv[])
 	exit(-1);
     }
     if (rxkadDisableDotCheck) {
-        rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
-                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
+	code = rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
+					   (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
+	if (code) {
+	    ViceLog(0, ("Failed to allow dotted principals: code %d\n", code));
+	    exit(-1);
+	}
     }
     rx_SetMinProcs(tservice, 3);
     rx_SetMaxProcs(tservice, lwps);

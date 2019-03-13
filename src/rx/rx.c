@@ -152,7 +152,7 @@ static void rxi_ScheduleNatKeepAliveEvent(struct rx_connection *conn);
 static void rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs);
 static void rxi_KeepAliveOn(struct rx_call *call);
 static void rxi_GrowMTUOn(struct rx_call *call);
-static void rxi_ChallengeOn(struct rx_connection *conn);
+static int rxi_ChallengeOn(struct rx_connection *conn);
 static int rxi_CheckCall(struct rx_call *call, int haveCTLock);
 static void rxi_AckAllInTransmitQueue(struct rx_call *call);
 static void rxi_CancelKeepAliveEvent(struct rx_call *call);
@@ -1042,6 +1042,7 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
 {
     int hashindex, i;
     struct rx_connection *conn;
+    int code;
 
     SPLVAR;
 
@@ -1085,7 +1086,7 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
 	conn->lastBusy[i] = 0;
     }
 
-    RXS_NewConnection(securityObject, conn);
+    code = RXS_NewConnection(securityObject, conn);
     hashindex =
 	CONN_HASH(shost, sport, conn->cid, conn->epoch, RX_CLIENT_CONNECTION);
 
@@ -1096,6 +1097,9 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
 	rx_atomic_inc(&rx_stats.nClientConns);
     MUTEX_EXIT(&rx_connHashTable_lock);
     USERPRI;
+    if (code) {
+	rxi_ConnectionError(conn, code);
+    }
     return conn;
 }
 
@@ -1833,10 +1837,14 @@ rx_SetSecurityConfiguration(struct rx_service *service,
 			    void *value)
 {
     int i;
+    int code;
     for (i = 0; i<service->nSecurityObjects; i++) {
 	if (service->securityObjects[i]) {
-	    RXS_SetConfiguration(service->securityObjects[i], NULL, type,
-				 value, NULL);
+	    code = RXS_SetConfiguration(service->securityObjects[i], NULL, type,
+					value, NULL);
+	    if (code) {
+		return code;
+	    }
 	}
     }
     return 0;
@@ -3106,6 +3114,7 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
                    int *unknownService)
 {
     int hashindex, flag, i;
+    int code = 0;
     struct rx_connection *conn;
     *unknownService = 0;
     hashindex = CONN_HASH(host, port, cid, epoch, type);
@@ -3180,7 +3189,7 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
 	    conn->rwind[i] = rx_initReceiveWindow;
 	}
 	/* Notify security object of the new connection */
-	RXS_NewConnection(conn->securityObject, conn);
+	code = RXS_NewConnection(conn->securityObject, conn);
 	/* XXXX Connection timeout? */
 	if (service->newConnProc)
 	    (*service->newConnProc) (conn);
@@ -3192,6 +3201,9 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
 
     rxLastConn = conn;		/* store this connection as the last conn used */
     MUTEX_EXIT(&rx_connHashTable_lock);
+    if (code) {
+	rxi_ConnectionError(conn, code);
+    }
     return conn;
 }
 
@@ -3830,7 +3842,7 @@ rxi_CheckConnReach(struct rx_connection *conn, struct rx_call *call)
 static void
 TryAttach(struct rx_call *acall, osi_socket socket,
 	  int *tnop, struct rx_call **newcallp,
-	  int reachOverride)
+	  int reachOverride, int istack)
 {
     struct rx_connection *conn = acall->conn;
 
@@ -3844,7 +3856,19 @@ TryAttach(struct rx_call *acall, osi_socket socket,
 	     * may not any proc available
 	     */
 	} else {
-	    rxi_ChallengeOn(acall->conn);
+	    int code;
+	    code = rxi_ChallengeOn(acall->conn);
+	    if (code) {
+		/*
+		 * Ideally we would rxi_ConnectionError here, but doing that is
+		 * difficult, because some callers may have locked 'call',
+		 * _and_ another call on the same conn. So we cannot
+		 * rxi_ConnectionError, since that needs to lock every call on
+		 * the conn. But we can at least abort the call we have.
+		 */
+		rxi_CallError(acall, code);
+		rxi_SendCallAbort(acall, NULL, istack, 0);
+	    }
 	}
     }
 }
@@ -4004,7 +4028,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	     * server thread is available, this thread becomes a server
 	     * thread and the server thread becomes a listener thread. */
 	    if (isFirst) {
-		TryAttach(call, socket, tnop, newcallp, 0);
+		TryAttach(call, socket, tnop, newcallp, 0, istack);
 	    }
 	}
 	/* This is not the expected next packet. */
@@ -4185,7 +4209,8 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 }
 
 static void
-rxi_UpdatePeerReach(struct rx_connection *conn, struct rx_call *acall)
+rxi_UpdatePeerReach(struct rx_connection *conn, struct rx_call *acall,
+		    int istack)
 {
     struct rx_peer *peer = conn->peer;
 
@@ -4206,7 +4231,7 @@ rxi_UpdatePeerReach(struct rx_connection *conn, struct rx_call *acall)
 		if (call != acall)
 		    MUTEX_ENTER(&call->lock);
 		/* tnop can be null if newcallp is null */
-		TryAttach(call, (osi_socket) - 1, NULL, NULL, 1);
+		TryAttach(call, (osi_socket) - 1, NULL, NULL, 1, istack);
 		if (call != acall)
 		    MUTEX_EXIT(&call->lock);
 	    }
@@ -4332,7 +4357,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     }
 
     if (ap->reason == RX_ACK_PING_RESPONSE)
-	rxi_UpdatePeerReach(conn, call);
+	rxi_UpdatePeerReach(conn, call, istack);
 
     if (conn->lastPacketSizeSeq) {
 	MUTEX_ENTER(&conn->conn_data_lock);
@@ -4877,7 +4902,7 @@ rxi_ReceiveResponsePacket(struct rx_connection *conn,
 	 * some calls went into attach-wait while we were waiting
 	 * for authentication..
 	 */
-	rxi_UpdatePeerReach(conn, NULL);
+	rxi_UpdatePeerReach(conn, NULL, istack);
     }
     return np;
 }
@@ -6299,6 +6324,7 @@ void
 rxi_Send(struct rx_call *call, struct rx_packet *p,
 	 int istack)
 {
+    int code;
     struct rx_connection *conn = call->conn;
 
     /* Stamp each packet with the user supplied status */
@@ -6306,7 +6332,15 @@ rxi_Send(struct rx_call *call, struct rx_packet *p,
 
     /* Allow the security object controlling this call's security to
      * make any last-minute changes to the packet */
-    RXS_SendPacket(conn->securityObject, call, p);
+    code = RXS_SendPacket(conn->securityObject, call, p);
+    if (code) {
+	MUTEX_EXIT(&call->lock);
+	CALL_HOLD(call, RX_CALL_REFCOUNT_SEND);
+	rxi_ConnectionError(conn, code);
+	CALL_RELE(call, RX_CALL_REFCOUNT_SEND);
+	MUTEX_ENTER(&call->lock);
+	return;
+    }
 
     /* Since we're about to send SOME sort of packet to the peer, it's
      * safe to nuke any scheduled end-of-packets ack */
@@ -6862,12 +6896,28 @@ rxi_ChallengeEvent(struct rxevent *event,
 
 	packet = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
 	if (packet) {
-	    /* If there's no packet available, do this later. */
-	    RXS_GetChallenge(conn->securityObject, conn, packet);
-	    rxi_SendSpecial((struct rx_call *)0, conn, packet,
-			    RX_PACKET_TYPE_CHALLENGE, NULL, -1, 0);
+	    int code;
+	    code = RXS_GetChallenge(conn->securityObject, conn, packet);
+	    if (code && event_raised) {
+		/*
+		 * We can only rxi_ConnectionError the connection if we are
+		 * running as an event. Otherwise, the caller may have our call
+		 * locked, and so we cannot call rxi_ConnectionError (since it
+		 * tries to lock each call in the conn).
+		 */
+		rxi_FreePacket(packet);
+		rxi_ConnectionError(conn, code);
+		goto done;
+	    }
+	    if (code == 0) {
+		/* Only send a challenge packet if we were able to allocate a
+		 * packet, and the security layer successfully populated the
+		 * challenge. */
+		rxi_SendSpecial((struct rx_call *)0, conn, packet,
+				RX_PACKET_TYPE_CHALLENGE, NULL, -1, 0);
+		conn->securityChallengeSent = 1;
+	    }
 	    rxi_FreePacket(packet);
-	    conn->securityChallengeSent = 1;
 	}
 	clock_GetTime(&now);
 	when = now;
@@ -6892,7 +6942,7 @@ rxi_ChallengeEvent(struct rxevent *event,
  * the call times out, or an invalid response is returned.  The
  * security object associated with the connection is asked to create
  * the challenge at this time. */
-static void
+static int
 rxi_ChallengeOn(struct rx_connection *conn)
 {
     int start = 0;
@@ -6901,9 +6951,14 @@ rxi_ChallengeOn(struct rx_connection *conn)
 	start = 1;
     MUTEX_EXIT(&conn->conn_data_lock);
     if (start) {
-	RXS_CreateChallenge(conn->securityObject, conn);
+	int code;
+	code = RXS_CreateChallenge(conn->securityObject, conn);
+	if (code) {
+	    return code;
+	}
 	rxi_ChallengeEvent(NULL, conn, 0, RX_CHALLENGE_MAXTRIES);
-    };
+    }
+    return 0;
 }
 
 

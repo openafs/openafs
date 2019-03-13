@@ -616,8 +616,14 @@ main(int argc, char **argv)
 #endif
 
     if (rxkadDisableDotCheck) {
-        rx_SetSecurityConfiguration(service, RXS_CONFIG_FLAGS,
-                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
+	code = rx_SetSecurityConfiguration(service, RXS_CONFIG_FLAGS,
+					   (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
+	if (code) {
+	    fprintf(stderr,
+		    "volser: failed to allow dotted principals: code %d\n",
+		    code);
+	    VS_EXIT(1);
+	}
     }
 
     service =

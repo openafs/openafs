@@ -1253,8 +1253,12 @@ main(int argc, char **argv, char **envp)
     rx_SetMaxProcs(tservice, 4);
     rx_SetStackSize(tservice, BOZO_LWP_STACKSIZE);	/* so gethostbyname works (in cell stuff) */
     if (rxkadDisableDotCheck) {
-        rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
-                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
+	code = rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
+					   (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
+	if (code) {
+	    bozo_Log("Failed to allow dotted principals: code %d\n", code);
+	    exit(1);
+	}
     }
 
     tservice =

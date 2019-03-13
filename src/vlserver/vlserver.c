@@ -518,8 +518,13 @@ main(int argc, char **argv)
     rx_SetMaxProcs(tservice, lwps);
 
     if (rxkadDisableDotCheck) {
-        rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
-                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
+	code = rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
+					   (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
+	if (code) {
+	    VLog(0, ("vlserver: failed to allow dotted principals: %s\n",
+		 afs_error_message(code)));
+	    exit(2);
+	}
     }
 
     tservice =
