@@ -65,8 +65,8 @@ static int rxgk_CheckResponse(struct rx_securityClass *aobj,
 			      struct rx_packet *apacket);
 static int rxgk_ServerCheckPacket(struct rx_securityClass *aobj,
 				  struct rx_call *acall, struct rx_packet *apacket);
-static int rxgk_DestroyServerConnection(struct rx_securityClass *aobj,
-					struct rx_connection *aconn);
+static void rxgk_DestroyServerConnection(struct rx_securityClass *aobj,
+					 struct rx_connection *aconn);
 static int rxgk_ServerGetStats(struct rx_securityClass *aobj,
 			       struct rx_connection *aconn,
 			       struct rx_securityObjectStats *astats);
@@ -156,11 +156,10 @@ rxgk_ServerCheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
     return RXGK_INCONSISTENCY;
 }
 
-static int
+static void
 rxgk_DestroyServerConnection(struct rx_securityClass *aobj,
 			     struct rx_connection *aconn)
 {
-    return RXGK_INCONSISTENCY;
 }
 
 static int

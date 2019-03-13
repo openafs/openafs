@@ -364,7 +364,7 @@ rxkad_NewConnection(struct rx_securityClass *aobj,
 
 /* either: called to destroy a connection. */
 
-int
+void
 rxkad_DestroyConnection(struct rx_securityClass *aobj,
 			struct rx_connection *aconn)
 {
@@ -391,7 +391,7 @@ rxkad_DestroyConnection(struct rx_securityClass *aobj,
 	cconn = rx_GetSecurityData(aconn);
 	tcp = (struct rxkad_cprivate *)aobj->privateData;
 	if (!(tcp->type & rxkad_client))
-	    return RXKADINCONSISTENCY;
+	    return; /* something is weird; bail out */
 	if (cconn) {
 	    rx_SetSecurityData(aconn, NULL);
 	    rxi_Free(cconn, sizeof(struct rxkad_cconn));
@@ -400,12 +400,8 @@ rxkad_DestroyConnection(struct rx_securityClass *aobj,
     }
     aobj->refCount--;		/* decrement connection counter */
     if (aobj->refCount <= 0) {
-	afs_int32 code;
-	code = FreeObject(aobj);
-	if (code)
-	    return code;
+	(void)FreeObject(aobj);
     }
-    return 0;
 }
 
 /* either: decode packet */

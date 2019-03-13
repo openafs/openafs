@@ -1874,6 +1874,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 		for (tc = rx_connHashTable[i]; tc; tc = tc->next) {
 		    if ((all || rxi_IsConnInteresting(tc))
 			&& tin.index-- <= 0) {
+			int do_secstats = 0;
 			tconn.host = tc->peer->host;
 			tconn.port = tc->peer->port;
 			tconn.cid = htonl(tc->cid);
@@ -1899,8 +1900,14 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			tconn.type = tc->type;
 			tconn.securityIndex = tc->securityIndex;
 			if (tc->securityObject) {
-			    RXS_GetStats(tc->securityObject, tc,
-					 &tconn.secStats);
+			    int code;
+			    code = RXS_GetStats(tc->securityObject, tc,
+						&tconn.secStats);
+			    if (code == 0) {
+				do_secstats = 1;
+			    }
+			}
+			if (do_secstats) {
 #define DOHTONL(a) (tconn.secStats.a = htonl(tconn.secStats.a))
 #define DOHTONS(a) (tconn.secStats.a = htons(tconn.secStats.a))
 			    DOHTONL(flags);
@@ -1919,6 +1926,8 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 				 sizeof(tconn.secStats.sparel) /
 				 sizeof(afs_int32); i++)
 				DOHTONL(sparel[i]);
+			} else {
+			    memset(&tconn.secStats, 0, sizeof(tconn.secStats));
 			}
 
 			MUTEX_EXIT(&rx_connHashTable_lock);

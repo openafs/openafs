@@ -66,8 +66,8 @@ extern void rxkad_SetLevel(struct rx_connection *conn, rxkad_level level);
 extern int rxkad_Close(struct rx_securityClass *aobj);
 extern int rxkad_NewConnection(struct rx_securityClass *aobj,
 			       struct rx_connection *aconn);
-extern int rxkad_DestroyConnection(struct rx_securityClass *aobj,
-				   struct rx_connection *aconn);
+extern void rxkad_DestroyConnection(struct rx_securityClass *aobj,
+				    struct rx_connection *aconn);
 extern int rxkad_CheckPacket(struct rx_securityClass *aobj,
 			     struct rx_call *acall,
 			     struct rx_packet *apacket);

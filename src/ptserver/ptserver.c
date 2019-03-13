@@ -587,8 +587,12 @@ main(int argc, char **argv)
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, lwps);
     if (rxkadDisableDotCheck) {
-        rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
-                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
+	code = rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
+					   (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
+	if (code) {
+	    afs_com_err(whoami, code, "Failed to allow dotted principals");
+	    PT_EXIT(3);
+	}
     }
 
     tservice =

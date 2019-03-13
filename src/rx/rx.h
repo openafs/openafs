@@ -588,8 +588,8 @@ struct rx_securityClass {
 	int (*op_CheckPacket) (struct rx_securityClass * aobj,
 			       struct rx_call * acall,
 			       struct rx_packet * apacket);
-	int (*op_DestroyConnection) (struct rx_securityClass * aobj,
-				     struct rx_connection * aconn);
+	void (*op_DestroyConnection) (struct rx_securityClass * aobj,
+				      struct rx_connection * aconn);
 	int (*op_GetStats) (struct rx_securityClass * aobj,
 			    struct rx_connection * aconn,
 			    struct rx_securityObjectStats * astats);
@@ -606,6 +606,10 @@ struct rx_securityClass {
 };
 
 #define RXS_OP(obj,op,args) ((obj && (obj->ops->op_ ## op)) ? (*(obj)->ops->op_ ## op)args : 0)
+#define RXS_OP_VOID(obj,op,args) do { \
+    if (obj && (obj->ops->op_ ## op)) \
+	(*(obj)->ops->op_ ## op)args; \
+} while (0)
 
 #define RXS_Close(obj) RXS_OP(obj,Close,(obj))
 #define RXS_NewConnection(obj,conn) RXS_OP(obj,NewConnection,(obj,conn))
@@ -617,7 +621,7 @@ struct rx_securityClass {
 #define RXS_GetResponse(obj,conn,packet) RXS_OP(obj,GetResponse,(obj,conn,packet))
 #define RXS_CheckResponse(obj,conn,packet) RXS_OP(obj,CheckResponse,(obj,conn,packet))
 #define RXS_CheckPacket(obj,call,packet) RXS_OP(obj,CheckPacket,(obj,call,packet))
-#define RXS_DestroyConnection(obj,conn) RXS_OP(obj,DestroyConnection,(obj,conn))
+#define RXS_DestroyConnection(obj,conn) RXS_OP_VOID(obj,DestroyConnection,(obj,conn))
 #define RXS_GetStats(obj,conn,stats) RXS_OP(obj,GetStats,(obj,conn,stats))
 #define RXS_SetConfiguration(obj, conn, type, value, currentValue) RXS_OP(obj, SetConfiguration,(obj,conn,type,value,currentValue))
 
