@@ -2096,6 +2096,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	    opr_queue_Remove(&call->entry);
 	    MUTEX_EXIT(&rx_serverPool_lock);
 	    MUTEX_ENTER(&call->lock);
+	    CLEAR_CALL_QUEUE_LOCK(call);
 
 	    if (call->flags & RX_CALL_WAIT_PROC) {
 		call->flags &= ~RX_CALL_WAIT_PROC;
@@ -2114,7 +2115,6 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 		|| opr_queue_First(&call->rq, struct rx_packet, entry)->header.seq != 1)
 		rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
 
-	    CLEAR_CALL_QUEUE_LOCK(call);
 	    break;
 	} else {
 	    /* If there are no eligible incoming calls, add this process
@@ -5012,6 +5012,7 @@ rxi_AttachServerProc(struct rx_call *call,
 	    if (opr_queue_IsOnQueue(&call->entry)) {
 		opr_queue_Remove(&call->entry);
 	    }
+	    CLEAR_CALL_QUEUE_LOCK(call);
 	}
 	call->state = RX_STATE_ACTIVE;
 	call->app.mode = RX_MODE_RECEIVING;
