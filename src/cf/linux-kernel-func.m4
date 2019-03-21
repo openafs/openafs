@@ -42,6 +42,9 @@ AC_CHECK_LINUX_FUNC([d_make_root],
 AC_CHECK_LINUX_FUNC([do_sync_read],
                     [#include <linux/fs.h>],
                     [do_sync_read(NULL, NULL, 0, NULL);])
+AC_CHECK_LINUX_FUNC([fatal_signal_pending],
+                    [#include <linux/sched.h>],
+                    [fatal_signal_pending(NULL);])
 AC_CHECK_LINUX_FUNC([file_dentry],
                     [#include <linux/fs.h>],
                     [struct file *f; file_dentry(f);])

@@ -1141,6 +1141,17 @@ parent_vcache_dv(struct inode *inode, cred_t *credp)
     return hgetlo(pvcp->f.m.DataVersion);
 }
 
+static inline int
+filter_enoent(int code)
+{
+#ifdef HAVE_LINUX_FATAL_SIGNAL_PENDING
+    if (code == ENOENT && fatal_signal_pending(current)) {
+        return EINTR;
+    }
+#endif
+    return code;
+}
+
 #ifndef D_SPLICE_ALIAS_RACE
 
 static inline void dentry_race_lock(void) {}
@@ -1310,6 +1321,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 		credp = crref();
 	    }
 	    code = afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
+            code = filter_enoent(code);
 
 	    if (code) {
 		/* We couldn't perform the lookup, so we're not okay. */
@@ -1601,6 +1613,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     AFS_GLOCK();
 
     code = afs_lookup(VTOAFS(dip), (char *)comp, &vcp, credp);
+    code = filter_enoent(code);
     if (code == ENOENT) {
         /* It's ok for the file to not be found. That's noted by the caller by
          * seeing that the dp->d_inode field is NULL (set by d_splice_alias or
