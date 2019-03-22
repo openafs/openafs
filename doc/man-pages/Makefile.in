@@ -33,7 +33,7 @@ INSTALL_KAUTH = @INSTALL_KAUTH@
 prep-noinstall: Makefile
 	rm -f man*/*.noinstall
 	if [ "$(INSTALL_KAUTH)" = "no" ] ; then \
-		mkdir -p man1 man5 man8; \
+		mkdir -p man1 man3 man5 man8; \
 		for M in $(KAUTH_MAN); do \
 			touch $$M.noinstall; \
 		done; \
