@@ -1388,6 +1388,11 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     int dynrootRetry = 1;
     struct afs_fakestat_state fakestate;
     int tryEvalOnly = 0;
+
+    /* Don't allow ENOENT errors, except for a specific code path where
+     * 'enoent_prohibited' is cleared below. */
+    int enoent_prohibited = 1;
+
     OSI_VC_CONVERT(adp);
 
     AFS_STATCNT(afs_lookup);
@@ -1727,8 +1732,10 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		   ICL_TYPE_INT32, code);
 
 	if (code) {
-	    if (code != ENOENT) {
-		/*printf("LOOKUP dirLookupOff -> %d\n", code);*/
+	    if (code == ENOENT) {
+		/* The target name really doesn't exist (according to
+		 * afs_dir_LookupOffset, anyway). */
+		enoent_prohibited = 0;
 	    }
 	    goto done;
 	}
@@ -1947,6 +1954,16 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	 * Alphas panic otherwise - defect 10719.
 	 */
 	*avcp = NULL;
+    }
+    if (code == ENOENT && enoent_prohibited) {
+	/*
+	 * We got an ENOENT error, but we didn't get it while looking up the
+	 * dir entry in the relevant dir blob. That means we likely hit some
+	 * other internal error; don't allow us to return ENOENT in this case,
+	 * since some platforms cache ENOENT errors, and the target path name
+	 * may actually exist.
+	 */
+	code = EIO;
     }
 
     afs_PutFakeStat(&fakestate);
