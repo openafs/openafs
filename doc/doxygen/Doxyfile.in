@@ -44,7 +44,6 @@ EXCLUDE                = \
     src/JAVA \
     src/kauth \
     src/libafs \
-    src/mcas \
     src/NTObjdir \
     src/packaging \
     src/shlibafsrpc \
