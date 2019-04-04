@@ -66,7 +66,7 @@ static void ZapList(struct AclEntry *);
 static int PruneList(struct AclEntry **, int);
 static int CleanAcl(struct Acl *, char *);
 static int SetVolCmd(struct cmd_syndesc *as, void *arock);
-static int GetCellName(char *, struct afsconf_cell *);
+static int GetCellName(char *, char *, size_t);
 static void Die(int, char *);
 
 /*
@@ -2063,7 +2063,6 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 j;
     afs_int32 temp;
     char *tp;
-    struct afsconf_cell info;
     struct chservinfo checkserv;
 
     memset(&checkserv, 0, sizeof(struct chservinfo));
@@ -2086,12 +2085,12 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
 
     /* now copy in optional cell name, if specified */
     if (as->parms[0].items) {
-	code = GetCellName(as->parms[0].items->data, &info);
+	code = GetCellName(as->parms[0].items->data, &checkserv.tbuffer[0],
+			   sizeof(checkserv.tbuffer));
 	if (code) {
 	    return 1;
 	}
-	strcpy(checkserv.tbuffer, info.name);
-	checkserv.tsize = strlen(info.name) + 1;
+	checkserv.tsize = strlen(checkserv.tbuffer) + 1;
     } else {
 	strcpy(checkserv.tbuffer, "\0");
 	checkserv.tsize = 0;
@@ -2957,7 +2956,7 @@ GetCellCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
-    struct afsconf_cell info;
+    char cellName[MAXCELLCHARS];
     struct cmd_item *ti;
     struct a {
 	afs_int32 stat;
@@ -2970,24 +2969,24 @@ GetCellCmd(struct cmd_syndesc *as, void *arock)
 	/* once per cell */
 	blob.out_size = sizeof(args);
 	blob.out = (caddr_t) & args;
-	code = GetCellName(ti->data, &info);
+	code = GetCellName(ti->data, &cellName[0], sizeof(cellName));
 	if (code) {
 	    error = 1;
 	    continue;
 	}
-	blob.in_size = 1 + strlen(info.name);
-	blob.in = info.name;
+	blob.in_size = 1 + strlen(cellName);
+	blob.in = cellName;
 	code = pioctl(0, VIOC_GETCELLSTATUS, &blob, 1);
 	if (code) {
 	    if (errno == ENOENT)
 		fprintf(stderr, "%s: the cell named '%s' does not exist\n",
-			pn, info.name);
+			pn, cellName);
 	    else
-		Die(errno, info.name);
+		Die(errno, cellName);
 	    error = 1;
 	    continue;
 	}
-	printf("Cell %s status: ", info.name);
+	printf("Cell %s status: ", cellName);
 	if (args.stat & 2)
 	    printf("no setuid allowed");
 	else
@@ -3004,7 +3003,6 @@ SetCellCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
-    struct afsconf_cell info;
     struct cmd_item *ti;
     struct a {
 	afs_int32 stat;
@@ -3029,19 +3027,18 @@ SetCellCmd(struct cmd_syndesc *as, void *arock)
     /* set stat for all listed cells */
     for (ti = as->parms[0].items; ti; ti = ti->next) {
 	/* once per cell */
-	code = GetCellName(ti->data, &info);
+	code = GetCellName(ti->data, &args.cname[0], sizeof(args.cname));
 	if (code) {
 	    error = 1;
 	    continue;
 	}
-	strcpy(args.cname, info.name);
 	blob.in_size = sizeof(args);
 	blob.in = (caddr_t) & args;
 	blob.out_size = 0;
 	blob.out = (caddr_t) 0;
 	code = pioctl(0, VIOC_SETCELLSTATUS, &blob, 1);
 	if (code) {
-	    Die(errno, info.name);	/* XXX added cell name to Die() call */
+	    Die(errno, args.cname);	/* XXX added cell name to Die() call */
 	    error = 1;
 	}
     }
@@ -3049,7 +3046,7 @@ SetCellCmd(struct cmd_syndesc *as, void *arock)
 }
 
 static int
-GetCellName(char *cellName, struct afsconf_cell *info)
+GetCellName(char *cellName, char *buf, size_t buf_size)
 {
     struct afsconf_dir *tdir;
     int code;
@@ -3062,7 +3059,7 @@ GetCellName(char *cellName, struct afsconf_cell *info)
 	return -1;
     }
 
-    code = afsconf_GetCellInfo(tdir, cellName, AFSCONF_VLDBSERVICE, info);
+    code = afsconf_GetCellName(tdir, cellName, buf, buf_size);
     if (code) {
 	fprintf(stderr, "%s: cell %s not in %s\n", pn, cellName,
 		AFSDIR_CLIENT_CELLSERVDB_FILEPATH);

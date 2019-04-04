@@ -123,6 +123,8 @@ extern int afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 extern int afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName,
 			       char *aservice,
 			       struct afsconf_cell *acellInfo);
+extern int afsconf_GetCellName(struct afsconf_dir *adir, char *acellName,
+			       char *buf, size_t buf_size);
 extern int afsconf_GetLocalCell(struct afsconf_dir *adir,
 				char *aname, afs_int32 alen);
 extern int afsconf_Close(struct afsconf_dir *adir);

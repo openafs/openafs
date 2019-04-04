@@ -1325,9 +1325,14 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 }
 #endif /* windows */
 
-int
-afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
-		    struct afsconf_cell *acellInfo)
+/* flags for _GetCellInfo */
+#define AFSCONF_GETCELL_EMPTYOK (0x1) /** it's okay to return 'empty' cells
+					* (that is, cells without any
+					* dbservers) */
+
+static int
+_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
+	     struct afsconf_cell *acellInfo, afs_uint32 flags)
 {
     struct afsconf_entry *tce;
     struct afsconf_aliasentry *tcae;
@@ -1338,6 +1343,11 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
     int cnLen;
     int ambig;
     char tbuffer[64];
+    int emptyok = 0;
+
+    if ((flags & AFSCONF_GETCELL_EMPTYOK)) {
+	emptyok = 1;
+    }
 
     LOCK_GLOBAL_MUTEX;
     if (adir)
@@ -1387,7 +1397,7 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
 	    bestce = tce;
 	}
     }
-    if (!ambig && bestce && bestce->cellInfo.numServers) {
+    if (!ambig && bestce && (bestce->cellInfo.numServers || emptyok)) {
 	*acellInfo = bestce->cellInfo;	/* structure assignment */
 	if (aservice) {
 	    tservice = afsconf_FindService(aservice);
@@ -1459,7 +1469,9 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
                 strcpy(acellInfo->hostName[i], hostName[i]);
             }
             acellInfo->numServers = numServers;
-            acellInfo->flags |= AFSCONF_CELL_FLAG_DNS_QUERIED;
+	    if (numServers) {
+		acellInfo->flags |= AFSCONF_CELL_FLAG_DNS_QUERIED;
+	    }
         }
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;
@@ -1467,6 +1479,63 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
 	UNLOCK_GLOBAL_MUTEX;
 	return afsconf_GetAfsdbInfo(tcell, aservice, acellInfo);
     }
+}
+
+/**
+ * Get info about a cell.
+ *
+ * @param[in] adir	afsconf object.
+ * @param[in] acellName	name of the cell to get. a cell name abbreviation can
+ *			be given if it's unambiguous (e.g. "cell" can be given
+ *			for "cell.example.com" if no other cells begin with
+ *			"cell").
+ * @param[in] aservice	name of the service in the cell, as accepted by
+ *			afsconf_FindService. if NULL is given: for local
+ *			lookups, no port information will be returned; for DNS
+ *			lookups, we'll default to "afs3-vlserver".
+ * @param[out] acellInfo    info for the requested cell and service
+ *
+ * @return afsconf error codes
+ */
+int
+afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
+		    struct afsconf_cell *acellInfo)
+{
+    return _GetCellInfo(adir, acellName, aservice, acellInfo, 0);
+}
+
+/**
+ * Get a cell's name.
+ *
+ * This is similar to afsconf_GetCellInfo, but doesn't actually retrieve the
+ * info of the specified cell (beyond it's name). This can be useful to verify
+ * that a cell name is valid, or to canonicalize a possibly-abbreviated cell
+ * name. Unlike afsconf_GetCellInfo, this call can avoid DNS lookups if the
+ * cell name is specified in the local config, but the cell's servers are not.
+ *
+ * @param[in] adir	afsconf object.
+ * @param[in] acellName	name of the cell to get. a cell name abbreviation can
+ *			be given if it's unambiguous (see afsconf_GetCellInfo).
+ * @param[out] buf	on success, the cell's name is written to this buffer.
+ * @param[in] buf_size	size of 'buf'.
+ *
+ * @return afsconf error codes
+ * @retval AFSCONF_FAILURE  buf_size is too small to fit the cell's name.
+ */
+int
+afsconf_GetCellName(struct afsconf_dir *adir, char *acellName, char *buf,
+		    size_t buf_size)
+{
+    int code;
+    struct afsconf_cell info;
+    code = _GetCellInfo(adir, acellName, NULL, &info, AFSCONF_GETCELL_EMPTYOK);
+    if (code) {
+	return code;
+    }
+    if (strlcpy(buf, info.name, buf_size) >= buf_size) {
+	return AFSCONF_FAILURE;
+    }
+    return 0;
 }
 
 /**

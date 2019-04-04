@@ -13,6 +13,7 @@ afsconf_DeleteKey
 afsconf_GetAfsdbInfo
 afsconf_GetAllKeys
 afsconf_GetCellInfo
+afsconf_GetCellName
 afsconf_GetExtendedCellInfo
 afsconf_GetKey
 afsconf_GetLatestKey
