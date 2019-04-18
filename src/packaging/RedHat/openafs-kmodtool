@@ -107,6 +107,9 @@ Requires(post):   ${depmod}
 Requires(postun): ${depmod}
 Release:          %{pkgrel}.%(echo ${verrel} | tr - _)
 BuildRequires:    kernel${dashvariant}-devel-%{_target_cpu} = ${verrel}
+%if 0%{?rhel} >= 8
+BuildRequires: elfutils-devel
+%endif
 %description   -n kmod-${kmod_name}${dashvariant}
 This package provides the ${kmod_name} kernel modules built for the Linux
 kernel ${kname} for the %{_target_cpu} family of processors.
