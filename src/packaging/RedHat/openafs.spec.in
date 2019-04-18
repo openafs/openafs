@@ -100,6 +100,9 @@ BuildRequires: krb5-devel
 %endif
 %if %{build_modules}
 BuildRequires: kernel-devel
+%if 0%{?rhel} >= 8
+BuildRequires: elfutils-devel
+%endif
 %endif
 
 ExclusiveArch: %{ix86} x86_64 ia64 s390 s390x sparc64 ppc ppc64 aarch64
