@@ -7,6 +7,13 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+/*-
+ * OSI Directory Name Lookup Cache
+ *
+ * Keep a local cache of lookup results to avoid needing to examine the disk
+ * cache, for frequently accessed names.
+ */
+
 #include <afsconfig.h>
 #include "afs/param.h"
 
