@@ -86,6 +86,9 @@ AC_CHECK_LINUX_FUNC([ktime_get_real_ts64],
 AC_CHECK_LINUX_FUNC([locks_lock_file_wait],
                     [#include <linux/fs.h>],
                     [locks_lock_file_wait(NULL, NULL);])
+AC_CHECK_LINUX_FUNC([override_creds],
+                    [#include <linux/cred.h>],
+                    [override_creds(0);])
 AC_CHECK_LINUX_FUNC([page_follow_link],
                     [#include <linux/fs.h>],
                     [page_follow_link(0,0);])
