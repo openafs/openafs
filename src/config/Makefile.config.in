@@ -158,7 +158,9 @@ COMPILE_ET = @COMPILE_ET_PATH@
 CONFIGTOOL = @CONFIGTOOL_PATH@
 RXGEN = @RXGEN_PATH@
 SHELL = @SHELL@
-LWPTOOL = ${TOP_SRCDIR}/config/lwptool
+
+LWPTOOL_FLAGS_V0 = --quiet
+LWPTOOL = ${TOP_SRCDIR}/config/lwptool $(LWPTOOL_FLAGS_V$(V))
 
 #
 # "Pretty" build line stuff

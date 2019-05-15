@@ -11,6 +11,7 @@ ranlib=
 mode=
 object=
 done=
+quiet=
 
 while [ -z "$done" ] && [ $# -gt 0 ] ; do
     case "$1" in
@@ -39,6 +40,10 @@ while [ -z "$done" ] && [ $# -gt 0 ] ; do
 	ranlib="$1"
 	shift
 	;;
+    --quiet)
+	shift
+	quiet="1"
+	;;
     -o)
 	shift
 	object="$1"
@@ -55,6 +60,18 @@ while [ -z "$done" ] && [ $# -gt 0 ] ; do
     esac
 done
 
+_run_cmd() {
+    if [ x"$quiet" != x1 ] ; then
+	echo "$@"
+    fi
+    if "$@" ; then
+	:
+    else
+	echo "FAILED LWPTOOL COMMAND: $@" >&2
+	exit 1
+    fi
+}
+
 case "$mode" in
 compile)
     if [ -z "$object" ] || [ -z "$lwpcc" ] || \
@@ -69,10 +86,8 @@ compile)
     lwpobj=".lwp/$lwpobj"
 
     mkdir .lwp 2>/dev/null
-    echo $lwpcc -o $lwpobj "$@"
-    $lwpcc -o $lwpobj "$@" || exit 1
-    echo $mtcc -o $object "$@"
-    $mtcc -o $object "$@" || exit 1
+    _run_cmd $lwpcc -o $lwpobj "$@"
+    _run_cmd $mtcc -o $object "$@"
     ;;
 link)
     if [ -z "$object" ] || [ -z "$linker" ] || \
@@ -95,9 +110,7 @@ link)
     done
 
     rm -f $object 2>/dev/null
-    echo $linker $object $objects
-    $linker $object $objects
-    echo $ranlib $object
-    $ranlib $object
+    _run_cmd $linker $object $objects
+    _run_cmd $ranlib $object
     ;;
 esac
