@@ -30,6 +30,5 @@
 /* Machine / Operating system information */
 #define SYS_NAME	"ppc64le_linux26"
 #define SYS_NAME_ID	SYS_NAME_ID_ppc64le_linux26
-#define AFS_SYSCALL	137
 
 #endif /* AFS_PARAM_H */
