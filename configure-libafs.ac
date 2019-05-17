@@ -4,7 +4,7 @@ AC_CONFIG_AUX_DIR([build-tools])
 AC_CONFIG_SRCDIR([src/libafs/Makefile.common.in])
 
 AC_CONFIG_HEADER([src/config/afsconfig.h])
-MACOS_VERSION=1.8.3
+MACOS_VERSION=1.8.4fc1
 
 AC_SUBST([MACOS_VERSION])
 
