@@ -219,6 +219,9 @@ else
                 powerpc64-*-linux*)
                         AFS_SYSNAME="ppc64_linuxXX"
                         ;;
+                powerpc64le-*-linux*)
+                        AFS_SYSNAME="ppc64le_linuxXX"
+                        ;;
                 alpha*-linux*)
                         AFS_SYSNAME="alpha_linux_XX"
                         ;;
