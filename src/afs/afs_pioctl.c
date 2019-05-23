@@ -2274,6 +2274,9 @@ getNthCell(afs_int32 uid, afs_int32 iterator) {
     int i;
     struct unixuser *tu = NULL;
 
+    if (iterator > afs_cellindex)
+	return NULL;		/* no point in looking */
+
     i = UHash(uid);
     ObtainReadLock(&afs_xuser);
     for (tu = afs_users[i]; tu; tu = tu->next) {
