@@ -5442,6 +5442,26 @@ out:
     return code;
 }
 
+/*!
+ * VIOC_GETTOK2 (7) - Return a user's nth token, or token for a cell by
+ *			name.
+ *
+ * \ingroup pioctl
+ *
+ * \param[in] ain	EITHER	a string cellname
+ *			OR	an integer 'iterator' to specify the nth
+ *				token.
+ *
+ * \param[out] aout	XDR-encoded tokens from the user's tokenJar
+ *
+ * \retval EINVAL	invalid input (bad integer, or invalid string)
+ *			unable to extract token(s)
+ * \retval ENOMEM	insufficient memory (returned from called routines)
+ * \retval EDOM		(integer) request was out of bounds or the user has no tokens
+ * \retval ENOTCONN	user found but has no valid token(s)
+ * \retval E2BIG	token(s) do not fit in the output buffer
+ *
+ */
 DECL_PIOCTL(PGetTokens2)
 {
     struct cell *cell = NULL;
@@ -5450,6 +5470,7 @@ DECL_PIOCTL(PGetTokens2)
     char *cellName = NULL;
     afs_int32 cellNum;
     int code = 0;
+    int integer_in = 1;		/* assume integer input */
     time_t now;
     XDR xdrs;
     struct ktc_setTokenData tokenSet;
@@ -5461,11 +5482,23 @@ DECL_PIOCTL(PGetTokens2)
     memset(&tokenSet, 0, sizeof(tokenSet));
 
     /* No input data - return tokens for primary cell */
-    /* 4 octets of data is an iterator count */
+    /* 4 octets of data is PROBABLY an iterator count */
     /* Otherwise, treat as string & return tokens for that cell name */
 
     if (afs_pd_remaining(ain) == sizeof(afs_int32)) {
-	/* Integer iterator - return tokens for the n'th cell found for user */
+	char *scratch = afs_pd_where(ain);
+
+	if (scratch[3] == '\0' && strlen(scratch) == 3)
+	    integer_in = 0;
+    } else {
+	integer_in = 0;
+    }
+
+    if (integer_in) {
+	/* The misleadingly-named getNthCell actually return the nth valid
+	 * token found for the specified user; there can never be a gap
+	 * in the ordinals at this level.
+	 */
 	if (afs_pd_getInt(ain, &iterator) != 0)
 	    return EINVAL;
 	tu = getNthCell(areq->uid, iterator);
