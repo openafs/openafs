@@ -794,6 +794,9 @@ ktc_ListTokensEx(int prevIndex, int *newIndex, char **cellName) {
 
 	code = PIOCTL(0, VIOC_GETTOK2, &iob, 0);
 
+	if (code == -1 && errno == EDOM)
+	    return KTC_NOENT;	/* no more tokens to be found */
+
 	/* Can't use new pioctl, so must use old one */
 	if (code == -1 && errno == EINVAL) {
 	    struct ktc_principal server;
