@@ -461,7 +461,6 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
     osi_audit_init();
-    osi_audit(VS_StartEvent, 0, AUD_END);
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
@@ -480,9 +479,12 @@ main(int argc, char **argv)
     }
 
     if (auditFileName) {
-	osi_audit_file(auditFileName);
-	osi_audit(VS_StartEvent, 0, AUD_END);
+	if (osi_audit_file(auditFileName)) {
+	    fprintf(stderr, "error from opening auditlog %s\n", auditFileName);
+	    exit(1);
+	}
     }
+    osi_audit(VS_StartEvent, 0, AUD_END);
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
 	printf
