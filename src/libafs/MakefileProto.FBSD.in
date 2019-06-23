@@ -97,7 +97,10 @@ INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
 DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
-install_libafs:	$(LIBAFSNONFS) install
+$(DESTDIR)$(KMODDIR)/:
+	$(INSTALL) -d $@
+
+install_libafs:	$(LIBAFSNONFS) $(DESTDIR)$(KMODDIR)/ install
 
 dest_libafs: $(LIBAFSNONFS)
 	${INSTALL} -d ${DEST}/root.client/bin
