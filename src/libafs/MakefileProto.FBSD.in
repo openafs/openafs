@@ -41,10 +41,15 @@ AFS_OS_NONFSOBJS = \
 KSRC = @BSD_KERNEL_PATH@
 KBLD = @BSD_KERNEL_BUILD@
 
+LIBAFS_REQ_DIRS = $(DESTDIR)$(KMODDIR)/
+
 # keep symbols if --enable-debug-kernel
 AC_DEBUG_FLAGS = @DEBUG_FLAGS@
 .if !empty(AC_DEBUG_FLAGS)
 DEBUG_FLAGS=	${AC_DEBUG_FLAGS}
+
+# For debug builds, we also need /usr/lib/debug/* dirs to exist
+LIBAFS_REQ_DIRS += ${DESTDIR}${KERN_DEBUGDIR}${KMODDIR}/
 .endif
 
 # We are not doing very well (WARNS=2 brings in printf format type checking)
@@ -55,6 +60,7 @@ CWARNFLAGS+= -Wno-redundant-decls
 # setup for bsd.kmod.mk infrastructure
 .PATH:	${TOP_SRCDIR}/afs/FBSD
 KMODDIR=/boot/modules
+KERN_DEBUGDIR=/usr/lib/debug
 KMOD=	libafs
 SYSDIR= ${KSRC}
 .if !empty(KBLD)
@@ -103,7 +109,10 @@ DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 $(DESTDIR)$(KMODDIR)/:
 	$(INSTALL) -d $@
 
-install_libafs:	$(LIBAFSNONFS) $(DESTDIR)$(KMODDIR)/ install
+${DESTDIR}${KERN_DEBUGDIR}${KMODDIR}/:
+	$(INSTALL) -d $@
+
+install_libafs:	$(LIBAFSNONFS) $(LIBAFS_REQ_DIRS) install
 
 dest_libafs: $(LIBAFSNONFS)
 	${INSTALL} -d ${DEST}/root.client/bin
