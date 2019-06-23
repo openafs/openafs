@@ -95,16 +95,16 @@ keyFromCommandLine(afsconf_keyType type, int kvno, int subType,
 
 #ifdef USING_HEIMDAL
 #define deref_key_length(key)			\
-	    key->keyvalue.length
+	    (key)->keyvalue.length
 
 #define deref_key_contents(key)			\
-	    key->keyvalue.data
+	    (key)->keyvalue.data
 #else
 #define deref_key_length(key)			\
-	    key->length
+	    (key)->length
 
 #define deref_key_contents(key)			\
-	    key->contents
+	    (key)->contents
 #endif
 
 static struct afsconf_typedKey *
@@ -260,8 +260,8 @@ random_key(char **argv, int type, int kvno, int subtype)
     }
 
     memset(&key, 0, sizeof(key));
-    key.len = keyblock.length;
-    key.val = keyblock.contents;
+    key.len = deref_key_length(&keyblock);
+    key.val = deref_key_contents(&keyblock);
 
     typedKey = afsconf_typedKey_new(type, kvno, subtype, &key);
 
