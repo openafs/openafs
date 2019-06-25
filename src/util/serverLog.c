@@ -575,9 +575,12 @@ OpenLogFile(const char *fileName)
     RedirectStdStreams(fileName);
 
     /* Save our name for reopening. */
-    free(ourName);
-    ourName = strdup(fileName);
-    opr_Assert(ourName != NULL);
+    if (ourName != fileName) {
+	/* Make a copy if needed */
+	free(ourName);
+	ourName = strdup(fileName);
+	opr_Assert(ourName != NULL);
+    }
 
     serverLogFD = tempfd;
 
