@@ -1,7 +1,7 @@
 [Unit]
 Description=OpenAFS Client Service
 Wants=network-online.target
-After=syslog.target network-online.target
+After=syslog.target network-online.target dkms.service
 Before=remote-fs.target
 
 [Service]
