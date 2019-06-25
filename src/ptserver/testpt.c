@@ -981,7 +981,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	code = mkdir(tmp_conf_dir, 0777);
 	if ((code < 0) && (errno != EEXIST)) {
 	    afs_com_err(whoami, errno, "can't create temporary afsconf dir: %s",
-		    cdir);
+		    tmp_conf_dir);
 	    return errno;
 	}
 
