@@ -377,7 +377,7 @@ setThreadId(char *s)
 
     /* set our 'thread-id' so that the host hold table works */
     threadId = rx_SetThreadNum();
-    afs_pthread_setname_self(s);
+    opr_threadname_set(s);
     ViceLog(0, ("Set thread id 0x%x for '%s'\n", threadId, s));
 #endif
 }
@@ -682,7 +682,7 @@ PrintCounters(void)
 static void *
 ShutdownWatchdogLWP(void *unused)
 {
-    afs_pthread_setname_self("ShutdownWatchdog");
+    opr_threadname_set("ShutdownWatchdog");
     sleep(panic_timeout);
     ViceLogThenPanic(0, ("ShutdownWatchdogLWP: Failed to shutdown and panic "
                          "within %d seconds; forcing panic\n",

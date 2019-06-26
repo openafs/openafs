@@ -19,7 +19,6 @@ afsUUID_to_string
 afs_htonuuid
 afs_inet_ntoa_r
 afs_ntohuuid
-afs_pthread_setname_self
 afs_uuid_create
 afs_uuid_equal
 afs_uuid_hash

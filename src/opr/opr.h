@@ -74,4 +74,16 @@ extern void opr_stolower(char *s) AFS_NONNULL((1));
 extern void opr_stoupper(char *s) AFS_NONNULL((1));
 extern char *opr_strcompose(char *buf, size_t len, ...) AFS_NONNULL((1));
 
+/* threadname.c */
+
+#ifdef AFS_PTHREAD_ENV
+extern void opr_threadname_set(const char *threadname);
+#else
+static_inline void
+opr_threadname_set(const char *threadname)
+{
+    /* noop */
+}
+#endif
+
 #endif

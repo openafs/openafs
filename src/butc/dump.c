@@ -12,6 +12,7 @@
 
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
@@ -1116,7 +1117,7 @@ Dumper(void *param)
     extern struct deviceSyncNode *deviceLatch;
     extern struct tapeConfig globalTapeConfig;
 
-    afs_pthread_setname_self("dumper");
+    opr_threadname_set("dumper");
     taskId = nodePtr->taskID;	/* Get task Id */
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);
@@ -2033,7 +2034,7 @@ DeleteDump(void *param)
     dumpid = ptr->dumpID;
     taskId = ptr->taskId;	/* Get task Id */
 
-    afs_pthread_setname_self("deletedump");
+    opr_threadname_set("deletedump");
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);
     clearStatus(taskId, DRIVE_WAIT);

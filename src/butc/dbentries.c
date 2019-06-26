@@ -12,6 +12,7 @@
 
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
@@ -328,7 +329,7 @@ dbWatcher(void *unused)
     afs_int32 code = 0;
     int i, c, addedDump;
 
-    afs_pthread_setname_self("dbWatcher");
+    opr_threadname_set("dbWatcher");
     dlqInit(&entries_to_flush);
     dlqInit(&savedEntries);
 
