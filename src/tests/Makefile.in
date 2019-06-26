@@ -11,7 +11,7 @@ SYS_LIBS	= ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a $
 
 AUTH_LIBS	= ${TOP_LIBDIR}/libauth.a ${SYS_LIBS}
 
-INT_LIBS	= ${TOP_LIBDIR}/libafsint.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libafscom_err.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libafsrfc3961.a
+INT_LIBS	= ${TOP_LIBDIR}/libafsint.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libafscom_err.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libafsrfc3961.a ${TOP_LIBDIR}/libopr.a $(LIB_roken) $(LIB_hcrypto)
 
 TEST_PROGRAMS = write-ro-file hello-world read-vs-mmap read-vs-mmap2	 \
 		mmap-and-read large-dir large-dir2 large-dir3 mountpoint \
