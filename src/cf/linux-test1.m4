@@ -27,8 +27,8 @@ $2
 
 MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
-    echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD &&
-    make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD 2>conftest.err &&
+    echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir $SPARSE_MAKEFLAGS modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD &&
+    make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir $SPARSE_MAKEFLAGS modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD 2>conftest.err &&
     ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then [$3]
     else
@@ -84,6 +84,28 @@ AC_DEFUN([LINUX_KBUILD_USES_EXTRA_CFLAGS], [
     ac_linux_kbuild_requires_extra_cflags=yes)
     CPPFLAGS="$save_CPPFLAGS"
     AC_MSG_RESULT($ac_linux_kbuild_requires_extra_cflags)])
+
+AC_DEFUN([LINUX_KBUILD_SPARSE_CHECKS], [
+  AC_ARG_WITH([sparse],
+              AS_HELP_STRING([--with-sparse@<:@=PATH@:>@],
+                             [Location of the 'sparse' tool]),
+              [SPARSE="$withval"],
+              [SPARSE=check])
+
+  AS_CASE([$SPARSE],
+          [check], [AC_PATH_PROG([SPARSE], [sparse], [])],
+          [yes],   [AC_PATH_PROG([SPARSE], [sparse], [])
+                    AS_IF([test "x$SPARSE" = "x"], [AC_MSG_ERROR([sparse not found])])],
+          [no],    [SPARSE=])
+
+  AS_IF([test x"$SPARSE" != x],
+        [SPARSE_MAKEFLAGS="C=2 CHECK=$SPARSE"])
+
+  AC_SUBST([SPARSE_MAKEFLAGS])
+
+  AC_ARG_VAR([SPARSE], [Path to the 'sparse' tool])
+])
+
 
 dnl AC_CHECK_LINUX_BUILD([msg], [var], [includes], [code], [define], [CFLAGS])
 AC_DEFUN([AC_CHECK_LINUX_BUILD],
