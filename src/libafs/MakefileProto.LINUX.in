@@ -296,6 +296,8 @@ SYSTEM_LIBAFS = /lib/modules/${CLIENT}/extra/${LINUX_LIBAFS_NAME}/${LINUX_LIBAFS
 INST_SYSTEM = ${DESTDIR}${SYSTEM_LIBAFS}
 DEST_SYSTEM = ${DEST}/root.client${SYSTEM_LIBAFS}
 
+SPARSE_MAKEFLAGS = @SPARSE_MAKEFLAGS@
+
 libafs:	$(LIBAFS) 
 	echo SP Build Complete
 
@@ -319,7 +321,7 @@ ${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: ${LINUX_LIBAFS_NAME}.ko
 ${LINUX_LIBAFS_NAME}.ko afspag.ko: .FORCE
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
 	( env EXTRA_CFLAGS="${EXTRA_CFLAGS}" \
-		$(MAKE) -C ${LINUX_KERNEL_BUILD} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules 2>&1 \
+		$(MAKE) -C ${LINUX_KERNEL_BUILD} M=@TOP_OBJDIR@/src/libafs/${KDIR} $(SPARSE_MAKEFLAGS) modules 2>&1 \
 		|| echo "FAILURE: make exit code $$?" ) | tee .makelog
 	@if grep -E -q '^(FAILURE|WARNING)' .makelog; then \
 		grep -q '^WARNING' .makelog && echo "Error: Undefined symbols in modules" ; \
