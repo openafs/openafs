@@ -255,7 +255,7 @@ void
 CreateGroup(int g)
 {
     afs_int32 code;
-    char name[16];
+    char name[PR_MAXNAMELEN + 1];
     afs_int32 id = 0;
     afs_int32 owner = 0;
     char *ownerName = NULL;
@@ -286,7 +286,12 @@ CreateGroup(int g)
 	break;
     }
 
-    sprintf(name, "%s:%s%d", ownerName, createPrefix, g);
+    code = snprintf(name, sizeof(name), "%s:%s%d", ownerName, createPrefix, g);
+    if (code >= sizeof(name)) {
+	fprintf(stderr, "%s: generated group name is too long: %s:%s%d\n",
+		whoami, ownerName, createPrefix, g);
+	exit(13);
+    }
     code = ubik_PR_NewEntry(pruclient, 0, name, PRGRP, owner, &id);
     if (code) {
 	if (code == PREXIST) {
