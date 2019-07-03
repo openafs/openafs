@@ -2080,7 +2080,8 @@ afs_linux_put_link(struct dentry *dentry, struct nameidata *nd)
  * If task is NULL, the page copy occurs syncronously, and the routine
  * returns with page still locked. If task is non-NULL, then page copies
  * may occur in the background, and the page will be unlocked when it is
- * ready for use.
+ * ready for use. Note that if task is non-NULL and we encounter an error
+ * before we start the background copy, we MUST unlock 'page' before we return.
  */
 static int
 afs_linux_read_cache(struct file *cachefp, struct page *page,
@@ -2144,7 +2145,9 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 
     if (!PageUptodate(cachepage)) {
 	ClearPageError(cachepage);
-        code = cachemapping->a_ops->readpage(NULL, cachepage);
+	/* Note that ->readpage always handles unlocking the given page, even
+	 * when an error is returned. */
+	code = cachemapping->a_ops->readpage(NULL, cachepage);
 	if (!code && !task) {
 	    wait_on_page_locked(cachepage);
 	}
@@ -2167,11 +2170,11 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 	}
     }
 
+ out:
     if (code && task) {
         unlock_page(page);
     }
 
-out:
     if (cachepage)
 	put_page(cachepage);
 
@@ -2711,6 +2714,8 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 	    if (!pagevec_add(&lrupv, page))
 		__pagevec_lru_add_file(&lrupv);
 
+	    /* Note that add_to_page_cache() locked 'page'.
+	     * afs_linux_read_cache() is guaranteed to handle unlocking it. */
 	    afs_linux_read_cache(cacheFp, page, tdc->f.chunk, &lrupv, task);
 	}
 	put_page(page);
