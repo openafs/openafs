@@ -1,5 +1,180 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.9.0
+
+  All platforms
+
+    Introduce the rxgk Rx security class, initially limited to server-to-server
+    traffic and local keys (gerrit topic: rxgk-phase1).
+
+    Add options to the vos and pts commands for server-to-server rxgk support.
+
+    Add support to add and delete rxgk keys with asetkey.  Add support to
+    generate random keys with asetkey, which can be useful to create certain
+    types of rxgk keys.
+
+    Raise implementation-defined anti-DoS length limits for prdb-related XDR
+    array types, which were being reached at some sites (13838).
+
+    Bring "-setpag" functionality in klog to parity with aklog (14146).
+
+    Fix potential Rx hang when an incoming call must wait (14158).
+
+    Do not leave empty directories behind in the file server vice partition
+    when running the "vos zap -force" command (12879, 12839).
+
+    Make non-verbose "vos remsite" output output more readable (14127).
+
+    Display the usage of simple commands (commands without subcommands) when run
+    only with the -help option (10983).
+
+    Replace SOURCE-MAP with a README.md (14003).
+
+    Remove unused definition of LINUX_PKGREL from configure.ac (14117).
+
+    Improve logging and diagnostic messages:
+      * Add a warning message to vos when performing an incremental volume
+        restore over an existing volume which is newer than the dump
+        volume (13251)
+      * Log the binding address and port during startup in the cache manager and
+        all of the server processes (13272)
+      * Improve volume server logging to provide better information during
+        volume restore failures (13252)
+      * Improved cache manager syslog tracing (11858)
+      * Improved database server logging to log important messages at the
+        default logging level, log information during database synchronizations,
+        and log diagnostic messages during recovery aborts (12617, 13079, 12618)
+      * Set a thread name for rx listener threads (13600)
+      * Avoid truncating authentication information in vlserver log
+        messages (13466)
+      * Log when ubik recovery aborts a running remote transaction (13862).
+
+    Fix warnings issued by static code analyzers:
+      * Fix possible undefined variable in disconnected mode (13207)
+      * Remove redundant conditionals (13158, 13157)
+      * Exit if out of memory while attempting to format command help
+        messages (13335)
+      * Fix possible undefined variable when reading old vldb formats (13755)
+
+    Assorted memory-handling fixes (13461, 12293, 13355, 13395, 13396, 13161,
+    13659, 13714, 13715, 13760, 13716, 13761).
+
+    Fix many (but not all) of the new warnings issued by recent versions of
+    gcc and clang (12987..12989, 13010, 13287, 13462..13464, 13467..13468,
+    13470..13476, 13494, 13660..13664, 13684, 13726, 13754, 14049, 14092,
+    14106).
+
+    Added unit tests for functions mapping vide partition to id (13176).
+
+    Fix issues resulting in parallel "make install" to fail (13786, 14137).
+
+    Updated libauth test program (13394).
+
+    General code cleanup; remove unused code or obsolete code, old comments,
+    or refactor for clarity
+    (12988, 13204, 13209, 13210, 13213, 13226, 13227, 13260, 13271, 13277,
+    13309, 13310, 13324, 13325, 13339, 13345, 13346, 13351, 13361, 13362, 13363,
+    13390, 13397, 13408, 13414, 13458, 13490, 13500, 13509, 13514, 13557, 13640,
+    13655, 13282, 13683).
+
+    Build system clean up and fixes
+    (12956, 12961, 12962, 12963, 12992, 12993, 12994, 13237, 13275, 13338,
+    13357, 13360, 13387, 13419, 13594, 13652).
+
+  All server platforms
+
+    Improve database server logging by logging messages when and why a server
+    is marked as down (12616).
+
+    Log a warning message when starting server processes with no encryption
+    keys available (13911).
+
+    Remove redundant lseek system calls and use positional I/O in the database
+    servers to improve performance (12271, 12272).
+
+    Fix an edge case where writes were errneously allowed on readonly
+    fileservers (13934).
+
+    Add an option to allow members of system:administrators to perform
+    write operations on otherwise readonly fileservers (13707).
+
+    Allow "vos rename" to be re-run to finish a previously interrupted
+    volume rename operation (13720).
+
+    Take volumes offline during convertROtoRW operations, since volume access
+    during the conversion can leave it in an inconsistent state (14066).
+
+    Do not overwrite the errno variable when logging certain database sendfile
+    errors (13263).
+
+    Code migration to POSIX Threads (pthreads) from LWP.
+      * Convert upserver and upclient to pthreads (12754)
+      * Convert xstat libraries and related utilities to pthreads (12745, 12746,
+        12747, 12753, 13454, 13455)
+
+  All client platforms
+
+    Attempt to detect and report some common types of cache corruption
+    (13436, 13747, 13969, 14002).
+
+    Require opt-in to use the historical/deprecated single-DES krb5
+    encryption types, which are being removed from krb5 distributions (13689).
+
+    Fix incorrect informational messages when the AFSCELL environment
+    variable is set (13371).
+
+    Fix reading entries of historic vldb formats (13465).
+
+  Linux
+
+    Be more careful about overriding the current credentials for operations
+    on cache files, preventing spurious permission errors when systems like
+    AppArmor and SELinux are in use (13751, 14098).
+
+    Avoid panics from procfs when the kernel module is loaded but afsd is
+    not running (14093).
+
+    Improve ppc64le support (13980, 14046).
+
+  MacOS
+
+    Simplify background-move return-code processing (13280).
+
+    Support macOS Catalina (13935, 13936, 13668..13671, 13928, 14062).
+
+  Solaris
+
+    Remove references to (unspported) SunOS 4 (13506).
+
+    Build system fixes for parallel make on Solaris.
+
+    Support function attributes when building with recent versions of Solaris
+    compilers.
+
+    Fix many (but not all) of the compiler warnings when building on the Solaris
+    platform.
+
+    Add autoconf support for Studio 12.6 tools (13867).
+
+  FreeBSD
+
+    General improvements to VFS compliance.
+
+    Create destination kernel module directory when installing on
+    FreeBSD (13653, 13690)).
+
+    Add param.h files and sysnames for FreeBSD 11.2 (13534) and 11.3 (13792).
+
+    Fix fcntl-style locks by adapting to quirky historical behavior (12579).
+
+    Support kernels that use VIMAGE support at runtime, not just at
+    build-time (12580).
+
+    Change LWP stack strategy to avoid SIGBUS errors (13691).
+
+    Skip SIGBUS test (for reasons unrelated to the previous) (14145).
+
+
 OpenAFS 1.8.5
 
 All platforms
@@ -747,6 +922,7 @@ OpenAFS 1.8.0
     * Add the uidpag and localuid runtime options to the aklog LAM plugin.
       (These runtime options override the use of UID-based PAGs, which were
       introduced to appease the CDE screensaver.)
+
 
 OpenAFS 1.6.21
 
