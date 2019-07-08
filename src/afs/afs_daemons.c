@@ -598,6 +598,26 @@ BPartialStore(struct brequest *ab)
     afs_DestroyReq(treq);
 }
 
+static void
+BInvalidateSegments(struct brequest *ab)
+{
+    int code;
+    struct vcache *tvc = ab->vc;
+    osi_Assert(WriteLocked(&tvc->lock));
+
+    code = afs_InvalidateAllSegments_once(tvc);
+
+    /* Set return code, and wakeup anyone waiting. */
+    if ((ab->flags & BUVALID) == 0) {
+	ab->code_raw = ab->code_checkcode = code;
+	ab->flags |= BUVALID;
+	if ((ab->flags & BUWAIT)) {
+	    ab->flags &= ~BUWAIT;
+	    afs_osi_Wakeup(ab);
+	}
+    }
+}
+
 /* release a held request buffer */
 void
 afs_BRelease(struct brequest *ab)
@@ -1095,6 +1115,8 @@ afs_BackgroundDaemon(void)
 #endif
 	    else if (tb->opcode == BOP_PARTIAL_STORE)
 		BPartialStore(tb);
+	    else if (tb->opcode == BOP_INVALIDATE_SEGMENTS)
+		BInvalidateSegments(tb);
 	    else
 		panic("background bop");
 	    brequest_release(tb);

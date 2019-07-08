@@ -148,6 +148,7 @@ struct sysname_info {
 #define	BOP_MOVE	5	 /* ptr1 afs_uspc_param ptr2 sname ptr3 dname */
 #endif
 #define BOP_PARTIAL_STORE 6     /* parm1 is chunk to store */
+#define BOP_INVALIDATE_SEGMENTS 7 /* no parms: just uses the 'bp->vc' vcache */
 
 #define	B_DONTWAIT	1	/* On failure return; don't wait */
 
