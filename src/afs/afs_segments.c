@@ -496,28 +496,13 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 
 }				/*afs_StoreAllSegments (new 03/02/94) */
 
-
-/*
- * afs_InvalidateAllSegments
- *
- * Description:
- *	Invalidates all chunks for a given file
- *
- * Parameters:
- *	avc      : Pointer to vcache entry.
- *
- * Environment:
- *	For example, called after an error has been detected.  Called
- *	with avc write-locked, and afs_xdcache unheld.
- */
-
 int
-afs_InvalidateAllSegments(struct vcache *avc)
+afs_InvalidateAllSegments_once(struct vcache *avc)
 {
     struct dcache *tdc;
     afs_int32 hash;
     afs_int32 index;
-    struct dcache **dcList;
+    struct dcache **dcList = NULL;
     int i, dcListMax, dcListCount;
 
     AFS_STATCNT(afs_InvalidateAllSegments);
@@ -543,17 +528,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetValidDSlot(index);
 	    if (!tdc) {
-		/* In the case of fatal errors during stores, we MUST
-		 * invalidate all of the relevant chunks. Otherwise, the chunks
-		 * will be left with the 'new' data that was never successfully
-		 * written to the server, but the DV in the dcache is still the
-		 * old DV. So, we may indefinitely serve data to applications
-		 * that is not actually in the file on the fileserver. If we
-		 * cannot afs_GetValidDSlot the appropriate entries, currently
-		 * there is no way to ensure the dcache is invalidated. So for
-		 * now, to avoid risking serving bad data from the cache, panic
-		 * instead. */
-		osi_Panic("afs_InvalidateAllSegments tdc count");
+		goto error;
 	    }
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid))
@@ -570,11 +545,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetValidDSlot(index);
 	    if (!tdc) {
-		/* We cannot proceed after getting this error; we risk serving
-		 * incorrect data to applications. So panic instead. See the
-		 * above comment next to the previous afs_GetValidDSlot call
-		 * for details. */
-		osi_Panic("afs_InvalidateAllSegments tdc store");
+		goto error;
 	    }
 	    ReleaseReadLock(&tdc->tlock);
 	    if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
@@ -611,6 +582,112 @@ afs_InvalidateAllSegments(struct vcache *avc)
     osi_Free(dcList, dcListMax * sizeof(struct dcache *));
 
     return 0;
+
+ error:
+    ReleaseWriteLock(&afs_xdcache);
+
+    if (dcList) {
+	for (i = 0; i < dcListCount; i++) {
+	    tdc = dcList[i];
+	    if (tdc) {
+		afs_PutDCache(tdc);
+	    }
+	}
+	osi_Free(dcList, dcListMax * sizeof(struct dcache *));
+    }
+    return EIO;
+}
+
+
+/*
+ * afs_InvalidateAllSegments
+ *
+ * Description:
+ *	Invalidates all chunks for a given file
+ *
+ * Parameters:
+ *	avc      : Pointer to vcache entry.
+ *
+ * Environment:
+ *	For example, called after an error has been detected.  Called
+ *	with avc write-locked, and afs_xdcache unheld.
+ */
+
+void
+afs_InvalidateAllSegments(struct vcache *avc)
+{
+    int code;
+    afs_uint32 last_warn;
+
+    code = afs_InvalidateAllSegments_once(avc);
+    if (code == 0) {
+	/* Success; nothing more to do. */
+	return;
+    }
+
+    /*
+     * If afs_InvalidateAllSegments_once failed, we cannot simply return an
+     * error to our caller. This function is called when we encounter a fatal
+     * error during stores, in which case we MUST invalidate all chunks for the
+     * given file. If we fail to invalidate some chunks, they will be left with
+     * the 'new' dirty/written data that was never successfully stored on the
+     * server, but the DV in the dcache is still the old DV. So, if its left
+     * alone, we may indefinitely serve data to applications that is not
+     * actually in the file on the fileserver.
+     *
+     * So to make sure we never serve userspace bad data after such a failure,
+     * we must keep trying to invalidate the dcaches for the given file. (Note
+     * that we cannot simply set a flag on the vcache to retry the invalidate
+     * later on, because the vcache may go away, but the 'bad' dcaches could
+     * remain.) We do this below, via background daemon requests because in
+     * some scenarios we can always get I/O errors on accessing the cache if we
+     * access via a user pid. (e.g. on LINUX, this can happen if the pid has a
+     * pending SIGKILL.) Doing this via background daemon ops should avoid
+     * that.
+     */
+
+    last_warn = osi_Time();
+    afs_warn("afs: Failed to invalidate cache chunks for fid %d.%d.%d.%d; our "
+	     "local disk cache may be throwing errors. We must invalidate "
+	     "these chunks to avoid possibly serving incorrect data, so we'll "
+	     "retry until we succeed. If AFS access seems to hang, this may "
+	     "be why.\n",
+	     avc->f.fid.Cell, avc->f.fid.Fid.Volume, avc->f.fid.Fid.Vnode,
+	     avc->f.fid.Fid.Unique);
+
+    do {
+	static const afs_uint32 warn_int = 60*60; /* warn once every hour */
+	afs_uint32 now = osi_Time();
+	struct brequest *bp;
+
+	if (now < last_warn || now - last_warn > warn_int) {
+	    last_warn = now;
+	    afs_warn("afs: Still trying to invalidate cache chunks for fid "
+		     "%d.%d.%d.%d. We will retry until we succeed; if AFS "
+		     "access seems to hang, this may be why.\n",
+		     avc->f.fid.Cell, avc->f.fid.Fid.Volume,
+		     avc->f.fid.Fid.Vnode, avc->f.fid.Fid.Unique);
+	}
+
+	/* Wait 10 seconds between attempts. */
+	afs_osi_Wait(1000 * 10, NULL, 0);
+
+	/*
+	 * Ask a background daemon to do this request for us. Note that _we_ hold
+	 * the write lock on 'avc', while the background daemon does the work. This
+	 * is a little weird, but it helps avoid any issues with lock ordering
+	 * or if our caller does not expect avc->lock to be dropped while
+	 * running.
+	 */
+	bp = afs_BQueue(BOP_INVALIDATE_SEGMENTS, avc, 0, 1, NULL, 0, 0, NULL,
+			NULL, NULL);
+	while ((bp->flags & BUVALID) == 0) {
+	    bp->flags |= BUWAIT;
+	    afs_osi_Sleep(bp);
+	}
+	code = bp->code_raw;
+	afs_BRelease(bp);
+    } while (code);
 }
 
 /*!
