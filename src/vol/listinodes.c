@@ -1085,15 +1085,6 @@ ListViceInodes(char *devname, char *mountedOn, FD_t inodeFile,
 		}
 	    }
 	    for (p = inodes; p < einodes && i < e; i++, p++) {
-#ifdef notdef
-		Log("Ino=%d, v1=%x, v2=%x, v3=%x, mode=%x size=%d, lcnt=%d\n",
-		    i, p->di_vicep1, p->di_vicep2, p->di_vicep3, p->di_mode,
-		    p->di_size, p->di_nlink);
-		printf
-		    ("Ino=%d, v1=%x, v2=%x, v3=%x, mode=%x size=%d, lcnt=%d\n",
-		     i, p->di_vicep1, p->di_vicep2, p->di_vicep3, p->di_mode,
-		     p->di_size, p->di_nlink);
-#endif
 #if	defined(AFS_SUN5_ENV)
 		/* if this is a pre-sol2.6 unconverted inode, bail out */
 		{

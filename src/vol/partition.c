@@ -1449,12 +1449,4 @@ AddPartitionToTable_r(struct DiskPartition64 *dp)
     DiskPartitionTable[dp->index] = dp;
 }
 
-#if 0
-static void
-DeletePartitionFromTable_r(struct DiskPartition64 *dp)
-{
-    opr_Assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
-    DiskPartitionTable[dp->index] = NULL;
-}
-#endif
 #endif /* AFS_DEMAND_ATTACH_FS */

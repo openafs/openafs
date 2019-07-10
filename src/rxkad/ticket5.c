@@ -393,13 +393,8 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	*start = decr_part.authtime;
 	if (decr_part.starttime)
 	    *start = *decr_part.starttime;
-#if 0
-	if (*start - now > CLOCK_SKEW || decr_part.flags.invalid)
-	    goto no_auth;
-#else
 	if (decr_part.flags.invalid)
 	    goto no_auth;
-#endif
 	if (now > decr_part.endtime)
 	    goto tkt_expired;
 	*end = decr_part.endtime;

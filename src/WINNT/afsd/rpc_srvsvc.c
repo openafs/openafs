@@ -1426,18 +1426,6 @@ void __RPC_USER SHARE_DEL_HANDLE_rundown( SHARE_DEL_HANDLE h)
 {
 }
 
-#if 0
-/* [nocode] */ void Opnum3NotUsedOnWire(
-    /* [in] */ handle_t IDL_handle)
-{
-}
-
-/* [nocode] */ void Opnum4NotUsedOnWire(
-    /* [in] */ handle_t IDL_handle)
-{
-}
-#endif
-
 /* [nocode] */ void Opnum5NotUsedOnWire(
     /* [in] */ handle_t IDL_handle)
 {

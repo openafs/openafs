@@ -1028,9 +1028,6 @@ ScanVnodes(FILE * f, VolumeDiskData * vol, int sizescan)
 		    fprintf(stderr, "failed readbystring for 'A'\n");
 		    return -1;
 		}
-#if 0
-		acl_NtohACL(VVnodeDiskACL(vnode));
-#endif
 		break;
 #ifdef RESIDENCY
 	    case 'h':

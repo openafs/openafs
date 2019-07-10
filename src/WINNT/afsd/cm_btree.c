@@ -2147,9 +2147,6 @@ long cm_BPlusDirBuildTree(cm_scache_t *scp, cm_user_t *userp, cm_req_t* reqp)
 
     bplus_build_time += (end.QuadPart - start.QuadPart);
 
-#if 0
-    cm_BPlusDirEnumTest(scp, 1);
-#endif
     return rc;
 }
 

@@ -1948,10 +1948,6 @@ get_credv5_akimpersonate(krb5_context context,
     enc_tkt_reply->authtime = starttime;
     enc_tkt_reply->starttime = temp_time;
     *enc_tkt_reply->starttime = starttime;
-#if 0
-    enc_tkt_reply->renew_till = temp_time + 1;
-    *enc_tkt_reply->renew_till = endtime;
-#endif
     enc_tkt_reply->endtime = endtime;
 #else
     if ((code = krb5_c_make_random_key(context,

@@ -2046,32 +2046,6 @@ CreateVolume(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-#if 0
-static afs_int32
-DeleteAll(struct nvldbentry *entry)
-{
-    int i;
-    afs_int32 error, code, curserver, curpart;
-    afs_uint32 volid;
-
-    MapHostToNetwork(entry);
-    error = 0;
-    for (i = 0; i < entry->nServers; i++) {
-	curserver = entry->serverNumber[i];
-	curpart = entry->serverPartition[i];
-	if (entry->serverFlags[i] & VLSF_ROVOL) {
-	    volid = entry->volumeId[ROVOL];
-	} else {
-	    volid = entry->volumeId[RWVOL];
-	}
-	code = UV_DeleteVolume(curserver, curpart, volid);
-	if (code && !error)
-	    error = code;
-    }
-    return error;
-}
-#endif
-
 static int
 DeleteVolume(struct cmd_syndesc *as, void *arock)
 {
@@ -2727,18 +2701,6 @@ CloneVolume(struct cmd_syndesc *as, void *arock)
 		volname, VOLSER_OLDMAXVOLNAME - 1);
 	    return E2BIG;
 	}
-#if 0
-	/*
-	 * In order that you be able to make clones of RO or BK, this
-	 * check must be omitted.
-	 */
-	if (!VolNameOK(volname)) {
-	    fprintf(STDERR,
-		"Illegal volume name %s, should not end in .readonly or .backup\n",
-		volname);
-	    return EINVAL;
-	}
-#endif
 	if (IsNumeric(volname)) {
 	    fprintf(STDERR,
 		"Illegal volume name %s, should not be a number\n",
@@ -5951,9 +5913,6 @@ main(int argc, char **argv)
 		"initial quota (KB)");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "volume ID");
     cmd_AddParm(ts, "-roid", CMD_SINGLE, CMD_OPTIONAL, "readonly volume ID");
-#ifdef notdef
-    cmd_AddParm(ts, "-minquota", CMD_SINGLE, CMD_OPTIONAL, "");
-#endif
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("remove", DeleteVolume, NULL, 0, "delete a volume");

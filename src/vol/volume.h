@@ -29,10 +29,7 @@ typedef bit32 FileOffset;	/* Offset in this file */
 #include "daemon_com.h"
 #include "fssync.h"
 
-#if 0
-/** turn this on if you suspect a volume package locking bug */
-#define VOL_LOCK_DEBUG 1
-#endif
+/** turn on VOL_LOCK_DEBUG if you suspect a volume package locking bug */
 
 #ifdef VOL_LOCK_DEBUG
 #define VOL_LOCK_ASSERT_HELD \

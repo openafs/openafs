@@ -260,10 +260,6 @@ EvalMountPoint(struct vcache *avc, struct vcache *advc,
     afs_uint32 avnoid, auniq;
 
     AFS_STATCNT(EvalMountPoint);
-#ifdef notdef
-    if (avc->mvid.target_root && (avc->f.states & CMValid))
-	return 0;		/* done while racing */
-#endif
     *avolpp = NULL;
     code = afs_HandleLink(avc, areq);
     if (code)

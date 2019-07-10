@@ -455,9 +455,6 @@ afs_lhash_enter(afs_lhash * lh, unsigned key, void *data)
      */
     if (lh->ndata > LOAD_FACTOR * lh->ltable) {
 	afs_lhash_expand(lh);
-#if 0
-	printf("lh->p = %d; lh->maxp = %d\n", lh->p, lh->maxp);
-#endif
     }
 #ifdef CHECK_INVARIANTS
     assert(lh->ndata <= LOAD_FACTOR * lh->ltable);

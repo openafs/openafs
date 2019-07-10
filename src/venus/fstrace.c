@@ -753,10 +753,6 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 	    /* print the record */
 	    DisplayRecord(outFilep, &bufferp[ix], rlength);
 	    ix += rlength;
-#ifdef notdef
-	    /* obsolete: read entire buffer first */
-	    i += rlength;	/* update cookie value, too */
-#endif
 	}			/* for loop displaying buffer */
     }				/* for loop over all logs */
 

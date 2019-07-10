@@ -661,15 +661,6 @@ getScanTape(afs_int32 taskId, struct butm_tapeInfo *tapeInfoPtr, char *tname,
 	/* If no name, accept any tape */
 	if (strcmp(tname, "") == 0) {
 	    break;		/* Start scan on any tape */
-#ifdef notdef
-	    if (curseq == 1)
-		break;		/* The first tape */
-	    else {
-		TLog(taskId, "Expected first tape of dump, label seen %s\n",
-		     gotname);
-		goto newtape;
-	    }
-#endif
 	}
 
 	if (strcmp(tname, tapeLabelPtr->AFSName)

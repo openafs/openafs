@@ -1356,20 +1356,6 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	    osi_Assert(vcp->mvid.parent != NULL);
 	}
 
-#ifdef notdef
-	/* If the last looker changes, we should make sure the current
-	 * looker still has permission to examine this file.  This would
-	 * always require a crref() which would be "slow".
-	 */
-	if (vcp->last_looker != treq.uid) {
-	    if (!afs_AccessOK(vcp, (vType(vcp) == VREG) ? PRSFS_READ : PRSFS_LOOKUP, &treq, CHECK_MODE_BITS)) {
-		goto bad_dentry;
-	    }
-
-	    vcp->last_looker = treq.uid;
-	}
-#endif
-
 	parent = dget_parent(dp);
 	pvcp = VTOAFS(parent->d_inode);
 	parent_dv = parent_vcache_dv(parent->d_inode, credp);

@@ -146,15 +146,6 @@ handleit(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
 
 
-#ifndef AFS_NT40_ENV
-#if 0
-    if (geteuid() != 0) {
-	fprintf(stderr, "voldump must be run as root; sorry\n");
-	exit(1);
-    }
-#endif
-#endif
-
     if ((ti = as->parms[0].items))
 	partName = ti->data;
     if ((ti = as->parms[1].items))

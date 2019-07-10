@@ -417,19 +417,6 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc,
 	    osi_Panic
             ("rxfs_storeInit: osi_AllocSmallSpace for iovecs returned NULL\n");
 	*ops = (struct storeOps *) &rxfs_storeMemOps;
-#ifdef notdef
-	/* do this at a higher level now -- it's a parameter */
-	/* for now, only do 'continue from close' code if file fits in one
-	 * chunk.  Could clearly do better: if only one modified chunk
-	 * then can still do this.  can do this on *last* modified chunk */
-	length = avc->f.m.Length - 1; /* byte position of last byte we'll store */
-	if (shouldWake) {
-	    if (AFS_CHUNK(length) != 0)
-		*shouldWake = 0;
-	    else
-		*shouldWake = 1;
-	}
-#endif /* notdef */
     }
 
     *rock = (void *)v;
