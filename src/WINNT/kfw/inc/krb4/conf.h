@@ -47,11 +47,6 @@ typedef void *pointer;
 #endif
 #endif
 
-/* Does your compiler understand "void"? */
-#ifdef notdef
-#define void int
-#endif
-
 /*
  * A few checks to see that necessary definitions are included.
  */

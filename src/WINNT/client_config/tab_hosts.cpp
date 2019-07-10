@@ -321,11 +321,6 @@ void HostsTab_FillList (HWND hDlg)
       TCHAR szText[ MAX_PATH ];
       lstrcpy (szText, Info.szCell);
 
-#if 0 // Add this if you like a more verbose Cell Hosts tab
-      if (Info.szComment)
-         wsprintf (&szText[ lstrlen(szText) ], TEXT(" (%s)"), Info.szComment);
-#endif
-
       FASTLISTADDITEM ai;
       memset (&ai, 0x00, sizeof(ai));
       ai.iFirstImage = IMAGE_NOIMAGE;

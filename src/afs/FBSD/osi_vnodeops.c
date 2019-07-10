@@ -305,12 +305,6 @@ afs_vop_lock(ap)
     struct vnode *vp = ap->a_vp;
     struct lock *lkp = vp->v_vnlock;
 
-#if 0 && defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
-    afs_warn("afs_vop_lock: tid %d pid %d \"%s\"\n", curthread->td_tid,
-	     curthread->td_proc->p_pid, curthread->td_name);
-    kdb_backtrace();
-#endif
-
 #ifdef AFS_FBSD80_ENV
     return (_lockmgr_args(lkp, ap->a_flags, VI_MTX(vp),
 			  LK_WMESG_DEFAULT, LK_PRIO_DEFAULT, LK_TIMO_DEFAULT,
@@ -621,27 +615,6 @@ afs_vop_mknod(ap)
     return (ENODEV);
 }
 
-#if 0
-static int
-validate_vops(struct vnode *vp, int after)
-{
-    int ret = 0;
-    struct vnodeopv_entry_desc *this;
-    for (this = afs_vnodeop_entries; this->opve_op; this++) {
-	if (vp->v_op[this->opve_op->vdesc_offset] != this->opve_impl) {
-	    if (!ret) {
-		printf("v_op %d ", after);
-		vprint("check", vp);
-	    }
-	    ret = 1;
-	    printf("For oper %d (%s), func is %p, not %p",
-		   this->opve_op->vdesc_offset, this->opve_op->vdesc_name,
-		   vp->v_op[this->opve_op->vdesc_offset], this->opve_impl);
-	}
-    }
-    return ret;
-}
-#endif
 int
 afs_vop_open(ap)
      struct vop_open_args	/* {

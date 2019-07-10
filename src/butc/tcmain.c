@@ -244,24 +244,6 @@ atocl(char *numstring, char crunit, afs_int32 *number)
     return (0);
 }
 
-/* replace last two ocurrences of / by _ */
-#if 0
-static int
-stringReplace(char *name)
-{
-    char *pos;
-    char buffer[256];
-
-    pos = strrchr(name, '/');
-    *pos = '_';
-    strcpy(buffer, pos);
-    pos = strrchr(name, '/');
-    *pos = '\0';
-    strcat(name, buffer);
-    return 0;
-}
-#endif
-
 static int
 stringNowReplace(char *logFile, char *deviceName)
 {

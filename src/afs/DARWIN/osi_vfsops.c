@@ -357,9 +357,6 @@ afs_statfs(struct mount *mp, STATFS_TYPE *abp, CTX_TYPE ctx)
     abp->f_bsize = mp->vfs_bsize;
     abp->f_iosize = mp->vfs_bsize;
 #endif
-#if 0
-    abp->f_type = MOUNT_AFS;
-#endif
 
     abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
       abp->f_ffree = AFS_VFS_FAKEFREE;

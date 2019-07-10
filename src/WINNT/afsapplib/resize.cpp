@@ -636,18 +636,6 @@ LONG APIENTRY SplitterWndProc (HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
                   SetWindowLong (hWnd, GWL_USER, 0);
                   }
                break;
-
-#if 0 // Enable me to make the splitters draw in black
-         case WM_PAINT:
-               {
-               PAINTSTRUCT ps;
-               HDC hdc = BeginPaint (hWnd, &ps);
-               FillRect (hdc, &ps.rcPaint, GetStockObject(BLACK_BRUSH));
-               EndPaint (hWnd, &ps);
-               return 0;
-               }
-               break;
-#endif
          }
       }
 

@@ -51,9 +51,6 @@
 
 #define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
 
-#if 0
-#define	afs_suser(x)	    suser(x)
-#endif
 /*
  * Global lock support.
  */

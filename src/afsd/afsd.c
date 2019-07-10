@@ -496,11 +496,6 @@ afsd_install_events(void)
 		   (NULL, kSCDynamicStoreDomainState,
 		    kSCCompAnyRegex, kSCEntNetIPv4));
 
-#if 0
-	/* This should tell us when the hostname(s) change. do we care? */
-	keys[N] = SCDynamicStoreKeyCreateHostNames (NULL);
-#endif
-
 	if (keys[0] != NULL) {
 	    CFArrayRef pattern_array;
 
@@ -2077,20 +2072,6 @@ afsd_run(void)
 	    if (afsd_verbose)
 		printf("%s: cacheFiles autotuned to %d\n", rn, cacheFiles);
 	}
-#if 0
-       /* This actually needs to
-          1) use powers of 2
-          2) not second-guess when a chunksize comes from the command line
-          3) be less, um, small. 2^2??
-       */
-	/* Sanity check chunkSize */
-	i = max(cacheBlocks / 1000, cacheBlocks / cacheFiles);
-	chunkSize = min(chunkSize, i);
-	chunkSize = max(chunkSize, 2);
-	if (afsd_verbose)
-	    printf("%s: chunkSize autotuned to %d\n", rn, chunkSize);
-#endif
-
 	if (!sawDCacheSize) {
 	    dCacheSize = cacheFiles / 2;
 	    if (dCacheSize > 10000) {

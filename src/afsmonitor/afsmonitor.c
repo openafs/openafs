@@ -3955,25 +3955,6 @@ afsmonInit(struct cmd_syndesc *as, void *arock)
 
 
     /* use curses always until we support other packages */
-#ifdef notdef
-    wpkg_to_use = atoi(as->parms[P_PACKAGE].items->data);
-
-    switch (wpkg_to_use) {
-    case GATOR_WIN_CURSES:
-	fprintf(stderr, "curses\n");
-	break;
-    case GATOR_WIN_DUMB:
-	fprintf(stderr, "dumb terminal\n");
-	break;
-    case GATOR_WIN_X11:
-	fprintf(stderr, "X11\n");
-	break;
-    default:
-	fprintf(stderr, "Illegal graphics package: %d\n", wpkg_to_use);
-	afsmon_Exit(155);
-    }				/*end switch (wpkg_to_use) */
-#endif
-
     wpkg_to_use = GATOR_WIN_CURSES;
 
     /* get probe frequency . We check for meaningful bounds on the frequency
@@ -4228,11 +4209,6 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-output", CMD_SINGLE, CMD_OPTIONAL, "storage file name");
     cmd_AddParm(ts, "-detailed", CMD_FLAG, CMD_OPTIONAL,
 		"output detailed statistics to storage file");
-#ifdef notdef
-    /* we hope to use this .... eventually! */
-    cmd_AddParm(ts, "-package", CMD_SINGLE, CMD_REQUIRED,
-		"Graphics Package to use");
-#endif
     cmd_AddParm(ts, "-debug", CMD_SINGLE, CMD_OPTIONAL,
 		"turn debugging output on to the named file");
     cmd_AddParm(ts, "-fshosts", CMD_LIST, CMD_OPTIONAL,

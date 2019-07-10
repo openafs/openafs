@@ -197,11 +197,6 @@ rxk_init()
     last = inetdomain.dom_protoswNPROTOSW;
     for (tpro = inetdomain.dom_protosw; tpro < last; tpro++)
 	if (tpro->pr_protocol == IPPROTO_UDP) {
-#if 0				/* not exported */
-	    /* force UDP checksumming on for AFS    */
-	    extern int udpcksum;
-	    udpcksum = 1;
-#endif
 	    memcpy(&parent_proto, tpro, sizeof(parent_proto));
 	    tpro->pr_input = rxk_input;
 	    tpro->pr_fasttimo = rxk_fasttimo;

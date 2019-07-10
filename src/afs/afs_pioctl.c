@@ -4766,10 +4766,6 @@ DECL_PIOCTL(PSetCPrefs)
 
     if (ainSize < sizeof(struct setspref))
 	return EINVAL;
-#if 0				/* num_servers is unsigned */
-    if (sin->num_servers < 0)
-	return EINVAL;
-#endif
     if (sin->num_servers > AFS_MAX_INTERFACE_ADDR)
 	return ENOMEM;
 

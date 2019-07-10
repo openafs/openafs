@@ -144,20 +144,8 @@ pass5()
 	idesc[i].id_type = ADDR;
     memset(&cstotal, 0, sizeof(struct csum));
     (void)time(&now);
-#ifdef notdef
-    /* this is the original from UCB/McKusick, but it is clearly wrong.  It is
-     * rounding the # of fragments to the next 1024 (in our case, with a 1K/8K file system),
-     * while instead it should be rounding to the next block.
-     *
-     * In addition, we should be sure that we allocate enough space, but that seems to be
-     * ensured by the fact that the bitmap is rounded up to the nearest short, and that there
-     * are never more than 16 frags per block.
-     */
-    for (i = fs->fs_size; i < fragroundup(fs, fs->fs_size); i++)
-#else
     c = 1 << fs->fs_fragshift;	/* unit to which we want to round */
     for (i = fs->fs_size; i < roundup(fs->fs_size, c); i++)
-#endif
 	setbmap(i);
     for (c = 0; c < fs->fs_ncg; c++) {
 	getblk(&cgblk, cgtod(fs, c), fs->fs_cgsize);

@@ -159,11 +159,6 @@ do { \
 
 
 /* Protos for static routines */
-#if 0
-static afs_int32 CheckAndDeleteVolume(struct rx_connection *aconn,
-				      afs_int32 apart, afs_uint32 okvol,
-				      afs_uint32 delvol);
-#endif
 static int GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 		    struct rx_connection **connPtr, afs_int32 * transPtr,
 		    afs_uint32 * crtimePtr, afs_uint32 * uptimePtr,
@@ -485,57 +480,6 @@ AFSVolTransCreate_retry(struct rx_connection *z_conn,
     return code;
 }
 
-#if 0
-/* if <okvol> is allright(indicated by beibg able to
- * start a transaction, delete the <delvol> */
-static afs_int32
-CheckAndDeleteVolume(struct rx_connection *aconn, afs_int32 apart,
-		     afs_uint32 okvol, afs_uint32 delvol)
-{
-    afs_int32 error, code, tid, rcode;
-    error = 0;
-    code = 0;
-
-    if (okvol == 0) {
-	code = AFSVolTransCreate_retry(aconn, delvol, apart, ITOffline, &tid);
-	if (!error && code)
-	    error = code;
-	code = AFSVolDeleteVolume(aconn, tid);
-	if (!error && code)
-	    error = code;
-	code = AFSVolEndTrans(aconn, tid, &rcode);
-	if (!code)
-	    code = rcode;
-	if (!error && code)
-	    error = code;
-	return error;
-    } else {
-	code = AFSVolTransCreate_retry(aconn, okvol, apart, ITOffline, &tid);
-	if (!code) {
-	    code = AFSVolEndTrans(aconn, tid, &rcode);
-	    if (!code)
-		code = rcode;
-	    if (!error && code)
-		error = code;
-	    code = AFSVolTransCreate_retry(aconn, delvol, apart, ITOffline, &tid);
-	    if (!error && code)
-		error = code;
-	    code = AFSVolDeleteVolume(aconn, tid);
-	    if (!error && code)
-		error = code;
-	    code = AFSVolEndTrans(aconn, tid, &rcode);
-	    if (!code)
-		code = rcode;
-	    if (!error && code)
-		error = code;
-	} else
-	    error = code;
-	return error;
-    }
-}
-
-#endif
-
 /* called by EmuerateEntry, show vldb entry in a reasonable format */
 void
 SubEnumerateEntry(struct nvldbentry *entry)
@@ -545,25 +489,6 @@ SubEnumerateEntry(struct nvldbentry *entry)
     int isMixed = 0;
     char hoststr[16];
 
-#ifdef notdef
-    fprintf(STDOUT, "	readWriteID %-10u ", entry->volumeId[RWVOL]);
-    if (entry->flags & VLF_RWEXISTS)
-	fprintf(STDOUT, " valid \n");
-    else
-	fprintf(STDOUT, " invalid \n");
-    fprintf(STDOUT, "	readOnlyID  %-10u ", entry->volumeId[ROVOL]);
-    if (entry->flags & VLF_ROEXISTS)
-	fprintf(STDOUT, " valid \n");
-    else
-	fprintf(STDOUT, " invalid \n");
-    fprintf(STDOUT, "	backUpID    %-10u ", entry->volumeId[BACKVOL]);
-    if (entry->flags & VLF_BACKEXISTS)
-	fprintf(STDOUT, " valid \n");
-    else
-	fprintf(STDOUT, " invalid \n");
-    if ((entry->cloneId != 0) && (entry->flags & VLF_ROEXISTS))
-	fprintf(STDOUT, "    releaseClone %-10u \n", entry->cloneId);
-#else
     if (entry->flags & VLF_RWEXISTS)
 	fprintf(STDOUT, "    RWrite: %-10u", entry->volumeId[RWVOL]);
     if (entry->flags & VLF_ROEXISTS)
@@ -573,7 +498,6 @@ SubEnumerateEntry(struct nvldbentry *entry)
     if ((entry->cloneId != 0) && (entry->flags & VLF_ROEXISTS))
 	fprintf(STDOUT, "    RClone: %-10lu", (unsigned long)entry->cloneId);
     fprintf(STDOUT, "\n");
-#endif
     fprintf(STDOUT, "    number of sites -> %lu\n",
 	    (unsigned long)entry->nServers);
     for (i = 0; i < entry->nServers; i++) {
@@ -868,13 +792,8 @@ UV_AddVLDBEntry(afs_uint32 aserver, afs_int32 apart, char *aname,
     entry.flags = VLF_RWEXISTS;	/* this records that rw volume exists */
     entry.serverFlags[0] = VLSF_RWVOL;	/*this rep site has rw  vol */
     entry.volumeId[RWVOL] = aid;
-#ifdef notdef
-    entry.volumeId[ROVOL] = anewid + 1;	/* rw,ro, bk id are related in the default case */
-    entry.volumeId[BACKVOL] = *anewid + 2;
-#else
     entry.volumeId[ROVOL] = 0;
     entry.volumeId[BACKVOL] = 0;
-#endif
     entry.cloneId = 0;
     /*map into right byte order, before passing to xdr, the stuff has to be in host
      * byte order. Xdr converts it into network order */
@@ -1978,21 +1897,6 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	}
 	/* or drop through */
     }
-#ifdef notdef
-    /* This is tricky.  File server is very stupid, and if you mark the volume
-     * as VTOutOfService, it may mark the *good* instance (if you're moving
-     * between partitions on the same machine) as out of service.  Since
-     * we're cleaning this code up in DEcorum, we're just going to kludge around
-     * it for now by removing this call. */
-    /* already out of service, just zap it now */
-    code =
-	AFSVolSetFlags(fromconn, fromtid, VTDeleteOnSalvage | VTOutOfService);
-    if (code) {
-	fprintf(STDERR,
-		"Failed to set the flags to make the old source volume offline\n");
-	goto mfail;
-    }
-#endif
     if (atoserver != afromserver) {
 	/* set forwarding pointer for moved volumes */
 	VPRINT1("Setting forwarding pointer for volume %u ...", afromvol);

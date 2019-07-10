@@ -1110,11 +1110,6 @@ ktc_curpag(void)
   * <mit-copyright.h>.
   */
 
-#if 0
-#include <sys/file.h>
-#include <krb.h>
-#endif
-
 #define TOO_BIG -1
 #define TF_LCK_RETRY ((unsigned)2)	/* seconds to sleep before
 					 * retry if ticket file is
