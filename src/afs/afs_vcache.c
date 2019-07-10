@@ -22,7 +22,6 @@
  * afs_WriteVCacheDiscon
  * afs_SimpleVStat
  * afs_ProcessFS
- * TellALittleWhiteLie
  * afs_RemoteLookup
  * afs_GetVCache
  * afs_LookupVCache
