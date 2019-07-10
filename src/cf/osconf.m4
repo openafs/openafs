@@ -633,6 +633,7 @@ if test "x$GCC" = "xyes"; then
   fi
   if test "x$enable_checking" != "xno"; then
     XCFLAGS="${XCFLAGS} -Wall -Wstrict-prototypes -Wold-style-definition -Werror -fdiagnostics-show-option -Wpointer-arith"
+    CFLAGS_WERROR="-Werror"
     if test "x$enable_checking" != "xall"; then
       CFLAGS_NOERROR="-Wno-error"
       CFLAGS_NOUNUSED="-Wno-unused"
@@ -713,6 +714,7 @@ AC_SUBST(CFLAGS_NOERROR)
 AC_SUBST(CFLAGS_NOSTRICT)
 AC_SUBST(CFLAGS_NOUNUSED)
 AC_SUBST(CFLAGS_NOOLDSTYLE)
+AC_SUBST(CFLAGS_WERROR)
 AC_SUBST(XCFLAGS64)
 AC_SUBST(XLDFLAGS)
 AC_SUBST(XLDFLAGS64)
