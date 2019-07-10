@@ -125,7 +125,7 @@ EXTRA_CFLAGS = -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arc
 INCLUDES = -I. -I../ -I${TOP_OBJDIR}/src/config \
   -I${TOP_SRCDIR}/rx -I${TOP_OBJDIR}/src/rxstat
 
-CFLAGS = $(CCFLAGS) $(KERN_DBG) $(DEFINES) $(INCLUDES)
+CFLAGS = $(CCFLAGS) $(KERN_DBG) $(DEFINES) $(INCLUDES) @CFLAGS_WERROR@
 
 # Name of directory to hold object files and libraries.
 KOBJ = MODLOAD
