@@ -228,7 +228,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	ReleaseWriteLock(&tvc->lock);
     } else {
     	/* now we're done with parent dir, create the real dir's cache entry */
-	tvc = afs_GetVCache(&newFid, treq, NULL, NULL);
+	tvc = afs_GetVCache(&newFid, treq);
     	if (tvc) {
 	    code = 0;
 	    *avcp = tvc;
@@ -323,13 +323,11 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	unlinkFid.Fid.Vnode = 0;
 	code = afs_dir_Lookup(tdc, aname, &unlinkFid.Fid);
 	if (code == 0) {
-	    afs_int32 cached = 0;
-
 	    unlinkFid.Cell = adp->f.fid.Cell;
 	    unlinkFid.Fid.Volume = adp->f.fid.Fid.Volume;
 	    if (unlinkFid.Fid.Unique == 0) {
 		tvc =
-		    afs_LookupVCache(&unlinkFid, treq, &cached, adp, aname);
+		    afs_LookupVCache(&unlinkFid, treq, adp, aname);
 	    } else {
 		ObtainReadLock(&afs_xvcache);
 		tvc = afs_FindVCache(&unlinkFid, 0, 1 /* do xstats */ );

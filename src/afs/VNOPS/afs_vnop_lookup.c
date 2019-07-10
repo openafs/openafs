@@ -408,7 +408,7 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	    } while (root_vp && retry);
 	    ReleaseWriteLock(&afs_xvcache);
 	} else {
-	    root_vp = afs_GetVCache(tvc->mvid.target_root, areq, NULL, NULL);
+	    root_vp = afs_GetVCache(tvc->mvid.target_root, areq);
 	}
 	if (!root_vp) {
 	    code = canblock ? EIO : 0;
@@ -1458,7 +1458,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	}
 	/* otherwise we have the fid here, so we use it */
 	/*printf("Getting vcache\n");*/
-	tvc = afs_GetVCache(adp->mvid.parent, treq, NULL, NULL);
+	tvc = afs_GetVCache(adp->mvid.parent, treq);
 	afs_Trace3(afs_iclSetp, CM_TRACE_GETVCDOTDOT, ICL_TYPE_FID, adp->mvid.parent,
 		   ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32, code);
 	*avcp = tvc;
@@ -1554,7 +1554,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    tfid.Fid.Vnode = VNUM_FROM_TYPEID(VN_TYPE_MOUNT, cellidx << 2);
 	    tfid.Fid.Unique = volid;
 	}
-	*avcp = tvc = afs_GetVCache(&tfid, treq, NULL, NULL);
+	*avcp = tvc = afs_GetVCache(&tfid, treq);
 	code = (tvc ? 0 : EIO);
 	hit = 1;
 	goto done;
@@ -1570,7 +1570,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	struct VenusFid tfid;
 
 	afs_GetDynrootMountFid(&tfid);
-	*avcp = tvc = afs_GetVCache(&tfid, treq, NULL, NULL);
+	*avcp = tvc = afs_GetVCache(&tfid, treq);
 	code = 0;
 	hit = 1;
 	goto done;
@@ -1780,12 +1780,11 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	 * the file has not yet been looked up.
 	 */
 	if (!tvc) {
-	    afs_int32 cached = 0;
 	    if (!tfid.Fid.Unique && (adp->f.states & CForeign)) {
-		tvc = afs_LookupVCache(&tfid, treq, &cached, adp, tname);
+		tvc = afs_LookupVCache(&tfid, treq, adp, tname);
 	    }
 	    if (!tvc && !bulkcode) {	/* lookup failed or wasn't called */
-		tvc = afs_GetVCache(&tfid, treq, &cached, NULL);
+		tvc = afs_GetVCache(&tfid, treq);
 	    }
 	}			/* if !tvc */
     }				/* sub-block just to reduce stack usage */
@@ -1845,9 +1844,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		    if (tvolp && (tvolp->states & VForeign)) {
 			/* XXXX tvolp has ref cnt on but not locked! XXX */
 			tvc =
-			    afs_GetRootVCache(tvc->mvid.target_root, treq, NULL, tvolp);
+			    afs_GetRootVCache(tvc->mvid.target_root, treq, tvolp);
 		    } else {
-			tvc = afs_GetVCache(tvc->mvid.target_root, treq, NULL, NULL);
+			tvc = afs_GetVCache(tvc->mvid.target_root, treq);
 		    }
 		    afs_PutVCache(uvc);	/* we're done with it */
 

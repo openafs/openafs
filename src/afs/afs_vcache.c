@@ -1246,7 +1246,7 @@ afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq)
     ReleaseWriteLock(&avc->lock);
 
     /* fetch the status info */
-    tvc = afs_GetVCache(&avc->f.fid, areq, NULL, avc);
+    tvc = afs_GetVCache(&avc->f.fid, areq);
     if (!tvc)
 	return EIO;
     /* Put it back; caller has already incremented vrefCount */
@@ -1643,8 +1643,6 @@ afs_RemoteLookup(struct VenusFid *afid, struct vrequest *areq,
  * \param afid File ID.
  * \param areq Ptr to associated vrequest structure, specifying the
  *  user whose authentication tokens will be used.
- * \param avc Caller may already have a vcache for this file, which is
- *  already held.
  *
  * \note Environment:
  *	The cache entry is returned with an increased vrefCount field.
@@ -1664,13 +1662,9 @@ afs_RemoteLookup(struct VenusFid *afid, struct vrequest *areq,
  *	locking directories in a constant order.
  *
  * \note NB.  NewVCache -> FlushVCache presently (4/10/95) drops the xvcache lock.
- *
- * \note Might have a vcache structure already, which must
- *  already be held by the caller
  */
 struct vcache *
-afs_GetVCache(struct VenusFid *afid, struct vrequest *areq,
-	      afs_int32 * cached, struct vcache *avc)
+afs_GetVCache(struct VenusFid *afid, struct vrequest *areq)
 {
 
     afs_int32 code, newvcache = 0;
@@ -1679,9 +1673,6 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq,
     afs_int32 retry;
 
     AFS_STATCNT(afs_GetVCache);
-
-    if (cached)
-	*cached = 0;		/* Init just in case */
 
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
   loop:
@@ -1698,8 +1689,6 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq,
 #endif
     }
     if (tvc) {
-	if (cached)
-	    *cached = 1;
 	osi_Assert((tvc->f.states & CVInit) == 0);
 	/* If we are in readdir, return the vnode even if not statd */
 	if ((tvc->f.states & CStatd) || afs_InReadDir(tvc)) {
@@ -1905,7 +1894,6 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq,
  *
  * \param afid
  * \param areq
- * \param cached Is element cached? If NULL, don't answer.
  * \param adp
  * \param aname
  *
@@ -1913,7 +1901,7 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq,
  */
 struct vcache *
 afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
-		 afs_int32 * cached, struct vcache *adp, char *aname)
+		 struct vcache *adp, char *aname)
 {
     afs_int32 code, now, newvcache = 0;
     struct VenusFid nfid;
@@ -1927,8 +1915,6 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     afs_int32 retry;
 
     AFS_STATCNT(afs_GetVCache);
-    if (cached)
-	*cached = 0;		/* Init just in case */
 
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
   loop1:
@@ -1948,9 +1934,6 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 	ObtainReadLock(&tvc->lock);
 
 	if (tvc->f.states & CStatd) {
-	    if (cached) {
-		*cached = 1;
-	    }
 	    ReleaseReadLock(&tvc->lock);
 	    return tvc;
 	}
@@ -2075,7 +2058,7 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 
 struct vcache *
 afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
-		  afs_int32 * cached, struct volume *tvolp)
+		  struct volume *tvolp)
 {
     afs_int32 code = 0, i, newvcache = 0, haveStatus = 0;
     afs_int32 getNewFid = 0;
@@ -2177,8 +2160,6 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 	newvcache = 1;
 	afs_stats_cmperf.vcacheMisses++;
     } else {
-	if (cached)
-	    *cached = 1;
 	afs_stats_cmperf.vcacheHits++;
 #if	defined(AFS_DARWIN80_ENV)
 	/* we already bumped the ref count in the for loop above */

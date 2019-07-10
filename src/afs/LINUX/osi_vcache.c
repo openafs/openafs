@@ -205,7 +205,7 @@ osi_ResetRootVCache(afs_uint32 volid)
     credp = crref();
     if (afs_CreateReq(&treq, credp))
 	goto out;
-    vcp = afs_GetVCache(&afs_rootFid, treq, NULL, NULL);
+    vcp = afs_GetVCache(&afs_rootFid, treq);
     if (!vcp)
 	goto out;
     afs_getattr(vcp, &vattr, credp);

@@ -361,10 +361,10 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	unlinkFid.Cell = aodp->f.fid.Cell;
 	tvc = NULL;
 	if (!unlinkFid.Fid.Unique) {
-	    tvc = afs_LookupVCache(&unlinkFid, areq, NULL, aodp, aname1);
+	    tvc = afs_LookupVCache(&unlinkFid, areq, aodp, aname1);
 	}
 	if (!tvc)		/* lookup failed or wasn't called */
-	    tvc = afs_GetVCache(&unlinkFid, areq, NULL, NULL);
+	    tvc = afs_GetVCache(&unlinkFid, areq);
 
 	if (tvc) {
 	    ObtainWriteLock(&tvc->lock, 151);
@@ -392,9 +392,9 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	fileFid.Fid.Volume = aodp->f.fid.Fid.Volume;
 	fileFid.Cell = aodp->f.fid.Cell;
 	if (!fileFid.Fid.Unique)
-	    tvc = afs_LookupVCache(&fileFid, areq, NULL, andp, aname2);
+	    tvc = afs_LookupVCache(&fileFid, areq, andp, aname2);
 	else
-	    tvc = afs_GetVCache(&fileFid, areq, NULL, (struct vcache *)0);
+	    tvc = afs_GetVCache(&fileFid, areq);
 	if (tvc && (vType(tvc) == VDIR)) {
 	    ObtainWriteLock(&tvc->lock, 152);
 	    tdc1 = afs_FindDCache(tvc, (afs_size_t) 0);

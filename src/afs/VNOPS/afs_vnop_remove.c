@@ -255,13 +255,11 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	if (tdc) {
 	    code = afs_dir_Lookup(tdc, aname, &unlinkFid.Fid);
 	    if (code == 0) {
-		afs_int32 cached = 0;
-
 		unlinkFid.Cell = adp->f.fid.Cell;
 		unlinkFid.Fid.Volume = adp->f.fid.Fid.Volume;
 		if (unlinkFid.Fid.Unique == 0) {
 		    tvc =
-			afs_LookupVCache(&unlinkFid, treq, &cached, adp,
+			afs_LookupVCache(&unlinkFid, treq, adp,
 					 aname);
 		} else {
 		    ObtainReadLock(&afs_xvcache);
@@ -437,7 +435,7 @@ afs_remunlink(struct vcache *avc, int doit)
 	    dirFid.Fid.Volume = avc->f.fid.Fid.Volume;
 	    dirFid.Fid.Vnode = avc->f.parent.vnode;
 	    dirFid.Fid.Unique = avc->f.parent.unique;
-	    adp = afs_GetVCache(&dirFid, treq, NULL, NULL);
+	    adp = afs_GetVCache(&dirFid, treq);
 
 	    if (adp) {
 		tdc = afs_FindDCache(adp, (afs_size_t) 0);

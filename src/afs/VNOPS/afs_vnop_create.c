@@ -178,10 +178,10 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    newFid.Fid.Volume = adp->f.fid.Fid.Volume;
 	    tvc = NULL;
 	    if (newFid.Fid.Unique == 0) {
-		tvc = afs_LookupVCache(&newFid, treq, NULL, adp, aname);
+		tvc = afs_LookupVCache(&newFid, treq, adp, aname);
 	    }
 	    if (!tvc)		/* lookup failed or wasn't called */
-		tvc = afs_GetVCache(&newFid, treq, NULL, NULL);
+		tvc = afs_GetVCache(&newFid, treq);
 
 	    if (tvc) {
 		/* if the thing exists, we need the right access to open it.
