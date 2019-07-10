@@ -204,7 +204,7 @@ afs_root(struct super_block *afsp)
 	}
 
 	if (!(code = afs_CreateReq(&treq, credp)) && !(code = afs_CheckInit())) {
-	    tvp = afs_GetVCache(&afs_rootFid, treq, NULL, NULL);
+	    tvp = afs_GetVCache(&afs_rootFid, treq);
 	    if (tvp) {
 		struct inode *ip = AFSTOV(tvp);
 		struct vattr *vattr = NULL;

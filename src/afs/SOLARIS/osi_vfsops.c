@@ -178,7 +178,7 @@ again:
 
 	if (!(code = afs_InitReq(&treq, proc->p_cred))
 	    && !(code = afs_CheckInit())) {
-	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
+	    tvp = afs_GetVCache(&afs_rootFid, &treq);
 	    /* we really want this to stay around */
 	    if (tvp) {
 		if (afs_globalVp) {

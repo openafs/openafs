@@ -62,7 +62,7 @@ afs_osi_vget(struct vcache **avcpp, struct fid *afidp, struct vrequest *areqp)
 	/* didn't find an entry. */
 	code = afs_CreateReq(&treq, afs_osi_credp);
 	if (code == 0) {
-	    *avcpp = afs_GetVCache(&vfid, treq, NULL, NULL);
+	    *avcpp = afs_GetVCache(&vfid, treq);
 	    afs_DestroyReq(treq);
 	}
     }

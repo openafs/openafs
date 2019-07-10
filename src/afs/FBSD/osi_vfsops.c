@@ -209,7 +209,7 @@ tryagain:
 	error = 0;
     } else {
 	if (!(error = afs_InitReq(&treq, cr)) && !(error = afs_CheckInit())) {
-	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
+	    tvp = afs_GetVCache(&afs_rootFid, &treq);
 	    /* we really want this to stay around */
 	    if (tvp) {
 		gvp = afs_globalVp;

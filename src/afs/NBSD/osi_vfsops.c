@@ -353,7 +353,7 @@ tryagain:
 
 	if (!(code = afs_InitReq(&treq, osi_curcred()))
 	    && !(code = afs_CheckInit())) {
-	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
+	    tvp = afs_GetVCache(&afs_rootFid, &treq);
 
 	    if (tvp) {
 		if (afs_globalVp) {

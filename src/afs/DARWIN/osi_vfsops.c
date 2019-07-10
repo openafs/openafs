@@ -257,7 +257,7 @@ again:
 	    ? &afs_rootFid : (struct VenusFid *)mdata;
 
 	if (!(error = afs_InitReq(&treq, cr)) && !(error = afs_CheckInit())) {
-	    tvp = afs_GetVCache(rootFid, &treq, NULL, NULL);
+	    tvp = afs_GetVCache(rootFid, &treq);
 #ifdef AFS_DARWIN80_ENV
             if (tvp) {
 	        AFS_GUNLOCK();

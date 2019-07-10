@@ -343,7 +343,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
     AFS_GLOCK();
     if (!(code = afs_InitReq(&treq, osi_curcred()))
 	&& !(code = afs_CheckInit())) {
-	tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
+	tvp = afs_GetVCache(&afs_rootFid, &treq);
 	if (tvp) {
 	    /* There is really no reason to over-hold this bugger--it's held
 	     * by the root filesystem reference. */
