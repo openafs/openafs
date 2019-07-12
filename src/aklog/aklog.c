@@ -1428,7 +1428,7 @@ usage(void)
 	    "[-d] [[-cell | -c] cell [-k krb_realm]] ",
 	    "[[-p | -path] pathname]\n",
 	    "    [-zsubs] [-hosts] [-noauth] [-noprdb] [-force] [-setpag] \n"
-		"    [-linked]"
+		"    [-linked] [-insecure_des]"
 #ifndef HAVE_NO_KRB5_524
 		" [-524]"
 #endif
@@ -1447,6 +1447,7 @@ usage(void)
 #ifndef HAVE_NO_KRB5_524
     fprintf(stderr, "    -524 means use the 524 converter instead of V5 directly\n");
 #endif
+    fprintf(stderr, "    -insecure_des enables insecure single-DES for krb5.\n");
     fprintf(stderr, "    No commandline arguments means ");
     fprintf(stderr, "authenticate to the local cell.\n");
     fprintf(stderr, "\n");
@@ -1460,6 +1461,7 @@ main(int argc, char *argv[])
     int status = AKLOG_SUCCESS;
     int i;
     int somethingswrong = FALSE;
+    int insecure_des = 0;
 
     cellinfo_t cellinfo;
 
@@ -1539,19 +1541,6 @@ main(int argc, char *argv[])
     initialize_PT_error_table();
     afs_set_com_err_hook(redirect_errors);
 
-    /*
-     * Enable DES enctypes, which are currently still required for AFS.
-     * krb5_allow_weak_crypto is MIT Kerberos 1.8.  krb5_enctype_enable is
-     * Heimdal.
-     */
-#if defined(HAVE_KRB5_ENCTYPE_ENABLE)
-    i = krb5_enctype_valid(context, ETYPE_DES_CBC_CRC);
-    if (i)
-        krb5_enctype_enable(context, ETYPE_DES_CBC_CRC);
-#elif defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
-    krb5_allow_weak_crypto(context, 1);
-#endif
-
     /* Initialize list of cells to which we have authenticated */
     ll_init(&authedcells);
 
@@ -1611,6 +1600,8 @@ main(int argc, char *argv[])
 	    }
 	    else
 		usage();
+	else if (strcmp(argv[i], "-insecure_des") == 0)
+	    insecure_des = 1;
 	else if (argv[i][0] == '-')
 	    usage();
 	else if (!pmode && !cmode) {
@@ -1626,6 +1617,26 @@ main(int argc, char *argv[])
 	}
 	else
 	    usage();
+
+    /*
+     * Enable DES enctypes if requested.  This is not required when rxkad-k5
+     * is used, but some sites may not have updated.
+     * krb5_allow_weak_crypto is MIT Kerberos 1.8.  krb5_enctype_enable is
+     * Heimdal.
+     */
+    if (insecure_des) {
+#if defined(HAVE_KRB5_ENCTYPE_ENABLE)
+	i = krb5_enctype_valid(context, ETYPE_DES_CBC_CRC);
+	if (i)
+	    krb5_enctype_enable(context, ETYPE_DES_CBC_CRC);
+#elif defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
+	krb5_allow_weak_crypto(context, 1);
+#else
+	fprintf(stderr,
+	    "%s: -insecure_des is not supported by this libkrb5\n", progname);
+	exit(AKLOG_MISC);
+#endif
+    }
 
 	if (cmode) {
 	    if (((i + 1) < argc) && (strcmp(argv[i + 1], "-k") == 0)) {

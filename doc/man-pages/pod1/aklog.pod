@@ -8,11 +8,11 @@ aklog - Obtain tokens for authentication to AFS
 <div class="synopsis">
 
 B<aklog> [B<-d>] [B<-hosts>] [B<-zsubs>] [B<-noprdb>] [B<-noauth>] [B<-linked>]
-    [B<-force>] [B<-524>] [B<-setpag>]
+    [B<-force>] [B<-524>] [B<-setpag>] [B<-insecure_des>]
     S<<< [[B<-cell> | B<-c>] <I<cell>> [B<-k> <I<Kerberos realm>>]]+ >>>
 
 B<aklog> [B<-d>] [B<-hosts>] [B<-zsubs>] [B<-noprdb>] [B<-noauth>] [B<-linked>]
-    [B<-force>] [B<-524>] [B<-setpag>] [B<-path> | B<-p>] <I<path>>+
+    [B<-force>] [B<-524>] [B<-setpag>] [B<-insecure_des>] [B<-path> | B<-p>] <I<path>>+
 
 =for html
 </div>
@@ -118,6 +118,11 @@ normally won't be necessary.
 =item B<-linked>
 
 If the AFS cell is linked to another AFS cell, get tokens for both.
+
+-item B<-insecure_des>
+
+Configure libkrb5 to allow the use of the (insecure) single-DES encryption
+types.  When rxkad-k5 is in use, this is not needed.
 
 =item B<-noauth>
 

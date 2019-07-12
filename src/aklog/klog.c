@@ -116,6 +116,7 @@ main(int argc, char *argv[])
 #define aUNWRAP 11
 #define aK5 12
 #define aK4 13
+#define aDES 14
 
     cmd_AddParm(ts, "-x", CMD_FLAG, CMD_OPTIONAL, "obsolete, noop");
     cmd_Seek(ts, aPRINCIPAL);
@@ -142,6 +143,8 @@ main(int argc, char *argv[])
     ++ts->nParms;	/* skip -k5 */
     cmd_AddParm(ts, "-k4", CMD_FLAG, CMD_OPTIONAL|CMD_HIDDEN, 0);
 #endif
+    cmd_AddParm(ts, "-insecure_des", CMD_FLAG, CMD_OPTIONAL,
+		"enable insecure single-DES for krb5");
 
     code = cmd_Dispatch(argc, argv);
     KLOGEXIT(code);
@@ -413,13 +416,15 @@ CommandProc(struct cmd_syndesc *as, void *arock)
      * krb5_allow_weak_crypto is MIT Kerberos 1.8.  krb5_enctype_enable is
      * Heimdal.
      */
+    if (as->parms[aDES].items) {
 #if defined(HAVE_KRB5_ENCTYPE_ENABLE)
-    i = krb5_enctype_valid(k5context, ETYPE_DES_CBC_CRC);
-    if (i)
-        krb5_enctype_enable(k5context, ETYPE_DES_CBC_CRC);
+	i = krb5_enctype_valid(k5context, ETYPE_DES_CBC_CRC);
+	if (i)
+	    krb5_enctype_enable(k5context, ETYPE_DES_CBC_CRC);
 #elif defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
-    krb5_allow_weak_crypto(k5context, 1);
+	krb5_allow_weak_crypto(k5context, 1);
 #endif
+    }
 
     /* Parse remaining arguments. */
 

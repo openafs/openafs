@@ -11,14 +11,15 @@ B<klog.krb5> [B<-x>] S<<< [B<-principal> <I<user name>>] >>>
     [-password <I<user's password>>] S<<< [B<-cell> <I<cell name>>] >>>
     S<<< [B<-k> <I<realm>>] >>> [B<-pipe>] [B<-silent>]
     S<<< [B<-lifetime> <I<ticket lifetime in hh[:mm[:ss]]>>] >>>
-    [B<-setpag>] [B<-tmp>] [B<-noprdb>] [B<-unwrap>] [B<-help>]
+    [B<-setpag>] [B<-tmp>] [B<-noprdb>] [B<-unwrap>] [B<-insecure_des>]
+    [B<-help>]
 
 B<klog.krb5> [B<-x>] S<<< [B<-pr> <I<user name>>] >>>
     S<<< [B<-pa> <I<user's password>>] >>>
     S<<< [B<-c> <I<cell name>>] >>>
     B<<< [B<-k> <I<realm>>] >>> [B<-pi>] [B<-si>]
     S<<< [B<-l> <I<ticket lifetime in hh[:mm[:ss]]>>] >>>
-    [B<-se>] [B<-t>] [B<-n>] [B<-u>] [B<-h>]
+    [B<-se>] [B<-t>] [B<-n>] [B<-u>] [B<-i>] [B<-h>]
 
 =for html
 </div>
@@ -220,6 +221,11 @@ if you are using older OpenAFS software that cannot handle large ticket
 sizes in conjunction with Active Directory as the Kerberos server, using
 B<-unwrap> can shrink the AFS token size so that older software can handle
 it more easily.
+
+=item B<-insecure_des>
+
+Configures libkrb5 to allow the use of the (insecure) single-DES encryption
+types.  When rxkad-k5 is in use, this is not needed.
 
 =item B<-help>
 
