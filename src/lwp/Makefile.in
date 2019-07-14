@@ -130,6 +130,8 @@ process.o	: process.default.s process.i386.s process.amd64.s process.c lwp.o
 		${CCOBJ} -DIGNORE_STDS_H -E -I${srcdir} -I${TOP_INCDIR} process.S > process.s ; \
 		${AS} process.s -o process.o ;  \
 		$(RM) -f process.s process.S ;;\
+	amd64_fbsd_1??) \
+		$(AFS_CCRULE_NOQ) -c ${srcdir}/process.c;; \
 	amd64_*bsd*) \
 		cp ${srcdir}/process.amd64.s process.S ; \
 		${CCOBJ} -DIGNORE_STDS_H -E -I${srcdir} -I${TOP_INCDIR} process.S > process.s ; \

@@ -85,4 +85,6 @@
 
 #endif /* !defined(UKERNEL) */
 
+#define USE_UCONTEXT
+
 #endif /* AFS_PARAM_H */
