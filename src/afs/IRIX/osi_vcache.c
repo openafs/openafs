@@ -14,7 +14,8 @@
 #include "afsincludes.h"        /*AFS-based standard headers */
 
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
+{
      int code;
      /* we can't control whether we sleep */
      if (!VREFCOUNT_GT(avc,0)
@@ -29,7 +30,8 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
 extern char *makesname();
 
 struct vcache *
-osi_NewVnode(void) {
+osi_NewVnode(void)
+{
     struct vcache *avc;
     char name[METER_NAMSZ];
 
@@ -47,16 +49,20 @@ osi_NewVnode(void) {
 }
 
 void
-osi_PrePopulateVCache(struct vcache *avc) {
+osi_PrePopulateVCache(struct vcache *avc)
+{
     avc->uncred = 0;
     memset(&(avc->f), 0, sizeof(struct fvcache));
 }
 
 void
-osi_AttachVnode(struct vcache *avc, int seq) { }
+osi_AttachVnode(struct vcache *avc, int seq)
+{
+}
 
 void
-osi_PostPopulateVCache(struct vcache *avc) {
+osi_PostPopulateVCache(struct vcache *avc)
+{
     memset(&(avc->vc_bhv_desc), 0, sizeof(avc->vc_bhv_desc));
     bhv_desc_init(&(avc->vc_bhv_desc), avc, avc, &Afs_vnodeops);
 

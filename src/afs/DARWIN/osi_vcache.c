@@ -14,7 +14,8 @@
 #include "afsincludes.h"        /*AFS-based standard headers */
 
 struct vcache *
-osi_NewVnode(void) {
+osi_NewVnode(void)
+{
     struct vcache *tvc;
 
     tvc = afs_osi_Alloc(sizeof(struct vcache));
@@ -29,7 +30,8 @@ osi_NewVnode(void) {
 
 #if defined(AFS_DARWIN80_ENV)
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
+{
     *slept = 0;
 
     /* we ignore defersleep, as we *always* need to sleep */
@@ -64,7 +66,8 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
 }
 #else
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
+{
     if (!VREFCOUNT_GT(avc,0)
         || ((VREFCOUNT(avc) == 1) && (UBCINFOEXISTS(AFSTOV(avc))))
         && avc->opens == 0 && (avc->f.states & CUnlinkedDel) == 0)
@@ -85,12 +88,14 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
 #endif /* AFS_DARWIN80_ENV */
 
 void
-osi_PrePopulateVCache(struct vcache *avc) {
+osi_PrePopulateVCache(struct vcache *avc)
+{
     memset(avc, 0, sizeof(struct vcache));
 }
 
 void
-osi_AttachVnode(struct vcache *avc, int seq) {
+osi_AttachVnode(struct vcache *avc, int seq)
+{
     ReleaseWriteLock(&afs_xvcache);
     AFS_GUNLOCK();
     afs_darwin_getnewvnode(avc);  /* includes one refcount */
@@ -104,7 +109,8 @@ osi_AttachVnode(struct vcache *avc, int seq) {
 }
 
 void
-osi_PostPopulateVCache(struct vcache *avc) {
+osi_PostPopulateVCache(struct vcache *avc)
+{
 #if !defined(AFS_DARWIN80_ENV)
    avc->v->v_mount = afs_globalVFS;
    vSetType(avc, VREG);

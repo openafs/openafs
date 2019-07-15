@@ -25,7 +25,7 @@ TryEvictDirDentries(struct inode *inode)
 
     afs_d_alias_lock(inode);
 
-restart:
+ restart:
 #if defined(D_ALIAS_IS_HLIST)
 # if defined(HLIST_ITERATOR_NO_NODE)
     hlist_for_each_entry(dentry, &inode->i_dentry, d_alias) {
@@ -88,7 +88,7 @@ restart:
     }
     afs_d_alias_unlock(inode);
 
-inuse:
+ inuse:
     return;
 }
 
@@ -240,7 +240,7 @@ osi_ResetRootVCache(afs_uint32 volid)
 
     AFS_RELE(root);
     afs_globalVp = vcp;
-out:
+ out:
     crfree(credp);
     afs_DestroyReq(treq);
 }

@@ -16,19 +16,21 @@
 extern struct vnodeops *afs_ops;
 
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
-     int code;
-     if (!VREFCOUNT_GT(avc,0)
-         && avc->opens == 0 && (avc->f.states & CUnlinkedDel) == 0) {
-        code = afs_FlushVCache(avc, slept);
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
+{
+    int code;
+    if (!VREFCOUNT_GT(avc,0)
+	&& avc->opens == 0 && (avc->f.states & CUnlinkedDel) == 0) {
+	code = afs_FlushVCache(avc, slept);
 	if (code == 0)
 	    return 1;
-     }
-     return 0;
+    }
+    return 0;
 }
 
 struct vcache *
-osi_NewVnode(void) {
+osi_NewVnode(void)
+{
     struct vcache *tvc;
 
     tvc = afs_osi_Alloc(sizeof(struct vcache));
@@ -44,7 +46,8 @@ osi_NewVnode(void) {
 }
 
 void
-osi_PrePopulateVCache(struct vcache *avc) {
+osi_PrePopulateVCache(struct vcache *avc)
+{
     memset(avc, 0, sizeof(struct vcache));
 
 #ifdef	AFS_AIX32_ENV
@@ -59,10 +62,13 @@ osi_PrePopulateVCache(struct vcache *avc) {
 }
 
 void
-osi_AttachVnode(struct vcache *avc, int seq) { }
+osi_AttachVnode(struct vcache *avc, int seq)
+{
+}
 
 void
-osi_PostPopulateVCache(struct vcache *avc) {
+osi_PostPopulateVCache(struct vcache *avc)
+{
     avc->v.v_op = afs_ops;
 
     avc->v.v_vfsp = afs_globalVFS;
