@@ -1289,8 +1289,14 @@ afs_syscall_call(long parm, long parm2, long parm3,
     else if (parm == AFSOP_SET_DYNROOT) {
 	code = afs_SetDynrootEnable(parm2);
     } else if (parm == AFSOP_SET_FAKESTAT) {
-	afs_fakestat_enable = parm2;
-	code = 0;
+	if (parm2 >= 0 && parm2 <= 2) {
+	    afs_fakestat_enable = parm2;
+	    code = 0;
+	} else {
+	    afs_warn("afs: afsd gave us unknown fakestat value %ld (are afsd "
+	             "and libafs running the same version?\n", parm2);
+	    code = EINVAL;
+	}
     } else if (parm == AFSOP_SET_BACKUPTREE) {
 	afs_bkvolpref = parm2;
     } else if (parm == AFSOP_SET_RXPCK) {
