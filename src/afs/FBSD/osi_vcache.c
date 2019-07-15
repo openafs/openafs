@@ -54,7 +54,8 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
 }
 
 struct vcache *
-osi_NewVnode(void) {
+osi_NewVnode(void)
+{
     struct vcache *tvc;
 
     tvc = afs_osi_Alloc(sizeof(struct vcache));
@@ -64,12 +65,14 @@ osi_NewVnode(void) {
 }
 
 void
-osi_PrePopulateVCache(struct vcache *avc) {
+osi_PrePopulateVCache(struct vcache *avc)
+{
     memset(avc, 0, sizeof(struct vcache));
 }
 
 void
-osi_AttachVnode(struct vcache *avc, int seq) {
+osi_AttachVnode(struct vcache *avc, int seq)
+{
     struct vnode *vp;
 
     ReleaseWriteLock(&afs_xvcache);
@@ -103,7 +106,8 @@ osi_AttachVnode(struct vcache *avc, int seq) {
 }
 
 void
-osi_PostPopulateVCache(struct vcache *avc) {
+osi_PostPopulateVCache(struct vcache *avc)
+{
     avc->v->v_mount = afs_globalVFS;
     vSetType(avc, VREG);
 }

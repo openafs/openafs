@@ -14,7 +14,8 @@
 #include "afsincludes.h"        /*AFS-based standard headers */
 
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
+{
     int code;
 
     /* we can't control whether we sleep */
@@ -28,25 +29,28 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
 }
 
 struct vcache *
-osi_NewVnode(void) {
+osi_NewVnode(void)
+{
     return afs_osi_Alloc(sizeof(struct vcache));
 }
 
 void
-osi_PrePopulateVCache(struct vcache *avc) {
+osi_PrePopulateVCache(struct vcache *avc)
+{
     memset(avc, 0, sizeof(struct vcache));
 
     avc->flushDV.low = avc->flushDV.high = AFS_MAXDV;
 }
 
 void
-osi_AttachVnode(struct vcache *avc, int seq) {
+osi_AttachVnode(struct vcache *avc, int seq)
+{
 }
 
 void
-osi_PostPopulateVCache(struct vcache *avc) {
+osi_PostPopulateVCache(struct vcache *avc)
+{
     AFSTOV(avc)->v_op = afs_ops;
     avc->v.v_vfsp = afs_globalVFS;
     vSetType(avc, VREG);
 }
-

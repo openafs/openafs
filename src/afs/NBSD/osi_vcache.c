@@ -73,4 +73,3 @@ osi_PostPopulateVCache(struct vcache *avc)
     AFSTOV(avc)->v_mount = afs_globalVFS;
     vSetType(avc, VREG);
 }
-

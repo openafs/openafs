@@ -14,7 +14,8 @@
 #include "afsincludes.h"        /*AFS-based standard headers */
 
 int
-osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
+osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
+{
     int code;
 
     if (!VREFCOUNT_GT(avc,0)
@@ -27,7 +28,8 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep) {
 }
 
 struct vcache *
-osi_NewVnode(void) {
+osi_NewVnode(void)
+{
     struct vcache *avc;
 
     avc = afs_osi_Alloc(sizeof(struct vcache));
@@ -36,7 +38,8 @@ osi_NewVnode(void) {
 }
 
 void
-osi_PrePopulateVCache(struct vcache *avc) {
+osi_PrePopulateVCache(struct vcache *avc)
+{
     memset(avc, 0, sizeof(struct vcache));
 
     QInit(&avc->multiPage);
@@ -78,7 +81,8 @@ osi_AttachVnode(struct vcache *avc, int seq)
 }
 
 void
-osi_PostPopulateVCache(struct vcache *avc) {
+osi_PostPopulateVCache(struct vcache *avc)
+{
     AFSTOV(avc)->v_op = afs_ops;
     AFSTOV(avc)->v_vfsp = afs_globalVFS;
     vSetType(avc, VREG);
