@@ -80,7 +80,16 @@
 #include "v5gen-rewrite.h"
 #include "v5gen.h"
 #include "der.h"
+
+#if defined(IGNORE_SOME_GCC_WARNINGS) && !defined(_clang) && __GNUC__ >= 7
+# pragma GCC diagnostic push
+# pragma GCC diagnostic warning "-Wformat-truncation"
+#endif
 #include "v5der.c"
+#if defined(IGNORE_SOME_GCC_WARNINGS) && !defined(__clang__) && __GNUC__ >= 7
+# pragma GCC diagnostic pop
+#endif
+
 #include "v5gen.c"
 
 #define RFC3961_NO_ENUMS
