@@ -296,4 +296,8 @@ libadmin/samples/rxstat_query_process.c : all : util_RPCStatsStateGet types
 libadmin/test/client.c : all         : util_RPCStatsStateGet types
 ubik/ubikclient.c    : strict-protos : ubik_Call
 volser/vol-dump.c    : format        : afs_sfsize_t
-
+rxkad/ticket5.c      : format-truncation : inside included file v5der.c in the
+                                       function _heim_time2generalizedtime, the
+                                       two snprintf calls raise
+                                       format-truncation warnings due to the
+                                       arithmetic on tm_year and tm_mon fields
