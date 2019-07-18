@@ -146,13 +146,18 @@ osi_NewVnode(void)
 
     AFS_GUNLOCK();
     ip = new_inode(afs_globalVFS);
-    if (!ip)
-	osi_Panic("afs_NewVCache: no more inodes");
     AFS_GLOCK();
+    if (ip == NULL) {
+	return NULL;
+    }
 #if defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE)
     tvc = VTOAFS(ip);
 #else
     tvc = afs_osi_Alloc(sizeof(struct vcache));
+    if (tvc == NULL) {
+	iput(ip);
+	return NULL;
+    }
     ip->u.generic_ip = tvc;
     tvc->v = ip;
 #endif

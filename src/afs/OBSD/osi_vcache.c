@@ -40,6 +40,9 @@ osi_NewVnode(void)
     struct vcache *tvc;
 
     tvc = afs_osi_Alloc(sizeof(struct vcache));
+    if (tvc == NULL) {
+	return NULL;
+    }
     tvc->v = NULL; /* important to clean this, or use memset 0 */
 
     return tvc;
