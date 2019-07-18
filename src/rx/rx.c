@@ -2264,6 +2264,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 
     if (call) {
 	opr_queue_Remove(&call->entry);
+	CLEAR_CALL_QUEUE_LOCK(call);
 	/* we can't schedule a call if there's no data!!! */
 	/* send an ack if there's no data, if we're missing the
 	 * first packet, or we're missing something between first
