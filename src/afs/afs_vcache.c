@@ -889,6 +889,9 @@ afs_AllocVCache(void)
     struct vcache *tvc;
 
     tvc = osi_NewVnode();
+    if (tvc == NULL) {
+	return NULL;
+    }
 
     afs_vcount++;
 
@@ -1022,6 +1025,9 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
 	}
     }
     tvc = afs_AllocVCache();
+    if (tvc == NULL) {
+	return NULL;
+    }
 #else /* AFS_LINUX22_ENV */
     /* pull out a free cache entry */
     if (!freeVCList) {
@@ -1030,6 +1036,9 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
 
     if (!freeVCList) {
 	tvc = afs_AllocVCache();
+	if (tvc == NULL) {
+	    return NULL;
+	}
     } else {
 	tvc = freeVCList;	/* take from free list */
 	freeVCList = tvc->nextfree;

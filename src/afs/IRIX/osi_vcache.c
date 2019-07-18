@@ -34,6 +34,9 @@ osi_NewVnode(void) {
     char name[METER_NAMSZ];
 
     avc = afs_osi_Alloc(sizeof(struct vcache));
+    if (avc == NULL) {
+	return NULL;
+    }
 
     memset(avc, 0, sizeof(struct vcache));
     avc->v.v_number = ++afsvnumbers;

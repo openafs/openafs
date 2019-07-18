@@ -31,7 +31,9 @@ osi_NewVnode(void) {
     struct vcache *avc;
 
     avc = afs_osi_Alloc(sizeof(struct vcache));
-    osi_Assert(avc != NULL);
+    if (avc == NULL) {
+	return NULL;
+    }
     return avc;
 }
 
