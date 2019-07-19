@@ -579,12 +579,24 @@ DFlush(void)
     return 0;
 }
 
+/*!
+ * Prepare a new directory page buffer
+ *
+ * \param adc	    pointer to the directory object dcache
+ * \param nblobs    page we want
+ * \param entry	    buffer to return requested page
+ *
+ * \retval 0	    success; entry is updated
+ * \retval non-zero internal error or IO error writing to disk
+ */
 int
 DNew(struct dcache *adc, int page, struct DirBuffer *entry)
 {
     /* Same as read, only do *not* even try to read the page, since it
      * probably doesn't exist. */
     struct buffer *tb;
+    int code;
+
     AFS_STATCNT(DNew);
 
     ObtainWriteLock(&afs_bufferLock, 264);
@@ -599,7 +611,11 @@ DNew(struct dcache *adc, int page, struct DirBuffer *entry)
      * DFlush due to lock hierarchy issues */
     if ((page + 1) * AFS_BUFFER_PAGESIZE > adc->f.chunkBytes) {
 	afs_AdjustSize(adc, (page + 1) * AFS_BUFFER_PAGESIZE);
-	osi_Assert(afs_WriteDCache(adc, 1) == 0);
+	code = afs_WriteDCache(adc, 1);
+	if (code) {
+	    ReleaseWriteLock(&afs_bufferLock);
+	    return code;
+	}
     }
     ObtainWriteLock(&tb->lock, 265);
     tb->lockers++;
