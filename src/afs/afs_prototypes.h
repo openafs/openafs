@@ -319,6 +319,7 @@ extern int afs_DynrootVOPRemove(struct vcache *avc, afs_ucred_t *acred,
 				char *aname);
 extern int afs_DynrootVOPSymlink(struct vcache *avc, afs_ucred_t *acred,
 				 char *aname, char *atargetName);
+extern void shutdown_dynroot(void);
 
 /* afs_error.c */
 extern void init_et_to_sys_error(void);

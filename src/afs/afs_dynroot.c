@@ -916,3 +916,26 @@ afs_DynrootVOPSymlink(struct vcache *avc, afs_ucred_t *acred,
     afs_DynrootInvalidate();
     return 0;
 }
+
+void
+shutdown_dynroot(void)
+{
+    if (!afs_dynrootEnable) {
+	return;
+    }
+
+    ObtainWriteLock(&afs_dynrootDirLock, 554);
+
+    if (afs_dynrootDir) {
+	afs_osi_Free(afs_dynrootDir, afs_dynrootDirLen);
+	afs_dynrootDir = NULL;
+	afs_dynrootDirLen = 0;
+    }
+    if (afs_dynrootMountDir) {
+	afs_osi_Free(afs_dynrootMountDir, afs_dynrootMountDirLen);
+	afs_dynrootMountDir = NULL;
+	afs_dynrootMountDirLen = 0;
+    }
+
+    ReleaseWriteLock(&afs_dynrootDirLock);
+}

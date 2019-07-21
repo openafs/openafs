@@ -1520,6 +1520,7 @@ afs_shutdown(void)
     shutdown_nfsclnt();
 #endif
     shutdown_afstest();
+    shutdown_dynroot();
     shutdown_AFS();
     /* The following hold the cm stats */
     memset(&afs_cmstats, 0, sizeof(struct afs_CMStats));
