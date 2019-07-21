@@ -152,7 +152,6 @@ rx_upcall(socket_t so, void *arg, __unused int waitflag)
 void
 osi_StopNetIfPoller(void)
 {
-    shutdown_rx();
     soclose(rx_socket);
     if (afs_termState == AFSOP_STOP_NETIF) {
 	afs_termState = AFSOP_STOP_COMPLETE;
