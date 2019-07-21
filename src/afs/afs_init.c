@@ -881,4 +881,6 @@ shutdown_AFS(void)
     }
     shutdown_cell();
     shutdown_server();
+    shutdown_rx();
+    shutdown_rxevent();
 }
