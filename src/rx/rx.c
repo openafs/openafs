@@ -9421,5 +9421,12 @@ int
 rxi_NetSend(osi_socket socket, void *addr, struct iovec *dvec,
 	    int nvecs, int length, int istack)
 {
-    return osi_NetSend(socket, addr, dvec, nvecs, length, istack);
+    if (rxi_IsRunning()) {
+	return osi_NetSend(socket, addr, dvec, nvecs, length, istack);
+    }
+#ifdef AFS_NT40_ENV
+    return WSAESHUTDOWN;
+#else
+    return ESHUTDOWN;
+#endif
 }
