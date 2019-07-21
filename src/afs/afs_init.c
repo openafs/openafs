@@ -822,62 +822,65 @@ shutdown_AFS(void)
     int i;
 
     AFS_STATCNT(shutdown_AFS);
-    if (afs_cold_shutdown) {
-	afs_resourceinit_flag = 0;
 
-	shutdown_volume();
+    afs_resourceinit_flag = 0;
 
-	/*
-	 * Free FreeVolList allocations
-	 */
-	afs_osi_Free(Initialafs_freeVolList,
-		     afs_memvolumes * sizeof(struct volume));
-	afs_freeVolList = Initialafs_freeVolList = 0;
+    shutdown_volume();
 
-	/* XXX HACK for MEM systems XXX
-	 *
-	 * For -memcache cache managers when we run out of free in memory volumes
-	 * we simply malloc more; we won't be able to free those additional volumes.
-	 */
+    /*
+     * Free FreeVolList allocations
+     */
+    afs_osi_Free(Initialafs_freeVolList,
+		 afs_memvolumes * sizeof(struct volume));
+    afs_freeVolList = Initialafs_freeVolList = NULL;
 
-	/*
-	 * Free Users table allocation
-	 */
-	{
-	    struct unixuser *tu, *ntu;
-	    for (i = 0; i < NUSERS; i++) {
-		for (tu = afs_users[i]; tu; tu = ntu) {
-		    ntu = tu->next;
-		    if (tu->tokens)
-			afs_FreeTokens(&tu->tokens);
-		    if (tu->exporter)
-			EXP_RELE(tu->exporter);
-		    afs_osi_Free(tu, sizeof(struct unixuser));
-		}
-		afs_users[i] = 0;
+    /* XXX HACK for MEM systems XXX
+     *
+     * For -memcache cache managers when we run out of free in memory volumes
+     * we simply malloc more; we won't be able to free those additional volumes.
+     */
+
+    /*
+     * Free Users table allocation
+     */
+    {
+	struct unixuser *tu, *ntu;
+	for (i = 0; i < NUSERS; i++) {
+	    for (tu = afs_users[i]; tu; tu = ntu) {
+		ntu = tu->next;
+		if (tu->tokens)
+		    afs_FreeTokens(&tu->tokens);
+		if (tu->exporter)
+		    EXP_RELE(tu->exporter);
+		afs_osi_Free(tu, sizeof(struct unixuser));
 	    }
+	    afs_users[i] = NULL;
 	}
+    }
 
-	for (i = 0; i < NFENTRIES; i++)
-	    fvTable[i] = 0;
-	/* Reinitialize local globals to defaults */
-	for (i = 0; i < MAXNUMSYSNAMES; i++)
-	    afs_osi_Free(afs_sysnamelist[i], MAXSYSNAME);
-	afs_sysname = 0;
-	afs_sysnamecount = 0;
-	afs_marinerHost = 0;
-	afs_volCounter = 1;
-	afs_waitForever = afs_waitForeverCount = 0;
-	afs_FVIndex = -1;
-	afs_server = (struct rx_service *)0;
+    for (i = 0; i < NFENTRIES; i++)
+	fvTable[i] = 0;
+    /* Reinitialize local globals to defaults */
+    for (i = 0; i < MAXNUMSYSNAMES; i++) {
+	afs_osi_Free(afs_sysnamelist[i], MAXSYSNAME);
+	afs_sysnamelist[i] = NULL;
+    }
+    afs_sysname = NULL;
+    afs_sysnamecount = 0;
+    afs_marinerHost = 0;
+    afs_volCounter = 1;
+    afs_waitForever = afs_waitForeverCount = 0;
+    afs_FVIndex = -1;
+    afs_server = NULL;
+
+    if (afs_cold_shutdown) {
 	AFS_RWLOCK_INIT(&afs_xconn, "afs_xconn");
 	memset(&afs_rootFid, 0, sizeof(struct VenusFid));
 	AFS_RWLOCK_INIT(&afs_xuser, "afs_xuser");
 	AFS_RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
 	AFS_RWLOCK_INIT(&afs_xserver, "afs_xserver");
 	LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
-
-	shutdown_cell();
-	shutdown_server();
     }
+    shutdown_cell();
+    shutdown_server();
 }

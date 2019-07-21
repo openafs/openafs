@@ -181,26 +181,29 @@ osi_AllocSmallSpace(size_t size)
 void
 shutdown_osinet(void)
 {
-    AFS_STATCNT(shutdown_osinet);
 #ifndef AFS_PRIVATE_OSI_ALLOCSPACES
+    struct osi_packet *tp;
+#endif
+
+    AFS_STATCNT(shutdown_osinet);
+
+#ifndef AFS_PRIVATE_OSI_ALLOCSPACES
+    while ((tp = freePacketList)) {
+	freePacketList = tp->next;
+	afs_osi_Free(tp, AFS_LRALLOCSIZ);
+#ifdef  KERNEL_HAVE_PIN
+	unpin(tp, AFS_LRALLOCSIZ);
+#endif
+    }
+
+    while ((tp = freeSmallList)) {
+	freeSmallList = tp->next;
+	afs_osi_Free(tp, AFS_SMALLOCSIZ);
+#ifdef  KERNEL_HAVE_PIN
+	unpin(tp, AFS_SMALLOCSIZ);
+#endif
+    }
     if (afs_cold_shutdown) {
-	struct osi_packet *tp;
-
-	while ((tp = freePacketList)) {
-	    freePacketList = tp->next;
-	    afs_osi_Free(tp, AFS_LRALLOCSIZ);
-#ifdef  KERNEL_HAVE_PIN
-	    unpin(tp, AFS_LRALLOCSIZ);
-#endif
-	}
-
-	while ((tp = freeSmallList)) {
-	    freeSmallList = tp->next;
-	    afs_osi_Free(tp, AFS_SMALLOCSIZ);
-#ifdef  KERNEL_HAVE_PIN
-	    unpin(tp, AFS_SMALLOCSIZ);
-#endif
-	}
 	LOCK_INIT(&osi_fsplock, "osi_fsplock");
 	LOCK_INIT(&osi_flplock, "osi_flplock");
     }

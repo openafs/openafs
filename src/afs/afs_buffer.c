@@ -588,17 +588,20 @@ shutdown_bufferpackage(void)
     AFS_STATCNT(shutdown_bufferpackage);
     /* Free all allocated Buffers and associated buffer pages */
     DFlush();
+
+    dinit_flag = 0;
+    tp = Buffers;
+    for (i = 0; i < nbuffers; i += NPB, tp += NPB) {
+	afs_osi_Free(tp->data, NPB * AFS_BUFFER_PAGESIZE);
+    }
+    afs_osi_Free(Buffers, nbuffers * sizeof(struct buffer));
+    Buffers = NULL;
+    nbuffers = 0;
+    timecounter = 1;
+    for (i = 0; i < PHSIZE; i++)
+	phTable[i] = NULL;
+
     if (afs_cold_shutdown) {
-	dinit_flag = 0;
-	tp = Buffers;
-	for (i = 0; i < nbuffers; i += NPB, tp += NPB) {
-	    afs_osi_Free(tp->data, NPB * AFS_BUFFER_PAGESIZE);
-	}
-	afs_osi_Free(Buffers, nbuffers * sizeof(struct buffer));
-	nbuffers = 0;
-	timecounter = 1;
-	for (i = 0; i < PHSIZE; i++)
-	    phTable[i] = 0;
 	memset(&afs_bufferLock, 0, sizeof(afs_lock_t));
     }
 }
