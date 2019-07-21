@@ -4392,7 +4392,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 
 #ifdef RX_ENABLE_LOCKS
 	/* XXX Hack. Because we have to release the global call lock when sending
-	 * packets (osi_NetSend) we drop all acks while we're traversing the tq
+	 * packets (rxi_NetSend) we drop all acks while we're traversing the tq
 	 * in rxi_Start sending packets out because packets may move to the
 	 * freePacketQueue as result of being here! So we drop these packets until
 	 * we're safely out of the traversing. Really ugly!
@@ -6455,7 +6455,7 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1,
     tmpiov[0].iov_base = tbuffer;
     tmpiov[0].iov_len = 1 + sizeof(struct rx_header);
 
-    osi_NetSend(socket, &taddr, tmpiov, 1, 1 + sizeof(struct rx_header), 1);
+    rxi_NetSend(socket, &taddr, tmpiov, 1, 1 + sizeof(struct rx_header), 1);
 
     MUTEX_ENTER(&conn->conn_data_lock);
     /* We ran, so the handle is no longer needed to try to cancel ourselves. */
@@ -9343,3 +9343,10 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
     return 0;
 }
 #endif
+
+int
+rxi_NetSend(osi_socket socket, void *addr, struct iovec *dvec,
+	    int nvecs, int length, int istack)
+{
+    return osi_NetSend(socket, addr, dvec, nvecs, length, istack);
+}
