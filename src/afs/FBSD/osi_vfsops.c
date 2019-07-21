@@ -222,19 +222,18 @@ afs_unmount(struct mount *mp, int flags, struct thread *p)
 	error = EBUSY;
     AFS_GUNLOCK();
 
-    /*
-     * Release any remaining vnodes on this mount point.
-     * The `1' means that we hold one extra reference on
-     * the root vnode (this is just a guess right now).
-     * This has to be done outside the global lock.
-     */
     if (!error) {
+	/*
+	 * Release any remaining vnodes on this mount point. The second
+	 * argument is how many refs we hold on the root vnode. Since we
+	 * released our reference to the root vnode up above, give 0.
+	 */
 #if defined(AFS_FBSD80_ENV)
-	error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, curthread);
+	error = vflush(mp, 0, (flags & MNT_FORCE) ? FORCECLOSE : 0, curthread);
 #elif defined(AFS_FBSD53_ENV)
-	error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, p);
+	error = vflush(mp, 0, (flags & MNT_FORCE) ? FORCECLOSE : 0, p);
 #else
-	error = vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0);
+	error = vflush(mp, 0, (flags & MNT_FORCE) ? FORCECLOSE : 0);
 #endif
     }
     if (error)
