@@ -412,6 +412,8 @@ extern struct rx_packet *rxi_SplitJumboPacket(struct rx_packet *p,
 extern int osi_NetSend(osi_socket socket, void *addr, struct iovec *dvec,
 		       int nvecs, int length, int istack);
 #endif
+extern int rxi_NetSend(osi_socket socket, void *addr, struct iovec *dvec,
+		       int nvecs, int length, int istack);
 extern struct rx_packet *rxi_ReceiveDebugPacket(struct rx_packet *ap,
 						osi_socket asocket,
 						afs_uint32 ahost, short aport,
