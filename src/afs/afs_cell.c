@@ -1097,7 +1097,9 @@ shutdown_cell(void)
 	afs_osi_FreeStr(afs_cellname_inode.ufs);
     }
 #endif
-    AFS_RWLOCK_INIT(&afs_xcell, "afs_xcell");
+    if (afs_cold_shutdown) {
+	AFS_RWLOCK_INIT(&afs_xcell, "afs_xcell");
+    }
 
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
 	tc = QTOC(cq);
