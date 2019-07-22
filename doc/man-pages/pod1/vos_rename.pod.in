@@ -40,13 +40,16 @@ command.
 
 =over 4
 
-=item B<-oldname> <I<old volume name>>
+=item B<-oldname> <I<old volume name or id>>
 
-Is the current name of the read/write volume.
+Is the current name or numeric id of the read/write volume to be renamed.
 
 =item B<-newname> <I<new volume name>>
 
 Is the desired new name for the volume.
+
+The new name may be the same as the current volume name in the VLDB
+in order to complete a previously interrupted volume rename.
 
 =include fragments/vos-common.pod
 
