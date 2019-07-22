@@ -1119,6 +1119,10 @@ shutdown_cell(void)
 	cn = next;
     }
 }
+    if (afs_thiscell) {
+	afs_osi_FreeStr(afs_thiscell);
+	afs_thiscell = NULL;
+    }
 }
 
 /*!
