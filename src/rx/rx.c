@@ -2131,8 +2131,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 		CV_WAIT(&sq->cv, &rx_serverPool_lock);
 #ifdef	KERNEL
 		if (afs_termState == AFSOP_STOP_RXCALLBACK) {
-		    MUTEX_EXIT(&rx_serverPool_lock);
-		    return (struct rx_call *)0;
+		    break;
 		}
 #endif
 	    } while (!(call = sq->newcall)
