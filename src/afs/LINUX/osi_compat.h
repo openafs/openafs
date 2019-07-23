@@ -722,4 +722,15 @@ afs_file_write(struct file *filp, char __user *buf, size_t len, loff_t *pos)
 #endif
 }
 
+static inline char*
+afs_d_path(struct dentry *dp, struct vfsmount *mnt, char *buf, int buflen)
+{
+#ifdef D_PATH_TAKES_STRUCT_PATH
+    afs_linux_path_t p = { .mnt = mnt, .dentry = dp };
+    return d_path(&p, buf, buflen);
+#else
+    return d_path(dp, mnt, buf, buflen);
+#endif
+}
+
 #endif /* AFS_LINUX_OSI_COMPAT_H */
