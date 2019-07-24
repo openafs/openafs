@@ -108,10 +108,10 @@ AC_ARG_ENABLE([kauth],
      enable_pam="no"])
 
 dnl modern crypto
-AC_ARG_ENABLE([rxgk],
 dnl Note that this flag only dictates whether or not rxgk support is turned on
 dnl in various daemons, utilities, etc. Without this flag, we still always try
 dnl to build rxgk when we can (when a suitable gssapi is available).
+AC_ARG_ENABLE([rxgk],
     [AS_HELP_STRING([--enable-rxgk],
         [Include experimental support for the RXGK security class (defaults to disabled)])],
     [],
