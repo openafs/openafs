@@ -1453,12 +1453,20 @@ static void
 afs_dentry_iput(struct dentry *dp, struct inode *ip)
 {
     struct vcache *vcp = VTOAFS(ip);
+    int haveGlock = ISAFS_GLOCK();
 
-    AFS_GLOCK();
+    if (!haveGlock) {
+        AFS_GLOCK();
+    }
+
     if (!AFS_IS_DISCONNECTED || (vcp->f.states & CUnlinked)) {
 	(void) afs_InactiveVCache(vcp, NULL);
     }
-    AFS_GUNLOCK();
+
+    if (!haveGlock) {
+        AFS_GUNLOCK();
+    }
+
     afs_linux_clear_nfsfs_renamed(dp);
 
     iput(ip);
