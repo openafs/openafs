@@ -807,12 +807,16 @@ afs_VCacheStressed(void)
 int
 afs_ShakeLooseVCaches(afs_int32 anumber)
 {
+    /* Try not to run for more than about 3 seconds */
+    static const int DEADLINE = 3;
+
     afs_int32 i, loop;
     int evicted;
     struct vcache *tvc;
     struct afs_q *tq, *uq;
     int fv_slept, defersleep = 0;
     int limit;
+    afs_uint32 start = osi_Time();
 
     loop = 0;
 
@@ -841,8 +845,33 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
 	}
 
 	if (fv_slept) {
-	    if (loop++ > 100)
-		break;
+	    if (loop++ > 100) {
+		afs_uint32 now = osi_Time();
+		loop = 0;
+		if (now < start) {
+		    start = now;
+		}
+		if (now - start >= DEADLINE) {
+		    static afs_uint32 last_warned;
+		    /* Warn about this at most every VCACHE_STRESS_LOGINTERVAL secs */
+		    if (now < last_warned ||
+			now - last_warned > VCACHE_STRESS_LOGINTERVAL) {
+			last_warned = now;
+			afs_warn("afs: Warning: it took us a long time (around "
+				 "%d seconds) to try to trim our stat cache "
+				 "down to a reasonable size. This may indicate "
+				 "someone is accessing an excessive number of "
+				 "files, or something is wrong with the AFS "
+				 "cache.\n",
+				 now - start);
+			afs_warn("afs: Consider raising the afsd -stat parameter "
+				 "(current setting: %d, current vcount: %d), or "
+				 "figure out what is accessing so many files.\n",
+				 afs_cacheStats, afs_vcount);
+		    }
+		    break;
+		}
+	    }
 	    if (!evicted) {
 		/*
 		 * This vcache was busy and we slept while trying to evict it.
