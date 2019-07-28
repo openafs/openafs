@@ -60,6 +60,9 @@ CWARNFLAGS+= -Wno-redundant-decls
 KMODDIR=/boot/modules
 KMOD=	libafs
 SYSDIR= ${KSRC}
+.if !empty(KBLD)
+KERNBUILDDIR=${KBLD}
+.endif
 
 # Name of directory to hold object files and libraries.
 KOBJ = MODLOAD
