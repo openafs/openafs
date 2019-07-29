@@ -1744,6 +1744,35 @@ IsDCacheSizeOK(struct dcache *adc, struct vcache *avc, afs_int32 chunk_bytes,
     afs_size_t expected_bytes;
     afs_size_t chunk_start = AFS_CHUNKTOBASE(adc->f.chunk);
 
+    if (vType(avc) == VDIR) {
+	/*
+	 * Directory blobs may be constructed locally (see afs_LocalHero), and
+	 * the size of the blob may differ slightly compared to what's on the
+	 * fileserver. So, skip size checks for directories.
+	 */
+	return 1;
+    }
+
+    if ((avc->f.states & CDirty)) {
+	/*
+	 * Our vcache may have writes that are local to our cache, but not yet
+	 * written to the fileserver. In such a situation, we may have dcaches
+	 * for that file that are "short". For example:
+	 *
+	 * Say we have a file that is 0 bytes long. A process opens that file,
+	 * and writes some data to offset 5M (keeping the file open). Another
+	 * process comes along and reads data from offset 1M. We'll try to
+	 * fetch data at offset 1M, and the fileserver will respond with 0
+	 * bytes, since our locally-written data hasn't been written to the
+	 * fileserver yet (on the fileserver, the file is still 0-bytes long).
+	 * So our dcache at offset 1M will have 0 bytes.
+	 *
+	 * So if CDirty is set, don't do any size/length checks at all, since
+	 * we have no idea if the avc length is valid.
+	 */
+	return 1;
+    }
+
     if (file_length < chunk_start) {
 	expected_bytes = 0;
 
@@ -1782,8 +1811,7 @@ IsDCacheSizeOK(struct dcache *adc, struct vcache *avc, afs_int32 chunk_bytes,
 	    }
 
 	    afs_warn("afs: Detected corrupt dcache for file %d.%u.%u.%u: chunk %d "
-		     "(offset %lu) has %d bytes, but it should have %lu bytes (file "
-		     "length %lu, DV %u, dcache mtime %u)\n",
+		     "(offset %lu) has %d bytes, but it should have %lu bytes\n",
 		     adc->f.fid.Cell,
 		     adc->f.fid.Fid.Volume,
 		     adc->f.fid.Fid.Vnode,
@@ -1791,12 +1819,21 @@ IsDCacheSizeOK(struct dcache *adc, struct vcache *avc, afs_int32 chunk_bytes,
 		     adc->f.chunk,
 		     (unsigned long)chunk_start,
 		     chunk_bytes,
-		     (unsigned long)expected_bytes,
+		     (unsigned long)expected_bytes);
+	    afs_warn("afs: (dcache %p, file length %lu, DV %u, dcache mtime %u, "
+		     "index %d, dflags 0x%x, mflags 0x%x, states 0x%x, vcache "
+		     "states 0x%x)\n",
+		     adc,
 		     (unsigned long)file_length,
 		     versionNo,
-		     mtime);
+		     mtime,
+		     adc->index,
+		     (unsigned)adc->dflags,
+		     (unsigned)adc->mflags,
+		     (unsigned)adc->f.states,
+		     avc->f.states);
 	    afs_warn("afs: Ignoring the dcache for now, but this may indicate "
-		     "corruption in the AFS cache\n");
+		     "corruption in the AFS cache, or a bug.\n");
 	}
 	return 0;
     }
