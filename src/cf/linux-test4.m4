@@ -836,3 +836,16 @@ AC_DEFUN([LINUX_KERNEL_READ_OFFSET_IS_LAST], [
                        [define if your kernel_read has offset as the last argument],
                        [])
 ])
+
+AC_DEFUN([LINUX_KEYRING_SEARCH_TAKES_RECURSE], [
+  AC_CHECK_LINUX_BUILD([whether keyring_search has the recurse parameter],
+                       [ac_cv_linux_func_keyring_search_takes_recurse],
+                       [#include <linux/key.h>
+                       key_ref_t tkey;],
+                       [
+                       keyring_search(tkey, NULL, NULL, 0);
+                       ],
+                       [KEYRING_SEARCH_TAKES_RECURSE],
+                       [define if your keyring_search has the recurse parameter],
+                       [])
+])
