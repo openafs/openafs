@@ -1301,7 +1301,12 @@ cs_ProcTail_setup(definition * defp, int split_flag)
 static void
 ss_Proc_CodeGeneration(definition * defp)
 {
-    defp->can_fail = 0;
+    extern char zflag;
+
+    if (zflag)
+	defp->can_fail = 0;
+    else
+	defp->can_fail = 1;
     ss_ProcName_setup(defp);
     if (!cflag) {
 	ss_ProcParams_setup(defp);
@@ -1546,6 +1551,8 @@ ss_ProcCallRealProc_setup(definition * defp)
     f_print(fout, ");\n");
     if (zflag) {
 	f_print(fout, "\tif (z_result)\n\t\treturn z_result;\n");
+    } else {
+	f_print(fout, "\tif (z_result)\n\t\tgoto fail;\n");
     }
 }
 
