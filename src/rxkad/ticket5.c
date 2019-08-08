@@ -81,7 +81,7 @@
 #include "v5gen.h"
 #include "der.h"
 
-#if defined(IGNORE_SOME_GCC_WARNINGS) && !defined(_clang) && __GNUC__ >= 7
+#if defined(IGNORE_SOME_GCC_WARNINGS) && !defined(__clang__) && __GNUC__ >= 7
 # pragma GCC diagnostic push
 # pragma GCC diagnostic warning "-Wformat-truncation"
 #endif
