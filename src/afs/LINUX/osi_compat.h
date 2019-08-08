@@ -222,9 +222,15 @@ afs_linux_search_keyring(afs_ucred_t *cred, struct key_type *type)
     key_ref_t key_ref;
 
     if (afs_session_keyring(cred)) {
+#  if defined(KEYRING_SEARCH_TAKES_RECURSE)
+	key_ref = keyring_search(
+		      make_key_ref(afs_session_keyring(cred), 1),
+		      type, "_pag", 1);
+#  else
 	key_ref = keyring_search(
 		      make_key_ref(afs_session_keyring(cred), 1),
 		      type, "_pag");
+#  endif
 	if (IS_ERR(key_ref))
 	    return ERR_CAST(key_ref);
 
