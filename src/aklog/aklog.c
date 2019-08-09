@@ -2119,10 +2119,6 @@ cleanup:
     if (deref_enc_data(&ticket_reply->enc_part))
         free(deref_enc_data(&ticket_reply->enc_part));
     krb5_free_keytab_entry_contents(context, entry);
-    if (client_principal)
-        krb5_free_principal(context, client_principal);
-    if (service_principal)
-        krb5_free_principal(context, service_principal);
     if (cc)
         krb5_cc_close(context, cc);
     if (kt)
@@ -2142,7 +2138,6 @@ get_credv5(krb5_context context, char *name, char *inst, char *realm,
 {
     krb5_creds increds;
     krb5_error_code r;
-    static krb5_principal client_principal = 0;
 
     afs_dprintf("Getting tickets: %s%s%s@%s\n", name,
 	    (inst && inst[0]) ? "/" : "", inst ? inst : "", realm);
@@ -2154,26 +2149,25 @@ get_credv5(krb5_context context, char *name, char *inst, char *realm,
 				  name,
 				  (inst && strlen(inst)) ? inst : NULL,
 				  NULL))) {
-        return r;
+        goto out;
     }
 
 
     if (!_krb425_ccache) {
         r = krb5_cc_default(context, &_krb425_ccache);
 	if (r)
-	    return r;
-    }
-    if (!client_principal) {
-	if (client) {
-	    r = krb5_parse_name(context, client,  &client_principal);
-	} else {
-	    r = krb5_cc_get_principal(context, _krb425_ccache, &client_principal);
-	}
-	if (r)
-	    return r;
+	    goto out;
     }
 
-    increds.client = client_principal;
+    if (client) {
+        r = krb5_parse_name(context, client,  &increds.client);
+    } else {
+        r = krb5_cc_get_principal(context, _krb425_ccache, &increds.client);
+    }
+
+    if (r)
+	goto out;
+
     increds.times.endtime = 0;
     if (do524)
 	/* Ask for DES since that is what V4 understands */
@@ -2195,9 +2189,19 @@ get_credv5(krb5_context context, char *name, char *inst, char *realm,
     } else {
 	r = krb5_get_credentials(context, 0, _krb425_ccache, &increds, creds);
     }
-    return r;
-}
 
+ out:
+
+   if (increds.server) {
+       krb5_free_principal(context, increds.server);
+   }
+
+   if (increds.client) {
+       krb5_free_principal(context, increds.client);
+   }
+
+   return r;
+}
 
 static int
 get_user_realm(krb5_context context, char **realm)
