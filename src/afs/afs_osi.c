@@ -138,6 +138,9 @@ afs_osi_MaskSignals(void)
 void
 afs_osi_UnmaskRxkSignals(void)
 {
+#ifdef AFS_LINUX22_ENV
+    osi_linux_unmaskrxk();
+#endif
 }
 
 /* Two hacks to try and fix afsdb */

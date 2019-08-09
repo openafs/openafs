@@ -37,6 +37,17 @@ osi_linux_mask(void)
     SIG_UNLOCK(current);
 }
 
+void
+osi_linux_unmaskrxk(void)
+{
+    extern struct task_struct *rxk_ListenerTask;
+    /* Note this unblocks signals on the rxk_Listener
+     * thread from a thread that is stopping rxk */
+    SIG_LOCK(rxk_ListenerTask);
+    sigdelset(&rxk_ListenerTask->blocked, SIGKILL);
+    SIG_UNLOCK(rxk_ListenerTask);
+}
+
 /* LOOKUP_POSITIVE is becoming the default */
 #ifndef LOOKUP_POSITIVE
 #define LOOKUP_POSITIVE 0

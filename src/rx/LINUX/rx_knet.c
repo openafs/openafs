@@ -272,7 +272,7 @@ osi_StopListener(void)
     while (rxk_ListenerTask) {
         if (rxk_ListenerTask) {
 	    flush_signals(rxk_ListenerTask);
-	    force_sig(SIGKILL, rxk_ListenerTask);
+	    send_sig(SIGKILL, rxk_ListenerTask, 1);
 	}
 	if (!rxk_ListenerTask)
 	    break;
