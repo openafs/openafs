@@ -826,11 +826,11 @@ afs_random(void)
 	osi_timeval_t t;
 	osi_GetTime(&t);
 	/*
-	 * Clear the low byte of tv_usec in a size-independent manner before adding
+	 * Clear the low nybble of tv_usec in a size-independent manner before adding
 	 * in the rest of the state.
 	 */
 	state = t.tv_usec;
-	state ^= (state & 0xff);
+	state ^= (state & 0x0f);
 	state += rxi_getaddr() & 0xff;
 	state += (t.tv_sec & 0xff);
 	for (i = 0; i < 30; i++) {
