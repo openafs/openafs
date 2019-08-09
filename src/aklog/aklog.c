@@ -859,7 +859,7 @@ rxkad_get_converted_token(krb5_context context, krb5_creds *v5cred,
 static int
 rxkad_get_token(krb5_context context, struct afsconf_cell *cell, char *realm,
 		struct ktc_tokenUnion **token, char **authuser, int *foreign) {
-    krb5_creds *v5cred;
+    krb5_creds *v5cred = NULL;
     char *realmUsed = NULL;
     char *username = NULL;
     int status;
@@ -870,7 +870,7 @@ rxkad_get_token(krb5_context context, struct afsconf_cell *cell, char *realm,
 
     status = rxkad_get_ticket(context, realm, cell, &v5cred, &realmUsed);
     if (status)
-	return status;
+	goto out;
 
     if (do524)
 	status = rxkad_get_converted_token(context, v5cred, token, &username);
@@ -901,6 +901,8 @@ out:
 	free(realmUsed);
     if (username)
 	free(username);
+    if (v5cred)
+        krb5_free_creds(context, v5cred);
 
     return status;
 }
