@@ -23,6 +23,7 @@
 #include <lock.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>
+#include <afs/afsutil.h>
 
 
 #define UBIK_INTERNALS
@@ -222,7 +223,7 @@ ContactQuorum_rcode(int okcalls, afs_int32 rcode)
  * because it is sent the sync count along with the beacon message that
  * marks it as \b really up (\p beaconSinceDown).
  */
-afs_int32
+static afs_int32
 ContactQuorum_NoArguments(afs_int32 (*proc)(struct rx_connection *, ubik_tid *),
 	       		  struct ubik_trans *atrans, int aflags)
 {
@@ -241,7 +242,7 @@ ContactQuorum_NoArguments(afs_int32 (*proc)(struct rx_connection *, ubik_tid *),
 }
 
 
-afs_int32
+static afs_int32
 ContactQuorum_DISK_Lock(struct ubik_trans *atrans, int aflags,afs_int32 file,
 			afs_int32 position, afs_int32 length, afs_int32 type)
 {
@@ -259,27 +260,7 @@ ContactQuorum_DISK_Lock(struct ubik_trans *atrans, int aflags,afs_int32 file,
     return ContactQuorum_rcode(okcalls, rcode);
 }
 
-
-afs_int32
-ContactQuorum_DISK_Write(struct ubik_trans *atrans, int aflags,
-			 afs_int32 file, afs_int32 position, bulkdata *data)
-{
-    struct ubik_server *ts = NULL;
-    afs_int32 code = 0, rcode, okcalls;
-    struct rx_connection *conn;
-    int done;
-
-    done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
-    while (!done) {
-	if (conn)
-	    code = DISK_Write(conn, &atrans->tid, file, position, data);
-	done = ContactQuorum_iterate(atrans, aflags, &ts, &conn, &rcode, &okcalls, code);
-    }
-    return ContactQuorum_rcode(okcalls, rcode);
-}
-
-
-afs_int32
+static afs_int32
 ContactQuorum_DISK_Truncate(struct ubik_trans *atrans, int aflags,
 			    afs_int32 file, afs_int32 length)
 {
@@ -298,7 +279,7 @@ ContactQuorum_DISK_Truncate(struct ubik_trans *atrans, int aflags,
 }
 
 
-afs_int32
+static afs_int32
 ContactQuorum_DISK_WriteV(struct ubik_trans *atrans, int aflags,
 			  iovec_wrt * io_vector, iovec_buf *io_buffer)
 {
@@ -440,6 +421,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     tdb->getlabel = uphys_getlabel;
     tdb->setlabel = uphys_setlabel;
     tdb->getnfiles = uphys_getnfiles;
+    tdb->buffered_append = uphys_buf_append;
     tdb->readers = 0;
     tdb->tidCounter = tdb->writeTidCounter = 0;
     *dbase = tdb;
@@ -499,7 +481,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 	rx_NewService(0, VOTE_SERVICE_ID, "VOTE", ubik_sc, numClasses,
 		      VOTE_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
-	ubik_dprint("Could not create VOTE rx service!\n");
+	ViceLog(5, ("Could not create VOTE rx service!\n"));
 	return -1;
     }
     rx_SetMinProcs(tservice, 2);
@@ -509,7 +491,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 	rx_NewService(0, DISK_SERVICE_ID, "DISK", ubik_sc, numClasses,
 		      DISK_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
-	ubik_dprint("Could not create DISK rx service!\n");
+	ViceLog(5, ("Could not create DISK rx service!\n"));
 	return -1;
     }
     rx_SetMinProcs(tservice, 2);
@@ -612,9 +594,9 @@ BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 	/* it's not safe to use ubik_BeginTransReadAnyWrite without a
 	 * cache-syncing function; fall back to ubik_BeginTransReadAny,
 	 * which is safe but slower */
-	ubik_print("ubik_BeginTransReadAnyWrite called, but "
+	ViceLog(0, ("ubik_BeginTransReadAnyWrite called, but "
 	           "ubik_SyncWriterCacheProc not set; pretending "
-	           "ubik_BeginTransReadAny was called instead\n");
+	           "ubik_BeginTransReadAny was called instead\n"));
 	readAny = 1;
     }
 
@@ -905,7 +887,7 @@ ubik_EndTrans(struct ubik_trans *transPtr)
 	 * to us, or timeout.  Put safety check in anyway */
 	if (now - realStart > 10 * BIGTIME) {
 	    ubik_stats.escapes++;
-	    ubik_print("ubik escaping from commit wait\n");
+	    ViceLog(0, ("ubik escaping from commit wait\n"));
 	    break;
 	}
 	for (ts = ubik_servers; ts; ts = ts->next) {
@@ -1392,12 +1374,12 @@ panic(char *format, ...)
     va_list ap;
 
     va_start(ap, format);
-    ubik_print("Ubik PANIC:\n");
-    ubik_vprint(format, ap);
+    ViceLog(0, ("Ubik PANIC:\n"));
+    vViceLog(0, (format, ap));
     va_end(ap);
 
     abort();
-    ubik_print("BACK FROM ABORT\n");	/* shouldn't come back */
+    ViceLog(0, ("BACK FROM ABORT\n"));	/* shouldn't come back */
     exit(1);			/* never know, though  */
 }
 

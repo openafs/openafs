@@ -45,7 +45,6 @@ extern void osi_ioctl_init(void);
 extern void osi_ioctl_clean(void);
 
 /* osi_misc.c */
-extern void afs_osi_SetTime(osi_timeval_t * tvp);
 extern int osi_lookupname_internal(char *aname, int followlink,
 				   struct vfsmount **mnt, struct dentry **dpp);
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,

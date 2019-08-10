@@ -99,7 +99,7 @@ urecovery_AllBetter(struct ubik_dbase *adbase, int areadAny)
 {
     afs_int32 rcode;
 
-    ubik_dprint_25("allbetter checking\n");
+    ViceLog(25, ("allbetter checking\n"));
     rcode = 0;
 
 
@@ -122,7 +122,7 @@ urecovery_AllBetter(struct ubik_dbase *adbase, int areadAny)
 	rcode = 1;
     }
 
-    ubik_dprint_25("allbetter: returning %d\n", rcode);
+    ViceLog(25, ("allbetter: returning %d\n", rcode));
     return rcode;
 }
 
@@ -236,8 +236,8 @@ ReplayLog(struct ubik_dbase *adbase)
 	    /* otherwise, skip over the data bytes, too */
 	    tpos += ntohl(buffer[2]) + 3 * sizeof(afs_int32);
 	} else {
-	    ubik_print("corrupt log opcode (%d) at position %d\n", opcode,
-		       tpos);
+	    ViceLog(0, ("corrupt log opcode (%d) at position %d\n", opcode,
+		       tpos));
 	    break;		/* corrupt log! */
 	}
     }
@@ -272,9 +272,9 @@ ReplayLog(struct ubik_dbase *adbase)
 		code = (*adbase->setlabel) (adbase, 0, &version);
 		if (code)
 		    return code;
-		ubik_print("Successfully replayed log for interrupted "
+		ViceLog(0, ("Successfully replayed log for interrupted "
 		           "transaction; db version is now %ld.%ld\n",
-		           (long) version.epoch, (long) version.counter);
+		           (long) version.epoch, (long) version.counter));
 		logIsGood = 1;
 		break;		/* all done now */
 	    } else if (opcode == LOGTRUNCATE) {
@@ -330,8 +330,8 @@ ReplayLog(struct ubik_dbase *adbase)
 		    len -= thisSize;
 		}
 	    } else {
-		ubik_print("corrupt log opcode (%d) at position %d\n",
-			   opcode, tpos);
+		ViceLog(0, ("corrupt log opcode (%d) at position %d\n",
+			   opcode, tpos));
 		break;		/* corrupt log! */
 	    }
 	}
@@ -341,7 +341,7 @@ ReplayLog(struct ubik_dbase *adbase)
 	    if (code)
 		return code;
 	} else {
-	    ubik_print("Log read error on pass 2\n");
+	    ViceLog(0, ("Log read error on pass 2\n"));
 	    return UBADLOG;
 	}
     }
@@ -472,7 +472,7 @@ urecovery_Interact(void *dummy)
 	IOMGR_Select(0, 0, 0, 0, &tv);
 #endif
 
-	ubik_dprint("recovery running in state %x\n", urecovery_state);
+	ViceLog(5, ("recovery running in state %x\n", urecovery_state));
 
 	/* Every 30 seconds, check all the down servers and mark them
 	 * as up if they respond. When a server comes up or found to
@@ -599,19 +599,19 @@ urecovery_Interact(void *dummy)
 	    UBIK_ADDR_LOCK;
 	    rxcall = rx_NewCall(bestServer->disk_rxcid);
 
-	    ubik_print("Ubik: Synchronize database with server %s\n",
-		       afs_inet_ntoa_r(bestServer->addr[0], hoststr));
+	    ViceLog(0, ("Ubik: Synchronize database via DISK_GetFile to server %s\n",
+		       afs_inet_ntoa_r(bestServer->addr[0], hoststr)));
 	    UBIK_ADDR_UNLOCK;
 
 	    code = StartDISK_GetFile(rxcall, file);
 	    if (code) {
-		ubik_dprint("StartDiskGetFile failed=%d\n", code);
+		ViceLog(5, ("StartDiskGetFile failed=%d\n", code));
 		goto FetchEndCall;
 	    }
 	    nbytes = rx_Read(rxcall, (char *)&length, sizeof(afs_int32));
 	    length = ntohl(length);
 	    if (nbytes != sizeof(afs_int32)) {
-		ubik_dprint("Rx-read length error=%d\n", code = BULK_ERROR);
+		ViceLog(5, ("Rx-read length error=%d\n", BULK_ERROR));
 		code = EIO;
 		goto FetchEndCall;
 	    }
@@ -622,7 +622,7 @@ urecovery_Interact(void *dummy)
 	    code = (*ubik_dbase->setlabel) (ubik_dbase, file, &tversion);
 	    UBIK_VERSION_UNLOCK;
 	    if (code) {
-		ubik_dprint("setlabel io error=%d\n", code);
+		ViceLog(5, ("setlabel io error=%d\n", code));
 		goto FetchEndCall;
 	    }
 	    snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP",
@@ -648,7 +648,7 @@ urecovery_Interact(void *dummy)
 #endif
 		nbytes = rx_Read(rxcall, tbuffer, tlen);
 		if (nbytes != tlen) {
-		    ubik_dprint("Rx-read bulk error=%d\n", code = BULK_ERROR);
+		    ViceLog(5, ("Rx-read bulk error=%d\n", BULK_ERROR));
 		    code = EIO;
 		    close(fd);
 		    goto FetchEndCall;
@@ -716,10 +716,10 @@ urecovery_Interact(void *dummy)
 		ubik_dbase->version.epoch = 0;
 		ubik_dbase->version.counter = 0;
 		UBIK_VERSION_UNLOCK;
-		ubik_print("Ubik: Synchronize database failed (error = %d)\n",
-			   code);
+		ViceLog(0, ("Ubik: Synchronize database failed (error = %d)\n",
+			   code));
 	    } else {
-		ubik_print("Ubik: Synchronize database completed\n");
+		ViceLog(0, ("Ubik: Synchronize database completed\n"));
 		urecovery_state |= UBIK_RECHAVEDB;
 	    }
 	    udisk_Invalidate(ubik_dbase, 0);	/* data has changed */
@@ -798,16 +798,16 @@ urecovery_Interact(void *dummy)
 		UBIK_BEACON_LOCK;
 		if (!ts->up) {
 		    UBIK_BEACON_UNLOCK;
-		    ubik_dprint("recovery cannot send version to %s\n",
-				afs_inet_ntoa_r(inAddr.s_addr, hoststr));
+		    ViceLog(5, ("recovery cannot send version to %s\n",
+				afs_inet_ntoa_r(inAddr.s_addr, hoststr)));
 		    dbok = 0;
 		    continue;
 		}
 		UBIK_BEACON_UNLOCK;
-		ubik_dprint("recovery sending version to %s\n",
-			    afs_inet_ntoa_r(inAddr.s_addr, hoststr));
+		ViceLog(5, ("recovery sending version to %s\n",
+			    afs_inet_ntoa_r(inAddr.s_addr, hoststr)));
 		if (vcmp(ts->version, ubik_dbase->version) != 0) {
-		    ubik_dprint("recovery stating local database\n");
+		    ViceLog(5, ("recovery stating local database\n"));
 
 		    /* Rx code to do the Bulk Store */
 		    code = (*ubik_dbase->stat) (ubik_dbase, 0, &ubikstat);
@@ -821,8 +821,8 @@ urecovery_Interact(void *dummy)
 			    StartDISK_SendFile(rxcall, file, length,
 					       &ubik_dbase->version);
 			if (code) {
-			    ubik_dprint("StartDiskSendFile failed=%d\n",
-					code);
+			    ViceLog(5, ("StartDiskSendFile failed=%d\n",
+					code));
 			    goto StoreEndCall;
 			}
 			while (length > 0) {
@@ -833,14 +833,14 @@ urecovery_Interact(void *dummy)
 				(*ubik_dbase->read) (ubik_dbase, file,
 						     tbuffer, offset, tlen);
 			    if (nbytes != tlen) {
-				ubik_dprint("Local disk read error=%d\n",
-					    code = UIOERROR);
+				code = UIOERROR;
+				ViceLog(5, ("Local disk read error=%d\n", code));
 				goto StoreEndCall;
 			    }
 			    nbytes = rx_Write(rxcall, tbuffer, tlen);
 			    if (nbytes != tlen) {
-				ubik_dprint("Rx-write bulk error=%d\n", code =
-					    BULK_ERROR);
+				code = BULK_ERROR;
+				ViceLog(5, ("Rx-write bulk error=%d\n", code));
 				goto StoreEndCall;
 			    }
 			    offset += tlen;
@@ -928,8 +928,8 @@ DoProbe(struct ubik_server *server)
 	connSuccess = conns[success_i];
 	strcpy(buffer, afs_inet_ntoa_r(server->addr[0], hoststr));
 
-	ubik_print("ubik:server %s is back up: will be contacted through %s\n",
-	     buffer, afs_inet_ntoa_r(addr, hoststr));
+	ViceLog(0, ("ubik:server %s is back up: will be contacted through %s\n",
+	     buffer, afs_inet_ntoa_r(addr, hoststr)));
 	UBIK_ADDR_UNLOCK;
     }
 
@@ -939,8 +939,8 @@ DoProbe(struct ubik_server *server)
 	    rx_DestroyConnection(conns[i]);
 
     if (!connSuccess)
-	ubik_dprint("ubik:server %s still down\n",
-		    afs_inet_ntoa_r(server->addr[0], hoststr));
+	ViceLog(5, ("ubik:server %s still down\n",
+		    afs_inet_ntoa_r(server->addr[0], hoststr)));
 
     if (connSuccess)
 	return 0;		/* success */

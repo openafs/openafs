@@ -1542,6 +1542,10 @@ afsconf_GetLocalCell(struct afsconf_dir *adir, char *aname, afs_int32 alen)
 int
 afsconf_Close(struct afsconf_dir *adir)
 {
+    if (adir == NULL) {
+	return 0;
+    }
+
     LOCK_GLOBAL_MUTEX;
     afsconf_CloseInternal(adir);
     if (adir->name)
@@ -1557,6 +1561,10 @@ afsconf_CloseInternal(struct afsconf_dir *adir)
     struct afsconf_entry *td, *nd;
     struct afsconf_aliasentry *ta, *na;
     char *tname;
+
+    if (adir == NULL) {
+	return 0;
+    }
 
     tname = adir->name;		/* remember name, since that's all we preserve */
 

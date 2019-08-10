@@ -17,6 +17,7 @@
 # include <opr/lock.h>
 #endif
 #include <lock.h>
+#include <afs/afsutil.h>
 
 #define UBIK_INTERNALS 1
 #include "ubik.h"
@@ -83,13 +84,13 @@ ulock_getLock(struct ubik_trans *atrans, int atype, int await)
     }
 
     if (atrans->locktype != 0) {
-	ubik_print("Ubik: Internal Error: attempted to take lock twice\n");
+	ViceLog(0, ("Ubik: Internal Error: attempted to take lock twice\n"));
 	abort();
     }
 
 /*
- *ubik_print("Ubik: DEBUG: Thread 0x%x request %s lock\n", lwp_cpptr,
- *	     ((atype == LOCKREAD) ? "READ" : "WRITE"));
+ *ViceLog(0, ("Ubik: DEBUG: Thread 0x%x request %s lock\n", lwp_cpptr,
+ *	     ((atype == LOCKREAD) ? "READ" : "WRITE")));
  */
 
     /* Check if the lock would would block */
@@ -120,8 +121,8 @@ ulock_getLock(struct ubik_trans *atrans, int atype, int await)
     atrans->locktype = atype;
 
 /*
- *ubik_print("Ubik: DEBUG: Thread 0x%x took %s lock\n", lwp_cpptr,
- *	     ((atype == LOCKREAD) ? "READ" : "WRITE"));
+ *ViceLog(0, ("Ubik: DEBUG: Thread 0x%x took %s lock\n", lwp_cpptr,
+ *	     ((atype == LOCKREAD) ? "READ" : "WRITE")));
  */
     return 0;
 }
@@ -133,8 +134,8 @@ void
 ulock_relLock(struct ubik_trans *atrans)
 {
     if (atrans->locktype == LOCKWRITE && (atrans->flags & TRREADWRITE)) {
-	ubik_print("Ubik: Internal Error: unlocking write lock with "
-	           "TRREADWRITE?\n");
+	ViceLog(0, ("Ubik: Internal Error: unlocking write lock with "
+	           "TRREADWRITE?\n"));
 	abort();
     }
 
@@ -147,8 +148,8 @@ ulock_relLock(struct ubik_trans *atrans)
     }
 
 /*
- *ubik_print("Ubik: DEBUG: Thread 0x%x %s unlock\n", lwp_cpptr,
- *	     ((atrans->locktype == LOCKREAD) ? "READ" : "WRITE"));
+ *ViceLog(0, ("Ubik: DEBUG: Thread 0x%x %s unlock\n", lwp_cpptr,
+ *	     ((atrans->locktype == LOCKREAD) ? "READ" : "WRITE")));
  */
 
     atrans->locktype = 0;

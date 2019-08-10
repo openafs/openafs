@@ -72,3 +72,23 @@ rx_RecordCallStatistics(struct rx_call *call, unsigned int rxInterface,
 			     totalFunc, &queue, &exec, call->app.bytesSent,
 			     call->app.bytesRcvd, 1);
 }
+
+/*
+ * Accessor for VolMonitor 'vos status'
+ * note: the rx_call members are all unsigned, but our return targets
+ * in wire struct transDebugInfo are all signed.  Sigh.
+ */
+void
+rx_GetCallStatus(struct rx_call *call, afs_int32 *readNext,
+			afs_int32 *transmitNext, int *lastSendTime,
+			int *lastReceiveTime)
+{
+    if (readNext != NULL)
+	*readNext = call->rnext;
+    if (transmitNext != NULL)
+	*transmitNext = call->tnext;
+    if (lastSendTime != NULL)
+	*lastSendTime = call->lastSendTime;
+    if (lastReceiveTime != NULL)
+	*lastReceiveTime = call->lastReceiveTime;
+}

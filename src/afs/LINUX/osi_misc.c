@@ -29,18 +29,6 @@ int afs_osicred_initialized = 0;
 afs_ucred_t afs_osi_cred;
 
 void
-afs_osi_SetTime(osi_timeval_t * tvp)
-{
-    struct timespec tv;
-    tv.tv_sec = tvp->tv_sec;
-    tv.tv_nsec = tvp->tv_usec * NSEC_PER_USEC;
-
-    AFS_STATCNT(osi_SetTime);
-
-    do_settimeofday(&tv);
-}
-
-void
 osi_linux_mask(void)
 {
     SIG_LOCK(current);

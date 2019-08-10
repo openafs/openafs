@@ -2250,7 +2250,11 @@ afsd_run(void)
     cparams.setTimeFlag = 0;
     cparams.memCacheFlag = cacheFlags;
     cparams.dynamic_vcaches = afsd_dynamic_vcaches;
-    afsd_syscall(AFSOP_CACHEINIT, &cparams);
+    code = afsd_syscall(AFSOP_CACHEINIT, &cparams);
+    if (code) {
+	printf("%s: Error %d during cache init.\n", rn, code);
+        exit(1);
+    }
 
     /* do it before we init the cache inodes */
     if (enable_splitcache) {

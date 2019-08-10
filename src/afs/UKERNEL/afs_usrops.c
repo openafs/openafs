@@ -181,12 +181,6 @@ afs_suser(void *credp)
  * These are no-ops in user space
  */
 
-void
-afs_osi_SetTime(osi_timeval_t * atv)
-{
-    return;
-}
-
 /*
  * xflock should never fall through, the only files we know
  * about are AFS files

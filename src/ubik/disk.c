@@ -18,6 +18,7 @@
 #else
 # include <opr/lockstub.h>
 #endif
+#include <afs/afsutil.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"
@@ -112,19 +113,11 @@ udisk_Debug(struct ubik_debug *aparm)
 static int
 udisk_LogOpcode(struct ubik_dbase *adbase, afs_int32 aopcode, int async)
 {
-    struct ubik_stat ustat;
     afs_int32 code;
-
-    /* figure out where to write */
-    code = (*adbase->stat) (adbase, LOGFILE, &ustat);
-    if (code < 0)
-	return code;
 
     /* setup data and do write */
     aopcode = htonl(aopcode);
-    code =
-	(*adbase->write) (adbase, LOGFILE, (char *)&aopcode, ustat.size,
-			  sizeof(afs_int32));
+    code = (*adbase->buffered_append)(adbase, LOGFILE, &aopcode, sizeof(afs_int32));
     if (code != sizeof(afs_int32))
 	return UIOERROR;
 
@@ -144,12 +137,6 @@ udisk_LogEnd(struct ubik_dbase *adbase, struct ubik_version *aversion)
 {
     afs_int32 code;
     afs_int32 data[3];
-    struct ubik_stat ustat;
-
-    /* figure out where to write */
-    code = (*adbase->stat) (adbase, LOGFILE, &ustat);
-    if (code)
-	return code;
 
     /* setup data */
     data[0] = htonl(LOGEND);
@@ -158,8 +145,7 @@ udisk_LogEnd(struct ubik_dbase *adbase, struct ubik_version *aversion)
 
     /* do write */
     code =
-	(*adbase->write) (adbase, LOGFILE, (char *)data, ustat.size,
-			  3 * sizeof(afs_int32));
+	(*adbase->buffered_append)(adbase, LOGFILE, data, 3 * sizeof(afs_int32));
     if (code != 3 * sizeof(afs_int32))
 	return UIOERROR;
 
@@ -177,12 +163,6 @@ udisk_LogTruncate(struct ubik_dbase *adbase, afs_int32 afile,
 {
     afs_int32 code;
     afs_int32 data[3];
-    struct ubik_stat ustat;
-
-    /* figure out where to write */
-    code = (*adbase->stat) (adbase, LOGFILE, &ustat);
-    if (code < 0)
-	return code;
 
     /* setup data */
     data[0] = htonl(LOGTRUNCATE);
@@ -191,8 +171,7 @@ udisk_LogTruncate(struct ubik_dbase *adbase, afs_int32 afile,
 
     /* do write */
     code =
-	(*adbase->write) (adbase, LOGFILE, (char *)data, ustat.size,
-			  3 * sizeof(afs_int32));
+	(*adbase->buffered_append)(adbase, LOGFILE, data, 3 * sizeof(afs_int32));
     if (code != 3 * sizeof(afs_int32))
 	return UIOERROR;
     return 0;
@@ -205,16 +184,8 @@ static int
 udisk_LogWriteData(struct ubik_dbase *adbase, afs_int32 afile, void *abuffer,
 		   afs_int32 apos, afs_int32 alen)
 {
-    struct ubik_stat ustat;
     afs_int32 code;
     afs_int32 data[4];
-    afs_int32 lpos;
-
-    /* find end of log */
-    code = (*adbase->stat) (adbase, LOGFILE, &ustat);
-    lpos = ustat.size;
-    if (code < 0)
-	return code;
 
     /* setup header */
     data[0] = htonl(LOGDATA);
@@ -224,13 +195,12 @@ udisk_LogWriteData(struct ubik_dbase *adbase, afs_int32 afile, void *abuffer,
 
     /* write header */
     code =
-	(*adbase->write) (adbase, LOGFILE, (char *)data, lpos, 4 * sizeof(afs_int32));
+	(*adbase->buffered_append)(adbase, LOGFILE, data, 4 * sizeof(afs_int32));
     if (code != 4 * sizeof(afs_int32))
 	return UIOERROR;
-    lpos += 4 * sizeof(afs_int32);
 
     /* write data */
-    code = (*adbase->write) (adbase, LOGFILE, abuffer, lpos, alen);
+    code = (*adbase->buffered_append)(adbase, LOGFILE, abuffer, alen);
     if (code != alen)
 	return UIOERROR;
     return 0;
@@ -380,7 +350,7 @@ DRead(struct ubik_trans *atrans, afs_int32 fid, int page)
 	tb->file = BADFID;
 	Dlru(tb);
 	tb->lockers--;
-	ubik_print("Ubik: Error reading database file: errno=%d\n", errno);
+	ViceLog(0, ("Ubik: Error reading database file: errno=%d\n", errno));
 	return 0;
     }
     ios++;
@@ -545,8 +515,7 @@ newslot(struct ubik_dbase *adbase, afs_int32 afid, afs_int32 apage)
 
     if (pp == 0) {
 	/* There are no unlocked buffers that don't need to be written to the disk. */
-	ubik_print
-	    ("Ubik: Internal Error: Unable to find free buffer in ubik cache\n");
+	ViceLog(0, ("Ubik: Internal Error: Unable to find free buffer in ubik cache\n"));
 	return NULL;
     }
 
@@ -878,9 +847,9 @@ udisk_commit(struct ubik_trans *atrans)
 	    UBIK_VERSION_LOCK;
 	    if (version_globals.ubik_epochTime < UBIK_MILESTONE
 		|| version_globals.ubik_epochTime > now) {
-		ubik_print
+		ViceLog(0,
 		    ("Ubik: New database label %d is out of the valid range (%d - %d)\n",
-		     version_globals.ubik_epochTime, UBIK_MILESTONE, now);
+		     version_globals.ubik_epochTime, UBIK_MILESTONE, now));
 		panic("Writing Ubik DB label\n");
 	    }
 	    oldversion = dbase->version;

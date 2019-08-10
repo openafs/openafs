@@ -189,7 +189,12 @@ AC_DEFUN([LINUX_IATTR_64BIT_TIME], [
                        [#include <linux/fs.h>
                         #include <linux/timekeeping.h>],
                        [struct iattr _attrs;
-                        _attrs.ia_ctime = current_kernel_time64();],
+                       #if defined(HAVE_LINUX_KTIME_GET_COARSE_REAL_TS64)
+                        ktime_get_coarse_real_ts64(&_attrs.ia_ctime);
+                       #else
+                        _attrs.ia_ctime = current_kernel_time64();
+                       #endif
+                       ],
                        [IATTR_TAKES_64BIT_TIME],
                        [define if struct iattr->ia_ctime takes struct timespec64],
                        [])

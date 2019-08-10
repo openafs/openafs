@@ -1598,6 +1598,7 @@ rxi_SplitJumboPacket(struct rx_packet *p, afs_uint32 host, short port,
     np->header = p->header;
     np->header.serial = p->header.serial + 1;
     np->header.seq = p->header.seq + 1;
+    np->header.userStatus = 0;
     np->header.flags = jp->flags;
     np->header.spare = jp->cksum;
 
@@ -2645,6 +2646,7 @@ rxi_SendSpecial(struct rx_call *call,
     p->header.seq = 0;
     p->header.epoch = conn->epoch;
     p->header.type = type;
+    p->header.userStatus = 0;
     p->header.flags = 0;
     if (conn->type == RX_CLIENT_CONNECTION)
 	p->header.flags |= RX_CLIENT_INITIATED;
@@ -2767,6 +2769,7 @@ rxi_PrepareSendPacket(struct rx_call *call,
     p->header.seq = seq;
     p->header.epoch = conn->epoch;
     p->header.type = RX_PACKET_TYPE_DATA;
+    p->header.userStatus = 0;
     p->header.flags = 0;
     p->header.spare = 0;
     if (conn->type == RX_CLIENT_CONNECTION)

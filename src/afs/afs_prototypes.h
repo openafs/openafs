@@ -247,8 +247,8 @@ extern afs_dcache_id_t cacheInode;
 extern struct osi_file *afs_cacheInodep;
 extern int DCHash(struct VenusFid *fid, afs_int32 chunk);
 extern int DVHash(struct VenusFid *fid);
-extern void afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk,
-			   int aflags);
+extern int afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk,
+			  int aflags);
 extern int afs_PutDCache(struct dcache *adc);
 extern void afs_FlushDCache(struct dcache *adc);
 extern void shutdown_dcache(void);
@@ -628,9 +628,6 @@ extern void osi_ReleaseVM(struct vcache *avc, afs_ucred_t *acred);
 
 /* ARCH/osi_crypto.c */
 extern int osi_readRandom(void *, afs_size_t);
-
-/* ARCH/osi_misc.c */
-extern void afs_osi_SetTime(osi_timeval_t * atv);
 
 /* LINUX/osi_misc.c */
 #ifdef AFS_LINUX20_ENV
@@ -1048,6 +1045,7 @@ extern void afs_warnuser(char *fmt, ...)
 extern void afs_warnall(char *fmt, ...)
 	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 #endif
+extern void afs_WarnENOSPC(void);
 
 /* afs_vcache.c */
 extern int VCHash(struct VenusFid *fid);
