@@ -82,7 +82,7 @@ CFLAGS_evp.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto \
 	       -DHAVE_CONFIG_H
 CFLAGS_evp-algs.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 CFLAGS_evp-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
-CFLAGS_rand-fortuna-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto -Wno-error=frame-larger-than=
+CFLAGS_rand-fortuna-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto @CFLAGS_WNOERROR_FRAME_LARGER_THAN@
 CFLAGS_rand-timer-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 CFLAGS_rand-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 CFLAGS_aes.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto

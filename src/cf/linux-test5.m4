@@ -86,3 +86,24 @@ AC_DEFUN([OPENAFS_GCC_SUPPORTS_PIPE], [
   AS_IF([test x$openafs_cv_gcc_supports_pipe = xyes],
 	  [LINUX_GCC_KOPTS="$LINUX_GCC_KOPTS -pipe"])
 ])
+
+AC_DEFUN([OPENAFS_GCC_SUPPORTS_WNO_ERROR_FRAME_LARGER_THAN], [
+  AC_CACHE_CHECK([if $CC supports -Wno-error=frame-larger-than=],
+    [openafs_cv_gcc_supports_wno_error_frame_larger_than],
+    [save_CFLAGS="$CFLAGS"
+     CFLAGS="-Wno-error=frame-larger-than="
+     AC_COMPILE_IFELSE(
+       [AC_LANG_PROGRAM(
+         [[]],
+         [[int x;]])],
+       [openafs_cv_gcc_supports_wno_error_frame_larger_than=yes],
+       [openafs_cv_gcc_supports_wno_error_frame_larger_than=no])
+  CFLAGS="$save_CFLAGS"
+  ])
+  AS_IF([test x$openafs_cv_gcc_supports_wno_error_frame_larger_than = xyes && test x"$CFLAGS_NOERROR" != x],
+        dnl Only use -Wno-error=frame-larger-than= if gcc supports it, and if
+        dnl CFLAGS_NOERROR is nonempty (so if --enable-checking=all is used, we
+        dnl don't pass -Wno-error=frame-larger-than=)
+	[CFLAGS_WNOERROR_FRAME_LARGER_THAN="-Wno-error=frame-larger-than="])
+  AC_SUBST([CFLAGS_WNOERROR_FRAME_LARGER_THAN])
+])
