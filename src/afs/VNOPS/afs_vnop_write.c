@@ -130,8 +130,7 @@ afs_UFSWriteUIO(struct vcache *avc, afs_dcache_id_t *inode, struct uio *tuiop)
 # endif
     AFS_GLOCK();
     if (code == ENOSPC)
-	afs_warnuser
-	    ("\n\n\n*** Cache partition is full - decrease cachesize!!! ***\n\n\n");
+        afs_WarnENOSPC();
 #elif defined(AFS_SGI_ENV)
     AFS_GUNLOCK();
     avc->f.states |= CWritingUFS;

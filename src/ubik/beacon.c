@@ -24,9 +24,7 @@
 #include <rx/rxkad.h>
 #include <rx/rx_multi.h>
 #include <afs/cellconfig.h>
-#ifndef AFS_NT40_ENV
 #include <afs/afsutil.h>
-#endif
 
 #define UBIK_INTERNALS
 #include "ubik.h"
@@ -117,7 +115,7 @@ amSyncSite(void)
 	now = FT_ApproxTime();
 	if (beacon_globals.syncSiteUntil <= now) {	/* if my votes have expired, say so */
 	    if (beacon_globals.ubik_amSyncSite)
-		ubik_dprint("Ubik: I am no longer the sync site\n");
+		ViceLog(5, ("Ubik: I am no longer the sync site\n"));
 	    beacon_globals.ubik_amSyncSite = 0;
 	    beacon_globals.ubik_syncSiteAdvertised = 0;
 	    rcode = 0;
@@ -126,7 +124,7 @@ amSyncSite(void)
 	}
     }
     UBIK_BEACON_UNLOCK;
-    ubik_dprint("beacon: amSyncSite is %d\n", rcode);
+    ViceLog(5, ("beacon: amSyncSite is %d\n", rcode));
     return rcode;
 }
 
@@ -412,7 +410,7 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 
     if (ubik_singleServer) {
 	if (!beacon_globals.ubik_amSyncSite) {
-	    ubik_dprint("Ubik: I am the sync site - 1 server\n");
+	    ViceLog(5, ("Ubik: I am the sync site - 1 server\n"));
 	    DBHOLD(ubik_dbase);
 	    UBIK_VERSION_LOCK;
 	    version_globals.ubik_epochTime = FT_ApproxTime();
@@ -549,14 +547,14 @@ ubeacon_Interact(void *dummy)
 		     * happen due to errors with the rx security class in play
 		     * (rxkad, rxgk, etc). treat the host as if we got a
 		     * timeout, since this is not a valid vote. */
-		    ubik_print("assuming distant vote time %d from %s is an error; marking host down\n",
-		               (int)code, afs_inet_ntoa_r(ts->addr[0], hoststr));
+		    ViceLog(0, ("assuming distant vote time %d from %s is an error; marking host down\n",
+		               (int)code, afs_inet_ntoa_r(ts->addr[0], hoststr)));
 		    code = -1;
 		}
 		if (code > 0 && rx_ConnError(connections[multi_i])) {
-		    ubik_print("assuming vote from %s is invalid due to conn error %d; marking host down\n",
+		    ViceLog(0, ("assuming vote from %s is invalid due to conn error %d; marking host down\n",
 		               afs_inet_ntoa_r(ts->addr[0], hoststr),
-		               (int)rx_ConnError(connections[multi_i]));
+		               (int)rx_ConnError(connections[multi_i])));
 		    code = -1;
 		}
 
@@ -565,8 +563,8 @@ ubeacon_Interact(void *dummy)
 		 * the latter down below if we got enough votes to go with */
 		if (code > 0) {
 		    if ((code & ~0xff) == ERROR_TABLE_BASE_RXK) {
-			ubik_dprint("token error %d from host %s\n",
-				    code, afs_inet_ntoa_r(ts->addr[0], hoststr));
+			ViceLog(5, ("token error %d from host %s\n",
+				    code, afs_inet_ntoa_r(ts->addr[0], hoststr)));
 			ts->up = 0;
 			ts->beaconSinceDown = 0;
 			urecovery_LostServer(ts);
@@ -581,21 +579,21 @@ ubeacon_Interact(void *dummy)
 			    yesVotes++;	/* the extra epsilon */
 			ts->up = 1;	/* server is up (not really necessary: recovery does this for real) */
 			ts->beaconSinceDown = 1;
-			ubik_dprint("yes vote from host %s\n",
-				    afs_inet_ntoa_r(ts->addr[0], hoststr));
+			ViceLog(5, ("yes vote from host %s\n",
+				    afs_inet_ntoa_r(ts->addr[0], hoststr)));
 		    }
 		} else if (code == 0) {
 		    ts->lastVoteTime = temp;
 		    ts->lastVote = 0;
 		    ts->beaconSinceDown = 1;
-		    ubik_dprint("no vote from %s\n",
-				afs_inet_ntoa_r(ts->addr[0], hoststr));
+		    ViceLog(5, ("no vote from %s\n",
+				afs_inet_ntoa_r(ts->addr[0], hoststr)));
 		} else if (code < 0) {
 		    ts->up = 0;
 		    ts->beaconSinceDown = 0;
 		    urecovery_LostServer(ts);
-		    ubik_dprint("time out from %s\n",
-				afs_inet_ntoa_r(ts->addr[0], hoststr));
+		    ViceLog(5, ("time out from %s\n",
+				afs_inet_ntoa_r(ts->addr[0], hoststr)));
 		}
 		UBIK_BEACON_UNLOCK;
 	    }
@@ -620,7 +618,7 @@ ubeacon_Interact(void *dummy)
 	if (yesVotes > nServers) {	/* yesVotes is bumped by 2 or 3 for each site */
 	    UBIK_BEACON_LOCK;
 	    if (!beacon_globals.ubik_amSyncSite) {
-		ubik_dprint("Ubik: I am the sync site\n");
+		ViceLog(5, ("Ubik: I am the sync site\n"));
 		/* Defer actually changing any variables until we can take the
 		 * DB lock (which is before the beacon lock in the lock order). */
 		becameSyncSite = 1;
@@ -634,7 +632,7 @@ ubeacon_Interact(void *dummy)
 	} else {
 	    UBIK_BEACON_LOCK;
 	    if (beacon_globals.ubik_amSyncSite)
-		ubik_dprint("Ubik: I am no longer the sync site\n");
+		ViceLog(5, ("Ubik: I am no longer the sync site\n"));
 	    beacon_globals.ubik_amSyncSite = 0;
 	    beacon_globals.ubik_syncSiteAdvertised = 0;
 	    UBIK_BEACON_UNLOCK;
@@ -711,9 +709,9 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 				      AFSDIR_SERVER_NETINFO_FILEPATH,
 				      AFSDIR_SERVER_NETRESTRICT_FILEPATH);
 	if (count < 0) {
-	    ubik_print("ubik: Can't register any valid addresses:%s\n",
-		       reason);
-	    ubik_print("Aborting..\n");
+	    ViceLog(0, ("ubik: Can't register any valid addresses:%s\n",
+		       reason));
+	    ViceLog(0, ("Aborting..\n"));
 	    return UBADHOST;
 	}
 	usednetfiles++;
@@ -723,7 +721,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
     }
 
     if (count <= 0) {		/* no address found */
-	ubik_print("ubik: No network addresses found, aborting..\n");
+	ViceLog(0, ("ubik: No network addresses found, aborting..\n"));
 	return UBADHOST;
     }
 
@@ -736,8 +734,8 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
     }
 
     if (!found) {
-	ubik_print("ubik: primary address %s does not exist\n",
-		   afs_inet_ntoa_r(*ame, hoststr));
+	ViceLog(0, ("ubik: primary address %s does not exist\n",
+		   afs_inet_ntoa_r(*ame, hoststr)));
 	/* if we had the result of rx_getAllAddr already, avoid subverting
 	 * the "is gethostbyname(gethostname()) us" check. If we're
 	 * using NetInfo/NetRestrict, we assume they have enough clue
@@ -747,7 +745,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 	    *ame = myAddr[0];
 	    tcount = rx_getAllAddr(myAddr2, UBIK_MAX_INTERFACE_ADDR);
 	    if (tcount <= 0) {	/* no address found */
-		ubik_print("ubik: No network addresses found, aborting..\n");
+		ViceLog(0, ("ubik: No network addresses found, aborting..\n"));
 		return UBADHOST;
 	    }
 
@@ -782,7 +780,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 	}
     }
     if (found)
-	ubik_print("Using %s as my primary address\n", afs_inet_ntoa_r(*ame, hoststr));
+	ViceLog(0, ("Using %s as my primary address\n", afs_inet_ntoa_r(*ame, hoststr)));
 
     if (!info) {
 	/* get rid of servers which were purged because all
@@ -864,9 +862,9 @@ ubeacon_updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 		if (ts->addr[0] != htonl(outAddr.hostAddr[0])) {
 		    code = UBADHOST;
 		    strcpy(buffer, afs_inet_ntoa_r(ts->addr[0], hoststr));
-		    ubik_print("ubik:Two primary addresses for same server \
+		    ViceLog(0, ("ubik:Two primary addresses for same server \
                     %s %s\n", buffer,
-		    afs_inet_ntoa_r(htonl(outAddr.hostAddr[0]), hoststr));
+		    afs_inet_ntoa_r(htonl(outAddr.hostAddr[0]), hoststr)));
 		} else {
 		    for (j = 1; j < UBIK_MAX_INTERFACE_ADDR; j++)
 			ts->addr[j] = htonl(outAddr.hostAddr[j]);
@@ -874,16 +872,15 @@ ubeacon_updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 		UBIK_ADDR_UNLOCK;
 	    } else if (multi_error == RXGEN_OPCODE) {	/* pre 3.5 remote server */
 		UBIK_ADDR_LOCK;
-		ubik_print
-		    ("ubik server %s does not support UpdateInterfaceAddr RPC\n",
-		     afs_inet_ntoa_r(ts->addr[0], hoststr));
+		ViceLog(0, ("ubik server %s does not support UpdateInterfaceAddr RPC\n",
+		     afs_inet_ntoa_r(ts->addr[0], hoststr)));
 		UBIK_ADDR_UNLOCK;
 	    } else if (multi_error == UBADHOST) {
 		code = UBADHOST;	/* remote CellServDB inconsistency */
-		ubik_print("Inconsistent Cell Info on server:\n");
+		ViceLog(0, ("Inconsistent Cell Info on server:\n"));
 		UBIK_ADDR_LOCK;
 		for (j = 0; j < UBIK_MAX_INTERFACE_ADDR && ts->addr[j]; j++)
-		    ubik_print("... %s\n", afs_inet_ntoa_r(ts->addr[j], hoststr));
+		    ViceLog(0, ("... %s\n", afs_inet_ntoa_r(ts->addr[j], hoststr)));
 		UBIK_ADDR_UNLOCK;
 	    } else {
 		UBIK_BEACON_LOCK;

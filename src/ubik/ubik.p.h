@@ -159,6 +159,7 @@ struct ubik_dbase {
     int (*setlabel) (struct ubik_dbase * adbase, afs_int32 afile, struct ubik_version * aversion);	/*!< set the version label */
     int (*getlabel) (struct ubik_dbase * adbase, afs_int32 afile, struct ubik_version * aversion);	/*!< retrieve the version label */
     int (*getnfiles) (struct ubik_dbase * adbase);	/*!< find out number of files */
+    int (*buffered_append)(struct ubik_dbase *adbase, afs_int32 afid, void *adata, afs_int32 alength);
     short readers;		/*!< number of current read transactions */
     struct ubik_version cachedVersion;	/*!< version of caller's cached data */
     struct Lock cache_lock; /*!< protects cached application data */
@@ -448,6 +449,8 @@ extern int uphys_setlabel(struct ubik_dbase *adbase, afs_int32 afile,
 extern int uphys_sync(struct ubik_dbase *adbase, afs_int32 afile);
 extern void uphys_invalidate(struct ubik_dbase *adbase,
 			     afs_int32 afid);
+extern int uphys_buf_append(struct ubik_dbase *adbase, afs_int32 afid,
+                            void *buf, afs_int32 alength);
 
 /*! \name recovery.c */
 extern int urecovery_ResetState(void);
@@ -462,31 +465,6 @@ extern int DoProbe(struct ubik_server *server);
 /*\}*/
 
 /*! \name ubik.c */
-extern afs_int32 ContactQuorum_NoArguments(afs_int32 (*proc)
-						       (struct rx_connection *,
-							ubik_tid *),
-					   struct ubik_trans *atrans,
-					   int aflags);
-
-extern afs_int32 ContactQuorum_DISK_Lock(struct ubik_trans *atrans,
-					 int aflags,
-					 afs_int32 file, afs_int32 position,
-					 afs_int32 length, afs_int32 type);
-
-extern afs_int32 ContactQuorum_DISK_Write(struct ubik_trans *atrans,
-					  int aflags,
-					  afs_int32 file, afs_int32 position,
-					  bulkdata *data);
-
-extern afs_int32 ContactQuorum_DISK_Truncate(struct ubik_trans *atrans,
-					     int aflags,
-					     afs_int32 file, afs_int32 length);
-
-extern afs_int32 ContactQuorum_DISK_WriteV(struct ubik_trans *atrans,
-					   int aflags,
-					   iovec_wrt * io_vector,
-					   iovec_buf *io_buffer);
-
 extern afs_int32 ContactQuorum_DISK_SetVersion(struct ubik_trans *atrans,
 					       int aflags,
 					       ubik_version *OldVersion,
@@ -547,17 +525,6 @@ extern void ulock_Debug(struct ubik_debug *aparm);
 extern int uvote_ShouldIRun(void);
 extern afs_int32 uvote_GetSyncSite(void);
 extern int uvote_Init(void);
-extern void ubik_vprint(const char *format, va_list ap)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 0);
-
-extern void ubik_print(const char *format, ...)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
-
-extern void ubik_dprint(const char *format, ...)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
-
-extern void ubik_dprint_25(const char *format, ...)
-    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 extern struct vote_data vote_globals;
 extern void uvote_set_dbVersion(struct ubik_version);
 extern int uvote_eq_dbVersion(struct ubik_version);

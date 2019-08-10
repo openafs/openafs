@@ -102,6 +102,11 @@ extern void rx_RecordCallStatistics(struct rx_call *call,
 				    unsigned int totalFunc,
 				    int isServer);
 
+extern void rx_GetCallStatus(struct rx_call *call,
+			     afs_int32 *readNext,
+			     afs_int32 *transmitNext,
+			     int *lastSendTime,
+			     int *lastReceiveTime);
 /* Peer management */
 extern afs_uint32 rx_HostOf(struct rx_peer *peer);
 extern u_short rx_PortOf(struct rx_peer *peer);

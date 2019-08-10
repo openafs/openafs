@@ -180,16 +180,13 @@ GCTrans(void)
 
     VTRANS_LOCK;
     for (tt = allTrans; tt; tt = nt) {
-	nt = tt->next;		/* remember in case we zap it */
 	if (tt->time + OLDTRANSWARN < now) {
 	    Log("trans %u on volume %" AFS_VOLID_FMT " %s than %d seconds\n", tt->tid,
 		afs_printable_VolumeId_lu(tt->volid),
 		((tt->refCount > 0) ? "is older" : "has been idle for more"),
 		(((now - tt->time) / GCWAKEUP) * GCWAKEUP));
 	}
-	if (tt->refCount > 0)
-	    continue;
-	if (tt->time + OLDTRANSTIME < now) {
+	if ((tt->refCount <= 0) && (tt->time + OLDTRANSTIME < now)) {
 	    Log("trans %u on volume %" AFS_VOLID_FMT " has timed out\n", tt->tid, afs_printable_VolumeId_lu(tt->volid));
 
 	    tt->refCount++;	/* we're using it now */
@@ -208,12 +205,27 @@ GCTrans(void)
 
 		VTRANS_UNLOCK;
 		VPurgeVolume(&error, tt->volume);
+		/*
+		 * While the lock was dropped, tt->next may have changed.
+		 * Therefore, defer reading tt->next until _after_ we regain the lock.
+		 */
 		VTRANS_LOCK;
 	    }
-
-	    DeleteTrans(tt, 0);	/* drops refCount or deletes it */
+	    nt = tt->next;
+	    /*
+	     * DeleteTrans() will decrement tt->refCount; if it falls to 0, it will
+	     * also delete tt itself.  Therefore, we must read tt->next _before_
+	     * calling DeleteTrans().
+	     */
+	    DeleteTrans(tt, 0);
 	    GCDeletes++;
+	    continue;
 	}
+	/*
+	 * This path never dropped VTRANS_LOCK or modified the allTrans list.
+	 * Therefore, no special care is required to determine the next trans in the chain.
+	 */
+	nt = tt->next;
     }
     VTRANS_UNLOCK;
     return 0;

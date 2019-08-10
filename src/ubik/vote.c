@@ -201,8 +201,8 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	/* This is the identifier that ubik uses. */
 	otherHost = ubikGetPrimaryInterfaceAddr(otherHost);
 	if (!otherHost) {
-	    ubik_dprint("Received beacon from unknown host %s\n",
-			afs_inet_ntoa_r(rx_HostOf(rxp), hoststr));
+	    ViceLog(5, ("Received beacon from unknown host %s\n",
+			afs_inet_ntoa_r(rx_HostOf(rxp), hoststr)));
 	    return 0;		/* I don't know about you: vote no */
 	}
 	for (ts = ubik_servers; ts; ts = ts->next) {
@@ -210,7 +210,7 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 		break;
 	}
 	if (!ts)
-	    ubik_dprint("Unknown host %x has sent a beacon\n", otherHost);
+	    ViceLog(5, ("Unknown host %x has sent a beacon\n", otherHost));
 	if (ts && ts->isClone)
 	    isClone = 1;
     } else {
@@ -218,8 +218,8 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	isClone = amIClone;
     }
 
-    ubik_dprint("Received beacon type %d from host %s\n", astate,
-		afs_inet_ntoa_r(otherHost, hoststr));
+    ViceLog(5, ("Received beacon type %d from host %s\n", astate,
+		afs_inet_ntoa_r(otherHost, hoststr)));
 
     /* compute the lowest server we've heard from.  We'll try to only vote for
      * this dude if we don't already have a synchronization site.  Also, don't
@@ -269,9 +269,8 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	vote_globals.syncTime = now;
     } else if (vote_globals.syncTime + BIGTIME < now) {
 	if (vote_globals.syncHost) {
-	    ubik_dprint
-		("Ubik: Lost contact with sync-site %s (NOT in quorum)\n",
-		 afs_inet_ntoa_r(vote_globals.syncHost, hoststr));
+	    ViceLog(5, ("Ubik: Lost contact with sync-site %s (NOT in quorum)\n",
+		 afs_inet_ntoa_r(vote_globals.syncHost, hoststr)));
 	}
 	vote_globals.syncHost = 0;
     }
@@ -316,9 +315,9 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	if ((vote_globals.ubik_lastYesTime + BIGTIME < now) || (otherHost != vote_globals.lastYesHost)
 	    || (vote_globals.lastYesState != astate)) {
 	    /* A new vote or a change in the vote or changed quorum */
-	    ubik_dprint("Ubik: vote 'yes' for %s %s\n",
+	    ViceLog(5, ("Ubik: vote 'yes' for %s %s\n",
 			afs_inet_ntoa_r(otherHost, hoststr),
-			(astate ? "(in quorum)" : "(NOT in quorum)"));
+			(astate ? "(in quorum)" : "(NOT in quorum)")));
 	}
 
 	vote = now;		/* vote yes */
@@ -551,42 +550,6 @@ SVOTE_GetSyncSite(struct rx_call * rxcall,
     temp = uvote_GetSyncSite();
     *ahost = ntohl(temp);
     return 0;
-}
-
-void
-ubik_dprint_25(const char *format, ...)
-{
-    va_list ap;
-
-    va_start(ap, format);
-    vViceLog(25, (format, ap));
-    va_end(ap);
-}
-
-void
-ubik_dprint(const char *format, ...)
-{
-    va_list ap;
-
-    va_start(ap, format);
-    vViceLog(5, (format, ap));
-    va_end(ap);
-}
-
-void
-ubik_vprint(const char *format, va_list ap)
-{
-    vViceLog(0, (format, ap));
-}
-
-void
-ubik_print(const char *format, ...)
-{
-    va_list ap;
-
-    va_start(ap, format);
-    ubik_vprint(format, ap);
-    va_end(ap);
 }
 
 /*!

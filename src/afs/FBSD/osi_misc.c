@@ -60,15 +60,6 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 }
 
 /*
- * does not implement security features of kern_time.c:settime()
- */
-void
-afs_osi_SetTime(osi_timeval_t * atv)
-{
-    printf("afs attempted to set clock; use \"afsd -nosettime\"\n");
-}
-
-/*
  * Replace all of the bogus special-purpose memory allocators...
  */
 void *
