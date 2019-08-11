@@ -10,6 +10,8 @@ openafs (1.8.3-1) UNRELEASED; urgency=medium
       (see NEWS).
     - Support Linux 5.0.
   * Update CellServDB from grand.central.org (2018-05-14).
+  * Remove custom compression settings for Debian tarball and binary
+    packages.
 
  -- Anders Kaseorg <andersk@mit.edu>  Sat, 10 Aug 2019 12:40:30 -0700
 
