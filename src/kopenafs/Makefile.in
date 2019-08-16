@@ -75,7 +75,7 @@ libkopenafs.a: $(LT_objs)
 	$(LT_LDLIB_static) $(LT_objs)
 
 libkopenafs.la: libkopenafs.la.sym $(LT_objs)
-	$(LT_LDLIB_shlib) $(LT_objs)
+	$(LT_LDLIB_shlib_only) $(LT_objs)
 
 test-unlog: test-unlog.lo libkopenafs.la
 	$(LT_LDRULE_static) test-unlog.lo libkopenafs.la $(XLIBS)

@@ -72,7 +72,7 @@ clean:
 $(LT_objs): $(HEADERS)
 
 libafshcrypto.la: libafshcrypto.la.sym $(LT_objs)
-	$(LT_LDLIB_shlib) $(LT_objs) $(LT_libs)
+	$(LT_LDLIB_shlib_only) $(LT_objs) $(LT_libs)
 
 libafshcrypto.a: $(LT_objs)
 	$(LT_LDLIB_static) $(LT_objs)
