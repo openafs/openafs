@@ -51,7 +51,6 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
@@ -61,7 +60,6 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
@@ -80,7 +78,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="/usr/lib/libpam.1"
 		RANLIB="/usr/bin/ranlib"
 		RM="/bin/rm"
-		SHLIB_LDFLAGS="-b -Bsymbolic"
 		SHLIB_SUFFIX="sl"
 		VFSCK_CFLAGS="-D_FILE64"
 		XCFLAGS0="-ldld -lc -Wp,-H200000 -Wl,-a,archive -DAUTH_DBM_LOG +z -Wl,+k -D_LARGEFILE64_SOURCE"
@@ -105,7 +102,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="/usr/lib/libpam.1"
 		RANLIB="/usr/bin/ranlib"
 		RM="/bin/rm"
-		SHLIB_LDFLAGS="-b -Bsymbolic"
 		SHLIB_SUFFIX="sl"
 		VFSCK_CFLAGS="-I/usr/old/usr/include -D_FILE64"
 		XCFLAGS0="-ldld -lc -Wp,-H200000 -Wl,-a,archive -DAUTH_DBM_LOG +z -Wl,+k -D_LARGEFILE64_SOURCE"
@@ -130,7 +126,6 @@ case $AFS_SYSNAME in
 		PAM_LIBS="/usr/lib/hpux32/libpam.so"
 		RANLIB="/usr/bin/ranlib"
 		RM="/bin/rm"
-		SHLIB_LDFLAGS="-b -Bsymbolic"
 		SHLIB_SUFFIX="sl"
 		VFSCK_CFLAGS="-I/usr/old/usr/include -D_FILE64"
 		XCFLAGS0="-ldld -lc -Wp,-H200000 -Wl,-a,archive_shared -DAUTH_DBM_LOG +z -Wl,+k -D_LARGEFILE64_SOURCE"
@@ -144,7 +139,6 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-pipe -fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		XCFLAGS="-pipe"
 		;;
@@ -153,7 +147,6 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-pipe -fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		XCFLAGS="-pipe"
 		;;
@@ -161,7 +154,6 @@ case $AFS_SYSNAME in
 	amd64_fbsd_*)
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_CFLAGS="-O2 -pipe -fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		XCFLAGS="-O2 -pipe -fPIC"
 		;;
@@ -171,7 +163,6 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-pipe -fPIC"
 		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		XCFLAGS="-pipe"
 		;;
@@ -180,7 +171,6 @@ case $AFS_SYSNAME in
 		MT_LIBS='${XLIBS}'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-pipe -fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		XCFLAGS="-pipe"
 		;;
@@ -191,7 +181,6 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		XCFLAGS="-G0"
 		SHLIB_LINKER="${CC} -shared"
 		;;
@@ -203,7 +192,6 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
@@ -211,7 +199,6 @@ case $AFS_SYSNAME in
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_CFLAGS="-fPIC"
 		SHLIB_LINKER="${CC} -shared -m64"
 		XCFLAGS="-m64"
@@ -229,7 +216,6 @@ case $AFS_SYSNAME in
 		OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
@@ -242,7 +228,6 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
@@ -254,7 +239,6 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-pipe -fpic"
 		SHLIB_CFLAGS="-fpic"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		XCFLAGS=
 		;;
@@ -372,7 +356,6 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
@@ -428,7 +411,6 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
@@ -440,7 +422,6 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x -Xlinker -Bsymbolic"
 		OPTMZ=-O
 		XCFLAGS="-D__s390x__"
 		SHLIB_LINKER="${CC} -shared"
@@ -501,7 +482,6 @@ case $AFS_SYSNAME in
 		PAM_OPTMZ=-O2
 		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_CFLAGS="-fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		XCFLAGS64="-m64"
 		XLDFLAGS64="-m64"
 		SHLIB_LINKER="${CC} -shared"
@@ -514,7 +494,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
-		SHLIB_LDFLAGS="-G -Bsymbolic"
 		XCFLAGS64='${XCFLAGS} -m64'
 		XCFLAGS="-dy -Bdynamic"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
@@ -551,7 +530,6 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
-		SHLIB_LDFLAGS="-G -Bsymbolic"
 		XCFLAGS0="-dy -Bdynamic"
 		XCFLAGS64="${XCFLAGS0} -m64"
 		XCFLAGS="${XCFLAGS0} ${XARCHFLAGS}"
@@ -747,7 +725,6 @@ AC_SUBST(REGEX_OBJ)
 AC_SUBST(RM)
 AC_SUBST(RXDEBUG)
 AC_SUBST(SHLIB_CFLAGS)
-AC_SUBST(SHLIB_LDFLAGS)
 AC_SUBST(SHLIB_LINKER)
 AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(TSM_IMPORTS)

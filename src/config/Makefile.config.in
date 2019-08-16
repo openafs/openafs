@@ -100,7 +100,6 @@ ROKEN_HEADERS = @ROKEN_HEADERS@
 ROKEN_LTLIBOBJS = @LTLIBOBJS@
 SED = @SED@
 SHLIB_CFLAGS = @SHLIB_CFLAGS@
-SHLIB_LDFLAGS = @SHLIB_LDFLAGS@
 SHLIB_LINKER = @SHLIB_LINKER@
 SHLIB_SUFFIX = @SHLIB_SUFFIX@
 SYS_NAME = @AFS_SYSNAME@
@@ -237,12 +236,6 @@ PTH_LDFLAGS=$(MODULE_LDFLAGS) $(COMMON_LDFLAGS) $(MT_LDFLAGS)
 PTH_CCRULE        =$(RUN_CC) $(CC_WRAPPER) $(MT_CC) $(CPPFLAGS_$(@)) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 PTH_CCRULE_NOQ=$(RUN_CC_NOQ) $(CC_WRAPPER) $(MT_CC) $(CPPFLAGS_$(@)) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 
-# Shared
-SHD_CFLAGS=$(MODULE_CFLAGS) $(COMMON_CFLAGS) $(MT_CFLAGS) $(SHLIB_CFLAGS)
-SHD_LDFLAGS=$(MODULE_LDFLAGS) $(COMMON_LDFLAGS) $(SHLIB_LDFLAGS)
-SHD_CCRULE        =$(RUN_CC) $(CC_WRAPPER) $(MT_CC) $(CPPFLAGS_$(@)) $(SHD_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
-SHD_CCRULE_NOQ=$(RUN_CC_NOQ) $(CC_WRAPPER) $(MT_CC) $(CPPFLAGS_$(@)) $(SHD_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
-
 # Libtool - for objects that are part of pthread-only libraries
 LT_CCRULE=$(RUN_CC) $(LIBTOOL) --quiet --mode=compile --tag=CC \
 	      $(CC_WRAPPER) $(MT_CC) $(CPPFLAGS_$(@)) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
@@ -260,7 +253,9 @@ LT_LDLIB_shlib_common=$(LIBTOOL) --quiet --mode=link --tag=CC \
 
 LT_LDLIB_shlib=$(LT_LDLIB_shlib_common) -export-symbols $(srcdir)/$@.sym
 
-LT_LDLIB_shlib_missing=$(LT_LDLIB_shlib_common) -export-symbols-regex \
+LT_LDLIB_shlib_only=$(LT_LDLIB_shlib_common) -shared -export-symbols $(srcdir)/$@.sym
+
+LT_LDLIB_shlib_missing=$(LT_LDLIB_shlib_common) -shared -export-symbols-regex \
 	"($$(sed -e 's/^/^/' -e 's/$$/$$|/' -e '$$ s/|$$//' $(srcdir)/$@.sym | \
 	tr -d '\n'))"
 
