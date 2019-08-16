@@ -231,7 +231,7 @@ osi_VMDirty_p(struct vcache *avc)
 #if defined (AFS_SUN5_ENV)
     if (avc->f.states & CMAPPED) {
 	struct page *pg;
-	for (pg = avc->v.v_s.v_Pages; pg; pg = pg->p_vpnext) {
+	for (pg = AFSTOV(avc)->v_s.v_Pages; pg; pg = pg->p_vpnext) {
 	    if (pg->p_mod) {
 		return 1;
 	    }

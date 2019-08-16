@@ -150,6 +150,8 @@ KERNELDIR = ../libafs
 #
 # Build helper apps
 #
+CC_WRAPPER = @CC_WRAPPER@
+LD_WRAPPER = @LD_WRAPPER@
 COMPILE_ET = @COMPILE_ET_PATH@
 CONFIGTOOL = @CONFIGTOOL_PATH@
 RXGEN = @RXGEN_PATH@
@@ -227,24 +229,24 @@ COMMON_LDFLAGS=$(LDFLAGS) $(LDFLAGS_hcrypto) $(LDFLAGS_roken) $(DBG) $(OPTMZ)
 # LWP Flags
 LWP_CFLAGS=$(MODULE_CFLAGS) $(COMMON_CFLAGS)
 LWP_LDFLAGS=$(MODULE_LDFLAGS) $(COMMON_LDFLAGS) $(XLDFLAGS) $(ARCHFLAGS)
-LWP_CCRULE        =$(RUN_CC) $(CCOBJ) $(CPPFLAGS_$(@)) $(LWP_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
-LWP_CCRULE_NOQ=$(RUN_CC_NOQ) $(CCOBJ) $(CPPFLAGS_$(@)) $(LWP_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+LWP_CCRULE        =$(RUN_CC) $(CC_WRAPPER) $(CCOBJ) $(CPPFLAGS_$(@)) $(LWP_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+LWP_CCRULE_NOQ=$(RUN_CC_NOQ) $(CC_WRAPPER) $(CCOBJ) $(CPPFLAGS_$(@)) $(LWP_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 
 # Pthreaded
 PTH_CFLAGS=$(MODULE_CFLAGS) $(COMMON_CFLAGS) $(MT_CFLAGS)
 PTH_LDFLAGS=$(MODULE_LDFLAGS) $(COMMON_LDFLAGS) $(MT_LDFLAGS)
-PTH_CCRULE        =$(RUN_CC) $(MT_CC) $(CPPFLAGS_$(@)) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
-PTH_CCRULE_NOQ=$(RUN_CC_NOQ) $(MT_CC) $(CPPFLAGS_$(@)) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+PTH_CCRULE        =$(RUN_CC) $(CC_WRAPPER) $(MT_CC) $(CPPFLAGS_$(@)) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+PTH_CCRULE_NOQ=$(RUN_CC_NOQ) $(CC_WRAPPER) $(MT_CC) $(CPPFLAGS_$(@)) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 
 # Shared
 SHD_CFLAGS=$(MODULE_CFLAGS) $(COMMON_CFLAGS) $(MT_CFLAGS) $(SHLIB_CFLAGS)
 SHD_LDFLAGS=$(MODULE_LDFLAGS) $(COMMON_LDFLAGS) $(SHLIB_LDFLAGS)
-SHD_CCRULE        =$(RUN_CC) $(MT_CC) $(CPPFLAGS_$(@)) $(SHD_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
-SHD_CCRULE_NOQ=$(RUN_CC_NOQ) $(MT_CC) $(CPPFLAGS_$(@)) $(SHD_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+SHD_CCRULE        =$(RUN_CC) $(CC_WRAPPER) $(MT_CC) $(CPPFLAGS_$(@)) $(SHD_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+SHD_CCRULE_NOQ=$(RUN_CC_NOQ) $(CC_WRAPPER) $(MT_CC) $(CPPFLAGS_$(@)) $(SHD_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 
 # Libtool - for objects that are part of pthread-only libraries
 LT_CCRULE=$(RUN_CC) $(LIBTOOL) --quiet --mode=compile --tag=CC \
-	      $(MT_CC) $(CPPFLAGS_$(@)) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+	      $(CC_WRAPPER) $(MT_CC) $(CPPFLAGS_$(@)) $(PTH_CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 
 LT_current=0
 LT_revision=0
@@ -252,7 +254,7 @@ LT_age=0
 
 # Basic rule to link a shared library.
 LT_LDLIB_shlib_common=$(LIBTOOL) --quiet --mode=link --tag=CC \
-		      $(MT_CC) -rpath $(libdir) \
+		      $(LD_WRAPPER) $(MT_CC) -rpath $(libdir) \
 		      $(PTH_LDFLAGS) $(PTH_CFLAGS) $(LDFLAGS_$(@)) \
 		      -o $@ \
 		      -version-info $(LT_current):$(LT_revision):$(LT_age)
@@ -265,18 +267,18 @@ LT_LDLIB_shlib_missing=$(LT_LDLIB_shlib_common) -export-symbols-regex \
 
 # Link a static convenience library (contains no PIC code)
 LT_LDLIB_static=$(LIBTOOL) --quiet --mode=link --tag=CC \
-		 $(MT_CC) -static $(LDFLAGS) $(DBG) $(OPTMZ) \
+		 $(LD_WRAPPER) $(MT_CC) -static $(LDFLAGS) $(DBG) $(OPTMZ) \
 		 $(LDFLAGS_$(@)) -o $@
 
 # Link a convenience library for use in other libs (contains PIC code)
 LT_LDLIB_pic= $(LIBTOOL) --quiet --mode=link --tag=CC \
-	       $(MT_CC) $(LDFLAGS) $(DBG) $(OPTMZ) \
+	       $(LD_WRAPPER) $(MT_CC) $(LDFLAGS) $(DBG) $(OPTMZ) \
 	       $(LDFLAGS_$(@)) -o $@
 
 # Libtool - for objects that are built for both pthread and lwp libraries
 LTLWP_CCRULE=$(RUN_CC) $(LWPTOOL) --mode compile \
-	         --lwpcc "$(CCOBJ)" \
-		 --mtcc "$(LIBTOOL) --quiet --mode=compile --tag=CC $(MT_CC) $(MT_CFLAGS)" \
+	         --lwpcc "$(CC_WRAPPER) $(CCOBJ)" \
+		 --mtcc "$(LIBTOOL) --quiet --mode=compile --tag=CC $(CC_WRAPPER) $(MT_CC) $(MT_CFLAGS)" \
 		 -o $@ \
 		 -- \
 		 $(CPPFLAGS_$(@)) $(MODULE_CFLAGS) $(COMMON_CFLAGS) $(CFLAGS_$(@)) \
@@ -296,15 +298,15 @@ LT_LDLIB_lwp_NOQ=$(RUN_LD_NOQ) $(LWPTOOL) --mode link \
 
 # Use this to link an executable with one or more libtool libraries
 LT_LDRULE        = $(RUN_LD) $(LIBTOOL) --quiet --mode=link --tag=CC \
-		             $(MT_CC) $(PTH_LDFLAGS) $(PTH_CFLAGS) \
+		             $(LD_WRAPPER) $(MT_CC) $(PTH_LDFLAGS) $(PTH_CFLAGS) \
 			     $(LDFLAGS_$(@)) -o $@
 
 LT_LDRULE_static = $(RUN_LD) $(LIBTOOL) --quiet --mode=link --tag=CC \
-			     $(MT_CC) -static $(PTH_LDFLAGS) $(PTH_CFLAGS) \
+			     $(LD_WRAPPER) $(MT_CC) -static $(PTH_LDFLAGS) $(PTH_CFLAGS) \
 			     $(LDFLAGS_$(@)) -o $@
 
 LT_LDRULE_static_NOQ = $(RUN_LD_NOQ) $(LIBTOOL) --quiet --mode=link --tag=CC \
-			     $(MT_CC) -static $(PTH_LDFLAGS) $(PTH_CFLAGS) \
+			     $(LD_WRAPPER) $(MT_CC) -static $(PTH_LDFLAGS) $(PTH_CFLAGS) \
 			     $(LDFLAGS_$(@)) -o $@
 
 LT_INSTALL_DATA=$(LIBTOOL) --quiet --mode=install $(INSTALL_DATA)
@@ -315,36 +317,5 @@ LT_CLEAN=$(RM) -rf .lwp .libs *.la *.lo
 # Default rules. These will be overriden if the module Makefile specifically
 # includes a particular type (lwp, pthread, or shared)
 
-AFS_LDRULE         =$(RUN_LD) $(CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) $(LDFLAGS_$(@)) -o $@
-AFS_LDRULE_NOQ =$(RUN_LD_NOQ) $(CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) $(LDFLAGS_$(@)) -o $@
-
-RUN_CTFCONVERT=@RUN_CTFCONVERT() { \
-    CTFLABEL=$$1 ; \
-    CTFDBG=$$2 ; \
-    shift ; shift ; \
-    if test "x$${CTFDBG}" = "x" ; then exit 0; fi; \
-    if test "x${CTFCONVERT}" = "x" ; then exit 0; fi; \
-    if test "x${CTFMERGE}" = "x" ; then \
-        echo "refusing to run ctfconvert; missing ctfmerge"; \
-        exit 1; \
-    fi; \
-    for t in $$@ ; do \
-        echo "${CTFCONVERT} -g -l $${CTFLABEL} $$t"; \
-        ${CTFCONVERT} -g -l $${CTFLABEL} $$t; \
-    done ; \
-} ; RUN_CTFCONVERT
-
-RUN_CTFMERGE=@RUN_CTFMERGE () { \
-    CTFLABEL=$$1 ; \
-    CTFDBG=$$2 ; \
-    shift ; shift ; \
-    if test "x$${CTFDBG}" = "x" ; then exit 0; fi; \
-    if test "x${CTFMERGE}" = "x" ; then exit 0; fi; \
-    if test "x${CTFCONVERT}" = "x" ; then \
-        echo "refusing to run ctfmerge; missing ctfconvert"; \
-        exit 1; \
-    fi; \
-    echo "$(CTFMERGE) -g -l $${CTFLABEL} -o $$@"; \
-    $(CTFMERGE) -g -l $${CTFLABEL} -o $$@; \
-} ; RUN_CTFMERGE
-
+AFS_LDRULE         =$(RUN_LD) $(LD_WRAPPER) $(CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) $(LDFLAGS_$(@)) -o $@
+AFS_LDRULE_NOQ =$(RUN_LD_NOQ) $(LD_WRAPPER) $(CC) $(AFS_LDFLAGS) $(AFS_CFLAGS) $(LDFLAGS_$(@)) -o $@

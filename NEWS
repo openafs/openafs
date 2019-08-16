@@ -1,5 +1,91 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.4 (in progress)
+
+  All platforms
+
+    Build system updates to remove obsolete autoconf macros and remove missing
+    script warning during builds (13480, 13481, 13482, 13483, 13484, 13486).
+
+    Build system update to fix a conditional check in the pthread.m4 autoconf
+    file (13595)
+
+    Build system update to create the man3 subdirectory, fixing a
+    reported build failure (13535).
+
+    Remove the last reference to src/mcas in the documentation (13558).
+
+  All server platforms
+
+    Fix fileserver's parsing of the options -vlruthresh, -vlruinterval,
+    -vlrumax and -novbc (13680).
+
+    Fixes to make ptserver's behaviour when run in restricted mode consistent
+    with the documentation: Non-members of the system:administrators group
+    are no longer allowed to issue the adduser, setfields and delete pts
+    commands, and all members of system:administrators are now allowed to
+    issue pts commands in this mode, not just the admin principal (13686..88).
+
+  All client platforms
+
+    Fix missing Rx call clean-up after failing to read dcaches from a file
+    server (13511).
+
+    Fix an Rx call leak for calls aborted by a connection abort after the call
+    was initialized but before use (13517).
+
+    Remove the obsolete afs_xosi lock to remove unnecessary serialization of
+    VOP_GETATTR calls. This can lead to improved performance under heavy
+    workloads (13529).
+
+    Increase the size of the Directory Name Lookup Cache (DNLC) to improve
+    cache performance (13559).
+
+    Fix getting tokens for cells with a three character name (13679).
+
+    Avoid a misleading message about the cell being used when aklog is run
+    with the -cell parameter but the AFSCELL environment variable is set to
+    a different cell (13676).
+
+    Build system update to honor the CFLAGS environment variable when building
+    libuafs (13544).
+
+  Linux
+
+    More improper use of ENOENT fixes to avoid incorrect use of linux negative
+    dentry cache, which can lead to false ENOENT errors (13542, 13543, 13590
+    13692) (RT #134904).
+
+    Return errors instead of returning incomplete directory listings when the
+    directory objects are incomplete in the cache (13591).
+
+    Add ppc64le_linux26 sysname for the ppc64le architecture (13636, 13637,
+    13589).
+
+    Fix configure check for a kernel time function in order to build on
+    Linux 5.0 (13523).
+
+    RPM packaging update for RHEL8 adding a build requirement to ensure the
+    kernel module can be built from the SRPM (13563) (RT #134900).
+
+    On systemd based RHEL/Fedora systems, start the client after dkms startup
+    is finished if the latter is installed and enabled, to avoid attempting
+    starts without the kernel module being available yet (13674) (RT #134974).
+
+  MacOS
+
+    Build system updates for MacOS (13584).
+
+  Solaris
+
+    Add CTF debugging records to userspace objects to improve debugging
+    of servers (13487).
+
+    Convert the cache manager vnodes to be non-embebbed on Solaris 11 in order
+    to make the cache manager more resilient across Solaris 11 changes (13524,
+    13525, 13526, 13527, 13528).
+
+
 OpenAFS 1.8.3
 
   All platforms

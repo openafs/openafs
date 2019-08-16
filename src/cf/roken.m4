@@ -88,7 +88,7 @@ AC_DEFUN([OPENAFS_ROKEN], [
     [AS_HELP_STRING([--with-roken=DIR],
         [Location of the roken library, or 'internal'])],
     [AS_IF([test x"$withval" = xno],
-           [AC_ERROR("OpenAFS requires roken to build")],
+           [AC_MSG_ERROR("OpenAFS requires roken to build")],
            [AS_IF([test x"$withval" != xyes],
                   [roken_root="$withval"])
            ])

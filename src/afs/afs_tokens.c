@@ -166,7 +166,7 @@ afs_IsTokenExpired(struct tokenJar *token, afs_int32 now) {
       default:
 	return 0;
     }
-    return 0; /* not reached, but keep gcc happy */
+    return 0;
 }
 
 /*!

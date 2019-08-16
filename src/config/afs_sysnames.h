@@ -391,6 +391,8 @@
 #define SYS_NAME_ID_arm64_linux2	4100
 #define SYS_NAME_ID_arm64_linux26	4103
 
+#define SYS_NAME_ID_ppc64le_linux26	4203
+
 #define	AFS_REALM_SZ	64
 
 /* Specifies the number of equivalent local realm names */

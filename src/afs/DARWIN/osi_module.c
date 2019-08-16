@@ -141,5 +141,5 @@ afs_modunload(struct kmod_info * kmod_info, void *data)
     return KERN_SUCCESS;
 }
 
-KMOD_EXPLICIT_DECL(MYBUNDLEID, VERSION, afs_modload,
+KMOD_EXPLICIT_DECL(MYBUNDLEID, PACKAGE_VERSION, afs_modload,
 		   afs_modunload)
