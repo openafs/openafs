@@ -1,17 +1,20 @@
-openafs (1.8.3-1) UNRELEASED; urgency=medium
+openafs (1.8.4~pre1-1) UNRELEASED; urgency=medium
 
   [ Ondřej Nový ]
   * d/control: Removing redundant Priority field in binary package
   * d/changelog: Remove trailing whitespaces
 
   [ Anders Kaseorg ]
-  * New upstream release 1.8.3.
+  * New upstream release 1.8.3:
     - Miscellaneous improvements to error handling and server efficiency
       (see NEWS).
     - Support Linux 5.0.
   * Update CellServDB from grand.central.org (2018-05-14).
   * Remove custom compression settings for Debian tarball and binary
     packages.
+
+  [ Benjamin Kaduk ]
+  * New upstream prerelease 1.8.4pre1
 
  -- Anders Kaseorg <andersk@mit.edu>  Sat, 10 Aug 2019 12:40:30 -0700
 
