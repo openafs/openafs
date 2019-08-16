@@ -1,0 +1,112 @@
+#!/bin/sh
+#
+# usage:
+# cc-wrapper cc /path/to/cc -c -o foo.o foo.c
+# cc-wrapper ld /path/to/ld -o foo foo.o
+#
+# This wraps running the compiler or linker, so we can tweak the files
+# generated. Currently, this just involves running ctfconvert or ctfmerge on
+# the relevant files, if available.
+
+set -e
+
+CTFCONVERT=@CTFCONVERT@
+CTFMERGE=@CTFMERGE@
+ctf_label=openafs
+
+mode="$1"
+shift
+
+# First, run the command that we're wrapping.
+"$@"
+
+# If we've reached here, the compiler/linker finished successfully, so now we
+# can run ctfconvert/ctfmerge, if we're configured to. If we're not going to
+# process ctf stuff, we can just exit immediately.
+if [ x"$CTFCONVERT" = x ] || [ x"$CTFMERGE" = x ] ; then
+    exit 0
+fi
+
+# Look for our target file (indicated by '-o target'), and if debugging is
+# turned on (indicated by '-g')
+target=
+target_next=
+debug=
+for arg in "$@" ; do
+    if [ x"$target_next" = x1 ] ; then
+        target="$arg"
+        target_next=
+        continue
+    fi
+
+    case "$arg" in
+    -o) target_next=1
+        ;;
+    -g) debug=1
+        ;;
+    esac
+done
+
+if [ x"$OPENAFS_CC_WRAPPER_DEBUG_FLAG" != x ] ; then
+    # Normally we try to determine if debugging is turned on by searching $@
+    # for "-g". But sometimes we link something with debugging info and don't
+    # pass -g (the Solaris kernel module, for example). In this case, the
+    # caller can specify whether that debugging is turned on by setting the env
+    # var OPENAFS_CC_WRAPPER_DEBUG_FLAG to a nonempty string.
+    debug=1
+fi
+
+if [ x"$debug" = x ] ; then
+    # Don't run ctfconvert/ctfmerge if debugging isn't turned on.
+    exit 0
+fi
+
+if [ x"$target" = x ] ; then
+    echo "$0: error: cannot extract target from args" >&2
+    exit 1
+fi
+
+echo_run() {
+    if [ x"$V" != x0 ] ; then
+        echo "$@"
+    fi
+    "$@"
+}
+
+case "$mode" in
+cc)
+    # It looks like we compiled a single object. For that, we just need to run
+    # 'ctfconvert' against the target .o.
+    echo_run "$CTFCONVERT" -g -l $ctf_label "$target"
+    ;;
+
+ld)
+    # It looks like we're linking an executable. For that, we need to give
+    # 'ctfmerge' every .o and .a that we're linking against.
+
+    merge_objs=
+    for arg in "$@" ; do
+        case "$arg" in
+        *.[oa])
+            merge_objs="$merge_objs $arg"
+            ;;
+        esac
+    done
+
+    if [ x"$merge_objs" = x ] ; then
+        # If we can't find any .o or .a files that we're linking into the
+        # target executable, our caller is probably compiling/linking directly
+        # from foo.c into foo (skipping foo.o). For that, we just need to run
+        # ctfconvert/ctfmerge on the executable itself.
+        echo_run "$CTFCONVERT" -g -l $ctf_label "$target"
+        merge_objs="$target"
+    fi
+
+    echo_run "$CTFMERGE" -g -l $ctf_label -o "$target" $merge_objs
+    ;;
+
+*)
+    echo "$0: Unknown mode '$mode'" >&2
+    exit 1
+    ;;
+esac

@@ -45,6 +45,7 @@ osi_PrePopulateVCache(struct vcache *avc) {
 
     rw_init(&avc->rwlock, "vcache rwlock", RW_DEFAULT, NULL);
 
+#ifndef AFS_SUN511_ENV
     /* This is required if the kaio (kernel aynchronous io)
      ** module is installed. Inside the kernel, the function
      ** check_vp( common/os/aio.c) checks to see if the kernel has
@@ -57,10 +58,24 @@ osi_PrePopulateVCache(struct vcache *avc) {
      ** for the time being, we fill up the v_data field with the
      ** vnode pointer itself. */
     avc->v.v_data = (char *)avc;
+#endif /* !AFS_SUN511_ENV */
 }
 
 void
-osi_AttachVnode(struct vcache *avc, int seq) { }
+osi_AttachVnode(struct vcache *avc, int seq)
+{
+#ifdef AFS_SUN511_ENV
+    struct vnode *vp;
+
+    osi_Assert(AFSTOV(avc) == NULL);
+
+    vp = vn_alloc(KM_SLEEP);
+    osi_Assert(vp != NULL);
+
+    vp->v_data = avc;
+    AFSTOV(avc) = vp;
+#endif
+}
 
 void
 osi_PostPopulateVCache(struct vcache *avc) {

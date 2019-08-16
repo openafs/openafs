@@ -4,8 +4,6 @@ LIBS="$save_LIBS"
 openafs_cv_saved_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS $XCFLAGS_NOCHECKING"
 
-AC_TYPE_SIGNAL
-OPENAFS_RETSIGTYPE
 AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(unsigned long long)
 AC_CHECK_SIZEOF(unsigned long)
@@ -50,7 +48,7 @@ AC_CHECK_TYPES([struct addrinfo], [], [], [
 ])
 AC_CHECK_TYPES([long long], [], [], [])
 
-AC_SIZEOF_TYPE(long)
+AC_CHECK_SIZEOF([long])
 
 CFLAGS="$openafs_cv_saved_CFLAGS"
 ])

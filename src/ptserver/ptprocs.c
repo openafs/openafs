@@ -739,6 +739,10 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 	&& !IsAMemberOf(tt, *cid, tentry.owner) && !pr_noAuth)
 	ABORT_WITH(tt, PRPERM);
 
+    if (restricted && !IsAMemberOf(tt, *cid, SYSADMINID)) {
+        ABORT_WITH(tt, PRPERM);
+    }
+
     /* Delete each continuation block as a separate transaction so that no one
      * transaction become to large to complete. */
     nptr = tentry.next;

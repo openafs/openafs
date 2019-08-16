@@ -687,7 +687,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		sscanf(&(*argp)[0], "%d", &id);
 		++argp, --nargs;
 		sscanf(&(*argp)[0], "%d", &voltype);
-		if (voltype < 0 && voltype > 2) {
+		if (voltype < 0 || voltype > 2) {
 		    printf("Illegal voltype; must be 0, 1 or 2\n");
 		    continue;
 		}

@@ -16,7 +16,6 @@
 
 
 int afs_osicred_initialized;
-afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;
 
@@ -60,7 +59,6 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
     struct vattr tvattr;
 
     AFS_STATCNT(osi_Stat);
-    ObtainWriteLock(&afs_xosi, 320);
     AFS_GUNLOCK();
 #ifdef AFS_NBSD50_ENV
 	code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp);
@@ -74,7 +72,6 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
 	astat->mtime = tvattr.va_mtime.tv_sec;
 	astat->atime = tvattr.va_atime.tv_sec;
     }
-    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 
@@ -108,7 +105,6 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     if (code || tstat.size <= asize)
 	return code;
 
-    ObtainWriteLock(&afs_xosi, 321);
     VATTR_NULL(&tvattr);
     tvattr.va_size = asize;
     AFS_GUNLOCK();
@@ -127,7 +123,6 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     AFS_GLOCK();
     if (code == 0)
 	afile->size = asize;
-    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 

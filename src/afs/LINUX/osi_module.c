@@ -50,7 +50,6 @@ int __init
 afs_init(void)
 {
     int err;
-    AFS_RWLOCK_INIT(&afs_xosi, "afs_xosi");
 
 #ifdef HAVE_LINUX_KUID_T
     afs_ns = afs_current_user_ns();

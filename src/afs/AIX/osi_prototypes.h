@@ -10,9 +10,6 @@
 #ifndef _OSI_PROTOTYPES_H_
 #define _OSI_PROTOTYPES_H_
 
-/* osi_file.c */
-extern afs_rwlock_t afs_xosi;
-
 /* osi_groups.c */
 extern void afs_aix_SetupPagRefCount(void);
 

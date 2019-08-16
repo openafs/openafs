@@ -614,7 +614,9 @@ afs_PrefetchNoCache(struct vcache *avc,
 	    } else {
 		afs_warn("BYPASS: StartRXAFS_FetchData failed: %d\n", code);
 		unlock_and_release_pages(auio);
-		afs_PutConn(tc, rxconn, SHARED_LOCK);
+		(void)afs_Analyze(tc, rxconn, code, &avc->f.fid, areq,
+				  AFS_STATS_FS_RPCIDX_FETCHDATA,
+				  SHARED_LOCK, NULL);
 		goto done;
 	    }
 	    if (code == 0) {
@@ -629,6 +631,9 @@ afs_PrefetchNoCache(struct vcache *avc,
 	    afs_warn("BYPASS: No connection.\n");
 	    code = -1;
 	    unlock_and_release_pages(auio);
+	    (void)afs_Analyze(tc, rxconn, code, &avc->f.fid, areq,
+			      AFS_STATS_FS_RPCIDX_FETCHDATA,
+			      SHARED_LOCK, NULL);
 	    goto done;
 	}
     } while (afs_Analyze(tc, rxconn, code, &avc->f.fid, areq,

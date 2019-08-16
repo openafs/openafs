@@ -93,7 +93,7 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
     attrs->va_uid = fakedir ? 0 : avc->f.m.Owner;
     attrs->va_gid = fakedir ? 0 : avc->f.m.Group;	/* yeah! */
 #if defined(AFS_SUN5_ENV)
-    attrs->va_fsid = avc->v.v_vfsp->vfs_fsid.val[0];
+    attrs->va_fsid = AFSTOV(avc)->v_vfsp->vfs_fsid.val[0];
 #elif defined(AFS_DARWIN80_ENV)
     VATTR_RETURN(attrs, va_fsid, vfs_statfs(vnode_mount(AFSTOV(avc)))->f_fsid.val[0]);
 #elif defined(AFS_DARWIN_ENV)

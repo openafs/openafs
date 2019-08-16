@@ -14,16 +14,24 @@ AS_CASE([$CTF_TOOLS],
 
         [yes],   [AC_PATH_PROG([CTFCONVERT], [ctfconvert], [], [$CTF_DEFAULT_PATH])
                   AC_PATH_PROG([CTFMERGE], [ctfmerge], [], [$CTF_DEFAULT_PATH])
-                  AS_IF([test "x$CTFCONVERT" = "x"], [AC_ERROR("ctfconvert not found")])
-                  AS_IF([test "x$CTFMERGE" = "x"], [AC_ERROR("ctfmerge not found")])],
+                  AS_IF([test "x$CTFCONVERT" = "x"], [AC_MSG_ERROR("ctfconvert not found")])
+                  AS_IF([test "x$CTFMERGE" = "x"], [AC_MSG_ERROR("ctfmerge not found")])],
 
         [no],    [],
 
         [AC_PATH_PROG([CTFCONVERT], [ctfconvert], [], [$CTF_TOOLS])
          AC_PATH_PROG([CTFMERGE], [ctfmerge], [], [$CTF_TOOLS])
-         AS_IF([test "x$CTFCONVERT" = "x"], [AC_ERROR("ctfconvert not found")])
-         AS_IF([test "x$CTFMERGE" = "x"], [AC_ERROR("ctfmerge not found")])]
+         AS_IF([test "x$CTFCONVERT" = "x"], [AC_MSG_ERROR("ctfconvert not found")])
+         AS_IF([test "x$CTFMERGE" = "x"], [AC_MSG_ERROR("ctfmerge not found")])]
 )
+
+CC_WRAPPER=
+LD_WRAPPER=
+AS_IF([test x"$CTFCONVERT" != x && test x"$CTFMERGE" != x],
+      [CC_WRAPPER="$TOP_SRCDIR/config/cc-wrapper cc"
+       LD_WRAPPER="$TOP_SRCDIR/config/cc-wrapper ld"])
+AC_SUBST([CC_WRAPPER])
+AC_SUBST([LD_WRAPPER])
 
 AC_ARG_VAR([CTFCONVERT], [Path to ctfconvert])
 AC_ARG_VAR([CTFMERGE], [Path to ctfmerge])

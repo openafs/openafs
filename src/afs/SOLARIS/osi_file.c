@@ -18,7 +18,6 @@
 
 
 int afs_osicred_initialized = 0;
-afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct vfs *afs_cacheVfsp;
 
@@ -116,11 +115,6 @@ VnodeToSize(vnode_t * vp)
     int code;
     struct vattr vattr;
 
-    /*
-     * We lock xosi in osi_Stat, so we probably should
-     * lock it here too - RWH.
-     */
-    ObtainWriteLock(&afs_xosi, 578);
     vattr.va_mask = AT_SIZE;
     AFS_GUNLOCK();
 #ifdef AFS_SUN511_ENV
@@ -132,7 +126,6 @@ VnodeToSize(vnode_t * vp)
     if (code) {
 	osi_Panic("VnodeToSize");
     }
-    ReleaseWriteLock(&afs_xosi);
     return (afs_int32) (vattr.va_size);
 }
 
@@ -258,7 +251,6 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
     afs_int32 code;
     struct vattr tvattr;
     AFS_STATCNT(osi_Stat);
-    ObtainWriteLock(&afs_xosi, 320);
     /* Ufs doesn't seem to care about the flags so we pass 0 for now */
     tvattr.va_mask = AT_ALL;
     AFS_GUNLOCK();
@@ -273,7 +265,6 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
 	astat->mtime = tvattr.va_mtime.tv_sec;
 	astat->atime = tvattr.va_atime.tv_sec;
     }
-    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 
@@ -305,7 +296,6 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     code = afs_osi_Stat(afile, &tstat);
     if (code || tstat.size <= asize)
 	return code;
-    ObtainWriteLock(&afs_xosi, 321);
     tvattr.va_mask = AT_SIZE;
     tvattr.va_size = asize;
     /*
@@ -318,7 +308,6 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     code = VOP_SETATTR(afile->vnode, &tvattr, 0, afs_osi_credp);
 #endif
     AFS_GLOCK();
-    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 

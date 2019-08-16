@@ -49,8 +49,6 @@
 
 #include <err.h>
 
-#define RETSIGTYPE void
-
 static void
 emkdir(const char *path, mode_t mode)
 {
@@ -63,7 +61,7 @@ static pid_t child_pid;
 
 static sig_atomic_t term_sig = 0;
 
-static RETSIGTYPE
+static void
 child_sigterm(int signo)
 {
     term_sig = 1;

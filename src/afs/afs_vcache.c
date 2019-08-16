@@ -243,7 +243,13 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	AFSTOV(avc) = NULL;             /* also drop the ptr to vnode */
     }
 #endif
-#ifdef AFS_SUN510_ENV
+
+#ifdef AFS_SUN511_ENV
+    if (avc->v) {
+        vn_free(avc->v);
+        avc->v = NULL;
+    }
+#elif defined(AFS_SUN510_ENV)
     /* As we use private vnodes, cleanup is up to us */
     vn_reinit(AFSTOV(avc));
 #endif

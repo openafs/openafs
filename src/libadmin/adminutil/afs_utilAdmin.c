@@ -126,8 +126,8 @@ util_AdminErrorCodeTranslate(afs_status_t errorCode, int langId,
  */
 
 typedef struct database_server_get {
-    int total;
-    int index;
+    unsigned int total;
+    unsigned int index;
     struct afsconf_dir *conf;
     struct afsconf_cell cell;
     util_databaseServerEntry_t server[CACHED_ITEMS];

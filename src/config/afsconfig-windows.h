@@ -30,10 +30,6 @@
 /* Define if you need to in order for stat and other things to work.  */
 #undef _POSIX_SOURCE
 
-/* Define as the return type of signal handlers (int or void).  */
-#undef RETSIGTYPE
-
-
 /* The size of `long', as computed by sizeof. */
 #define SIZEOF_LONG 4
 

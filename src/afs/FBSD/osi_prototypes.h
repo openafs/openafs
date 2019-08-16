@@ -14,9 +14,6 @@
 #ifndef _OSI_PROTO_H_
 #define _OSI_PROTO_H_
 
-/* osi_file.c */
-extern afs_rwlock_t afs_xosi;
-
 /* osi_misc.c */
 extern int osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 			  struct vnode **vpp);

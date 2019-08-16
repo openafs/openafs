@@ -569,8 +569,8 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
     if (int32p == 0 || int32p == 1)
         PrintLocks(conn, int32p);
-    if (int32p >= 0 || int32p <= 4)
-        PrintCacheEntries(conn, int32p);
+
+    PrintCacheEntries(conn, int32p);
     return 0;
 }
 

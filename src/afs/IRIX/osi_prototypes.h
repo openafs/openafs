@@ -10,7 +10,4 @@
 #ifndef _OSI_PROTOTYPES_H_
 #define _OSI_PROTOTYPES_H_
 
-/* osi_file.c */
-extern afs_lock_t afs_xosi;
-
 #endif /* _OSI_PROTOTYPES_H_ */
