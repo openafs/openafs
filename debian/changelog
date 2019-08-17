@@ -1,4 +1,4 @@
-openafs (1.8.4~pre1-1) UNRELEASED; urgency=medium
+openafs (1.8.4~pre1-1) unstable; urgency=medium
 
   [ Ondřej Nový ]
   * d/control: Removing redundant Priority field in binary package
@@ -26,7 +26,7 @@ openafs (1.8.4~pre1-1) UNRELEASED; urgency=medium
   * Backport upstream patch to require opt-in for weak crypto in aklog
     and klog.krb5. (Closes: #931819)
 
- -- Anders Kaseorg <andersk@mit.edu>  Sat, 10 Aug 2019 12:40:30 -0700
+ -- Benjamin Kaduk <kaduk@mit.edu>  Sat, 17 Aug 2019 06:54:44 -0700
 
 openafs (1.8.2-1) unstable; urgency=high
 
