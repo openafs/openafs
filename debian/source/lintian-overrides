@@ -1,6 +1,0 @@
-# -*- conf -*-
-
-# Upstream has dual-licensed these files under the IETF license and an
-# all-permissive license.  See the prefix of the file.
-openafs source: license-problem-non-free-RFC-BCP78 doc/protocol/rfc5864.txt
-openafs source: license-problem-non-free-RFC-BCP78 debian/copyright
