@@ -1,0 +1,219 @@
+From: Benjamin Kaduk <kaduk@mit.edu>
+Date: Thu, 11 Jul 2019 21:07:35 -0700
+Subject: aklog: require opt-in to enable single-DES in libkrb5
+
+Since the introduction of rxkad-k5 in response to OPENAFS-SA-2013-003,
+it is not strictly necessary to configure libkrb5 to allow weak crypto
+in order to obtain an AFS token.  A sufficient amount of time has passed
+since then that it is safe to assume that the default behavior is the
+more-secure one, and require opt-in for the insecure behavior.
+
+To indicate that the use of single-DES is quite risky, add the
+"-insecure_des" argument to both klog and aklog, to gate the
+preexisting calls that enable weak crypto/single-DES.
+These calls, and the -insecure_des option, may be removed entirely
+in a future commit.
+
+Change-Id: If175d0f95f0ede0f252844086a2a023da5580732
+Reviewed-on: https://gerrit.openafs.org/13689
+Reviewed-by: Michael Meffie <mmeffie@sinenomine.net>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+Tested-by: Benjamin Kaduk <kaduk@mit.edu>
+(cherry picked from commit eaae6eba8ca10ba7a5a20ee0d1b5f91bc2bac6c6)
+---
+ doc/man-pages/pod1/aklog.pod     |  9 +++++++--
+ doc/man-pages/pod1/klog.krb5.pod | 10 ++++++++--
+ src/aklog/aklog.c                | 39 +++++++++++++++++++++++++--------------
+ src/aklog/klog.c                 | 13 +++++++++----
+ 4 files changed, 49 insertions(+), 22 deletions(-)
+
+diff --git a/doc/man-pages/pod1/aklog.pod b/doc/man-pages/pod1/aklog.pod
+index eb1727b..0d67ea1 100644
+--- a/doc/man-pages/pod1/aklog.pod
++++ b/doc/man-pages/pod1/aklog.pod
+@@ -8,11 +8,11 @@ aklog - Obtain tokens for authentication to AFS
+ <div class="synopsis">
+ 
+ B<aklog> [B<-d>] [B<-hosts>] [B<-zsubs>] [B<-noprdb>] [B<-noauth>] [B<-linked>]
+-    [B<-force>] [B<-524>] [B<-setpag>]
++    [B<-force>] [B<-524>] [B<-setpag>] [B<-insecure_des>]
+     S<<< [[B<-cell> | B<-c>] <I<cell>> [B<-k> <I<Kerberos realm>>]]+ >>>
+ 
+ B<aklog> [B<-d>] [B<-hosts>] [B<-zsubs>] [B<-noprdb>] [B<-noauth>] [B<-linked>]
+-    [B<-force>] [B<-524>] [B<-setpag>] [B<-path> | B<-p>] <I<path>>+
++    [B<-force>] [B<-524>] [B<-setpag>] [B<-insecure_des>] [B<-path> | B<-p>] <I<path>>+
+ 
+ =for html
+ </div>
+@@ -119,6 +119,11 @@ normally won't be necessary.
+ 
+ If the AFS cell is linked to another AFS cell, get tokens for both.
+ 
++-item B<-insecure_des>
++
++Configure libkrb5 to allow the use of the (insecure) single-DES encryption
++types.  When rxkad-k5 is in use, this is not needed.
++
+ =item B<-noauth>
+ 
+ Don't actually authenticate, just do everything else B<aklog> does up to
+diff --git a/doc/man-pages/pod1/klog.krb5.pod b/doc/man-pages/pod1/klog.krb5.pod
+index 023deee..05d671c 100644
+--- a/doc/man-pages/pod1/klog.krb5.pod
++++ b/doc/man-pages/pod1/klog.krb5.pod
+@@ -11,14 +11,15 @@ B<klog.krb5> [B<-x>] S<<< [B<-principal> <I<user name>>] >>>
+     [-password <I<user's password>>] S<<< [B<-cell> <I<cell name>>] >>>
+     S<<< [B<-k> <I<realm>>] >>> [B<-pipe>] [B<-silent>]
+     S<<< [B<-lifetime> <I<ticket lifetime in hh[:mm[:ss]]>>] >>>
+-    [B<-setpag>] [B<-tmp>] [B<-noprdb>] [B<-unwrap>] [B<-help>]
++    [B<-setpag>] [B<-tmp>] [B<-noprdb>] [B<-unwrap>] [B<-insecure_des>]
++    [B<-help>]
+ 
+ B<klog.krb5> [B<-x>] S<<< [B<-pr> <I<user name>>] >>>
+     S<<< [B<-pa> <I<user's password>>] >>>
+     S<<< [B<-c> <I<cell name>>] >>>
+     B<<< [B<-k> <I<realm>>] >>> [B<-pi>] [B<-si>]
+     S<<< [B<-l> <I<ticket lifetime in hh[:mm[:ss]]>>] >>>
+-    [B<-se>] [B<-t>] [B<-n>] [B<-u>] [B<-h>]
++    [B<-se>] [B<-t>] [B<-n>] [B<-u>] [B<-i>] [B<-h>]
+ 
+ =for html
+ </div>
+@@ -227,6 +228,11 @@ sizes in conjunction with Active Directory as the Kerberos server, using
+ B<-unwrap> can shrink the AFS token size so that older software can handle
+ it more easily.
+ 
++=item B<-insecure_des>
++
++Configures libkrb5 to allow the use of the (insecure) single-DES encryption
++types.  When rxkad-k5 is in use, this is not needed.
++
+ =item B<-help>
+ 
+ Prints the online help for this command. All other valid options are
+diff --git a/src/aklog/aklog.c b/src/aklog/aklog.c
+index 49cb782..8d2ac35 100644
+--- a/src/aklog/aklog.c
++++ b/src/aklog/aklog.c
+@@ -1427,7 +1427,7 @@ usage(void)
+ 	    "[-d] [[-cell | -c] cell [-k krb_realm]] ",
+ 	    "[[-p | -path] pathname]\n",
+ 	    "    [-zsubs] [-hosts] [-noauth] [-noprdb] [-force] [-setpag] \n"
+-		"    [-linked]"
++		"    [-linked] [-insecure_des]"
+ #ifndef HAVE_NO_KRB5_524
+ 		" [-524]"
+ #endif
+@@ -1446,6 +1446,7 @@ usage(void)
+ #ifndef HAVE_NO_KRB5_524
+     fprintf(stderr, "    -524 means use the 524 converter instead of V5 directly\n");
+ #endif
++    fprintf(stderr, "    -insecure_des enables insecure single-DES for krb5.\n");
+     fprintf(stderr, "    No commandline arguments means ");
+     fprintf(stderr, "authenticate to the local cell.\n");
+     fprintf(stderr, "\n");
+@@ -1459,6 +1460,7 @@ main(int argc, char *argv[])
+     int status = AKLOG_SUCCESS;
+     int i;
+     int somethingswrong = FALSE;
++    int insecure_des = 0;
+ 
+     cellinfo_t cellinfo;
+ 
+@@ -1538,19 +1540,6 @@ main(int argc, char *argv[])
+     initialize_PT_error_table();
+     afs_set_com_err_hook(redirect_errors);
+ 
+-    /*
+-     * Enable DES enctypes, which are currently still required for AFS.
+-     * krb5_allow_weak_crypto is MIT Kerberos 1.8.  krb5_enctype_enable is
+-     * Heimdal.
+-     */
+-#if defined(HAVE_KRB5_ENCTYPE_ENABLE)
+-    i = krb5_enctype_valid(context, ETYPE_DES_CBC_CRC);
+-    if (i)
+-        krb5_enctype_enable(context, ETYPE_DES_CBC_CRC);
+-#elif defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
+-    krb5_allow_weak_crypto(context, 1);
+-#endif
+-
+     /* Initialize list of cells to which we have authenticated */
+     ll_init(&authedcells);
+ 
+@@ -1610,6 +1599,8 @@ main(int argc, char *argv[])
+ 	    }
+ 	    else
+ 		usage();
++	else if (strcmp(argv[i], "-insecure_des") == 0)
++	    insecure_des = 1;
+ 	else if (argv[i][0] == '-')
+ 	    usage();
+ 	else if (!pmode && !cmode) {
+@@ -1626,6 +1617,26 @@ main(int argc, char *argv[])
+ 	else
+ 	    usage();
+ 
++    /*
++     * Enable DES enctypes if requested.  This is not required when rxkad-k5
++     * is used, but some sites may not have updated.
++     * krb5_allow_weak_crypto is MIT Kerberos 1.8.  krb5_enctype_enable is
++     * Heimdal.
++     */
++    if (insecure_des) {
++#if defined(HAVE_KRB5_ENCTYPE_ENABLE)
++	i = krb5_enctype_valid(context, ETYPE_DES_CBC_CRC);
++	if (i)
++	    krb5_enctype_enable(context, ETYPE_DES_CBC_CRC);
++#elif defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
++	krb5_allow_weak_crypto(context, 1);
++#else
++	fprintf(stderr,
++	    "%s: -insecure_des is not supported by this libkrb5\n", progname);
++	exit(AKLOG_MISC);
++#endif
++    }
++
+ 	if (cmode) {
+ 	    if (((i + 1) < argc) && (strcmp(argv[i + 1], "-k") == 0)) {
+ 		i+=2;
+diff --git a/src/aklog/klog.c b/src/aklog/klog.c
+index 9677ffa..edf16e0 100644
+--- a/src/aklog/klog.c
++++ b/src/aklog/klog.c
+@@ -116,6 +116,7 @@ main(int argc, char *argv[])
+ #define aUNWRAP 11
+ #define aK5 12
+ #define aK4 13
++#define aDES 14
+ 
+     cmd_AddParm(ts, "-x", CMD_FLAG, CMD_OPTIONAL, "obsolete, noop");
+     cmd_Seek(ts, aPRINCIPAL);
+@@ -141,6 +142,8 @@ main(int argc, char *argv[])
+     ++ts->nParms;	/* skip -k5 */
+     cmd_AddParm(ts, "-k4", CMD_FLAG, CMD_OPTIONAL|CMD_HIDDEN, 0);
+ #endif
++    cmd_AddParm(ts, "-insecure_des", CMD_FLAG, CMD_OPTIONAL,
++		"enable insecure single-DES for krb5");
+ 
+     code = cmd_Dispatch(argc, argv);
+     KLOGEXIT(code);
+@@ -413,13 +416,15 @@ CommandProc(struct cmd_syndesc *as, void *arock)
+      * krb5_allow_weak_crypto is MIT Kerberos 1.8.  krb5_enctype_enable is
+      * Heimdal.
+      */
++    if (as->parms[aDES].items) {
+ #if defined(HAVE_KRB5_ENCTYPE_ENABLE)
+-    i = krb5_enctype_valid(k5context, ETYPE_DES_CBC_CRC);
+-    if (i)
+-        krb5_enctype_enable(k5context, ETYPE_DES_CBC_CRC);
++	i = krb5_enctype_valid(k5context, ETYPE_DES_CBC_CRC);
++	if (i)
++	    krb5_enctype_enable(k5context, ETYPE_DES_CBC_CRC);
+ #elif defined(HAVE_KRB5_ALLOW_WEAK_CRYPTO)
+-    krb5_allow_weak_crypto(k5context, 1);
++	krb5_allow_weak_crypto(k5context, 1);
+ #endif
++    }
+ 
+     /* Parse remaining arguments. */
+ 
