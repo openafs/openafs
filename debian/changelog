@@ -21,6 +21,8 @@ openafs (1.8.4~pre1-1) UNRELEASED; urgency=medium
     - Additional miscellaneous improvements (see NEWS).
   * openafs-fileserver now depends on openafs-krb5 for akeyconvert in the
     maintainer script. (Closes: #934236)
+  * Debconf translation update:
+    - Danish, thanks Joe Hansen.  (Closes: #923111)
 
  -- Anders Kaseorg <andersk@mit.edu>  Sat, 10 Aug 2019 12:40:30 -0700
 
