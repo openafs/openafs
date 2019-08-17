@@ -17,7 +17,7 @@ openafs (1.8.4~pre1-1) UNRELEASED; urgency=medium
   * New upstream prerelease 1.8.4pre1:
     - Further work to avoid spurious ENOENTs.
     - Fix the behavior of ptserver -restricted to match the documentation.
-    - Autoconf updates and modernization.
+    - Autoconf updates and modernization. (Closes: #934758)
     - Additional miscellaneous improvements (see NEWS).
   * openafs-fileserver now depends on openafs-krb5 for akeyconvert in the
     maintainer script. (Closes: #934236)
