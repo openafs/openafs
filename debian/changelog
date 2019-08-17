@@ -15,7 +15,7 @@ openafs (1.8.4~pre1-1) UNRELEASED; urgency=medium
 
   [ Benjamin Kaduk ]
   * New upstream prerelease 1.8.4pre1:
-    - Further work to avoid spurious ENOENTs.
+    - Further work to avoid spurious ENOENTs from filesystem access.
     - Fix the behavior of ptserver -restricted to match the documentation.
     - Autoconf updates and modernization. (Closes: #934758)
     - Additional miscellaneous improvements (see NEWS).
