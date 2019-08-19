@@ -450,7 +450,6 @@ DRelease(struct DirBuffer *entry, int flag)
     if (tp == NULL)
 	return;
 
-    tp = entry->buffer;
     ObtainWriteLock(&tp->lock, 261);
     tp->lockers--;
     if (flag)
