@@ -54,7 +54,7 @@
 struct rx_opaque *
 rx_opaque_new(void *data, size_t datalen)
 {
-    struct rx_opaque *opaque = rxi_Alloc(sizeof(struct rx_opaque));
+    struct rx_opaque *opaque = rxi_Alloc(sizeof(*opaque));
     if (opaque != NULL)
 	rx_opaque_populate(opaque, data, datalen);
     return opaque;
@@ -147,7 +147,8 @@ rx_opaque_copy(struct rx_opaque *to, const struct rx_opaque *from)
  *
  */
 void
-rx_opaque_freeContents(struct rx_opaque *buf) {
+rx_opaque_freeContents(struct rx_opaque *buf)
+{
     if (buf->val) {
 	rxi_Free(buf->val, buf->len);
     }
@@ -159,7 +160,8 @@ rx_opaque_freeContents(struct rx_opaque *buf) {
  * Zero, then free, the contents of an opaque object
  */
 void
-rx_opaque_zeroFreeContents(struct rx_opaque *buf) {
+rx_opaque_zeroFreeContents(struct rx_opaque *buf)
+{
     if (buf->val)
 	memset(buf->val, 0, buf->len);
     rx_opaque_freeContents(buf);
@@ -172,9 +174,10 @@ rx_opaque_zeroFreeContents(struct rx_opaque *buf) {
  */
 
 void
-rx_opaque_free(struct rx_opaque **buf) {
+rx_opaque_free(struct rx_opaque **buf)
+{
     rx_opaque_freeContents(*buf);
-    rxi_Free(*buf, sizeof(struct rx_opaque));
+    rxi_Free(*buf, sizeof(**buf));
     *buf = NULL;
 }
 
@@ -186,8 +189,9 @@ rx_opaque_free(struct rx_opaque **buf) {
  */
 
 void
-rx_opaque_zeroFree(struct rx_opaque **buf) {
+rx_opaque_zeroFree(struct rx_opaque **buf)
+{
     rx_opaque_zeroFreeContents(*buf);
-    rxi_Free(*buf, sizeof(struct rx_opaque));
+    rxi_Free(*buf, sizeof(**buf));
     *buf = NULL;
 }
