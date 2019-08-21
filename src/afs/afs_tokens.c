@@ -55,26 +55,29 @@ afs_FindToken(struct tokenJar *tokens, rx_securityIndex type)
 }
 
 /*!
- * Free a single token
+ * Unlink and free a single token
  *
- * This will free the given token. No attempt is made to unlink
- * the token from its container, and it is an error to attempt to
- * free a token which is still linked.
- *
- * This performs a secure free, setting all token information to 0
- * before returning allocated data blocks to the kernel.
+ * This will unlink the first token in the given tokenJar, and free that token.
+ * This attempts to perform a secure free, setting all token information to 0
+ * before returning allocated data blocks to the kernel.  (Optimizing compilers
+ * may eliminate such a "dead store", though.)
  *
  * Intended primarily for internal use.
  *
- * @param[in] token
- * 	The token to free
+ * @param[inout] tokenPtr
+ * 	The token to unlink and free
  */
-
 static void
-afs_FreeOneToken(struct tokenJar *token)
+afs_FreeFirstToken(struct tokenJar **tokenPtr)
 {
-    if (token->next != NULL)
-	osi_Panic("Freeing linked token");
+    struct tokenJar *token = *tokenPtr;
+    if (token == NULL) {
+	return;
+    }
+
+    /* Unlink the token. */
+    *tokenPtr = token->next;
+    token->next = NULL;
 
     switch (token->type) {
       case RX_SECIDX_KAD:
@@ -103,15 +106,8 @@ afs_FreeOneToken(struct tokenJar *token)
 void
 afs_FreeTokens(struct tokenJar **tokenPtr)
 {
-    struct tokenJar *next, *tokens;
-
-    tokens = *tokenPtr;
-    *tokenPtr = NULL;
-    while (tokens != NULL) {
-	next = tokens->next;
-	tokens->next = NULL; /* Unlink from chain */
-	afs_FreeOneToken(tokens);
-	tokens = next;
+    while (*tokenPtr != NULL) {
+	afs_FreeFirstToken(tokenPtr);
     }
 }
 
@@ -220,14 +216,9 @@ afs_IsTokenUsable(struct tokenJar *token, afs_int32 now)
 void
 afs_DiscardExpiredTokens(struct tokenJar **tokenPtr, afs_int32 now)
 {
-    struct tokenJar *next;
-
     while (*tokenPtr != NULL) {
 	if (afs_IsTokenExpired(*tokenPtr, now)) {
-	    next = (*tokenPtr)->next;
-	    (*tokenPtr)->next = NULL;
-	    afs_FreeOneToken(*tokenPtr);
-	    *tokenPtr = next;
+	    afs_FreeFirstToken(tokenPtr);
 	} else {
 	    tokenPtr = &(*tokenPtr)->next;
         }
