@@ -43,7 +43,8 @@
  * 	accessed using the appropriate element of the union.
  */
 union tokenUnion *
-afs_FindToken(struct tokenJar *tokens, rx_securityIndex type) {
+afs_FindToken(struct tokenJar *tokens, rx_securityIndex type)
+{
     while (tokens != NULL) {
 	if (tokens->type == type) {
 	    return &tokens->content;
@@ -69,24 +70,25 @@ afs_FindToken(struct tokenJar *tokens, rx_securityIndex type) {
  * 	The token to free
  */
 
-void
-afs_FreeOneToken(struct tokenJar *token) {
+static void
+afs_FreeOneToken(struct tokenJar *token)
+{
     if (token->next != NULL)
 	osi_Panic("Freeing linked token");
 
     switch (token->type) {
       case RX_SECIDX_KAD:
 	if (token->content.rxkad.ticket != NULL) {
-		memset(token->content.rxkad.ticket, 0, token->content.rxkad.ticketLen);
-		afs_osi_Free(token->content.rxkad.ticket,
-			     token->content.rxkad.ticketLen);
+	    memset(token->content.rxkad.ticket, 0, token->content.rxkad.ticketLen);
+	    afs_osi_Free(token->content.rxkad.ticket,
+			 token->content.rxkad.ticketLen);
 	}
 	break;
       default:
 	break;
     }
-    memset(token, 0, sizeof(struct tokenJar));
-    afs_osi_Free(token, sizeof(struct tokenJar));
+    memset(token, 0, sizeof(*token));
+    afs_osi_Free(token, sizeof(*token));
 }
 
 /*!
@@ -99,12 +101,13 @@ afs_FreeOneToken(struct tokenJar *token) {
  * 	A pointer to the address of the tokenjar to free.
  */
 void
-afs_FreeTokens(struct tokenJar **tokenPtr) {
+afs_FreeTokens(struct tokenJar **tokenPtr)
+{
     struct tokenJar *next, *tokens;
 
     tokens = *tokenPtr;
     *tokenPtr = NULL;
-    while(tokens != NULL) {
+    while (tokens != NULL) {
 	next = tokens->next;
 	tokens->next = NULL; /* Unlink from chain */
 	afs_FreeOneToken(tokens);
@@ -130,10 +133,11 @@ afs_FreeTokens(struct tokenJar **tokenPtr) {
  * 	which may then be used to populate the token.
  */
 union tokenUnion *
-afs_AddToken(struct tokenJar **tokens, rx_securityIndex type) {
+afs_AddToken(struct tokenJar **tokens, rx_securityIndex type)
+{
     struct tokenJar *newToken;
 
-    newToken = afs_osi_Alloc(sizeof(struct tokenJar));
+    newToken = afs_osi_Alloc(sizeof(*newToken));
     osi_Assert(newToken != NULL);
     memset(newToken, 0, sizeof(*newToken));
 
@@ -156,8 +160,9 @@ afs_AddToken(struct tokenJar **tokens, rx_securityIndex type) {
  * @returns
  * 	True if the token has expired, false otherwise
  */
-int
-afs_IsTokenExpired(struct tokenJar *token, afs_int32 now) {
+static int
+afs_IsTokenExpired(struct tokenJar *token, afs_int32 now)
+{
     switch (token->type) {
       case RX_SECIDX_KAD:
 	if (token->content.rxkad.clearToken.EndTimestamp < now - NOTOKTIMEOUT)
@@ -183,8 +188,9 @@ afs_IsTokenExpired(struct tokenJar *token, afs_int32 now) {
  * @returns
  * 	True if the token is usable, false otherwise
  */
-int
-afs_IsTokenUsable(struct tokenJar *token, afs_int32 now) {
+static int
+afs_IsTokenUsable(struct tokenJar *token, afs_int32 now)
+{
 
     if (afs_IsTokenExpired(token, now))
 	return 0;
@@ -212,7 +218,8 @@ afs_IsTokenUsable(struct tokenJar *token, afs_int32 now) {
  */
 
 void
-afs_DiscardExpiredTokens(struct tokenJar **tokenPtr, afs_int32 now) {
+afs_DiscardExpiredTokens(struct tokenJar **tokenPtr, afs_int32 now)
+{
     struct tokenJar *next;
 
     while (*tokenPtr != NULL) {
@@ -239,7 +246,8 @@ afs_DiscardExpiredTokens(struct tokenJar **tokenPtr, afs_int32 now) {
  * 	True if the jar contains usable tokens, otherwise false
  */
 int
-afs_HasUsableTokens(struct tokenJar *token, afs_int32 now) {
+afs_HasUsableTokens(struct tokenJar *token, afs_int32 now)
+{
     while (token != NULL) {
         if (afs_IsTokenUsable(token, now))
 	    return 1;
@@ -261,7 +269,8 @@ afs_HasUsableTokens(struct tokenJar *token, afs_int32 now) {
  *
  */
 int
-afs_HasValidTokens(struct tokenJar *token, afs_int32 now) {
+afs_HasValidTokens(struct tokenJar *token, afs_int32 now)
+{
     while (token != NULL) {
         if (!afs_IsTokenExpired(token, now))
 	    return 1;
@@ -284,7 +293,8 @@ afs_HasValidTokens(struct tokenJar *token, afs_int32 now) {
  * 	The number of valid tokens in the jar
  */
 static int
-countValidTokens(struct tokenJar *token, time_t now) {
+countValidTokens(struct tokenJar *token, time_t now)
+{
     int count = 0;
 
     while (token != NULL) {
@@ -309,7 +319,8 @@ countValidTokens(struct tokenJar *token, time_t now) {
  */
 void
 afs_AddRxkadToken(struct tokenJar **tokens, char *ticket, int ticketLen,
-		  struct ClearToken *clearToken) {
+		  struct ClearToken *clearToken)
+{
     union tokenUnion *tokenU;
     struct rxkadToken *rxkad;
 
@@ -325,7 +336,8 @@ afs_AddRxkadToken(struct tokenJar **tokens, char *ticket, int ticketLen,
 
 static int
 afs_AddRxkadTokenFromPioctl(struct tokenJar **tokens,
-			    struct ktc_tokenUnion *pioctlToken) {
+			    struct ktc_tokenUnion *pioctlToken)
+{
     struct ClearToken clear;
 
     clear.AuthHandle = pioctlToken->ktc_tokenUnion_u.at_kad.rk_kvno;
@@ -346,7 +358,8 @@ afs_AddRxkadTokenFromPioctl(struct tokenJar **tokens,
 
 static int
 rxkad_extractTokenForPioctl(struct tokenJar *token,
-			       struct ktc_tokenUnion *pioctlToken) {
+			       struct ktc_tokenUnion *pioctlToken)
+{
 
     struct token_rxkad *rxkadPioctl;
     struct rxkadToken *rxkadInternal;
@@ -385,7 +398,8 @@ rxkad_extractTokenForPioctl(struct tokenJar *token,
  */
 int
 afs_AddTokenFromPioctl(struct tokenJar **tokens,
-		       struct ktc_tokenUnion *pioctlToken) {
+		       struct ktc_tokenUnion *pioctlToken)
+{
 
     switch (pioctlToken->at_type) {
       case RX_SECIDX_KAD:
@@ -397,14 +411,15 @@ afs_AddTokenFromPioctl(struct tokenJar **tokens,
 
 static int
 extractPioctlToken(struct tokenJar *token,
-		   struct token_opaque *opaque) {
+		   struct token_opaque *opaque)
+{
     XDR xdrs;
     struct ktc_tokenUnion *pioctlToken;
     int code;
 
     memset(opaque, 0, sizeof(token_opaque));
 
-    pioctlToken = osi_Alloc(sizeof(struct ktc_tokenUnion));
+    pioctlToken = osi_Alloc(sizeof(*pioctlToken));
     if (pioctlToken == NULL)
 	return ENOMEM;
 
@@ -448,9 +463,9 @@ extractPioctlToken(struct tokenJar *token,
     }
     xdr_destroy(&xdrs);
 
-out:
+ out:
     xdr_free((xdrproc_t) xdr_ktc_tokenUnion, &pioctlToken);
-    osi_Free(pioctlToken, sizeof(struct ktc_tokenUnion));
+    osi_Free(pioctlToken, sizeof(*pioctlToken));
 
     if (code != 0) {
 	if (opaque->token_opaque_val != NULL)
@@ -473,7 +488,7 @@ afs_ExtractTokensForPioctl(struct tokenJar *token,
 
     tokenSet->tokens.tokens_len = numTokens;
     tokenSet->tokens.tokens_val
-	= xdr_alloc(sizeof(struct token_opaque) * numTokens);
+	= xdr_alloc(sizeof(tokenSet->tokens.tokens_val[0]) * numTokens);
 
     if (tokenSet->tokens.tokens_val == NULL)
 	return ENOMEM;
@@ -487,7 +502,7 @@ afs_ExtractTokensForPioctl(struct tokenJar *token,
 	pos++;
     }
 
-out:
+ out:
     if (code)
 	xdr_free((xdrproc_t) xdr_ktc_setTokenData, tokenSet);
 
