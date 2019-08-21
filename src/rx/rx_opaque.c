@@ -174,11 +174,16 @@ rx_opaque_zeroFreeContents(struct rx_opaque *buf)
  */
 
 void
-rx_opaque_free(struct rx_opaque **buf)
+rx_opaque_free(struct rx_opaque **a_buf)
 {
-    rx_opaque_freeContents(*buf);
-    rxi_Free(*buf, sizeof(**buf));
-    *buf = NULL;
+    struct rx_opaque *buf = *a_buf;
+    *a_buf = NULL;
+    if (buf == NULL) {
+	return;
+    }
+
+    rx_opaque_freeContents(buf);
+    rxi_Free(buf, sizeof(*buf));
 }
 
 /*!
@@ -189,9 +194,14 @@ rx_opaque_free(struct rx_opaque **buf)
  */
 
 void
-rx_opaque_zeroFree(struct rx_opaque **buf)
+rx_opaque_zeroFree(struct rx_opaque **a_buf)
 {
-    rx_opaque_zeroFreeContents(*buf);
-    rxi_Free(*buf, sizeof(**buf));
-    *buf = NULL;
+    struct rx_opaque *buf = *a_buf;
+    *a_buf = NULL;
+    if (buf == NULL) {
+	return;
+    }
+
+    rx_opaque_zeroFreeContents(buf);
+    rxi_Free(buf, sizeof(*buf));
 }
