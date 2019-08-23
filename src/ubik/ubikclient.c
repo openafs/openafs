@@ -688,3 +688,123 @@ ubik_Call(int (*aproc) (), struct ubik_client *aclient,
     UNLOCK_UBIK_CLIENT(aclient);
     return rcode;
 }
+
+afs_int32
+ubik_CallRock(struct ubik_client *aclient, afs_int32 aflags,
+	      ubik_callrock_func proc, void *rock)
+{
+    afs_int32 rcode, code, newHost, thisHost, i, _ucount;
+    int chaseCount, pass, needsync;
+    struct rx_connection *tc;
+    struct rx_peer *rxp;
+    short origLevel;
+
+    if (!aclient)
+	return UNOENT;
+    LOCK_UBIK_CLIENT(aclient);
+
+ restart:
+    origLevel = aclient->initializationState;
+    rcode = UNOSERVERS;
+    chaseCount = needsync = 0;
+
+    /*
+     * First  pass, we try all servers that are up.
+     * Second pass, we try all servers.
+     */
+    for (pass = 0; pass < 2; pass++) {
+	/* For each entry in our servers list */
+	for (_ucount = 0;; _ucount++) {
+	    struct ubik_callrock_info info;
+	    if (needsync) {
+		/* Need a sync site. Lets try to quickly find it */
+		if (aclient->syncSite) {
+		    newHost = aclient->syncSite;	/* already in network order */
+		    aclient->syncSite = 0;      /* Will reset if it works */
+		} else if (aclient->conns[3]) {
+		    /*
+		     * If there are fewer than four db servers in a cell,
+		     * there's no point in making the GetSyncSite call.
+		     * At best, it's a wash. At worst, it results in more
+		     * RPCs than you would otherwise make.
+		     */
+		    tc = aclient->conns[_ucount];
+		    if (tc && rx_ConnError(tc)) {
+			aclient->conns[_ucount] = tc = ubik_RefreshConn(tc);
+		    }
+		    if (!tc)
+			break;
+		    code = VOTE_GetSyncSite(tc, &newHost);
+		    if (aclient->initializationState != origLevel)
+			goto restart;   /* somebody did a ubik_ClientInit */
+		    if (code)
+			newHost = 0;
+		    newHost = htonl(newHost);   /* convert to network order */
+		} else {
+		    newHost = 0;
+		}
+		if (newHost) {
+		    /*
+		     * position count at the appropriate slot in the client
+		     * structure and retry. If we can't find in slot, we'll
+		     * just continue through the whole list
+		     */
+		    for (i = 0; i < MAXSERVERS && aclient->conns[i]; i++) {
+			rxp = rx_PeerOf(aclient->conns[i]);
+			thisHost = rx_HostOf(rxp);
+			if (!thisHost)
+			    break;
+			if (thisHost == newHost) {
+			    if (chaseCount++ > 2)
+				break;  /* avoid loop asking */
+			    _ucount = i;  /* this index is the sync site */
+			    break;
+			}
+		    }
+		}
+	    }
+	    /*needsync */
+	    tc = aclient->conns[_ucount];
+	    if (tc && rx_ConnError(tc)) {
+		aclient->conns[_ucount] = tc = ubik_RefreshConn(tc);
+	    }
+	    if (!tc)
+		break;
+
+	    if ((pass == 0) && (aclient->states[_ucount] & CFLastFailed)) {
+		continue;       /* this guy's down */
+	    }
+
+	    memset(&info, 0, sizeof(info));
+	    info.conn = tc;
+	    rcode = (*proc)(&info, rock);
+
+	    if (aclient->initializationState != origLevel) {
+		/* somebody did a ubik_ClientInit */
+		if (rcode)
+		    goto restart;       /* call failed */
+		else
+		    goto done;  /* call suceeded */
+	    }
+	    if (rcode < 0) {    /* network errors */
+		aclient->states[_ucount] |= CFLastFailed; /* Mark server down */
+	    } else if (rcode == UNOTSYNC) {
+		needsync = 1;
+	    } else if (rcode != UNOQUORUM) {
+		/* either misc ubik code, or misc appl code, or success. */
+		aclient->states[_ucount] &= ~CFLastFailed;	/* mark server up*/
+		goto done;      /* all done */
+	    }
+	}
+    }
+
+ done:
+    if (needsync) {
+	if (!rcode) {		/* Remember the sync site - cmd successful */
+	    rxp = rx_PeerOf(aclient->conns[_ucount]);
+	    aclient->syncSite = rx_HostOf(rxp);
+	}
+    }
+    UNLOCK_UBIK_CLIENT(aclient);
+    return rcode;
+}

@@ -210,3 +210,4 @@ EXPORTS
         xdr_namelist					@209
         xdr_prlist					@210
         afsconf_CountKeys				@211
+        ubik_CallRock					@212

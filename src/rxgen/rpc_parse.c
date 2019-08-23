@@ -125,10 +125,12 @@ static void cs_ProcMarshallInParams_setup(definition * defp, int split_flag);
 static void cs_ProcSendPacket_setup(definition * defp, int split_flag);
 static void cs_ProcUnmarshallOutParams_setup(definition * defp);
 static void cs_ProcTail_setup(definition * defp, int split_flag);
+static void ucs_ProcCallback_setup(definition * defp, char *cbheader);
 static void ucs_ProcName_setup(definition * defp, char *procheader,
 			      int split_flag);
 static void ucs_ProcParams_setup(definition * defp, int split_flag);
-static void ucs_ProcTail_setup(definition * defp, int split_flag);
+static void ucs_ProcTail_setup(definition * defp, char *cbheader,
+			       int split_flag);
 static void ss_Proc_CodeGeneration(definition * defp);
 static void ss_ProcName_setup(definition * defp);
 static void ss_ProcParams_setup(definition * defp);
@@ -1060,10 +1062,13 @@ cs_Proc_CodeGeneration(definition * defp, int split_flag, char *procheader)
     }
 
     if (!kflag && !split_flag && uflag) {
+	if (!cflag) {
+	    ucs_ProcCallback_setup(defp, "ubik_call_");
+	}
 	ucs_ProcName_setup(defp, "ubik_", split_flag);
 	if (!cflag) {
 	    ucs_ProcParams_setup(defp, split_flag);
-	    ucs_ProcTail_setup(defp, split_flag);
+	    ucs_ProcTail_setup(defp, "ubik_call_", split_flag);
 	}
     }
 }
@@ -1672,6 +1677,68 @@ ss_ProcTail_setup(definition * defp)
     f_print(fout, "}\n\n");
 }
 
+static void
+ucs_ProcCallback_setup(definition * defp, char *cbheader)
+{
+    proc1_list *plist;
+    int any_params = 0;
+
+    for (plist = defp->pc.plists; plist; plist = plist->next) {
+	if (plist->component_kind == DEF_PARAM) {
+	    any_params = 1;
+	    break;
+	}
+    }
+
+    if (any_params) {
+	f_print(fout, "struct args_%s%s%s {\n", prefix,
+		      PackagePrefix[PackageIndex], defp->pc.proc_name);
+
+	for (plist = defp->pc.plists; plist; plist = plist->next) {
+	    if (plist->component_kind == DEF_PARAM) {
+		f_print(fout, "\t");
+		if (plist->pl.param_kind == DEF_INPARAM &&
+		    strcmp(plist->pl.param_type, "char *") == 0) {
+		    f_print(fout, "const ");
+		}
+		if ((plist->pl.param_flag & OUT_STRING) != 0) {
+		    f_print(fout, "%s *%s", plist->pl.param_type,
+			    plist->pl.param_name);
+		} else {
+		    f_print(fout, "%s %s", plist->pl.param_type,
+			    plist->pl.param_name);
+		}
+		f_print(fout, ";\n");
+	    }
+	}
+
+	f_print(fout, "};\n");
+    }
+
+    f_print(fout, "static int\n"
+		  "%s%s%s%s(struct ubik_callrock_info *info, void *z_rock)\n"
+		  "{\n",
+		  cbheader, prefix, PackagePrefix[PackageIndex],
+		  defp->pc.proc_name);
+
+    if (any_params) {
+	f_print(fout, "\tstruct args_%s%s%s *z_args = z_rock;\n", prefix,
+		      PackagePrefix[PackageIndex], defp->pc.proc_name);
+    }
+
+    f_print(fout, "\treturn %s%s%s(info->conn", prefix, PackagePrefix[PackageIndex],
+		  defp->pc.proc_name);
+
+    for (plist = defp->pc.plists; plist; plist = plist->next) {
+	if (plist->component_kind == DEF_PARAM) {
+	    f_print(fout, ",\n\t\t\tz_args->%s", plist->pl.param_name);
+	}
+    }
+
+    f_print(fout, ");\n"
+		  "}\n");
+
+}
 
 static void
 ucs_ProcName_setup(definition * defp, char *procheader, int split_flag)
@@ -1762,115 +1829,41 @@ ucs_ProcParams_setup(definition * defp, int split_flag)
 }
 
 static void
-ucs_ProcTail_setup(definition * defp, int split_flag)
+ucs_ProcTail_setup(definition * defp, char *cbheader, int split_flag)
 {
     proc1_list *plist;
+    int any_params = 0;
 
-    f_print(fout, "{\tafs_int32 rcode, code, newHost, thisHost, i, _ucount;\n");
-    f_print(fout, "\tint chaseCount, pass, needsync;\n");
-    f_print(fout, "\tstruct rx_connection *tc;\n");
-    f_print(fout, "\tstruct rx_peer *rxp;\n");
-    f_print(fout, "\tshort origLevel;\n\n");
-    f_print(fout, "\tif (!aclient)\n");
-    f_print(fout, "\t\treturn UNOENT;\n");
-    f_print(fout, "\tLOCK_UBIK_CLIENT(aclient);\n\n");
-    f_print(fout, "\t restart:\n");
-    f_print(fout, "\torigLevel = aclient->initializationState;\n");
-    f_print(fout, "\trcode = UNOSERVERS;\n");
-    f_print(fout, "\tchaseCount = needsync = 0;\n\n");
-    f_print(fout, "\t/* \n\t* First  pass, we try all servers that are up.\n\t* Second pass, we try all servers.\n\t*/\n");
-    f_print(fout, "\tfor (pass = 0; pass < 2; pass++) {  /*p */\n");
-    f_print(fout, "\t\t/* For each entry in our servers list */\n");
-    f_print(fout, "\t\tfor (_ucount = 0;; _ucount++) {     /*s */\n\n");
-    f_print(fout, "\t\tif (needsync) {\n");
-    f_print(fout, "\t\t\t/* Need a sync site. Lets try to quickly find it */\n");
-    f_print(fout, "\t\t\tif (aclient->syncSite) {\n");
-    f_print(fout, "\t\t\t\tnewHost = aclient->syncSite;        /* already in network order */\n");
-    f_print(fout, "\t\t\t\taclient->syncSite = 0;      /* Will reset if it works */\n");
-    f_print(fout, "\t\t\t} else if (aclient->conns[3]) {\n");
-    f_print(fout, "\t\t\t\t/* If there are fewer than four db servers in a cell,\n");
-    f_print(fout, "\t\t\t\t* there's no point in making the GetSyncSite call.\n");
-    f_print(fout, "\t\t\t\t* At best, it's a wash. At worst, it results in more\n");
-    f_print(fout, "\t\t\t\t* RPCs than you would otherwise make.\n");
-    f_print(fout, "\t\t\t\t*/\n");
-    f_print(fout, "\t\t\t\ttc = aclient->conns[_ucount];\n");
-    f_print(fout, "\t\t\t\tif (tc && rx_ConnError(tc)) {\n");
-    f_print(fout, "\t\t\t\t\taclient->conns[_ucount] = tc = ubik_RefreshConn(tc);\n");
-    f_print(fout, "\t\t\t\t}\n");
-    f_print(fout, "\t\t\t\tif (!tc)\n");
-    f_print(fout, "\t\t\t\t\tbreak;\n");
-    f_print(fout, "\t\t\t\tcode = VOTE_GetSyncSite(tc, &newHost);\n");
-    f_print(fout, "\t\t\t\tif (aclient->initializationState != origLevel)\n");
-    f_print(fout, "\t\t\t\t\tgoto restart;   /* somebody did a ubik_ClientInit */\n");
-    f_print(fout, "\t\t\t\tif (code)\n");
-    f_print(fout, "\t\t\t\t\tnewHost = 0;\n");
-    f_print(fout, "\t\t\t\tnewHost = htonl(newHost);   /* convert to network order */\n");
-    f_print(fout, "\t\t\t} else {\n");
-    f_print(fout, "\t\t\t\tnewHost = 0;\n");
-    f_print(fout, "\t\t\t}\n");
-    f_print(fout, "\t\t\tif (newHost) {\n");
-    f_print(fout, "\t\t\t\t/* position count at the appropriate slot in the client\n");
-    f_print(fout, "\t\t\t\t* structure and retry. If we can't find in slot, we'll\n");
-    f_print(fout, "\t\t\t\t* just continue through the whole list \n");
-    f_print(fout, "\t\t\t\t*/\n");
-    f_print(fout, "\t\t\t\tfor (i = 0; i < MAXSERVERS && aclient->conns[i]; i++) {\n");
-    f_print(fout, "\t\t\t\t\trxp = rx_PeerOf(aclient->conns[i]);\n");
-    f_print(fout, "\t\t\t\t\tthisHost = rx_HostOf(rxp);\n");
-    f_print(fout, "\t\t\t\t\tif (!thisHost)\n");
-    f_print(fout, "\t\t\t\t\t\tbreak;\n");
-    f_print(fout, "\t\t\t\t\tif (thisHost == newHost) {\n");
-    f_print(fout, "\t\t\t\t\t\tif (chaseCount++ > 2)\n");
-    f_print(fout, "\t\t\t\t\t\t\tbreak;  /* avoid loop asking */\n");
-    f_print(fout, "\t\t\t\t\t\t_ucount = i;  /* this index is the sync site */\n");
-    f_print(fout, "\t\t\t\t\t\tbreak;\n");
-    f_print(fout, "\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n");
-    f_print(fout, "\t\t/*needsync */\n");
-    f_print(fout, "\t\ttc = aclient->conns[_ucount];\n");
-    f_print(fout, "\t\tif (tc && rx_ConnError(tc)) {\n");
-    f_print(fout, "\t\t\taclient->conns[_ucount] = tc = ubik_RefreshConn(tc);\n");
-    f_print(fout, "\t\t}\n");
-    f_print(fout, "\t\tif (!tc)\n");
-    f_print(fout, "\t\t\tbreak;\n\n");
-    f_print(fout, "\t\tif ((pass == 0) && (aclient->states[_ucount] & CFLastFailed)) {\n");
-    f_print(fout, "\t\t\tcontinue;       /* this guy's down */\n");
-    f_print(fout, "\t\t}\n");
+    f_print(fout, "{\n");
 
-    f_print(fout, "\t\trcode = %s%s%s(tc\n", prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
     for (plist = defp->pc.plists; plist; plist = plist->next) {
 	if (plist->component_kind == DEF_PARAM) {
-	    plist->pl.param_flag &= ~PROCESSED_PARAM;
-	    f_print(fout, ", %s", plist->pl.param_name);
+	    any_params = 1;
+	    break;
 	}
     }
-    f_print(fout, ");\n");
-    f_print(fout, "\t\tif (aclient->initializationState != origLevel) {\n");
-    f_print(fout, "\t\t\t/* somebody did a ubik_ClientInit */\n");
-    f_print(fout, "\t\t\tif (rcode)\n");
-    f_print(fout, "\t\t\t\tgoto restart;       /* call failed */\n");
-    f_print(fout, "\t\t\telse\n");
-    f_print(fout, "\t\t\t\tgoto done;  /* call suceeded */\n");
-    f_print(fout, "\t\t}\n");
-    f_print(fout, "\t\tif (rcode < 0) {    /* network errors */\n");
-    f_print(fout, "\t\t\taclient->states[_ucount] |= CFLastFailed; /* Mark server down */\n");
-    f_print(fout, "\t\t} else if (rcode == UNOTSYNC) {\n");
-    f_print(fout, "\t\t\tneedsync = 1;\n");
-    f_print(fout, "\t\t} else if (rcode != UNOQUORUM) {\n");
-    f_print(fout, "\t\t\t/* either misc ubik code, or misc appl code, or success. */\n");
-    f_print(fout, "\t\t\taclient->states[_ucount] &= ~CFLastFailed;        /* mark server up*/\n");
-    f_print(fout, "\t\t\tgoto done;      /* all done */\n");
-    f_print(fout, "\t\t}\n");
-    f_print(fout, "\t\t}                       /*s */\n");
-    f_print(fout, "\t}                           /*p */\n\n");
-    f_print(fout, "\tdone:\n");
-    f_print(fout, "\tif (needsync) {\n");
 
-    f_print(fout, "\t\tif (!rcode) {           /* Remember the sync site - cmd successful */\n");
-    f_print(fout, "\t\t\trxp = rx_PeerOf(aclient->conns[_ucount]);\n");
-    f_print(fout, "\t\t\taclient->syncSite = rx_HostOf(rxp);\n");
-    f_print(fout, "\t\t}\n");
-    f_print(fout, "\t}\n");
-    f_print(fout, "\tUNLOCK_UBIK_CLIENT(aclient);\n");
-    f_print(fout, "\treturn rcode;\n}\n\n");
+    if (any_params) {
+	f_print(fout, "\tstruct args_%s%s%s args;\n", prefix,
+		      PackagePrefix[PackageIndex], defp->pc.proc_name);
+	f_print(fout, "\tmemset(&args, 0, sizeof(args));\n\n");
+
+	for (plist = defp->pc.plists; plist; plist = plist->next) {
+	    if (plist->component_kind == DEF_PARAM) {
+		plist->pl.param_flag &= ~PROCESSED_PARAM;
+		f_print(fout, "\targs.%s = %s;\n", plist->pl.param_name,
+			      plist->pl.param_name);
+	    }
+	}
+
+	f_print(fout, "\n\treturn ubik_CallRock(aclient, aflags, %s%s%s%s, &args);\n",
+		      cbheader, prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
+    } else {
+	f_print(fout, "\treturn ubik_CallRock(aclient, aflags, %s%s%s%s, NULL);\n",
+		      cbheader, prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
+    }
+
+    f_print(fout, "}\n\n");
 }
 
 

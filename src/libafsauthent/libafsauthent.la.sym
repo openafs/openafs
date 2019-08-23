@@ -120,6 +120,7 @@ token_setPag
 token_setRxkadViceId
 ubik_Call
 ubik_CallIter
+ubik_CallRock
 ubik_Call_New
 ubik_ClientDestroy
 ubik_ClientInit
