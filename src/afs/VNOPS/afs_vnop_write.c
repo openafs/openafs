@@ -159,17 +159,11 @@ afs_UFSWriteUIO(struct vcache *avc, afs_dcache_id_t *inode, struct uio *tuiop)
     code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp);
     VOP_UNLOCK(tfile->vnode, 0, current_proc());
     AFS_GLOCK();
-#elif defined(AFS_FBSD80_ENV)
+#elif defined(AFS_FBSD_ENV)
     AFS_GUNLOCK();
     VOP_LOCK(tfile->vnode, LK_EXCLUSIVE);
     code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp);
     VOP_UNLOCK(tfile->vnode, 0);
-    AFS_GLOCK();
-#elif defined(AFS_FBSD_ENV)
-    AFS_GUNLOCK();
-    VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curthread);
-    code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp);
-    VOP_UNLOCK(tfile->vnode, 0, curthread);
     AFS_GLOCK();
 #elif defined(AFS_NBSD_ENV)
     AFS_GUNLOCK();
@@ -635,7 +629,7 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 	    code_checkcode = avc->vc_error;
 	    avc->vc_error = 0;
 	}
-#if defined(AFS_FBSD80_ENV)
+#if defined(AFS_FBSD_ENV)
         /* XXX */
         if (!avc->opens) {
             afs_int32 opens, is_free, is_gone, is_doomed, iflag;

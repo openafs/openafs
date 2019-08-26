@@ -10,35 +10,10 @@
 #ifndef UKERNEL
 /* This section for kernel libafs compiles only */
 
-#define AFS_FBSD50_ENV 1
-#define AFS_FBSD51_ENV 1
-#define AFS_FBSD52_ENV 1
-#define AFS_FBSD53_ENV 1
-#define AFS_FBSD60_ENV 1
-#define AFS_FBSD61_ENV 1
-#define AFS_FBSD62_ENV 1
-#define AFS_FBSD70_ENV 1
-#define AFS_FBSD71_ENV 1
-#define AFS_FBSD72_ENV 1
-#define AFS_FBSD73_ENV 1
-#define AFS_FBSD74_ENV 1
-#define AFS_FBSD80_ENV 1
 #define AFS_FBSD81_ENV 1
 #define AFS_FBSD82_ENV 1
 #define AFS_FBSD83_ENV 1
 
-#define AFS_X86_FBSD50_ENV 1
-#define AFS_X86_FBSD51_ENV 1
-#define AFS_X86_FBSD52_ENV 1
-#define AFS_X86_FBSD53_ENV 1
-#define AFS_X86_FBSD60_ENV 1
-#define AFS_X86_FBSD61_ENV 1
-#define AFS_X86_FBSD62_ENV 1
-#define AFS_X86_FBSD70_ENV 1
-#define AFS_X86_FBSD71_ENV 1
-#define AFS_X86_FBSD72_ENV 1
-#define AFS_X86_FBSD74_ENV 1
-#define AFS_X86_FBSD80_ENV 1
 #define AFS_X86_FBSD81_ENV 1
 #define AFS_X86_FBSD82_ENV 1
 #define AFS_X86_FBSD83_ENV 1
@@ -47,18 +22,6 @@
 
 /* This section for user space compiles only */
 
-#define AFS_USR_FBSD50_ENV 1
-#define AFS_USR_FBSD51_ENV 1
-#define AFS_USR_FBSD52_ENV 1
-#define AFS_USR_FBSD53_ENV 1
-#define AFS_USR_FBSD60_ENV 1
-#define AFS_USR_FBSD61_ENV 1
-#define AFS_USR_FBSD62_ENV 1
-#define AFS_USR_FBSD70_ENV 1
-#define AFS_USR_FBSD71_ENV 1
-#define AFS_USR_FBSD72_ENV 1
-#define AFS_USR_FBSD73_ENV 1
-#define AFS_USR_FBSD80_ENV 1
 #define AFS_USR_FBSD81_ENV 1
 #define AFS_USR_FBSD82_ENV 1
 #define AFS_USR_FBSD83_ENV 1

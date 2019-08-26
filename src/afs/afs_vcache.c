@@ -1741,7 +1741,7 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq)
 	  ObtainWriteLock(&tvc->lock, 954);
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, LK_EXCLUSIVE, current_proc());
-#elif defined(AFS_FBSD80_ENV)
+#elif defined(AFS_FBSD_ENV)
 	iheldthelock = VOP_ISLOCKED(vp);
 	if (!iheldthelock) {
 	    /* nosleep/sleep lock order reversal */
@@ -1755,22 +1755,6 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq)
 	vinvalbuf(vp, V_SAVE, PINOD, 0); /* changed late in 8.0-CURRENT */
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, 0);
-#elif defined(AFS_FBSD60_ENV)
-	iheldthelock = VOP_ISLOCKED(vp, curthread);
-	if (!iheldthelock)
-	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
-	AFS_GUNLOCK();
-	vinvalbuf(vp, V_SAVE, curthread, PINOD, 0);
-	AFS_GLOCK();
-	if (!iheldthelock)
-	    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
-#elif defined(AFS_FBSD_ENV)
-	iheldthelock = VOP_ISLOCKED(vp, curthread);
-	if (!iheldthelock)
-	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
-	vinvalbuf(vp, V_SAVE, osi_curcred(), curthread, PINOD, 0);
-	if (!iheldthelock)
-	    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
 #elif defined(AFS_OBSD_ENV)
 	iheldthelock = VOP_ISLOCKED(vp, curproc);
 	if (!iheldthelock)

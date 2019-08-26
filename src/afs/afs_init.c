@@ -432,7 +432,7 @@ afs_InitCacheInfo(char *afile)
 #elif defined(AFS_DARWIN80_ENV)
         afs_cacheVfsp = vnode_mount(filevp);
 	if (afs_cacheVfsp && ((st = *(vfs_statfs(afs_cacheVfsp))),1))
-#elif defined(AFS_FBSD80_ENV)
+#elif defined(AFS_FBSD_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st))
 #elif defined(AFS_NBSD50_ENV)
 	if (!VFS_STATVFS(filevp->v_vfsp, &st))

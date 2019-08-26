@@ -48,17 +48,10 @@
  * check the VCS history of those files.
  */
 
-#if defined(AFS_FBSD80_ENV)
 #define	lock_vnode(v, f)	vn_lock((v), (f))
 #define ilock_vnode(v)	vn_lock((v), LK_INTERLOCK|LK_EXCLUSIVE|LK_RETRY)
 #define unlock_vnode(v)	VOP_UNLOCK((v), 0)
 #define islocked_vnode(v)	VOP_ISLOCKED((v))
-#else
-#define	lock_vnode(v, f)	vn_lock((v), (f), curthread)
-#define ilock_vnode(v)	vn_lock((v), LK_INTERLOCK|LK_EXCLUSIVE|LK_RETRY, curthread)
-#define unlock_vnode(v)	VOP_UNLOCK((v), 0, curthread)
-#define islocked_vnode(v)	VOP_ISLOCKED((v), curthread)
-#endif
 
 #if __FreeBSD_version >= 1000030
 #define AFS_VM_OBJECT_WLOCK(o)	VM_OBJECT_WLOCK(o)

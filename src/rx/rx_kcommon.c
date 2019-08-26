@@ -658,7 +658,7 @@ rxi_GetIFInfo(void)
     }
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-#if defined(AFS_FBSD80_ENV)
+#if defined(AFS_FBSD_ENV)
     CURVNET_SET(rx_socket->so_vnet);
     TAILQ_FOREACH(ifn, &V_ifnet, if_link) {
 #else
@@ -722,7 +722,7 @@ rxi_GetIFInfo(void)
 	}
     }
 
-#ifdef AFS_FBSD80_ENV
+#ifdef AFS_FBSD_ENV
     CURVNET_RESTORE();
 #endif
 
@@ -738,7 +738,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
     rx_ifaddr_t ifad;
     rx_ifnet_t ret;
 
-#ifdef AFS_FBSD80_ENV
+#ifdef AFS_FBSD_ENV
     CURVNET_SET(rx_socket->so_vnet);
 #endif
 
@@ -753,7 +753,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 
     ret = (ifad ? rx_ifaddr_ifnet(ifad) : NULL);
 
-#ifdef AFS_FBSD80_ENV
+#ifdef AFS_FBSD_ENV
     CURVNET_RESTORE();
 #endif
 
