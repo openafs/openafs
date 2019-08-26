@@ -76,7 +76,7 @@ extern char *opr_strcompose(char *buf, size_t len, ...) AFS_NONNULL((1));
 
 /* threadname.c */
 
-#ifdef AFS_PTHREAD_ENV
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
 extern void opr_threadname_set(const char *threadname);
 #else
 static_inline void
