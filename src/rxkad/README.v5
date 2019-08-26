@@ -17,7 +17,10 @@
 #
 #  All files are modified to build within OpenAFS environment without
 #  any external dependencies. Below is the shell script that is used to
-#  import the code into the four files.
+#  import the code into the four files. Before running this, you must first run
+#  a build from the heimdal tree like so:
+#
+# $ sh autogen.sh && COMPILE_ET=no ./configure && make
 #
 #  All internal symbols are rewritten to _rxkad_v5_.
 #
@@ -36,7 +39,6 @@ otree=/sources/afs/openafs-rxkad5
 export htree hotree otree
 
 (cd $htree/lib/asn1 ; \
- echo '#include "asn1_err.h"'; \
  echo '#include <errno.h>'; \
  echo '#include <limits.h>'; \
  cat  timegm.c \
@@ -57,8 +59,9 @@ grep -v 'struct units'  $hotree/lib/asn1/krb5_asn1.h \
  | sed s/uint32_t/afs_uint32/ \
    > $otree/src/rxkad/v5gen.h
 
-cp  $hotree/lib/asn1/der-protos.h \
-    $otree/src/rxkad/der-protos.h
+cat $hotree/lib/asn1/der-protos.h \
+ | sed 's:[*]/[*]:* /*:g' \
+   > $otree/src/rxkad/der-protos.h
 
 < $hotree/lib/asn1/asn1_err.h \
  sed 's!#include <et/com_err[.]h>!struct et_list;!' \
