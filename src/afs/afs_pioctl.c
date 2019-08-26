@@ -1258,10 +1258,10 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 	dput(dp);
 	AFS_GLOCK();
 #else
-#if defined(AFS_FBSD80_ENV)
+#if defined(AFS_FBSD_ENV)
     if (VOP_ISLOCKED(vp))
 	VOP_UNLOCK(vp, 0);
-#endif /* AFS_FBSD80_ENV */
+#endif /* AFS_FBSD_ENV */
 	AFS_RELE(vp);		/* put vnode back */
 #endif
     }
@@ -4642,7 +4642,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 #ifdef AFS_AIX_ENV
     newcred->cr_ngrps = 2;
 #elif !defined(AFS_LINUX26_ENV) && !defined(AFS_SUN510_ENV)
-# if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_FBSD80_ENV)
+# if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_FBSD_ENV)
     newcred->cr_ngroups = 2;
 # else
     for (i = 2; i < NGROUPS; i++)

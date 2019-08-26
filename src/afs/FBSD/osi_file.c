@@ -17,9 +17,6 @@
 
 
 int afs_osicred_initialized = 0;
-#ifndef AFS_FBSD80_ENV	/* cr_groups is now malloc()'d */
-afs_ucred_t afs_osi_cred;
-#endif
 extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;
 
@@ -45,11 +42,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	osi_FreeSmallSpace(afile);
 	osi_Panic("UFSOpen: igetinode failed");
     }
-#if defined(AFS_FBSD80_ENV)
     VOP_UNLOCK(vp, 0);
-#else
-    VOP_UNLOCK(vp, 0, curthread);
-#endif
     afile->vnode = vp;
     afile->size = VTOI(vp)->i_size;
     afile->offset = 0;
@@ -64,15 +57,9 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
     struct vattr tvattr;
     AFS_STATCNT(osi_Stat);
     AFS_GUNLOCK();
-#if defined(AFS_FBSD80_ENV)
     vn_lock(afile->vnode, LK_EXCLUSIVE | LK_RETRY);
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp);
     VOP_UNLOCK(afile->vnode, 0);
-#else
-    vn_lock(afile->vnode, LK_EXCLUSIVE | LK_RETRY, curthread);
-    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
-    VOP_UNLOCK(afile->vnode, LK_EXCLUSIVE, curthread);
-#endif
     AFS_GLOCK();
     if (code == 0) {
 	astat->size = tvattr.va_size;
@@ -111,30 +98,17 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     glocked = ISAFS_GLOCK();
     if (glocked)
       AFS_GUNLOCK();
-#if defined(AFS_FBSD80_ENV)
     vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp);
-#else
-    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
-    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
-#endif
     if (code != 0 || tvattr.va_size <= asize)
 	goto out;
 
     VATTR_NULL(&tvattr);
     tvattr.va_size = asize;
-#if defined(AFS_FBSD80_ENV)
     code = VOP_SETATTR(vp, &tvattr, afs_osi_credp);
-#else
-    code = VOP_SETATTR(vp, &tvattr, afs_osi_credp, curthread);
-#endif
 
 out:
-#if defined(AFS_FBSD80_ENV)
     VOP_UNLOCK(vp, 0);
-#else
-    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
-#endif
     if (glocked)
       AFS_GLOCK();
     return code;

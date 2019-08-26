@@ -93,11 +93,11 @@ osi_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 	       ICL_TYPE_INT32, origDV.low, ICL_TYPE_INT32, avc->f.m.Length);
 
     ReleaseWriteLock(&avc->lock);
-#ifndef AFS_FBSD70_ENV
+#ifndef AFS_FBSD_ENV
     AFS_GUNLOCK();
 #endif
     osi_VM_FlushPages(avc, credp);
-#ifndef AFS_FBSD70_ENV
+#ifndef AFS_FBSD_ENV
     AFS_GLOCK();
 #endif
     ObtainWriteLock(&avc->lock, 88);

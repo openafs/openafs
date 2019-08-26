@@ -84,20 +84,15 @@ setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
 #if defined(AFS_FBSD81_ENV)
     gid_t *gidset;
     int gidset_len = ngroups_max + 1;
-#elif defined(AFS_FBSD80_ENV)
+#else
     gid_t *gidset;
     int gidset_len = NGROUPS;	/* 1024 */
-#else
-    gid_t gidset[NGROUPS];
-    int gidset_len = NGROUPS;	/* 16 */
 #endif
     int ngroups, code;
     int j;
 
     AFS_STATCNT(setpag);
-#ifdef AFS_FBSD80_ENV
     gidset = osi_Alloc(gidset_len * sizeof(gid_t));
-#endif
     ngroups = afs_getgroups(*cred, gidset_len, gidset);
     if (afs_get_pag_from_groups(gidset[1], gidset[2]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
@@ -112,9 +107,7 @@ setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
     *newpag = (pagvalue == -1 ? genpag() : pagvalue);
     afs_get_groups_from_pag(*newpag, &gidset[1], &gidset[2]);
     code = afs_setgroups(td, cred, ngroups, gidset, change_parent);
-#ifdef AFS_FBSD80_ENV
     osi_Free(gidset, gidset_len * sizeof(gid_t));
-#endif
     return code;
 }
 

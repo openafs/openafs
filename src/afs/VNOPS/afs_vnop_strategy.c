@@ -208,10 +208,8 @@ int afs_ustrategy(struct buf *abp)
 
 #if defined(AFS_AIX32_ENV)
     crfree(credp);
-#elif defined(AFS_FBSD60_ENV)
-    (*abp->b_iodone)(abp);
 #elif defined(AFS_FBSD_ENV)
-    biodone(&abp->b_io);
+    (*abp->b_iodone)(abp);
 #elif defined(AFS_NBSD40_ENV)
     abp->b_resid = tuio.uio_resid;
     biodone(abp);
