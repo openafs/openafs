@@ -1691,8 +1691,8 @@ kamListEntry(struct rx_call *call,
     afs_int32 caller;
     struct kaentry tentry;
 
-    memset(name, 0, sizeof(*name));
     COUNT_REQ(ListEntry);
+    memset(name, 0, sizeof(*name));
     if ((code = InitAuthServ(&tt, LOCKREAD, this_op)))
 	return code;
     code = check_auth(call, tt, 1, &caller);
