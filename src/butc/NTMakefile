@@ -47,6 +47,7 @@ EXELIBS =\
         $(DESTDIR)\lib\afs\afscmd.lib \
         $(DESTDIR)\lib\afs\afscom_err.lib \
         $(DESTDIR)\lib\afs\afsutil.lib \
+        $(DESTDIR)\lib\afs\afsaudit.lib \
         $(DESTDIR)\lib\afs\afsusd.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
