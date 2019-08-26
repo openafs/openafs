@@ -63,7 +63,6 @@ RXKADOBJS = \
 	$(OUT)\rxkad_errs.obj
 
 PTSERVEROBJS = \
-	$(OUT)\ptclient.obj \
 	$(OUT)\ptint.cs.obj \
 	$(OUT)\ptint.xdr.obj \
 	$(OUT)\ptuser.obj \
