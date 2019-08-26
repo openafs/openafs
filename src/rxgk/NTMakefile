@@ -1,0 +1,29 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+RELDIR=rxgk
+!include ..\config\NTMakefile.$(SYS_NAME)
+
+INCFILEDIR = $(DESTDIR)\include\rx
+
+INCFILES  = \
+	$(INCFILEDIR)\rxgk_types.h \
+	$(INCFILEDIR)\rxgk_int.h
+
+$(INCFILEDIR)\rxgk_types.h: rxgk_types.h
+	$(COPY) rxgk_types.h $@
+
+$(INCFILEDIR)\rxgk_int.h: rxgk_int.h
+	$(COPY) rxgk_int.h $@
+
+rxgk_int.h: rxgk_int.xg
+	$(RXGEN) -b -A -x -h -o $@ rxgk_int.xg
+
+install_headers:  $(INCFILES)
+
+clean::
+	$(DEL) rxgk_int.h

@@ -292,7 +292,14 @@ cm_headers: libacl_headers
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..\..
 
-auth_headers: cm_headers
+rxgk_headers: cm_headers
+     @echo ***** $@
+	$(DOCD) $(SRC)\rxgk
+	$(CD) $(SRC)\rxgk
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+auth_headers: rxgk_headers
      @echo ***** $@
 	$(DOCD) $(SRC)\auth
 	$(CD) $(SRC)\auth
