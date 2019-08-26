@@ -221,12 +221,16 @@ struct opr_queue rx_incomingCallQueue;
  * calls to process */
 struct opr_queue rx_idleServerQueue;
 
+/* List of free rx_serverQueueEntry structs */
+struct opr_queue rx_freeServerQueue;
+
 #if !defined(offsetof)
 #include <stddef.h>		/* for definition of offsetof() */
 #endif
 
 #ifdef RX_ENABLE_LOCKS
 afs_kmutex_t rx_atomic_mutex;
+static afs_kmutex_t freeSQEList_lock;
 #endif
 
 /* Forward prototypes */
@@ -634,6 +638,7 @@ rx_InitHost(u_int host, u_int port)
 
     /* Initialize various global queues */
     opr_queue_Init(&rx_idleServerQueue);
+    opr_queue_Init(&rx_freeServerQueue);
     opr_queue_Init(&rx_incomingCallQueue);
     opr_queue_Init(&rx_freeCallQueue);
 
@@ -1944,7 +1949,7 @@ rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 void
 rx_WakeupServerProcs(void)
 {
-    struct rx_serverQueueEntry *np, *tqp;
+    struct rx_serverQueueEntry *np;
     struct opr_queue *cursor;
     SPLVAR;
 
@@ -1959,8 +1964,8 @@ rx_WakeupServerProcs(void)
 	osi_rxWakeup(rx_waitForPacket);
 #endif /* RX_ENABLE_LOCKS */
     MUTEX_ENTER(&freeSQEList_lock);
-    for (np = rx_FreeSQEList; np; np = tqp) {
-	tqp = *(struct rx_serverQueueEntry **)np;
+    for (opr_queue_Scan(&rx_freeServerQueue, cursor)) {
+        np = opr_queue_Entry(cursor, struct rx_serverQueueEntry, entry);
 #ifdef RX_ENABLE_LOCKS
 	CV_BROADCAST(&np->cv);
 #else /* RX_ENABLE_LOCKS */
@@ -2020,8 +2025,10 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 
     MUTEX_ENTER(&freeSQEList_lock);
 
-    if ((sq = rx_FreeSQEList)) {
-	rx_FreeSQEList = *(struct rx_serverQueueEntry **)sq;
+    if (!opr_queue_IsEmpty(&rx_freeServerQueue)) {
+	sq = opr_queue_First(&rx_freeServerQueue, struct rx_serverQueueEntry,
+			     entry);
+	opr_queue_Remove(&sq->entry);
 	MUTEX_EXIT(&freeSQEList_lock);
     } else {			/* otherwise allocate a new one and return that */
 	MUTEX_EXIT(&freeSQEList_lock);
@@ -2136,6 +2143,9 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 #endif
 	    } while (!(call = sq->newcall)
 		     && !(socketp && *socketp != OSI_NULLSOCKET));
+	    if (opr_queue_IsOnQueue(&sq->entry)) {
+		opr_queue_Remove(&sq->entry);
+	    }
 	    MUTEX_EXIT(&rx_serverPool_lock);
 	    if (call) {
 		MUTEX_ENTER(&call->lock);
@@ -2145,8 +2155,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
     }
 
     MUTEX_ENTER(&freeSQEList_lock);
-    *(struct rx_serverQueueEntry **)sq = rx_FreeSQEList;
-    rx_FreeSQEList = sq;
+    opr_queue_Prepend(&rx_freeServerQueue, &sq->entry);
     MUTEX_EXIT(&freeSQEList_lock);
 
     if (call) {
@@ -2191,8 +2200,10 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
     NETPRI;
     MUTEX_ENTER(&freeSQEList_lock);
 
-    if ((sq = rx_FreeSQEList)) {
-	rx_FreeSQEList = *(struct rx_serverQueueEntry **)sq;
+    if (!opr_queue_IsEmpty(&rx_freeServerQueue)) {
+	sq = opr_queue_First(&rx_freeServerQueue, struct rx_serverQueueEntry,
+			     entry);
+	opr_queue_Remove(&sq->entry);
 	MUTEX_EXIT(&freeSQEList_lock);
     } else {			/* otherwise allocate a new one and return that */
 	MUTEX_EXIT(&freeSQEList_lock);
@@ -2306,8 +2317,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
     MUTEX_EXIT(&sq->lock);
 
     MUTEX_ENTER(&freeSQEList_lock);
-    *(struct rx_serverQueueEntry **)sq = rx_FreeSQEList;
-    rx_FreeSQEList = sq;
+    opr_queue_Prepend(&rx_freeServerQueue, &sq->entry);
     MUTEX_EXIT(&freeSQEList_lock);
 
     if (call) {
@@ -8045,8 +8055,10 @@ shutdown_rx(void)
 
     MUTEX_ENTER(&freeSQEList_lock);
 
-    while ((np = rx_FreeSQEList)) {
-	rx_FreeSQEList = *(struct rx_serverQueueEntry **)np;
+    while (!opr_queue_IsEmpty(&rx_freeServerQueue)) {
+	np = opr_queue_First(&rx_freeServerQueue, struct rx_serverQueueEntry,
+			     entry);
+	opr_queue_Remove(&np->entry);
 	MUTEX_DESTROY(&np->lock);
 	rxi_Free(np, sizeof(*np));
     }

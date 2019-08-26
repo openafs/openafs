@@ -459,12 +459,6 @@ EXT afs_uint32 rx_maxJumboRecvSize GLOBALSINIT(RX_MAX_PACKET_SIZE);
 /* need this to permit progs to run on AIX systems */
 EXT int (*rxi_syscallp) (afs_uint32 a3, afs_uint32 a4, void *a5)GLOBALSINIT(0);
 
-/* List of free queue entries */
-EXT struct rx_serverQueueEntry *rx_FreeSQEList GLOBALSINIT(0);
-#ifdef	RX_ENABLE_LOCKS
-EXT afs_kmutex_t freeSQEList_lock;
-#endif
-
 /* List of free call structures */
 EXT struct opr_queue rx_freeCallQueue;
 #ifdef	RX_ENABLE_LOCKS
