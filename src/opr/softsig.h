@@ -28,4 +28,8 @@
 int opr_softsig_Init(void);
 int opr_softsig_Register(int sig, void (*handler)(int));
 
+#ifdef AFS_NT40_ENV
+# include <afs/procmgmt_softsig.h>
+#endif
+
 #endif

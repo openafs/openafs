@@ -14,7 +14,6 @@
 #include <roken.h>
 #ifdef AFS_PTHREAD_ENV
 # include <opr/softsig.h>
-# include <afs/procmgmt_softsig.h> /* must come after softsig.h */
 #endif
 
 #ifdef AFS_NT40_ENV

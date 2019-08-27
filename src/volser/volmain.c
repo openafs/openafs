@@ -15,7 +15,6 @@
 #ifdef AFS_PTHREAD_ENV
 # include <opr/lock.h>
 # include <opr/softsig.h>
-# include <afs/procmgmt_softsig.h> /* must come after softsig */
 #endif
 
 #ifdef AFS_NT40_ENV

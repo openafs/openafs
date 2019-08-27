@@ -47,7 +47,6 @@
 #include <opr/lock.h>
 #include <opr/proc.h>
 #include <opr/softsig.h>
-#include <afs/procmgmt_softsig.h> /* must come after softsig.h */
 #include <afs/cmd.h>
 #include <afs/ptclient.h>
 #include <afs/afsint.h>

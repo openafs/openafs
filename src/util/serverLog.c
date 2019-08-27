@@ -25,7 +25,6 @@
 #include <roken.h>		/* Must come after procmgmt.h */
 #ifdef AFS_PTHREAD_ENV
  #include <opr/softsig.h>
- #include <afs/procmgmt_softsig.h>	/* Must come after softsig.h */
 #endif
 #include <afs/opr.h>
 #include "afsutil.h"

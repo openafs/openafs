@@ -25,6 +25,7 @@ LIBS= \
 	$(LIBDIR)\afshcrypto.lib \
 	$(LIBDIR)\afspthread.lib \
 	$(LIBDIR)\afs\afspioctl.lib \
+	$(LIBDIR)\afs\afsprocmgmt.lib \
 	$(LIBDIR)\afs\mtafsutil.lib \
 	$(LIBDIR)\afs\afsreg.lib \
 	$(LIBDIR)\afsroken.lib \
