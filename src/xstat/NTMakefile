@@ -44,7 +44,7 @@ install: \
 FSINCLS= $(INCDIR)\xstat_fs.h $(RPCINCLS)
 
 {.}.c{$(OUT)}.obj:
-    $(C2OBJ) $<
+    $(C2OBJ) $< -DAFS_PTHREAD_ENV
 
 $(LIBDIR)\afs_xstat_fs.lib: $(OUT)\xstat_fs.obj $(OUT)\xstat_fs_callback.obj $(OUT)\AFS_component_version_number.obj
 	$(LIBARCH)
