@@ -53,6 +53,7 @@ rx_FreeStatistics
 rx_GetCachedConnection
 rx_GetCall
 rx_GetCallAbortCode
+rx_GetCallStatus
 rx_GetConnectionEpoch
 rx_GetConnectionId
 rx_GetIFInfo
