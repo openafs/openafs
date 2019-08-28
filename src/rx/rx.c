@@ -135,7 +135,7 @@ static struct rx_packet
 			       struct rx_call **newcallp);
 static struct rx_packet
 	*rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
-			      int istack);
+			      int istack, int *a_invalid);
 static struct rx_packet
 	*rxi_ReceiveResponsePacket(struct rx_connection *conn,
 				   struct rx_packet *np, int istack);
@@ -3377,6 +3377,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     struct rx_connection *conn;
     int type;
     int unknownService = 0;
+    int invalid = 0;
 #ifdef RXDEBUG
     char *packetType;
 #endif
@@ -3567,7 +3568,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 		(void)rxi_SendAck(call, 0, np->header.serial,
 				  RX_ACK_PING_RESPONSE, 1);
 	}
-	np = rxi_ReceiveAckPacket(call, np, 1);
+	np = rxi_ReceiveAckPacket(call, np, 1, &invalid);
 	break;
     case RX_PACKET_TYPE_ABORT: {
 	/* An abort packet: reset the call, passing the error up to the user. */
@@ -3600,11 +3601,16 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	np = rxi_SendCallAbort(call, np, 1, 0);
 	break;
     };
-    /* Note when this last legitimate packet was received, for keep-alive
-     * processing.  Note, we delay getting the time until now in the hope that
-     * the packet will be delivered to the user before any get time is required
-     * (if not, then the time won't actually be re-evaluated here). */
-    call->lastReceiveTime = clock_Sec();
+    if (invalid) {
+	if (rx_stats_active)
+	    rx_atomic_inc(&rx_stats.spuriousPacketsRead);
+    } else {
+	/*
+	 * Note when this last legitimate packet was received, for keep-alive
+	 * processing.
+	 */
+	call->lastReceiveTime = clock_Sec();
+    }
     MUTEX_EXIT(&call->lock);
     putConnection(conn);
     return np;
@@ -4247,7 +4253,7 @@ ack_is_valid(struct rx_call *call, afs_uint32 first, afs_uint32 prev)
 /* The real smarts of the whole thing.  */
 static struct rx_packet *
 rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
-		     int istack)
+		     int istack, int *a_invalid)
 {
     struct rx_ackPacket *ap;
     int nAcks;
@@ -4268,6 +4274,8 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     int pktsize = 0;            /* Set if we need to update the peer mtu */
     int conn_data_locked = 0;
 
+    *a_invalid = 1;
+
     if (rx_stats_active)
         rx_atomic_inc(&rx_stats.ackPacketsRead);
     ap = (struct rx_ackPacket *)rx_DataOf(np);
@@ -4286,6 +4294,8 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     }
 
     call->tprev = prev;
+
+    *a_invalid = 0;
 
     if (np->header.flags & RX_SLOW_START_OK) {
 	call->flags |= RX_CALL_SLOW_START_OK;
