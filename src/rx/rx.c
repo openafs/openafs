@@ -4249,6 +4249,41 @@ rx_ack_reason(int reason)
 }
 #endif
 
+static_inline int
+ack_is_valid(struct rx_call *call, afs_uint32 first, afs_uint32 prev)
+{
+    if (first < call->tfirst) {
+	/*
+	 * The peer indicated that the window went backwards. That's not
+	 * allowed; the window can only move forwards.
+	 */
+	return 0;
+    }
+
+    if (first == call->tfirst && prev < call->tprev) {
+	/*
+	 * The peer said the last DATA packet it received was seq X, but it
+	 * already told us before that it had received data after X. This is
+	 * probably just an out-of-order ACK, and so we can ignore it.
+	 */
+	if (prev >= call->tfirst + call->twind) {
+	    /*
+	     * Some peers (OpenAFS libafs before 1.6.23) mistakenly set the
+	     * previousPacket field to a serial number, not a sequence number.
+	     * The sequence number the peer told us about is further than our
+	     * transmit window, so it cannot possibly be correct; it's probably
+	     * actually a serial number. Don't ignore packets based on this;
+	     * the previousPacket information is not accurate.
+	     */
+	    return 1;
+	}
+
+	return 0;
+    }
+
+    /* Otherwise, the ack looks valid. */
+    return 1;
+}
 
 /* The real smarts of the whole thing.  */
 static struct rx_packet *
@@ -4287,14 +4322,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     prev = ntohl(ap->previousPacket);
     serial = ntohl(ap->serial);
 
-    /*
-     * Ignore ack packets received out of order while protecting
-     * against peers that set the previousPacket field to a packet
-     * serial number instead of a sequence number.
-     */
-    if (first < call->tfirst ||
-        (first == call->tfirst && prev < call->tprev && prev < call->tfirst
-	 + call->twind)) {
+    if (!ack_is_valid(call, first, prev)) {
 	return np;
     }
 
