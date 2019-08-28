@@ -1832,14 +1832,12 @@ get_credv5_akimpersonate(krb5_context context,
 			 krb5_principal client_principal,
 			 time_t starttime,
 			 time_t endtime,
-			 int *allowed_enctypes,
 			 int *paddress,
 			 krb5_creds** out_creds /* out */ )
 {
 #if defined(USING_HEIMDAL) || (defined(HAVE_ENCODE_KRB5_ENC_TKT_PART) && defined(HAVE_ENCODE_KRB5_TICKET) && defined(HAVE_KRB5_C_ENCRYPT))
     krb5_error_code code;
     krb5_keytab kt = 0;
-    krb5_kt_cursor cursor[1];
     krb5_keytab_entry entry[1];
     krb5_ccache cc = 0;
     krb5_creds *creds = 0;
@@ -1860,14 +1858,11 @@ get_credv5_akimpersonate(krb5_context context,
     krb5_data * temp;
 #endif
     int i;
-    static int any_enctype[] = {0};
     *out_creds = 0;
     if (!(creds = malloc(sizeof *creds))) {
         code = ENOMEM;
         goto cleanup;
     }
-    if (!allowed_enctypes)
-        allowed_enctypes = any_enctype;
 
     cc = 0;
     enctype = 0; /* AKIMPERSONATE_IGNORE_ENCTYPE */
@@ -1886,54 +1881,17 @@ get_credv5_akimpersonate(krb5_context context,
         goto cleanup;
     }
 
-    if (service_principal) {
-        for (i = 0; (enctype = allowed_enctypes[i]) || !i; ++i) {
-	    code = krb5_kt_get_entry(context,
-				     kt,
-				     service_principal,
-				     kvno,
-				     enctype,
-				     entry);
-	    if (!code) {
-		if (allowed_enctypes[i])
-		    deref_keyblock_enctype(session_key) = allowed_enctypes[i];
-		break;
-	    }
-        }
-        if (code) {
-	    afs_com_err(progname, code,"while scanning keytab entries");
-	    goto cleanup;
-        }
-    } else {
-        krb5_keytab_entry new[1];
-        int best = -1;
-        memset(new, 0, sizeof *new);
-        if ((code = krb5_kt_start_seq_get(context, kt, cursor))) {
-            afs_com_err(progname, code, "while starting keytab scan");
-            goto cleanup;
-        }
-        while (!(code = krb5_kt_next_entry(context, kt, new, cursor))) {
-            for (i = 0;
-                    allowed_enctypes[i] && allowed_enctypes[i]
-		     != deref_entry_enctype(new); ++i)
-                ;
-            if ((!i || allowed_enctypes[i]) &&
-		(best < 0 || best > i)) {
-                krb5_free_keytab_entry_contents(context, entry);
-                *entry = *new;
-                memset(new, 0, sizeof *new);
-            } else krb5_free_keytab_entry_contents(context, new);
-        }
-        if ((i = krb5_kt_end_seq_get(context, kt, cursor))) {
-            afs_com_err(progname, i, "while ending keytab scan");
-            code = i;
-            goto cleanup;
-        }
-        if (best < 0) {
-            afs_com_err(progname, code, "while scanning keytab");
-            goto cleanup;
-        }
+    code = krb5_kt_get_entry(context,
+			     kt,
+			     service_principal,
+			     kvno,
+			     enctype,
+			     entry);
+    if (!code)
         deref_keyblock_enctype(session_key) = deref_entry_enctype(entry);
+    else {
+        afs_com_err(progname, code, "while scanning keytab entries");
+        goto cleanup;
     }
 
     /* Make Ticket */
@@ -2180,16 +2138,12 @@ get_credv5(krb5_context context, char *name, char *inst, char *realm,
 	get_creds_enctype((&increds)) = ENCTYPE_DES_CBC_CRC;
 
     if (keytab) {
-	int allowed_enctypes[] = {
-	    ENCTYPE_DES_CBC_CRC, 0
-	};
 
 	r = get_credv5_akimpersonate(context,
 				     keytab,
 				     increds.server,
 				     increds.client,
 				     300, ((~0U)>>1),
-				     allowed_enctypes,
 				     0 /* paddress */,
 				     creds /* out */);
     } else {
