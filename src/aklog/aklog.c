@@ -167,6 +167,11 @@ static int get_user_realm(krb5_context, char **);
 #error "Must have either krb5_princ_size or krb5_principal_get_comp_string"
 #endif
 
+#if defined(HAVE_ENCODE_KRB5_TICKET)
+extern krb5_error_code encode_krb5_ticket (const krb5_ticket *rep,
+					   krb5_data **code);
+#endif
+
 #if !defined(HAVE_KRB5_ENCRYPT_TKT_PART) && defined(HAVE_ENCODE_KRB5_ENC_TKT_PART) && defined(HAVE_KRB5_C_ENCRYPT)
 extern krb5_error_code encode_krb5_enc_tkt_part (const krb5_enc_tkt_part *rep,
 						 krb5_data **code);
@@ -1830,7 +1835,7 @@ get_credv5_akimpersonate(krb5_context context,
 			 int *paddress,
 			 krb5_creds** out_creds /* out */ )
 {
-#if defined(USING_HEIMDAL) || (defined(HAVE_ENCODE_KRB5_ENC_TKT) && defined(HAVE_ENCODE_KRB5_TICKET) && defined(HAVE_KRB5_C_ENCRYPT))
+#if defined(USING_HEIMDAL) || (defined(HAVE_ENCODE_KRB5_ENC_TKT_PART) && defined(HAVE_ENCODE_KRB5_TICKET) && defined(HAVE_KRB5_C_ENCRYPT))
     krb5_error_code code;
     krb5_keytab kt = 0;
     krb5_kt_cursor cursor[1];
