@@ -145,6 +145,7 @@ static int get_user_realm(krb5_context, char **);
 
 #define TRYAGAIN(x) (x == AKLOG_TRYAGAIN || \
 		     x == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || \
+		     x == KRB5_KT_NOTFOUND || \
 		     x == KRB5KRB_ERR_GENERIC)
 
 #if defined(HAVE_KRB5_PRINC_SIZE) || defined(krb5_princ_size)
