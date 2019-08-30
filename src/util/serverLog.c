@@ -35,7 +35,10 @@
 #include <pthread.h>
 static pthread_once_t serverLogOnce = PTHREAD_ONCE_INIT;
 static pthread_mutex_t serverLogMutex;
-#define LOCK_SERVERLOG() opr_Verify(pthread_mutex_lock(&serverLogMutex) == 0)
+#define LOCK_SERVERLOG() do { \
+    opr_Verify(pthread_once(&serverLogOnce, InitServerLogMutex) == 0); \
+    opr_Verify(pthread_mutex_lock(&serverLogMutex) == 0); \
+} while (0)
 #define UNLOCK_SERVERLOG() opr_Verify(pthread_mutex_unlock(&serverLogMutex) == 0)
 
 #ifdef AFS_NT40_ENV
@@ -66,16 +69,42 @@ static int (*threadNumProgram) (void) = dummyThreadNum;
 
 /* After single-threaded startup, accesses to serverlogFD and
  * serverLogSyslog* are protected by LOCK_SERVERLOG(). */
-static int serverLogFD = -1;	/*!< The log file descriptor. */
+static int serverLogFD = 2;	/*!< The log file descriptor (stderr by
+				 *   default). If 'ourName' is not set, don't
+				 *   close this; it's not ours to close. */
 static struct logOptions serverLogOpts;	/*!< logging options */
 
 int LogLevel;			/*!< The current logging level. */
 static int threadIdLogs = 0;	/*!< Include the thread id in log messages when true. */
 static int resetSignals = 0;	/*!< Reset signal handlers for the next signal when true. */
 static char *ourName = NULL;	/*!< The fully qualified log file path, saved for reopens. */
+static int logTime;		/*!< Do we prefix log lines with the time? */
 
 static int OpenLogFile(const char *fileName);
 static void RotateLogFile(void);
+
+#if defined(AFS_PTHREAD_ENV)
+static void
+LockServerLog(void)
+{
+    opr_Verify(pthread_mutex_lock(&serverLogMutex) == 0);
+}
+
+static void
+UnlockServerLog(void)
+{
+    opr_Verify(pthread_mutex_unlock(&serverLogMutex) == 0);
+}
+
+static void
+InitServerLogMutex(void)
+{
+    opr_Verify(pthread_mutex_init(&serverLogMutex, NULL) == 0);
+# ifndef AFS_NT40_ENV
+    opr_Verify(pthread_atfork(LockServerLog, UnlockServerLog, UnlockServerLog) == 0);
+# endif
+}
+#endif /* AFS_PTHREAD_ENV */
 
 /*!
  * Determine if the file is a named pipe.
@@ -174,16 +203,18 @@ void
 vFSLog(const char *format, va_list args)
 {
     time_t currenttime;
-    char tbuffer[1024];
-    char *info;
+    char tbuffer[1024] = "";
+    char *info = tbuffer;
     size_t len;
     struct tm tm;
     int num;
 
-    currenttime = time(NULL);
-    len = strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y ",
-		   localtime_r(&currenttime, &tm));
-    info = &tbuffer[len];
+    if (logTime) {
+	currenttime = time(NULL);
+	len = strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y ",
+		       localtime_r(&currenttime, &tm));
+	info = &tbuffer[len];
+    }
 
     if (threadIdLogs) {
 	num = (*threadNumProgram) ();
@@ -490,29 +521,6 @@ SetupLogSignals(void)
 #endif
 }
 
-#if defined(AFS_PTHREAD_ENV)
-static void
-LockServerLog(void)
-{
-    LOCK_SERVERLOG();
-}
-
-static void
-UnlockServerLog(void)
-{
-    UNLOCK_SERVERLOG();
-}
-
-static void
-InitServerLogMutex(void)
-{
-    opr_Verify(pthread_mutex_init(&serverLogMutex, NULL) == 0);
-# ifndef AFS_NT40_ENV
-    opr_Verify(pthread_atfork(LockServerLog, UnlockServerLog, UnlockServerLog) == 0);
-# endif
-}
-#endif /* AFS_PTHREAD_ENV */
-
 /*!
  * Redirect stdout and stderr to the log file.
  *
@@ -649,14 +657,13 @@ OpenLog(struct logOptions *opts)
 {
     int code;
 
-#if defined(AFS_PTHREAD_ENV)
-    opr_Verify(pthread_once(&serverLogOnce, InitServerLogMutex) == 0);
-#endif /* AFS_PTHREAD_ENV */
+    LOCK_SERVERLOG();
 
     LogLevel = serverLogOpts.logLevel = opts->logLevel;
     serverLogOpts.dest = opts->dest;
     switch (serverLogOpts.dest) {
     case logDest_file:
+	logTime = 1;
 	serverLogOpts.lopt_rotateOnOpen = opts->lopt_rotateOnOpen;
 	serverLogOpts.lopt_rotateOnReset = opts->lopt_rotateOnReset;
 	serverLogOpts.lopt_rotateStyle = opts->lopt_rotateStyle;
@@ -675,6 +682,9 @@ OpenLog(struct logOptions *opts)
     default:
 	opr_Assert(0);
     }
+
+    UNLOCK_SERVERLOG();
+
     return code;
 }				/*OpenLog */
 
@@ -747,7 +757,7 @@ CloseLog(void)
 	closelog();
     } else
 #endif
-    {
+    if (ourName != NULL) {
 	if (serverLogFD >= 0) {
 	    close(serverLogFD);
 	    serverLogFD = -1;
