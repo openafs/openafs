@@ -249,6 +249,22 @@ vFSLog(const char *format, va_list args)
 #endif
 }				/*vFSLog */
 
+/*
+ * Small wrapper around opr_time64_ratelimit() that uses LOCK_SERVERLOG() to
+ * protect 'last'.
+ */
+int
+FSLog_ratelimit(struct afs_time64 *last, int interval)
+{
+    int ret;
+
+    LOCK_SERVERLOG();
+    ret = opr_time64_ratelimit(last, interval);
+    UNLOCK_SERVERLOG();
+
+    return ret;
+}
+
 /*!
  * Write a message to the log.
  *

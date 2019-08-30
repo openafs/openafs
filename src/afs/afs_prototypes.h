@@ -1014,6 +1014,68 @@ extern void afs_warnall(char *fmt, ...)
 #endif
 extern void afs_WarnENOSPC(void);
 
+/*
+ * A small helper for rate-limiting log messages, like ViceLog_ratelimit(). For
+ * example:
+ *
+ * static afs_int32 lastlog;
+ * if (afs_warn_ratelimit(&lastlog, 3600)) {
+ *     afs_warn("This message will be logged hourly at most.\n");
+ * }
+ *
+ * Can be called with or without AFS_GLOCK (we will acquire and drop AFS_GLOCK
+ * if it's not held).
+ */
+static_inline int
+afs_warn_ratelimit(afs_int32 *a_last, afs_int32 interval)
+{
+    afs_int32 now = osi_Time();
+    afs_int32 last;
+    int success = 0;
+    int locked = ISAFS_GLOCK();
+
+    if (!locked) {
+	AFS_GLOCK();
+    }
+
+    last = *a_last;
+    if (now < last || now - last >= interval) {
+	*a_last = now;
+	success = 1;
+    }
+
+    if (!locked) {
+	AFS_GUNLOCK();
+    }
+
+    return success;
+}
+
+/*
+ * An afs_warn() variant that rate-limits messages to avoid flooding the log,
+ * like ViceLog_timedlimit(). For example:
+ *
+ * afs_warn_timedlimit(3600, ("This message will be logged hourly at most.\n"));
+ */
+#define afs_warn_timedlimit(interval, msg) do { \
+    static afs_int32 _last; \
+    if (afs_warn_ratelimit(&_last, (interval))) { \
+	(afs_warn msg); \
+    } \
+} while (0)
+
+/*
+ * An afs_warn() variant that tries to avoid flooding the log, like ViceLog_limit().
+ *
+ * Note that you must pass args with an extra set of parens, like so:
+ *
+ * afs_warn_limit(("afs: foo is %d\n", foo));
+ */
+#define AFS_RATELIMIT_DEFAULT 60
+#define afs_warn_limit(msg) \
+	afs_warn_timedlimit(AFS_RATELIMIT_DEFAULT, msg)
+
+
 /* afs_vcache.c */
 extern int VCHash(struct VenusFid *fid);
 extern int VCHashV(struct VenusFid *fid);

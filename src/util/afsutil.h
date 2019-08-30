@@ -13,6 +13,7 @@
 #include <time.h>
 /* Include afs installation dir retrieval routines */
 #include <afs/dirpath.h>
+#include <opr/time.h>
 
 /* These macros are return values from extractAddr. They do not represent
  * any valid IP address and so can indicate a failure.
@@ -80,6 +81,7 @@ extern void SetLogThreadNumProgram(int (*func) (void) );
 
 extern void FSLog(const char *format, ...)
 	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+extern int FSLog_ratelimit(struct afs_time64 *last, int interval);
 
 
 extern int LogLevel; /* For logging macros only. */
@@ -88,6 +90,33 @@ extern int LogLevel; /* For logging macros only. */
 #define vViceLog(level, str) do { if ((level) <= LogLevel) (vFSLog str); } while (0)
 #define ViceLogThenPanic(level, str) \
     do { ViceLog(level, str); osi_Panic str; } while(0);
+
+/*
+ * A ViceLog variant that rate-limits potentially-frequent messages to avoid
+ * flooding the log. Use like so:
+ *
+ * ViceLog_timedlimit(60, 0, ("Some message.\n"));
+ *
+ * And the given message will be limiting to being logged at most about once
+ * per minute.
+ */
+#define ViceLog_timedlimit(interval, level, str) do { \
+    if ((level) <= LogLevel) { \
+	static struct afs_time64 _last; \
+	if (FSLog_ratelimit(&_last, (interval))) { \
+	    (FSLog str); \
+	} \
+    } \
+} while (0)
+
+/*
+ * A ViceLog variant that tries to avoid flooding the log. Use just like
+ * ViceLog(), but we'll rate-limit how often we actually log the given message,
+ * to avoid flooding the log.
+ */
+#define VICELOG_RATELIMIT_DEFAULT 60
+#define ViceLog_limit(level, str) \
+	ViceLog_timedlimit(VICELOG_RATELIMIT_DEFAULT, (level), str)
 
 extern int OpenLog(struct logOptions *opts);
 extern int ReOpenLog(void);

@@ -7,6 +7,7 @@ ConstructLocalBinPath
 ConstructLocalLogPath
 ConstructLocalPath
 FSLog
+FSLog_ratelimit
 FilepathNormalize
 GetLogDest
 GetLogFilename
