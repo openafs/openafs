@@ -72,6 +72,12 @@ extern int afs_pbuf_freecnt;
 
 #define DROPNAME() free(name, M_TEMP)
 
+#ifdef LINK_MAX
+# define AFS_LINK_MAX LINK_MAX
+#else
+# define AFS_LINK_MAX (32767)
+#endif
+
 /*
  * Here we define compatibility functions/macros for interfaces that
  * have changed between different FreeBSD versions.
@@ -103,7 +109,7 @@ afs_vop_pathconf(struct vop_pathconf_args *ap)
 	error = 0;
 	switch (ap->a_name) {
 	case _PC_LINK_MAX:
-		*ap->a_retval = LINK_MAX;
+		*ap->a_retval = AFS_LINK_MAX;
 		break;
 	case _PC_NAME_MAX:
 		*ap->a_retval = NAME_MAX;
