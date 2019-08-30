@@ -69,7 +69,7 @@ osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr,
 		*addr = *(struct sockaddr_in *)sa;
 	} else
 	    printf("Unknown socket family %d in NetReceive\n", sa->sa_family);
-	FREE(sa, M_SONAME);
+	free(sa, M_SONAME);
     }
     return code;
 }
