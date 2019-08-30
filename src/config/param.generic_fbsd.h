@@ -121,9 +121,9 @@ enum vcexcl { NONEXCL, EXCL };
 #define FBSD_IFA_IFWITHNET_THREE_ARGS
 #endif
 
-/* r273707 added a flags argument to syscall_register() */
+/* r273707 added a flags argument to syscall_register/syscall_helper_register */
 #if __FreeBSD_version >= 1100041
-#define FBSD_SYSCALL_REGISTER_FOUR_ARGS
+#define FBSD_SYSCALL_REGISTER_TAKES_FLAGS
 #endif
 
 /* r285819 eliminated b_saveaddr from struct buf */

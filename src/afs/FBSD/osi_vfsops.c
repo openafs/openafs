@@ -20,28 +20,26 @@ int afs_pbuf_freecnt = -1;
 extern int Afs_xsetgroups();
 extern int afs_xioctl();
 
-static struct sysent old_sysent;
-
-static struct sysent afs_sysent = {
-    5,			/* int sy_narg */
-    (sy_call_t *) afs3_syscall,	/* sy_call_t *sy_call */
-    AUE_NULL,		/* au_event_t sy_auevent */
-    NULL,		/* systrace_args_funt_t sy_systrace_args_func */
-    0,			/* u_int32_t sy_entry */
-    0,			/* u_int32_t sy_return */
-    0,			/* u_int32_t sy_flags */
-    0			/* u_int32_t sy_thrcnt */
+static struct syscall_helper_data afs_syscalls[] = {
+    {
+	.syscall_no = AFS_SYSCALL,
+	.new_sysent = {
+	    .sy_narg = 5,
+	    .sy_call = (sy_call_t *)afs3_syscall,
+	    .sy_auevent = AUE_NULL,
+	},
+    },
+    SYSCALL_INIT_LAST
 };
 
 static int
 afs_init(struct vfsconf *vfc)
 {
     int code;
-    int offset = AFS_SYSCALL;
-#if defined(FBSD_SYSCALL_REGISTER_FOUR_ARGS)
-    code = syscall_register(&offset, &afs_sysent, &old_sysent, 0);
+#if defined(FBSD_SYSCALL_REGISTER_TAKES_FLAGS)
+    code = syscall_helper_register(afs_syscalls, 0);
 #else
-    code = syscall_register(&offset, &afs_sysent, &old_sysent);
+    code = syscall_helper_register(afs_syscalls);
 #endif
     if (code) {
 	printf("AFS_SYSCALL in use, error %i. aborting\n", code);
@@ -55,12 +53,10 @@ afs_init(struct vfsconf *vfc)
 static int
 afs_uninit(struct vfsconf *vfc)
 {
-    int offset = AFS_SYSCALL;
-
     if (afs_globalVFS)
 	return EBUSY;
-    syscall_deregister(&offset, &old_sysent);
-    return 0;
+
+    return syscall_helper_unregister(afs_syscalls);
 }
 
 static int
