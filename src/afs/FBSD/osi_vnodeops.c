@@ -61,6 +61,7 @@
 #include <vm/vm_object.h>
 #include <vm/vm_pager.h>
 #include <vm/vnode_pager.h>
+#include <sys/vmmeter.h>
 extern int afs_pbuf_freecnt;
 
 #define GETNAME()       \
@@ -93,6 +94,14 @@ static __inline void ma_vm_page_unlock(vm_page_t m) { vm_page_unlock(m); };
 #else
 #define AFS_VM_OBJECT_WLOCK(o)	VM_OBJECT_LOCK(o)
 #define AFS_VM_OBJECT_WUNLOCK(o)	VM_OBJECT_UNLOCK(o)
+#endif
+
+#ifdef VM_CNT_ADD
+# define AFS_VM_CNT_ADD(var, x) VM_CNT_ADD(var, x)
+# define AFS_VM_CNT_INC(var)    VM_CNT_INC(var)
+#else
+# define AFS_VM_CNT_ADD(var, x) PCPU_ADD(cnt.var, x)
+# define AFS_VM_CNT_INC(var)    PCPU_INC(cnt.var)
 #endif
 
 /*
@@ -533,8 +542,8 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, pages, npages);
-    PCPU_INC(cnt.v_vnodein);
-    PCPU_ADD(cnt.v_vnodepgsin, npages);
+    AFS_VM_CNT_INC(v_vnodein);
+    AFS_VM_CNT_ADD(v_vnodepgsin, npages);
 
 #ifdef FBSD_VOP_GETPAGES_BUSIED
     count = ctob(npages);
@@ -708,8 +717,8 @@ afs_vop_putpages(struct vop_putpages_args *ap)
 
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
-    PCPU_INC(cnt.v_vnodeout);
-    PCPU_ADD(cnt.v_vnodepgsout, ap->a_count);
+    AFS_VM_CNT_INC(v_vnodeout);
+    AFS_VM_CNT_ADD(v_vnodepgsout, ap->a_count);
 
     iov.iov_base = (caddr_t) kva;
     iov.iov_len = ap->a_count;
