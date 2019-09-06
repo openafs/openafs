@@ -103,8 +103,8 @@ const	PRUPDATE_IDHASH =	0x0010;
 %#define PR_SF_NUSERS  (1u<<30)		/*  "  "  foreign users  "  */
 
 /* OpenAFS implementation limit.  This limit can be modified in future releases
- * and does not need to match the limis applied by other implementations. */
-const OPENAFS_MAXPRLIST=50000;
+ * and does not need to match the limits applied by other implementations. */
+const OPENAFS_MAXPRLIST=500000;
 
 typedef char prname[PR_MAXNAMELEN];
 typedef prname namelist<OPENAFS_MAXPRLIST>;
