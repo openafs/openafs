@@ -88,13 +88,6 @@ static __inline void ma_vm_page_lock(vm_page_t m) {};
 static __inline void ma_vm_page_unlock(vm_page_t m) {};
 #endif
 
-#define ma_vn_lock(vp, flags, p) (vn_lock(vp, flags))
-#define MA_VOP_LOCK(vp, flags, p) (VOP_LOCK(vp, flags))
-#define MA_VOP_UNLOCK(vp, flags, p) (VOP_UNLOCK(vp, flags))
-
-#define MA_PCPU_INC(c) PCPU_INC(c)
-#define	MA_PCPU_ADD(c, n) PCPU_ADD(c, n)
-
 #if __FreeBSD_version >= 1000030
 #define AFS_VM_OBJECT_WLOCK(o)	VM_OBJECT_WLOCK(o)
 #define AFS_VM_OBJECT_WUNLOCK(o)	VM_OBJECT_WUNLOCK(o)
@@ -243,7 +236,7 @@ afs_vop_lookup(ap)
      */
 
     if (flags & ISDOTDOT)
-	MA_VOP_UNLOCK(dvp, 0, p);
+	VOP_UNLOCK(dvp, 0);
 
     AFS_GLOCK();
     error = afs_lookup(VTOAFS(dvp), name, &vcp, cnp->cn_cred);
@@ -251,7 +244,7 @@ afs_vop_lookup(ap)
 
     if (error) {
 	if (flags & ISDOTDOT)
-	    MA_VOP_LOCK(dvp, LK_EXCLUSIVE | LK_RETRY, p);
+	    vn_lock(dvp, LK_EXCLUSIVE | LK_RETRY);
 	if ((cnp->cn_nameiop == CREATE || cnp->cn_nameiop == RENAME)
 	    && (flags & ISLASTCN) && error == ENOENT)
 	    error = EJUSTRETURN;
@@ -265,13 +258,13 @@ afs_vop_lookup(ap)
 
     if (flags & ISDOTDOT) {
 	/* Must lock 'vp' before 'dvp', since 'vp' is the parent vnode. */
-	ma_vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
-	ma_vn_lock(dvp, LK_EXCLUSIVE | LK_RETRY, p);
+	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
+	vn_lock(dvp, LK_EXCLUSIVE | LK_RETRY);
     } else if (vp == dvp) {
 	/* they're the same; afs_lookup() already ref'ed the leaf.
 	 * It came in locked, so we don't need to ref OR lock it */
     } else {
-	ma_vn_lock(vp, LK_EXCLUSIVE | LK_CANRECURSE | LK_RETRY, p);
+	vn_lock(vp, LK_EXCLUSIVE | LK_CANRECURSE | LK_RETRY);
     }
     *ap->a_vpp = vp;
 
@@ -309,7 +302,7 @@ afs_vop_create(ap)
 
     if (vcp) {
 	*ap->a_vpp = AFSTOV(vcp);
-	ma_vn_lock(AFSTOV(vcp), LK_EXCLUSIVE | LK_RETRY, p);
+	vn_lock(AFSTOV(vcp), LK_EXCLUSIVE | LK_RETRY);
     } else
 	*ap->a_vpp = 0;
 
@@ -541,8 +534,8 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, pages, npages);
-    MA_PCPU_INC(cnt.v_vnodein);
-    MA_PCPU_ADD(cnt.v_vnodepgsin, npages);
+    PCPU_INC(cnt.v_vnodein);
+    PCPU_ADD(cnt.v_vnodepgsin, npages);
 
 #ifdef FBSD_VOP_GETPAGES_BUSIED
     count = ctob(npages);
@@ -716,8 +709,8 @@ afs_vop_putpages(struct vop_putpages_args *ap)
 
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
-    MA_PCPU_INC(cnt.v_vnodeout);
-    MA_PCPU_ADD(cnt.v_vnodepgsout, ap->a_count);
+    PCPU_INC(cnt.v_vnodeout);
+    PCPU_ADD(cnt.v_vnodepgsout, ap->a_count);
 
     iov.iov_base = (caddr_t) kva;
     iov.iov_len = ap->a_count;
@@ -840,14 +833,14 @@ afs_vop_link(ap)
 	error = EISDIR;
 	goto out;
     }
-    if ((error = ma_vn_lock(vp, LK_CANRECURSE | LK_EXCLUSIVE, p)) != 0) {
+    if ((error = vn_lock(vp, LK_CANRECURSE | LK_EXCLUSIVE)) != 0) {
 	goto out;
     }
     AFS_GLOCK();
     error = afs_link(VTOAFS(vp), VTOAFS(dvp), name, cnp->cn_cred);
     AFS_GUNLOCK();
     if (dvp != vp)
-	MA_VOP_UNLOCK(vp, 0, p);
+	VOP_UNLOCK(vp, 0);
   out:
     DROPNAME();
     return error;
@@ -931,7 +924,7 @@ afs_vop_rename(ap)
 	vput(fvp);
 	return (error);
     }
-    if ((error = ma_vn_lock(fvp, LK_EXCLUSIVE, p)) != 0)
+    if ((error = vn_lock(fvp, LK_EXCLUSIVE)) != 0)
 	goto abortit;
 
     MALLOC(fname, char *, fcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
@@ -989,7 +982,7 @@ afs_vop_mkdir(ap)
     }
     if (vcp) {
 	*ap->a_vpp = AFSTOV(vcp);
-	ma_vn_lock(AFSTOV(vcp), LK_EXCLUSIVE | LK_RETRY, p);
+	vn_lock(AFSTOV(vcp), LK_EXCLUSIVE | LK_RETRY);
     } else
 	*ap->a_vpp = 0;
     DROPNAME();
@@ -1044,7 +1037,7 @@ afs_vop_symlink(struct vop_symlink_args *ap)
 	error = afs_lookup(VTOAFS(dvp), name, &vcp, cnp->cn_cred);
 	if (error == 0) {
 	    newvp = AFSTOV(vcp);
-	    ma_vn_lock(newvp, LK_EXCLUSIVE | LK_RETRY, cnp->cn_thread);
+	    vn_lock(newvp, LK_EXCLUSIVE | LK_RETRY);
 	}
     }
     AFS_GUNLOCK();
