@@ -5,7 +5,8 @@ OpenAFS 1.8.4 (in progress)
   All platforms
 
     Build system updates to remove obsolete autoconf macros and remove missing
-    script warning during builds (13480, 13481, 13482, 13483, 13484, 13486).
+    script warning during builds (13480, 13481, 13482, 13483, 13484, 13486,
+    13789, 13790).
 
     Build system update to fix a conditional check in the pthread.m4 autoconf
     file (13595)
@@ -52,9 +53,11 @@ OpenAFS 1.8.4 (in progress)
 
   Linux
 
-    More improper use of ENOENT fixes to avoid incorrect use of linux negative
-    dentry cache, which can lead to false ENOENT errors (13542, 13543, 13590
-    13692) (RT #134904).
+    Support for mainline kernels up to 5.3 (13787, 13789).
+
+    More fixes for improper use of ENOENT fixes to avoid incorrect use of linux
+    negative dentry cache, which can lead to false ENOENT errors (13542, 13543,
+    13590, 13692) (RT #134904).
 
     Return errors instead of returning incomplete directory listings when the
     directory objects are incomplete in the cache (13591).
