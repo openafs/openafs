@@ -181,9 +181,13 @@ rx_identity_freeContents(struct rx_identity *identity)
  */
 
 void
-rx_identity_free(struct rx_identity **identity)
+rx_identity_free(struct rx_identity **a_identity)
 {
-    rx_identity_freeContents(*identity);
-    rxi_Free(*identity, sizeof(struct rx_identity));
-    *identity = NULL;
+    struct rx_identity *identity = *a_identity;
+    *a_identity = NULL;
+    if (identity == NULL) {
+	return;
+    }
+    rx_identity_freeContents(identity);
+    rxi_Free(identity, sizeof(*identity));
 }
