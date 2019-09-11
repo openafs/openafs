@@ -159,8 +159,20 @@ urecovery_CheckTid(struct ubik_tid *atid, int abortalways)
 	if (atid->epoch != ubik_currentTrans->tid.epoch
 	    || atid->counter > ubik_currentTrans->tid.counter || abortalways) {
 	    /* don't match, abort it */
+	    int endit = 0;
 	    /* If the thread is not waiting for lock - ok to end it */
 	    if (ubik_currentTrans->locktype != LOCKWAIT) {
+		endit = 1;
+	    }
+
+	    ViceLog(0, ("urecovery_CheckTid: Aborting/ending bad remote "
+			"transaction. (tx %d.%d, atid %d.%d, abortalways %d, "
+			"endit %d)\n",
+			ubik_currentTrans->tid.epoch,
+			ubik_currentTrans->tid.counter,
+			atid->epoch, atid->counter,
+			abortalways, endit));
+	    if (endit) {
 		udisk_end(ubik_currentTrans);
 	    }
 	    ubik_currentTrans = (struct ubik_trans *)0;
