@@ -417,7 +417,9 @@ struct addr_data {
 
 /*!
  * \brief The version lock protects the structure member, as well as
- * the database version, flags, tidCounter, writeTidCounter
+ * the database version, flags, tidCounter, writeTidCounter. Reading these
+ * values can be done while holding either UBIK_VERSION_LOCK or DBHOLD. Writing
+ * these requires holding both locks.
  */
 struct version_data {
 #ifdef AFS_PTHREAD_ENV
