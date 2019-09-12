@@ -498,7 +498,7 @@ ubeacon_Interact(void *dummy)
 
 	UBIK_VERSION_LOCK;
 	ttid.epoch = version_globals.ubik_epochTime;
-	if (ubik_dbase->flags & DBWRITING) {
+	if (ubik_dbase->dbFlags & DBWRITING) {
 	    /*
 	     * if a write is in progress, we have to send the writeTidCounter
 	     * which holds the tid counter of the write transaction , and not

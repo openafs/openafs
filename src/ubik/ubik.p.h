@@ -144,7 +144,7 @@ struct ubik_dbase {
 #endif
     afs_int32 tidCounter;	/*!< last RW or RO trans tid counter */
     afs_int32 writeTidCounter;	/*!< last write trans tid counter */
-    afs_int32 flags;		/*!< flags */
+    afs_int32 dbFlags;		/*!< flags */
     /* physio procedures */
     int (*read) (struct ubik_dbase * adbase, afs_int32 afile, void *abuffer,
 		 afs_int32 apos, afs_int32 alength);
@@ -417,7 +417,7 @@ struct addr_data {
 
 /*!
  * \brief The version lock protects the structure member, as well as
- * the database version, flags, tidCounter, writeTidCounter. Reading these
+ * the database version, dbFlags, tidCounter, writeTidCounter. Reading these
  * values can be done while holding either UBIK_VERSION_LOCK or DBHOLD. Writing
  * these requires holding both locks.
  */

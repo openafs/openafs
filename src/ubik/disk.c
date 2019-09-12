@@ -803,7 +803,7 @@ udisk_begin(struct ubik_dbase *adbase, int atype, struct ubik_trans **atrans)
 
     *atrans = NULL;
     if (atype == UBIK_WRITETRANS) {
-	if (adbase->flags & DBWRITING)
+	if (adbase->dbFlags & DBWRITING)
 	    return USYNC;
 	code = udisk_LogOpcode(adbase, LOGNEW, 0);
 	if (code)
@@ -818,7 +818,7 @@ udisk_begin(struct ubik_dbase *adbase, int atype, struct ubik_trans **atrans)
 	adbase->readers++;
     else if (atype == UBIK_WRITETRANS) {
 	UBIK_VERSION_LOCK;
-	adbase->flags |= DBWRITING;
+	adbase->dbFlags |= DBWRITING;
 	UBIK_VERSION_UNLOCK;
     }
     *atrans = tt;
@@ -937,7 +937,7 @@ udisk_abort(struct ubik_trans *atrans)
      * will do nothing because the abort is there or no LogEnd opcode.
      */
     dbase = atrans->dbase;
-    if (atrans->type == UBIK_WRITETRANS && dbase->flags & DBWRITING) {
+    if (atrans->type == UBIK_WRITETRANS && dbase->dbFlags & DBWRITING) {
 	udisk_LogOpcode(dbase, LOGABORT, 1);
 	code = (*dbase->truncate) (dbase, LOGFILE, 0);
 	if (code)
@@ -973,9 +973,9 @@ udisk_end(struct ubik_trans *atrans)
     /* check if we are the write trans before unsetting the DBWRITING bit, else
      * we could be unsetting someone else's bit.
      */
-    if (atrans->type == UBIK_WRITETRANS && dbase->flags & DBWRITING) {
+    if (atrans->type == UBIK_WRITETRANS && dbase->dbFlags & DBWRITING) {
 	UBIK_VERSION_LOCK;
-	dbase->flags &= ~DBWRITING;
+	dbase->dbFlags &= ~DBWRITING;
 	UBIK_VERSION_UNLOCK;
     } else {
 	dbase->readers--;
@@ -990,7 +990,7 @@ udisk_end(struct ubik_trans *atrans)
 #ifdef AFS_PTHREAD_ENV
     opr_cv_broadcast(&dbase->flags_cond);
 #else
-    LWP_NoYieldSignal(&dbase->flags);
+    LWP_NoYieldSignal(&dbase->dbFlags);
 #endif
     return 0;
 }

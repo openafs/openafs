@@ -784,11 +784,11 @@ urecovery_Interact(void *dummy)
 	     * the write-lock above if there is a write transaction in progress,
 	     * but then, it won't hurt to check, will it?
 	     */
-	    if (ubik_dbase->flags & DBWRITING) {
+	    if (ubik_dbase->dbFlags & DBWRITING) {
 		struct timeval tv;
 		int safety = 0;
 		long cur_usec = 50000;
-		while ((ubik_dbase->flags & DBWRITING) && (safety < 500)) {
+		while ((ubik_dbase->dbFlags & DBWRITING) && (safety < 500)) {
 		    DBRELE(ubik_dbase);
 		    /* sleep for a little while */
 		    tv.tv_sec = 0;
