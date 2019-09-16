@@ -233,12 +233,12 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     /* OK, there are no internal vrefCounts, so there shouldn't
      * be any more refs here. */
     if (avc->v) {
-#ifdef AFS_DARWIN80_ENV
+# ifdef AFS_DARWIN80_ENV
 	vnode_clearfsnode(AFSTOV(avc));
         vnode_removefsref(AFSTOV(avc));
-#else
+# else
 	avc->v->v_data = NULL;	/* remove from vnode */
-#endif
+# endif
 	AFSTOV(avc) = NULL;             /* also drop the ptr to vnode */
     }
 #endif
@@ -700,14 +700,14 @@ afs_FlushReclaimedVcaches(void)
 	    /* printf("Reclaim list flush %lx failed: %d\n", (unsigned long) tvc, code); */
 	}
         if (tvc->f.states & (CVInit
-#ifdef AFS_DARWIN80_ENV
+# ifdef AFS_DARWIN80_ENV
 			  | CDeadVnode
-#endif
+# endif
            )) {
 	   tvc->f.states &= ~(CVInit
-#ifdef AFS_DARWIN80_ENV
+# ifdef AFS_DARWIN80_ENV
 			    | CDeadVnode
-#endif
+# endif
 	   );
 	   afs_osi_Wakeup(&tvc->f.states);
 	}
@@ -1711,7 +1711,7 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq)
 /* Darwin 8.0 only has bufs in nfs, so we shouldn't have to worry about them.
    What about ubc? */
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+# if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     /*
      * XXX - I really don't like this.  Should try to understand better.
      * It seems that sometimes, when we get called, we already hold the
@@ -1727,7 +1727,7 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq)
 	struct vnode *vp = AFSTOV(tvc);
 	int iheldthelock;
 
-#if defined(AFS_DARWIN_ENV)
+#  if defined(AFS_DARWIN_ENV)
 	iheldthelock = VOP_ISLOCKED(vp);
 	if (!iheldthelock)
 	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, current_proc());
@@ -1741,7 +1741,7 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq)
 	  ObtainWriteLock(&tvc->lock, 954);
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, LK_EXCLUSIVE, current_proc());
-#elif defined(AFS_FBSD_ENV)
+#  elif defined(AFS_FBSD_ENV)
 	iheldthelock = VOP_ISLOCKED(vp);
 	if (!iheldthelock) {
 	    /* nosleep/sleep lock order reversal */
@@ -1755,14 +1755,14 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq)
 	vinvalbuf(vp, V_SAVE, PINOD, 0); /* changed late in 8.0-CURRENT */
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, 0);
-#elif defined(AFS_OBSD_ENV)
+#  elif defined(AFS_OBSD_ENV)
 	iheldthelock = VOP_ISLOCKED(vp, curproc);
 	if (!iheldthelock)
 	    VOP_LOCK(vp, LK_EXCLUSIVE | LK_RETRY, curproc);
 	uvm_vnp_uncache(vp);
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, 0, curproc);
-#elif defined(AFS_NBSD40_ENV)
+#  elif defined(AFS_NBSD40_ENV)
 	iheldthelock = VOP_ISLOCKED(vp);
 	if (!iheldthelock) {
 	    VOP_LOCK(vp, LK_EXCLUSIVE | LK_RETRY);
@@ -1770,9 +1770,9 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq)
 	uvm_vnp_uncache(vp);
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, 0);
-#endif
+#  endif
     }
-#endif
+# endif
 #endif
 
     afs_StaleVCacheFlags(tvc, AFS_STALEVC_NODNLC | AFS_STALEVC_CLEARCB,
@@ -2737,7 +2737,7 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
     /* should I have a read lock on the vnode here? */
     if (tvc) {
 #ifndef AFS_DARWIN80_ENV
-#if defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
+# if defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
 	afs_int32 retry = 0;
 	osi_vnhold(tvc, &retry);
 	if (retry) {
@@ -2747,9 +2747,9 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 	    spunlock_psema(tvc->v.v_lock, retry, &tvc->v.v_sync, PINOD);
 	    goto loop;
 	}
-#else
+# else
 	osi_vnhold(tvc, (int *)0);	/* already held, above */
-#endif
+# endif
 #endif
 	/*
 	 * We obtained the xvcache lock above.
@@ -2846,12 +2846,12 @@ afs_vcacheInit(int astatSize)
 	tvc->vc_rwlockid = OSI_NO_LOCKID;
 	initnsema(&tvc->vc_rwlock, 1,
 		  makesname(name, "vrw", tvc->v.v_number));
-#ifndef	AFS_SGI53_ENV
+# ifndef	AFS_SGI53_ENV
 	initnsema(&tvc->v.v_sync, 0, makesname(name, "vsy", tvc->v.v_number));
-#endif
-#ifndef AFS_SGI62_ENV
+# endif
+# ifndef AFS_SGI62_ENV
 	initnlock(&tvc->v.v_lock, makesname(name, "vlk", tvc->v.v_number));
-#endif /* AFS_SGI62_ENV */
+# endif /* AFS_SGI62_ENV */
     }
 #endif
     QInit(&VLRU);
@@ -2904,7 +2904,7 @@ shutdown_vcache(void)
 #ifdef	AFS_AIX_ENV
 		if (tvc->v.v_gnode)
 		    afs_osi_Free(tvc->v.v_gnode, sizeof(struct gnode));
-#ifdef	AFS_AIX32_ENV
+# ifdef	AFS_AIX32_ENV
 		if (tvc->segid) {
 		    AFS_GUNLOCK();
 		    vms_delete(tvc->segid);
@@ -2917,7 +2917,7 @@ shutdown_vcache(void)
 		    crfree(tvc->credp);
 		    tvc->credp = NULL;
 		}
-#endif
+# endif
 #endif
 #if	defined(AFS_SUN5_ENV)
 		if (tvc->credp) {
