@@ -3,6 +3,7 @@ AC_DEFUN([SOLARIS_PATH_CC], [
     [m4_join([:],
       [/opt/SUNWspro/bin],
       [/opt/SunStudioExpress/bin],
+      [/opt/developerstudio12.6/bin],
       [/opt/developerstudio12.5/bin],
       [/opt/solarisstudio12.4/bin],
       [/opt/solarisstudio12.3/bin],
