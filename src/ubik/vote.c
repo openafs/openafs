@@ -444,10 +444,7 @@ SVOTE_Debug(struct rx_call * rxcall, struct ubik_debug * aparm)
 
     if (ubik_currentTrans) {
 	aparm->currentTrans = 1;
-	if (ubik_currentTrans->type == UBIK_WRITETRANS)
-	    aparm->writeTrans = 1;
-	else
-	    aparm->writeTrans = 0;
+	aparm->writeTrans = 1;
     } else {
 	aparm->currentTrans = 0;
     }
@@ -527,10 +524,7 @@ SVOTE_DebugOld(struct rx_call * rxcall,
 
     if (ubik_currentTrans) {
 	aparm->currentTrans = 1;
-	if (ubik_currentTrans->type == UBIK_WRITETRANS)
-	    aparm->writeTrans = 1;
-	else
-	    aparm->writeTrans = 0;
+	aparm->writeTrans = 1;
     } else {
 	aparm->currentTrans = 0;
     }
