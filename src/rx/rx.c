@@ -3310,6 +3310,20 @@ rxi_ReceiveServerCall(osi_socket socket, struct rx_packet *np,
 	    return NULL;
 	}
 
+	if (np->header.seq > rx_maxReceiveWindow) {
+	    /*
+	     * This is a DATA packet for further along in the call than is
+	     * possible for a new call. This is probably from an existing call
+	     * that was in the middle of running when we were restarted; ignore
+	     * it to avoid confusing clients. (See above comment about non-DATA
+	     * packets.)
+	     */
+	    MUTEX_EXIT(&conn->conn_call_lock);
+	    if (rx_stats_active)
+		rx_atomic_inc(&rx_stats.spuriousPacketsRead);
+	    return NULL;
+	}
+
 	if (rxi_AbortIfServerBusy(socket, conn, np)) {
 	    MUTEX_EXIT(&conn->conn_call_lock);
 	    return NULL;
