@@ -36,6 +36,7 @@ LIBFILE = $(DESTDIR)\lib\opr.lib
 
 LIBOBJS = \
 	$(OUT)\assert.obj \
+	$(OUT)\cache.obj \
 	$(OUT)\casestrcpy.obj \
 	$(OUT)\dict.obj \
 	$(OUT)\fmt.obj \

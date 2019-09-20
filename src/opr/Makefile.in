@@ -3,7 +3,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 include @TOP_OBJDIR@/src/config/Makefile.libtool
 
-LT_objs = assert.lo casestrcpy.lo dict.lo fmt.lo proc.lo rbtree.lo \
+LT_objs = assert.lo cache.lo casestrcpy.lo dict.lo fmt.lo proc.lo rbtree.lo \
 	  softsig.lo threadname.lo uuid.lo
 LT_libs = $(LIB_hcrypto) $(LIB_roken)
 

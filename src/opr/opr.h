@@ -86,4 +86,22 @@ opr_threadname_set(const char *threadname)
 }
 #endif
 
+/* cache.c */
+
+struct opr_cache_opts {
+    afs_uint32 max_entries;
+    afs_uint32 n_buckets;
+};
+struct opr_cache;
+
+extern int opr_cache_init(struct opr_cache_opts *opts,
+			  struct opr_cache **a_cache) AFS_NONNULL();
+extern void opr_cache_free(struct opr_cache **a_cache) AFS_NONNULL();
+
+extern int opr_cache_get(struct opr_cache *cache, void *key_buf,
+			 size_t key_len, void *val_buf, size_t *a_val_len)
+			 AFS_NONNULL((4,5));
+extern void opr_cache_put(struct opr_cache *cache, void *key_buf,
+			  size_t key_len, void *val_buf, size_t val_len);
+
 #endif

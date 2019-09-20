@@ -6,6 +6,7 @@ auth/superuser
 auth/authcon
 auth/realms
 cmd/command
+opr/cache
 opr/dict
 opr/fmt
 opr/jhash
