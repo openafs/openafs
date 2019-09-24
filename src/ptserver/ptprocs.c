@@ -2044,15 +2044,15 @@ WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid,
 	    strcat(vname, inst);
 	}
 	if (!islocal) {
-	     if (strlen(vname) + strlen(tcell) + 1  >= sizeof(vname))
+	    if (strlen(vname) + strlen(tcell) + 1  >= sizeof(vname))
 		goto done;
-	     strcat(vname, "@");
-	     strcat(vname, tcell);
-	     lcstring(vname, vname, sizeof(vname));
-	     NameToID(at, vname, aid);
-	     if (aname)
+	    strcat(vname, "@");
+	    strcat(vname, tcell);
+	    lcstring(vname, vname, sizeof(vname));
+	    NameToID(at, vname, aid);
+	    if (aname)
 		strcpy(aname, vname);
-	     return 2;
+	    return 2;
 	}
 
 	if (strcmp(AUTH_SUPERUSER, vname) == 0)
