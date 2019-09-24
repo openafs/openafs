@@ -258,12 +258,12 @@ xstat_cm_LWP(void *unused)
 
 		    if (xstat_cm_debug) {
 			printf
-			    ("%s: Calling RXAFSCB_GetXStats, conn=%" AFS_PTR_FMT ", clientVersionNumber=%d, collectionNumber=%d, srvVersionNumberP=%" AFS_PTR_FMT ", timeP=%" AFS_PTR_FMT ", dataP=%" AFS_PTR_FMT "\n",
+			    ("%s: Calling RXAFSCB_GetXStats, conn=%p, clientVersionNumber=%d, collectionNumber=%d, srvVersionNumberP=%p, timeP=%p, dataP=%p\n",
 			     rn, curr_conn->rxconn, clientVersionNumber,
 			     *currCollIDP, &srvVersionNumber,
 			     &(xstat_cm_Results.probeTime),
 			     &(xstat_cm_Results.data));
-			printf("%s: [bufflen=%d, buffer at %" AFS_PTR_FMT "]\n", rn,
+			printf("%s: [bufflen=%d, buffer at %p]\n", rn,
 			       xstat_cm_Results.data.AFSCB_CollData_len,
 			       xstat_cm_Results.data.AFSCB_CollData_val);
 		    }
@@ -552,7 +552,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	    conn_err = 1;
 	}
 	if (xstat_cm_debug)
-	    printf("[%s] New connection at %" AFS_PTR_FMT "\n", rn, curr_conn->rxconn);
+	    printf("[%s] New connection at %p\n", rn, curr_conn->rxconn);
 
 	/*
 	 * Bump the current xstat_cm connection to set up.

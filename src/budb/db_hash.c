@@ -883,7 +883,7 @@ ht_HashIn(struct ubik_trans *ut,
 		      htonl(ea));
     if (code)
 	return BUDB_IO;
-    LogDebug(5, "Hashin: set %"AFS_PTR_FMT" to %d\n",
+    LogDebug(5, "Hashin: set %p to %d\n",
 	     &block->b.bucket[bo], htonl(ea));
 
     pentries = &ht->entries;

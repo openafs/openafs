@@ -259,7 +259,7 @@ openFile(char * path)
 	goto done;
     }
 
-    printf("mapped %lu bytes at %"AFS_PTR_FMT"\n", (unsigned long)map_len, map);
+    printf("mapped %lu bytes at %p\n", (unsigned long)map_len, map);
 
  done:
     if (ret) {
@@ -700,7 +700,7 @@ print_cb_help(void)
     do { \
         char * _p = (char *)addr; \
         char * _m = (char *)map; \
-        printf("loading structure from address %"AFS_PTR_FMT" (offset %ld)\n", \
+	printf("loading structure from address %p (offset %ld)\n", \
                addr, (long)(_p-_m)); \
     } while (0)
 

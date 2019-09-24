@@ -256,7 +256,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    } else if (rwinode) {
 		if (IH_INC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
-		    Log("IH_INC failed: %"AFS_PTR_FMT", %s, %" AFS_VOLID_FMT " errno %d\n",
+		    Log("IH_INC failed: %p, %s, %" AFS_VOLID_FMT " errno %d\n",
 			V_linkHandle(rwvp), PrintInode(stmp, rwinode),
 			afs_printable_VolumeId_lu(V_parentId(rwvp)), errno);
 		    VForceOffline(rwvp);
@@ -309,7 +309,7 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    if (inodeinced) {
 		if (IH_DEC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
 		    -1) {
-		    Log("IH_DEC failed: %"AFS_PTR_FMT", %s, %" AFS_VOLID_FMT " errno %d\n",
+		    Log("IH_DEC failed: %p, %s, %" AFS_VOLID_FMT " errno %d\n",
 			V_linkHandle(rwvp), PrintInode(stmp, rwinode),
 			afs_printable_VolumeId_lu(V_parentId(rwvp)), errno);
 		    VForceOffline(rwvp);

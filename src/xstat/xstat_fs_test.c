@@ -123,7 +123,7 @@ PrintCallInfo(void)
 	   printableTime);
 
     if (debugging_on)
-	printf("\n[%u entries returned at %" AFS_PTR_FMT "]\n\n", numInt32s, currInt32);
+	printf("\n[%u entries returned at %p]\n\n", numInt32s, currInt32);
 
     for (i = 0; i < numInt32s; i++)
 	printf("%u ", *currInt32++);

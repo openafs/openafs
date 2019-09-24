@@ -108,8 +108,8 @@ dbread(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len)
     }
     code = ubik_Read(ut, buff, len);
     if (code) {
-	LogError(code, "dbread: ubik_Read pos %d, buff %"AFS_PTR_FMT
-		 ", len %d\n", pos, buff, len);
+	LogError(code, "dbread: ubik_Read pos %d, buff %p, len %d\n",
+		 pos, buff, len);
 	ERROR(code);
     }
 
@@ -143,8 +143,8 @@ cdbread(struct ubik_trans *ut, int type, afs_int32 pos, void *buff, afs_int32 le
     }
     code = ubik_Read(ut, buff, len);
     if (code) {
-	LogError(code, "cdbread: ubik_Read pos 0x%x, buff %"AFS_PTR_FMT
-		 ", len %d\n", pos, buff, len);
+	LogError(code, "cdbread: ubik_Read pos 0x%x, buff %p, len %d\n",
+		 pos, buff, len);
 	ERROR(code);
     }
 

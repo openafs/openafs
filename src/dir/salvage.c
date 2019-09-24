@@ -291,8 +291,8 @@ DirOK(void *file)
 
 	    /* A null name is no good */
 	    if (ep->name[0] == '\000') {
-		printf("Dir entry %"AFS_PTR_FMT
-		       " in chain %d has bogus (null) name.\n", ep, i);
+		printf("Dir entry %p in chain %d has bogus (null) name.\n",
+			ep, i);
 		DRelease(&entrybuf, 0);
 		DRelease(&headerbuf, 0);
 		return 0;
@@ -300,8 +300,8 @@ DirOK(void *file)
 
 	    /* The entry flag better be FFIRST */
 	    if (ep->flag != FFIRST) {
-		printf("Dir entry %"AFS_PTR_FMT
-		       " in chain %d has bogus flag field.\n", ep, i);
+		printf("Dir entry %p in chain %d has bogus flag field.\n",
+			ep, i);
 		DRelease(&entrybuf, 0);
 		DRelease(&headerbuf, 0);
 		return 0;
@@ -310,8 +310,7 @@ DirOK(void *file)
 	    /* Check the size of the name */
 	    j = strlen(ep->name);
 	    if (j >= MAXENAME) {	/* MAXENAME counts the null */
-		printf("Dir entry %"AFS_PTR_FMT
-		       " in chain %d has too-long name.\n", ep, i);
+		printf("Dir entry %p in chain %d has too-long name.\n", ep, i);
 		DRelease(&entrybuf, 0);
 		DRelease(&headerbuf, 0);
 		return 0;
@@ -327,8 +326,7 @@ DirOK(void *file)
 
 	    /* Hash the name and make sure it is in the correct name hash */
 	    if ((j = afs_dir_DirHash(ep->name)) != i) {
-		printf("Dir entry %"AFS_PTR_FMT
-		       " should be in hash bucket %d but IS in %d.\n",
+		printf("Dir entry %p should be in hash bucket %d but IS in %d.\n",
 		       ep, j, i);
 		DRelease(&entrybuf, 0);
 		DRelease(&headerbuf, 0);
@@ -341,8 +339,7 @@ DirOK(void *file)
 		    havedot = 1;
 		} else {
 		    printf
-			("Dir entry %"AFS_PTR_FMT
-			 ", index 13 has name '%s' should be '.'\n",
+			("Dir entry %p, index 13 has name '%s' should be '.'\n",
 			 ep, ep->name);
 		    DRelease(&entrybuf, 0);
 		    DRelease(&headerbuf, 0);
@@ -356,8 +353,7 @@ DirOK(void *file)
 		    havedotdot = 1;
 		} else {
 		    printf
-			("Dir entry %"AFS_PTR_FMT
-			 ", index 14 has name '%s' should be '..'\n",
+			("Dir entry %p, index 14 has name '%s' should be '..'\n",
 			 ep, ep->name);
 		    DRelease(&entrybuf, 0);
 		    DRelease(&headerbuf, 0);
