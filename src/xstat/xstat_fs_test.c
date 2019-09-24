@@ -122,7 +122,7 @@ PrintCallInfo(void)
 	   printableTime);
 
     if (debugging_on)
-	printf("\n[%u entries returned at %" AFS_PTR_FMT "]\n\n", numInt32s, currInt32);
+	printf("\n[%u entries returned at %p]\n\n", numInt32s, currInt32);
 
     for (i = 0; i < numInt32s; i++)
 	printf("%u ", *currInt32++);
@@ -777,7 +777,7 @@ RunTheTest(struct cmd_syndesc *a_s, void *dummy)
 	 * One-shot operation; just wait for the collection to be done.
 	 */
 	if (debugging_on)
-	    printf("[%s] Calling LWP_WaitProcess() on event %" AFS_PTR_FMT "\n", rn,
+	    printf("[%s] Calling LWP_WaitProcess() on event %p\n", rn,
 		   &fs_terminationEvent);
 	waitCode = LWP_WaitProcess(&fs_terminationEvent);
 	if (debugging_on)

@@ -69,8 +69,8 @@ GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
     char *textPtr;
     afs_int32 code;
 
-    LogDebug(5, "GetText: type %d, offset %d, nextOffset %"AFS_PTR_FMT
-	     ", maxLength %d\n", textType, offset, nextOffset, maxLength);
+    LogDebug(5, "GetText: type %d, offset %d, nextOffset %p, maxLength %d\n",
+		textType, offset, nextOffset, maxLength);
 
     if (callPermitted(call) == 0) {
 	code = BUDB_NOTPERMITTED;

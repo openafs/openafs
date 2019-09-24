@@ -880,8 +880,8 @@ RunTheTest(struct cmd_syndesc *a_s, void *arock)
 	 * One-shot operation; just wait for the collection to be done.
 	 */
 	if (debugging_on)
-	    printf("[%s] Calling LWP_WaitProcess() on event %" AFS_PTR_FMT
-		   "\n", rn, &cm_terminationEvent);
+	    printf("[%s] Calling LWP_WaitProcess() on event %p\n",
+		   rn, &cm_terminationEvent);
 	waitCode = LWP_WaitProcess(&cm_terminationEvent);
 	if (debugging_on)
 	    printf("[%s] Returned from LWP_WaitProcess()\n", rn);

@@ -920,7 +920,7 @@ Dispatcher(void)
 #endif
 	printf("stackcheck = %u: stack = %u \n", lwp_cpptr->stackcheck,
 	       *(int *)lwp_cpptr->stack);
-	printf("topstack = 0x%" AFS_PTR_FMT ": stackptr = 0x%" AFS_PTR_FMT ": stacksize = 0x%x\n",
+	printf("topstack = %p: stackptr = %p: stacksize = 0x%x\n",
 	       (void *)(uintptr_t)lwp_cpptr->context.topstack,
 	       (void *)(uintptr_t)lwp_cpptr->stack,
 	       lwp_cpptr->stacksize);

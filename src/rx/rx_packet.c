@@ -871,7 +871,7 @@ rx_CheckPackets(void)
 static void
 rxi_FreePacketNoLock(struct rx_packet *p)
 {
-    dpf(("Free %"AFS_PTR_FMT"\n", p));
+    dpf(("Free %p\n", p));
 
     RX_FPQ_MARK_FREE(p);
     rx_nFreePackets++;
@@ -884,7 +884,7 @@ static void
 rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
 {
     struct rx_ts_info_t * rx_ts_info;
-    dpf(("Free %"AFS_PTR_FMT"\n", p));
+    dpf(("Free %p\n", p));
 
     RX_TS_INFO_GET(rx_ts_info);
     RX_TS_FPQ_CHECKIN(rx_ts_info,p);
@@ -1183,7 +1183,7 @@ rxi_AllocPacketNoLock(int class)
 
     RX_TS_FPQ_CHECKOUT(rx_ts_info,p);
 
-    dpf(("Alloc %"AFS_PTR_FMT", class %d\n", p, class));
+    dpf(("Alloc %p, class %d\n", p, class));
 
 
     /* have to do this here because rx_FlushWrite fiddles with the iovs in
@@ -1241,7 +1241,7 @@ rxi_AllocPacketNoLock(int class)
     opr_queue_Remove(&p->entry);
     RX_FPQ_MARK_USED(p);
 
-    dpf(("Alloc %"AFS_PTR_FMT", class %d\n", p, class));
+    dpf(("Alloc %p, class %d\n", p, class));
 
 
     /* have to do this here because rx_FlushWrite fiddles with the iovs in
@@ -1279,7 +1279,7 @@ rxi_AllocPacketTSFPQ(int class, int pull_global)
 
     RX_TS_FPQ_CHECKOUT(rx_ts_info,p);
 
-    dpf(("Alloc %"AFS_PTR_FMT", class %d\n", p, class));
+    dpf(("Alloc %p, class %d\n", p, class));
 
     /* have to do this here because rx_FlushWrite fiddles with the iovs in
      * order to truncate outbound packets.  In the near future, may need
@@ -2352,7 +2352,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 #endif
 #ifdef RXDEBUG
     }
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d\n",
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %p len %d\n",
           deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
           ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
           p->header.seq, p->header.flags, p, p->length));
@@ -2545,7 +2545,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 
     osi_Assert(p != NULL);
 
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" len %d\n",
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %p len %d\n",
           deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
           ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
           p->header.seq, p->header.flags, p, p->length));

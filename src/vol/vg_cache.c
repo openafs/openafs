@@ -508,7 +508,7 @@ _VVGC_hash_entry_add(struct DiskPartition64 * dp,
 	if (ent != nent) {
 	    ViceLog(0, ("_VVGC_hash_entry_add: tried to add a duplicate "
 	                " nonmatching entry for vol %lu: original "
-	                "(%"AFS_PTR_FMT",%lu) new (%"AFS_PTR_FMT",%lu)\n",
+			"(%p,%lu) new (%p,%lu)\n",
 	                afs_printable_uint32_lu(volid),
 	                nent, afs_printable_uint32_lu(nent->rw),
 	                ent, afs_printable_uint32_lu(ent->rw)));
@@ -891,8 +891,8 @@ _VVGC_entry_purge_r(struct DiskPartition64 * dp,
 	if (parent_ent != child_ent) {
 	    ViceLog(0,
 		    ("VVGCache_entry_del: trying to delete vol %lu from VG %lu, "
-		     "but vol %lu points to VGC entry %" AFS_PTR_FMT
-		     " and VG %lu " "points to VGC entry %" AFS_PTR_FMT "\n",
+		     "but vol %lu points to VGC entry %p"
+		     " and VG %lu " "points to VGC entry %p\n",
 		     afs_printable_uint32_lu(child),
 		     afs_printable_uint32_lu(parent),
 		     afs_printable_uint32_lu(child), child_ent,

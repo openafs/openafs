@@ -1417,7 +1417,7 @@ static void
 rxi_WakeUpTransmitQueue(struct rx_call *call)
 {
     if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
-	dpf(("call %"AFS_PTR_FMT" has %d waiters and flags %d\n",
+	dpf(("call %p has %d waiters and flags %d\n",
 	     call, call->tqWaiters, call->flags));
 #ifdef RX_ENABLE_LOCKS
 	MUTEX_ASSERT(&call->lock);
@@ -1447,7 +1447,7 @@ rx_NewCall(struct rx_connection *conn)
     SPLVAR;
 
     clock_NewTime();
-    dpf(("rx_NewCall(conn %"AFS_PTR_FMT")\n", conn));
+    dpf(("rx_NewCall(conn %p)\n", conn));
 
     NETPRI;
     clock_GetTime(&queueTime);
@@ -1661,7 +1661,7 @@ rx_NewCall(struct rx_connection *conn)
     MUTEX_EXIT(&call->lock);
     USERPRI;
 
-    dpf(("rx_NewCall(call %"AFS_PTR_FMT")\n", call));
+    dpf(("rx_NewCall(call %p)\n", call));
     return call;
 }
 
@@ -2165,7 +2165,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 #endif
 
 	rxi_calltrace(RX_CALL_START, call);
-	dpf(("rx_GetCall(port=%d, service=%d) ==> call %"AFS_PTR_FMT"\n",
+	dpf(("rx_GetCall(port=%d, service=%d) ==> call %p\n",
 	     call->conn->service->servicePort, call->conn->service->serviceId,
 	     call));
 
@@ -2373,7 +2373,7 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
     afs_int32 error;
     SPLVAR;
 
-    dpf(("rx_EndCall(call %"AFS_PTR_FMT" rc %d error %d abortCode %d)\n",
+    dpf(("rx_EndCall(call %p rc %d error %d abortCode %d)\n",
           call, rc, call->error, call->abortCode));
 
     NETPRI;
@@ -2639,7 +2639,7 @@ rxi_NewCall(struct rx_connection *conn, int channel)
     struct opr_queue *cursor;
 #endif
 
-    dpf(("rxi_NewCall(conn %"AFS_PTR_FMT", channel %d)\n", conn, channel));
+    dpf(("rxi_NewCall(conn %p, channel %d)\n", conn, channel));
 
     /* Grab an existing call structure, or allocate a new one.
      * Existing call structures are assumed to have been left reset by
@@ -3428,7 +3428,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
  * this is the first time the packet has been seen */
     packetType = (np->header.type > 0 && np->header.type < RX_N_PACKET_TYPES)
 	? rx_packetTypes[np->header.type - 1] : "*UNKNOWN*";
-    dpf(("R %d %s: %x.%d.%d.%d.%d.%d.%d flags %d, packet %"AFS_PTR_FMT"\n",
+    dpf(("R %d %s: %x.%d.%d.%d.%d.%d.%d flags %d, packet %p\n",
 	 np->header.serial, packetType, ntohl(host), ntohs(port), np->header.serviceId,
 	 np->header.epoch, np->header.cid, np->header.callNumber,
 	 np->header.seq, np->header.flags, np));
@@ -3901,7 +3901,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
         if (rx_stats_active)
             rx_atomic_inc(&rx_stats.noPacketBuffersOnRead);
 	rxi_calltrace(RX_TRACE_DROP, call);
-	dpf(("packet %"AFS_PTR_FMT" dropped on receipt - quota problems\n", np));
+	dpf(("packet %p dropped on receipt - quota problems\n", np));
         /* We used to clear the receive queue here, in an attempt to free
          * packets. However this is unsafe if the queue has received a
          * soft ACK for the final packet */
@@ -3955,7 +3955,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 		&& opr_queue_First(&call->rq, struct rx_packet, entry)->header.seq == seq) {
                 if (rx_stats_active)
                     rx_atomic_inc(&rx_stats.dupPacketsRead);
-		dpf(("packet %"AFS_PTR_FMT" dropped on receipt - duplicate\n", np));
+		dpf(("packet %p dropped on receipt - duplicate\n", np));
 		rxi_CancelDelayedAckEvent(call);
 		np = rxi_SendAck(call, np, serial, RX_ACK_DUPLICATE, istack);
 		ackNeeded = 0;
@@ -5196,7 +5196,7 @@ rxi_ClearReceiveQueue(struct rx_call *call)
 #ifdef RXDEBUG_PACKET
         call->rqc -= count;
         if ( call->rqc != 0 )
-            dpf(("rxi_ClearReceiveQueue call %"AFS_PTR_FMT" rqc %u != 0\n", call, call->rqc));
+	  dpf(("rxi_ClearReceiveQueue call %p rqc %u != 0\n", call, call->rqc));
 #endif
 	call->flags &= ~(RX_CALL_RECEIVE_DONE | RX_CALL_HAVE_LAST);
     }
@@ -5313,7 +5313,7 @@ rxi_ConnectionError(struct rx_connection *conn,
     if (error) {
 	int i;
 
-	dpf(("rxi_ConnectionError conn %"AFS_PTR_FMT" error %d\n", conn, error));
+	dpf(("rxi_ConnectionError conn %p error %d\n", conn, error));
 
 	MUTEX_ENTER(&conn->conn_data_lock);
 	if (rxevent_Cancel(&conn->challengeEvent))
@@ -5358,7 +5358,7 @@ void
 rxi_CallError(struct rx_call *call, afs_int32 error)
 {
     MUTEX_ASSERT(&call->lock);
-    dpf(("rxi_CallError call %"AFS_PTR_FMT" error %d call->error %d\n", call, error, call->error));
+    dpf(("rxi_CallError call %p error %d call->error %d\n", call, error, call->error));
     if (call->error)
 	error = call->error;
 
@@ -5387,7 +5387,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     struct rx_packet *packet;
 
     MUTEX_ASSERT(&call->lock);
-    dpf(("rxi_ResetCall(call %"AFS_PTR_FMT", newcall %d)\n", call, newcall));
+    dpf(("rxi_ResetCall(call %p, newcall %d)\n", call, newcall));
 
     /* Notify anyone who is waiting for asynchronous packet arrival */
     if (call->arrivalProc) {
@@ -5448,7 +5448,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
 
     rxi_ClearTransmitQueue(call, 1);
     if (call->tqWaiters || (flags & RX_CALL_TQ_WAIT)) {
-        dpf(("rcall %"AFS_PTR_FMT" has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
+	dpf(("rcall %p has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
     }
     call->flags = 0;
 
@@ -6241,7 +6241,7 @@ rxi_Start(struct rx_call *call, int istack)
 					     nXmitPackets, istack);
 			    goto restart;
 			}
-                        dpf(("call %d xmit packet %"AFS_PTR_FMT"\n",
+		       dpf(("call %d xmit packet %p\n",
                               *(call->callNumber), p));
 			call->xmitList[nXmitPackets++] = p;
 		    }
@@ -7010,7 +7010,7 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 	return;			/* somebody set the clock back, don't count this time. */
 
     clock_Sub(&thisRtt, sentp);
-    dpf(("rxi_ComputeRoundTripTime(call=%d packet=%"AFS_PTR_FMT" rttp=%d.%06d sec)\n",
+    dpf(("rxi_ComputeRoundTripTime(call=%d packet=%p rttp=%d.%06d sec)\n",
           p->header.callNumber, p, thisRtt.sec, thisRtt.usec));
 
     if (clock_IsZero(&thisRtt)) {
@@ -7109,8 +7109,10 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
     peer->rtt_dev = call->rtt_dev;
     peer->rtt = call->rtt;
 
-    dpf(("rxi_ComputeRoundTripTime(call=%d packet=%"AFS_PTR_FMT" rtt=%d ms, srtt=%d ms, rtt_dev=%d ms, timeout=%d.%06d sec)\n",
-          p->header.callNumber, p, MSEC(&thisRtt), call->rtt >> 3, call->rtt_dev >> 2, (call->rto.sec), (call->rto.usec)));
+    dpf(("rxi_ComputeRoundTripTime(call=%d packet=%p rtt=%d ms, srtt=%d ms, "
+	 "rtt_dev=%d ms, timeout=%d.%06d sec)\n",
+	 p->header.callNumber, p, MSEC(&thisRtt), call->rtt >> 3,
+	 call->rtt_dev >> 2, (call->rto.sec), (call->rto.usec)));
 }
 
 

@@ -1376,7 +1376,7 @@ VPutVnode_r(Error * ec, Vnode * vnp)
 						changed_oldTime) << 1) | vnp->
 	      delete, 0, 0);
 	if (thisProcess != vnp->writer)
-	    Abort("VPutVnode: Vnode at %"AFS_PTR_FMT" locked by another process!\n",
+	    Abort("VPutVnode: Vnode at %p locked by another process!\n",
 		  vnp);
 
 
@@ -1434,7 +1434,7 @@ VPutVnode_r(Error * ec, Vnode * vnp)
 	if (vnp->changed_newTime || vnp->changed_oldTime || vnp->delete)
 	    Abort
 		("VPutVnode: Change or delete flag for vnode "
-		 "%"AFS_PTR_FMT" is set but vnode is not write locked!\n",
+		 "%p is set but vnode is not write locked!\n",
 		 vnp);
 #ifdef AFS_DEMAND_ATTACH_FS
 	VnEndRead_r(vnp);
@@ -1521,8 +1521,7 @@ VVnodeWriteToRead_r(Error * ec, Vnode * vnp)
     LWP_CurrentProcess(&thisProcess);
 #endif /* AFS_PTHREAD_ENV */
     if (thisProcess != vnp->writer)
-	Abort("VPutVnode: Vnode at %"AFS_PTR_FMT
-	      " locked by another process!\n", vnp);
+	Abort("VPutVnode: Vnode at %p locked by another process!\n", vnp);
 
     if (vnp->delete) {
 	return 0;

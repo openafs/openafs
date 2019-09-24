@@ -829,7 +829,7 @@ h_TossStuff_r(struct host *host)
 	char hoststr[16];
 	if (wasdeleted) {
 	    /* someone locked the host while HOSTDELETED was set; that is bad */
-	    ViceLog(0, ("Warning:  h_TossStuff_r failed; Host %" AFS_PTR_FMT
+	    ViceLog(0, ("Warning:  h_TossStuff_r failed; Host %p"
 			" (%s:%d flags 0x%x) was locked.\n",
 			host, afs_inet_ntoa_r(host->z.host, hoststr), ntohs(host->z.port),
 			(unsigned)host->z.hostFlags));
@@ -846,7 +846,7 @@ h_TossStuff_r(struct host *host)
 	char hoststr[16];
 	if (wasdeleted) {
 	    /* someone grabbed a ref while HOSTDELETED was set; that is bad */
-	    ViceLog(0, ("Warning:  h_TossStuff_r failed; Host %" AFS_PTR_FMT
+	    ViceLog(0, ("Warning:  h_TossStuff_r failed; Host %p"
 			" (%s:%d flags 0x%x) was held.\n",
 			host, afs_inet_ntoa_r(host->z.host, hoststr), ntohs(host->z.port),
 			(unsigned)host->z.hostFlags));
@@ -1132,7 +1132,7 @@ h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host)
 		afsUUID_to_string(&chain->hostPtr->z.interface->uuid, uuid1,
 				  127);
 		afsUUID_to_string(uuid, uuid2, 127);
-		ViceLog(125, ("h_AddHostToUuidHashTable_r: host %" AFS_PTR_FMT " (uuid %s) exists as %s:%d (uuid %s)\n",
+		ViceLog(125, ("h_AddHostToUuidHashTable_r: host %p (uuid %s) exists as %s:%d (uuid %s)\n",
 			      host, uuid1,
 			      afs_inet_ntoa_r(chain->hostPtr->z.host, hoststr),
 			      ntohs(chain->hostPtr->z.port), uuid2));
@@ -1179,7 +1179,7 @@ h_DeleteHostFromUuidHashTable_r(struct host *host)
          opr_Assert(uth->hostPtr);
 	 if (uth->hostPtr == host) {
 	     ViceLog(125,
-		     ("h_DeleteHostFromUuidHashTable_r: host %" AFS_PTR_FMT " (uuid %s %s:%d)\n",
+		     ("h_DeleteHostFromUuidHashTable_r: host %p (uuid %s %s:%d)\n",
 		      host, uuid1, afs_inet_ntoa_r(host->z.host, hoststr),
 		      ntohs(host->z.port)));
 	     *uhp = uth->next;
@@ -1188,7 +1188,7 @@ h_DeleteHostFromUuidHashTable_r(struct host *host)
 	 }
      }
      ViceLog(125,
-	     ("h_DeleteHostFromUuidHashTable_r: host %" AFS_PTR_FMT " (uuid %s %s:%d) not found\n",
+	     ("h_DeleteHostFromUuidHashTable_r: host %p (uuid %s %s:%d) not found\n",
 	      host, uuid1, afs_inet_ntoa_r(host->z.host, hoststr),
 	      ntohs(host->z.port)));
      return 0;
@@ -1210,7 +1210,7 @@ invalidateInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     opr_Assert(host);
     opr_Assert(host->z.interface);
 
-    ViceLog(125, ("invalidateInterfaceAddr : host %" AFS_PTR_FMT " (%s:%d) addr %s:%d\n",
+    ViceLog(125, ("invalidateInterfaceAddr : host %p (%s:%d) addr %s:%d\n",
 		  host, afs_inet_ntoa_r(host->z.host, hoststr),
 		  ntohs(host->z.port), afs_inet_ntoa_r(addr, hoststr2),
 		  ntohs(port)));
@@ -1255,7 +1255,7 @@ removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     if (!host->z.interface || host->z.interface->numberOfInterfaces == 1) {
 	if (host->z.host == addr && host->z.port == port) {
 	    ViceLog(25,
-		    ("Removing only address for host %" AFS_PTR_FMT " (%s:%d), deleting host.\n",
+		    ("Removing only address for host %p (%s:%d), deleting host.\n",
 		     host, afs_inet_ntoa_r(host->z.host, hoststr), ntohs(host->z.port)));
 	    host->z.hostFlags |= HOSTDELETED;
             /*
@@ -1267,7 +1267,7 @@ removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port)
              */
         } else {
 	    ViceLog(0,
-		    ("Removing address that does not belong to host %" AFS_PTR_FMT " (%s:%d).\n",
+		    ("Removing address that does not belong to host %p (%s:%d).\n",
 		     host, afs_inet_ntoa_r(host->z.host, hoststr), ntohs(host->z.port)));
         }
     } else {
@@ -1277,7 +1277,7 @@ removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 	    for (i=0; i < host->z.interface->numberOfInterfaces; i++) {
 		if (host->z.interface->interface[i].valid) {
 		    ViceLog(25,
-			     ("Removed address for host %" AFS_PTR_FMT " (%s:%d), new primary interface %s:%d.\n",
+			     ("Removed address for host %p (%s:%d), new primary interface %s:%d.\n",
 			       host, afs_inet_ntoa_r(host->z.host, hoststr), ntohs(host->z.port),
 			       afs_inet_ntoa_r(host->z.interface->interface[i].addr, hoststr2),
 			       ntohs(host->z.interface->interface[i].port)));
@@ -1290,7 +1290,7 @@ removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 
 	    if (i == host->z.interface->numberOfInterfaces) {
                 ViceLog(25,
-                         ("Removed only address for host %" AFS_PTR_FMT " (%s:%d), no valid alternate interfaces, deleting host.\n",
+			 ("Removed only address for host %p (%s:%d), no valid alternate interfaces, deleting host.\n",
 			   host, afs_inet_ntoa_r(host->z.host, hoststr), ntohs(host->z.port)));
 		host->z.hostFlags |= HOSTDELETED;
                 /* addr/port was removed from the hash table */
@@ -1332,7 +1332,7 @@ createHostAddrHashChain_r(int index, afs_uint32 addr, afs_uint16 port, struct ho
     chain->addr = addr;
     chain->port = port;
     hostAddrHashTable[index] = chain;
-    ViceLog(125, ("h_AddHostToAddrHashTable_r: host %" AFS_PTR_FMT " added as %s:%d\n",
+    ViceLog(125, ("h_AddHostToAddrHashTable_r: host %p added as %s:%d\n",
 		  host, afs_inet_ntoa_r(addr, hoststr), ntohs(port)));
 }
 
@@ -1357,8 +1357,8 @@ reconcileHosts_r(afs_uint32 addr, afs_uint16 port, struct host *newHost,
     char hoststr[16];
 
     ViceLog(125,
-	    ("reconcileHosts_r: addr %s:%d newHost %" AFS_PTR_FMT " oldHost %"
-	     AFS_PTR_FMT "\n", afs_inet_ntoa_r(addr, hoststr), ntohs(port),
+	    ("reconcileHosts_r: addr %s:%d newHost %p oldHost %p\n",
+	     afs_inet_ntoa_r(addr, hoststr), ntohs(port),
 	     newHost, oldHost));
 
     opr_Assert(oldHost != newHost);
@@ -1481,7 +1481,7 @@ h_AddHostToAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host *host)
 	if (chain->addr == addr && chain->port == port) {
 	    if (chain->hostPtr == host) {
 	        ViceLog(125,
-	                ("h_AddHostToAddrHashTable_r: host %" AFS_PTR_FMT " (%s:%d) already hashed\n",
+			("h_AddHostToAddrHashTable_r: host %p (%s:%d) already hashed\n",
 	                  host, afs_inet_ntoa_r(chain->addr, hoststr),
 	                  ntohs(chain->port)));
 	        return;
@@ -1523,7 +1523,7 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 	if (host->z.interface->interface[i].addr == addr &&
 	     host->z.interface->interface[i].port == port) {
 	    ViceLog(125,
-		    ("addInterfaceAddr : found host %" AFS_PTR_FMT " (%s:%d) adding %s:%d%s\n",
+		    ("addInterfaceAddr : found host %p (%s:%d) adding %s:%d%s\n",
 		     host, afs_inet_ntoa_r(host->z.host, hoststr),
 		     ntohs(host->z.port), afs_inet_ntoa_r(addr, hoststr2),
 		     ntohs(port), host->z.interface->interface[i].valid ? "" :
@@ -1537,7 +1537,7 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
         }
     }
 
-    ViceLog(125, ("addInterfaceAddr : host %" AFS_PTR_FMT " (%s:%d) adding %s:%d\n",
+    ViceLog(125, ("addInterfaceAddr : host %p (%s:%d) adding %s:%d\n",
 		  host, afs_inet_ntoa_r(host->z.host, hoststr),
 		  ntohs(host->z.port), afs_inet_ntoa_r(addr, hoststr2),
 		  ntohs(port)));
@@ -1580,7 +1580,7 @@ removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     opr_Assert(host);
     opr_Assert(host->z.interface);
 
-    ViceLog(125, ("removeInterfaceAddr : host %" AFS_PTR_FMT " (%s:%d) addr %s:%d\n",
+    ViceLog(125, ("removeInterfaceAddr : host %p (%s:%d) addr %s:%d\n",
 		  host, afs_inet_ntoa_r(host->z.host, hoststr),
 		  ntohs(host->z.port), afs_inet_ntoa_r(addr, hoststr2),
 		  ntohs(port)));
@@ -1888,7 +1888,7 @@ h_GetHost_r(struct rx_connection *tcon)
              * waited for the lock. */
 	    h_Unlock_r(host);
 	    ViceLog(125,
-		    ("Host %" AFS_PTR_FMT " (%s:%d) starting h_Lookup again\n",
+		    ("Host %p (%s:%d) starting h_Lookup again\n",
 		     host, afs_inet_ntoa_r(host->z.host, hoststr),
 		     ntohs(host->z.port)));
 	    h_Release_r(host);
@@ -1970,7 +1970,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		 * that we maintain some extra callback state information */
 		if (host->z.interface) {
 		    ViceLog(0,
-			    ("Host %" AFS_PTR_FMT " (%s:%d) used to support WhoAreYou, deleting.\n",
+			    ("Host %p (%s:%d) used to support WhoAreYou, deleting.\n",
 			     host,
 			     afs_inet_ntoa_r(host->z.host, hoststr),
 			     ntohs(host->z.port)));
@@ -2017,7 +2017,7 @@ h_GetHost_r(struct rx_connection *tcon)
 			removeAddress_r(host, haddr, hport);
 		} else {
 		    ViceLog(25,
-			    ("Uuid doesn't match host %" AFS_PTR_FMT " (%s:%d).\n",
+			    ("Uuid doesn't match host %p (%s:%d).\n",
 			     host, afs_inet_ntoa_r(host->z.host, hoststr), ntohs(host->z.port)));
 
 		    removeAddress_r(host, host->z.host, host->z.port);
@@ -2054,7 +2054,7 @@ h_GetHost_r(struct rx_connection *tcon)
                      * callback connection, and destroy the old one.
                      */
                     struct rx_connection *rxconn;
-                    ViceLog(0,("CB: ProbeUuid for host %" AFS_PTR_FMT " (%s:%d) failed %d\n",
+		    ViceLog(0,("CB: ProbeUuid for host %p (%s:%d) failed %d\n",
 			       host,
 			       afs_inet_ntoa_r(host->z.host, hoststr),
 			       ntohs(host->z.port),code2));
@@ -2104,7 +2104,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		goto gethost_out;
 	    } else {
 		ViceLog(0,
-			("CB: WhoAreYou failed for host %" AFS_PTR_FMT " (%s:%d), error %d\n",
+			("CB: WhoAreYou failed for host %p (%s:%d), error %d\n",
 			 host, afs_inet_ntoa_r(host->z.host, hoststr),
 			 ntohs(host->z.port), code));
 		host->z.hostFlags |= VENUSDOWN;
@@ -2122,13 +2122,13 @@ h_GetHost_r(struct rx_connection *tcon)
 	if (!(host->z.hostFlags & ALTADDR)) {
 	    /* another thread is doing the initialisation */
 	    ViceLog(125,
-		    ("Host %" AFS_PTR_FMT " (%s:%d) waiting for host-init to complete\n",
+		    ("Host %p (%s:%d) waiting for host-init to complete\n",
 		     host, afs_inet_ntoa_r(host->z.host, hoststr),
 		     ntohs(host->z.port)));
 	    h_Lock_r(host);
 	    h_Unlock_r(host);
 	    ViceLog(125,
-		    ("Host %" AFS_PTR_FMT " (%s:%d) starting h_Lookup again\n",
+		    ("Host %p (%s:%d) starting h_Lookup again\n",
 		     host, afs_inet_ntoa_r(host->z.host, hoststr),
 		     ntohs(host->z.port)));
 	    h_Release_r(host);
@@ -2195,7 +2195,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		if (!pident)
 		    rx_SetSpecific(tcon, rxcon_ident_key, identP);
 		ViceLog(25,
-			("Host %" AFS_PTR_FMT " (%s:%d) does not support WhoAreYou.\n",
+			("Host %p (%s:%d) does not support WhoAreYou.\n",
 			 host, afs_inet_ntoa_r(host->z.host, hoststr),
 			 ntohs(host->z.port)));
 		code = 0;
@@ -2214,7 +2214,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		if (!pident)
 		    rx_SetSpecific(tcon, rxcon_ident_key, identP);
 		ViceLog(25,
-			("WhoAreYou success on host %" AFS_PTR_FMT " (%s:%d)\n",
+			("WhoAreYou success on host %p (%s:%d)\n",
 			 host, afs_inet_ntoa_r(host->z.host, hoststr),
 			 ntohs(host->z.port)));
 	    }
@@ -2275,7 +2275,7 @@ h_GetHost_r(struct rx_connection *tcon)
 			     * MultiProbeAlternateAddress_r() will remove the
 			     * alternate interfaces that do not have the same
 			     * Uuid. */
-			    ViceLog(0,("CB: ProbeUuid for host %" AFS_PTR_FMT " (%s:%d) failed %d\n",
+			    ViceLog(0,("CB: ProbeUuid for host %p (%s:%d) failed %d\n",
 					 oldHost,
 					 afs_inet_ntoa_r(oldHost->z.host, hoststr),
 					 ntohs(oldHost->z.port),code2));
@@ -2299,7 +2299,7 @@ h_GetHost_r(struct rx_connection *tcon)
 			struct rx_connection *rxconn;
 
 			ViceLog(25,
-				 ("CB: Host %" AFS_PTR_FMT " (%s:%d) has new addr %s:%d\n",
+				 ("CB: Host %p (%s:%d) has new addr %s:%d\n",
 				   oldHost,
 				   afs_inet_ntoa_r(oldHost->z.host, hoststr2),
 				   ntohs(oldHost->z.port),
@@ -2369,7 +2369,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		    H_LOCK;
 		    if (code == 0) {
 			ViceLog(25,
-				("InitCallBackState3 success on host %" AFS_PTR_FMT " (%s:%d)\n",
+				("InitCallBackState3 success on host %p (%s:%d)\n",
 				 host, afs_inet_ntoa_r(host->z.host, hoststr),
 				 ntohs(host->z.port)));
 		    }
@@ -2377,12 +2377,12 @@ h_GetHost_r(struct rx_connection *tcon)
 	    }
 	    if (code) {
 		ViceLog(0,
-			("CB: RCallBackConnectBack failed for %" AFS_PTR_FMT " (%s:%d)\n",
+			("CB: RCallBackConnectBack failed for %p (%s:%d)\n",
 			 host, afs_inet_ntoa_r(host->z.host, hoststr), ntohs(host->z.port)));
 		host->z.hostFlags |= VENUSDOWN;
 	    } else {
 		ViceLog(125,
-			("CB: RCallBackConnectBack succeeded for %" AFS_PTR_FMT " (%s:%d)\n",
+			("CB: RCallBackConnectBack succeeded for %p (%s:%d)\n",
 			 host, afs_inet_ntoa_r(host->z.host, hoststr), ntohs(host->z.port)));
 		host->z.hostFlags |= RESETDONE;
 	    }
@@ -2734,7 +2734,7 @@ h_FindClient_r(struct rx_connection *tcon, afs_int32 *a_viceid)
 	    if (code) {
 		char hoststr[16];
 		ViceLog(0,
-			("pr_GetCPS failed(%d) for user %d, host %" AFS_PTR_FMT " (%s:%d)\n",
+			("pr_GetCPS failed(%d) for user %d, host %p (%s:%d)\n",
 			 code, viceid, client->z.host,
 			 afs_inet_ntoa_r(client->z.host->z.host,hoststr),
 			 ntohs(client->z.host->z.port)));
@@ -4290,7 +4290,7 @@ h_DeleteHostFromAddrHashTable_r(afs_uint32 addr, afs_uint16 port,
 	 hp = &th->next) {
         opr_Assert(th->hostPtr);
         if (th->hostPtr == host && th->addr == addr && th->port == port) {
-	    ViceLog(125, ("h_DeleteHostFromAddrHashTable_r: host %" AFS_PTR_FMT " (%s:%d)\n",
+	    ViceLog(125, ("h_DeleteHostFromAddrHashTable_r: host %p (%s:%d)\n",
 			  host, afs_inet_ntoa_r(host->z.host, hoststr),
 			  ntohs(host->z.port)));
             *hp = th->next;
@@ -4299,7 +4299,7 @@ h_DeleteHostFromAddrHashTable_r(afs_uint32 addr, afs_uint16 port,
         }
     }
     ViceLog(125,
-	    ("h_DeleteHostFromAddrHashTable_r: host %" AFS_PTR_FMT " (%s:%d) not found\n",
+	    ("h_DeleteHostFromAddrHashTable_r: host %p (%s:%d) not found\n",
 	     host, afs_inet_ntoa_r(host->z.host, hoststr),
 	     ntohs(host->z.port)));
     return 0;
