@@ -8,8 +8,8 @@ kaserver - Initializes the Authentication Server
 <div class="synopsis">
 
 B<kaserver> [B<-noAuth>] [B<-database> <I<dbpath>>]
-    S<<< [B<-auditlog> <I<log path>>] >>>
-    S<<< [B<-audit-interface> (file | sysvmq)] >>>
+    S<<< [B<-auditlog> [<I<interface name>>:]<I<path to log file>>[:<I<parameters to interface>>]] >>>
+    S<<< [B<-audit-interface> <I<interface name>>] >>>
     S<<< [B<-localfiles> <I<lclpath>>] >>> S<<< [B<-minhours> <I<n>>] >>>
     S<<< [B<-servers> <I<serverlist>>] >>> [B<-enable_peer_stats>]
     [B<-enable_process_stats>] [B<-rxbind>] [B<-crossrealm>] [B<-help>]
@@ -109,18 +109,22 @@ Provide the B<-localfiles> argument along with this one; otherwise, the
 B<-localfiles> argument is also set to the value of this argument, which
 is probably inappropriate.
 
-=item B<-auditlog> <I<log path>>
+=item B<-auditlog> [<I<interface name>>:]<I<path to log file>>[:<I<parameters to interface>>]
 
 Turns on audit logging, and sets the path for the audit log.  The audit
 log records information about RPC calls, including the name of the RPC
 call, the host that submitted the call, the authenticated entity (user)
 that issued the call, the parameters for the call, and if the call
-succeeded or failed.
+succeeded or failed.  See L<fileserver(8)> for an explanation of the audit
+facility.
 
-=item B<-audit-interface> (file | sysvmq)
+Note: kaserver supports only a single -auditlog.
 
-Specifies what audit interface to use. Defaults to C<file>. See
-L<fileserver(8)> for an explanation of each interface.
+=item B<-audit-interface> <I<interface name>>
+
+Sets the default audit interface used by the B<-auditlog> option.  The
+initial default is the C<file> interface. See L<fileserver(8)> for
+an explanation of each interface.
 
 =item B<-localfiles> <I<lclpath>>
 

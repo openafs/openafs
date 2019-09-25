@@ -171,6 +171,7 @@ main(int argc, char *argv[])
     char clones[MAXHOSTSPERCELL];
     char hoststr[16];
     afs_uint32 host = ntohl(INADDR_ANY);
+    char *auditIFace = NULL;
     char *auditFileName = NULL;
     struct logOptions logopts;
 
@@ -202,7 +203,8 @@ main(int argc, char *argv[])
     if (argc == 0) {
       usage:
 	printf("Usage: kaserver [-noAuth] [-database <dbpath>] "
-	       "[-auditlog <log path>] [-audit-interface <file|sysvmq>] "
+	       "[-auditlog [<interface>:]<path>[:<options>]] "
+	       "[-audit-interface <default interface>] "
 	       "[-rxbind] [-localfiles <lclpath>] [-minhours <n>] "
 	       "[-servers <serverlist>] [-crossrealm] "
 	       "[-enable_peer_stats] [-enable_process_stats] "
@@ -252,15 +254,18 @@ main(int argc, char *argv[])
 		lclpath = dbpath;
 	}
 	else if (strncmp(arg, "-auditlog", arglen) == 0) {
+	    if (a + 1 >= argc) {
+		fprintf(stderr, "missing argument for -auditlog\n");
+		exit(2);
+	    }
 	    auditFileName = argv[++a];
 
 	} else if (strncmp(arg, "-audit-interface", arglen) == 0) {
-	    char *interface = argv[++a];
-
-	    if (osi_audit_interface(interface)) {
-		printf("Invalid audit interface '%s'\n", interface);
-		exit(1);
+	    if (a + 1 >= argc) {
+		fprintf(stderr, "missing argument for -audit-interface\n");
+		exit(2);
 	    }
+	    auditIFace = argv[++a];
 
 	} else if (strcmp(arg, "-localfiles") == 0)
 	    lclpath = argv[++a];
@@ -304,9 +309,17 @@ main(int argc, char *argv[])
 	}
     }
 
+    if (auditIFace) {
+	if (osi_audit_interface(auditIFace)) {
+	    fprintf(stderr, "Invalid audit-interface '%s'\n", auditIFace);
+	    exit(1);
+	}
+    }
     if (auditFileName) {
 	osi_audit_file(auditFileName);
     }
+
+    osi_audit_open();
 
     if ((code = ka_CellConfig(cellservdb)))
 	goto abort;
