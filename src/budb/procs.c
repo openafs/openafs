@@ -1369,8 +1369,6 @@ CreateDump(struct rx_call *call, struct budb_dumpEntry *dump)
     struct dump findDump, d;
     afs_int32 eval, code = 0;
 
-    rxkad_level level;
-    afs_int32 kvno;
     struct ktc_principal principal;
 
     if (!callPermitted(call))
@@ -1384,9 +1382,9 @@ CreateDump(struct rx_call *call, struct budb_dumpEntry *dump)
 	return eval;
 
     eval =
-	rxkad_GetServerInfo(rx_ConnectionOf(call), &level, NULL,
+	rxkad_GetServerInfo(rx_ConnectionOf(call), NULL, NULL,
 			    principal.name, principal.instance,
-			    principal.cell, &kvno);
+			    principal.cell, NULL);
 
     if (eval) {
 	if (eval != RXKADNOAUTH)

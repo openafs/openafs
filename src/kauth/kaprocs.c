@@ -354,7 +354,6 @@ check_auth(struct rx_call *call,
     char name[MAXKTCNAMELEN];
     char instance[MAXKTCNAMELEN];
     char cell[MAXKTCREALMLEN];
-    afs_int32 kvno;
     struct kaentry tentry;
     int code;
     int si;
@@ -378,7 +377,7 @@ check_auth(struct rx_call *call,
 
     code =
 	rxkad_GetServerInfo(rx_ConnectionOf(call), &level, NULL, name,
-			    instance, cell, &kvno);
+			    instance, cell, NULL);
     if (code) {
 	goto no_auth;
     }
