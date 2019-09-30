@@ -698,52 +698,45 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 
     if (call) {
 	conn = rx_ConnectionOf(call);	/* call -> conn) */
-	if (conn) {
-            secClass = rx_SecurityClassOf(conn);	/* conn -> securityIndex */
-	    if (secClass == RX_SECIDX_NULL) {	/* unauthenticated */
-		osi_audit("AFS_Aud_Unauth", (-1), AUD_STR, audEvent, AUD_END);
-		strcpy(afsName, "--UnAuth--");
-	    } else if (secClass == RX_SECIDX_KAD || secClass == RX_SECIDX_KAE) {
-		/* authenticated with rxkad */
-                char tcell[MAXKTCREALMLEN];
-                char name[MAXKTCNAMELEN];
-                char inst[MAXKTCNAMELEN];
+	secClass = rx_SecurityClassOf(conn);	/* conn -> securityIndex */
+	if (secClass == RX_SECIDX_NULL) {	/* unauthenticated */
+	    osi_audit("AFS_Aud_Unauth", (-1), AUD_STR, audEvent, AUD_END);
+	    strcpy(afsName, "--UnAuth--");
+	} else if (secClass == RX_SECIDX_KAD || secClass == RX_SECIDX_KAE) {
+	    /* authenticated with rxkad */
+	    char tcell[MAXKTCREALMLEN];
+	    char name[MAXKTCNAMELEN];
+	    char inst[MAXKTCNAMELEN];
 
-                code =
-		    rxkad_GetServerInfo(conn, NULL, NULL, name, inst, tcell,
-					NULL);
-		if (code) {
-		    osi_audit("AFS_Aud_NoAFSId", (-1), AUD_STR, audEvent, AUD_END);
-		    strcpy(afsName, "--NoName--");
-		} else {
-		    afs_int32 islocal = 0;
-		    if (audit_user_check.islocal) {
-			islocal =
-			    audit_user_check.islocal(audit_user_check.rock,
-						     name, inst, tcell);
-		    }
-		    strlcpy(afsName, name, sizeof(afsName));
-		    if (inst[0]) {
-			strlcat(afsName, ".", sizeof(afsName));
-			strlcat(afsName, inst, sizeof(afsName));
-		    }
-		    if (tcell[0] && !islocal) {
-			strlcat(afsName, "@", sizeof(afsName));
-			strlcat(afsName, tcell, sizeof(afsName));
-		    }
+	    code =
+		rxkad_GetServerInfo(conn, NULL, NULL, name, inst, tcell,
+				    NULL);
+	    if (code) {
+		osi_audit("AFS_Aud_NoAFSId", (-1), AUD_STR, audEvent, AUD_END);
+		strcpy(afsName, "--NoName--");
+	    } else {
+		afs_int32 islocal = 0;
+		if (audit_user_check.islocal) {
+		    islocal =
+			audit_user_check.islocal(audit_user_check.rock,
+						 name, inst, tcell);
 		}
-	    } else {		/* Unauthenticated and/or unknown */
-		osi_audit("AFS_Aud_UnknSec", (-1), AUD_STR, audEvent, AUD_END);
-                strcpy(afsName, "--Unknown--");
+		strlcpy(afsName, name, sizeof(afsName));
+		if (inst[0]) {
+		    strlcat(afsName, ".", sizeof(afsName));
+		    strlcat(afsName, inst, sizeof(afsName));
+		}
+		if (tcell[0] && !islocal) {
+		    strlcat(afsName, "@", sizeof(afsName));
+		    strlcat(afsName, tcell, sizeof(afsName));
+		}
 	    }
-	    peer = rx_PeerOf(conn);	/* conn -> peer */
-	    if (peer)
-		hostId = rx_HostOf(peer);	/* peer -> host */
-	    else
-		osi_audit("AFS_Aud_NoHost", (-1), AUD_STR, audEvent, AUD_END);
-	} else {		/* null conn */
-	    osi_audit("AFS_Aud_NoConn", (-1), AUD_STR, audEvent, AUD_END);
+	} else {		/* Unauthenticated and/or unknown */
+	    osi_audit("AFS_Aud_UnknSec", (-1), AUD_STR, audEvent, AUD_END);
+	    strcpy(afsName, "--Unknown--");
 	}
+	peer = rx_PeerOf(conn);	/* conn -> peer */
+	hostId = rx_HostOf(peer);	/* peer -> host */
     } else {			/* null call */
 	osi_audit("AFS_Aud_NoCall", (-1), AUD_STR, audEvent, AUD_END);
     }
