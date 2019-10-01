@@ -1132,6 +1132,17 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_sbindir}/fstrace
 %{_sbindir}/read_tape
 %{_sbindir}/rxdebug
+%{_sbindir}/rxstat_clear_peer
+%{_sbindir}/rxstat_clear_process
+%{_sbindir}/rxstat_disable_peer
+%{_sbindir}/rxstat_disable_process
+%{_sbindir}/rxstat_enable_peer
+%{_sbindir}/rxstat_enable_process
+%{_sbindir}/rxstat_get_peer
+%{_sbindir}/rxstat_get_process
+%{_sbindir}/rxstat_get_version
+%{_sbindir}/rxstat_query_peer
+%{_sbindir}/rxstat_query_process
 %{_sbindir}/uss
 %{_sbindir}/vos
 %{_sbindir}/vsys

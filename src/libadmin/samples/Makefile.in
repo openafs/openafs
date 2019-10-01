@@ -141,9 +141,33 @@ CFLAGS_rxstat_query_peer.o = @CFLAGS_NOERROR@
 CFLAGS_rxstat_query_process.o = @CFLAGS_NOERROR@
 
 #######################################################################
-install:
+install: all
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL_PROGRAM} rxstat_clear_peer ${DESTDIR}${sbindir}/rxstat_clear_peer
+	${INSTALL_PROGRAM} rxstat_clear_process ${DESTDIR}${sbindir}/rxstat_clear_process
+	${INSTALL_PROGRAM} rxstat_disable_peer ${DESTDIR}${sbindir}/rxstat_disable_peer
+	${INSTALL_PROGRAM} rxstat_disable_process ${DESTDIR}${sbindir}/rxstat_disable_process
+	${INSTALL_PROGRAM} rxstat_enable_peer ${DESTDIR}${sbindir}/rxstat_enable_peer
+	${INSTALL_PROGRAM} rxstat_enable_process ${DESTDIR}${sbindir}/rxstat_enable_process
+	${INSTALL_PROGRAM} rxstat_get_peer ${DESTDIR}${sbindir}/rxstat_get_peer
+	${INSTALL_PROGRAM} rxstat_get_process ${DESTDIR}${sbindir}/rxstat_get_process
+	${INSTALL_PROGRAM} rxstat_get_version ${DESTDIR}${sbindir}/rxstat_get_version
+	${INSTALL_PROGRAM} rxstat_query_peer ${DESTDIR}${sbindir}/rxstat_query_peer
+	${INSTALL_PROGRAM} rxstat_query_process ${DESTDIR}${sbindir}/rxstat_query_process
 
-dest:
+dest: all
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL_PROGRAM} rxstat_clear_peer ${DEST}/etc/rxstat_clear_peer
+	${INSTALL_PROGRAM} rxstat_clear_process ${DEST}/etc/rxstat_clear_process
+	${INSTALL_PROGRAM} rxstat_disable_peer ${DEST}/etc/rxstat_disable_peer
+	${INSTALL_PROGRAM} rxstat_disable_process ${DEST}/etc/rxstat_disable_process
+	${INSTALL_PROGRAM} rxstat_enable_peer ${DEST}/etc/rxstat_enable_peer
+	${INSTALL_PROGRAM} rxstat_enable_process ${DEST}/etc/rxstat_enable_process
+	${INSTALL_PROGRAM} rxstat_get_peer ${DEST}/etc/rxstat_get_peer
+	${INSTALL_PROGRAM} rxstat_get_process ${DEST}/etc/rxstat_get_process
+	${INSTALL_PROGRAM} rxstat_get_version ${DEST}/etc/rxstat_get_version
+	${INSTALL_PROGRAM} rxstat_query_peer ${DEST}/etc/rxstat_query_peer
+	${INSTALL_PROGRAM} rxstat_query_process ${DEST}/etc/rxstat_query_process
 
 clean:
 	$(LT_CLEAN)
