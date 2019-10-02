@@ -34,6 +34,7 @@
 #  error "Do not use the opr/lockstub.h header with pthreaded code"
 # endif
 
+typedef int opr_mutex_t;
 typedef int opr_cv_t;
 
 # define opr_mutex_init(mutex)
