@@ -12,8 +12,6 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 LIBS = ${srcdir}/lib/libdir.a ${srcdir}/lib/util.a  ${srcdir}/lib/liblwp.a
 
-OBJS=test-salvage.o physio.o dtest.o
-
 all:	dtest
 
 install:	dtest
