@@ -107,6 +107,7 @@ lib/roken/strlcat.c		roken/strlcat.c
 lib/roken/strlcpy.c		roken/strlcpy.c
 lib/roken/strnlen.c		roken/strnlen.c
 lib/roken/strsep.c		roken/strsep.c
+lib/roken/strtok_r.c		roken/strtok_r.c
 lib/roken/tsearch.c		roken/tsearch.c
 lib/roken/unsetenv.c		roken/unsetenv.c
 lib/roken/verr.c		roken/verr.c
