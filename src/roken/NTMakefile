@@ -54,6 +54,7 @@ ROKEN_OBJS = \
 	$(OUT)\strlcpy.obj \
 	$(OUT)\strnlen.obj \
 	$(OUT)\strsep.obj \
+	$(OUT)\strtok_r.obj \
 	$(OUT)\tsearch.obj \
         $(OUT)\verr.obj \
         $(OUT)\verrx.obj \

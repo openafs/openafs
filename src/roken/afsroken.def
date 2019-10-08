@@ -51,3 +51,4 @@ EXPORTS
 	rk_rename		@55
 	rk_vasprintf		@56
 	rk_mkdir		@57
+	strtok_r		@58
