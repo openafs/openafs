@@ -21,6 +21,7 @@ ptserver S<<< [B<-database> | B<-db> <I<db path>>] >>>
     [B<-transarc-logs>]
     S<<< [B<-config> <I<configuration path>>] >>>
     S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
+    S<< [B<-s2scrypt> (rxgk-crypt | never)] >>
     [B<-help>]
 
 =for html
@@ -193,6 +194,14 @@ L<fileserver(8)> for an explanation of each interface.
 =item B<-rxmaxmtu> <I<bytes>>
 
 Sets the maximum transmission unit for the RX protocol.
+
+=item B<-s2scrypt> (rxgk-crypt | never)
+
+Specify C<rxgk-crypt> to use rxgk connections with per-packet encryption for
+server-to-server (s2s) communication. Specify C<never> to use rxkad connections
+instead, without per-packet encryption ("rxkad_clear").
+
+The default is currently C<never>.
 
 =item B<-help>
 

@@ -263,6 +263,16 @@ Produces on the standard output stream a detailed trace of the command's
 execution. If this argument is omitted, only warnings and error messages
 appear.
 
+=item B<-rxgk> (crypt | auth | clear)
+
+Specify B<-rxgk> to use rxgk credentials when contacting the vlserver or volserver. The
+C<crypt> argument causes B<vos> to use rxgk with per-packet encryption, C<auth>
+causes B<vos> to use rxgk with per-packet integrity protection, and C<clear>
+causes B<vos> to use rxgk without any per-packet cryptography.
+
+By default, B<vos> uses rxkad credentials.  B<vos> falls back to unauthenticated
+connections if credentials are not available.
+
 =back
 
 =head1 PRIVILEGE REQUIRED

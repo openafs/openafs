@@ -23,6 +23,7 @@ vlserver [B<-noauth>] [B<-smallmem>]
     S<<< [B<-auditlog> <I<log path>>] >>>
     S<<< [B<-audit-interface> (file | sysvmq)] >>>
     S<<< [B<-restricted_query> (anyuser | admin)] >>>
+    S<< [B<-s2scrypt> (rxgk-crypt | never)] >>
     [B<-help>]
 
 =for html
@@ -205,6 +206,14 @@ always unauthenticated. You can use C<admin> to restrict to AFS
 administrators.  The C<anyuser> option doesn't restrict the RPCs and
 leaves it open for all users including unauthenticated users, this is
 the default.
+
+=item B<-s2scrypt> (rxgk-crypt | never)
+
+Specify C<rxgk-crypt> to use rxgk connections with per-packet encryption for
+server-to-server (s2s) communication. Specify C<never> to use rxkad connections
+instead, without per-packet encryption ("rxkad_clear").
+
+The default is currently C<never>.
 
 =item B<-help>
 

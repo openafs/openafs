@@ -195,6 +195,16 @@ L<pts_interactive(1)>, since otherwise it would be impossible to switch from,
 for example, B<-localauth> back to using regular tokens during a bulk
 operation. See L<pts_interactive(1)> for more details.
 
+=item B<-rxgk> (crypt | auth | clear)
+
+Specify B<-rxgk> to use rxgk credentials when contacting the ptserver. The
+C<crypt> argument causes B<pts> to use rxgk with per-packet encryption, C<auth>
+causes B<pts> to use rxgk with per-packet integrity protection, and C<clear>
+causes B<pts> to use rxgk without any per-packet cryptography.
+
+By default, B<pts> uses rxkad credentials.  B<pts> falls back to unauthenticated
+connections if credentials are not available.
+
 =back
 
 =head1 PRIVILEGE REQUIRED
