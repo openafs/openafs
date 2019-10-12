@@ -385,7 +385,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	     afs_int32 locktype, afs_int32 replicated,
 	     struct rx_connection **rxconn)
 {
-    int glocked, foundvec;
+    int foundvec;
     struct afs_conn *tc = NULL;
     struct sa_conn_vector *tcv = NULL;
     struct rx_securityClass *csec; /*Security class object */
@@ -486,18 +486,15 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	tu->states &= ~UHasTokens;      /* remove the authentication info */
     }
 
-    glocked = ISAFS_GLOCK();
     if (tc->forceConnectFS) {
 	UpgradeSToWLock(&afs_xconn, 38);
 	if (tc->id) {
 	    if (sap->natping == tc)
 		sap->natping = NULL;
-	    if (glocked)
-                AFS_GUNLOCK();
+	    AFS_GUNLOCK();
             rx_SetConnSecondsUntilNatPing(tc->id, 0);
             rx_DestroyConnection(tc->id);
-	    if (glocked)
-                AFS_GLOCK();
+	    AFS_GLOCK();
 	}
 	/*
 	 * Stupid hack to determine if using vldb service or file system
@@ -511,11 +508,9 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 
 	csec = afs_pickSecurityObject(tc, &isec);
 
-	if (glocked)
-            AFS_GUNLOCK();
+	AFS_GUNLOCK();
 	tc->id = rx_NewConnection(sap->sa_ip, aport, service, csec, isec);
-	if (glocked)
-            AFS_GLOCK();
+	AFS_GLOCK();
 	if (service == 52) {
 	    rx_SetConnHardDeadTime(tc->id, afs_rx_harddead);
 	}
