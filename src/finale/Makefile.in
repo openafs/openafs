@@ -25,6 +25,8 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/afs/bnode.h \
 	${TOP_INCDIR}/afs/vlserver.h
 
+@IF_RXGK@LIBS_rxgk=$(top_builddir)/src/rxgk/.libs/liboafs_rxgk.a
+
 LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
@@ -41,6 +43,7 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libprot.a \
 	${TOP_LIBDIR}/libopr.a \
 	${TOP_LIBDIR}/libafsrfc3961.a \
+	$(LIBS_rxgk) \
 	${XLIBS}
 
 OBJS=$(top_builddir)/src/afs/unified_afs.o

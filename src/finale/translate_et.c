@@ -24,6 +24,9 @@
 #include <afs/volser.h>
 #include <afs/unified_afs.h>
 #include <ubik.h>
+#ifdef ENABLE_RXGK
+# include <rx/rxgk_errs.h>
+#endif
 
 
 #define ERRCODE_RANGE 8		/* from error_table.h */
@@ -63,6 +66,9 @@ main(int argc, char *argv[])
     initialize_U_error_table();
     initialize_VOLS_error_table();
     initialize_uae_error_table();
+#ifdef ENABLE_RXGK
+    initialize_RXGK_error_table();
+#endif
 
     if (argc < 2) {
 	fprintf(stderr, "Usage is: %s [<code>]+\n", argv[0]);
