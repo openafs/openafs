@@ -24,6 +24,7 @@ rx/opaque
 rx/perf
 rx/simple
 rx/xdr
+rxgk/derive
 volser/vos-man
 volser/vos
 bucoord/backup-man
