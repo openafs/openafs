@@ -1,3 +1,32 @@
+dnl There are a few things we define as a result of this function:
+dnl
+dnl - BUILD_RXGK is "#define"d if we are able to build rxgk components.
+dnl
+dnl - ENABLE_RXGK is "#define"d if BUILD_RXGK is defined and we are supposed to
+dnl   turn on rxgk support in various binaries. (If BUILD_RXGK is defined, but
+dnl   not ENABLE_RXGK, we're supposed to build rxgk components, but rxgk
+dnl   functionality should be disabled in all binaries.)
+dnl
+dnl - @BUILD_RXGK@ is "yes" if BUILD_RXGK is defined, and "no" otherwise.
+dnl
+dnl - @ENABLE_RXGK@ is "yes" if ENABLE_RXGK is defined, and "no" otherwise.
+dnl
+dnl - @IF_RXGK@ is "" if ENABLE_RXGK is defined, and "#" otherwise. This is
+dnl   helpful in makefiles to conditionally change build rules depending on if
+dnl   rxgk is enabled or not. For example, this line:
+dnl
+dnl     @IF_RXGK@LIBS=$(top_builddir)/src/rxgk/liboafs_rxgk.la
+dnl
+dnl will expand to this when rxgk is disabled:
+dnl
+dnl     #LIBS=$(top_builddir)/src/rxgk/liboafs_rxgk.la
+dnl
+dnl and will expand to this when enabled:
+dnl
+dnl     LIBS=$(top_builddir)/src/rxgk/liboafs_rxgk.la
+dnl
+dnl So in other words, lines prefixed with @IF_RXGK@ will only be interpreted
+dnl when rxgk support is enabled.
 AC_DEFUN([OPENAFS_GSS],
   [
 dnl Probe for GSSAPI
@@ -37,17 +66,11 @@ dnl gss_pseudo_random() in the future
 dnl Determine if we should enable rxgk support (note that this is a different
 dnl decision than whether we should build rxgk)
   ENABLE_RXGK="no"
-  RXGK_LIBS=""
-  RXGK_LIBS_RPC=""
-  RXGK_CFLAGS=""
-  RXGK_GSSAPI_LIBS=""
+  IF_RXGK="#"
   AS_IF([test "$enable_rxgk" = yes],
     [AS_IF([test "$BUILD_RXGK" = yes],
        [ENABLE_RXGK="yes"
-        RXGK_LIBS="\$(top_builddir)/src/rxgk/liboafs_rxgk.la"
-        RXGK_LIBS_RPC="\$(top_builddir)/src/rxgk/librxgk_pic.la"
-        RXGK_CFLAGS="\$(CPPFLAGS_gssapi)"
-        RXGK_GSSAPI_LIBS="\$(LDFLAGS_gssapi) \$(LIB_gssapi)"
+	IF_RXGK=""
         AC_DEFINE([ENABLE_RXGK], [1],
                   [Build rxgk support into applications])],
 
@@ -55,7 +78,4 @@ dnl decision than whether we should build rxgk)
     [ENABLE_RXGK="no"])
 
   AC_SUBST([ENABLE_RXGK])
-  AC_SUBST([RXGK_LIBS])
-  AC_SUBST([RXGK_LIBS_RPC])
-  AC_SUBST([RXGK_CFLAGS])
-  AC_SUBST([RXGK_GSSAPI_LIBS])])
+  AC_SUBST([IF_RXGK])])

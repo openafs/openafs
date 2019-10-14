@@ -17,6 +17,8 @@ BASE_objs= cellconfig.lo keys.lo userok.lo authcon.lo \
 LT_objs= ktc.lo $(BASE_objs)
 KRB_objs = ktc.krb.lo $(BASE_objs)
 
+@IF_RXGK@LT_deps_rxgk=$(top_builddir)/src/rxgk/liboafs_rxgk.la
+
 LT_deps= $(top_builddir)/src/opr/liboafs_opr.la \
 	 $(top_builddir)/src/comerr/liboafs_comerr.la \
 	 $(top_builddir)/src/rx/liboafs_rx.la \
@@ -24,7 +26,7 @@ LT_deps= $(top_builddir)/src/opr/liboafs_opr.la \
 	 $(top_builddir)/src/audit/liboafs_audit.la \
 	 $(top_builddir)/src/util/liboafs_util.la \
 	 $(top_builddir)/src/sys/liboafs_sys.la \
-	 @RXGK_LIBS@
+	 $(LT_deps_rxgk)
 
 LT_libs= $(LDFLAGS_roken) $(LIB_roken)
 
