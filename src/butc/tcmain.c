@@ -997,6 +997,12 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
 
+    if (afsconf_CountKeys(butc_confdir) == 0) {
+	TLog(0, "WARNING: No encryption keys found! "
+		"All authenticated accesses will fail. "
+		"Run akeyconvert or asetkey to import encryption keys.\n");
+    }
+
     /* Start auditing */
     osi_audit_init();
     if (as->parms[9].items) {
