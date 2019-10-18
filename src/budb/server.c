@@ -467,6 +467,12 @@ main(int argc, char **argv)
 	ERROR(BUDB_NOCELLS);
     }
 
+    if (afsconf_CountKeys(BU_conf) == 0) {
+	LogError(0, "WARNING: No encryption keys found! "
+		    "All authenticated accesses will fail. "
+		    "Run akeyconvert or asetkey to import encryption keys.\n");
+    }
+
     code = afsconf_GetLocalCell(BU_conf, lcell, sizeof(lcell));
     if (code) {
 	LogError(0, "** Can't determine local cell name!\n");

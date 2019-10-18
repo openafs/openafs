@@ -8,6 +8,7 @@ afsconf_ClientAuth
 afsconf_ClientAuthSecure
 afsconf_ClientAuthToken
 afsconf_Close
+afsconf_CountKeys
 afsconf_DeleteKey
 afsconf_GetAfsdbInfo
 afsconf_GetAllKeys

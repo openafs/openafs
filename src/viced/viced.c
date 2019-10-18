@@ -1900,7 +1900,12 @@ main(int argc, char *argv[])
     OpenLog(&logopts);
 
     LogCommandLine(argc, argv, "starting", "", "File server", FSLog);
-    if (afsconf_GetLatestKey(confDir, NULL, NULL) == 0) {
+
+    if (afsconf_CountKeys(confDir) == 0) {
+	ViceLog(0, ("WARNING: No encryption keys found! "
+		    "All authenticated accesses will fail. "
+		    "Run akeyconvert or asetkey to import encryption keys.\n"));
+    } else if (afsconf_GetLatestKey(confDir, NULL, NULL) == 0) {
 	LogDesWarning();
     }
 

@@ -1149,6 +1149,12 @@ main(int argc, char **argv, char **envp)
     /* opened the cell databse */
     bozo_confdir = tdir;
 
+    if (afsconf_CountKeys(bozo_confdir) == 0) {
+	bozo_Log("WARNING: No encryption keys found! "
+		 "All authenticated accesses will fail. "
+		 "Run akeyconvert or asetkey to import encryption keys.\n");
+    }
+
     code = bnode_Init();
     if (code) {
 	printf("bosserver: could not init bnode package, code %d\n", code);

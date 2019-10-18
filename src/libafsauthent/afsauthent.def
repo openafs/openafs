@@ -209,3 +209,4 @@ EXPORTS
         xdr_idlist					@208
         xdr_namelist					@209
         xdr_prlist					@210
+        afsconf_CountKeys				@211

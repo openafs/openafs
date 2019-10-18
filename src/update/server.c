@@ -289,6 +289,12 @@ main(int argc, char *argv[])
 	exit(1);
     }
 
+    if (afsconf_CountKeys(cdir) == 0) {
+	fprintf(stderr, "WARNING: No encryption keys found! "
+			"All authenticated accesses will fail."
+			"Run akeyconvert or asetkey to import encryption keys.\n");
+    }
+
     if (rxBind) {
 	afs_int32 ccode;
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||

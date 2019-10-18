@@ -607,7 +607,11 @@ main(int argc, char **argv)
 		   "1.0",
 #endif
 		   "Starting AFS", FSLog);
-    if (afsconf_GetLatestKey(prdir, NULL, NULL) == 0) {
+    if (afsconf_CountKeys(prdir) == 0) {
+	ViceLog(0, ("WARNING: No encryption keys found! "
+		    "All authenticated accesses will fail. "
+		    "Run akeyconvert or asetkey to import encryption keys.\n"));
+    } else if (afsconf_GetLatestKey(prdir, NULL, NULL) == 0) {
 	LogDesWarning();
     }
 

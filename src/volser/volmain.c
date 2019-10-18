@@ -630,7 +630,11 @@ main(int argc, char **argv)
 
     LogCommandLine(argc, argv, "Volserver", VolserVersion, "Starting AFS",
 		   Log);
-    if (afsconf_GetLatestKey(tdir, NULL, NULL) == 0) {
+    if (afsconf_CountKeys(tdir) == 0) {
+	Log("WARNING: No encryption keys found! "
+	    "All authenticated accesses will fail. "
+	    "Run akeyconvert or asetkey to import encryption keys.\n");
+    } else if (afsconf_GetLatestKey(tdir, NULL, NULL) == 0) {
 	LogDesWarning();
     }
 

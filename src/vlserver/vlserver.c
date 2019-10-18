@@ -534,7 +534,11 @@ main(int argc, char **argv)
     rx_SetMaxProcs(tservice, 4);
 
     LogCommandLine(argc, argv, "vlserver", VldbVersion, "Starting AFS", FSLog);
-    if (afsconf_GetLatestKey(tdir, NULL, NULL) == 0) {
+    if (afsconf_CountKeys(tdir) == 0) {
+	VLog(0, ("WARNING: No encryption keys found! "
+		 "All authenticated accesses will fail."
+		 "Run akeyconvert or asetkey to import encryption keys.\n"));
+    } else if (afsconf_GetLatestKey(tdir, NULL, NULL) == 0) {
 	LogDesWarning();
     }
     VLog(0, ("%s\n", cml_version_number));
