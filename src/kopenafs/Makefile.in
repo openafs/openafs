@@ -24,7 +24,10 @@ MODULE_INCLUDE	= -I. -I${srcdir} -I../sys
 SFLAGS		= -I${TOP_INCDIR}
 SYS		= ${srcdir}/../sys
 
-all: ${TOP_LIBDIR}/libkopenafs.${SHLIB_SUFFIX} ${TOP_LIBDIR}/libkopenafs.a \
+@SHARED_ONLY@SHARED_LIBS = libkopenafs.la
+@SHARED_ONLY@SHARED_SHLIBS_TOP = ${TOP_LIBDIR}/libkopenafs.${SHLIB_SUFFIX}
+
+all: $(SHARED_SHLIBS_TOP) ${TOP_LIBDIR}/libkopenafs.a \
 		${TOP_INCDIR}/kopenafs.h
 
 ${TOP_LIBDIR}/libkopenafs.${SHLIB_SUFFIX}: libkopenafs.la
@@ -77,28 +80,28 @@ libkopenafs.a: $(LT_objs)
 libkopenafs.la: libkopenafs.la.sym $(LT_objs)
 	$(LT_LDLIB_shlib_only) $(LT_objs)
 
-test-unlog: test-unlog.lo libkopenafs.la
-	$(LT_LDRULE_static) test-unlog.lo libkopenafs.la $(XLIBS)
+test-unlog: test-unlog.lo libkopenafs.a
+	$(LT_LDRULE_static) test-unlog.lo libkopenafs.a $(XLIBS)
 
-test-setpag: test-setpag.lo libkopenafs.la
-	$(LT_LDRULE_static) test-setpag.lo libkopenafs.la $(XLIBS)
+test-setpag: test-setpag.lo libkopenafs.a
+	$(LT_LDRULE_static) test-setpag.lo libkopenafs.a $(XLIBS)
 
 #
 # Installation targets
 #
-install: libkopenafs.la libkopenafs.a
+install: $(SHARED_LIBS) libkopenafs.a
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL} -d ${DESTDIR}${includedir}
-	${LT_INSTALL_DATA} libkopenafs.la ${DESTDIR}${libdir}/libkopenafs.la
-	${RM} ${DESTDIR}${libdir}/libkopenafs.la
+	@SHARED_ONLY@${LT_INSTALL_DATA} libkopenafs.la ${DESTDIR}${libdir}/libkopenafs.la
+	@SHARED_ONLY@${RM} ${DESTDIR}${libdir}/libkopenafs.la
 	${INSTALL_DATA} libkopenafs.a ${DESTDIR}${libdir}/libkopenafs.a
 	${INSTALL_DATA} ${srcdir}/kopenafs.h ${DESTDIR}${includedir}/kopenafs.h
 
-dest: libkopenafs.la libkopenafs.a
+dest: $(SHARED_LIBS) libkopenafs.a
 	${INSTALL} -d ${DEST}/lib
 	${INSTALL} -d ${DEST}/include
-	${LT_INSTALL_DATA} libkopenafs.la ${DEST}/lib/libkopenafs.la
-	${RM} ${DEST}/lib/libkopenafs.la
+	@SHARED_ONLY@${LT_INSTALL_DATA} libkopenafs.la ${DEST}/lib/libkopenafs.la
+	@SHARED_ONLY@${RM} ${DEST}/lib/libkopenafs.la
 	${INSTALL_DATA} libkopenafs.a ${DEST}/lib/libkopenafs.a
 	${INSTALL_DATA} ${srcdir}/kopenafs.h ${DEST}/include/kopenafs.h
 

@@ -22,23 +22,26 @@ HEADERS = ${TOP_INCDIR}/base64.h \
 
 UPSTREAM = $(TOP_SRCDIR)/external/heimdal/roken
 
+@SHARED_ONLY@SHARED_LIBS = librokenafs.la
+@SHARED_ONLY@SHARED_SHLIBS_TOP = $(TOP_LIBDIR)/librokenafs.$(SHLIB_SUFFIX)
+
 # TOP_LIBDIR is a convenient place where we can ensure that both the shared
 # and static versions of the library will end up (I'm looking at you, AIX).
 # Otherwise we could just use .libs directly, since only openafs-internal
 # tools will be linking roken from that directory.
-all: $(ROKEN_HEADERS) $(HEADERS) $(TOP_LIBDIR)/librokenafs.$(SHLIB_SUFFIX) \
+all: $(ROKEN_HEADERS) $(HEADERS) $(SHARED_SHLIBS_TOP) \
 	$(TOP_LIBDIR)/librokenafs.a
 
 buildtools: $(ROKEN_HEADERS) $(HEADERS)
 
-install: librokenafs.la librokenafs.a
-	$(LT_INSTALL_DATA) librokenafs.la $(DESTDIR)$(libdir)/librokenafs.la
-	$(RM) $(DESTDIR)$(libdir)/librokenafs.la
+install: $(SHARED_LIBS) librokenafs.a
+	@SHARED_ONLY@$(LT_INSTALL_DATA) librokenafs.la $(DESTDIR)$(libdir)/librokenafs.la
+	@SHARED_ONLY@$(RM) $(DESTDIR)$(libdir)/librokenafs.la
 	$(INSTALL_DATA) librokenafs.a $(DESTDIR)$(libdir)/librokenafs.a
 
-dest: librokenafs.la librokenafs.a
-	$(LT_INSTALL_DATA) librokenafs.la $(DEST)/lib/librokenafs.la
-	$(RM) $(DEST)/lib/librokenafs.la
+dest: $(SHARED_LIBS) librokenafs.a
+	@SHARED_ONLY@$(LT_INSTALL_DATA) librokenafs.la $(DEST)/lib/librokenafs.la
+	@SHARED_ONLY@$(RM) $(DEST)/lib/librokenafs.la
 	$(INSTALL_DATA) librokenafs.a $(DEST)/lib/librokenafs.a
 
 clean:

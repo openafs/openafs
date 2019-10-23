@@ -34,7 +34,9 @@ LT_deps = \
 
 LT_libs = $(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(LIB_AFSDB) $(MT_LIBS)
 
-all: libafsauthent.la libafsauthent_pic.la \
+@SHARED_ONLY@SHARED_LIBS = libafsauthent.la
+
+all: $(SHARED_LIBS) libafsauthent_pic.la \
 	$(TOP_LIBDIR)/libafsauthent.a \
 	$(TOP_LIBDIR)/libafsauthent_pic.a
 
@@ -46,7 +48,7 @@ libafsauthent_pic.la: $(LT_objs)
 
 # On AIX, libtool can only produce one of shared and static libraries in a
 # given invocation, so we need separate rules.
-libafsauthent.a: $(LT_objs) libafsauthent.la
+libafsauthent.a: $(LT_objs)
 	$(LT_LDLIB_static) $(LT_objs)
 
 ${TOP_LIBDIR}/libafsauthent.a: libafsauthent.a
@@ -59,10 +61,10 @@ clean:
 	$(LT_CLEAN)
 	$(RM) -f *.o libafsauthent.a
 
-install: libafsauthent.la libafsauthent.a libafsauthent_pic.la
+install: $(SHARED_LIBS) libafsauthent.a libafsauthent_pic.la
 	${INSTALL} -d ${DESTDIR}${libdir}
-	${LT_INSTALL_DATA} libafsauthent.la ${DESTDIR}${libdir}/libafsauthent.la
-	${RM} ${DESTDIR}${libdir}/libafsauthent.la
+	@SHARED_ONLY@${LT_INSTALL_DATA} libafsauthent.la ${DESTDIR}${libdir}/libafsauthent.la
+	@SHARED_ONLY@${RM} ${DESTDIR}${libdir}/libafsauthent.la
 	${INSTALL_DATA}  libafsauthent.a ${DESTDIR}${libdir}/libafsauthent.a
 	${INSTALL_DATA}  .libs/libafsauthent_pic.a ${DESTDIR}${libdir}/libafsauthent_pic.a
 

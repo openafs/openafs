@@ -30,7 +30,9 @@ LT_objs = \
 
 LT_libs = $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS) $(RXGK_GSSAPI_LIBS)
 
-all: libafsrpc.la libafsrpc.a libafsrpc_pic.la \
+@SHARED_ONLY@SHARED_LIBS = libafsrpc.la
+
+all: $(SHARED_LIBS) libafsrpc.a libafsrpc_pic.la \
 	$(TOP_LIBDIR)/libafsrpc.a \
 	$(TOP_LIBDIR)/libafsrpc_pic.a
 
@@ -53,7 +55,7 @@ libafsrpc_pic.la: $(LT_objs)
 # AIX needs libafsrpc to also be linked against the syscall import list
 # On most platforms, libtool will make shared and static libraries at the
 # same time, but not on AIX, so we need separate rules.
-libafsrpc.a: $(LT_objs) libafsrpc.la
+libafsrpc.a: $(LT_objs)
 	$(LT_LDLIB_static) $(LT_objs)
 	@set -e; set -x; case "${SYS_NAME}" in \
 	    rs_aix*) \
@@ -66,17 +68,17 @@ ${TOP_LIBDIR}/libafsrpc.a: libafsrpc.a
 ${TOP_LIBDIR}/libafsrpc_pic.a: libafsrpc_pic.la
 	${INSTALL_DATA} .libs/libafsrpc_pic.a $@
 
-install: libafsrpc.la libafsrpc.a libafsrpc_pic.la
+install: $(SHARED_LIBS) libafsrpc.a libafsrpc_pic.la
 	${INSTALL} -d ${DESTDIR}${libdir}
-	$(LT_INSTALL_DATA) libafsrpc.la $(DESTDIR)$(libdir)/libafsrpc.la
-	$(RM) $(DESTDIR)$(libdir)/libafsrpc.la
+	@SHARED_ONLY@$(LT_INSTALL_DATA) libafsrpc.la $(DESTDIR)$(libdir)/libafsrpc.la
+	@SHARED_ONLY@$(RM) $(DESTDIR)$(libdir)/libafsrpc.la
 	$(INSTALL_DATA) libafsrpc.a $(DESTDIR)$(libdir)/libafsrpc.a
 	$(INSTALL_DATA) .libs/libafsrpc_pic.a $(DESTDIR)$(libdir)/libafsrpc_pic.a
 
-dest: libafsrpc.la libafsrpc.a
+dest: $(SHARED_LIBS) libafsrpc.a
 	${INSTALL} -d ${DEST}/lib
-	${LT_INSTALL_DATA} libafsrpc.la ${DEST}/lib/libafsrpc.la
-	${RM} ${DEST}/lib/libafsrpc.la
+	@SHARED_ONLY@${LT_INSTALL_DATA} libafsrpc.la ${DEST}/lib/libafsrpc.la
+	@SHARED_ONLY@${RM} ${DEST}/lib/libafsrpc.la
 	${INSTALL_DATA} libafsrpc.a ${DEST}/lib/libafsrpc.a
 	${INSTALL_DATA} .libs/libafsrpc_pic.a ${DEST}/lib/libafsrpc_pic.a
 

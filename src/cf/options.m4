@@ -347,4 +347,12 @@ fi
 if test "x$enable_pthreaded_ubik" = "xyes"; then
 ENABLE_PTHREADED_UBIK=yes
 fi
+
+dnl If the libtool --disable-shared option is specified, comment out the
+dnl @SHARED_ONLY@ lines in our Makefiles.
+AS_IF([test x"$enable_shared" = xyes],
+ [SHARED_ONLY=],
+ [SHARED_ONLY=#])
+AC_SUBST([SHARED_ONLY])
+
 ])

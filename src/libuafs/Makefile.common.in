@@ -193,9 +193,6 @@ ${TOP_LIBDIR}/libuafs_pic.a: libuafs_pic.la
 
 $(LT_objs): h
 
-libuafs.la: $(LT_objs)
-	$(LT_LDLIB_shlib_only) $(LT_objs)
-
 libuafs.a: $(LT_objs)
 	$(LT_LDLIB_static) $(LT_objs)
 
