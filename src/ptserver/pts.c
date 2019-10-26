@@ -50,6 +50,24 @@ struct authstate {
     char cell[MAXCELLCHARS];
 };
 
+/*
+ * Constants for add_std_args() global parameters. Start at offset 16, to try
+ * to avoid conflicting with any subcommand-specific parameters. If any
+ * subcommand uses more than 16 params, these constants will probably need to
+ * change.
+ */
+enum {
+    OPT_cell	    = 16,
+    OPT_noauth	    = 17,
+    OPT_test	    = 18,
+    OPT_force	    = 19,
+    OPT_localauth   = 20,
+    OPT_auth	    = 21,
+    OPT_encrypt	    = 22,
+    OPT_config	    = 23,
+    OPT_rxgk	    = 24,
+};
+
 static int CleanUp(struct cmd_syndesc *as, void *arock);
 
 static int
@@ -184,23 +202,23 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 	changed = 1;
     }
 
-    if (as->parms[16].items) {
+    if (as->parms[OPT_cell].items) {
 	changed = 1;
-	cell = as->parms[16].items->data;
+	cell = as->parms[OPT_cell].items->data;
     }
-    if (as->parms[17].items) { /* -noauth */
+    if (as->parms[OPT_noauth].items) {
 	changed = 1;
 	sec = 0;
     }
-    if (as->parms[20].items) { /* -localauth */
+    if (as->parms[OPT_localauth].items) {
 	changed = 1;
 	sec = 2;
     }
-    if (as->parms[21].items) { /* -auth */
+    if (as->parms[OPT_auth].items) {
 	changed = 1;
 	sec = 1;
     }
-    if (as->parms[22].items    /* -encrypt */
+    if (as->parms[OPT_encrypt].items
 #ifdef AFS_NT40_ENV
         || win32_enableCrypt()
 #endif /* AFS_NT40_ENV */
@@ -208,7 +226,7 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 	changed = 1;
 	sec = 3;
     }
-    if (as->parms[18].items || as->parms[20].items) { /* -test, -localauth */
+    if (as->parms[OPT_test].items || as->parms[OPT_localauth].items) {
 	changed = 1;
 	confdir = AFSDIR_SERVER_ETC_DIRPATH;
     } else {
@@ -218,13 +236,13 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 	    confdir = AFSDIR_CLIENT_ETC_DIRPATH;
     }
 
-    if (as->parms[23].items) { /* -config */
+    if (as->parms[OPT_config].items) { /* -config */
 	changed = 1;
-	confdir = as->parms[23].items->data;
+	confdir = as->parms[OPT_config].items->data;
     }
 
-    if (as->parms[24].items) { /* -rxgk */
-	char *rxgk_seclevel_str = as->parms[24].items->data;
+    if (as->parms[OPT_rxgk].items) {
+	char *rxgk_seclevel_str = as->parms[OPT_rxgk].items->data;
 	changed = 1;
 
 	if (strcmp(rxgk_seclevel_str, "clear") == 0)
@@ -256,7 +274,7 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
         strncpy(state->cell, cell, MAXCELLCHARS-1);
 
     force = 0;
-    if (as->parms[19].items)
+    if (as->parms[OPT_force].items)
 	force = 1;
 
     return code;
@@ -1005,20 +1023,24 @@ add_std_args(struct cmd_syndesc *ts)
 	test_help = strdup("use server config file");
     }
 
-    cmd_Seek(ts, 16);
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
-    cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "run unauthenticated");
-    cmd_AddParm(ts, "-test", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE, test_help);
-    cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
-		"Continue oper despite reasonable errors");
-    cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
-		"use local authentication");
-    cmd_AddParm(ts, "-auth", CMD_FLAG, CMD_OPTIONAL,
-		"use user's authentication (default)");
-    cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL,
-		"encrypt commands");
-    cmd_AddParm(ts, "-config", CMD_SINGLE, CMD_OPTIONAL, "config location");
-    cmd_AddParm(ts, "-rxgk", CMD_SINGLE, CMD_OPTIONAL, "rxgk security level to use");
+    cmd_AddParmAtOffset(ts, OPT_cell, "-cell", CMD_SINGLE, CMD_OPTIONAL,
+			"cell name");
+    cmd_AddParmAtOffset(ts, OPT_noauth, "-noauth", CMD_FLAG, CMD_OPTIONAL,
+			"run unauthenticated");
+    cmd_AddParmAtOffset(ts, OPT_test, "-test", CMD_FLAG,
+			CMD_OPTIONAL | CMD_HIDE, test_help);
+    cmd_AddParmAtOffset(ts, OPT_force, "-force", CMD_FLAG, CMD_OPTIONAL,
+			"Continue oper despite reasonable errors");
+    cmd_AddParmAtOffset(ts, OPT_localauth, "-localauth", CMD_FLAG,
+			CMD_OPTIONAL, "use local authentication");
+    cmd_AddParmAtOffset(ts, OPT_auth, "-auth", CMD_FLAG, CMD_OPTIONAL,
+			"use user's authentication (default)");
+    cmd_AddParmAtOffset(ts, OPT_encrypt, "-encrypt", CMD_FLAG, CMD_OPTIONAL,
+			"encrypt commands");
+    cmd_AddParmAtOffset(ts, OPT_config, "-config", CMD_SINGLE, CMD_OPTIONAL,
+			"config location");
+    cmd_AddParmAtOffset(ts, OPT_rxgk, "-rxgk", CMD_SINGLE, CMD_OPTIONAL,
+			"rxgk security level to use");
     free(test_help);
 }
 
