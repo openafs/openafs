@@ -1,5 +1,5 @@
 Title OpenAFS
-Version @VERSION@
+Version @PACKAGE_VERSION@
 Description The OpenAFS distributed filesystem. This package installs a ready-to-run client for OpenAFS. See http://www.openafs.org for more information.
 DefaultLocation /
 Diskname (null)

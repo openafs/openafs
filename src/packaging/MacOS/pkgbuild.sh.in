@@ -426,7 +426,7 @@ if [ x"$PASS2" = x1 ]; then
 
     rm -rf "$CURDIR"/OpenAFS-debug-extension.pkg
     /usr/bin/pkgbuild --root "$DPKGROOT" --id org.openafs.OpenAFS-debug.pkg \
-		      --version '@VERSION@' \
+		      --version '@PACKAGE_VERSION@' \
 	     "$CURDIR"/OpenAFS-debug-extension.pkg
 
     cd "$RESSRC"
@@ -445,7 +445,7 @@ if [ x"$PASS2" = x1 ]; then
 
     rm -rf "$CURDIR"/OpenAFS-dist.pkg
     /usr/bin/pkgbuild --root "$PKGROOT" --id org.openafs.OpenAFS.pkg \
-		      --version '@VERSION@' \
+		      --version '@PACKAGE_VERSION@' \
 		      --scripts "$PKGRES" "$CURDIR"/OpenAFS-dist.pkg
 
     rm -rf "$PKGRES"
@@ -466,7 +466,7 @@ if [ x"$PASS2" = x1 ]; then
     sed -e "s/%%OSX_MAJOR_CUR%%/$THISREL/g" \
 	-e "s/%%OSX_MAJOR_NEXT%%/$(( $THISREL + 1 ))/g" \
 	-e "s,%%PRES_EXTRA%%,$PRES_EXTRA,g" \
-	-e "s/%%OPENAFS_VERSION%%/@VERSION@/g" \
+	-e "s/%%OPENAFS_VERSION%%/@PACKAGE_VERSION@/g" \
 	< Distribution.xml.in > Distribution.xml
 
     rm -rf "$CURDIR/prod"
@@ -484,7 +484,7 @@ if [ x"$PASS2" = x1 ]; then
 
     rm -rf "$CURDIR/dmg"
     rm -f "$CURDIR/TMP.dmg"
-    rm -rf "$CURDIR/OpenAFS-@VERSION@-$RELNAME.dmg"
+    rm -rf "$CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME.dmg"
 
     mkdir "$CURDIR"/dmg
     mv "$CURDIR"/OpenAFS.pkg "$CURDIR"/dmg
@@ -500,8 +500,8 @@ if [ x"$PASS2" = x1 ]; then
     hdiutil create -srcfolder "$CURDIR"/dmg -volname OpenAFS \
 	    -o "$CURDIR"/TMP.dmg
     hdiutil convert -format UDZO "$CURDIR"/TMP.dmg \
-	    -o "$CURDIR/OpenAFS-@VERSION@-$RELNAME".dmg
+	    -o "$CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME".dmg
 
     echo
-    echo "Created $CURDIR/OpenAFS-@VERSION@-$RELNAME".dmg
+    echo "Created $CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME".dmg
 fi
