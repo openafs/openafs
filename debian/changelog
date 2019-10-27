@@ -1,4 +1,4 @@
-openafs (1.8.5-1) UNRELEASED; urgency=high
+openafs (1.8.5-1) unstable; urgency=high
 
   * New upstream security release (Closes: #943587):
     - Fix OPENAFS-SA-2019-001, OPENAFS-SA-2019-002: information leakage from
@@ -8,7 +8,7 @@ openafs (1.8.5-1) UNRELEASED; urgency=high
     are installed. (Closes: #935771)
   * Enable support for ppc64le. (Closes: #941658)
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 27 Oct 2019 11:05:37 -0700
+ -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 27 Oct 2019 15:13:27 -0700
 
 openafs (1.8.4~pre1-1) unstable; urgency=medium
 
