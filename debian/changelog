@@ -1,6 +1,9 @@
 openafs (1.8.5-1) UNRELEASED; urgency=high
 
-  * New upstream security release
+  * New upstream security release (Closes: #943587):
+    - Fix OPENAFS-SA-2019-001, OPENAFS-SA-2019-002: information leakage from
+      uninitialized RPC output variables
+    - Fix OPENAFS-SA-2019-003: database server DoS (NULL dereference)
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 27 Oct 2019 11:05:37 -0700
 
