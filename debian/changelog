@@ -1,3 +1,9 @@
+openafs (1.8.5-1) UNRELEASED; urgency=high
+
+  * New upstream security release
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 27 Oct 2019 11:05:37 -0700
+
 openafs (1.8.4~pre1-1) unstable; urgency=medium
 
   [ Ondřej Nový ]
