@@ -111,6 +111,7 @@ override_dh_auto_configure:
 	    --with-roken-lib=/usr/lib/$(DEB_HOST_MULTIARCH)/heimdal	   \
 	    --with-hcrypto-include=/usr/include/heimdal			   \
 	    --with-hcrypto-lib=/usr/lib/$(DEB_HOST_MULTIARCH)/heimdal	   \
+	    --without-ctf-tools						   \
 	    $(DEBIAN_OPT_FLAGS)
 
 # Also build a libafs_tree and build the XML documentation if building
