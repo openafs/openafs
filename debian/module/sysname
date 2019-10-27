@@ -22,6 +22,9 @@ ppc)
 ppc64)
     echo ppc64_linux26
     ;;
+ppc64le)
+    echo ppc64le_linux26
+    ;;
 s390)
     echo s390_linux26
     ;;

@@ -6,6 +6,7 @@ openafs (1.8.5-1) UNRELEASED; urgency=high
     - Fix OPENAFS-SA-2019-003: database server DoS (NULL dereference)
   * Configure --without-ctf-tools to allow kernel module builds when ctfutils
     are installed. (Closes: #935771)
+  * Enable support for ppc64le. (Closes: #941658)
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 27 Oct 2019 11:05:37 -0700
 
