@@ -3366,7 +3366,7 @@ openafs (1.0.snap20001106-6) unstable; urgency=medium
     works  under fakeroot.  Important for modules package.
   * Fix purge to delete configuration files
 
- --  <Sam Hartman <hartmans@mit.edu>  Sat, 25 Nov 2000 01:09:55 -0500
+ -- Sam Hartman <hartmans@mit.edu>  Sat, 25 Nov 2000 01:09:55 -0500
 
 openafs (1.0.snap20001106-5) unstable; urgency=low
 
