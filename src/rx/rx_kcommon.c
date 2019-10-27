@@ -1201,6 +1201,7 @@ rxk_Listener(void)
 #ifdef AFS_LINUX20_ENV
     rxk_ListenerPid = current->pid;
     rxk_ListenerTask = current;
+    allow_signal(SIGKILL);    /* Allowed, but blocked until shutdown */
 #endif
 #ifdef AFS_SUN5_ENV
     rxk_ListenerPid = 1;	/* No PID, just a flag that we're alive */

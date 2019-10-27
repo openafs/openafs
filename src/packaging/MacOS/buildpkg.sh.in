@@ -306,14 +306,14 @@ if [ $secondpass = yes ]; then
     if [ $majorvers -ge 8 ]; then
 	mv $CURDIR/OpenAFS-debug-extension.pkg $CURDIR/dmg
     fi
-    rm -rf $CURDIR/OpenAFS-@VERSION@-$RELNAME.dmg
+    rm -rf $CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME.dmg
     cp $RESSRC/Uninstall $CURDIR/dmg/Uninstall.command
     cp $RESSRC/DS_Store $CURDIR/dmg/.DS_Store
     mkdir $CURDIR/dmg/.background
     cp $RESSRC/afslogo.jpg $CURDIR/dmg/.background
 #    hdiutil create -srcfolder $CURDIR/dmg -volname OpenAFS -anyowners $CURDIR/OpenAFS.dmg
     hdiutil makehybrid -hfs -hfs-volume-name OpenAFS -hfs-openfolder $CURDIR/dmg $CURDIR/dmg -o $CURDIR/TMP.dmg
-    hdiutil convert -format UDZO $CURDIR/TMP.dmg -o $CURDIR/OpenAFS-@VERSION@-$RELNAME.dmg
+    hdiutil convert -format UDZO $CURDIR/TMP.dmg -o $CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME.dmg
     rm $CURDIR/TMP.dmg
     rm -rf $CURDIR/dmg
     # Unfortunately, sudo sets $USER to root, so I can't chown the 

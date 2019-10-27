@@ -1,11 +1,39 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.8.4 (in progress)
+OpenAFS 1.8.5
+
+All platforms
+
+    * Fix OPENAFS-SA-2019-001: information leakage in failed RPC output
+      Generated RPC handler routines ran output variables through XDR encoding
+      even when the call had failed and would shortly be aborted (and for
+      which uninitialized output variables is common); any complete packets
+      assembled in the process would be sent to the peer, leaking the contents
+      of the uninitialized memory in question.
+
+    * Fix OPENAFS-SA-2019-002: information leakage from uninitialized scalars
+      Generated RPC handler routines did not initialize output variables of
+      scalar (fixed-length) type, since they did not require dedicated logic to
+      free.  Such variables allocated on the stack could remain uninitialized
+      in some cases (including those affected by OPENAFS-SA-2019-001), and the
+      contents of uninitialized memory would be returned to the peer.
+
+All server platforms
+
+    * Fix OPENAFS-SA-2019-003: fix crash in database servers
+      The ubik debugging RPCs prioritize being fast and non-disruptive to
+      database operations over strict correctness, and do not adhere to the
+      usual locking protocol for data access.  A data race could cause a NULL
+      dereference if the second memory load was not optimized out by the
+      compiler.
+
+OpenAFS 1.8.4
 
   All platforms
 
     Build system updates to remove obsolete autoconf macros and remove missing
-    script warning during builds (13480, 13481, 13482, 13483, 13484, 13486).
+    script warning during builds (13480, 13481, 13482, 13483, 13484, 13486,
+    13789, 13790).
 
     Build system update to fix a conditional check in the pthread.m4 autoconf
     file (13595)
@@ -52,9 +80,11 @@ OpenAFS 1.8.4 (in progress)
 
   Linux
 
-    More improper use of ENOENT fixes to avoid incorrect use of linux negative
-    dentry cache, which can lead to false ENOENT errors (13542, 13543, 13590
-    13692) (RT #134904).
+    Support for mainline kernels up to 5.3 (13787, 13789).
+
+    More fixes for improper use of ENOENT fixes to avoid incorrect use of linux
+    negative dentry cache, which can lead to false ENOENT errors (13542, 13543,
+    13590, 13692) (RT #134904).
 
     Return errors instead of returning incomplete directory listings when the
     directory objects are incomplete in the cache (13591).

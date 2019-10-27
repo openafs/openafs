@@ -9,6 +9,6 @@
 	<key>IFPkgDescriptionTitle</key>
 	<string>OpenAFS debug extension</string>
 	<key>IFPkgDescriptionVersion</key>
-	<string>@VERSION@</string>
+	<string>@PACKAGE_VERSION@</string>
 </dict>
 </plist>

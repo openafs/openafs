@@ -1301,7 +1301,12 @@ cs_ProcTail_setup(definition * defp, int split_flag)
 static void
 ss_Proc_CodeGeneration(definition * defp)
 {
-    defp->can_fail = 0;
+    extern char zflag;
+
+    if (zflag)
+	defp->can_fail = 0;
+    else
+	defp->can_fail = 1;
     ss_ProcName_setup(defp);
     if (!cflag) {
 	ss_ProcParams_setup(defp);
@@ -1430,8 +1435,6 @@ ss_ProcSpecial_setup(definition * defp)
 		if (streq(string, structname(plist->pl.param_type))) {
 		    plist->pl.string_name = spec->sdef.string_name;
 		    plist->pl.param_flag |= FREETHIS_PARAM;
-		    fprintf(fout, "\n\t%s.%s = 0;", plist->pl.param_name,
-			    spec->sdef.string_name);
 		}
 	    }
 	}
@@ -1446,22 +1449,13 @@ ss_ProcSpecial_setup(definition * defp)
 		    case REL_ARRAY:
 			plist->pl.string_name = alloc(40);
 			if (brief_flag) {
-			    f_print(fout, "\n\t%s.val = 0;",
-				    plist->pl.param_name);
-			    f_print(fout, "\n\t%s.len = 0;",
-				    plist->pl.param_name);
 			    s_print(plist->pl.string_name, "val");
 			} else {
-			    f_print(fout, "\n\t%s.%s_val = 0;",
-				    plist->pl.param_name, defp1->def_name);
-			    f_print(fout, "\n\t%s.%s_len = 0;",
-				    plist->pl.param_name, defp1->def_name);
 			    s_print(plist->pl.string_name, "%s_val",
 				    defp1->def_name);
 			}
 			break;
 		    case REL_POINTER:
-			f_print(fout, "\n\t%s = 0;", plist->pl.param_name);
 			plist->pl.string_name = NULL;
 			break;
 		    default:
@@ -1477,10 +1471,16 @@ ss_ProcSpecial_setup(definition * defp)
 	    if (plist->component_kind == DEF_PARAM) {
 		if (streq(defp1->def_name, structname(plist->pl.param_type))) {
 		    plist->pl.param_flag |= FREETHIS_PARAM;
-		    fprintf(fout, "\n\tmemset(&%s, 0, sizeof(%s));",
-				 plist->pl.param_name, defp1->def_name);
 		}
 	    }
+	}
+    }
+
+    for (plist = defp->pc.plists; plist; plist = plist->next) {
+	if (plist->component_kind == DEF_PARAM) {
+	    fprintf(fout, "\n\tmemset(&%s, 0, sizeof(%s));",
+		    plist->pl.param_name,
+		    plist->pl.param_name);
 	}
     }
 
@@ -1546,6 +1546,8 @@ ss_ProcCallRealProc_setup(definition * defp)
     f_print(fout, ");\n");
     if (zflag) {
 	f_print(fout, "\tif (z_result)\n\t\treturn z_result;\n");
+    } else {
+	f_print(fout, "\tif (z_result)\n\t\tgoto fail;\n");
     }
 }
 

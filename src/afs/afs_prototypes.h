@@ -643,7 +643,7 @@ extern int uiomove(char *dp, int length, uio_flag_t rw, struct uio *uiop);
 extern void osi_linux_free_inode_pages(void);
 #endif
 extern void osi_linux_mask(void);
-extern void osi_linux_unmask(void);
+extern void osi_linux_unmaskrxk(void);
 extern int setpag(cred_t ** cr, afs_uint32 pagvalue, afs_uint32 * newpag,
 		  int change_parent);
 #endif
