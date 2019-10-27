@@ -1,4 +1,2 @@
 0003-Catch-up-to-roken-s-rename-of-base64-symbols.patch
 0002-aklog-require-opt-in-to-enable-single-DES-in-libkrb5.patch
-0003-Remove-automake-autoconf-vars.patch
-0004-Remove-one-more-automake-VERSION-reference.patch
