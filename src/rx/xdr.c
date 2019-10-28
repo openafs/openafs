@@ -577,6 +577,15 @@ xdr_wrapstring(XDR * xdrs, char **cpp)
 }
 #endif
 
+void
+xdrfree_string(char **cpp)
+{
+    XDR xdrs;
+    memset(&xdrs, 0, sizeof(xdrs));
+    xdrs.x_op = XDR_FREE;
+    (void)xdr_string(&xdrs, cpp, MAX_AFS_UINT32);
+}
+
 void *
 xdr_alloc(afs_int32 size)
 {

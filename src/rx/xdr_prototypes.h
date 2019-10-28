@@ -57,6 +57,7 @@ extern bool_t xdr_bytes(XDR * xdrs, char **cpp,
 extern bool_t xdr_union(XDR * xdrs, enum_t * dscmp, caddr_t unp,
 			struct xdr_discrim *choices, xdrproc_t dfault);
 extern bool_t xdr_string(XDR * xdrs, char **cpp, u_int maxsize);
+extern void xdrfree_string(char **cpp);
 extern bool_t xdr_wrapstring(XDR * xdrs, char **cpp);
 extern void * xdr_alloc(afs_int32 size);
 extern void   xdr_free(xdrproc_t proc, void *obj);
