@@ -11,6 +11,8 @@
 
 #include <afs/cellconfig.h>
 
+#include <tests/tap/basic.h>
+
 #include "common.h"
 
 /* Start up the VLserver, using the configuration in dirname, and putting our
@@ -21,6 +23,7 @@ int
 afstest_StartVLServer(char *dirname, pid_t *serverPid)
 {
     pid_t pid;
+    int status;
 
     pid = fork();
     if (pid == -1) {
@@ -46,6 +49,20 @@ afstest_StartVLServer(char *dirname, pid_t *serverPid)
 	fprintf(stderr, "Running %s failed\n", binPath);
 	exit(1);
     }
+
+    if (waitpid(pid, &status, WNOHANG) != 0) {
+	fprintf(stderr, "Error starting vlserver\n");
+	return -1;
+    }
+
+    diag("Sleeping for a few seconds to let the vlserver startup");
+    sleep(5);
+
+    if (waitpid(pid, &status, WNOHANG) != 0) {
+	fprintf(stderr, "vlserver died during startup\n");
+	return -1;
+    }
+
     *serverPid = pid;
 
     return 0;

@@ -128,8 +128,6 @@ main(int argc, char **argv)
 	goto out;
     }
 
-    /* Let it figure itself out ... */
-    sleep(5);
     code = afsconf_ClientAuthSecure(dir, &secClass, &secIndex);
     is_int(code, 0, "Successfully got security class");
     if (code) {
