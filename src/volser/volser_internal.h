@@ -50,8 +50,6 @@ extern int UV_CreateVolume3(afs_uint32 aserver, afs_int32 apart, char *aname,
 			    afs_int32 aspare2, afs_int32 aspare3,
 			    afs_int32 aspare4, afs_uint32 * anewid,
 			    afs_uint32 * aroid, afs_uint32 * abkid);
-extern int UV_AddVLDBEntry(afs_uint32 aserver, afs_int32 apart, char *aname,
-			   afs_uint32 aid);
 extern int UV_MoveVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 			 afs_int32 afrompart, afs_uint32 atoserver,
 			 afs_int32 atopart);
@@ -81,12 +79,6 @@ extern int UV_ChangeLocation(afs_uint32 server, afs_int32 part,
 			     afs_uint32 volid);
 extern int UV_ListPartitions(afs_uint32 aserver, struct partList *ptrPartList,
 			     afs_int32 * cntp);
-extern int UV_ZapVolumeClones(afs_uint32 aserver, afs_int32 apart,
-			      struct volDescription *volPtr,
-			      afs_int32 arraySize);
-extern int UV_GenerateVolumeClones(afs_uint32 aserver, afs_int32 apart,
-				   struct volDescription *volPtr,
-				   afs_int32 arraySize);
 extern int UV_ListVolumes(afs_uint32 aserver, afs_int32 apart, int all,
 			  struct volintInfo **resultPtr, afs_int32 * size);
 extern int UV_XListVolumes(afs_uint32 a_serverID, afs_int32 a_partID,
