@@ -396,7 +396,7 @@ VLDB_IsSameAddrs(afs_uint32 serv1, afs_uint32 serv2, afs_int32 *errorp)
 */
 int
 vsu_ClientInit(const char *confDir, char *cellName, int secFlags,
-	       int (*secproc)(struct rx_securityClass *, afs_int32),
+	       ugen_secproc_func secproc,
 	       struct ubik_client **uclientp)
 {
     return ugen_ClientInitFlags(confDir, cellName, secFlags, uclientp,

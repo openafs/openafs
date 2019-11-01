@@ -32,7 +32,7 @@
 static int
 internal_client_init(struct afsconf_dir *dir, struct afsconf_cell *info,
 		     int secFlags, struct ubik_client **uclientp,
-		     int (*secproc) (struct rx_securityClass *, afs_int32),
+		     ugen_secproc_func secproc,
 		     int maxservers, const char *serviceid, int deadtime,
 		     afs_uint32 server, afs_uint32 port, afs_int32 usrvid)
 {
@@ -115,7 +115,7 @@ ugen_ClientInitCell(struct afsconf_dir *dir, struct afsconf_cell *info,
 static int
 internal_client_init_dir(const char *confDir, char *cellName, int secFlags,
 		      struct ubik_client **uclientp,
-		      int (*secproc) (struct rx_securityClass *, afs_int32),
+		      ugen_secproc_func secproc,
 		      afs_int32 maxservers, char *serviceid, afs_int32 deadtime,
 		      afs_uint32 server, afs_uint32 port, afs_int32 usrvid)
 {
@@ -174,7 +174,7 @@ ugen_ClientInitServer(const char *confDir, char *cellName, int secFlags,
 int
 ugen_ClientInitFlags(const char *confDir, char *cellName, int secFlags,
 		     struct ubik_client **uclientp,
-	             int (*secproc) (struct rx_securityClass *, afs_int32),
+	             ugen_secproc_func secproc,
 		     int maxservers, char *serviceid, int deadtime)
 {
     return internal_client_init_dir(confDir, cellName, secFlags, uclientp,
@@ -188,7 +188,7 @@ ugen_ClientInitFlags(const char *confDir, char *cellName, int secFlags,
 afs_int32
 ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 sauth,
 	       struct ubik_client **uclientp,
-	       int (*secproc) (struct rx_securityClass *, afs_int32),
+	       ugen_secproc_func secproc,
 	       char *funcName, afs_int32 gen_rxkad_level,
 	       afs_int32 maxservers, char *serviceid, afs_int32 deadtime,
 	       afs_uint32 server, afs_uint32 port, afs_int32 usrvid)

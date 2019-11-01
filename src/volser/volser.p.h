@@ -15,6 +15,7 @@
 #endif
 
 #include <afs/voldefs.h>
+#include <ubik.h>
 
 /* vflags, representing state of the volume */
 #define	VTDeleteOnSalvage	1	/* delete on next salvage */
@@ -183,8 +184,7 @@ extern afs_uint32 vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, a
 extern int vsu_ExtractName(char rname[], char name[]);
 extern afs_int32 vsu_ClientInit(const char *confDir, char *cellName,
 				int secFlags,
-				int (*secproc)(struct rx_securityClass *,
-					       afs_int32),
+				ugen_secproc_func secproc,
 				struct ubik_client **uclientp);
 enum vol_s2s_crypt {
     VS2SC_NEVER = 0,

@@ -608,6 +608,7 @@ extern int ubik_ParseServerList(int argc, char **argv, afs_uint32 *ahost,
 
 struct rx_securityClass;
 struct afsconf_dir;
+typedef int (*ugen_secproc_func)(struct rx_securityClass *, afs_int32);
 extern int ugen_ClientInitCell(struct afsconf_dir *dir,
 			       struct afsconf_cell *info,
 			       int secFlags,
@@ -621,15 +622,13 @@ extern int ugen_ClientInitServer(const char *confDir, char *cellName,
 			         afs_uint32 port);
 extern int ugen_ClientInitFlags(const char *confDir, char *cellName,
 				int secFlags, struct ubik_client **uclientp,
-				int (*secproc) (struct rx_securityClass *,
-						afs_int32),
+				ugen_secproc_func secproc,
 				int maxservers, char *serviceid,
 				int deadtime);
 extern afs_int32 ugen_ClientInit(int noAuthFlag, const char *confDir,
 				 char *cellName, afs_int32 sauth,
 				 struct ubik_client **uclientp,
-				 int (*secproc) (struct rx_securityClass *sc,
-					 	 afs_int32 scIndex),
+				 ugen_secproc_func secproc,
 				 char *funcName,
 				 afs_int32 gen_rxkad_level,
 				 afs_int32 maxservers, char *serviceid,
