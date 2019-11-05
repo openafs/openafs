@@ -105,7 +105,7 @@ afs_UFSWriteUIO(struct vcache *avc, afs_dcache_id_t *inode, struct uio *tuiop)
 
     tfile = (struct osi_file *)osi_UFSOpen(inode);
     if (!tfile)
-	return -1;
+	return EIO;
 
 #if defined(AFS_AIX41_ENV)
     AFS_GUNLOCK();
