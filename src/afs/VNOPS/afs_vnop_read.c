@@ -486,7 +486,7 @@ afs_UFSReadUIO(afs_dcache_id_t *cacheId, struct uio *tuiop)
 
     tfile = (struct osi_file *) osi_UFSOpen(cacheId);
     if (!tfile)
-	return -1;
+	return EIO;
 
 #if defined(AFS_AIX41_ENV)
     AFS_GUNLOCK();
