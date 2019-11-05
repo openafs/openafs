@@ -248,8 +248,10 @@ afs_UFSGetVolSlot(afs_int32 volid, struct cell *tcell)
     }
 
     /* read volume item data from disk for the gotten slot */
-    for (j = fvTable[FVHash(tcell->cellNum, volid)]; j != 0; j = tf->next) {
+    for (j = fvTable[FVHash(tcell->cellNum, volid)]; j != 0; j = staticFVolume.next) {
 	if (afs_FVIndex != j) {
+	    /* The data in staticFVolume is currently for a different slot.
+	     * Read the data for slot 'j' into staticFVolume. */
 	    tfile = osi_UFSOpen(&volumeInode);
 	    if (!tfile) {
 		afs_warn("afs_UFSGetVolSlot: unable to open volumeinfo\n");
@@ -274,11 +276,9 @@ afs_UFSGetVolSlot(afs_int32 volid, struct cell *tcell)
 	    }
 	    afs_FVIndex = j;
 	}
-	if (j != 0) {		/* volume items record 0 is not used */
+	if (staticFVolume.cell == tcell->cellNum && staticFVolume.volume == volid) {
 	    tf = &staticFVolume;
-	    if (tf->cell == tcell->cellNum && tf->volume == volid) {
-		break;
-	    }
+	    break;
 	}
     }
 
