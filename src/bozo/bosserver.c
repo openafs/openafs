@@ -73,11 +73,6 @@ const char *bozo_fileName;
 /* Protects the entire bnode subsystem. */
 opr_mutex_t bnode_glock;
 
-#ifdef AFS_PTHREAD_ENV
-/* Protects writing to the log file. */
-static opr_mutex_t bozo_logLock;
-#endif
-
 #ifndef AFS_NT40_ENV
 static int bozo_argc = 0;
 static char** bozo_argv = NULL;
@@ -87,9 +82,6 @@ char *DoCore;
 int DoLogging = 0;
 int DoSyslog = 0;
 char *DoPidFiles = NULL;
-#ifndef AFS_NT40_ENV
-int DoSyslogFacility = LOG_DAEMON;
-#endif
 int DoTransarcLogs = 0;
 
 struct ktime bozo_nextRestartKT, bozo_nextDayKT;
@@ -145,8 +137,8 @@ bozo_IsLocalRealmMatch(void *rock, char *name, char *inst, char *cell)
 
     code = afsconf_IsLocalRealmMatch(dir, &islocal, name, inst, cell);
     if (code) {
-	bozo_Log("Failed local realm check; code=%d, name=%s, inst=%s, cell=%s\n",
-		 code, name, inst, cell);
+	ViceLog(0, ("Failed local realm check; code=%d, name=%s, inst=%s, cell=%s\n",
+		    code, name, inst, cell));
     }
     return islocal;
 }
@@ -621,7 +613,8 @@ bdrestart(struct bnode *abnode, void *arock)
     return 0;			/* keep trying all bnodes */
 }
 
-#define	BOZO_MINSKIP 3600	/* minimum to advance clock */
+#define BOZO_MINSKIP 3600	/* minimum to advance clock */
+#define BOZO_LOGOPEN_INT 300	/* reopen our log file every 5 minutes */
 /* lwp to handle system restarts */
 static void *
 BozoDaemon(void *unused)
@@ -629,6 +622,7 @@ BozoDaemon(void *unused)
     afs_int32 now;
     afs_int32 nextRestart = 0;
     afs_int32 nextDay = 0;
+    afs_int32 last_reopen = FT_ApproxTime();
 
     while (1) {
 #ifdef AFS_PTHREAD_ENV
@@ -642,7 +636,7 @@ BozoDaemon(void *unused)
 	now = FT_ApproxTime();
 
 	if (rx_atomic_read(&bozo_restricted_disabled)) {
-	    bozo_Log("Restricted mode disabled by signal\n");
+	    ViceLog(0, ("Restricted mode disabled by signal\n"));
 	    rx_atomic_set(&bozo_restricted_disabled, 0);
 	}
 
@@ -668,6 +662,12 @@ BozoDaemon(void *unused)
 	}
 
 	BNODE_UNLOCK();
+
+	if (now < last_reopen || now - last_reopen >= BOZO_LOGOPEN_INT) {
+	    /* Reopen logs to allow for log rotation. */
+	    last_reopen = now;
+	    ReOpenLog();
+	}
     }
     AFS_UNREACHED(return(NULL));
 }
@@ -714,12 +714,13 @@ make_pid_filename(char *ainst, char *aname)
     if (aname && *aname) {
 	r = asprintf(&buffer, "%s/%s.%s.pid", DoPidFiles, ainst, aname);
 	if (r < 0 || buffer == NULL)
-	    bozo_Log("Failed to alloc pid filename buffer for %s.%s.\n",
-		     ainst, aname);
+	    ViceLog(0, ("Failed to alloc pid filename buffer for %s.%s.\n",
+			ainst, aname));
     } else {
 	r = asprintf(&buffer, "%s/%s.pid", DoPidFiles, ainst);
 	if (r < 0 || buffer == NULL)
-	    bozo_Log("Failed to alloc pid filename buffer for %s.\n", ainst);
+	    ViceLog(0, ("Failed to alloc pid filename buffer for %s.\n",
+			ainst));
     }
 
     return buffer;
@@ -746,7 +747,7 @@ bozo_CreatePidFile(char *ainst, char *aname, pid_t apid)
 	return ENOMEM;
     }
     if ((fp = fopen(pidfile, "w")) == NULL) {
-	bozo_Log("Failed to open pidfile %s; errno=%d\n", pidfile, errno);
+	ViceLog(0, ("Failed to open pidfile %s; errno=%d\n", pidfile, errno));
 	free(pidfile);
 	return errno;
     }
@@ -794,10 +795,10 @@ bozo_CreateRxBindFile(afs_uint32 host)
     FILE *fp;
 
     afs_inet_ntoa_r(host, buffer);
-    bozo_Log("Listening on %s:%d\n", buffer, AFSCONF_NANNYPORT);
+    ViceLog(0, ("Listening on %s:%d\n", buffer, AFSCONF_NANNYPORT));
     if ((fp = fopen(AFSDIR_SERVER_BOZRXBIND_FILEPATH, "w")) == NULL) {
-	bozo_Log("Unable to open rxbind address file: %s, code=%d\n",
-		 AFSDIR_SERVER_BOZRXBIND_FILEPATH, errno);
+	ViceLog(0, ("Unable to open rxbind address file: %s, code=%d\n",
+		    AFSDIR_SERVER_BOZRXBIND_FILEPATH, errno));
     } else {
 	/* If listening on any interface, write the loopback interface
 	   to the rxbind file to give local scripts a usable addresss. */
@@ -851,24 +852,24 @@ CreateLocalCellConfig(void)
     tcell.numServers = 1;
     code = gethostname(tcell.hostName[0], MAXHOSTCHARS);
     if (code) {
-	bozo_Log("failed to get hostname, code %d\n", errno);
+	ViceLog(0, ("failed to get hostname, code %d\n", errno));
 	exit(1);
     }
     if (tcell.hostName[0][0] == 0) {
-	bozo_Log("host name not set, can't start\n");
-	bozo_Log("try the 'hostname' command\n");
+	ViceLog(0, ("host name not set, can't start\n"));
+	ViceLog(0, ("try the 'hostname' command\n"));
 	exit(1);
     }
     code = afsconf_SetCellInfo(NULL, AFSDIR_SERVER_ETC_DIRPATH, &tcell);
     if (code) {
-	bozo_Log
+	ViceLog(0,
 	    ("could not create cell database in '%s' (code %d), quitting\n",
-	     AFSDIR_SERVER_ETC_DIRPATH, code);
+	     AFSDIR_SERVER_ETC_DIRPATH, code));
 	exit(1);
     }
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
     if (!tdir) {
-	bozo_Log("failed to open newly-created cell database, quitting\n");
+	ViceLog(0, ("failed to open newly-created cell database, quitting\n"));
 	exit(1);
     }
     return tdir;
@@ -902,13 +903,12 @@ int
 main(int argc, char **argv, char **envp)
 {
     struct cmd_syndesc *opts;
-
+    struct logOptions logopts;
     struct rx_service *tservice;
     afs_int32 code;
     struct afsconf_dir *tdir;
     int noAuth = 0;
     int i;
-    char *oldlog;
     int rxMaxMTU = -1;
     afs_uint32 host = htonl(INADDR_ANY);
     char *auditIface = NULL;
@@ -917,7 +917,6 @@ main(int argc, char **argv, char **envp)
     afs_int32 numClasses;
     int DoPeerRPCStats = 0;
     int DoProcessRPCStats = 0;
-    struct stat sb;
     struct afsconf_bsso_info bsso;
     int restricted = 0;
 #ifdef AFS_PTHREAD_ENV
@@ -951,6 +950,7 @@ main(int argc, char **argv, char **envp)
     sigaction(SIGABRT, &nsa, NULL);
 #endif
     osi_audit_init();
+    memset(&logopts, 0, sizeof(logopts));
 
     memset(&bsso, 0, sizeof(bsso));
 
@@ -963,7 +963,6 @@ main(int argc, char **argv, char **envp)
     }
 #endif
 
-    opr_mutex_init(&bozo_logLock);
     opr_mutex_init(&bnode_glock);
 
     /* Initialize dirpaths */
@@ -1096,11 +1095,20 @@ main(int argc, char **argv, char **envp)
     cmd_OptionAsList(opts, OPT_auditlog, &auditLogList);
 
     cmd_OptionAsFlag(opts, OPT_transarc_logs, &DoTransarcLogs);
+    if (DoTransarcLogs) {
+	logopts.lopt_rotateOnOpen = 1;
+	logopts.lopt_rotateStyle = logRotate_old;
+    }
 
 #ifndef AFS_NT40_ENV
     if (cmd_OptionPresent(opts, OPT_syslog)) {
 	DoSyslog = 1;
-	cmd_OptionAsInt(opts, OPT_syslog, &DoSyslogFacility);
+
+	logopts.lopt_dest = logDest_syslog;
+	logopts.lopt_facility = LOG_DAEMON;
+	logopts.lopt_tag = "bosserver";
+
+	cmd_OptionAsInt(opts, OPT_syslog, &logopts.lopt_facility);
     }
 #endif
 
@@ -1128,30 +1136,14 @@ main(int argc, char **argv, char **envp)
     }
 
     if (!DoSyslog) {
-	FILE *bozo_logFile;
-	/* Support logging to named pipes by not renaming. */
-	if (DoTransarcLogs
-	    && (lstat(AFSDIR_SERVER_BOZLOG_FILEPATH, &sb) == 0)
-	    && !(S_ISFIFO(sb.st_mode))) {
-	    if (asprintf(&oldlog, "%s.old", AFSDIR_SERVER_BOZLOG_FILEPATH) < 0) {
-		printf("bosserver: out of memory\n");
-		exit(1);
-	    }
-	    rk_rename(AFSDIR_SERVER_BOZLOG_FILEPATH, oldlog);
-	    free(oldlog);
-	}
-	bozo_logFile = fopen(AFSDIR_SERVER_BOZLOG_FILEPATH, "a");
-	if (!bozo_logFile) {
-	    printf("bosserver: can't initialize log file (%s).\n",
-		   AFSDIR_SERVER_BOZLOG_FILEPATH);
-	    exit(1);
-	}
-	/* keep log closed normally, so can be removed */
-	fclose(bozo_logFile);
-    } else {
-#ifndef AFS_NT40_ENV
-	openlog("bosserver", LOG_PID, DoSyslogFacility);
-#endif
+	logopts.lopt_dest = logDest_file;
+	logopts.lopt_filename = AFSDIR_SERVER_BOZLOG_FILEPATH;
+    }
+
+    code = OpenLog(&logopts);
+    if (code != 0) {
+	printf("bosserver: can't initialize logs.\n");
+	exit(1);
     }
 
     /*
@@ -1226,25 +1218,26 @@ main(int argc, char **argv, char **envp)
 	  rlp.rlim_max = rlp.rlim_cur = RLIM_INFINITY;
       setrlimit(RLIMIT_CORE, &rlp);
       getrlimit(RLIMIT_CORE, &rlp);
-      bozo_Log("Core limits now %d %d\n",(int)rlp.rlim_cur,(int)rlp.rlim_max);
+      ViceLog(0, ("Core limits now %d %d\n",
+		  (int)rlp.rlim_cur,(int)rlp.rlim_max));
     }
 #endif
 
     /* Read init file, starting up programs. Also starts watcher threads. */
     if ((code = ReadBozoFile(0))) {
-	bozo_Log
+	ViceLog(0,
 	    ("bosserver: Something is wrong (%d) with the bos configuration file %s; aborting\n",
-	     code, AFSDIR_SERVER_BOZCONF_FILEPATH);
+	     code, AFSDIR_SERVER_BOZCONF_FILEPATH));
 	exit(code);
     }
 
     if (bozo_IsRestricted()) {
-	bozo_Log("NOTICE: bosserver is running in restricted mode.\n");
+	ViceLog(0, ("NOTICE: bosserver is running in restricted mode.\n"));
     } else {
-	bozo_Log("WARNING: bosserver is not running in restricted mode.\n");
-	bozo_Log("WARNING: Superusers have unrestricted access to this host via bos.\n");
-	bozo_Log("WARNING: Use 'bos setrestricted' or restart with the -restricted option\n");
-	bozo_Log("WARNING: to enable restricted mode.\n");
+	ViceLog(0, ("WARNING: bosserver is not running in restricted mode.\n"));
+	ViceLog(0, ("WARNING: Superusers have unrestricted access to this host via bos.\n"));
+	ViceLog(0, ("WARNING: Use 'bos setrestricted' or restart with the -restricted option\n"));
+	ViceLog(0, ("WARNING: to enable restricted mode.\n"));
     }
 
     if (rxBind) {
@@ -1253,13 +1246,13 @@ main(int argc, char **argv, char **envp)
     for (i = 0; i < 10; i++) {
 	code = rx_InitHost(host, htons(AFSCONF_NANNYPORT));
 	if (code) {
-	    bozo_Log("can't initialize rx: code=%d\n", code);
+	    ViceLog(0, ("can't initialize rx: code=%d\n", code));
 	    sleep(3);
 	} else
 	    break;
     }
     if (i >= 10) {
-	bozo_Log("Bos giving up, can't initialize rx\n");
+	ViceLog(0, ("Bos giving up, can't initialize rx\n"));
 	exit(code);
     }
 
@@ -1274,7 +1267,7 @@ main(int argc, char **argv, char **envp)
 
     if (rxMaxMTU != -1) {
 	if (rx_SetMaxMTU(rxMaxMTU) != 0) {
-	    bozo_Log("bosserver: rxMaxMTU %d is invalid\n", rxMaxMTU);
+	    ViceLog(0, ("bosserver: rxMaxMTU %d is invalid\n", rxMaxMTU));
 	    exit(1);
 	}
     }
@@ -1289,7 +1282,7 @@ main(int argc, char **argv, char **envp)
 			     /* param */ NULL , "bozo-the-clown", &bozo_pid);
 #endif
     if (code) {
-	bozo_Log("Failed to create daemon thread\n");
+	ViceLog(0, ("Failed to create daemon thread\n"));
         exit(1);
     }
 
@@ -1307,7 +1300,7 @@ main(int argc, char **argv, char **envp)
     afsconf_SetNoAuthFlag(tdir, noAuth);
 
     bsso.dir = tdir;
-    bsso.logger = bozo_Log;
+    bsso.logger = FSLog;
     afsconf_BuildServerSecurityObjects_int(&bsso, &securityClasses, &numClasses);
 
     if (DoPidFiles) {
@@ -1326,7 +1319,7 @@ main(int argc, char **argv, char **envp)
 	code = rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
 					   (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
 	if (code) {
-	    bozo_Log("Failed to allow dotted principals: code %d\n", code);
+	    ViceLog(0, ("Failed to allow dotted principals: code %d\n", code));
 	    exit(1);
 	}
     }
@@ -1338,45 +1331,4 @@ main(int argc, char **argv, char **envp)
     rx_SetMaxProcs(tservice, 4);
     rx_StartServer(1);		/* donate this process */
     return 0;
-}
-
-void
-bozo_Log(const char *format, ...)
-{
-    char tdate[27];
-    time_t myTime;
-    va_list ap;
-
-    va_start(ap, format);
-
-    if (DoSyslog) {
-#ifndef AFS_NT40_ENV
-        vsyslog(LOG_INFO, format, ap);
-#endif
-    } else {
-	FILE *bozo_logFile;
-	opr_mutex_enter(&bozo_logLock);
-	myTime = time(0);
-	strcpy(tdate, ctime(&myTime));	/* copy out of static area asap */
-	tdate[24] = ':';
-
-	/* log normally closed, so can be removed */
-
-	bozo_logFile = fopen(AFSDIR_SERVER_BOZLOG_FILEPATH, "a");
-	if (bozo_logFile == NULL) {
-	    printf("bosserver: WARNING: problem with %s\n",
-		   AFSDIR_SERVER_BOZLOG_FILEPATH);
-	    printf("%s ", tdate);
-	    vprintf(format, ap);
-	    fflush(stdout);
-	} else {
-	    fprintf(bozo_logFile, "%s ", tdate);
-	    vfprintf(bozo_logFile, format, ap);
-
-	    /* close so rm BosLog works */
-	    fclose(bozo_logFile);
-	}
-	opr_mutex_exit(&bozo_logLock);
-    }
-    va_end(ap);
 }

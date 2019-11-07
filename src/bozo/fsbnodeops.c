@@ -420,24 +420,24 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 
     /* construct local paths from canonical (wire-format) paths */
     if (ConstructLocalBinPath(afilecmd, &fileCmdpath)) {
-	bozo_Log("BNODE: command path invalid '%s'\n", afilecmd);
+	ViceLog(0, ("BNODE: command path invalid '%s'\n", afilecmd));
 	bailout = 1;
 	goto done;
     }
     if (ConstructLocalBinPath(avolcmd, &volCmdpath)) {
-	bozo_Log("BNODE: command path invalid '%s'\n", avolcmd);
+	ViceLog(0, ("BNODE: command path invalid '%s'\n", avolcmd));
 	bailout = 1;
 	goto done;
     }
     if (ConstructLocalBinPath(asalcmd, &salCmdpath)) {
-	bozo_Log("BNODE: command path invalid '%s'\n", asalcmd);
+	ViceLog(0, ("BNODE: command path invalid '%s'\n", asalcmd));
 	bailout = 1;
 	goto done;
     }
 
     if (ascancmd && strlen(ascancmd)) {
 	if (ConstructLocalBinPath(ascancmd, &scanCmdpath)) {
-	    bozo_Log("BNODE: command path invalid '%s'\n", ascancmd);
+	    ViceLog(0, ("BNODE: command path invalid '%s'\n", ascancmd));
 	    bailout = 1;
 	    goto done;
 	}
@@ -446,12 +446,12 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
     if (!bailout) {
 	cmdname = PathToExecutable(fileCmdpath);
 	if (cmdname == NULL) {
-	    bozo_Log("Out of memory constructing binary filename\n");
+	    ViceLog(0, ("Out of memory constructing binary filename\n"));
 	    bailout = 1;
 	    goto done;
 	}
 	if (stat(cmdname, &tstat)) {
-	    bozo_Log("BNODE: file server binary '%s' not found\n", cmdname);
+	    ViceLog(0, ("BNODE: file server binary '%s' not found\n", cmdname));
 	    bailout = 1;
 	    goto done;
 	}
@@ -459,12 +459,12 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 
 	cmdname = PathToExecutable(volCmdpath);
 	if (cmdname == NULL) {
-	    bozo_Log("Out of memory constructing binary filename\n");
+	    ViceLog(0, ("Out of memory constructing binary filename\n"));
 	    bailout = 1;
 	    goto done;
 	}
 	if (stat(cmdname, &tstat)) {
-	    bozo_Log("BNODE: volume server binary '%s' not found\n", cmdname);
+	    ViceLog(0, ("BNODE: volume server binary '%s' not found\n", cmdname));
 	    bailout = 1;
 	    goto done;
 	}
@@ -472,12 +472,12 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 
 	cmdname = PathToExecutable(salCmdpath);
 	if (cmdname == NULL) {
-	    bozo_Log("Out of memory constructing binary filename\n");
+	    ViceLog(0, ("Out of memory constructing binary filename\n"));
 	    bailout = 1;
 	    goto done;
 	}
 	if (stat(cmdname, &tstat)) {
-	    bozo_Log("BNODE: salvager binary '%s' not found\n", cmdname);
+	    ViceLog(0, ("BNODE: salvager binary '%s' not found\n", cmdname));
 	    bailout = 1;
 	    goto done;
 	}
@@ -486,12 +486,12 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 	    free(cmdname);
 	    cmdname = PathToExecutable(scanCmdpath);
 	    if (cmdname == NULL) {
-		bozo_Log("Out of memory constructing binary filename\n");
+		ViceLog(0, ("Out of memory constructing binary filename\n"));
 		bailout = 1;
 		goto done;
 	    }
 	    if (stat(cmdname, &tstat)) {
-		bozo_Log("BNODE: scanner binary '%s' not found\n", cmdname);
+		ViceLog(0, ("BNODE: scanner binary '%s' not found\n", cmdname));
 		bailout = 1;
 		goto done;
 	    }
@@ -555,29 +555,29 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 
     /* construct local paths from canonical (wire-format) paths */
     if (ConstructLocalBinPath(afilecmd, &fileCmdpath)) {
-	bozo_Log("BNODE: command path invalid '%s'\n", afilecmd);
+	ViceLog(0, ("BNODE: command path invalid '%s'\n", afilecmd));
 	bailout = 1;
 	goto done;
     }
     if (ConstructLocalBinPath(avolcmd, &volCmdpath)) {
-	bozo_Log("BNODE: command path invalid '%s'\n", avolcmd);
+	ViceLog(0, ("BNODE: command path invalid '%s'\n", avolcmd));
 	bailout = 1;
 	goto done;
     }
     if (ConstructLocalBinPath(asalsrvcmd, &salsrvCmdpath)) {
-	bozo_Log("BNODE: command path invalid '%s'\n", asalsrvcmd);
+	ViceLog(0, ("BNODE: command path invalid '%s'\n", asalsrvcmd));
 	bailout = 1;
 	goto done;
     }
     if (ConstructLocalBinPath(asalcmd, &salCmdpath)) {
-	bozo_Log("BNODE: command path invalid '%s'\n", asalcmd);
+	ViceLog(0, ("BNODE: command path invalid '%s'\n", asalcmd));
 	bailout = 1;
 	goto done;
     }
 
     if (ascancmd && strlen(ascancmd)) {
 	if (ConstructLocalBinPath(ascancmd, &scanCmdpath)) {
-	    bozo_Log("BNODE: command path invalid '%s'\n", ascancmd);
+	    ViceLog(0, ("BNODE: command path invalid '%s'\n", ascancmd));
 	    bailout = 1;
 	    goto done;
 	}
@@ -586,12 +586,12 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
     if (!bailout) {
 	cmdname = PathToExecutable(fileCmdpath);
 	if (cmdname == NULL) {
-	    bozo_Log("Out of memory constructing binary filename\n");
+	    ViceLog(0, ("Out of memory constructing binary filename\n"));
 	    bailout = 1;
 	    goto done;
 	}
 	if (stat(cmdname, &tstat)) {
-	    bozo_Log("BNODE: file server binary '%s' not found\n", cmdname);
+	    ViceLog(0, ("BNODE: file server binary '%s' not found\n", cmdname));
 	    bailout = 1;
 	    goto done;
 	}
@@ -599,12 +599,12 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 
 	cmdname = PathToExecutable(volCmdpath);
 	if (cmdname == NULL) {
-	    bozo_Log("Out of memory constructing binary filename\n");
+	    ViceLog(0, ("Out of memory constructing binary filename\n"));
 	    bailout = 1;
 	    goto done;
 	}
 	if (stat(cmdname, &tstat)) {
-	    bozo_Log("BNODE: volume server binary '%s' not found\n", cmdname);
+	    ViceLog(0, ("BNODE: volume server binary '%s' not found\n", cmdname));
 	    bailout = 1;
 	    goto done;
 	}
@@ -612,12 +612,12 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 
 	cmdname = PathToExecutable(salsrvCmdpath);
 	if (cmdname == NULL) {
-	    bozo_Log("Out of memory constructing binary filename\n");
+	    ViceLog(0, ("Out of memory constructing binary filename\n"));
 	    bailout = 1;
 	    goto done;
 	}
 	if (stat(cmdname, &tstat)) {
-	    bozo_Log("BNODE: salvageserver binary '%s' not found\n", cmdname);
+	    ViceLog(0, ("BNODE: salvageserver binary '%s' not found\n", cmdname));
 	    bailout = 1;
 	    goto done;
 	}
@@ -625,12 +625,12 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 
 	cmdname = PathToExecutable(salCmdpath);
 	if (cmdname == NULL) {
-	    bozo_Log("Out of memory constructing binary filename\n");
+	    ViceLog(0, ("Out of memory constructing binary filename\n"));
 	    bailout = 1;
 	    goto done;
 	}
 	if (stat(cmdname, &tstat)) {
-	    bozo_Log("BNODE: salvager binary '%s' not found\n", cmdname);
+	    ViceLog(0, ("BNODE: salvager binary '%s' not found\n", cmdname));
 	    bailout = 1;
 	    goto done;
 	}
@@ -639,12 +639,12 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 	    free(cmdname);
 	    cmdname = PathToExecutable(scanCmdpath);
 	    if (cmdname == NULL) {
-		bozo_Log("Out of memory constructing binary filename\n");
+		ViceLog(0, ("Out of memory constructing binary filename\n"));
 		bailout = 1;
 		goto done;
 	    }
 	    if (stat(cmdname, &tstat)) {
-		bozo_Log("BNODE: scanner binary '%s' not found\n", cmdname);
+		ViceLog(0, ("BNODE: scanner binary '%s' not found\n", cmdname));
 		bailout = 1;
 		goto done;
 	    }
@@ -708,45 +708,45 @@ fs_timeout(struct bnode *bn)
 	if (!abnode->volKillSent && now - abnode->timeSDStarted > SDTIME) {
 	    bnode_StopProc(abnode->volProc, SIGKILL);
 	    abnode->volKillSent = 1;
-	    bozo_Log
+	    ViceLog(0,
 		("bos shutdown: volserver failed to shutdown within %d seconds\n",
-		 SDTIME);
+		 SDTIME));
 	}
     }
     if (abnode->salSDW) {
 	if (!abnode->salKillSent && now - abnode->timeSDStarted > SDTIME) {
 	    bnode_StopProc(abnode->salProc, SIGKILL);
 	    abnode->salKillSent = 1;
-	    bozo_Log
+	    ViceLog(0,
 		("bos shutdown: salvager failed to shutdown within %d seconds\n",
-		 SDTIME);
+		 SDTIME));
 	}
     }
     if (abnode->fileSDW) {
 	if (!abnode->fileKillSent && now - abnode->timeSDStarted > FSSDTIME) {
 	    bnode_StopProc(abnode->fileProc, SIGKILL);
 	    abnode->fileKillSent = 1;
-	    bozo_Log
+	    ViceLog(0,
 		("bos shutdown: fileserver failed to shutdown within %d seconds\n",
-		 FSSDTIME);
+		 FSSDTIME));
 	}
     }
     if (abnode->salsrvSDW) {
 	if (!abnode->salsrvKillSent && now - abnode->timeSDStarted > SDTIME) {
 	    bnode_StopProc(abnode->salsrvProc, SIGKILL);
 	    abnode->salsrvKillSent = 1;
-	    bozo_Log
+	    ViceLog(0,
 		("bos shutdown: salvageserver failed to shutdown within %d seconds\n",
-		 SDTIME);
+		 SDTIME));
 	}
     }
     if (abnode->scanSDW) {
 	if (!abnode->scanKillSent && now - abnode->timeSDStarted > SDTIME) {
 	    bnode_StopProc(abnode->scanProc, SIGKILL);
 	    abnode->scanKillSent = 1;
-	    bozo_Log
+	    ViceLog(0,
 		("bos shutdown: scanner failed to shutdown within %d seconds\n",
-		 SDTIME);
+		 SDTIME));
 	}
     }
 
@@ -882,8 +882,8 @@ SetNeedsClock(struct fsbnode *ab)
     } else if ((ab->b.goal == 0) && !ab->fileRunning && !ab->volRunning
 	       && !ab->salRunning && !ab->scanRunning && !ab->salsrvRunning) {
 	if (ab->b.flags & BNODE_ERRORSTOP && ab->b.errorStopDelay) {
-	    bozo_Log("%s will retry start in %d seconds\n", ab->b.name,
-		     ab->b.errorStopDelay);
+	    ViceLog(0, ("%s will retry start in %d seconds\n", ab->b.name,
+			ab->b.errorStopDelay));
 	    ab->needsClock = 1;	/* halted for errors, retry later */
 	    timeout = ab->b.errorStopDelay;
 	} else {
@@ -913,8 +913,8 @@ NudgeProcs(struct fsbnode *abnode)
 	 * tells us if we need to run the salvager or not */
 	if (abnode->fileRunning) {
 	    if (abnode->salRunning) {
-		bozo_Log("Salvager running along with file server!\n");
-		bozo_Log("Emergency shutdown\n");
+		ViceLog(0, ("Salvager running along with file server!\n"));
+		ViceLog(0, ("Emergency shutdown\n"));
 		emergency = 1;
 		bnode_SetGoal(fsbnode2bnode(abnode), BSTAT_SHUTDOWN);
 		bnode_StopProc(abnode->salProc, SIGKILL);

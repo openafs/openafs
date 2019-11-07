@@ -110,7 +110,7 @@ ez_create(char *ainstance, char *acommand, char *unused1, char *unused2,
     char *cmdpath;
 
     if (ConstructLocalBinPath(acommand, &cmdpath)) {
-	bozo_Log("BNODE: command path invalid '%s'\n", acommand);
+	ViceLog(0, ("BNODE: command path invalid '%s'\n", acommand));
 	return NULL;
     }
 
@@ -226,8 +226,8 @@ ez_procexit(struct bnode *bn, struct bnode_proc *aproc)
     if (abnode->b.goal)
 	code = ez_setstat((struct bnode *) abnode, BSTAT_NORMAL);
     else if (abnode->b.flags & BNODE_ERRORSTOP && abnode->b.errorStopDelay) {
-	bozo_Log("%s will retry start in %d seconds\n", abnode->b.name,
-		 abnode->b.errorStopDelay);
+	ViceLog(0, ("%s will retry start in %d seconds\n", abnode->b.name,
+		    abnode->b.errorStopDelay));
 	bnode_SetTimeout(bn, abnode->b.errorStopDelay);
     }
     return code;

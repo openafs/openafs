@@ -80,7 +80,7 @@ SBOZO_SetRestartTime(struct rx_call *acall, afs_int32 atype, struct bozo_netKTim
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing SetRestartTime\n", caller);
+	ViceLog(0, ("%s is executing SetRestartTime\n", caller));
 
     code = 0;			/* assume success */
     switch (atype) {
@@ -125,7 +125,7 @@ SBOZO_Exec(struct rx_call *acall, char *acmd)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing the shell command '%s'\n", caller, acmd);
+	ViceLog(0, ("%s is executing the shell command '%s'\n", caller, acmd));
 
     /* should copy output to acall, but don't yet cause its hard */
     /*  hard... NOT!  Nnow _at least_ return the exit status */
@@ -202,7 +202,7 @@ SBOZO_UnInstall(struct rx_call *acall, char *aname)
     }
 
     if (DoLogging)
-	bozo_Log("%s is executing UnInstall '%s'\n", caller, filepath);
+	ViceLog(0, ("%s is executing UnInstall '%s'\n", caller, filepath));
 
     if (asprintf(&fpBak, "%s.BAK", filepath) < 0) {
 	code = BZIO;
@@ -323,7 +323,7 @@ SBOZO_Install(struct rx_call *acall, char *aname, afs_int32 asize, afs_int32 mod
     }
 
     if (DoLogging)
-	bozo_Log("%s is executing Install '%s'\n", caller, filepath);
+	ViceLog(0, ("%s is executing Install '%s'\n", caller, filepath));
 
     /* open file */
     fd = open(fpNew, O_CREAT | O_RDWR | O_TRUNC, 0777);
@@ -402,7 +402,7 @@ SBOZO_SetCellName(struct rx_call *acall, char *aname)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing SetCellName '%s'\n", caller, aname);
+	ViceLog(0, ("%s is executing SetCellName '%s'\n", caller, aname));
 
     code =
 	afsconf_GetExtendedCellInfo(bozo_confdir, NULL, NULL, &tcell,
@@ -412,9 +412,9 @@ SBOZO_SetCellName(struct rx_call *acall, char *aname)
 
     /* Check that tcell has enough space for the new cellname. */
     if (strlen(aname) > sizeof tcell.name - 1) {
-	bozo_Log
+	ViceLog(0,
 	    ("ERROR: SetCellName: cell name '%s' exceeds %ld bytes (cell name not changed)\n",
-	     aname, (long)(sizeof tcell.name - 1));
+	     aname, (long)(sizeof tcell.name - 1)));
 	code = BZDOM;
 	goto fail;
     }
@@ -499,7 +499,7 @@ SBOZO_DeleteCellHost(struct rx_call *acall, char *aname)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing DeleteCellHost '%s'\n", caller, aname);
+	ViceLog(0, ("%s is executing DeleteCellHost '%s'\n", caller, aname));
 
     code =
 	afsconf_GetExtendedCellInfo(bozo_confdir, NULL, NULL, &tcell,
@@ -548,7 +548,7 @@ SBOZO_AddCellHost(struct rx_call *acall, char *aname)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing AddCellHost '%s'\n", caller, aname);
+	ViceLog(0, ("%s is executing AddCellHost '%s'\n", caller, aname));
 
     code =
 	afsconf_GetExtendedCellInfo(bozo_confdir, NULL, NULL, &tcell,
@@ -582,19 +582,19 @@ SBOZO_AddCellHost(struct rx_call *acall, char *aname)
 	 */
 	if (tcell.numServers >
 	    sizeof tcell.hostAddr / sizeof tcell.hostAddr[0]) {
-	    bozo_Log
+	    ViceLog(0,
 		("ERROR: AddCellHost: attempt to add more than %ld database servers (database server '%s' not added)\n",
 		 (long)(sizeof tcell.hostAddr / sizeof tcell.hostAddr[0]),
-		 aname);
+		 aname));
 	    code = BZDOM;
 	    goto fail;
 	}
 
 	/* Check that tcell has enough space for the new hostname. */
 	if (strlen(aname) > sizeof tcell.hostName[0] - 1) {
-	    bozo_Log
+	    ViceLog(0,
 		("ERROR: AddCellHost: host name '%s' exceeds %ld bytes (not added)\n",
-		 aname, (long)(sizeof tcell.hostName[0] - 1));
+		 aname, (long)(sizeof tcell.hostName[0] - 1)));
 	    code = BZDOM;
 	    goto fail;
 	}
@@ -628,7 +628,7 @@ SBOZO_ListKeys(struct rx_call *acall, afs_int32 an, afs_int32 *akvno,
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing ListKeys\n", caller);
+	ViceLog(0, ("%s is executing ListKeys\n", caller));
 
     code = afsconf_GetKeys(bozo_confdir, &tkeys);
     if (code)
@@ -688,7 +688,7 @@ SBOZO_AddKey(struct rx_call *acall, afs_int32 an, struct bozo_key *akey)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing AddKey\n", caller);
+	ViceLog(0, ("%s is executing AddKey\n", caller));
 
     code = afsconf_AddKey(bozo_confdir, an, akey->data, 0);
     if (code == AFSCONF_KEYINUSE)
@@ -709,7 +709,7 @@ SBOZO_SetNoAuthFlag(struct rx_call *acall, afs_int32 aflag)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing Set No Authentication\n", caller);
+	ViceLog(0, ("%s is executing Set No Authentication\n", caller));
 
     afsconf_SetNoAuthFlag(bozo_confdir, aflag);
 
@@ -729,7 +729,7 @@ SBOZO_DeleteKey(struct rx_call *acall, afs_int32 an)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing DeleteKey\n", caller);
+	ViceLog(0, ("%s is executing DeleteKey\n", caller));
 
     code = afsconf_DeleteKey(bozo_confdir, an);
 
@@ -765,7 +765,7 @@ SBOZO_AddSUser(struct rx_call *acall, char *aname)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing Add SuperUser '%s'\n", caller, aname);
+	ViceLog(0, ("%s is executing Add SuperUser '%s'\n", caller, aname));
 
     code = afsconf_AddUser(bozo_confdir, aname);
 
@@ -786,7 +786,7 @@ SBOZO_DeleteSUser(struct rx_call *acall, char *aname)
     }
 
     if (DoLogging)
-	bozo_Log("%s is executing Delete SuperUser '%s'\n", caller, aname);
+	ViceLog(0, ("%s is executing Delete SuperUser '%s'\n", caller, aname));
 
     code = afsconf_DeleteUser(bozo_confdir, aname);
 
@@ -852,7 +852,7 @@ SBOZO_WaitAll(struct rx_call *acall)
     }
 
     if (DoLogging)
-	bozo_Log("%s is executing Wait for All\n", caller);
+	ViceLog(0, ("%s is executing Wait for All\n", caller));
 
     code = bnode_WaitAll();
 
@@ -879,7 +879,7 @@ SBOZO_DeleteBnode(struct rx_call *acall, char *ainstance)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing DeleteBnode '%s'\n", caller, ainstance);
+	ViceLog(0, ("%s is executing DeleteBnode '%s'\n", caller, ainstance));
 
     code = bnode_DeleteName(ainstance);
 
@@ -940,7 +940,7 @@ SBOZO_ShutdownAll(struct rx_call *acall)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing ShutdownAll\n", caller);
+	ViceLog(0, ("%s is executing ShutdownAll\n", caller));
 
     code = bnode_ApplyInstance(sdproc, NULL);
 
@@ -964,7 +964,7 @@ SBOZO_RestartAll(struct rx_call *acall)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing RestartAll\n", caller);
+	ViceLog(0, ("%s is executing RestartAll\n", caller));
 
     /* start shutdown of all processes */
     code = bnode_ApplyInstance(sdproc, NULL);
@@ -999,7 +999,7 @@ SBOZO_ReBozo(struct rx_call *acall)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing ReBozo\n", caller);
+	ViceLog(0, ("%s is executing ReBozo\n", caller));
 
     /* start shutdown of all processes */
     code = bnode_ApplyInstance(sdproc, NULL);
@@ -1047,7 +1047,7 @@ SBOZO_StartupAll(struct rx_call *acall)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing StartupAll\n", caller);
+	ViceLog(0, ("%s is executing StartupAll\n", caller));
     code = bnode_ApplyInstance(stproc, NULL);
 
   fail:
@@ -1070,7 +1070,7 @@ SBOZO_Restart(struct rx_call *acall, char *ainstance)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing Restart '%s'\n", caller, ainstance);
+	ViceLog(0, ("%s is executing Restart '%s'\n", caller, ainstance));
 
     tb = bnode_FindInstance(ainstance);
     if (!tb) {
@@ -1106,7 +1106,7 @@ SBOZO_SetTStatus(struct rx_call *acall, char *ainstance, afs_int32 astatus)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing SetTempStatus '%s'\n", caller, ainstance);
+	ViceLog(0, ("%s is executing SetTempStatus '%s'\n", caller, ainstance));
 
     tb = bnode_FindInstance(ainstance);
     if (!tb) {
@@ -1139,8 +1139,8 @@ SBOZO_SetStatus(struct rx_call *acall, char *ainstance, afs_int32 astatus)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing SetStatus '%s' (status = %d)\n", caller,
-		 ainstance, astatus);
+	ViceLog(0, ("%s is executing SetStatus '%s' (status = %d)\n", caller,
+		    ainstance, astatus));
 
     tb = bnode_FindInstance(ainstance);
     if (!tb) {
@@ -1232,7 +1232,7 @@ SBOZO_Prune(struct rx_call *acall, afs_int32 aflags)
 	goto fail;
     }
     if (DoLogging)
-	bozo_Log("%s is executing Prune (flags=%d)\n", caller, aflags);
+	ViceLog(0, ("%s is executing Prune (flags=%d)\n", caller, aflags));
 
     /* first scan AFS binary directory */
     dirp = opendir(AFSDIR_SERVER_BIN_DIRPATH);
@@ -1390,18 +1390,19 @@ DirAccessOK(void)
     for (i = 0; i < bozo_nbosEntryStats; i++) {
 	struct bozo_bosEntryStats *e = &bozo_bosEntryStats[i];
 	if (!StatEachEntry(e)) {
-	    bozo_Log("unhappy with %s which is a %s that should "
+	    ViceLog(0,
+		    ("unhappy with %s which is a %s that should "
 		     "have at least rights %o, at most rights %o %s\n",
 		     e->path, e->dir ? "dir" : "file", e->reqPerm,
 		     (~e->proPerm & 0777),
-		     e->rootOwner ? ", owned by root" : "");
+		     e->rootOwner ? ", owned by root" : ""));
 	    result = 0;
 	}
     }
 
     if (result != lastResult) {	/* log changes */
-	bozo_Log("Server directory access is %sokay\n",
-		 (result ? "" : "not "));
+	ViceLog(0, ("Server directory access is %sokay\n",
+		    (result ? "" : "not ")));
     }
     lastResult = result;
     return lastResult;
@@ -1518,7 +1519,7 @@ SBOZO_GetLog(struct rx_call *acall, char *aname)
 	return BZNOENT;
     }
     if (DoLogging)
-	bozo_Log("%s is executing GetLog '%s'\n", caller, logpath);
+	ViceLog(0, ("%s is executing GetLog '%s'\n", caller, logpath));
     tfile = fopen(logpath, "r");
     free(logpath);
 
@@ -1632,9 +1633,9 @@ bozo_ShutdownAndExit(void *param)
 
     BNODE_LOCK();
 
-    bozo_Log
+    ViceLog(0,
 	("Shutdown of BOS server and processes in response to signal %d\n",
-	 asignal);
+	 asignal));
 
     /* start shutdown of all processes */
     if ((code = bnode_ApplyInstance(sdproc, NULL)) == 0) {
@@ -1643,8 +1644,8 @@ bozo_ShutdownAndExit(void *param)
     }
 
     if (code) {
-	bozo_Log("Shutdown incomplete (code = %d); manual cleanup required\n",
-		 code);
+	ViceLog(0, ("Shutdown incomplete (code = %d); manual cleanup required\n",
+		    code));
     }
 
     BNODE_UNLOCK();

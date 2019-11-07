@@ -111,8 +111,8 @@ ScheduleCronBnode(struct cronbnode *abnode)
 	    abnode->lastStart = FT_ApproxTime();
 	    code = bnode_NewProc((struct bnode *)abnode, abnode->command, NULL, &tp);
 	    if (code) {
-		bozo_Log("cron bnode %s failed to start (code %d)\n",
-			 abnode->b.name, code);
+		ViceLog(0, ("cron bnode %s failed to start (code %d)\n",
+			    abnode->b.name, code));
 		return code;
 	    }
 	    abnode->everRun = 1;
@@ -159,7 +159,7 @@ cron_create(char *ainstance, char *acommand, char *awhen,
 
     /* construct local path from canonical (wire-format) path */
     if (ConstructLocalBinPath(acommand, &cmdpath)) {
-	bozo_Log("BNODE: command path invalid '%s'\n", acommand);
+	ViceLog(0, ("BNODE: command path invalid '%s'\n", acommand));
 	return NULL;
     }
 
@@ -195,8 +195,8 @@ cron_timeout(struct bnode *bn)
 	    bnode_SetTimeout((struct bnode *)abnode, 0);
 	    code = bnode_NewProc((struct bnode *)abnode, abnode->command, NULL, &tp);
 	    if (code) {
-		bozo_Log("cron failed to start bnode %s (code %d)\n",
-			 abnode->b.name, code);
+		ViceLog(0, ("cron failed to start bnode %s (code %d)\n",
+			    abnode->b.name, code));
 		return code;
 	    }
 	    abnode->everRun = 1;
@@ -284,11 +284,11 @@ cron_procexit(struct bnode *bn, struct bnode_proc *aproc)
 
     /* log interesting errors for folks */
     if (aproc->lastSignal)
-	bozo_Log("cron job %s exited due to signal %d\n", abnode->b.name,
-		 aproc->lastSignal);
+	ViceLog(0, ("cron job %s exited due to signal %d\n", abnode->b.name,
+		    aproc->lastSignal));
     else if (aproc->lastExit)
-	bozo_Log("cron job %s exited with non-zero code %d\n", abnode->b.name,
-		 aproc->lastExit);
+	ViceLog(0, ("cron job %s exited with non-zero code %d\n",
+		    abnode->b.name, aproc->lastExit));
 
     abnode->waitingForShutdown = 0;
     abnode->running = 0;
