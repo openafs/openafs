@@ -333,6 +333,25 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} -framework CoreFoundation"
 		;;
 
+	*_darwin_190)
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
+		MT_CFLAGS="-D_REENTRANT"
+		MT_LIBS='${XLIBS}'
+		KROOT='/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
+		LD="cc"
+		KERN_OPTMZ="-Os"
+		LWP_OPTMZ="-Os"
+		OPTMZ="-Os"
+		PAM_LIBS="-lpam"
+		REGEX_OBJ="regex.lo"
+		EXTRA_VLIBOBJS="fstab.o"
+		SHLIB_LINKER="${CC} \${ARCHFLAGS} -dynamiclib"
+		SHLIB_SUFFIX="dylib"
+		RANLIB="ranlib"
+		XLIBS="${LIB_AFSDB} -framework CoreFoundation"
+		;;
+
 	ppc_linux*)
 		KERN_OPTMZ=-O2
 		MT_CFLAGS='-pthread -D_REENTRANT'
@@ -699,6 +718,8 @@ AC_SUBST(XLIBELFA)
 AC_SUBST(XLIBKVM)
 AC_SUBST(XLIBS)
 AC_SUBST(YACC)
+AC_SUBST(KROOT)
+AC_SUBST(KINCLUDES)
 
 
 ])
