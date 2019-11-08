@@ -40,7 +40,6 @@ AFS_OS_NONFSOBJS = osi_vfsops.o
 KDEFS=
 DBUG = 
 DEFINES= -D_KERNEL -DKERNEL -DKERNEL_PRIVATE -DDIAGNOSTIC -DUSE_SELECT -DMACH_USER_API -DMACH_KERNEL
-KINCLUDES=-I${KROOT}/System/Library/Frameworks/Kernel.framework/Headers
 
 <ppc_darwin_70 ppc_darwin_80 x86_darwin_80>
 KOPTS_DBUG=-g
