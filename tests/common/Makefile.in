@@ -4,7 +4,7 @@ abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-MODULE_CFLAGS=-I$(srcdir)/.. -I$(srcdir)/../..
+MODULE_CFLAGS=-I$(TOP_OBJDIR)
 
 all check test tests:	config.o servers.o ubik.o rxkad.o network.o
 
