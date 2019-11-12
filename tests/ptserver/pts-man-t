@@ -2,24 +2,7 @@
 
 use strict;
 use warnings;
-use File::Basename;
-use lib "./tests-lib/perl5";
+use lib $ENV{SOURCE} . "/tests-lib/perl5";
 use mancheck_utils;
 
-# Set this to the bare command to test
-my $command = 'pts';
-my $builddir = $ENV{BUILD};
-if (!$builddir) {
-    $builddir = dirname($0) . "/..";
-}
-$builddir .= "/..";
-# Set this to the directory holding $command
-my $srcdir = "$builddir/src/ptserver";
-
-#---------------------------------------------------------------------
-
-my @sub_commands = lookup_sub_commands($srcdir, $command);
-plan tests => scalar @sub_commands;
-
-test_command_man_pages($builddir, $command, @sub_commands);
-
+run_manpage_tests("src/ptserver", "pts");

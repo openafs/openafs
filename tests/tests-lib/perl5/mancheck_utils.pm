@@ -52,7 +52,7 @@ sub lookup_sub_commands {
 #
 # Arguments:
 #
-#                builddir : A path to the OpenAFS build directory,
+#                  srcdir : A path to the OpenAFS source directory,
 #                           such as /tmp/1.4.14
 #
 #                 command : the name of the command (e.g. vos)
@@ -60,7 +60,7 @@ sub lookup_sub_commands {
 #             subcommlist : a list of sub-commands for command
 #
 sub test_command_man_pages {
-    my ($builddir, $command, @subcommlist) = @_;
+    my ($srcdir, $command, @subcommlist) = @_;
 
     # The following is because File::Find makes no sense to me
     # for this purpose, and actually seems totally misnamed
@@ -69,9 +69,9 @@ sub test_command_man_pages {
     my $frex = "";
     # Since we don't know what man section it might be in,
     # search all existing man page files for a filename match
-    my @mandirglob = glob("$builddir/doc/man-pages/man[1-8]/*");
+    my @mandirglob = glob("$srcdir/doc/man-pages/man[1-8]/*");
     # For every subcommand, see if command_subcommand.[1-8] exists
-    # in our man page build dir.
+    # in our man page source dir.
     foreach (@subcommlist) {
         my $subcommand = $_;
         $found = 0;
@@ -88,5 +88,29 @@ sub test_command_man_pages {
 	}
 	ok($found eq 1, "existence of man page for $command" . "_$subcommand");
     }
+}
+
+#
+# Setup the test plan and run all of the tests for the given command suite.
+#
+# Call like so:
+# run_manpage_tests("src/ptserver", "pts");
+#
+sub run_manpage_tests($$) {
+    my ($subdir, $command) = @_;
+
+    # When run from 'runtests', our cwd will be TOP_OBJDIR/tests. $SOURCE is
+    # set to TOP_SRCDIR/tests, and $BUILD is set to TOP_OBJDIR/tests. We want
+    # the top-level src and obj dirs, in order to find the relevant binaries
+    # and manpages.
+    my $srcdir = $ENV{SOURCE} . "/..";
+    my $objdir = $ENV{BUILD} . "/..";
+
+    my @sub_commands = lookup_sub_commands("$objdir/$subdir", $command);
+    die("No subcommands found in $objdir/$subdir/$command?") unless(@sub_commands);
+
+    plan tests => scalar @sub_commands;
+
+    test_command_man_pages($srcdir, $command, @sub_commands);
 }
 1;
