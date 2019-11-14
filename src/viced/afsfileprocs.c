@@ -1077,6 +1077,9 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 		      AUD_END);
 	}
     } else {			/* a store operation */
+	if (readonlyServer) {
+	    return (VREADONLY);
+	}
 	if ((rights & PRSFS_INSERT) && OWNSp(client, targetptr)
 	    && (CallingRoutine != CHK_STOREACL)
 	    && (targetptr->disk.type == vFile)) {
@@ -1085,9 +1088,7 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 	     * unless you are a system administrator */
 	  /******  InStatus->Owner && UnixModeBits better be SET!! */
 	    if (CHOWN(InStatus, targetptr) || CHGRP(InStatus, targetptr)) {
-		if (readonlyServer)
-		    return (VREADONLY);
-		else if (VanillaUser(client))
+		if (VanillaUser(client))
 		    return (EPERM);	/* Was EACCES */
 		else
 		    osi_audit(PrivilegeEvent, 0, AUD_ID,
@@ -1100,9 +1101,6 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 			  (client ? client->z.ViceId : 0), AUD_INT,
 			  CallingRoutine, AUD_END);
 	    } else {
-		if (readonlyServer) {
-		    return (VREADONLY);
-		}
 		if (CallingRoutine == CHK_STOREACL) {
 		    if (!(rights & PRSFS_ADMINISTER)
 			&& !VolumeOwner(client, targetptr))
@@ -1111,9 +1109,7 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 		    /* watch for chowns and chgrps */
 		    if (CHOWN(InStatus, targetptr)
 			|| CHGRP(InStatus, targetptr)) {
-			if (readonlyServer)
-			    return (VREADONLY);
-			else if (VanillaUser(client))
+			if (VanillaUser(client))
 			    return (EPERM);	/* Was EACCES */
 			else
 			    osi_audit(PrivilegeEvent, 0, AUD_ID,
@@ -1127,8 +1123,6 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 #else
 			(InStatus->UnixModeBits & (S_ISUID | S_ISGID)) != 0) {
 #endif
-			if (readonlyServer)
-			    return (VREADONLY);
 			if (VanillaUser(client))
 			    return (EACCES);
 			else
@@ -1137,8 +1131,6 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 				      CallingRoutine, AUD_END);
 		    }
 		    if (CallingRoutine == CHK_STOREDATA) {
-			if (readonlyServer)
-			    return (VREADONLY);
 			if (!(rights & PRSFS_WRITE))
 			    return (EACCES);
 			/* Next thing is tricky.  We want to prevent people
@@ -1166,8 +1158,6 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 #endif
 			    if ((targetptr->disk.type != vDirectory)
 				&& (!(targetptr->disk.modeBits & OWNERWRITE))) {
-			    if (readonlyServer)
-				return (VREADONLY);
 			    if (VanillaUser(client))
 				return (EACCES);
 			    else
@@ -1176,8 +1166,6 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 					  AUD_INT, CallingRoutine, AUD_END);
 			}
 		    } else {	/* a status store */
-			if (readonlyServer)
-			    return (VREADONLY);
 			if (targetptr->disk.type == vDirectory) {
 			    if (!(rights & PRSFS_DELETE)
 				&& !(rights & PRSFS_INSERT))
