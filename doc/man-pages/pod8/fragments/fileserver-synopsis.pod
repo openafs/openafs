@@ -15,6 +15,7 @@ B<fileserver>
     S<<< [B<-novbc>] >>>
     S<<< [B<-implicit> <I<admin mode bits: rlidwka>>] >>>
     S<<< [B<-readonly>] >>>
+    S<<< [B<-admin-write>] >>>
     S<<< [B<-hr> <I<number of hours between refreshing the host cps>>] >>>
     S<<< [B<-busyat> <I<< redirect clients when queue > n >>>] >>>
     S<<< [B<-nobusy>] >>>
