@@ -447,9 +447,6 @@ loop1:
 			    afs_osi_Sleep(&tvc->f.states);
 			    goto loop1;
 			}
-#if     defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
-			AFS_FAST_HOLD(tvc);
-#else
 #ifdef AFS_DARWIN80_ENV
 			if (tvc->f.states & CDeadVnode) {
 			    ReleaseReadLock(&afs_xvcache);
@@ -466,8 +463,9 @@ loop1:
 			    continue;
 			}
 #else
-			AFS_FAST_HOLD(tvc);
-#endif
+			if (osi_vnhold(tvc) != 0) {
+			    continue;
+			}
 #endif
 			ReleaseReadLock(&afs_xvcache);
 			afs_StaleVCacheFlags(tvc, 0, CUnique | CBulkFetching);
@@ -530,9 +528,6 @@ loop2:
 			afs_osi_Sleep(&tvc->f.states);
 			goto loop2;
 		    }
-#if     defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
-		    AFS_FAST_HOLD(tvc);
-#else
 #ifdef AFS_DARWIN80_ENV
 		    if (tvc->f.states & CDeadVnode) {
 			ReleaseReadLock(&afs_xvcache);
@@ -549,8 +544,9 @@ loop2:
 			continue;
 		    }
 #else
-		    AFS_FAST_HOLD(tvc);
-#endif
+		    if (osi_vnhold(tvc) != 0) {
+			continue;
+		    }
 #endif
 		    ReleaseReadLock(&afs_xvcache);
 		    afs_StaleVCacheFlags(tvc, 0, CUnique | CBulkFetching);

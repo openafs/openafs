@@ -54,3 +54,10 @@ osi_PostPopulateVCache(struct vcache *avc)
     avc->v.v_vfsp = afs_globalVFS;
     vSetType(avc, VREG);
 }
+
+int
+osi_vnhold(struct vcache *avc)
+{
+    VN_HOLD(AFSTOV(avc));
+    return 0;
+}

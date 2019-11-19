@@ -81,3 +81,9 @@ osi_PostPopulateVCache(struct vcache *avc)
     avc->v.v_gnode->gn_vnode = &avc->v;
 }
 
+int
+osi_vnhold(struct vcache *avc)
+{
+    VN_HOLD(AFSTOV(avc));
+    return 0;
+}
