@@ -548,7 +548,9 @@ loop:
 			continue;
 		    }
 #else
-		    AFS_FAST_HOLD(tvc);
+		    if (osi_vnhold(tvc) != 0) {
+			continue;
+		    }
 #endif
 		    ReleaseReadLock(&afs_xvcache);
 

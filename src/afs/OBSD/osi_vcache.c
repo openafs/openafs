@@ -64,3 +64,8 @@ osi_PostPopulateVCache(struct vcache *avc) {
     vSetType(avc, VREG);
 }
 
+int
+osi_vnhold(struct vcache *avc)
+{
+    return afs_vget(AFSTOV(avc), 0);
+}

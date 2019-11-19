@@ -42,8 +42,6 @@ typedef struct proc afs_proc_t;
 #define VSUID           S_ISUID
 #define VSGID           S_ISGID
 
-#define osi_vnhold(avc,r)	vref(AFSTOV(avc))
-
 #define vType(vc)               AFSTOV(vc)->v_type
 #define vSetVfsp(vc, vfsp) 	AFSTOV(vc)->v_mount = (vfsp)
 #define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)

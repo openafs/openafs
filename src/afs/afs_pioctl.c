@@ -3519,7 +3519,9 @@ FlushVolumeData(struct VenusFid *afid, afs_ucred_t * acred)
 		    continue;
 		}
 #else
-		AFS_FAST_HOLD(tvc);
+		if (osi_vnhold(tvc) != 0) {
+		    continue;
+		}
 #endif
 		ReleaseReadLock(&afs_xvcache);
 		ObtainWriteLock(&tvc->lock, 232);

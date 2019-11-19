@@ -1337,7 +1337,7 @@ struct afs_FetchOutput {
 	avc->f.states |= CCore;	/* causes close to be called later */ \
                                                                       \
 	/* The cred and vnode holds will be released in afs_FlushActiveVcaches */  \
-	AFS_FAST_HOLD(avc);	/* So it won't disappear */           \
+	osi_Assert(osi_vnhold(avc) == 0);	/* So it won't disappear */        \
 	CRKEEP(avc, acred); /* Should use a better place for the creds */ \
     }                                                                         \
     else {                                                                    \

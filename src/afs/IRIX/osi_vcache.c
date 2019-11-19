@@ -114,3 +114,9 @@ osi_PostPopulateVCache(struct vcache *avc) {
     avc->lastr = 0;
 }
 
+int
+osi_vnhold(struct vcache *avc)
+{
+    VN_HOLD(AFSTOV(avc));
+    return 0;
+}

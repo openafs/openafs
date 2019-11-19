@@ -666,7 +666,7 @@ afs_BQueue(short aopcode, struct vcache *avc,
 		crhold(tb->cred);
 	    }
 	    if (avc) {
-		AFS_FAST_HOLD(avc);
+		osi_Assert(osi_vnhold(avc) == 0);
 	    }
 	    tb->refCount = ause + 1;
 	    tb->size_parm[0] = asparm0;

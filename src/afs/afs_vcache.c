@@ -1081,7 +1081,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
 
 #if defined(AFS_LINUX22_ENV)
     /* Hold it for the LRU (should make count 2) */
-    AFS_FAST_HOLD(tvc);
+    osi_Assert(osi_vnhold(tvc) == 0);
 #elif !(defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV))
     VREFCOUNT_SET(tvc, 1);	/* us */
 #endif
@@ -1145,8 +1145,10 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 #endif
 	    if (doflocks && tvc->flockCount != 0) {
 		struct rx_connection *rxconn;
+		if (osi_vnhold(tvc) != 0) {
+		    continue;
+		}
 		/* if this entry has an flock, send a keep-alive call out */
-		osi_vnhold(tvc, 0);
 		ReleaseReadLock(&afs_xvcache);
 		ObtainWriteLock(&tvc->lock, 51);
 		do {
@@ -1189,7 +1191,9 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 		 * this code.  Also, drop the afs_xvcache lock while
 		 * getting vcache locks.
 		 */
-		osi_vnhold(tvc, 0);
+		if (osi_vnhold(tvc) != 0) {
+		    continue;
+		}
 		ReleaseReadLock(&afs_xvcache);
 #if defined(AFS_SGI_ENV)
 		/*
@@ -2179,6 +2183,10 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 		AFS_GLOCK();
 	        continue;
 	    }
+#else
+	    if (osi_vnhold(tvc) != 0) {
+		continue;
+	    }
 #endif
 	    break;
 	}
@@ -2187,14 +2195,19 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
     if (!haveStatus && (!tvc || !(tvc->f.states & CStatd))) {
 	/* Mount point no longer stat'd or unknown. FID may have changed. */
 	getNewFid = 1;
-	ReleaseSharedLock(&afs_xvcache);
 #ifdef AFS_DARWIN80_ENV
+	ReleaseSharedLock(&afs_xvcache);
         if (tvc) {
             AFS_GUNLOCK();
             vnode_put(AFSTOV(tvc));
             vnode_rele(AFSTOV(tvc));
             AFS_GLOCK();
         }
+#else
+	if (tvc) {
+	    AFS_FAST_RELE(tvc);
+	}
+	ReleaseSharedLock(&afs_xvcache);
 #endif
         tvc = NULL;
 	goto newmtpt;
@@ -2215,11 +2228,6 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 	if (cached)
 	    *cached = 1;
 	afs_stats_cmperf.vcacheHits++;
-#if	defined(AFS_DARWIN80_ENV)
-	/* we already bumped the ref count in the for loop above */
-#else /* AFS_DARWIN80_ENV */
-	osi_vnhold(tvc, 0);
-#endif
 	UpgradeSToWLock(&afs_xvcache, 24);
 	if ((VLRU.next->prev != &VLRU) || (VLRU.prev->next != &VLRU)) {
 	    refpanic("GRVC VLRU inconsistent0");
@@ -2605,7 +2613,9 @@ afs_RefVCache(struct vcache *tvc)
 	return -1;
     }
 #else
-	osi_vnhold(tvc, 0);
+    if (osi_vnhold(tvc) != 0) {
+	return -1;
+    }
 #endif
     return 0;
 }				/*afs_RefVCache */
@@ -2657,8 +2667,6 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 
     /* should I have a read lock on the vnode here? */
     if (tvc) {
-	if (retry)
-	    *retry = 0;
 #if defined(AFS_DARWIN80_ENV)
 	tvp = AFSTOV(tvc);
 	if (vnode_get(tvp))
@@ -2684,10 +2692,12 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 	AFS_GLOCK();
 	tvc->f.states &= ~CUBCinit;
 #else
-	osi_vnhold(tvc, retry);	/* already held, above */
-	if (retry && *retry)
-	    return 0;
+	if (osi_vnhold(tvc) != 0) {
+	    tvc = NULL;
+	}
 #endif
+    }
+    if (tvc) {
 	/*
 	 * only move to front of vlru if we have proper vcache locking)
 	 */
@@ -2799,11 +2809,19 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 		AFS_GLOCK();
 		continue;
 	    }
+#else
+	    if (osi_vnhold(tvc) != 0) {
+		continue;
+	    }
 #endif /* AFS_DARWIN80_ENV */
 	    count++;
 	    if (found_tvc) {
 		/* Duplicates */
 		afs_duplicate_nfs_fids++;
+#ifndef AFS_DARWIN80_ENV
+		AFS_FAST_RELE(tvc);
+		AFS_FAST_RELE(found_tvc);
+#endif
 		ReleaseSharedLock(&afs_xvcache);
 #ifdef AFS_DARWIN80_ENV
                 /* Drop our reference counts. */
@@ -2819,21 +2837,6 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
     tvc = found_tvc;
     /* should I have a read lock on the vnode here? */
     if (tvc) {
-#ifndef AFS_DARWIN80_ENV
-#if defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
-	afs_int32 retry = 0;
-	osi_vnhold(tvc, &retry);
-	if (retry) {
-	    count = 0;
-	    found_tvc = (struct vcache *)0;
-	    ReleaseSharedLock(&afs_xvcache);
-	    spunlock_psema(tvc->v.v_lock, retry, &tvc->v.v_sync, PINOD);
-	    goto loop;
-	}
-#else
-	osi_vnhold(tvc, (int *)0);	/* already held, above */
-#endif
-#endif
 	/*
 	 * We obtained the xvcache lock above.
 	 */

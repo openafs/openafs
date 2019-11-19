@@ -275,7 +275,11 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    return 0;
 	}
 #else
-	osi_vnhold(tvc, 0);
+	if (osi_vnhold(tvc) != 0) {
+	    dnlcstats.misses++;
+	    osi_dnlc_remove(adp, aname, tvc);
+	    tvc = NULL;
+	}
 #endif
 	ReleaseReadLock(&afs_xvcache);
 
