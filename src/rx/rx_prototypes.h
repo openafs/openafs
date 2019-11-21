@@ -274,7 +274,6 @@ extern void *rx_ServerProc(void *);
 # ifndef AFS_LINUX26_ENV
 extern void osi_AssertFailK(const char *expr, const char *file, int line) AFS_NORETURN;
 # endif
-extern void rxk_ListenerProc(void);
 extern void rxk_Listener(void);
 # ifndef UKERNEL
 extern void afs_rxevent_daemon(void);
