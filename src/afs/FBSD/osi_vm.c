@@ -79,8 +79,7 @@ osi_VM_FlushVCache(struct vcache *avc)
 
     vp = AFSTOV(avc);
 
-    if (!VI_TRYLOCK(vp))
-	return EBUSY;
+    VI_LOCK(vp);
     code = osi_fbsd_checkinuse(avc);
     if (code) {
 	VI_UNLOCK(vp);
