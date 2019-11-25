@@ -18,39 +18,50 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
 {
     struct vnode *vp;
     int code;
+    int evicted = 0;
 
     vp = AFSTOV(avc);
 
     if (!VI_TRYLOCK(vp))
-	return 0;
+	return evicted;
     code = osi_fbsd_checkinuse(avc);
     if (code != 0) {
 	VI_UNLOCK(vp);
-	return 0;
+	return evicted;
     }
 
     if ((vp->v_iflag & VI_DOOMED) != 0) {
 	VI_UNLOCK(vp);
-	return 1;
+	evicted = 1;
+	return evicted;
     }
 
-    /* must hold the vnode before calling vgone()
-     * This code largely copied from vfs_subr.c:vlrureclaim() */
     vholdl(vp);
 
     ReleaseWriteLock(&afs_xvcache);
     AFS_GUNLOCK();
 
     *slept = 1;
-    /* use the interlock while locking, so no one else can DOOM this */
-    vn_lock(vp, LK_INTERLOCK|LK_EXCLUSIVE|LK_RETRY);
-    vgone(vp);
-    VOP_UNLOCK(vp, 0);
+
+    if (vn_lock(vp, LK_INTERLOCK|LK_EXCLUSIVE|LK_NOWAIT) == 0) {
+	/*
+	 * vrecycle() will vgone() only if its usecount is 0. If someone grabbed a
+	 * new usecount ref just now, the vgone() will be skipped, and vrecycle
+	 * will return 0.
+	 */
+	if (vrecycle(vp) != 0) {
+	    evicted = 1;
+	}
+
+	VOP_UNLOCK(vp, 0);
+    }
+
     vdrop(vp);
 
     AFS_GLOCK();
     ObtainWriteLock(&afs_xvcache, 340);
-    return 1;
+
+    return evicted;
 }
 
 struct vcache *
@@ -115,6 +126,15 @@ osi_PostPopulateVCache(struct vcache *avc)
 int
 osi_vnhold(struct vcache *avc)
 {
-    vref(AFSTOV(avc));
+    struct vnode *vp = AFSTOV(avc);
+
+    VI_LOCK(vp);
+    if ((vp->v_iflag & VI_DOOMED) != 0) {
+	VI_UNLOCK(vp);
+	return ENOENT;
+    }
+
+    vrefl(AFSTOV(avc));
+    VI_UNLOCK(vp);
     return 0;
 }

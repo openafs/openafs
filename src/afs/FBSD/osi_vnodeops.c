@@ -1128,18 +1128,31 @@ afs_vop_inactive(ap)
 static int
 afs_vop_reclaim(struct vop_reclaim_args *ap)
 {
-    /* copied from ../OBSD/osi_vnodeops.c:afs_nbsd_reclaim() */
     int code, slept;
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
     int haveGlock = ISAFS_GLOCK();
-    int haveVlock = CheckLock(&afs_xvcache);
+
+    /*
+     * In other code paths, we acquire the vnode lock while afs_xvcache is
+     * already held (e.g. afs_PutVCache() -> vrele()). Here, we already have
+     * the vnode lock, and we need afs_xvcache. So drop the vnode lock in order
+     * to hold afs_xvcache.
+     */
+    VOP_UNLOCK(vp, 0);
 
     if (!haveGlock)
 	AFS_GLOCK();
-    if (!haveVlock)
-	ObtainWriteLock(&afs_xvcache, 901);
-    /* reclaim the vnode and the in-memory vcache, but keep the on-disk vcache */
+    ObtainWriteLock(&afs_xvcache, 901);
+
+    /*
+     * Note that we deliberately call VOP_LOCK() instead of vn_lock() here.
+     * vn_lock() will return an error for VI_DOOMED vnodes, but we know this
+     * vnode is already VI_DOOMED. We just want to lock it again, and skip the
+     * VI_DOOMED check.
+     */
+    VOP_LOCK(vp, LK_EXCLUSIVE);
+
     code = afs_FlushVCache(avc, &slept);
 
     if (avc->f.states & CVInit) {
@@ -1147,17 +1160,16 @@ afs_vop_reclaim(struct vop_reclaim_args *ap)
 	afs_osi_Wakeup(&avc->f.states);
     }
 
-    if (!haveVlock)
-	ReleaseWriteLock(&afs_xvcache);
+    ReleaseWriteLock(&afs_xvcache);
     if (!haveGlock)
 	AFS_GUNLOCK();
 
     if (code) {
 	afs_warn("afs_vop_reclaim: afs_FlushVCache failed code %d vnode\n", code);
 	VOP_PRINT(vp);
+	panic("afs: afs_FlushVCache failed during reclaim");
     }
 
-    /* basically, it must not fail */
     vnode_destroy_vobject(vp);
     vp->v_data = 0;
 
