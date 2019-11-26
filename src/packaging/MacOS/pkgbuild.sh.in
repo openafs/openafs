@@ -33,6 +33,8 @@ INST_KEY=
 DEST_DIR=
 CSDB=
 
+CODESIGN_OPTS=
+
 while [ x"$#" != x0 ] ; do
     key="$1"
     shift
@@ -150,6 +152,11 @@ elif [ x"$majorvers" = x ] ; then
 else
     echo "Unknown major version $majorvers" >&2
     exit 1
+fi
+
+if [ $THISREL -ge 14 ]; then
+    # Enable the Hardened Runtime capability, required as of 10.14.5.
+    CODESIGN_OPTS="--options runtime"
 fi
 
 SEP=:
@@ -326,8 +333,12 @@ if [ x"$PASS1" = x1 ]; then
 		   "$PKGROOT"/Library/OpenAFS/Tools/tools/aklog.bundle \
 		   "$PLUGINS"/afscell.bundle
 	do
-	    codesign --verbose --force --timestamp --sign "$APP_KEY" "$obj"
+	    codesign --verbose --force --timestamp --sign "$APP_KEY" $CODESIGN_OPTS "$obj"
 	done
+
+	# To be notarized by Apple, all files must be signed.
+	find "$PKGROOT" -type f -exec codesign --verbose --force \
+	    --timestamp --sign "$APP_KEY" $CODESIGN_OPTS {} \;
 
 	# Check if our signatures for our kexts are valid. 'kextutil' will exit
 	# with an error and print out a message if something is wrong with the
