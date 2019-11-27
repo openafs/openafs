@@ -173,6 +173,8 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
     }
     VI_UNLOCK(vp);
 
+    AFS_GUNLOCK();
+
     islocked = islocked_vnode(vp);
     if (islocked == LK_EXCLOTHER)
 	panic("Trying to Smush over someone else's lock");
@@ -213,6 +215,8 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 	lock_vnode(vp, LK_DOWNGRADE);
     else if (!islocked)
 	unlock_vnode(vp);
+
+    AFS_GLOCK();
 }
 
 /* Purge VM for a file when its callback is revoked.
