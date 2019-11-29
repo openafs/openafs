@@ -1773,6 +1773,29 @@ IsDCacheSizeOK(struct dcache *adc, struct vcache *avc, afs_int32 chunk_bytes,
 	return 1;
     }
 
+    if (!from_net && (adc->f.states & DRW)) {
+	/*
+	 * The dcache data we're looking at is from our local cache (not from a
+	 * fileserver), and it's for data in an RW volume. For cached RW data,
+	 * there are some edge cases that can cause the below length checks to
+	 * trigger false positives.
+	 *
+	 * For example: if the local client writes 4 bytes to a new file at
+	 * offset 0, and then 4 bytes at offset 0x400000, the file will be
+	 * 0x400004 bytes long, but the first dcache chunk will only contain 4
+	 * bytes. If such a file is fetched from a fileserver, the first chunk
+	 * will have a full chunk of data (most of it zeroes), but on the
+	 * client that did the write, the sparse data will not appear in the
+	 * dcache.
+	 *
+	 * Such false positives should only be possible with RW data, since
+	 * non-RW data is never generated locally. So to avoid the false
+	 * positives, assume the dcache length is OK for RW data if the dcache
+	 * came from our local cache (and not directly from a fileserver).
+	 */
+	return 1;
+    }
+
     if (file_length < chunk_start) {
 	expected_bytes = 0;
 
