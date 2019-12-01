@@ -76,17 +76,10 @@ extern int afs_pbuf_freecnt;
  * Here we define compatibility functions/macros for interfaces that
  * have changed between different FreeBSD versions.
  */
-#if defined(AFS_FBSD90_ENV)
 static __inline void ma_vm_page_lock_queues(void) {};
 static __inline void ma_vm_page_unlock_queues(void) {};
 static __inline void ma_vm_page_lock(vm_page_t m) { vm_page_lock(m); };
 static __inline void ma_vm_page_unlock(vm_page_t m) { vm_page_unlock(m); };
-#else
-static __inline void ma_vm_page_lock_queues(void) { vm_page_lock_queues(); };
-static __inline void ma_vm_page_unlock_queues(void) { vm_page_unlock_queues(); };
-static __inline void ma_vm_page_lock(vm_page_t m) {};
-static __inline void ma_vm_page_unlock(vm_page_t m) {};
-#endif
 
 #if __FreeBSD_version >= 1000030
 #define AFS_VM_OBJECT_WLOCK(o)	VM_OBJECT_WLOCK(o)

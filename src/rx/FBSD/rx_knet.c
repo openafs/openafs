@@ -96,11 +96,7 @@ osi_StopListener(void)
     p = pfind(rxk_ListenerPid);
     if (p) {
 	afs_warn("osi_StopListener: rxk_ListenerPid %u\n", rxk_ListenerPid);
-#if (__FreeBSD_version >= 900044)
 	kern_psignal(p, SIGUSR1);
-#else
-	psignal(p, SIGUSR1);
-#endif
 	PROC_UNLOCK(p);
     } else
 	afs_warn("osi_StopListener: rxk_Listener not found (pid %u)\n",

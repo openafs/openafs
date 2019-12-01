@@ -828,7 +828,7 @@ afs_xioctl(afs_proc_t *p, const struct ioctl_args *uap, register_t *retval)
 #if defined(AFS_NBSD50_ENV)
     if ((fd = fd_getfile(SCARG(uap, fd))) == NULL)
 	return (EBADF);
-#elif defined(AFS_FBSD100_ENV)
+#elif defined(AFS_FBSD_ENV)
     if ((uap->fd >= fdp->fd_nfiles)
 	|| ((fd = fdp->fd_ofiles[uap->fd].fde_file) == NULL))
 	return EBADF;
@@ -887,11 +887,7 @@ afs_xioctl(afs_proc_t *p, const struct ioctl_args *uap, register_t *retval)
 
     if (!ioctlDone) {
 # if defined(AFS_FBSD_ENV)
-#  if (__FreeBSD_version >= 900044)
 	return sys_ioctl(td, uap);
-#  else
-	return ioctl(td, uap);
-#  endif
 # elif defined(AFS_OBSD_ENV)
 	code = sys_ioctl(p, uap, retval);
 # elif defined(AFS_NBSD_ENV)

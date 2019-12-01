@@ -80,7 +80,7 @@ extern void osi_Panic(char *fmt, ...)
 #define rx_ifnet_flags(x) (x?(x)->if_flags:0)
 #if defined(FBSD_IFA_IFWITHNET_THREE_ARGS)
 #define rx_ifaddr_withnet(x) ifa_ifwithnet(x, 0, RT_ALL_FIBS)
-#elif defined(AFS_OBSD46_ENV) || defined(AFS_FBSD81_ENV)
+#elif defined(AFS_OBSD46_ENV) || defined(AFS_FBSD_ENV)
 #define rx_ifaddr_withnet(x) ifa_ifwithnet(x, 0)
 #else
 #define rx_ifaddr_withnet(x) ifa_ifwithnet(x)
