@@ -33,7 +33,7 @@ static struct sysent afs_sysent = {
     0			/* u_int32_t sy_thrcnt */
 };
 
-int
+static int
 afs_init(struct vfsconf *vfc)
 {
     int code;
@@ -52,7 +52,7 @@ afs_init(struct vfsconf *vfc)
     return 0;
 }
 
-int
+static int
 afs_uninit(struct vfsconf *vfc)
 {
     int offset = AFS_SYSCALL;
@@ -63,7 +63,33 @@ afs_uninit(struct vfsconf *vfc)
     return 0;
 }
 
-int
+static int
+afs_statfs(struct mount *mp, struct statfs *abp)
+{
+    AFS_GLOCK();
+    AFS_STATCNT(afs_statfs);
+
+    abp->f_bsize = mp->vfs_bsize;
+    abp->f_iosize = mp->vfs_bsize;
+
+    abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
+	abp->f_ffree = AFS_VFS_FAKEFREE;
+
+    abp->f_fsid.val[0] = mp->mnt_stat.f_fsid.val[0];
+    abp->f_fsid.val[1] = mp->mnt_stat.f_fsid.val[1];
+    if (abp != &mp->mnt_stat) {
+	abp->f_type = mp->mnt_vfc->vfc_typenum;
+	memcpy((caddr_t) & abp->f_mntonname[0],
+	       (caddr_t) mp->mnt_stat.f_mntonname, MNAMELEN);
+	memcpy((caddr_t) & abp->f_mntfromname[0],
+	       (caddr_t) mp->mnt_stat.f_mntfromname, MNAMELEN);
+    }
+
+    AFS_GUNLOCK();
+    return 0;
+}
+
+static int
 afs_omount(struct mount *mp, char *path, caddr_t data)
 {
     /* ndp contains the mounted-from device.  Just ignore it.
@@ -116,7 +142,7 @@ afs_omount(struct mount *mp, char *path, caddr_t data)
     return 0;
 }
 
-int
+static int
 afs_mount(struct mount *mp)
 {
     return afs_omount(mp, NULL, NULL);
@@ -132,7 +158,7 @@ afs_cmount(struct mntarg *ma, void *data, int flags)
     return kernel_mount(ma, flags);
 }
 
-int
+static int
 afs_unmount(struct mount *mp, int flags)
 {
     int error = 0;
@@ -169,7 +195,7 @@ out:
     return error;
 }
 
-int
+static int
 afs_root(struct mount *mp, int flags, struct vnode **vpp)
 {
     int error;
@@ -239,33 +265,7 @@ tryagain:
     return error;
 }
 
-int
-afs_statfs(struct mount *mp, struct statfs *abp)
-{
-    AFS_GLOCK();
-    AFS_STATCNT(afs_statfs);
-
-    abp->f_bsize = mp->vfs_bsize;
-    abp->f_iosize = mp->vfs_bsize;
-
-    abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
-	abp->f_ffree = AFS_VFS_FAKEFREE;
-
-    abp->f_fsid.val[0] = mp->mnt_stat.f_fsid.val[0];
-    abp->f_fsid.val[1] = mp->mnt_stat.f_fsid.val[1];
-    if (abp != &mp->mnt_stat) {
-	abp->f_type = mp->mnt_vfc->vfc_typenum;
-	memcpy((caddr_t) & abp->f_mntonname[0],
-	       (caddr_t) mp->mnt_stat.f_mntonname, MNAMELEN);
-	memcpy((caddr_t) & abp->f_mntfromname[0],
-	       (caddr_t) mp->mnt_stat.f_mntfromname, MNAMELEN);
-    }
-
-    AFS_GUNLOCK();
-    return 0;
-}
-
-int
+static int
 afs_sync(struct mount *mp, int waitfor)
 {
     return 0;

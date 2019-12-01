@@ -63,67 +63,6 @@
 #include <vm/vnode_pager.h>
 extern int afs_pbuf_freecnt;
 
-static vop_access_t	afs_vop_access;
-static vop_advlock_t	afs_vop_advlock;
-static vop_close_t	afs_vop_close;
-static vop_create_t	afs_vop_create;
-static vop_fsync_t	afs_vop_fsync;
-static vop_getattr_t	afs_vop_getattr;
-static vop_getpages_t	afs_vop_getpages;
-static vop_inactive_t	afs_vop_inactive;
-static vop_ioctl_t	afs_vop_ioctl;
-static vop_link_t	afs_vop_link;
-static vop_lookup_t	afs_vop_lookup;
-static vop_mkdir_t	afs_vop_mkdir;
-static vop_mknod_t	afs_vop_mknod;
-static vop_open_t	afs_vop_open;
-static vop_pathconf_t	afs_vop_pathconf;
-static vop_print_t	afs_vop_print;
-static vop_putpages_t	afs_vop_putpages;
-static vop_read_t	afs_vop_read;
-static vop_readdir_t	afs_vop_readdir;
-static vop_readlink_t	afs_vop_readlink;
-static vop_reclaim_t	afs_vop_reclaim;
-static vop_remove_t	afs_vop_remove;
-static vop_rename_t	afs_vop_rename;
-static vop_rmdir_t	afs_vop_rmdir;
-static vop_setattr_t	afs_vop_setattr;
-static vop_strategy_t	afs_vop_strategy;
-static vop_symlink_t	afs_vop_symlink;
-static vop_write_t	afs_vop_write;
-
-struct vop_vector afs_vnodeops = {
-	.vop_default =		&default_vnodeops,
-	.vop_access =		afs_vop_access,
-	.vop_advlock =		afs_vop_advlock,
-	.vop_close =		afs_vop_close,
-	.vop_create =		afs_vop_create,
-	.vop_fsync =		afs_vop_fsync,
-	.vop_getattr =		afs_vop_getattr,
-	.vop_getpages =		afs_vop_getpages,
-	.vop_inactive =		afs_vop_inactive,
-	.vop_ioctl =		afs_vop_ioctl,
-	.vop_link =		afs_vop_link,
-	.vop_lookup =		afs_vop_lookup,
-	.vop_mkdir =		afs_vop_mkdir,
-	.vop_mknod =		afs_vop_mknod,
-	.vop_open =		afs_vop_open,
-	.vop_pathconf =		afs_vop_pathconf,
-	.vop_print =		afs_vop_print,
-	.vop_putpages =		afs_vop_putpages,
-	.vop_read =		afs_vop_read,
-	.vop_readdir =		afs_vop_readdir,
-	.vop_readlink =		afs_vop_readlink,
-	.vop_reclaim =		afs_vop_reclaim,
-	.vop_remove =		afs_vop_remove,
-	.vop_rename =		afs_vop_rename,
-	.vop_rmdir =		afs_vop_rmdir,
-	.vop_setattr =		afs_vop_setattr,
-	.vop_strategy =		afs_vop_strategy,
-	.vop_symlink =		afs_vop_symlink,
-	.vop_write =		afs_vop_write,
-};
-
 #define GETNAME()       \
     struct componentname *cnp = ap->a_cnp; \
     char *name; \
@@ -250,7 +189,7 @@ afs_vop_pathconf(struct vop_pathconf_args *ap)
 	return (error);
 }
 
-int
+static int
 afs_vop_lookup(ap)
      struct vop_lookup_args	/* {
 				 * struct vnodeop_desc * a_desc;
@@ -336,7 +275,7 @@ afs_vop_lookup(ap)
     return error;
 }
 
-int
+static int
 afs_vop_create(ap)
      struct vop_create_args	/* {
 				 * struct vnode *a_dvp;
@@ -371,7 +310,7 @@ afs_vop_create(ap)
     return error;
 }
 
-int
+static int
 afs_vop_mknod(ap)
      struct vop_mknod_args	/* {
 				 * struct vnode *a_dvp;
@@ -383,7 +322,7 @@ afs_vop_mknod(ap)
     return (ENODEV);
 }
 
-int
+static int
 afs_vop_open(ap)
      struct vop_open_args	/* {
 				 * struct vnode *a_vp;
@@ -408,7 +347,7 @@ afs_vop_open(ap)
     return error;
 }
 
-int
+static int
 afs_vop_close(ap)
      struct vop_close_args	/* {
 				 * struct vnode *a_vp;
@@ -443,7 +382,7 @@ afs_vop_close(ap)
     return code;
 }
 
-int
+static int
 afs_vop_access(ap)
      struct vop_access_args	/* {
 				 * struct vnode *a_vp;
@@ -459,7 +398,7 @@ afs_vop_access(ap)
     return code;
 }
 
-int
+static int
 afs_vop_getattr(ap)
      struct vop_getattr_args	/* {
 				 * struct vnode *a_vp;
@@ -476,7 +415,7 @@ afs_vop_getattr(ap)
     return code;
 }
 
-int
+static int
 afs_vop_setattr(ap)
      struct vop_setattr_args	/* {
 				 * struct vnode *a_vp;
@@ -491,7 +430,7 @@ afs_vop_setattr(ap)
     return code;
 }
 
-int
+static int
 afs_vop_read(ap)
      struct vop_read_args	/* {
 				 * struct vnode *a_vp;
@@ -518,7 +457,7 @@ afs_vop_read(ap)
  *	int *a_rahead;
  * };
  */
-int
+static int
 afs_vop_getpages(struct vop_getpages_args *ap)
 {
     int code;
@@ -704,7 +643,7 @@ afs_vop_getpages(struct vop_getpages_args *ap)
     return VM_PAGER_OK;
 }
 
-int
+static int
 afs_vop_write(ap)
      struct vop_write_args	/* {
 				 * struct vnode *a_vp;
@@ -737,7 +676,7 @@ afs_vop_write(ap)
  * All of the pages passed to us in ap->a_m[] are already marked as busy,
  * so there is no additional locking required to set their flags.  -GAW
  */
-int
+static int
 afs_vop_putpages(struct vop_putpages_args *ap)
 {
     int code;
@@ -805,7 +744,7 @@ afs_vop_putpages(struct vop_putpages_args *ap)
     return ap->a_rtvals[0];
 }
 
-int
+static int
 afs_vop_ioctl(ap)
      struct vop_ioctl_args	/* {
 				 * struct vnode *a_vp;
@@ -834,7 +773,7 @@ afs_vop_ioctl(ap)
     }
 }
 
-int
+static int
 afs_vop_fsync(ap)
      struct vop_fsync_args	/* {
 				 * struct vnode *a_vp;
@@ -852,7 +791,7 @@ afs_vop_fsync(ap)
     return error;
 }
 
-int
+static int
 afs_vop_remove(ap)
      struct vop_remove_args	/* {
 				 * struct vnode *a_dvp;
@@ -873,7 +812,7 @@ afs_vop_remove(ap)
     return error;
 }
 
-int
+static int
 afs_vop_link(ap)
      struct vop_link_args	/* {
 				 * struct vnode *a_vp;
@@ -907,7 +846,7 @@ afs_vop_link(ap)
     return error;
 }
 
-int
+static int
 afs_vop_rename(ap)
      struct vop_rename_args	/* {
 				 * struct vnode *a_fdvp;
@@ -1015,7 +954,7 @@ afs_vop_rename(ap)
     return error;
 }
 
-int
+static int
 afs_vop_mkdir(ap)
      struct vop_mkdir_args	/* {
 				 * struct vnode *a_dvp;
@@ -1050,7 +989,7 @@ afs_vop_mkdir(ap)
     return error;
 }
 
-int
+static int
 afs_vop_rmdir(ap)
      struct vop_rmdir_args	/* {
 				 * struct vnode *a_dvp;
@@ -1077,7 +1016,7 @@ afs_vop_rmdir(ap)
  *	char *a_target;
  * };
  */
-int
+static int
 afs_vop_symlink(struct vop_symlink_args *ap)
 {
     struct vnode *dvp;
@@ -1107,7 +1046,7 @@ afs_vop_symlink(struct vop_symlink_args *ap)
     return error;
 }
 
-int
+static int
 afs_vop_readdir(ap)
      struct vop_readdir_args	/* {
 				 * struct vnode *a_vp;
@@ -1157,7 +1096,7 @@ afs_vop_readdir(ap)
     return error;
 }
 
-int
+static int
 afs_vop_readlink(ap)
      struct vop_readlink_args	/* {
 				 * struct vnode *a_vp;
@@ -1173,7 +1112,7 @@ afs_vop_readlink(ap)
     return error;
 }
 
-int
+static int
 afs_vop_inactive(ap)
      struct vop_inactive_args	/* {
 				 * struct vnode *a_vp;
@@ -1193,7 +1132,7 @@ afs_vop_inactive(ap)
  *	struct vnode *a_vp;
  * };
  */
-int
+static int
 afs_vop_reclaim(struct vop_reclaim_args *ap)
 {
     /* copied from ../OBSD/osi_vnodeops.c:afs_nbsd_reclaim() */
@@ -1232,7 +1171,7 @@ afs_vop_reclaim(struct vop_reclaim_args *ap)
     return 0;
 }
 
-int
+static int
 afs_vop_strategy(ap)
      struct vop_strategy_args	/* {
 				 * struct buf *a_bp;
@@ -1245,7 +1184,7 @@ afs_vop_strategy(ap)
     return error;
 }
 
-int
+static int
 afs_vop_print(ap)
      struct vop_print_args	/* {
 				 * struct vnode *a_vp;
@@ -1270,7 +1209,7 @@ afs_vop_print(ap)
 /*
  * Advisory record locking support (fcntl() POSIX style)
  */
-int
+static int
 afs_vop_advlock(ap)
      struct vop_advlock_args	/* {
 				 * struct vnode *a_vp;
@@ -1304,3 +1243,35 @@ afs_vop_advlock(ap)
     AFS_GUNLOCK();
     return error;
 }
+
+struct vop_vector afs_vnodeops = {
+	.vop_default =		&default_vnodeops,
+	.vop_access =		afs_vop_access,
+	.vop_advlock =		afs_vop_advlock,
+	.vop_close =		afs_vop_close,
+	.vop_create =		afs_vop_create,
+	.vop_fsync =		afs_vop_fsync,
+	.vop_getattr =		afs_vop_getattr,
+	.vop_getpages =		afs_vop_getpages,
+	.vop_inactive =		afs_vop_inactive,
+	.vop_ioctl =		afs_vop_ioctl,
+	.vop_link =		afs_vop_link,
+	.vop_lookup =		afs_vop_lookup,
+	.vop_mkdir =		afs_vop_mkdir,
+	.vop_mknod =		afs_vop_mknod,
+	.vop_open =		afs_vop_open,
+	.vop_pathconf =		afs_vop_pathconf,
+	.vop_print =		afs_vop_print,
+	.vop_putpages =		afs_vop_putpages,
+	.vop_read =		afs_vop_read,
+	.vop_readdir =		afs_vop_readdir,
+	.vop_readlink =		afs_vop_readlink,
+	.vop_reclaim =		afs_vop_reclaim,
+	.vop_remove =		afs_vop_remove,
+	.vop_rename =		afs_vop_rename,
+	.vop_rmdir =		afs_vop_rmdir,
+	.vop_setattr =		afs_vop_setattr,
+	.vop_strategy =		afs_vop_strategy,
+	.vop_symlink =		afs_vop_symlink,
+	.vop_write =		afs_vop_write,
+};
