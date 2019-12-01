@@ -127,7 +127,7 @@ int
 afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
-#if (__FreeBSD_version >= 900505 && __FreeBSD_Version < 1000000) ||__FreeBSD_version >= 1000009
+#if __FreeBSD_version >= 1000009
     ssize_t resid;
 #else
     int resid;
@@ -172,7 +172,7 @@ int
 afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
-#if (__FreeBSD_version >= 900505 && __FreeBSD_Version < 1000000) ||__FreeBSD_version >= 1000009
+#if __FreeBSD_version >= 1000009
     ssize_t resid;
 #else
     int resid;

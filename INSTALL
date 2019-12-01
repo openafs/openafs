@@ -235,11 +235,10 @@ F  OpenBSD Notes
 
 G  FreeBSD Notes
 
-   The FreeBSD client supports FreeBSD 8.x and later, but does not receive
-   regular testing on versions older than FreeBSD 9.x at this time.  Only
-   the amd64 and i386 architectures are supported, but it should not be
-   hard to port to other processors if they are already supported under
-   another operating system.
+   The FreeBSD client supports FreeBSD 10.x and later.  Only the amd64
+   and i386 architectures are supported, but it should not be hard to
+   port to other processors if they are already supported under another
+   operating system.
 
    You need kernel source installed to build OpenAFS.  Use the
    --with-bsd-kernel-headers= configure option if your kernel source is
