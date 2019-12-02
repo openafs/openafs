@@ -751,7 +751,7 @@ print_cb_help(void)
 static void
 dump_hdr(void)
 {
-    char uuid_str[40];
+    struct uuid_fmtbuf uuid_str;
     afs_uint32 hi, lo;
 
     if (get_hdr())
@@ -766,8 +766,8 @@ dump_hdr(void)
     DPFT1("timestamp", hdrs.hdr.timestamp);
     DPFV1("sys_name", "u", hdrs.hdr.sys_name);
 
-    afsUUID_to_string(&hdrs.hdr.server_uuid, uuid_str, sizeof(uuid_str));
-    DPFS1("server_uuid", uuid_str);
+    afsUUID_to_string(&hdrs.hdr.server_uuid, &uuid_str);
+    DPFS1("server_uuid", uuid_str.buffer);
     DPFV1("valid", "d", hdrs.hdr.valid);
     DPFV1("endianness", "d", hdrs.hdr.endianness);
     DPFV1("stats_detailed", "d", hdrs.hdr.stats_detailed);
@@ -1265,6 +1265,7 @@ static void
 dump_he_interfaces(void)
 {
     char temp_str[40];
+    struct uuid_fmtbuf uuidstr;
     struct Interface * ifp;
     int len, i;
     char hoststr[16];
@@ -1281,8 +1282,8 @@ dump_he_interfaces(void)
     DPFSO0("Interface");
     DPFV1("numberOfInterfaces", "u", ifp->numberOfInterfaces);
 
-    afsUUID_to_string(&ifp->uuid, temp_str, sizeof(temp_str));
-    DPFS1("uuid", temp_str);
+    afsUUID_to_string(&ifp->uuid, &uuidstr);
+    DPFS1("uuid", uuidstr.buffer);
     for (i = 0; i < he_cursor.hdr.interfaces; i++) {
 	snprintf(temp_str, sizeof(temp_str), "interface[%d]", i);
 	DPFSO1(temp_str);

@@ -82,7 +82,7 @@ PrintInterfaces(struct rx_connection *aconn)
 #ifdef AFS_NT40_ENV
     char * p;
 #else
-    char uuidstr[128];
+    struct uuid_fmtbuf uuidstr;
 #endif
     int i, code;
     char hoststr[16];
@@ -104,8 +104,8 @@ PrintInterfaces(struct rx_connection *aconn)
     printf("UUID: %s\n",p);
     RpcStringFree(&p);
 #else
-    afsUUID_to_string(&addr.uuid, uuidstr, sizeof(uuidstr));
-    printf("UUID: %s\n",uuidstr);
+    afsUUID_to_string(&addr.uuid, &uuidstr);
+    printf("UUID: %s\n", uuidstr.buffer);
 #endif
 
     printf("Host interfaces:\n");

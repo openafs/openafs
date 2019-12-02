@@ -1606,7 +1606,7 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
     int zilch;
     cm_server_t *tsp;
     char output[1024];
-    char uuidstr[128];
+    struct uuid_fmtbuf uuidstr;
     char hoststr[16];
 
     if (lock)
@@ -1634,8 +1634,7 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
         default:
             type = "unknown";
         }
-
-        afsUUID_to_string(&tsp->uuid, uuidstr, sizeof(uuidstr));
+        afsUUID_to_string(&tsp->uuid, &uuidstr);
         afs_inet_ntoa_r(tsp->addr.sin_addr.s_addr, hoststr);
         down = ctime(&tsp->downTime);
         down[strlen(down)-1] = '\0';
@@ -1645,7 +1644,7 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
 		 "flags=0x%x waitCount=%u pingCount=%d rank=%u downTime=\"%s\" "
 		 "refCount=%u\r\n",
                  cookie, tsp, tsp->cellp ? tsp->cellp->name : "", hoststr,
-                 ntohs(tsp->addr.sin_port), uuidstr, type,
+                 ntohs(tsp->addr.sin_port), uuidstr.buffer, type,
 		 tsp->capabilities, tsp->flags, tsp->waitCount, tsp->pingCount,
 		 tsp->activeRank,
                  (tsp->flags & CM_SERVERFLAG_DOWN) ?  "down" : "up",

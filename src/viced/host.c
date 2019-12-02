@@ -1113,7 +1113,7 @@ h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host)
 {
     int index;
     struct h_UuidHashChain *chain;
-    char uuid1[128], uuid2[128];
+    struct uuid_fmtbuf uuid1, uuid2;
     char hoststr[16];
 
     /* hash into proper bucket */
@@ -1127,13 +1127,12 @@ h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host)
 	if (chain->hostPtr->z.interface &&
 	    afs_uuid_equal(&chain->hostPtr->z.interface->uuid, uuid)) {
 	    if (GetLogLevel() >= 125) {
-		afsUUID_to_string(&chain->hostPtr->z.interface->uuid, uuid1,
-				  127);
-		afsUUID_to_string(uuid, uuid2, 127);
+		afsUUID_to_string(&chain->hostPtr->z.interface->uuid, &uuid1);
+		afsUUID_to_string(uuid, &uuid2);
 		ViceLog(125, ("h_AddHostToUuidHashTable_r: host %p (uuid %s) exists as %s:%d (uuid %s)\n",
-			      host, uuid1,
+			      host, uuid1.buffer,
 			      afs_inet_ntoa_r(chain->hostPtr->z.host, hoststr),
-			      ntohs(chain->hostPtr->z.port), uuid2));
+			      ntohs(chain->hostPtr->z.port), uuid2.buffer));
 	    }
 	    return;
 	}
@@ -1149,11 +1148,11 @@ h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host)
     hostUuidHashTable[index] = chain;
          if (GetLogLevel() < 125)
 	       return;
-     afsUUID_to_string(uuid, uuid2, 127);
+     afsUUID_to_string(uuid, &uuid2);
      ViceLog(125,
 	     ("h_AddHostToUuidHashTable_r: host %p (%s:%d) added as uuid %s\n",
 	      host, afs_inet_ntoa_r(chain->hostPtr->z.host, hoststr),
-	      ntohs(chain->hostPtr->z.port), uuid2));
+	      ntohs(chain->hostPtr->z.port), uuid2.buffer));
 }
 
 /* deletes a HashChain structure corresponding to this host */
@@ -1162,7 +1161,7 @@ h_DeleteHostFromUuidHashTable_r(struct host *host)
 {
      int index;
      struct h_UuidHashChain **uhp, *uth;
-     char uuid1[128];
+     struct uuid_fmtbuf uuid1;
      char hoststr[16];
 
      if (!host->z.interface)
@@ -1172,13 +1171,13 @@ h_DeleteHostFromUuidHashTable_r(struct host *host)
      index = h_UuidHashIndex(&host->z.interface->uuid);
 
      if (GetLogLevel() >= 125)
-	 afsUUID_to_string(&host->z.interface->uuid, uuid1, 127);
+	 afsUUID_to_string(&host->z.interface->uuid, &uuid1);
      for (uhp = &hostUuidHashTable[index]; (uth = *uhp); uhp = &uth->next) {
          opr_Assert(uth->hostPtr);
 	 if (uth->hostPtr == host) {
 	     ViceLog(125,
 		     ("h_DeleteHostFromUuidHashTable_r: host %p (uuid %s %s:%d)\n",
-		      host, uuid1, afs_inet_ntoa_r(host->z.host, hoststr),
+		      host, uuid1.buffer, afs_inet_ntoa_r(host->z.host, hoststr),
 		      ntohs(host->z.port)));
 	     *uhp = uth->next;
 	     free(uth);
@@ -1187,7 +1186,7 @@ h_DeleteHostFromUuidHashTable_r(struct host *host)
      }
      ViceLog(125,
 	     ("h_DeleteHostFromUuidHashTable_r: host %p (uuid %s %s:%d) not found\n",
-	      host, uuid1, afs_inet_ntoa_r(host->z.host, hoststr),
+	      host, uuid1.buffer, afs_inet_ntoa_r(host->z.host, hoststr),
 	      ntohs(host->z.port)));
      return 0;
 }
@@ -2141,18 +2140,20 @@ h_GetHost_r(struct rx_connection *tcon)
 		|| (identP->valid
 		    && !afs_uuid_equal(&identP->uuid,
 				       &host->z.interface->uuid)))) {
-	    char uuid1[128], uuid2[128];
+
+	    struct uuid_fmtbuf uuid1, uuid2;
+
 	    if (identP->valid)
-		afsUUID_to_string(&identP->uuid, uuid1, 127);
+		afsUUID_to_string(&identP->uuid, &uuid1);
 	    if (host->z.interface)
-		afsUUID_to_string(&host->z.interface->uuid, uuid2, 127);
+		afsUUID_to_string(&host->z.interface->uuid, &uuid2);
 	    ViceLog(0,
 		    ("CB: new identity for host %p (%s:%d), "
 		     "deleting(%x %p %s %s)\n",
 		     host, afs_inet_ntoa_r(host->z.host, hoststr), ntohs(host->z.port),
 		     identP->valid, host->z.interface,
-		     identP->valid ? uuid1 : "no_uuid",
-		     host->z.interface ? uuid2 : "no_uuid"));
+		     identP->valid ? uuid1.buffer : "no_uuid",
+		     host->z.interface ? uuid2.buffer : "no_uuid"));
 
 	    /* The host in the cache is not the host for this connection */
             h_Lock_r(host);
@@ -3405,14 +3406,15 @@ h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h)
     struct h_UuidHashChain *chain;
     afsUUID * uuidp = &h->z.interface->uuid;
     int index = h_UuidHashIndex(uuidp);
-    char tmp[40];
+    struct uuid_fmtbuf tmp;
     int chain_len = 0;
 
     for (chain = hostUuidHashTable[index]; chain; chain = chain->next) {
 	host = chain->hostPtr;
 	if (host == NULL) {
-	    afsUUID_to_string(uuidp, tmp, sizeof(tmp));
-	    ViceLog(0, ("h_stateVerifyUuidHash: error: uuid hash chain has NULL host ptr (lookup uuid %s)\n", tmp));
+	    afsUUID_to_string(uuidp, &tmp);
+	    ViceLog(0, ("h_stateVerifyUuidHash: error: uuid hash chain has NULL host ptr (lookup uuid %s)\n",
+			tmp.buffer));
 	    ret = 1;
 	    goto done;
 	}
@@ -3436,13 +3438,15 @@ h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h)
 
     /* Fall through, so host not found */
 
-    afsUUID_to_string(uuidp, tmp, sizeof(tmp));
+    afsUUID_to_string(uuidp, &tmp);
     if (state->mode == FS_STATE_LOAD_MODE) {
-	ViceLog(0, ("h_stateVerifyUuidHash: error: uuid %s not found in hash\n", tmp));
+	ViceLog(0, ("h_stateVerifyUuidHash: error: uuid %s not found in hash\n",
+		    tmp.buffer));
 	ret = 1;
 	goto done;
     } else {
-	ViceLog(0, ("h_stateVerifyUuidHash: warning: uuid %s not found in hash\n", tmp));
+	ViceLog(0, ("h_stateVerifyUuidHash: warning: uuid %s not found in hash\n",
+		    tmp.buffer));
 	state->flags.warnings_generated = 1;
     }
 
@@ -4141,7 +4145,7 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
     int found;
     struct Interface *interface;
     char hoststr[16];
-    char uuidstr[128];
+    struct uuid_fmtbuf uuidstr;
     afs_uint16 port7001 = htons(7001);
 
     opr_Assert(host);
@@ -4257,9 +4261,9 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
     h_AddHostToUuidHashTable_r(&interface->uuid, host);
 
     if (GetLogLevel() >= 125) {
-	afsUUID_to_string(&interface->uuid, uuidstr, 127);
+	afsUUID_to_string(&interface->uuid, &uuidstr);
 
-	ViceLog(125, ("--- uuid %s\n", uuidstr));
+	ViceLog(125, ("--- uuid %s\n", uuidstr.buffer));
 	for (i = 0; i < host->z.interface->numberOfInterfaces; i++) {
 	    ViceLog(125, ("--- alt address %s:%d\n",
 			  afs_inet_ntoa_r(host->z.interface->interface[i].addr, hoststr),

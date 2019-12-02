@@ -198,14 +198,21 @@ afsUUID_from_string(const char *str, afsUUID * uuid)
     return 0;
 }
 
-/*
+/**
  *    Converts a UUID from binary representation to a string representation.
+ *
+ *    @param[in]  uuid pointer to a afsUUID
+ *    @param[out] buf  format work buffer
+ *
+ *    @returns pointer to buffer containing string representation of "uuid"
  */
 
-int
-afsUUID_to_string(const afsUUID * uuid, char *str, size_t strsz)
+char *
+afsUUID_to_string(const afsUUID * uuid, struct uuid_fmtbuf *buf)
 {
-    snprintf(str, strsz, "%08x-%04x-%04x-%02x-%02x-%02x%02x%02x%02x%02x%02x",
+    memset(buf, 0, sizeof(*buf));
+    snprintf(buf->buffer, sizeof(buf->buffer),
+	     "%08x-%04x-%04x-%02x-%02x-%02x%02x%02x%02x%02x%02x",
 	     uuid->time_low, uuid->time_mid, uuid->time_hi_and_version,
 	     (unsigned char)uuid->clock_seq_hi_and_reserved,
 	     (unsigned char)uuid->clock_seq_low, (unsigned char)uuid->node[0],
@@ -213,7 +220,7 @@ afsUUID_to_string(const afsUUID * uuid, char *str, size_t strsz)
 	     (unsigned char)uuid->node[3], (unsigned char)uuid->node[4],
 	     (unsigned char)uuid->node[5]);
 
-    return 0;
+    return buf->buffer;
 }
 #endif
 

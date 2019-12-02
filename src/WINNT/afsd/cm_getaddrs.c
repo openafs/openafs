@@ -244,17 +244,17 @@ cm_GetAddrsU(cm_cell_t *cellp, cm_user_t *userp, cm_req_t *reqp,
 	code = cm_MapVLRPCError(code, reqp);
 
 	if (afsd_logp->enabled) {
-	    char uuidstr[128];
-	    afsUUID_to_string(Uuid, uuidstr, sizeof(uuidstr));
+	    struct uuid_fmtbuf uuidstr;
+	    afsUUID_to_string(Uuid, &uuidstr);
 
 	    if (code)
 		osi_Log2(afsd_logp,
 			  "CALL VL_GetAddrsU serverNumber %s FAILURE, code 0x%x",
-			  osi_LogSaveString(afsd_logp, uuidstr),
+			  osi_LogSaveString(afsd_logp, uuidstr.buffer),
 			  code);
 	    else
 		osi_Log1(afsd_logp, "CALL VL_GetAddrsU serverNumber %s SUCCESS",
-			  osi_LogSaveString(afsd_logp, uuidstr));
+			  osi_LogSaveString(afsd_logp, uuidstr.buffer));
 	}
 
 	if (code)

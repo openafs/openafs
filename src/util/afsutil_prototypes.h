@@ -162,7 +162,11 @@ extern afs_int32 afs_uuid_create(afsUUID * uuid);
 extern u_short afs_uuid_hash(afsUUID * uuid);
 #if !defined(KERNEL) && !defined(UKERNEL)
 extern int afsUUID_from_string(const char *str, afsUUID * uuid);
-extern int afsUUID_to_string(const afsUUID * uuid, char *str, size_t strsz);
+
+struct uuid_fmtbuf {
+    char buffer[38];
+};
+extern char *afsUUID_to_string(const afsUUID * uuid, struct uuid_fmtbuf *buf);
 #endif
 
 /* volparse.c */

@@ -264,9 +264,9 @@ afscp_ServerById(struct afscp_cell *thecell, afsUUID * u)
     bulkaddrs addrs;
     struct ListAddrByAttributes attrs;
     afs_int32 nentries, uniq;
-    char s[512];
-    afsUUID_to_string(u, s, 511);
-    afs_dprintf(("GetServerByID %s\n", s));
+    struct uuid_fmtbuf s;
+    afsUUID_to_string(u, &s);
+    afs_dprintf(("GetServerByID %s\n", s.buffer));
 
     for (i = 0; i < thecell->nservers; i++) {
 	if (afs_uuid_equal(&thecell->fsservers[i]->id, u)) {
@@ -400,10 +400,10 @@ afscp_ServerByAddr(struct afscp_cell *thecell, afs_uint32 addr)
 					 1, thecell->security,
 					 thecell->scindex);
     } else {
-	char s[512];
+	struct uuid_fmtbuf s;
 
-	afsUUID_to_string(&uuid, s, 511);
-	afs_dprintf(("GetServerByAddr 0x%x -> uuid %s\n", addr, s));
+	afsUUID_to_string(&uuid, &s);
+	afs_dprintf(("GetServerByAddr 0x%x -> uuid %s\n", addr, s.buffer));
 
 	if (nentries > AFS_MAXHOSTS) {
 	    nentries = AFS_MAXHOSTS;

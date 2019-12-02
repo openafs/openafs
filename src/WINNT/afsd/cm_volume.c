@@ -581,16 +581,15 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                  * vlserver.  If not, ...?
                  */
                 if (!afs_uuid_equal(&serverUUID[i], &tsp->uuid)) {
-                    char uuid1[128], uuid2[128];
+                    struct uuid_fmtbuf uuid1, uuid2;
                     char hoststr[16];
-
-                    afsUUID_to_string(&serverUUID[i], uuid1, sizeof(uuid1));
-                    afsUUID_to_string(&tsp->uuid, uuid2, sizeof(uuid2));
+                    afsUUID_to_string(&serverUUID[i], &uuid1);
+                    afsUUID_to_string(&tsp->uuid, &uuid2);
                     afs_inet_ntoa_r(serverNumber[i], hoststr);
 
                     osi_Log3(afsd_logp, "cm_UpdateVolumeLocation UUIDs do not match! %s != %s (%s)",
-                              osi_LogSaveString(afsd_logp, uuid1),
-                              osi_LogSaveString(afsd_logp, uuid2),
+                              osi_LogSaveString(afsd_logp, uuid1.buffer),
+                              osi_LogSaveString(afsd_logp, uuid2.buffer),
                               osi_LogSaveString(afsd_logp, hoststr));
                 }
             }

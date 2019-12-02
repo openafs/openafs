@@ -5261,12 +5261,11 @@ ChangeAddr(struct cmd_syndesc *as, void *arock)
 	afs_int32 m_uniq = 0;
 	afsUUID m_uuid;
 	ListAddrByAttributes m_attrs;
-	char buffer[128];
+	struct uuid_fmtbuf buffer;
 
 	memset(&m_attrs, 0, sizeof(m_attrs));
 	memset(&m_uuid, 0, sizeof(m_uuid));
 	memset(&m_addrs, 0, sizeof(m_addrs));
-	memset(buffer, 0, sizeof(buffer));
 
 	m_attrs.Mask = VLADDR_IPADDR;
 	m_attrs.ipaddr = ntohl(ip1);	/* -oldaddr */
@@ -5277,9 +5276,10 @@ ChangeAddr(struct cmd_syndesc *as, void *arock)
 	xdr_free((xdrproc_t) xdr_bulkaddrs, &m_addrs);
 	switch (vcode) {
 	case 0:		/* mh entry detected */
-	    afsUUID_to_string(&m_uuid, buffer, sizeof(buffer) - 1);
+	    afsUUID_to_string(&m_uuid, &buffer);
 	    fprintf(STDERR, "vos: Refusing to change address in multi-homed server entry.\n");
-	    fprintf(STDERR, "     -oldaddr address is registered to file server UUID %s\n", buffer);
+	    fprintf(STDERR, "     -oldaddr address is registered to file server UUID %s\n",
+			    buffer.buffer);
 	    fprintf(STDERR, "     Please restart the file server or use vos setaddrs.\n");
 	    return EINVAL;
 	case VL_NOENT:
@@ -5328,11 +5328,11 @@ print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
 {
     int i;
     afs_uint32 addr;
-    char buf[1024];
+    struct uuid_fmtbuf buf;
 
     if (print) {
-	afsUUID_to_string(m_uuid, buf, sizeof(buf));
-	printf("UUID: %s\n", buf);
+	afsUUID_to_string(m_uuid, &buf);
+	printf("UUID: %s\n", buf.buffer);
     }
 
     /* print out the list of all the server */
