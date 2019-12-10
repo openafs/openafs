@@ -1,0 +1,34 @@
+From 8ac8c505fc54df9b3e3f737f8b6b1eba0bbe77e1 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Fr=C3=A9d=C3=A9ric=20Bonnard?= <frediz@debian.org>
+Date: Tue, 10 Dec 2019 13:52:57 +0100
+Subject: [PATCH] Add compilation defaults for ppc64el
+
+---
+ src/cf/osconf.m4 | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/src/cf/osconf.m4 b/src/cf/osconf.m4
+index 4f30ed2b4..4440796e9 100644
+--- a/src/cf/osconf.m4
++++ b/src/cf/osconf.m4
+@@ -242,6 +242,17 @@ case $AFS_SYSNAME in
+ 		ASFLAGS="-a64"
+ 		;;
+ 
++	ppc64le_linux*)
++		CCOBJ="\$(CC) -fPIC"
++		KERN_OPTMZ=-O2
++		MT_CFLAGS='-pthread -D_REENTRANT'
++		PAM_OPTMZ=-O2
++		PAM_CFLAGS="-Dlinux -DLINUX_PAM -fPIC"
++		SHLIB_CFLAGS="-fPIC"
++		SHLIB_LDFLAGS="-shared -Xlinker -x"
++		SHLIB_LINKER="${CC} -shared"
++		;;
++
+ 	i386_linux*)
+ 		KERN_OPTMZ=-O2
+ 		MT_CFLAGS='-pthread -D_REENTRANT'
+-- 
+2.20.1
+

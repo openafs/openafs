@@ -30,7 +30,7 @@ powerpc|powerpcspe)
 ppc64)
     echo ppc64_linux26
     ;;
-ppc64le)
+ppc64el)
     echo ppc64le_linux26
     ;;
 s390)
