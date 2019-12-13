@@ -1563,6 +1563,12 @@ BkgHandler(void)
 	    /* Client is shutting down */
 	    return;
 
+	case AFS_USPC_NOOP:
+	    /* noop */
+	    memset(srcName, 0, sizeof(srcName));
+	    memset(dstName, 0, sizeof(dstName));
+	    break;
+
 # ifdef AFS_DARWIN_ENV
 	case AFS_USPC_UMV:
             {

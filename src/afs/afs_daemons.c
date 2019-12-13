@@ -1006,6 +1006,44 @@ brequest_release(struct brequest *tb)
 }
 
 #ifdef AFS_NEW_BKG
+static_inline int
+should_do_noop(int foundAny, int n_processed)
+{
+    if (!foundAny && n_processed > 0) {
+	/* If there aren't any requests right now, and we've processed
+	 * at least one request, do a noop. */
+	return 1;
+    } else if (foundAny && n_processed > 100) {
+	/* If we've processed over 100 requests in a row, do a noop. */
+	return 1;
+    }
+    return 0;
+}
+#endif
+
+/**
+ * Entry point for background daemon processes.
+ *
+ * For old-style background daemons (non-AFS_NEW_BKG), a background daemon afsd
+ * process will end up in this function, and it will stay in here forever
+ * processing in-kernel bkg requests until the client shuts down.
+ *
+ * For new-style background daemons (AFS_NEW_BKG), we can pass data back to
+ * afsd to perform some background operations in userspace, by populating
+ * 'uspc' with the operation to perform and then returning. When the afsd
+ * process enters this function again, the return code for that operation is
+ * also provided in 'uspc'.
+ *
+ * @param[inout] uspc   Userspace operation data. If uspc->ts is non-negative
+ *                      on entry, the related background request has finished,
+ *                      and we're providing the return code. On return,
+ *                      contains the userspace operation to perform.
+ * @param[inout] param1 Operation-specific pointer.
+ * @param[inout] param2 Operation-specific pointer.
+ *
+ * @return  Always returns 0.
+ */
+#ifdef AFS_NEW_BKG
 int
 afs_BackgroundDaemon(struct afs_uspc_param *uspc, void *param1, void *param2)
 #else
@@ -1015,6 +1053,7 @@ afs_BackgroundDaemon(void)
 {
     struct brequest *tb;
     int i, foundAny;
+    int n_processed = 0;
 
     AFS_STATCNT(afs_BackgroundDaemon);
     /* initialize subsystem */
@@ -1023,8 +1062,13 @@ afs_BackgroundDaemon(void)
 	afs_BackgroundDaemon_once();
 
 #ifdef AFS_NEW_BKG
-    /* If it's a re-entering syscall, complete the request and release */
-    if (uspc->ts > -1) {
+    if (uspc->reqtype == AFS_USPC_NOOP) {
+	/* The daemon is re-entering from a noop, not actually returning data;
+	 * don't look for an existing request. */
+	/* noop */
+
+    } else if (uspc->ts > -1) {
+	/* If it's a re-entering syscall, complete the request and release */
         tb = afs_brs;
         for (i = 0; i < NBRS; i++, tb++) {
             if (tb->ts == uspc->ts) {
@@ -1086,6 +1130,7 @@ afs_BackgroundDaemon(void)
 	    tb->flags |= BSTARTED;
 	    ReleaseWriteLock(&afs_xbrs);
 	    foundAny = 1;
+	    n_processed++;
 	    afs_Trace1(afs_iclSetp, CM_TRACE_BKG1, ICL_TYPE_INT32,
 		       tb->opcode);
 	    if (tb->opcode == BOP_FETCH)
@@ -1120,6 +1165,16 @@ afs_BackgroundDaemon(void)
 	    brequest_release(tb);
 	    ObtainWriteLock(&afs_xbrs, 305);
 	}
+
+#ifdef AFS_NEW_BKG
+	if (should_do_noop(foundAny, n_processed)) {
+	    ReleaseWriteLock(&afs_xbrs);
+	    memset(uspc, 0, sizeof(*uspc));
+	    uspc->reqtype = AFS_USPC_NOOP;
+	    return 0;
+	}
+#endif
+
 	if (!foundAny) {
 	    /* wait for new request */
 	    afs_brsDaemons++;
