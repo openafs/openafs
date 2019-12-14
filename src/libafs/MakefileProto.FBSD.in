@@ -99,6 +99,8 @@ include Makefile.common
 # we only do the no-NFS case
 OBJS=	${AFSAOBJS} ${AFSNONFSOBJS}
 
+$(OBJS): vnode_if.h
+
 LIBAFSNONFS=	libafs.ko
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 CFLAGS+= $(DEFINES) ${COMMON_INCLUDE}
