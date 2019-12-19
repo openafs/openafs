@@ -1403,25 +1403,32 @@ XDisplayVolumes2(afs_uint32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
 
 }				/*XDisplayVolumes2 */
 
-
-/* set <server> and <part> to the correct values depending on
- * <voltype> and <entry> */
-static void
+/**
+ * Retrieve the sites (i.e., server id, partition id) from a vldb entry for a
+ * given volume type.  May be called repeatedly to get each read-only site.
+ *
+ * @param[in] entry       vldb entry from a previous vldb query
+ * @param[in] voltype     type of volume of interest (rw, ro, bk)
+ * @param[out] server     vldb entry server number for voltype
+ * @param[out] part       vldb part id for voltype
+ * @param[inout] previdx  cursor; should be initialized to -1
+ *                        before first call on a given entry.
+ *
+ * @returns true when a volume site has been found
+ */
+static int
 GetServerAndPart(struct nvldbentry *entry, int voltype, afs_uint32 *server,
 		 afs_int32 *part, int *previdx)
 {
     int i, istart, vtype;
 
-    *server = -1;
-    *part = -1;
-
-    /* Doesn't check for non-existance of backup volume */
+    /* Doesn't check for non-existence of backup volume */
     if ((voltype == RWVOL) || (voltype == BACKVOL)) {
 	vtype = VLSF_RWVOL;
-	istart = 0;		/* seach the entire entry */
+	istart = 0;		/* search the entire entry */
     } else {
 	vtype = VLSF_ROVOL;
-	/* Seach from beginning of entry or pick up where we left off */
+	/* Search from beginning of entry or pick up where we left off */
 	istart = ((*previdx < 0) ? 0 : *previdx + 1);
     }
 
@@ -1430,13 +1437,13 @@ GetServerAndPart(struct nvldbentry *entry, int voltype, afs_uint32 *server,
 	    *server = entry->serverNumber[i];
 	    *part = entry->serverPartition[i];
 	    *previdx = i;
-	    return;
+	    return 1;
 	}
     }
 
-    /* Didn't find any, return -1 */
+    /* Didn't find any more, reset index. */
     *previdx = -1;
-    return;
+    return 0;
 }
 
 static void
@@ -1652,17 +1659,14 @@ ExamineVolume(struct cmd_syndesc *as, void *arock)
 	 * It its a BK vol, get the RW entry (even if VLDB may say the BK doen't exist).
 	 * If its a RO vol, get the next RO entry.
 	 */
-	GetServerAndPart(&entry, ((voltype == ROVOL) ? ROVOL : RWVOL),
-			 &aserver, &apart, &previdx);
-	if (previdx == -1) {	/* searched all entries */
-	    if (!foundentry) {
-		fprintf(STDERR, "Volume %s does not exist in VLDB\n\n",
-			as->parms[0].items->data);
-		error = ENOENT;
-	    }
+	foundentry = GetServerAndPart(&entry, ((voltype == ROVOL) ? ROVOL : RWVOL),
+				      &aserver, &apart, &previdx);
+	if (!foundentry) {	/* searched all entries */
+	    fprintf(STDERR, "Volume %s does not exist in VLDB\n\n",
+		    as->parms[0].items->data);
+	    error = ENOENT;
 	    break;
 	}
-	foundentry = 1;
 
 	/* Get information about the volume from the server */
 	if (verbose) {
@@ -1761,6 +1765,7 @@ SetFields(struct cmd_syndesc *as, void *arock)
     afs_int32 apart;
     int previdx = -1;
     int have_field = 0;
+    int found;
 
     volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);	/* -id */
     if (volid == 0) {
@@ -1781,8 +1786,8 @@ SetFields(struct cmd_syndesc *as, void *arock)
     }
     MapHostToNetwork(&entry);
 
-    GetServerAndPart(&entry, RWVOL, &aserver, &apart, &previdx);
-    if (previdx == -1) {
+    found = GetServerAndPart(&entry, RWVOL, &aserver, &apart, &previdx);
+    if (!found) {
 	fprintf(STDERR, "Volume %s does not exist in VLDB\n\n",
 		as->parms[0].items->data);
 	return (ENOENT);
@@ -4707,6 +4712,7 @@ BackSys(struct cmd_syndesc *as, void *arock)
 #ifndef HAVE_POSIX_REGEX
     char *ccode;
 #endif
+    int found;
 
     memset(&attributes, 0, sizeof(struct VldbListByAttributes));
     attributes.Mask = 0;
@@ -4964,8 +4970,8 @@ BackSys(struct cmd_syndesc *as, void *arock)
 
 	avolid = vllist->volumeId[RWVOL];
 	MapHostToNetwork(vllist);
-	GetServerAndPart(vllist, RWVOL, &aserver1, &apart1, &previdx);
-	if (aserver1 == -1 || apart1 == -1) {
+	found = GetServerAndPart(vllist, RWVOL, &aserver1, &apart1, &previdx);
+	if (!found) {
 	    fprintf(STDOUT, "could not backup %s, invalid VLDB entry\n",
 		    vllist->name);
 	    totalFail++;
