@@ -10,6 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifndef AFS_NAMEI_ENV
+
 #include <roken.h>
 
 #include <ctype.h>
@@ -24,15 +26,10 @@
 #  ifdef	AFS_SUN5_ENV
 #   include <sys/fs/ufs_fs.h>
 #  else
-#   if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-#    include <ufs/ufs/dinode.h>
-#    include <ufs/ffs/fs.h>
-#   else
-#    include <ufs/fs.h>
-#   endif
+#   include <ufs/fs.h>
 #  endif
 # else /* AFS_VFSINCL_ENV */
-#  if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_DARWIN_ENV)
+#  if !defined(AFS_AIX_ENV)
 #   include <sys/fs.h>
 #  endif
 # endif /* AFS_VFSINCL_ENV */
@@ -57,11 +54,7 @@
 #   if defined(AFS_SGI_ENV)
 #    include <mntent.h>
 #   else
-#    ifdef AFS_LINUX22_ENV
-#     include <mntent.h>
-#    else
-#     include <fstab.h>
-#    endif
+#    include <fstab.h>
 #   endif
 #  endif /* AFS_SGI_ENV */
 # endif /* AFS_HPUX_ENV */
@@ -85,7 +78,7 @@ vol_DevName(dev_t adev, char *wpath)
     struct mnttab mnt;
     FILE *mntfile;
 #else
-# if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX22_ENV)
+# if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV)
     struct mntent *mntent;
     FILE *mfd;
 # else
@@ -114,18 +107,10 @@ vol_DevName(dev_t adev, char *wpath)
     while (!getmntent(mntfile, &mnt)) {
 	char *part = mnt.mnt_mountp;
 # else
-#  if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX22_ENV)
-#   ifdef AFS_LINUX22_ENV
-    if ((mfd = setmntent("/proc/mounts", "r")) == NULL) {
-	if ((mfd = setmntent("/etc/mtab", "r")) == NULL) {
-	    return NULL;
-	}
-    }
-#   else
+#  if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV)
     if ((mfd = setmntent(MOUNTED /*MNTTAB*/, "r")) == NULL) {
 	return NULL;
     }
-#   endif
     while ((mntent = getmntent(mfd))) {
 	char *part = mntent->mnt_dir;
 #  else
@@ -146,17 +131,12 @@ vol_DevName(dev_t adev, char *wpath)
 	    || (strncmp(mnt.mnt_mntopts, "ro,ignore", 9) == 0))
 	    continue;
 # else
-#  if defined(AFS_LINUX22_ENV)
-	if (strcmp(mntent->mnt_type, "ext2"))
-	    continue;
-#  else
-#   if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV)
+#  if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV)
 	if (!hasmntopt(mntent, MNTOPT_RW))
 	    continue;
-#   else
+#  else
 	if (strcmp(fsent->fs_type, "rw") != 0)
 	    continue;		/* Ignore non read/write partitions */
-#   endif /* AFS_LINUX22_ENV */
 #  endif /* AFS_SGI_ENV */
 # endif
 #endif
@@ -167,7 +147,7 @@ vol_DevName(dev_t adev, char *wpath)
 	if (stat(part, &status) == -1) {
 	    continue;
 	}
-#if !defined(AFS_SGI_XFS_IOPS_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_SGI_XFS_IOPS_ENV)
 	if ((status.st_ino !=
 	     ROOTINO) /*|| ((status.st_mode & S_IFMT) != S_IFBLK) */ ) {
 	    continue;
@@ -180,7 +160,7 @@ vol_DevName(dev_t adev, char *wpath)
 # ifdef	AFS_SUN5_ENV
 	    strcpy(pbuffer, mnt.mnt_special);
 # else
-#  if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX22_ENV)
+#  if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV)
 	    strcpy(pbuffer, mntent->mnt_fsname);
 #  else
 	    strcpy(pbuffer, fsent->fs_spec);
@@ -207,7 +187,7 @@ vol_DevName(dev_t adev, char *wpath)
 #ifdef	AFS_SUN5_ENV
     (void)fclose(mntfile);
 #else
-# if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX22_ENV)
+# if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV)
     endmntent(mfd);
 # else
 #  ifndef	AFS_AIX_ENV
@@ -247,3 +227,5 @@ afs_rawname(char *devfile)
 
     return NULL;
 }
+
+#endif /* AFS_NAMEI_ENV */
