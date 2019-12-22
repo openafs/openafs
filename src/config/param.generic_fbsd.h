@@ -136,6 +136,14 @@ enum vcexcl { NONEXCL, EXCL };
 #define FBSD_VOP_GETPAGES_BUSIED
 #endif
 
+/* r333813 changed network interfaces and addrs to be traversed via
+ * CK_STAILQ_FOREACH instead of TAILQ_FOREACH */
+#if __FreeBSD_version >= 1200064
+# define AFS_FBSD_NET_FOREACH CK_STAILQ_FOREACH
+#else
+# define AFS_FBSD_NET_FOREACH TAILQ_FOREACH
+#endif
+
 #else /* !defined(UKERNEL) */
 
 /* This section for user space compiles only */

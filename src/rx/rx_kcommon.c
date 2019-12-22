@@ -669,7 +669,7 @@ rxi_GetIFInfo(void)
 #   elif defined(AFS_FBSD_ENV)
     CURVNET_SET(rx_socket->so_vnet);
     IFNET_RLOCK();
-    TAILQ_FOREACH(ifn, &V_ifnet, if_link) {
+    AFS_FBSD_NET_FOREACH(ifn, &V_ifnet, if_link) {
 	if (i >= ADDRSPERSITE)
 	    break;
 #   elif defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
@@ -685,7 +685,7 @@ rxi_GetIFInfo(void)
 		break;
 #   elif defined(AFS_FBSD_ENV)
 	if_addr_rlock(ifn);
-	TAILQ_FOREACH(ifad, &ifn->if_addrhead, ifa_link) {
+	AFS_FBSD_NET_FOREACH(ifad, &ifn->if_addrhead, ifa_link) {
 	    if (i >= ADDRSPERSITE)
 		break;
 #   elif defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
