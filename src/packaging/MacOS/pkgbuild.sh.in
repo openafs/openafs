@@ -6,10 +6,20 @@ usage() {
     exec >&2
 
     echo 'Usage: pkgbuild.sh [-x] [--app-key <appkey>] [--inst-key <instkey>]'
+    echo '                   [--apple-id <appleid> <password>]'
     echo '                   [--pass N] [--csdb <CellServDB>] <binary-dir>'
     echo
     echo '--app-key and --inst-key are for signing. -x prints all comamnds as '
-    echo 'they are run.'
+    echo 'they are run. --apple-id is for notarizing.'
+    echo
+    echo 'Note: the password associated with <appleid> can be a reference to a'
+    echo 'keychain item. Including your password as cleartext is not'
+    echo 'recommended. e.g.'
+    echo
+    echo '--apple-id foo@bar.com "@keychain:PASSWORD"'
+    echo
+    echo 'In this case, keychain must hold a keychain item named PASSWORD with'
+    echo 'an account matching foo@bar.com.'
     echo
     echo 'By default, all passes are run. Available passes:'
     echo '    --pass 1: prepare pkgroot'
@@ -30,6 +40,8 @@ PASS2=
 
 APP_KEY=
 INST_KEY=
+APPLE_ID=
+APPLE_PW=
 DEST_DIR=
 CSDB=
 
@@ -46,6 +58,12 @@ while [ x"$#" != x0 ] ; do
 	;;
     --inst-key)
 	INST_KEY="$1"
+	shift
+	;;
+    --apple-id)
+	APPLE_ID="$1"
+	shift
+	APPLE_PW="$1"
 	shift
 	;;
     --csdb)
@@ -519,4 +537,9 @@ if [ x"$PASS2" = x1 ]; then
 
     echo
     echo "Created $CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME".dmg
+
+    if [ x"$APPLE_ID" != x ] ; then
+	echo "Notarizing package..."
+	./notarize.pl "$APPLE_ID" "$APPLE_PW" "$CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME.dmg"
+    fi
 fi
