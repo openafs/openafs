@@ -68,6 +68,14 @@ extern void osi_Panic(char *fmt, ...)
 #define	osi_YieldIfPossible()
 #define	osi_WakeupAndYieldIfPossible(x)	    rx_Wakeup(x)
 
+#ifdef AFS_FBSD120_ENV
+# define RX_NET_EPOCH_ENTER() NET_EPOCH_ENTER()
+# define RX_NET_EPOCH_EXIT() NET_EPOCH_EXIT()
+#else
+# define RX_NET_EPOCH_ENTER() do { } while(0)
+# define RX_NET_EPOCH_EXIT() do { } while(0)
+#endif
+
 #if !defined(AFS_DARWIN80_ENV) || defined(UKERNEL)
 # ifdef UKERNEL
 # define rx_ifnet_t struct usr_ifnet *
