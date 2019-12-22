@@ -389,6 +389,8 @@ rxi_InitPeerParams(struct rx_peer *pp)
 # else /* AFS_USERSPACE_IP_ADDR */
     rx_ifnet_t ifn;
 
+    RX_NET_EPOCH_ENTER();
+
 #  if !defined(AFS_SGI62_ENV)
     if (numMyNetAddrs == 0)
 	(void)rxi_GetIFInfo();
@@ -416,6 +418,9 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	rx_rto_setPeerTimeoutSecs(pp, 3);
 	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     }
+
+    RX_NET_EPOCH_EXIT();
+
 # endif /* else AFS_USERSPACE_IP_ADDR */
 #else /* AFS_SUN5_ENV */
     afs_int32 mtu;
@@ -657,13 +662,14 @@ rxi_GetIFInfo(void)
 	ifnet_list_free(ifns);
     }
 #  else /* AFS_DARWIN80_ENV */
-#   if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-#    if defined(AFS_FBSD_ENV)
-    CURVNET_SET(rx_socket->so_vnet);
-    TAILQ_FOREACH(ifn, &V_ifnet, if_link) {
-#    else
+#   if defined(AFS_DARWIN_ENV)
     TAILQ_FOREACH(ifn, &ifnet, if_link) {
-#    endif
+	if (i >= ADDRSPERSITE)
+	    break;
+#   elif defined(AFS_FBSD_ENV)
+    CURVNET_SET(rx_socket->so_vnet);
+    IFNET_RLOCK();
+    TAILQ_FOREACH(ifn, &V_ifnet, if_link) {
 	if (i >= ADDRSPERSITE)
 	    break;
 #   elif defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
@@ -673,7 +679,12 @@ rxi_GetIFInfo(void)
     for (ifn = ifnet; ifn != NULL && i < ADDRSPERSITE; ifn = ifn->if_next) {
 #   endif
 	rxmtu = (ifn->if_mtu - RX_IPUDP_SIZE);
-#   if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#   if defined(AFS_DARWIN_ENV)
+	TAILQ_FOREACH(ifad, &ifn->if_addrhead, ifa_link) {
+	    if (i >= ADDRSPERSITE)
+		break;
+#   elif defined(AFS_FBSD_ENV)
+	if_addr_rlock(ifn);
 	TAILQ_FOREACH(ifad, &ifn->if_addrhead, ifa_link) {
 	    if (i >= ADDRSPERSITE)
 		break;
@@ -706,6 +717,9 @@ rxi_GetIFInfo(void)
 		}
 	    }
 	}
+#   ifdef AFS_FBSD_ENV
+	if_addr_runlock(ifn);
+#   endif
     }
 #  endif /* !AFS_DARWIN80_ENV */
 
@@ -723,6 +737,7 @@ rxi_GetIFInfo(void)
     }
 
 #  ifdef AFS_FBSD_ENV
+    IFNET_RUNLOCK();
     CURVNET_RESTORE();
 #  endif
 

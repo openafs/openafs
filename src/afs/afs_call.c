@@ -1231,9 +1231,12 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	mtu = ((i == -1) ? htonl(1500) : afs_cb_interface.mtu[i]);
 # else /* AFS_USERSPACE_IP_ADDR */
 	rx_ifnet_t tifnp;
+	RX_NET_EPOCH_ENTER();
 
 	tifnp = rxi_FindIfnet(parm2, NULL);	/*  make iterative */
 	mtu = (tifnp ? rx_ifnet_mtu(tifnp) : htonl(1500));
+
+	RX_NET_EPOCH_EXIT();
 # endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !AFS_SUN5_ENV */
 	if (!code)
@@ -1252,10 +1255,13 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	}
 # else /* AFS_USERSPACE_IP_ADDR */
 	rx_ifnet_t tifnp;
+	RX_NET_EPOCH_ENTER();
 
 	tifnp = rxi_FindIfnet(parm2, &mask);	/* make iterative */
 	if (!tifnp)
 	    code = -1;
+
+	RX_NET_EPOCH_EXIT();
 # endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !AFS_SUN5_ENV */
 	if (!code)
