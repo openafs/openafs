@@ -60,13 +60,33 @@ WARNS= 1
 # We have some sketchy code that redeclares prototypes
 CWARNFLAGS+= -Wno-redundant-decls
 
+GEN_KBLD_DIR=@abs_builddir@/kconf-GENERIC
+AFS_OS_CLEAN=$(GEN_KBLD_DIR)
+
+# Starting with FreeBSD 12, opt_global.h is effectively required to build, even
+# for the GENERIC kernel. Normally this would be provided in the kernel build
+# dir (--with-bsd-kernel-build). If that dir was not specified, we can still
+# get the needed header files if we assume that the user is building for the
+# GENERIC kernel. So if we don't have a kernel build dir, generate the header
+# files in GEN_KBLD_DIR by using config(8), and specify that as the
+# KERNBUILDDIR. This won't always work, of course, but it has a chance at
+# working for the most common setups (when the user isn't using some custom
+# kernel). The kernel headers, of course, we assume are in $(KSRC).
+$(GEN_KBLD_DIR):
+	-mkdir $(GEN_KBLD_DIR)
+	cd $(KSRC)/$(MACHINE)/conf && \
+		/usr/sbin/config -d $(GEN_KBLD_DIR) GENERIC
+
 # setup for bsd.kmod.mk infrastructure
 .PATH:	${TOP_SRCDIR}/afs/FBSD
 KMODDIR=/boot/modules
 KERN_DEBUGDIR=/usr/lib/debug
 KMOD=	libafs
 SYSDIR= ${KSRC}
-.if !empty(KBLD)
+
+.if empty(KBLD)
+KERNBUILDDIR=$(GEN_KBLD_DIR)
+.else
 KERNBUILDDIR=${KBLD}
 .endif
 
@@ -83,7 +103,7 @@ DESTDIRS = single_destdir
 # generating headers and objects in this directory, which we want in $(KOBJ).
 # We also need the install target from bsd.kmod.mk in $(KOBJ), but the one
 # from Makefile.common in this directory.  A prime candidate for cleanup.
-setup:
+setup: $(KERNBUILDDIR)
 	-mkdir $(KOBJ)
 	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common
 	$(CP) Makefile $(KOBJ)/Makefile
