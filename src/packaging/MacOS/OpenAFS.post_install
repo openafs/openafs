@@ -4,7 +4,12 @@ if [ -d /afs -a ! -h /afs ]; then
    rmdir /afs
 fi
 majorvers=`uname -r | sed 's/\..*//'`
-if [ $majorvers -ge 7 ]; then
+if [ $majorvers -ge 19 ]; then
+  # Root mount point is read-only. To workaround this restriction, add a
+  # synthetic entity for afs into /etc/synthetic.conf. For more information,
+  # please read man synthetic.conf(5).
+  grep -wqs 'afs' /etc/synthetic.conf || echo 'afs' >> /etc/synthetic.conf
+elif [ $majorvers -ge 7 ]; then
   # /Network is now readonly, so put AFS in /afs; make sure /afs is a directory
   if [ -e /afs ]; then
     if [ -h /afs -o ! -d /afs ]; then
@@ -136,3 +141,21 @@ fi
 #here we should run tools which configure the client, and then if it's enabled:
 #start the new launchd daemon
 launchctl load -w /Library/LaunchDaemons/org.openafs.filesystems.afs.plist
+
+if [ $majorvers -ge 19 ]; then
+    # Assume that, if /afs is not present, either OpenAFS is being installed for
+    # the first time or the system was not rebooted after the installation.
+    # If so, inform what needs to be done to load the client. This procedure is
+    # unnecessary if OpenAFS is being reinstalled.
+    if [ ! -d /afs ]; then
+	osascript -e 'display alert "OpenAFS successfully installed" message ¬
+	"If OpenAFS is being installed for the first time on this machine, " & ¬
+	"follow the steps below:\n\n" & ¬
+	"1. Navigate to System Preferences > Security & Privacy;\n\n" & ¬
+	"2. Under the General tab towards the bottom of the window, allow " & ¬
+	"the OpenAFS kernel extension to load by clicking on Allow;\n\n" & ¬
+	"3. Reboot the machine;\n\n" & ¬
+	"Note: An entry for /afs was added in /etc/synthetic.conf. This " & ¬
+	"change takes effect only after rebooting the system."'
+    fi
+fi
