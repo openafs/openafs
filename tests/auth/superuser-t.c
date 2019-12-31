@@ -372,6 +372,7 @@ int main(int argc, char **argv)
     int serverPid, clientPid, waited, stat;
     int code;
     int ret = 0;
+    char *argv0 = afstest_GetProgname(argv);
 
     afstest_SkipTestsIfBadHostname();
 
@@ -406,7 +407,7 @@ int main(int argc, char **argv)
 
     code = afstest_AddDESKeyFile(dir);
     if (code) {
-	afs_com_err("superuser-t", code, "while adding new key\n");
+	afs_com_err(argv0, code, "while adding new key\n");
 	ret = 1;
 	goto out;
     }

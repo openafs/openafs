@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Your File System Inc. All rights reserved.
+ * Copyright (c) 2019 Sine Nomine Associates. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,39 +22,27 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* config.c */
-extern char *afstest_BuildTestConfig(void);
-extern void afstest_UnlinkTestConfig(char *);
+/*!
+ * Common misc functions for testing programs
+ */
 
-struct afsconf_dir;
-extern int afstest_AddDESKeyFile(struct afsconf_dir *dir);
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
 
-/* rxkad.c */
+#include "common.h"
 
-extern struct rx_securityClass
-	*afstest_FakeRxkadClass(struct afsconf_dir *dir,
-				char *name, char *instance, char *realm,
-				afs_uint32 startTime, afs_uint32 endTime);
-/* servers.c */
+char *
+afstest_GetProgname(char **argv)
+{
+    char *argv0;
 
-struct rx_call;
-extern int afstest_StartVLServer(char *dirname, pid_t *serverPid);
-extern int afstest_StopServer(pid_t serverPid);
-extern int afstest_StartTestRPCService(const char *, u_short, u_short,
-				       afs_int32 (*proc)(struct rx_call *));
-
-/* ubik.c */
-struct ubik_client;
-extern int afstest_GetUbikClient(struct afsconf_dir *dir, char *service,
-				 int serviceId,
-				 struct rx_securityClass *secClass,
-				 int secIndex,
-				 struct ubik_client **ubikClient);
-
-/* network.c */
-extern int afstest_IsLoopbackNetworkDefault(void);
-extern int afstest_SkipTestsIfLoopbackNetIsDefault(void);
-extern void afstest_SkipTestsIfBadHostname(void);
-
-/* misc.c */
-extern char *afstest_GetProgname(char **argv);
+    /* For invocations like ./foo/bar/prog, strip out everything but the
+     * trailing 'prog'. */
+    argv0 = strrchr(argv[0], '/');
+    if (argv0 != NULL) {
+        argv0++;
+        return argv0;
+    }
+    return argv[0];
+}
