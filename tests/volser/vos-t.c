@@ -96,7 +96,7 @@ main(int argc, char **argv)
     char *dirname;
     struct afsconf_dir *dir;
     int code, secIndex;
-    pid_t serverPid;
+    pid_t serverPid = 0;
     struct rx_securityClass *secClass;
     struct ubik_client *ubikClient = NULL;
     int ret = 0;
@@ -148,10 +148,12 @@ main(int argc, char **argv)
 
     TestListAddrs(ubikClient, dirname);
 
-    code = afstest_StopServer(serverPid);
-    is_int(0, code, "Server exited cleanly");
-
 out:
+    if (serverPid != 0) {
+	code = afstest_StopServer(serverPid);
+	is_int(0, code, "Server exited cleanly");
+    }
+
     afstest_UnlinkTestConfig(dirname);
     return ret;
 }
