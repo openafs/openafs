@@ -15,9 +15,10 @@ MODULE_LIBS = 	../tap/libtap.a \
 		$(XLIBS)
 
 vos-t: vos-t.o ../common/config.o ../common/servers.o ../common/ubik.o \
-		../common/network.o
+		../common/network.o ../common/misc.o
 	$(LT_LDRULE_static) vos-t.o ../common/config.o ../common/servers.o \
-		../common/ubik.o ../common/network.o $(MODULE_LIBS)
+		../common/ubik.o ../common/network.o ../common/misc.o \
+		$(MODULE_LIBS)
 
 clean:
 	$(LT_CLEAN)

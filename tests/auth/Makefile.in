@@ -20,11 +20,12 @@ authcon-t: authcon-t.o ../common/config.o ../common/network.o
 		$(MODULE_LIBS)
 
 superuser-t: superuser-t.o ../common/config.o ../common/rxkad.o \
-	     test.cs.o test.ss.o test.xdr.o ../common/network.o
+	     test.cs.o test.ss.o test.xdr.o ../common/network.o \
+	     ../common/misc.o
 	$(LT_LDRULE_static) superuser-t.o ../common/config.o \
 		../common/rxkad.o ../common/servers.o \
 		test.cs.o test.ss.o test.xdr.o ../common/network.o \
-		$(MODULE_LIBS)
+		../common/misc.o $(MODULE_LIBS)
 
 keys-t: keys-t.o ../common/config.o ../common/network.o
 	$(LT_LDRULE_static) keys-t.o ../common/config.o ../common/network.o $(MODULE_LIBS)
