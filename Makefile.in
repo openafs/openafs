@@ -657,10 +657,10 @@ finale: finale_notest test_build
 finale_nolibafs: finale_nolibafs_notest test_build_nolibafs
 
 test_build: finale_notest
-	cd tests && $(MAKE)
+	cd tests && $(MAKE) all
 
 test_build_nolibafs: finale_nolibafs_notest
-	cd tests && $(MAKE)
+	cd tests && $(MAKE) all
 
 check test: finale_notest
 	cd tests && $(MAKE) check
