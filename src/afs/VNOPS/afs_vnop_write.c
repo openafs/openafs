@@ -433,6 +433,7 @@ int
 afs_DoPartialWrite(struct vcache *avc, struct vrequest *areq)
 {
     afs_int32 code;
+    int sync;
 
     if (afs_stats_cmperf.cacheCurrDirtyChunks <=
 	afs_stats_cmperf.cacheMaxDirtyChunks
@@ -442,11 +443,13 @@ afs_DoPartialWrite(struct vcache *avc, struct vrequest *areq)
     afs_Trace2(afs_iclSetp, CM_TRACE_PARTIALWRITE, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length));
 
+    sync = AFS_ASYNC;
 #if	defined(AFS_SUN5_ENV)
-    code = afs_StoreAllSegments(avc, areq, AFS_ASYNC | AFS_VMSYNC_INVAL);
-#else
-    code = afs_StoreAllSegments(avc, areq, AFS_ASYNC);
+    sync |= AFS_VMSYNC_INVAL;
+#elif defined(AFS_FBSD_ENV)
+    sync |= AFS_NOVMSYNC;
 #endif
+    code = afs_StoreAllSegments(avc, areq, sync);
     return code;
 }
 
