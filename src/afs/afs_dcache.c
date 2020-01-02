@@ -2606,6 +2606,8 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 		     * validPos is updated by CacheFetchProc, and can only be
 		     * modifed under a dcache write lock, which we've blocked out
 		     */
+		    afs_size_t length;
+
 		    size = tdc->validPos - Position;	/* actual segment size */
 		    if (size < 0)
 			size = 0;
@@ -2613,8 +2615,9 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 
 		    /* Check that the amount of data that we fetched for the
 		     * dcache makes sense. */
+		    FillInt64(length, tsmall->OutStatus.Length_hi, tsmall->OutStatus.Length);
 		    if (!IsDCacheSizeOK(tdc, avc, size,
-					tsmall->OutStatus.Length,
+					length,
 					tsmall->OutStatus.DataVersion, 1)) {
 			code = EIO;
 		    }
