@@ -40,7 +40,7 @@ all: $(SHARED_LIBS) libafsrpc.a libafsrpc_pic.la \
 # there doesn't seem to be any way to get libtool to remember this requirement
 # when it links the libafsrpc_sys.la convenience library.
 
-libafsrpc.la: libafsrpc.la.sym $(LT_objs) $(LT_deps) libafsrpc_pic.la
+libafsrpc.la: libafsrpc.la.sym $(LT_objs) $(LT_deps) libafsrpc_pic.la libafsrpc.a
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	rs_aix*) \
 	    $(LT_LDLIB_shlib_only) -Wl,-bI:../sys/afsl.exp \
