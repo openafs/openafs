@@ -74,7 +74,7 @@ syscall.lo: $(SYS)/syscall.s
 libkopenafs.a: $(LT_objs)
 	$(LT_LDLIB_static) $(LT_objs)
 
-libkopenafs.la: libkopenafs.la.sym $(LT_objs)
+libkopenafs.la: libkopenafs.la.sym $(LT_objs) libkopenafs.a
 	$(LT_LDLIB_shlib_only) $(LT_objs)
 
 test-unlog: test-unlog.lo libkopenafs.la

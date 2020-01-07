@@ -38,7 +38,7 @@ all: libafsauthent.la libafsauthent_pic.la \
 	$(TOP_LIBDIR)/libafsauthent.a \
 	$(TOP_LIBDIR)/libafsauthent_pic.a
 
-libafsauthent.la: libafsauthent.la.sym $(LT_objs) $(LT_deps) libafsauthent_pic.la
+libafsauthent.la: libafsauthent.la.sym $(LT_objs) $(LT_deps) libafsauthent_pic.la libafsauthent.a
 	$(LT_LDLIB_shlib_only) $(LT_objs) $(LT_deps) $(LT_libs)
 
 libafsauthent_pic.la: $(LT_objs)
