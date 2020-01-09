@@ -1342,7 +1342,6 @@ struct afs_FetchOutput {
 
 #define	AFS_ZEROS   64		/* zero buffer */
 
-/*#define afs_DirtyPages(avc)	(((avc)->f.states & CDirty) || osi_VMDirty_p((avc)))*/
 #define	afs_DirtyPages(avc)	((avc)->f.states & CDirty)
 
 #define afs_InReadDir(avc) (((avc)->f.states & CReadDir) && (avc)->readdir_pid == MyPidxx2Pid(MyPidxx))

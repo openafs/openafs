@@ -622,7 +622,6 @@ extern int osi_Active(struct vcache *avc);
 extern void osi_FlushPages(struct vcache *avc,
 			   afs_ucred_t *credp);
 extern void osi_FlushText_really(struct vcache *vp);
-extern int osi_VMDirty_p(struct vcache *avc);
 #ifndef UKERNEL
 extern void osi_ReleaseVM(struct vcache *avc, afs_ucred_t *acred);
 #endif
