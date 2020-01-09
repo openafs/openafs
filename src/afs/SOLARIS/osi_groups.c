@@ -162,7 +162,7 @@ setpag(cred, pagvalue, newpag, change_parent)
      afs_uint32 *newpag;
      afs_uint32 change_parent;
 {
-    gid_t *gidset;
+    gid_t *gidset = NULL;
     int ngroups, code;
     size_t gidset_sz;
 
@@ -171,7 +171,7 @@ setpag(cred, pagvalue, newpag, change_parent)
     if (pagvalue == -1) {
 	code = afs_genpag(*cred, &pagvalue);
 	if (code != 0) {
-	    return code;
+	    goto done;
 	}
     }
 
@@ -183,6 +183,10 @@ setpag(cred, pagvalue, newpag, change_parent)
 
     /* must use osi_Alloc, osi_AllocSmallSpace may not be enough. */
     gidset = osi_Alloc(gidset_sz);
+    if (gidset == NULL) {
+	code = ENOMEM;
+	goto done;
+    }
 
     mutex_enter(&curproc->p_crlock);
     ngroups = afs_getgroups(*cred, gidset);
@@ -200,7 +204,9 @@ setpag(cred, pagvalue, newpag, change_parent)
     code = afs_setgroups(cred, ngroups, gidset, change_parent);
 
  done:
-    osi_Free((char *)gidset, gidset_sz);
+    if (gidset != NULL) {
+	osi_Free(gidset, gidset_sz);
+    }
     return code;
 }
 

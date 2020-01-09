@@ -74,7 +74,7 @@ int
 setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
        afs_uint32 * newpag, int change_parent)
 {
-    gid_t *gidset;
+    gid_t *gidset = NULL;
     int gidset_len = ngroups_max + 1;
     int ngroups, code;
     int j;
@@ -84,16 +84,21 @@ setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
     if (pagvalue == -1) {
 	code = afs_genpag(*cred, &pagvalue);
 	if (code != 0) {
-	    return code;
+	    goto done;
 	}
     }
 
     gidset = osi_Alloc(gidset_len * sizeof(gid_t));
+    if (gidset == NULL) {
+	code = ENOMEM;
+	goto done;
+    }
     ngroups = afs_getgroups(*cred, gidset_len, gidset);
     if (afs_get_pag_from_groups(gidset[1], gidset[2]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
 	if (ngroups + 2 > gidset_len) {
-	    return (E2BIG);
+	    code = E2BIG;
+	    goto done;
 	}
 	for (j = ngroups - 1; j >= 1; j--) {
 	    gidset[j + 2] = gidset[j];
@@ -103,7 +108,11 @@ setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
     *newpag = pagvalue;
     afs_get_groups_from_pag(*newpag, &gidset[1], &gidset[2]);
     code = afs_setgroups(td, cred, ngroups, gidset, change_parent);
-    osi_Free(gidset, gidset_len * sizeof(gid_t));
+
+ done:
+    if (gidset != NULL) {
+	osi_Free(gidset, gidset_len * sizeof(gid_t));
+    }
     return code;
 }
 

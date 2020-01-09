@@ -102,7 +102,7 @@ setpag(proc, cred, pagvalue, newpag, change_parent)
     if (pagvalue == -1) {
 	code = afs_genpag(*cred, &pagvalue);
 	if (code != 0) {
-	    return code;
+	    goto done;
 	}
     }
 
@@ -110,7 +110,8 @@ setpag(proc, cred, pagvalue, newpag, change_parent)
     if (afs_get_pag_from_groups(gidset[1], gidset[2]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
 	if (ngroups + 2 > NGROUPS) {
-	    return (E2BIG);
+	    code = E2BIG;
+	    goto done;
 	}
 	for (j = ngroups - 1; j >= 1; j--) {
 	    gidset[j + 2] = gidset[j];
@@ -120,6 +121,7 @@ setpag(proc, cred, pagvalue, newpag, change_parent)
     *newpag = pagvalue;
     afs_get_groups_from_pag(*newpag, &gidset[1], &gidset[2]);
     code = afs_setgroups(proc, cred, ngroups, gidset, change_parent);
+ done:
     return code;
 }
 

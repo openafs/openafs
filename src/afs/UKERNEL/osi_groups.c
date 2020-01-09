@@ -68,7 +68,7 @@ int
 usr_setpag(struct usr_ucred **cred, afs_uint32 pagvalue, afs_uint32 * newpag,
 	   int change_parent)
 {
-    gid_t *gidset;
+    gid_t *gidset = NULL;
     int ngroups, code;
     int j;
 
@@ -77,18 +77,22 @@ usr_setpag(struct usr_ucred **cred, afs_uint32 pagvalue, afs_uint32 * newpag,
     if (pagvalue == -1) {
 	code = afs_genpag(*cred, &pagvalue);
 	if (code != 0) {
-	    return code;
+	    goto done;
 	}
     }
 
     gidset = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    if (gidset == NULL) {
+	code = ENOMEM;
+	goto done;
+    }
     ngroups = afs_getgroups(*cred, gidset);
 
     if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
 	if ((sizeof gidset[0]) * (ngroups + 2) > AFS_SMALLOCSIZ) {
-	    osi_FreeSmallSpace((char *)gidset);
-	    return (E2BIG);
+	    code = E2BIG;
+	    goto done;
 	}
 	for (j = ngroups - 1; j >= 0; j--) {
 	    gidset[j + 2] = gidset[j];
@@ -97,11 +101,11 @@ usr_setpag(struct usr_ucred **cred, afs_uint32 pagvalue, afs_uint32 * newpag,
     }
     *newpag = pagvalue;
     afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
-    if ((code = afs_setgroups(cred, ngroups, gidset, change_parent))) {
-	osi_FreeSmallSpace((char *)gidset);
-	return (code);
-    }
-    osi_FreeSmallSpace((char *)gidset);
+    code = afs_setgroups(cred, ngroups, gidset, change_parent);
 
-    return 0;
+ done:
+    if (gidset != NULL) {
+	osi_FreeSmallSpace(gidset);
+    }
+    return code;
 }
