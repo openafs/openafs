@@ -1106,7 +1106,7 @@ auth_to_cell(krb5_context context, const char *config,
 	    afs_dprintf("Setting tokens for cell %s\n", cellconf.name);
 	}
 
-#ifndef AFS_AIX51_ENV
+#if defined(AFS_AIX_ENV) && !defined(AFS_AIX51_ENV)
 	/* on AIX 4.1.4 with AFS 3.4a+ if a write is not done before
 	 * this routine, it will not add the token. It is not clear what
 	 * is going on here! So we will do the following operation.
