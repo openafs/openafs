@@ -55,6 +55,7 @@ extern int afstest_GetUbikClient(struct afsconf_dir *dir, char *service,
 extern int afstest_IsLoopbackNetworkDefault(void);
 extern int afstest_SkipTestsIfLoopbackNetIsDefault(void);
 extern void afstest_SkipTestsIfBadHostname(void);
+extern void afstest_SkipTestsIfServerRunning(char *name);
 
 /* misc.c */
 extern char *afstest_GetProgname(char **argv);

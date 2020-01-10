@@ -61,3 +61,44 @@ afstest_SkipTestsIfBadHostname(void)
     if (!host)
 	skip_all("Can't resolve hostname %s\n", hostname);
 }
+
+/*!
+ * Skips all TAP tests if a server is already running on this system.
+ *
+ * \param name[in]  IANA service name, e.g. "afs3-vlserver"
+ */
+void
+afstest_SkipTestsIfServerRunning(char *name)
+{
+    afs_int32 code;
+    osi_socket sock;
+    struct sockaddr_in addr;
+    afs_int32 service;
+
+    service = afsconf_FindService(name);
+    if (service == -1) {
+	fprintf(stderr, "Unknown service name: %s\n", name);
+	exit(1);
+    }
+    sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock == OSI_NULLSOCKET) {
+	fprintf(stderr, "Failed to get socket file descriptor.\n");
+	exit(1);
+    }
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr.sin_port = service; /* Already in network byte order. */
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    addr.sin_len = sizeof(addr);
+#endif
+    code = bind(sock, (struct sockaddr *)&addr, sizeof(addr));
+    if (code < 0) {
+	if (errno == EADDRINUSE) {
+	    skip_all("Service %s is already running.\n", name);
+	} else {
+	    perror("bind");
+	    exit(1);
+	}
+    }
+    close(sock);
+}
