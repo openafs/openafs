@@ -189,6 +189,7 @@ afs_pag_wait(afs_ucred_t **acred)
 afs_int32
 afs_genpag(afs_ucred_t **acred, afs_uint32 *apag)
 {
+    afs_pag_wait(acred);
     *apag = genpagval();
     return 0;
 }
@@ -222,8 +223,6 @@ afs_setpag(void)
 #endif /* defined(AFS_SGI53_ENV) && defined(MP) */
 
     AFS_STATCNT(afs_setpag);
-
-    afs_pag_wait(acred);
 
     afs_genpag(acred, &pag);
 
