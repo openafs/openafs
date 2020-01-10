@@ -78,7 +78,7 @@ TestListAddrs(struct ubik_client *client, char *dirname)
 	    exit(1);
 	}
 	execl(binPath, "vos",
-	      "listaddrs", "-config", dirname, "-noauth", NULL);
+	      "listaddrs", "-config", dirname, "-noauth", "-noresolve", NULL);
 	exit(1);
     }
     close(outpipe[1]);
