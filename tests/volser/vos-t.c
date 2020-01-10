@@ -106,6 +106,8 @@ main(int argc, char **argv)
     afstest_SkipTestsIfBadHostname();
     /* Skip all tests if the current hostname is on the loopback network */
     afstest_SkipTestsIfLoopbackNetIsDefault();
+    /* Skip all tests if a vlserver is already running on this system. */
+    afstest_SkipTestsIfServerRunning("afs3-vlserver");
 
     plan(6);
 
