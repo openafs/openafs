@@ -144,11 +144,19 @@ __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 {
     struct group_info *group_info;
     struct group_info *tmp;
+    int code;
+
+    if (pagvalue == -1) {
+	code = afs_genpag(*cr, &pagvalue);
+	if (code != 0) {
+	    return code;
+	}
+    }
 
     get_group_info(afs_cr_group_info(*cr));
     group_info = afs_cr_group_info(*cr);
 
-    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
+    *newpag = pagvalue;
     afs_linux_pag_to_groups(*newpag, group_info, &tmp);
 
     if (old_groups) {

@@ -74,6 +74,13 @@ usr_setpag(struct usr_ucred **cred, afs_uint32 pagvalue, afs_uint32 * newpag,
 
     AFS_STATCNT(setpag);
 
+    if (pagvalue == -1) {
+	code = afs_genpag(*cred, &pagvalue);
+	if (code != 0) {
+	    return code;
+	}
+    }
+
     gidset = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
     ngroups = afs_getgroups(*cred, gidset);
 
@@ -88,7 +95,7 @@ usr_setpag(struct usr_ucred **cred, afs_uint32 pagvalue, afs_uint32 * newpag,
 	}
 	ngroups += 2;
     }
-    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
+    *newpag = pagvalue;
     afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
     if ((code = afs_setgroups(cred, ngroups, gidset, change_parent))) {
 	osi_FreeSmallSpace((char *)gidset);

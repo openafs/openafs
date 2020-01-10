@@ -545,7 +545,7 @@ struct afs_MeanStats {
     AFS_CS(afs_swapvp)		/* afs_vfsops.c */ \
     AFS_CS(afs_AddMarinerName)	/* afs_vnodeops.c */ \
     AFS_CS(afs_setpag)		/* afs_vnodeops.c */ \
-    AFS_CS(genpag)		/* afs_vnodeops.c */ \
+    AFS_CS(genpag)		/* afs_vnodeops.c, renamed to genpagval() */ \
     AFS_CS(getpag)		/* afs_vnodeops.c */ \
     AFS_CS(afs_GetMariner)	/* afs_vnodeops.c */ \
     AFS_CS(afs_badop)		/* afs_vnodeops.c */ \

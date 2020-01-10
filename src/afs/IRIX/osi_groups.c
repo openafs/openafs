@@ -194,6 +194,17 @@ setpag(cred, pagvalue, newpag, change_parent)
 
     AFS_STATCNT(setpag);
 
+    if (pagvalue == -1) {
+	code = afs_genpag(*cred, &pagvalue);
+	if (code != 0) {
+#if defined(KERNEL_HAVE_UERROR)
+	    return (setuerror(code), code);
+#else
+	    return code;
+#endif
+	}
+    }
+
     ngroups = afs_getgroups(*cred, NGROUPS, gidset);
     if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
@@ -209,7 +220,7 @@ setpag(cred, pagvalue, newpag, change_parent)
 	}
 	ngroups += 2;
     }
-    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
+    *newpag = pagvalue;
     afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
     if (code = afs_setgroups(cred, ngroups, gidset, change_parent)) {
 #if defined(KERNEL_HAVE_UERROR)

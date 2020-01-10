@@ -87,6 +87,14 @@ setpag(cred, pagvalue, newpag, change_parent)
     int j;
 
     AFS_STATCNT(setpag);
+
+    if (pagvalue == -1) {
+	code = afs_genpag(*cred, &pagvalue);
+	if (code != 0) {
+	    return (setuerror(code), code);
+	}
+    }
+
 #ifndef AFS_AIX51_ENV
     ngroups = afs_getgroups(*cred, NGROUPS, gidset);
     if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
@@ -100,7 +108,7 @@ setpag(cred, pagvalue, newpag, change_parent)
 	ngroups += 2;
     }
 #endif
-    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
+    *newpag = pagvalue;
 #ifdef AFS_AIX51_ENV
     if (change_parent) {
 	code = kcred_setpag(*cred, PAG_AFS, *newpag);
