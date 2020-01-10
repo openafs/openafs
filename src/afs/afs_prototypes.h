@@ -526,7 +526,7 @@ extern int afs_setpag(afs_proc_t *p, void *args, int *retval);
 extern int afs_setpag(void);
 #endif
 
-extern afs_uint32 genpag(void);
+extern afs_int32 afs_genpag(afs_ucred_t *acred, afs_uint32 *apag);
 extern afs_uint32 getpag(void);
 #if defined(AFS_FBSD_ENV)
 extern int AddPag(struct thread *td, afs_int32 aval, afs_ucred_t **credpp);

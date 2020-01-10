@@ -9,7 +9,7 @@
 
 /*
  * Implements:
- * genpag
+ * genpagval
  * getpag
  * afs_setpag
  * AddPag
@@ -67,8 +67,8 @@ afs_uint32 pagCounter = 0;
  * secure (although of course not absolutely secure).
 */
 #if !defined(UKERNEL)
-afs_uint32
-genpag(void)
+static afs_uint32
+genpagval(void)
 {
     AFS_STATCNT(genpag);
 #ifdef AFS_LINUX_ENV
@@ -96,8 +96,8 @@ getpag(void)
 /* Web enhancement: we don't need to restrict pags to 41XXXXXX since
  * we are not sharing the space with anyone.  So we use the full 32 bits. */
 
-afs_uint32
-genpag(void)
+static afs_uint32
+genpagval(void)
 {
     AFS_STATCNT(genpag);
 #ifdef AFS_LINUX_ENV
@@ -182,6 +182,13 @@ afs_pag_wait(afs_ucred_t *acred)
     return code;
 }
 
+afs_int32
+afs_genpag(afs_ucred_t *acred, afs_uint32 *apag)
+{
+    *apag = genpagval();
+    return 0;
+}
+
 int
 #if	defined(AFS_SUN5_ENV)
 afs_setpag(afs_ucred_t **credpp)
@@ -205,6 +212,7 @@ afs_setpag(void)
 #endif
 
     int code = 0;
+    afs_uint32 pag;
 
 #if defined(AFS_SGI_ENV) && defined(MP)
     /* This is our first chance to get the global lock. */
@@ -218,15 +226,19 @@ afs_setpag(void)
 	goto done;
     }
 
+    code = afs_genpag(acred, &pag);
+    if (code) {
+	goto done;
+    }
 
 #if	defined(AFS_SUN5_ENV)
-    code = AddPag(genpag(), credpp);
+    code = AddPag(pag, credpp);
 #elif	defined(AFS_FBSD_ENV)
-    code = AddPag(td, genpag(), &td->td_ucred);
+    code = AddPag(td, pag, &td->td_ucred);
 #elif   defined(AFS_NBSD40_ENV)
-    code = AddPag(p, genpag(), &p->l_proc->p_cred);
+    code = AddPag(p, pag, &p->l_proc->p_cred);
 #elif	defined(AFS_XBSD_ENV)
-    code = AddPag(p, genpag(), &p->p_rcred);
+    code = AddPag(p, pag, &p->p_rcred);
 #elif	defined(AFS_AIX41_ENV)
     {
 	struct ucred *credp;
@@ -234,7 +246,7 @@ afs_setpag(void)
 
 	credp = crref();
 	credp0 = credp;
-	code = AddPag(genpag(), &credp);
+	code = AddPag(pag, &credp);
 	/* If AddPag() didn't make a new cred, then free our cred ref */
 	if (credp == credp0) {
 	    crfree(credp);
@@ -243,36 +255,36 @@ afs_setpag(void)
 #elif	defined(AFS_HPUX110_ENV)
     {
 	struct ucred *credp = p_cred(u.u_procp);
-	code = AddPag(genpag(), &credp);
+	code = AddPag(pag, &credp);
     }
 #elif	defined(AFS_SGI_ENV)
     {
 	cred_t *credp;
 	credp = OSI_GET_CURRENT_CRED();
-	code = AddPag(genpag(), &credp);
+	code = AddPag(pag, &credp);
     }
 #elif	defined(AFS_LINUX_ENV)
     {
 	afs_ucred_t *credp = crref();
-	code = AddPag(genpag(), &credp);
+	code = AddPag(pag, &credp);
 	crfree(credp);
     }
 #elif defined(AFS_DARWIN80_ENV)
     {
 	afs_ucred_t *credp = kauth_cred_proc_ref(p);
-	code = AddPag(p, genpag(), &credp);
+	code = AddPag(p, pag, &credp);
 	crfree(credp);
     }
 #elif defined(AFS_DARWIN_ENV)
     {
 	afs_ucred_t *credp = crdup(p->p_cred->pc_ucred);
-	code = AddPag(p, genpag(), &credp);
+	code = AddPag(p, pag, &credp);
 	crfree(credp);
     }
 #elif defined(UKERNEL)
-    code = AddPag(genpag(), &(get_user_struct()->u_cred));
+    code = AddPag(pag, &(get_user_struct()->u_cred));
 #else
-    code = AddPag(genpag(), &u.u_cred);
+    code = AddPag(pag, &u.u_cred);
 #endif
 
   done:
@@ -294,7 +306,7 @@ afs_setpag(void)
 /*
  * afs_setpag_val
  * This function is like setpag but sets the current thread's pag id to a
- * caller-provided value instead of calling genpag().  This implements a
+ * caller-provided value instead of calling afs_genpag().  This implements a
  * form of token caching since the caller can recall a particular pag value
  * for the thread to restore tokens, rather than reauthenticating.
  */

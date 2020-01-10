@@ -168,6 +168,13 @@ setpag(cred, pagvalue, newpag, change_parent)
 
     AFS_STATCNT(setpag);
 
+    if (pagvalue == -1) {
+	code = afs_genpag(*cred, &pagvalue);
+	if (code != 0) {
+	    return code;
+	}
+    }
+
     /* Derive gidset size from running kernel's ngroups_max;
      * default 16, but configurable up to 32 (Sol10) or
      * 1024 (Sol11).
@@ -176,8 +183,6 @@ setpag(cred, pagvalue, newpag, change_parent)
 
     /* must use osi_Alloc, osi_AllocSmallSpace may not be enough. */
     gidset = osi_Alloc(gidset_sz);
-
-    pagvalue = (pagvalue == -1 ? genpag() : pagvalue);
 
     mutex_enter(&curproc->p_crlock);
     ngroups = afs_getgroups(*cred, gidset);
