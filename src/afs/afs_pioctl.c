@@ -4615,7 +4615,13 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     *acred = newcred;
     if (!code && *com == PSETPAG) {
 	/* Special case for 'setpag' */
-	afs_uint32 pagvalue = genpag();
+	afs_uint32 pagvalue;
+
+	code = afs_genpag(*acred, &pagvalue);
+	if (code != 0) {
+	    EXP_RELE(outexporter);
+	    return code;
+	}
 
 	au = afs_GetUser(pagvalue, -1, WRITE_LOCK); /* a new unixuser struct */
 	/*

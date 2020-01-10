@@ -95,6 +95,14 @@ setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
     int j;
 
     AFS_STATCNT(setpag);
+
+    if (pagvalue == -1) {
+	code = afs_genpag(*cred, &pagvalue);
+	if (code != 0) {
+	    return code;
+	}
+    }
+
 #ifdef AFS_FBSD80_ENV
     gidset = osi_Alloc(gidset_len * sizeof(gid_t));
 #endif
@@ -109,7 +117,7 @@ setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
 	}
 	ngroups += 2;
     }
-    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
+    *newpag = pagvalue;
     afs_get_groups_from_pag(*newpag, &gidset[1], &gidset[2]);
     code = afs_setgroups(td, cred, ngroups, gidset, change_parent);
 #ifdef AFS_FBSD80_ENV

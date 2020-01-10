@@ -88,6 +88,13 @@ setpag(struct proc *proc, afs_ucred_t *cred, afs_uint32 pagvalue,
     int j;
 
     AFS_STATCNT(setpag);
+
+    if (pagvalue == -1) {
+	code = afs_genpag(*cred, &pagvalue);
+	if (code != 0) {
+	    return code;
+	}
+    }
     ngroups = osi_getgroups(*cred, NGROUPS, gidset);
     if (afs_get_pag_from_groups(gidset[1], gidset[2]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
@@ -99,7 +106,7 @@ setpag(struct proc *proc, afs_ucred_t *cred, afs_uint32 pagvalue,
 	}
 	ngroups += 2;
     }
-    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
+    *newpag = pagvalue;
     afs_get_groups_from_pag(*newpag, &gidset[1], &gidset[2]);
     code = osi_setgroups(proc, cred, ngroups, gidset, change_parent);
     return code;

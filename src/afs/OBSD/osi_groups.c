@@ -80,6 +80,14 @@ setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
     int j;
 
     AFS_STATCNT(setpag);
+
+    if (pagvalue == -1) {
+	code = afs_genpag(*cred, &pagvalue);
+	if (code != 0) {
+	    return code;
+	}
+    }
+
     ngroups = afs_getgroups(*cred, NGROUPS, gidset);
     /*
      * If the group list is empty, use the task's primary group as the group
@@ -101,7 +109,7 @@ setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
 	}
 	ngroups += 2;
     }
-    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
+    *newpag = pagvalue;
     afs_get_groups_from_pag(*newpag, &gidset[1], &gidset[2]);
     code = afs_setgroups(proc, cred, ngroups, gidset, change_parent);
     return code;
