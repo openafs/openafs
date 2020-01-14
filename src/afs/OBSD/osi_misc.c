@@ -65,7 +65,7 @@ such damages.
  */
 
 int
-afs_osi_suser(void *credp)
+afs_osi_suser(afs_ucred_t *credp)
 {
 #ifdef AFS_OBSD35_ENV
     return (suser_ucred((struct ucred *)credp) ? 0 : 1);

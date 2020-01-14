@@ -170,7 +170,7 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
  * Note that it must NOT set errno.
  */
 int
-afs_suser(void *credp)
+afs_suser(afs_ucred_t *credp)
 {
     int error;
     struct proc *p = current_proc();

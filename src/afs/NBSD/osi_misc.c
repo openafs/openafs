@@ -62,7 +62,7 @@ such damages.
  * traditional BSD suser, see OBSD/osi_misc.c.
  */
 int
-afs_osi_suser(void *credp)
+afs_osi_suser(afs_ucred_t *credp)
 {
     int code;
 /*

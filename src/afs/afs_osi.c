@@ -264,7 +264,7 @@ shutdown_osisleep(void)
 
 #if !defined(AFS_OBSD_ENV) && !defined(AFS_NBSD40_ENV)
 int
-afs_osi_suser(void *cr)
+afs_osi_suser(afs_ucred_t *cr)
 {
 #if defined(AFS_SUN510_ENV)
     return (priv_policy(cr, PRIV_SYS_SUSER_COMPAT, B_FALSE, EPERM, NULL) == 0);

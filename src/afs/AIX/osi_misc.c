@@ -167,7 +167,7 @@ aix_gnode_rele(vp)
  * Note that it must NOT set errno.
  */
 
-afs_suser(void *credp)
+afs_suser(afs_ucred_t *credp)
 {
     int rc;
     char err;

@@ -139,7 +139,7 @@ static int afs_pag_sleepcnt = 0;
 static int afs_pag_timewarn = 0;
 
 static int
-afs_pag_sleep(afs_ucred_t **acred)
+afs_pag_sleep(afs_ucred_t *acred)
 {
     int rv = 0;
 
@@ -160,7 +160,7 @@ afs_pag_sleep(afs_ucred_t **acred)
 }
 
 static int
-afs_pag_wait(afs_ucred_t **acred)
+afs_pag_wait(afs_ucred_t *acred)
 {
     int code = 0;
 
@@ -197,11 +197,11 @@ afs_setpag(void)
 {
 
 #if     defined(AFS_SUN5_ENV)
-    afs_ucred_t **acred = *credpp;
+    afs_ucred_t *acred = *credpp;
 #elif  defined(AFS_OBSD_ENV)
-    afs_ucred_t **acred = &p->p_ucred;
+    afs_ucred_t *acred = p->p_ucred;
 #else
-    afs_ucred_t **acred = NULL;
+    afs_ucred_t *acred = NULL;
 #endif
 
     int code = 0;
@@ -311,11 +311,11 @@ afs_setpag_val(int pagval)
 {
 
 #if     defined(AFS_SUN5_ENV)
-    afs_ucred_t **acred = *credp;
+    afs_ucred_t *acred = *credp;
 #elif  defined(AFS_OBSD_ENV)
-    afs_ucred_t **acred = &p->p_ucred;
+    afs_ucred_t *acred = p->p_ucred;
 #else
-    afs_ucred_t **acred = NULL;
+    afs_ucred_t *acred = NULL;
 #endif
 
     int code = 0;

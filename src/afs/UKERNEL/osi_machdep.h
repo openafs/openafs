@@ -76,7 +76,7 @@ extern usr_mutex_t afs_global_lock;
 
 extern int afs_bufferpages;
 
-extern int afs_suser(void *credp);
+extern int afs_suser(afs_ucred_t *credp);
 
 #define setuerror(erval) get_user_struct()->u_error = (erval)
 #define getuerror(erval) get_user_struct()->u_error
