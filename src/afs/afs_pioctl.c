@@ -5159,7 +5159,7 @@ DECL_PIOCTL(PCallBackAddr)
     if (!afs_resourceinit_flag)	/* afs deamons havn't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
-    if (!afs_osi_suser(acred))
+    if (!afs_osi_suser(*acred))
 	return EACCES;
 
     if (afs_pd_getInt(ain, &addr) != 0)
@@ -5564,7 +5564,7 @@ DECL_PIOCTL(PNFSNukeCreds)
 	    return EACCES;
 	}
 	afs_PutUser(tu, SHARED_LOCK);
-    } else if (!afs_osi_suser(acred)) {
+    } else if (!afs_osi_suser(*acred)) {
 	return EACCES;
     }
 

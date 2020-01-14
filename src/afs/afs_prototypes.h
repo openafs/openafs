@@ -552,7 +552,7 @@ extern void afs_osi_Invisible(void);
 extern void shutdown_osi(void);
 extern void shutdown_osinet(void);
 extern void shutdown_osisleep(void);
-extern int afs_osi_suser(void *credp);
+extern int afs_osi_suser(afs_ucred_t *credp);
 extern void afs_osi_TraverseProcTable(void);
 #if defined(KERNEL) && !defined(UKERNEL)
 extern const afs_ucred_t *afs_osi_proc2cred(afs_proc_t * pr);

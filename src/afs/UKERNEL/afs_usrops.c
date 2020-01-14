@@ -166,13 +166,13 @@ getf(int fd)
  * Every user is a super user
  */
 int
-afs_osi_suser(void *credp)
+afs_osi_suser(afs_ucred_t *credp)
 {
     return 1;
 }
 
 int
-afs_suser(void *credp)
+afs_suser(afs_ucred_t *credp)
 {
     return 1;
 }
