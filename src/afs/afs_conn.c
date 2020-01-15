@@ -354,7 +354,15 @@ afs_Conn(struct VenusFid *afid, struct vrequest *areq,
     afs_PutVolume(tv, READ_LOCK);
 
     if (lowp) {
-	tu = afs_GetUser(areq->uid, afid->Cell, SHARED_LOCK);
+	afs_int32 code;
+	code = afs_GetUser(&tu, areq->uid, afid->Cell, SHARED_LOCK);
+	if (code != 0) {
+	    if (areq != NULL) {
+		afs_FinalizeReq(areq);
+		areq->volumeError = VOL_INTERNAL_ERROR;
+	    }
+	    return NULL;
+	}
 	tconn = afs_ConnBySA(lowp, fsport, afid->Cell, tu, 0 /*!force */ ,
 			     1 /*create */ , locktype, replicated, rxconn);
 
@@ -572,6 +580,7 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
     struct unixuser *tu;
     struct afs_conn *tc = NULL;
     struct srvAddr *sa = NULL;
+    afs_int32 code;
 
     *rxconn = NULL;
 
@@ -588,7 +597,14 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
       (if aforce is true, create a connection at the first address)
 */
 
-    tu = afs_GetUser(areq->uid, acell, SHARED_LOCK);
+    code = afs_GetUser(&tu, areq->uid, acell, SHARED_LOCK);
+    if (code != 0) {
+	if (areq != NULL) {
+	    afs_FinalizeReq(areq);
+	    areq->volumeError = VOL_INTERNAL_ERROR;
+	}
+	return NULL;
+    }
 
     for (sa = aserver->addr; sa; sa = sa->next_sa) {
 	tc = afs_ConnBySA(sa, aport, acell, tu, aforce,

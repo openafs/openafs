@@ -179,7 +179,7 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 			 struct afs_exporter **outexporter)
 {
     struct nfsclientpag *np, *tnp;
-    extern struct unixuser *afs_FindUser(), *afs_GetUser();
+    extern struct unixuser *afs_FindUser();
     struct unixuser *au = 0;
     afs_int32 uid, pag, code = 0;
 
@@ -286,7 +286,15 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 	afs_PutUser(au, READ_LOCK);
     /* do not get a lock on au; afs_nfsclient_getcreds may write-lock the
      * same unixuser */
-    au = afs_GetUser(pag, -1, 0);
+    code = afs_GetUser(&au, pag, -1, 0);
+    if (code != 0) {
+	afs_PutNfsClientPag(np);
+	code = EIO;
+#if defined(KERNEL_HAVE_UERROR)
+	setuerror(code);
+#endif
+	return (code);
+    }
     if (!(au->exporter)) {	/* Created new unixuser struct */
 	np->refCount++;		/* so it won't disappear */
 	au->exporter = (struct afs_exporter *)np;
@@ -376,7 +384,13 @@ afs_nfsclient_getcreds(struct unixuser *au)
 	/* Find the appropriate unixuser.  This might be the same as
 	 * the one we were passed (au), but that's OK.
 	 */
-	tu = afs_GetUser(np->pag, cellnum, WRITE_LOCK);
+	code = afs_GetUser(&tu, np->pag, cellnum, WRITE_LOCK);
+	if (code != 0) {
+	    memset(tcred->ct.HandShakeKey, 0, 8);
+	    memset(tcred->st.st_val, 0, tcred->st.st_len);
+	    afs_osi_Free(tcred->st.st_val, tcred->st.st_len);
+	    continue;
+	}
 	if (!(tu->exporter)) {	/* Created new unixuser struct */
 	    np->refCount++;		/* so it won't disappear */
 	    tu->exporter = (struct afs_exporter *)np;

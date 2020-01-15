@@ -282,6 +282,8 @@ afs_CheckCode(afs_int32 acode, struct vrequest *areq, int where)
 	return ENODEV;
     if (areq->volumeError == VOLBUSY)
 	return EWOULDBLOCK;
+    if (areq->volumeError == VOL_INTERNAL_ERROR)
+	return EIO;
     if (acode == VNOVNODE)
 	return EIO;
     if (acode == VDISKFULL)

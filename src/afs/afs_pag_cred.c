@@ -143,6 +143,7 @@ afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
     int stLen;
     afs_int32 flag, set_parent_pag = 0;
     afs_int32 pag, uid;
+    afs_int32 code;
 
     AFS_STATCNT(PSetTokens);
     if (!afs_resourceinit_flag) {
@@ -196,7 +197,10 @@ afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
     pag = PagInCred(*acred);
     uid = (pag == NOPAG) ? afs_cr_uid(*acred) : pag;
     /* now we just set the tokens */
-    tu = afs_GetUser(uid, tcell->cellnum, WRITE_LOCK);
+    code = afs_GetUser(&tu, uid, tcell->cellnum, WRITE_LOCK);
+    if (code != 0) {
+	return EIO;
+    }
     if (!tu->cellinfo)
 	tu->cellinfo = (void *)tcell;
     afs_FreeTokens(&tu->tokens);

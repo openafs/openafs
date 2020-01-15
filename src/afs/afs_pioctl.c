@@ -1981,7 +1981,11 @@ DECL_PIOCTL(PSetTokens)
     }
 
     /* now we just set the tokens */
-    tu = afs_GetUser(areq->uid, cellNum, WRITE_LOCK);
+    code = afs_GetUser(&tu, areq->uid, cellNum, WRITE_LOCK);
+    if (code != 0) {
+	goto done;
+    }
+
     /* Set tokens destroys any that are already there */
     afs_FreeTokens(&tu->tokens);
     afs_AddRxkadToken(&tu->tokens, stp, stLen, &clear);
@@ -2769,13 +2773,17 @@ DECL_PIOCTL(PCheckAuth)
     struct sa_conn_vector *tcv;
     struct unixuser *tu;
     afs_int32 retValue;
+    afs_int32 code;
 
     AFS_STATCNT(PCheckAuth);
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
     retValue = 0;
-    tu = afs_GetUser(areq->uid, 1, READ_LOCK);	/* check local cell authentication */
+    code = afs_GetUser(&tu, areq->uid, 1, READ_LOCK);	/* check local cell authentication */
+    if (code != 0) {
+	return code;
+    }
     if (!tu)
 	retValue = EACCES;
     else {
@@ -4762,7 +4770,12 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 	    return code;
 	}
 
-	au = afs_GetUser(pagvalue, -1, WRITE_LOCK); /* a new unixuser struct */
+	code = afs_GetUser(&au, pagvalue, -1, WRITE_LOCK); /* a new unixuser struct */
+	if (code != 0) {
+	    EXP_RELE(outexporter);
+	    return code;
+	}
+
 	/*
 	 * Note that we leave the 'outexporter' struct held so it won't
 	 * dissappear on us
@@ -5323,8 +5336,11 @@ DECL_PIOCTL(PCallBackAddr)
 	    continue;
 	}
 
+	code = afs_GetUser(&tu, areq->uid, ts->cell->cellNum, SHARED_LOCK);
+	if (code != 0) {
+	    continue;
+	}
 	/* get a connection, even if host is down; bumps conn ref count */
-	tu = afs_GetUser(areq->uid, ts->cell->cellNum, SHARED_LOCK);
 	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cellNum, tu,
 			  1 /*force */ , 1 /*create */ , SHARED_LOCK, 0, &rxconn);
 	afs_PutUser(tu, SHARED_LOCK);
@@ -5481,7 +5497,11 @@ DECL_PIOCTL(PSetTokens2)
 	}
     }
 
-    tu = afs_GetUser(areq->uid, cellNum, WRITE_LOCK);
+    code = afs_GetUser(&tu, areq->uid, cellNum, WRITE_LOCK);
+    if (code != 0) {
+	goto done;
+    }
+
     /* Free any tokens that we've already got */
     afs_FreeTokens(&tu->tokens);
 
@@ -5654,6 +5674,7 @@ DECL_PIOCTL(PNFSNukeCreds)
 {
     afs_uint32 addr;
     afs_int32 i;
+    afs_int32 code;
     struct unixuser *tu;
 
     AFS_STATCNT(PUnlog);
@@ -5664,7 +5685,10 @@ DECL_PIOCTL(PNFSNukeCreds)
 	return EINVAL;
 
     if (afs_cr_gid(*acred) == RMTUSER_REQ_PRIV && !addr) {
-	tu = afs_GetUser(areq->uid, -1, SHARED_LOCK);
+	code = afs_GetUser(&tu, areq->uid, -1, SHARED_LOCK);
+	if (code != 0) {
+	    return code;
+	}
 	if (!tu->exporter || !(addr = EXP_GETHOST(tu->exporter))) {
 	    afs_PutUser(tu, SHARED_LOCK);
 	    return EACCES;

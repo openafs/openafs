@@ -460,9 +460,12 @@ afs_ComputePAGStats(void)
  * Obtain a unixuser for the specified uid and cell;
  * if no existing match found, allocate a new one.
  *
+ * \param[out] a_user	on success, set to the requested unixuser
  * \param[in] auid	uid/PAG value
  * \param[in] acell	cell number; if -1, match on auid only
  * \param[in] locktype  locktype desired on returned unixuser
+ *
+ * \returns 0 on success, or errno error codes on error
  *
  * \post unixuser is chained in afs_users[], returned with <locktype> held
  *
@@ -470,8 +473,9 @@ afs_ComputePAGStats(void)
  *         small lookup optimizations.
  */
 
-struct unixuser *
-afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
+afs_int32
+afs_GetUser(struct unixuser **a_user, afs_int32 auid, afs_int32 acell,
+	    afs_int32 locktype)
 {
     struct unixuser *tu, *xu = 0, *pu = 0;
     afs_int32 i;
@@ -541,8 +545,8 @@ afs_GetUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
  done:
     ReleaseWriteLock(&afs_xuser);
     afs_LockUser(tu, locktype, 364);
-    return tu;
-
+    *a_user = tu;
+    return 0;
 }				/*afs_GetUser */
 
 void

@@ -499,7 +499,11 @@ afs_getsysname(struct vrequest *areq, struct vcache *adp,
 	if (rlen >= bufsize)
 	    goto done;
     } else {
-	au = afs_GetUser(areq->uid, adp->f.fid.Cell, READ_LOCK);
+	error = afs_GetUser(&au, areq->uid, adp->f.fid.Cell, READ_LOCK);
+	if (error != 0) {
+	    strlcpy(bufp, "@sys", bufsize);
+	    goto done;
+	}
 	if (au->exporter) {
 	    error = EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num, 0);
 	    if (error) {
@@ -604,7 +608,10 @@ Next_AtSys(struct vcache *avc, struct vrequest *areq,
 	*sysnamelist = afs_sysnamelist;
 
 	if (afs_nfsexporter) {
-	    au = afs_GetUser(areq->uid, avc->f.fid.Cell, READ_LOCK);
+	    error = afs_GetUser(&au, areq->uid, avc->f.fid.Cell, READ_LOCK);
+	    if (error != 0) {
+		return 0;
+	    }
 	    if (au->exporter) {
 		error =
 		    EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, &num, 0);

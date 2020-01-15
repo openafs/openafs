@@ -286,8 +286,10 @@ struct vrequest {
     char skipserver[AFS_MAXHOSTS];
     afs_int32 lasterror[AFS_MAXHOSTS];
 };
+/* Possible values for volumeError. */
 #define VOLMISSING 1
 #define VOLBUSY 2
+#define VOL_INTERNAL_ERROR 3
 
 /* structure linked off of a server to keep track of queued returned
  * callbacks.  Sent asynchronously when we run a little low on free dudes.

@@ -938,8 +938,8 @@ extern afs_rwlock_t afs_xuser;
 extern struct unixuser *afs_users[NUSERS];
 extern struct unixuser *afs_FindUser(afs_int32 auid, afs_int32 acell,
 				     afs_int32 locktype);
-extern struct unixuser *afs_GetUser(afs_int32 auid, afs_int32 acell,
-				    afs_int32 locktype);
+extern afs_int32 afs_GetUser(struct unixuser **a_user, afs_int32 auid,
+			     afs_int32 acell, afs_int32 locktype);
 extern void afs_LockUser(struct unixuser *au, afs_int32 locktype,
                          unsigned int src_indicator);
 extern void afs_NotifyUser(struct unixuser *auser, int event);
