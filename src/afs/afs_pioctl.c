@@ -1890,7 +1890,7 @@ DECL_PIOCTL(PSetTokens)
 {
     afs_int32 cellNum;
     afs_int32 size;
-    afs_int32 code;
+    afs_int32 code = EIO;
     struct unixuser *tu;
     struct ClearToken clear;
     char *stp;
@@ -1901,25 +1901,38 @@ DECL_PIOCTL(PSetTokens)
 
     AFS_STATCNT(PSetTokens);
     if (!afs_resourceinit_flag) {
-	return EIO;
+	code = EIO;
+	goto done;
     }
 
-    if (afs_pd_getInt(ain, &stLen) != 0)
-	return EINVAL;
+    if (afs_pd_getInt(ain, &stLen) != 0) {
+	code = EINVAL;
+	goto done;
+    }
 
     stp = afs_pd_where(ain);	/* remember where the ticket is */
-    if (stLen < 0 || stLen > MAXKTCTICKETLEN)
-	return EINVAL;		/* malloc may fail */
-    if (afs_pd_skip(ain, stLen) != 0)
-	return EINVAL;
+    if (stLen < 0 || stLen > MAXKTCTICKETLEN) {
+	code = EINVAL;		/* malloc may fail */
+	goto done;
+    }
+    if (afs_pd_skip(ain, stLen) != 0) {
+	code = EINVAL;
+	goto done;
+    }
 
-    if (afs_pd_getInt(ain, &size) != 0)
-	return EINVAL;
-    if (size != sizeof(struct ClearToken))
-	return EINVAL;
+    if (afs_pd_getInt(ain, &size) != 0) {
+	code = EINVAL;
+	goto done;
+    }
+    if (size != sizeof(clear)) {
+	code = EINVAL;
+	goto done;
+    }
 
-    if (afs_pd_getBytes(ain, &clear, sizeof(struct ClearToken)) !=0)
-	return EINVAL;
+    if (afs_pd_getBytes(ain, &clear, sizeof(clear)) != 0) {
+	code = EINVAL;
+	goto done;
+    }
 
     if (clear.AuthHandle == -1)
 	clear.AuthHandle = 999;	/* more rxvab compat stuff */
@@ -1928,8 +1941,10 @@ DECL_PIOCTL(PSetTokens)
 	/* still stuff left?  we've got primary flag and cell name.
 	 * Set these */
 
-	if (afs_pd_getInt(ain, &flag) != 0)
-	    return EINVAL;
+	if (afs_pd_getInt(ain, &flag) != 0) {
+	    code = EINVAL;
+	    goto done;
+	}
 
 	/* some versions of gcc appear to need != 0 in order to get this
 	 * right */
@@ -1938,24 +1953,28 @@ DECL_PIOCTL(PSetTokens)
 	    set_parent_pag = 1;
 	}
 
-	if (afs_pd_getStringPtr(ain, &cellName) != 0)
-	    return EINVAL;
+	if (afs_pd_getStringPtr(ain, &cellName) != 0) {
+	    code = EINVAL;
+	    goto done;
+	}
 
 	code = _settok_tokenCell(cellName, &cellNum, NULL);
-	if (code)
-	    return code;
+	if (code != 0) {
+	    goto done;
+	}
     } else {
 	/* default to primary cell, primary id */
 	code = _settok_tokenCell(NULL, &cellNum, &flag);
-	if (code)
-	    return code;
+	if (code != 0) {
+	    goto done;
+	}
     }
 
     if (set_parent_pag) {
 	if (_settok_setParentPag(acred) == 0) {
 	    code = afs_CreateReq(&treq, *acred);
-	    if (code) {
-		return code;
+	    if (code != 0) {
+		goto done;
 	    }
 	    areq = treq;
 	}
@@ -1977,9 +1996,12 @@ DECL_PIOCTL(PSetTokens)
     afs_ResetUserConns(tu);
     afs_NotifyUser(tu, UTokensObtained);
     afs_PutUser(tu, WRITE_LOCK);
-    afs_DestroyReq(treq);
 
-    return 0;
+    code = 0;
+
+ done:
+    afs_DestroyReq(treq);
+    return code;
 }
 
 /*!
@@ -5408,25 +5430,29 @@ DECL_PIOCTL(PDiscon)
 
 DECL_PIOCTL(PSetTokens2)
 {
-    int code =0;
+    int code = EIO;
     int i, cellNum, primaryFlag;
     XDR xdrs;
-    struct unixuser *tu;
+    struct unixuser *tu = NULL;
     struct vrequest *treq = NULL;
     struct ktc_setTokenData tokenSet;
     struct ktc_tokenUnion decodedToken;
 
     memset(&tokenSet, 0, sizeof(tokenSet));
+    memset(&decodedToken, 0, sizeof(decodedToken));
 
     AFS_STATCNT(PSetTokens2);
-    if (!afs_resourceinit_flag)
-	return EIO;
+    if (!afs_resourceinit_flag) {
+	code = EIO;
+	goto done;
+    }
 
     afs_pd_xdrStart(ain, &xdrs, XDR_DECODE);
 
     if (!xdr_ktc_setTokenData(&xdrs, &tokenSet)) {
 	afs_pd_xdrEnd(ain, &xdrs);
-	return EINVAL;
+	code = EINVAL;
+	goto done;
     }
 
     afs_pd_xdrEnd(ain, &xdrs);
@@ -5436,22 +5462,20 @@ DECL_PIOCTL(PSetTokens2)
      * tokens.
      */
     if (tokenSet.tokens.tokens_len > MAX_PIOCTL_TOKENS) {
-	xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
-	return E2BIG;
+	code = E2BIG;
+	goto done;
     }
 
     code = _settok_tokenCell(tokenSet.cell, &cellNum, &primaryFlag);
-    if (code) {
-	xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
-	return code;
+    if (code != 0) {
+	goto done;
     }
 
     if (tokenSet.flags & AFSTOKEN_EX_SETPAG) {
 	if (_settok_setParentPag(acred) == 0) {
 	    code = afs_CreateReq(&treq, *acred);
-	    if (code) {
-		xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
-		return code;
+	    if (code != 0) {
+		goto done;
 	    }
 	    areq = treq;
 	}
@@ -5470,11 +5494,10 @@ DECL_PIOCTL(PSetTokens2)
 		      tokenSet.tokens.tokens_val[i].token_opaque_len,
 		      XDR_DECODE);
 
-	memset(&decodedToken, 0, sizeof(decodedToken));
 	if (!xdr_ktc_tokenUnion(&xdrs, &decodedToken)) {
 	    xdr_destroy(&xdrs);
 	    code = EINVAL;
-	    goto out;
+	    goto done;
 	}
 
 	xdr_destroy(&xdrs);
@@ -5496,6 +5519,7 @@ DECL_PIOCTL(PSetTokens2)
 	 * there is key material in what we're about to throw away, which
 	 * we really should zero out before giving back to the allocator */
 	xdr_free((xdrproc_t) xdr_ktc_tokenUnion, &decodedToken);
+	memset(&decodedToken, 0, sizeof(decodedToken));
     }
 
     tu->states |= UHasTokens;
@@ -5503,11 +5527,15 @@ DECL_PIOCTL(PSetTokens2)
     afs_SetPrimary(tu, primaryFlag);
     tu->tokenTime = osi_Time();
 
-    xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
+    code = 0;
 
-out:
-    afs_ResetUserConns(tu);
-    afs_PutUser(tu, WRITE_LOCK);
+ done:
+    xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
+    xdr_free((xdrproc_t) xdr_ktc_tokenUnion, &decodedToken);
+    if (tu != NULL) {
+	afs_ResetUserConns(tu);
+	afs_PutUser(tu, WRITE_LOCK);
+    }
     afs_DestroyReq(treq);
 
     return code;
