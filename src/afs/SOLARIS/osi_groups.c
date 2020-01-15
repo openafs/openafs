@@ -60,7 +60,7 @@ afs_xsetgroups(u_int uap, gid_t *rvp)
      * overwrite it with the old pag.
      */
     if (PagInCred(proc->p_cred) == NOPAG) {
-	if (((treq.uid >> 24) & 0xff) == 'A') {
+	if (afs_IsPagId(treq.uid)) {
 	    AFS_GLOCK();
 	    /* we've already done a setpag, so now we redo it */
 	    AddPag(treq.uid, &proc->p_cred);
@@ -93,7 +93,7 @@ pag_to_gidset(afs_uint32 pagvalue, gid_t *gidset, int *a_ngroups,
 
     /* See if we already have a PAG gid */
     for (i = 0; i < ngroups; i++) {
-        if (((gidset[i] >> 24) & 0xff) == 'A') {
+	if (afs_IsPagId(gidset[i])) {
             gidslot = &gidset[i];
             break;
         }
@@ -276,7 +276,7 @@ osi_get_group_pag(struct cred *cred) {
     ngroups = crgetngroups(cred);
 
     for (i = 0; i < ngroups; i++) {
-        if (((gidset[i] >> 24) & 0xff) == 'A') {
+	if (afs_IsPagId(gidset[i])) {
             return gidset[i];
         }
     }

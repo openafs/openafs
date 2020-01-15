@@ -67,7 +67,7 @@ fixup_pags(int **credpp, int ngroups, gid_t * gidset, int old_afs_pag,
     }
     if (ngroups >= 1) {		/* possibly a DFS PAG */
 	new_dfs_pag = (int)groups[ngroups - 1];
-	if (((new_dfs_pag >> 24) & 0xff) == 'A')
+	if (afs_IsPagId(new_dfs_pag))
 	    new_dfs_pag = (int)groups[ngroups - 1];
 	else
 	    new_dfs_pag = 0;
@@ -138,7 +138,7 @@ osi_DFSGetPagFromCred(struct ucred *credp)
      *  the first or third group entry.
      */
     pag = credp->cr_groups[ngroups - 1];
-    if (((pag >> 24) & 0xff) == 'A')
+    if (afs_IsPagId(pag))
 	return pag;
     else
 	return NOPAG;

@@ -39,7 +39,7 @@ afs_linux_pag_from_groups(struct group_info *group_info)
 
     for (i = 0; i < group_info->ngroups; i++) {
 	g0 = afs_from_kgid(GROUP_AT(group_info, i));
-	if (((g0 >> 24) & 0xff) == 'A')
+	if (afs_IsPagId(g0))
 	    return g0;
     }
     return NOPAG;
@@ -61,7 +61,7 @@ afs_linux_pag_to_groups(afs_uint32 newpag,
 
     for (i = 0, j = 0; i < old->ngroups; ++i) {
 	afs_kgid_t ths = GROUP_AT(old, i);
-	if ((afs_from_kgid(ths) >> 24) == 'A')
+	if (afs_IsPagId(afs_from_kgid(ths)))
 	    continue;
 	if ((i == 0 || !gid_lt(newkgid, GROUP_AT(old, i - 1))) &&
 	    gid_lt(newkgid, ths)) {
@@ -658,7 +658,7 @@ osi_get_keyring_pag(afs_ucred_t *cred)
 		/* Only set PAG in groups if needed,
 		 * and the creds are from the current process */
 		if (afs_linux_cred_is_current(cred) &&
-		    ((keyring_pag >> 24) & 0xff) == 'A' &&
+		    afs_IsPagId(keyring_pag) &&
 		    keyring_pag != afs_linux_pag_from_groups(current_group_info())) {
 
 		    __setpag(&cred, keyring_pag, &newpag, 0, NULL);

@@ -58,7 +58,7 @@ Afs_xsetgroups(struct thread *td, struct setgroups_args *uap)
     cr = crdup(td->td_ucred);
 
     if (PagInCred(cr) == NOPAG) {
-	if (((treq.uid >> 24) & 0xff) == 'A') {
+	if (afs_IsPagId(treq.uid)) {
 	    AFS_GLOCK();
 	    /* we've already done a setpag, so now we redo it */
 	    AddPag(td, treq.uid, &cr);

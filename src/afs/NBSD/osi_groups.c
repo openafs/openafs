@@ -65,7 +65,7 @@ Afs_xsetgroups(afs_proc_t *p, const void *args, register_t *retval)
      * overwrite it with the old pag.
      */
     if (PagInCred(cred) == NOPAG) {
-	if (((treq.uid >> 24) & 0xff) == 'A') {
+	if (afs_IsPagId(treq.uid)) {
 	    AFS_GLOCK();
 	    /* we've already done a setpag, so now we redo it */
 	    AddPag(p, treq.uid, &cred);

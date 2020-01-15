@@ -541,6 +541,7 @@ extern void afs_DestroyReq(struct vrequest *av);
 extern afs_uint32 afs_get_pag_from_groups(gid_t g0a, gid_t g1a);
 extern void afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p);
 extern afs_int32 PagInCred(afs_ucred_t *cred);
+extern int afs_IsPagId(afs_uint32 id);
 
 /* afs_osi_uio.c */
 #if !defined(AFS_DARWIN80_ENV)

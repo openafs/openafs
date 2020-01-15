@@ -74,7 +74,7 @@ Afs_xsetgroups(p, args, retval)
     pcred_unlock(p);
 
     if (PagInCred(cr) == NOPAG) {
-	if (((treq.uid >> 24) & 0xff) == 'A') {
+	if (afs_IsPagId(treq.uid)) {
 	    AFS_GLOCK();
 	    /* we've already done a setpag, so now we redo it */
 	    AddPag(p, treq.uid, &cr);

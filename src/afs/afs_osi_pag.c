@@ -575,7 +575,7 @@ afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 	return ret;
 # else
 	/* Additional testing */
-	if (((ret >> 24) & 0xff) == 'A')
+	if (afs_IsPagId(ret))
 	    return ret;
 # endif /* UKERNEL */
     }
@@ -712,4 +712,13 @@ PagInCred(afs_ucred_t *cred)
 #endif
 #endif
     return pag;
+}
+
+int
+afs_IsPagId(afs_uint32 id)
+{
+    if (((id >> 24) & 0xff) == 'A') {
+	return 1;
+    }
+    return 0;
 }

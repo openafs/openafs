@@ -782,7 +782,7 @@ afs_GCPAGs(afs_int32 * ReleasedCount)
     for (i = 0; i < NUSERS; i++) {
 	for (pu = afs_users[i]; pu; pu = pu->next) {
 	    pu->states |= TMP_UPAGNotReferenced;
-	    if (((pu->uid >> 24) & 0xff) != 'A') {
+	    if (afs_IsPagId(pu->uid)) {
 		/* this is a uid-based token, */
 		/* increment the count */
 		afs_GCPAGs_UIDBaseTokenCount++;
