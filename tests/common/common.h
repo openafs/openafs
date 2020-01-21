@@ -30,6 +30,25 @@ extern char *afstest_mkdtemp(char *template);
 struct afsconf_dir;
 extern int afstest_AddDESKeyFile(struct afsconf_dir *dir);
 
+/* exec.c */
+
+struct afstest_cmdinfo {
+    char *command;	/**< command to run (as given to e.g. system()) */
+    int exit_code;	/**< expected exit code */
+    const char *output; /**< expected command output */
+    int fd;		/**< fd to read output from */
+
+    /* The following fields are not to be set by the caller; they are set when
+     * running the given command. */
+    char *fd_descr;	/**< string description of 'fd' (e.g. "stdout") */
+    pid_t child;	/**< child pid (after command has started) */
+    FILE *pipe_fh;	/**< pipe from child (after started) */
+};
+
+extern int is_command(struct afstest_cmdinfo *cmdinfo,
+		      const char *format, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 2, 3);
+
 /* files.c */
 
 extern char *afstest_src_path(char *path);

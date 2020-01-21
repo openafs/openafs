@@ -26,11 +26,9 @@ TestListAddrs(struct ubik_client *client, char *dirname)
 {
     int code;
     bulkaddrs addrs;
-    pid_t pid;
-    int outpipe[2];
-    int status;
-    char *buffer;
-    size_t len;
+    char *vos;
+    char *cmd = NULL;
+    struct afstest_cmdinfo cmdinfo;
 
     afs_uint32 addrsA[] = {0x0a000000};
     afs_uint32 addrsB[] = {0x0a000001, 0x0a000002, 0x0a000003, 0x0a000004,
@@ -57,30 +55,22 @@ TestListAddrs(struct ubik_client *client, char *dirname)
     is_int(0, code, "Second address registration succeeds");
 
     /* Now we need to run vos ListAddrs and see what happens ... */
-    if (pipe(outpipe) < 0) {
-	perror("pipe");
-	exit(1);
-    }
-    pid = fork();
-    if (pid == 0) {
-	char *vos;
+    vos = afstest_obj_path("src/volser/vos");
 
-	dup2(outpipe[1], STDOUT_FILENO); /* Redirect stdout into pipe */
-	close(outpipe[0]);
-	close(outpipe[1]);
+    cmd = afstest_asprintf("'%s' listaddrs -config '%s' "
+			   "-noauth -noresolve",
+			   vos, dirname);
 
-	vos = afstest_obj_path("src/volser/vos");
-	execl(vos, "vos",
-	      "listaddrs", "-config", dirname, "-noauth", "-noresolve", NULL);
-	exit(1);
-    }
-    close(outpipe[1]);
-    buffer = malloc(4096);
-    len = read(outpipe[0], buffer, 4096);
-    waitpid(pid, &status, 0);
-    buffer[len]='\0';
-    is_string(expecting, buffer, "vos output matches");
-    free(buffer);
+    memset(&cmdinfo, 0, sizeof(cmdinfo));
+    cmdinfo.exit_code = 0;
+    cmdinfo.output = expecting;
+    cmdinfo.fd = STDOUT_FILENO;
+    cmdinfo.command = cmd;
+
+    is_command(&cmdinfo, "vos output matches");
+
+    free(vos);
+    free(cmd);
 }
 
 int

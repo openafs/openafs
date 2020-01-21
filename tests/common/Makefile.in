@@ -6,7 +6,8 @@ include @TOP_OBJDIR@/src/config/Makefile.libtool
 
 MODULE_CFLAGS=-I$(TOP_OBJDIR)
 
-LT_objs = config.lo files.lo misc.lo network.lo rxkad.lo servers.lo ubik.lo
+LT_objs = config.lo exec.lo files.lo misc.lo network.lo rxkad.lo servers.lo \
+	  ubik.lo
 LT_libs = $(LIB_rfc3961) $(LIB_roken)
 LT_deps = $(top_builddir)/tests/tap/libafstest_tap.la \
 	  $(top_builddir)/src/util/liboafs_util.la
