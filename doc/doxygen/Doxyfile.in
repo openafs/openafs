@@ -46,7 +46,6 @@ EXCLUDE                = \
     src/libafs \
     src/NTObjdir \
     src/packaging \
-    src/shlibafsrpc \
     src/tbudb \
     src/tbutc \
     src/tests \

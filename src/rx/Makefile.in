@@ -48,7 +48,7 @@ librx.a: $(LT_objs)
 liboafs_rx.la: liboafs_rx.la.sym $(LT_objs) $(LT_deps)
 	$(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) $(LT_libs)
 
-# Convenience libraries for libafsrpc and shlibafsrpc
+# Convenience libraries for libafsrpc
 librx_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 

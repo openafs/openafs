@@ -205,12 +205,6 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\rxstat))
 		$(MKDIR) $(OJT)\rxstat
 !	ENDIF
-!	IF (!EXIST($(OJT)\shlibafsauthent))
-		$(MKDIR) $(OJT)\shlibafsauthent
-!	ENDIF
-!	IF (!EXIST($(OJT)\shlibafsrpc))
-		$(MKDIR) $(OJT)\shlibafsrpc
-!	ENDIF
 !	IF (!EXIST($(OJT)\sys))
 		$(MKDIR) $(OJT)\sys
 !	ENDIF
