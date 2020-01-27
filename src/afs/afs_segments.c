@@ -503,7 +503,7 @@ afs_InvalidateAllSegments_once(struct vcache *avc)
     afs_int32 hash;
     afs_int32 index;
     struct dcache **dcList = NULL;
-    int i, dcListMax, dcListCount;
+    int i, dcListMax, dcListCount = 0;
 
     AFS_STATCNT(afs_InvalidateAllSegments);
     afs_Trace2(afs_iclSetp, CM_TRACE_INVALL, ICL_TYPE_POINTER, avc,
@@ -539,7 +539,6 @@ afs_InvalidateAllSegments_once(struct vcache *avc)
     }
 
     dcList = osi_Alloc(dcListMax * sizeof(struct dcache *));
-    dcListCount = 0;
 
     for (index = afs_dvhashTbl[hash]; index != NULLIDX;) {
 	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
