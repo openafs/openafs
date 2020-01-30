@@ -104,6 +104,8 @@ extern int afs_dir_EnumerateDir(dir_file_t dir,
 extern int afs_dir_IsEmpty(dir_file_t dir);
 extern int afs_dir_GetBlob(dir_file_t dir, afs_int32 blobno,
 			   struct DirBuffer *);
+extern int afs_dir_GetBlobWithErrno(dir_file_t dir, afs_int32 blobno,
+			   struct DirBuffer *, int *physerr);
 extern int afs_dir_GetVerifiedBlob(dir_file_t dir, afs_int32 blobno,
 				   struct DirBuffer *);
 extern int afs_dir_DirHash(char *string);
@@ -119,6 +121,7 @@ extern int afs_dir_ChangeFid(dir_file_t dir, char *entry,
 
 extern void DInit(int abuffers);
 extern int DRead(dir_file_t fid, int page, struct DirBuffer *);
+extern int DReadWithErrno(dir_file_t fid, int page, struct DirBuffer *, int *physerr);
 extern int DFlush(void);
 extern int DFlushVolume(afs_int32);
 extern int DNew(dir_file_t fid, int page, struct DirBuffer *);

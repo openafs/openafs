@@ -24,8 +24,6 @@
 #include <rx/rx.h>
 
 
-afs_int32 DErrno;
-
 afs_uint32 dir_lookup_hits = 0;
 afs_uint32 dir_lookup_misses = 0;
 afs_uint32 dir_create_entry = 0;

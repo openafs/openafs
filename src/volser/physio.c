@@ -22,30 +22,50 @@
 #include "vol.h"
 #include "physio.h"
 
-/* returns 0 on success, errno on failure */
+/*
+ * Read the specified page from a directory object
+ *
+ * \parm[in] file	handle to the directory object
+ * \parm[in] block	requested page from the directory object
+ * \parm[out] data	buffer for the returned page
+ * \parm[out] physerr	(optional) pointer to errno if physical error
+ *
+ * \retval 0   success
+ * \retval EIO physical or logical error;
+ *             if physerr is supplied by caller, it will be set to:
+ *                 0       for logical errors
+ *                 errno   for physical errors
+ */
 int
-ReallyRead(DirHandle * file, int block, char *data)
+ReallyRead(DirHandle *file, int block, char *data, int *physerr)
 {
     FdHandle_t *fdP;
-    int code;
+    int code = 0;
+    int saverr = 0;
     ssize_t nBytes;
     errno = 0;
     fdP = IH_OPEN(file->dirh_handle);
     if (fdP == NULL) {
-	code = errno;
-	return code;
+	saverr = errno;
+	code = EIO;
+	goto done;;
     }
     nBytes = FDH_PREAD(fdP, data, AFS_PAGESIZE, ((afs_foff_t)block) * AFS_PAGESIZE);
     if (nBytes != AFS_PAGESIZE) {
 	if (nBytes < 0)
-	    code = errno;
+	    saverr = errno;
 	else
-	    code = EIO;
+	    saverr = 0;	    /* logical error: short read */
+	code = EIO;
 	FDH_REALLYCLOSE(fdP);
-	return code;
+	goto done;
     }
     FDH_CLOSE(fdP);
-    return 0;
+
+ done:
+    if (physerr != NULL)
+	*physerr = saverr;
+    return code;
 }
 
 /* returns 0 on success, errno on failure */

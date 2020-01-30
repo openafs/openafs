@@ -72,8 +72,6 @@ extern int DNew(struct dcache *adc, int page, struct DirBuffer *);
 # include "dir.h"
 #endif /* KERNEL */
 
-afs_int32 DErrno;
-
 /* Local static prototypes */
 static int FindBlobs(dir_file_t, int);
 static void AddPage(dir_file_t, int);
@@ -518,11 +516,14 @@ afs_dir_IsEmpty(dir_file_t dir)
 /* Return a pointer to an entry, given its number. Also return the maximum
  * size of the entry, which is determined by its position within the directory
  * page.
+ *
+ * If physerr is supplied by caller, it will be set to:
+ *      0       for logical errors
+ *      errno   for physical errors
  */
-
 static int
 GetBlobWithLimit(dir_file_t dir, afs_int32 blobno,
-	         struct DirBuffer *buffer, afs_size_t *maxlen)
+		struct DirBuffer *buffer, afs_size_t *maxlen, int *physerr)
 {
     afs_size_t pos;
     int code;
@@ -530,7 +531,7 @@ GetBlobWithLimit(dir_file_t dir, afs_int32 blobno,
     *maxlen = 0;
     memset(buffer, 0, sizeof(struct DirBuffer));
 
-    code = DRead(dir, blobno >> LEPP, buffer);
+    code = DReadWithErrno(dir, blobno >> LEPP, buffer, physerr);
     if (code)
 	return code;
 
@@ -543,12 +544,26 @@ GetBlobWithLimit(dir_file_t dir, afs_int32 blobno,
     return 0;
 }
 
+/*
+ * Given an entry's number, return a pointer to that entry.
+ * If physerr is supplied by caller, it will be set to:
+ *      0       for logical errors
+ *      errno   for physical errors
+ */
+int
+afs_dir_GetBlobWithErrno(dir_file_t dir, afs_int32 blobno, struct DirBuffer *buffer,
+			int *physerr)
+{
+    afs_size_t maxlen = 0;
+    return GetBlobWithLimit(dir, blobno, buffer, &maxlen, physerr);
+}
+
 /* Given an entries number, return a pointer to that entry */
 int
 afs_dir_GetBlob(dir_file_t dir, afs_int32 blobno, struct DirBuffer *buffer)
 {
     afs_size_t maxlen = 0;
-    return GetBlobWithLimit(dir, blobno, buffer, &maxlen);
+    return GetBlobWithLimit(dir, blobno, buffer, &maxlen, NULL);
 }
 
 /* Return an entry, having verified that the name held within the entry
@@ -566,7 +581,7 @@ afs_dir_GetVerifiedBlob(dir_file_t file, afs_int32 blobno,
     int code;
     char *cp;
 
-    code = GetBlobWithLimit(file, blobno, &buffer, &maxlen);
+    code = GetBlobWithLimit(file, blobno, &buffer, &maxlen, NULL);
     if (code)
 	return code;
 

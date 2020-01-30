@@ -153,12 +153,16 @@ DInit(int abuffers)
  * \param[in]   adc	pointer to directory dcache
  * \param[in]	page	number of the desired directory page
  * \param[out]	entry	buffer to return requested page
+ * \param[out]	physerr	(optional) pointer to return errno, if any
  *
  * \retval 0	    success
- * \retval non-zero invalid directory or internal IO error
+ * \retval non-zero invalid directory or internal IO error;
+ *		    if physerr is supplied by caller, it will be set:
+ *			0	logical error
+ *			errno	physical error
  */
 int
-DRead(struct dcache *adc, int page, struct DirBuffer *entry)
+DReadWithErrno(struct dcache *adc, int page, struct DirBuffer *entry, int *physerr)
 {
     /* Read a page from the disk. */
     struct buffer *tb, *tb2;
@@ -166,6 +170,9 @@ DRead(struct dcache *adc, int page, struct DirBuffer *entry)
     int code;
 
     AFS_STATCNT(DRead);
+
+    if (physerr != NULL)
+	*physerr = 0;
 
     memset(entry, 0, sizeof(struct DirBuffer));
 
@@ -260,6 +267,8 @@ DRead(struct dcache *adc, int page, struct DirBuffer *entry)
 		      AFS_BUFFER_PAGESIZE);
     afs_CFileClose(tfile);
     if (code < AFS_BUFFER_PAGESIZE) {
+	if (code < 0 && physerr != NULL)
+	   *physerr = -code;
 	code = EIO;
 	goto error;
     }
@@ -276,6 +285,22 @@ DRead(struct dcache *adc, int page, struct DirBuffer *entry)
     tb->lockers--;
     ReleaseWriteLock(&tb->lock);
     return code;
+}
+
+/*!
+ * Read and return the requested directory page.
+ *
+ * \param[in]   adc	pointer to directory dcache
+ * \param[in]	page	number of the desired directory page
+ * \param[out]	entry	buffer to return requested page
+ *
+ * \retval 0	    success
+ * \retval non-zero invalid directory or internal IO error;
+ */
+int
+DRead(struct dcache *adc, int page, struct DirBuffer *entry)
+{
+    return DReadWithErrno(adc, page, entry, NULL);
 }
 
 static void
