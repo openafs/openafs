@@ -83,12 +83,12 @@ struct buffer *newslot(dir_file_t dir, afs_int32 apage,
  *
  * extern void FidZero(DirHandle *);
  * extern int  FidEq(DirHandle *a, DirHandle *b);
- * extern int  ReallyRead(DirHandle *a, int block, char *data);
+ * extern int  ReallyRead(DirHandle *a, int block, char *data, int *physerr);
  */
 
 extern void FidZero(dir_file_t);
 extern int FidEq(dir_file_t, dir_file_t);
-extern int ReallyRead(dir_file_t, int block, char *data);
+extern int ReallyRead(dir_file_t, int block, char *data, int *physerr);
 extern int ReallyWrite(dir_file_t, int block, char *data);
 extern void FidZap(dir_file_t);
 extern int  FidVolEq(dir_file_t, afs_int32 vid);
@@ -148,17 +148,26 @@ DInit(int abuffers)
 /**
  * read a page out of a directory object.
  *
- * @param[in] fid   directory object fid
- * @param[in] page  page in hash table to be read
+ * @param[in]	fid	directory object fid
+ * @param[in]   page	page in hash table to be read
+ * @param[out]	entry	buffer to be filled w/ page contents
+ * @param[out]	physerr	(optional) pointer to return possible errno
  *
- * @return pointer to requested page in directory cache
- *    @retval NULL read failed
+ * @retval 0	success
+ * @retval EIO	logical directory error or physical IO error;
+ *		if *physerr was supplied, it will be set to 0
+ *		for logical errors, or the errno for physical
+ *		errors.
  */
 int
-DRead(dir_file_t fid, int page, struct DirBuffer *entry)
+DReadWithErrno(dir_file_t fid, int page, struct DirBuffer *entry, int *physerr)
 {
     /* Read a page from the disk. */
     struct buffer *tb, *tb2, **bufhead;
+    int code;
+
+    if (physerr != NULL)
+	*physerr = 0;
 
     memset(entry, 0, sizeof(struct DirBuffer));
 
@@ -228,11 +237,12 @@ DRead(dir_file_t fid, int page, struct DirBuffer *entry)
     ObtainWriteLock(&tb->lock);
     tb->lockers++;
     ReleaseWriteLock(&afs_bufferLock);
-    if (ReallyRead(bufferDir(tb), tb->page, tb->data)) {
+    code = ReallyRead(bufferDir(tb), tb->page, tb->data, physerr);
+    if (code != 0) {
 	tb->lockers--;
 	FidZap(bufferDir(tb));	/* disaster */
 	ReleaseWriteLock(&tb->lock);
-	return EIO;
+	return code;
     }
     /* Note that findslot sets the page field in the buffer equal to
      * what it is searching for.
@@ -241,6 +251,22 @@ DRead(dir_file_t fid, int page, struct DirBuffer *entry)
     entry->buffer = tb;
     entry->data = tb->data;
     return 0;
+}
+
+/**
+ * read a page out of a directory object.
+ *
+ * @param[in]	fid   directory object fid
+ * @param[in]	page  page in hash table to be read
+ * @param[out]	entry buffer to be filled w/ page contents
+ *
+ * @retval 0	success
+ * @retval EIO	logical directory error or physical IO error
+ */
+int
+DRead(dir_file_t fid, int page, struct DirBuffer *entry)
+{
+    return DReadWithErrno(fid, page, entry, NULL);
 }
 
 

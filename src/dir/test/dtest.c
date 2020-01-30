@@ -191,18 +191,46 @@ CreateDir(char *name, dirhandle *dir)
     }
 }
 
+/*
+ * Read the specified page from a directory object
+ *
+ * \parm[in] dir	handle to the directory object
+ * \parm[in] block	requested page from the directory object
+ * \parm[out] data	buffer for the returned page
+ * \parm[out] physerr	(optional) pointer to errno if physical error
+ *
+ * \retval 0   success
+ * \retval EIO physical or logical error;
+ *             if physerr is supplied by caller, it will be set to:
+ *                 0       for logical errors
+ *                 errno   for physical errors
+ */
 int
-ReallyRead(dirhandle *dir, int block, char *data)
+ReallyRead(dirhandle *dir, int block, char *data, int *physerr)
 {
-    int code;
-    if (lseek(dir->fd, block * PAGESIZE, 0) == -1)
-	return errno;
+    int code = 0;
+
+    if (lseek(dir->fd, block * PAGESIZE, 0) == -1) {
+	code = EIO;
+	goto done;
+    }
     code = read(dir->fd, data, PAGESIZE);
-    if (code < 0)
-	return errno;
-    if (code != PAGESIZE)
-	return EIO;
-    return 0;
+    if (code < 0) {
+	code = EIO;
+	goto done;
+    }
+    if (code != PAGESIZE) {
+	errno = 0;	/* logical error - short read */
+	code = EIO;
+	goto done;
+    }
+
+    errno = 0;
+
+ done:
+    if (physerr != NULL)
+	*physerr = errno;
+    return code;
 }
 
 int

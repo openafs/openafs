@@ -31,8 +31,6 @@ extern void Log(const char *format, ...)
 
 #define MAXENAME 256
 
-extern afs_int32 DErrno;
-
 /* figure out how many pages in use in a directory, given ptr to its (locked)
  * header */
 static int
@@ -82,18 +80,19 @@ DirOK(void *file)
     afs_int32 entcount, maxents;
     unsigned short ne;
     int code;
+    int physerr;
 
     eaSize = BIGMAXPAGES * EPP / 8;
 
     /* Read the directory header */
-    code = DRead(file,0, &headerbuf);
+    code = DReadWithErrno(file, 0, &headerbuf, &physerr);
     if (code) {
-	/* if DErrno is 0, then we know that the read worked, but was short,
+	/* if physerr is 0, then we know that the read worked, but was short,
 	 * and the damage is permanent.  Otherwise, we got an I/O or programming
 	 * error.  Claim the dir is OK, but log something.
 	 */
-	if (DErrno != 0) {
-	    printf("Could not read first page in directory (%d)\n", DErrno);
+	if (physerr != 0) {
+	    printf("Could not read first page in directory (%d)\n", physerr);
 	    Die("dirok1");
 	    AFS_UNREACHED(return 1);
 	}
@@ -171,12 +170,12 @@ DirOK(void *file)
      */
     for (i = 0; i < usedPages; i++) {
 	/* Read the page header */
-	code = DRead(file, i, &pagebuf);
+	code = DReadWithErrno(file, i, &pagebuf, &physerr);
 	if (code) {
 	    DRelease(&headerbuf, 0);
-	    if (DErrno != 0) {
+	    if (physerr != 0) {
 		/* couldn't read page, but not because it wasn't there permanently */
-		printf("Failed to read dir page %d (errno %d)\n", i, DErrno);
+		printf("Failed to read dir page %d (errno %d)\n", i, physerr);
 		Die("dirok2");
 		AFS_UNREACHED(return 1);
 	    }
@@ -261,15 +260,14 @@ DirOK(void *file)
 	    }
 
 	    /* Read the directory entry */
-	    DErrno = 0;
-	    code = afs_dir_GetBlob(file, entry, &entrybuf);
+	    code = afs_dir_GetBlobWithErrno(file, entry, &entrybuf, &physerr);
 	    if (code) {
-		if (DErrno != 0) {
+		if (physerr != 0) {
 		    /* something went wrong reading the page, but it wasn't
 		     * really something wrong with the dir that we can fix.
 		     */
 		    printf("Could not get dir blob %d (errno %d)\n", entry,
-			   DErrno);
+			   physerr);
 		    DRelease(&headerbuf, 0);
 		    Die("dirok3");
 		}
@@ -380,17 +378,18 @@ DirOK(void *file)
      * Note that if this matches, alloMap has already been checked against it.
      */
     for (i = 0; i < usedPages; i++) {
-	code = DRead(file, i, &pagebuf);
+	code = DReadWithErrno(file, i, &pagebuf, &physerr);
 	if (code) {
 	    printf
 		("Failed on second attempt to read dir page %d (errno %d)\n",
-		 i, DErrno);
+		 i, physerr);
 	    DRelease(&headerbuf, 0);
-	    /* if DErrno is 0, then the dir is really bad, and we return dir *not* OK.
-	     * otherwise, we want to return true (1), meaning the dir isn't known
-	     * to be bad (we can't tell, since I/Os are failing.
+	    /* if physerr is 0, then the dir is really bad, and we return dir
+	     * *not* OK.  Otherwise, we Die instead of returning true (1),
+	     * becauase the dir isn't known to be bad (we can't tell, since
+	     * I/Os are failing).
 	     */
-	    if (DErrno != 0)
+	    if (physerr != 0)
 		Die("dirok4");
 	    else
 		return 0;	/* dir is really shorter */
@@ -443,6 +442,7 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
     struct DirHeader *dhp;
     struct DirEntry *ep;
     int entry;
+    int physerr;
 
     memset(dot, 0, sizeof(dot));
     memset(dotdot, 0, sizeof(dotdot));
@@ -453,17 +453,15 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 
     afs_dir_MakeDir(toFile, dot, dotdot);	/* Returns no error code. */
 
-    /* Find out how many pages are valid, using stupid heuristic since DRead
-     * never returns null.
-     */
-    code = DRead(fromFile, 0, &headerbuf);
+    /* Find out how many pages are valid. */
+    code = DReadWithErrno(fromFile, 0, &headerbuf, &physerr);
     if (code) {
 	printf("Failed to read first page of fromDir!\n");
-	/* if DErrno != 0, then our call failed and we should let our
+	/* if physerr != 0, then our call failed and we should let our
 	 * caller know that there's something wrong with the new dir.  If not,
 	 * then we return here anyway, with an empty, but at least good, directory.
 	 */
-	return DErrno;
+	return physerr;
     }
     dhp = (struct DirHeader *)headerbuf.data;
 
@@ -481,15 +479,14 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 		break;
 	    }
 
-	    DErrno = 0;
-	    code = afs_dir_GetBlob(fromFile, entry, &entrybuf);
+	    code = afs_dir_GetBlobWithErrno(fromFile, entry, &entrybuf, &physerr);
 	    if (code) {
-		if (DErrno) {
+		if (physerr != 0) {
 		    printf
 			("can't continue down hash chain (entry %d, errno %d)\n",
-			 entry, DErrno);
+			 entry, physerr);
 		    DRelease(&headerbuf, 0);
-		    return DErrno;
+		    return physerr;
 		}
 		printf
 		    ("Warning: bogus hash chain encountered, switching to next.\n");

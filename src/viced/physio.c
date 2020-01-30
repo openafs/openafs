@@ -39,43 +39,63 @@
 
 afs_int32 lpErrno, lpCount;
 
-/* returns 0 on success, errno on failure */
+/*
+ * Read the specified page from a directory object
+ *
+ * \parm[in] file      handle to the directory object
+ * \parm[in] block     requested page from the directory object
+ * \parm[out] data     buffer for the returned page
+ * \parm[out] physerr  (optional) pointer to errno if physical error
+ *
+ * \retval 0   success
+ * \retval EIO physical or logical error;
+ *             if physerr is supplied by caller, it will be set to:
+ *                 0       for logical errors
+ *                 errno   for physical errors
+ */
 int
-ReallyRead(DirHandle * file, int block, char *data)
+ReallyRead(DirHandle *file, int block, char *data, int *physerr)
 {
-    int code;
+    int saverr = 0;
+    int code = 0;
     ssize_t rdlen;
     FdHandle_t *fdP;
     afs_ino_str_t stmp;
 
     fdP = IH_OPEN(file->dirh_handle);
     if (fdP == NULL) {
-	code = errno;
+	saverr = errno;
+	code = EIO;
 	ViceLog(0,
 		("ReallyRead(): open failed device %X inode %s (volume=%" AFS_VOLID_FMT ") errno %d\n",
 		 file->dirh_handle->ih_dev, PrintInode(stmp,
 						       file->dirh_handle->
 						       ih_ino), 
-		 afs_printable_VolumeId_lu(file->dirh_handle->ih_vid), code));
-	return code;
+		 afs_printable_VolumeId_lu(file->dirh_handle->ih_vid), saverr));
+	goto done;
     }
     rdlen = FDH_PREAD(fdP, data, PAGESIZE, ((afs_foff_t)block) * PAGESIZE);
     if (rdlen != PAGESIZE) {
 	if (rdlen < 0)
-	    code = errno;
+	    saverr = errno;
 	else
-	    code = EIO;
+	    saverr = 0;	    /* logical error: short read */
+	code = EIO;
 	ViceLog(0,
 		("ReallyRead(): read failed device %X inode %s (volume=%" AFS_VOLID_FMT ") errno %d\n",
 		 file->dirh_handle->ih_dev, PrintInode(stmp,
 						       file->dirh_handle->
 						       ih_ino),
-		 afs_printable_VolumeId_lu(file->dirh_handle->ih_vid), code));
+		 afs_printable_VolumeId_lu(file->dirh_handle->ih_vid), saverr));
 	FDH_REALLYCLOSE(fdP);
-	return code;
+	goto done;
     }
     FDH_CLOSE(fdP);
-    return 0;
+
+ done:
+    if (physerr != NULL)
+	*physerr = saverr;
+    return code;
 
 }
 
