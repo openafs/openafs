@@ -123,7 +123,7 @@ chmod 0755, $tmpdir."/rpmdir/SOURCES/openafs-kvers-is.sh";
 
 # Create the specfile. Use sed for this, cos its easier
 system("cat ".$srcdir."/src/packaging/RedHat/openafs.spec.in | ".
-       "sed -e 's/\@VERSION\@/$afsversion/g' ".
+       "sed -e 's/\@PACKAGE_VERSION\@/$afsversion/g' ".
        "    -e 's/\@LINUX_PKGVER\@/$linuxver/g' ".
        "    -e 's/\@LINUX_PKGREL\@/$linuxrel/g' ".
        "    -e 's/\%define afsvers.*/%define afsvers $afsversion/g' ".
