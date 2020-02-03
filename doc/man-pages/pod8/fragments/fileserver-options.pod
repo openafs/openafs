@@ -168,7 +168,7 @@ Don't allow writes to this fileserver.
 =item B<-admin-write>
 
 Allows write requests for members of system:administrators on the read-only
-fileserver in question. The C<-admin-write> option has no effect when the
+fileserver in question. The C<-admin-write> option has no effect when
 C<-readonly> is not specified.
 
 =item B<-hr> <I<number of hours between refreshing the host cps>>
