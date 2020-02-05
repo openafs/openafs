@@ -74,7 +74,7 @@ extern int DNew(struct dcache *adc, int page, struct DirBuffer *);
 
 /* Local static prototypes */
 static int FindBlobs(dir_file_t, int);
-static void AddPage(dir_file_t, int);
+static int AddPage(dir_file_t, int);
 static void FreeBlobs(dir_file_t, int, int);
 static int FindItem(dir_file_t, char *, struct DirBuffer *,
 		    struct DirBuffer *);
@@ -211,7 +211,15 @@ afs_dir_Delete(dir_file_t dir, char *entry)
     return 0;
 }
 
-/* Find a bunch of contiguous entries; at least nblobs in a row. */
+/*!
+ * Find a bunch of contiguous entries; at least nblobs in a row.
+ *
+ * \param dir	    pointer to the directory object
+ * \param nblobs    number of contiguous entries we need
+ *
+ * \return element number (directory entry) of the requested space
+ * \retval -1		failed to find 'nblobs' contiguous entries
+ */
 static int
 FindBlobs(dir_file_t dir, int nblobs)
 {
@@ -221,6 +229,7 @@ FindBlobs(dir_file_t dir, int nblobs)
     struct DirHeader *dhp;
     struct PageHeader *pp;
     int pgcount;
+    int code;
 
     /* read the dir header in first. */
     if (DRead(dir, 0, &headerbuf) != 0)
@@ -240,12 +249,16 @@ FindBlobs(dir_file_t dir, int nblobs)
 		}
 		if (i > pgcount - 1) {
 		    /* this page is bigger than last allocated page */
-		    AddPage(dir, i);
+		    code = AddPage(dir, i);
+		    if (code)
+			break;
 		    dhp->header.pgcount = htons(i + 1);
 		}
 	    } else if (dhp->alloMap[i] == EPP) {
 		/* Add the page to the directory. */
-		AddPage(dir, i);
+		code = AddPage(dir, i);
+		if (code)
+		    break;
 		dhp->alloMap[i] = EPP - 1;
 		dhp->header.pgcount = htons(i + 1);
 	    }
@@ -280,20 +293,32 @@ FindBlobs(dir_file_t dir, int nblobs)
 	    DRelease(&pagebuf, 0);	/* This dir page is unchanged. */
 	}
     }
-    /* If we make it here, the directory is full. */
+    /* If we make it here, the directory is full, or we encountered an I/O error. */
     DRelease(&headerbuf, 1);
     return -1;
 }
 
-static void
+/*!
+ * Add a page to a directory object.
+ *
+ * \param dir	    pointer to the directory object
+ * \param pageno    page number to add
+ *
+ * \retval 0	    succcess
+ * \retval non-zero return error from DNew
+ */
+static int
 AddPage(dir_file_t dir, int pageno)
 {				/* Add a page to a directory. */
     int i;
     struct PageHeader *pp;
     struct DirBuffer pagebuf;
+    int code;
 
     /* Get a new buffer labelled dir,pageno */
-    DNew(dir, pageno, &pagebuf);
+    code = DNew(dir, pageno, &pagebuf);
+    if (code)
+	return code;
     pp = (struct PageHeader *)pagebuf.data;
 
     pp->tag = htons(1234);
@@ -304,6 +329,7 @@ AddPage(dir_file_t dir, int pageno)
     for (i = 1; i < EPP / 8; i++)	/* It's a constant */
 	pp->freebitmap[i] = 0;
     DRelease(&pagebuf, 1);
+    return 0;
 }
 
 /* Free a whole bunch of directory entries. */
@@ -358,7 +384,9 @@ afs_dir_MakeDir(dir_file_t dir, afs_int32 * me, afs_int32 * parent)
     struct DirHeader *dhp;
     int code;
 
-    DNew(dir, 0, &buffer);
+    code = DNew(dir, 0, &buffer);
+    if (code)
+	return code;
     dhp = (struct DirHeader *)buffer.data;
 
     dhp->header.pgcount = htons(1);
