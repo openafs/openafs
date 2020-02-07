@@ -8,7 +8,7 @@ if [ $majorvers -ge 19 ]; then
   # Root mount point is read-only. To workaround this restriction, add a
   # synthetic entity for afs into /etc/synthetic.conf. For more information,
   # please read man synthetic.conf(5).
-  grep -wqs 'afs' /etc/synthetic.conf || echo 'afs' >> /etc/synthetic.conf
+  grep -qs '^afs$' /etc/synthetic.conf || echo 'afs' >> /etc/synthetic.conf
 elif [ $majorvers -ge 7 ]; then
   # /Network is now readonly, so put AFS in /afs; make sure /afs is a directory
   if [ -e /afs ]; then
