@@ -30,6 +30,7 @@ AC_CHECK_LINUX_STRUCT([key_type], [preparse], [key-type.h])
 AC_CHECK_LINUX_STRUCT([msghdr], [msg_iter], [socket.h])
 AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
+AC_CHECK_LINUX_STRUCT([proc_ops], [proc_compat_ioctl], [proc_fs.h])
 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
 AC_CHECK_LINUX_STRUCT([super_block], [s_d_op], [fs.h])
 AC_CHECK_LINUX_STRUCT([super_operations], [alloc_inode],
