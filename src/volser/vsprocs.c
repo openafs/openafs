@@ -1342,6 +1342,14 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
 	}
     }
 
+    /* volume must be inaccessible during this process */
+    code = UV_SetVolume(server, partition, volid, ITOffline, VTOutOfService, 0);
+    if (code != 0) {
+	fprintf(STDERR, "Taking RO volume %u offline failed with code %d.\n",
+		volid, code);
+	goto error_exit;
+    }
+
     aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
     code = AFSVolConvertROtoRWvolume(aconn, partition, volid);
     if (code) {
@@ -1351,6 +1359,18 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
 	PrintError("convertROtoRW ", code);
 	goto error_exit;
     }
+
+    /*
+     * Since the inService flag is copied from the RO volume, the new RW copy is
+     * offline. Change the status of this RW volume to online.
+     */
+    code = UV_SetVolume(server, partition, entry->volumeId[RWVOL], ITOffline,
+			0 /* online */, 0);
+    if (code != 0) {
+	fprintf(STDERR, "Warning: Attempt to set RW volume %u as online failed "
+			"with code %d.\n", entry->volumeId[RWVOL], code);
+    }
+
     /* Update the VLDB to match what we did on disk as much as possible.  */
     /* If the converted RO was in the VLDB, make it look like the new RW. */
     if (roserver) {
