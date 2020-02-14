@@ -627,14 +627,18 @@ afs_truncate(struct inode *inode, int len)
 }
 
 static inline struct proc_dir_entry *
-afs_proc_create(char *name, umode_t mode, struct proc_dir_entry *parent, struct file_operations *fops) {
+#if defined(HAVE_LINUX_STRUCT_PROC_OPS)
+afs_proc_create(char *name, umode_t mode, struct proc_dir_entry *parent, struct proc_ops *ops) {
+#else
+afs_proc_create(char *name, umode_t mode, struct proc_dir_entry *parent, struct file_operations *ops) {
+#endif
 #if defined(HAVE_LINUX_PROC_CREATE)
-    return proc_create(name, mode, parent, fops);
+    return proc_create(name, mode, parent, ops);
 #else
     struct proc_dir_entry *entry;
     entry = create_proc_entry(name, mode, parent);
     if (entry)
-	entry->proc_fops = fops;
+	entry->proc_fops = ops;
     return entry;
 #endif
 }
