@@ -353,7 +353,7 @@ main(int argc, char **argv)
 
     /* rx options */
     cmd_AddParmAtOffset(opts, OPT_peer, "-enable_peer_stats", CMD_FLAG,
-		        CMD_OPTIONAL, "enable RX transport statistics");
+		        CMD_OPTIONAL, "enable RX RPC statistics by peer");
     cmd_AddParmAtOffset(opts, OPT_process, "-enable_process_stats", CMD_FLAG,
 		        CMD_OPTIONAL, "enable RX RPC statistics");
     cmd_AddParmAtOffset(opts, OPT_rxbind, "-rxbind", CMD_FLAG,
