@@ -35,7 +35,6 @@ AUDITOBJS = \
 AUTHOBJS = \
 	$(OUT)\cellconfig.obj \
 	$(OUT)\userok.obj \
-	$(OUT)\writeconfig.obj \
 	$(OUT)\authcon.obj \
 	$(OUT)\realms.obj \
 	$(OUT)\ktc_errors.obj \

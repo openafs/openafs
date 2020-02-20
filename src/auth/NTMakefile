@@ -39,7 +39,6 @@ AFSAUTH_LIBOBJS =\
 	$(OUT)\cellconfig.obj \
 	$(OUT)\keys.obj \
 	$(OUT)\userok.obj \
-	$(OUT)\writeconfig.obj \
 	$(OUT)\authcon.obj \
 	$(OUT)\realms.obj \
 	$(OUT)\acfg_errors.obj \
@@ -67,7 +66,6 @@ AFSAUTH_KRB_LIBFILE = $(DESTDIR)\lib\afs\afsauth.krb.lib
 AFSAUTH_KRB_LIBOBJS =\
 	$(OUT)\cellconfig.obj \
 	$(OUT)\userok.obj \
-	$(OUT)\writeconfig.obj \
 	$(OUT)\authcon.obj \
 	$(OUT)\realms.obj \
 	$(OUT)\acfg_errors.obj \

@@ -10,7 +10,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 include @TOP_OBJDIR@/src/config/Makefile.lwptool
 
-BASE_objs= cellconfig.lo keys.lo userok.lo writeconfig.lo authcon.lo \
+BASE_objs= cellconfig.lo keys.lo userok.lo authcon.lo \
 	 acfg_errors.lo ktc_errors.lo netrestrict.lo token.xdr.lo token.lo \
 	 realms.lo
 
@@ -77,7 +77,6 @@ ${TOP_LIBDIR}/libauth.krb.a: libauth.krb.a
 cellconfig.lo: cellconfig.c ${INCLS}
 keys.lo: keys.c ${INCLS}
 ktc.lo: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
-writeconfig.lo: writeconfig.c ${INCLS}
 authcon.lo: authcon.c ${INCLS}
 userok.lo: userok.c ${INCLS}
 cellconfig.lo: cellconfig.c ${INCLS}
@@ -129,7 +128,6 @@ netrestrict.lo: cellconfig.h
 realms.lo: cellconfig.h
 setkey.o: cellconfig.h
 userok.lo: cellconfig.h
-writeconfig.lo: cellconfig.h
 
 ktc_errors.c: ktc_errors.et
 	${COMPILE_ET_C} -p ${srcdir} ktc_errors

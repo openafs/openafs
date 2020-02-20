@@ -134,6 +134,10 @@ extern int afsconf_GetLocalCell(struct afsconf_dir *adir,
 				char *aname, afs_int32 alen);
 extern int afsconf_Close(struct afsconf_dir *adir);
 extern int afsconf_UpToDate(void *rock);
+int afsconf_SetExtendedCellInfo(struct afsconf_dir *adir, const char *apath,
+				struct afsconf_cell *acellInfo, char clones[]);
+int afsconf_SetCellInfo(struct afsconf_dir *adir, const char *apath,
+		        struct afsconf_cell *acellInfo);
 
 struct afsconf_keys;
 extern int afsconf_GetKeys(struct afsconf_dir *adir,
@@ -249,11 +253,6 @@ extern void afsconf_BuildServerSecurityObjects(void *,
 					       struct rx_securityClass ***,
 					       afs_int32 *);
 
-/* writeconfig.c */
-int afsconf_SetExtendedCellInfo(struct afsconf_dir *adir, const char *apath,
-				struct afsconf_cell *acellInfo, char clones[]);
-int afsconf_SetCellInfo(struct afsconf_dir *adir, const char *apath,
-		        struct afsconf_cell *acellInfo);
 
 
 /* userok.c */
