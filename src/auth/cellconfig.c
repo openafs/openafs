@@ -315,32 +315,32 @@ _afsconf_IsClientConfigDirectory(const char *path)
 
 #ifdef AFS_NT40_ENV
 static void
-_afsconf_CellServDBPath(struct afsconf_dir *adir, char **path)
+_afsconf_CellServDBPath(const char *dirname, char **path)
 {
     char *p;
 
     /* NT client CellServDB has different file name than NT server or Unix */
-    if (_afsconf_IsClientConfigDirectory(adir->name)) {
+    if (_afsconf_IsClientConfigDirectory(dirname)) {
 	if (!afssw_GetClientCellServDBDir(&p)) {
 	    if (asprintf(path, "%s/%s", p, AFSDIR_CELLSERVDB_FILE_NTCLIENT) < 0)
 		*path = NULL;
 	    free(p);
 	} else {
-	    if (asprintf(path, "%s/%s", adir->name,
+	    if (asprintf(path, "%s/%s", dirname,
 			 AFSDIR_CELLSERVDB_FILE_NTCLIENT) < 0)
 		*path = NULL;
 	}
     } else {
-	if (asprintf(path, "%s/%s", adir->name, AFSDIR_CELLSERVDB_FILE) < 0)
+	if (asprintf(path, "%s/%s", dirname, AFSDIR_CELLSERVDB_FILE) < 0)
 	    *path = NULL;
     }
     return;
 }
 #else
 static void
-_afsconf_CellServDBPath(struct afsconf_dir *adir, char **path)
+_afsconf_CellServDBPath(const char *dirname, char **path)
 {
-    if (asprintf(path, "%s/%s", adir->name, AFSDIR_CELLSERVDB_FILE) < 0)
+    if (asprintf(path, "%s/%s", dirname, AFSDIR_CELLSERVDB_FILE) < 0)
 	*path = NULL;
 }
 #endif /* AFS_NT40_ENV */
@@ -732,7 +732,7 @@ LoadConfig(struct afsconf_dir *adir)
     /* now parse the individual lines */
     curEntry = 0;
 
-    _afsconf_CellServDBPath(adir, &adir->cellservDB);
+    _afsconf_CellServDBPath(adir->name, &adir->cellservDB);
 
 #ifdef AFS_NT40_ENV
     if (_afsconf_IsClientConfigDirectory(adir->name))
