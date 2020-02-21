@@ -55,7 +55,6 @@ softsigSignalSet(sigset_t *set)
     sigdelset(set, SIGCONT);
     sigdelset(set, SIGABRT);
     sigdelset(set, SIGBUS);
-    sigdelset(set, SIGFPE);
     sigdelset(set, SIGILL);
     sigdelset(set, SIGPIPE);
     sigdelset(set, SIGSEGV);
@@ -158,6 +157,13 @@ opr_softsig_Init(void)
     opr_Verify(opr_softsig_Register(SIGTERM, ExitHandler) == 0);
     opr_Verify(opr_softsig_Register(SIGQUIT, ExitHandler) == 0);
     opr_Verify(opr_softsig_Register(SIGTSTP, StopHandler) == 0);
+
+    /*
+     * Some of our callers do actually specify a SIGFPE handler, but make sure
+     * the default SIGFPE behavior does actually terminate the process, in case
+     * we get a real FPE.
+     */
+    opr_Verify(opr_softsig_Register(SIGFPE, ExitHandler) == 0);
 
     /* Create a signal handler thread which will respond to any incoming signals
      * for us. */
