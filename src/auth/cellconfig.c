@@ -1685,10 +1685,6 @@ afsconf_Reopen(struct afsconf_dir *adir)
     return code;
 }
 
-/* write ThisCell and CellServDB containing exactly one cell's info specified
-    by acellInfo parm.   Useful only on the server (which describes only one cell).
-*/
-
 static int
 VerifyEntries(struct afsconf_cell *aci)
 {
@@ -1751,10 +1747,23 @@ VerifyEntries(struct afsconf_cell *aci)
     return 0;
 }
 
-/* Changed the interface to accept the afsconf_dir datastructure.
-   This is a handle to the internal cache that is maintained by the bosserver.
-   */
-
+/**
+ * Set cell information (deprecated)
+ *
+ * Write ThisCell and CellServDB containing exactly one cell's info specified
+ * by acellInfo param.  Useful only on the server (which describes only one
+ * cell).
+ *
+ * @param adir       cell configuation data; may be NULL
+ * @param apath      cell configuration path
+ * @param acellInfo  cell information
+ *
+ * @note This interface was changed at some point to optionally accept the
+ *       afsconf_dir data structure.  This is a handle to the internal cache
+ *       that is maintained by the bosserver.
+ *
+ * @return 0 on success
+ */
 int
 afsconf_SetCellInfo(struct afsconf_dir *adir, const char *apath,
 		    struct afsconf_cell *acellInfo)
@@ -1765,6 +1774,20 @@ afsconf_SetCellInfo(struct afsconf_dir *adir, const char *apath,
     return code;
 }
 
+/**
+ * Set cell information
+ *
+ * Write ThisCell and CellServDB containing exactly one cell's info specified
+ * by acellInfo param.  Useful only on the server (which describes only one
+ * cell).
+ *
+ * @param adir       cell configuation data; may be NULL
+ * @param apath      cell configuration path
+ * @param acellInfo  cell information
+ * @param clones     array of booleans to indicate which hosts are clones
+ *
+ * @return 0 on success
+ */
 int
 afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
 			    const char *apath,
@@ -1775,6 +1798,9 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
     char tbuffer[1024];
     FILE *tf;
     afs_int32 i;
+
+    opr_Assert(apath);
+    opr_Assert(acellInfo);
 
     LOCK_GLOBAL_MUTEX;
     /* write ThisCell file */
@@ -1805,7 +1831,17 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
     }
 
     /* write CellServDB */
-    tf = fopen(adir->cellservDB, "w");
+    if (adir) {
+	tf = fopen(adir->cellservDB, "w");
+    } else {
+	char *cellservDB = NULL;
+	_afsconf_CellServDBPath(apath, &cellservDB);
+	if (cellservDB)
+	    tf = fopen(cellservDB, "w");
+	else
+	    tf = NULL;
+	free(cellservDB);
+    }
     if (!tf) {
 	UNLOCK_GLOBAL_MUTEX;
 	return AFSCONF_NOTFOUND;
