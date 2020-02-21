@@ -525,8 +525,6 @@ FsyncCheckLWP(void *unused)
 
 	code = opr_cv_timedwait(&fsync_cond, &fsync_glock_mutex,
 			    &fsync_next);
-	if (code != 0 && code != ETIMEDOUT)
-	    ViceLog(0, ("pthread_cond_timedwait returned %d\n", code));
 	FSYNC_UNLOCK;
 
 #ifdef AFS_DEMAND_ATTACH_FS

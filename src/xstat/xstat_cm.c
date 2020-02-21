@@ -326,7 +326,6 @@ xstat_cm_LWP(void *unused)
 	    wait.tv_nsec = tv.tv_usec * 1000;
 	    opr_mutex_enter(&xstat_cm_force_lock);
 	    code = opr_cv_timedwait(&xstat_cm_force_cv, &xstat_cm_force_lock, &wait);
-	    opr_Assert(code == 0 || code == ETIMEDOUT);
 	    opr_mutex_exit(&xstat_cm_force_lock);
 	}			/*Continuous execution */
     }				/*Service loop */

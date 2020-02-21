@@ -341,7 +341,6 @@ xstat_fs_LWP(void *unused)
 	    wait.tv_nsec = tv.tv_usec * 1000;
 	    opr_mutex_enter(&xstat_fs_force_lock);
 	    code = opr_cv_timedwait(&xstat_fs_force_cv, &xstat_fs_force_lock, &wait);
-	    opr_Verify(code == 0 || code == ETIMEDOUT);
 	    opr_mutex_exit(&xstat_fs_force_lock);
 	}			/*Continuous execution */
     }				/*Service loop */

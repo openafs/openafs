@@ -361,7 +361,6 @@ fsprobe_LWP(void *unused)
 	wait.tv_nsec = tv.tv_usec * 1000;
 	opr_mutex_enter(&fsprobe_force_lock);
 	code = opr_cv_timedwait(&fsprobe_force_cv, &fsprobe_force_lock, &wait);
-	opr_Assert(code == 0 || code == ETIMEDOUT);
 	opr_mutex_exit(&fsprobe_force_lock);
     }				/*Service loop */
     AFS_UNREACHED(free(stats64.ViceStatistics64_val));

@@ -25,6 +25,7 @@
 #define OPENAFS_OPR_LOCK_H 1
 
 #include <pthread.h>
+#include <errno.h>
 
 /* Mutexes */
 
@@ -78,8 +79,14 @@ typedef pthread_cond_t opr_cv_t;
 # define opr_cv_wait(condvar, mutex) \
     opr_Verify(pthread_cond_wait(condvar, mutex) == 0)
 
-# define opr_cv_timedwait(condvar, mutex, timeout) \
-    pthread_cond_timedwait(condvar, mutex, timeout)
+static_inline int
+opr_cv_timedwait(opr_cv_t *condvar, opr_mutex_t *mutex,
+		 const struct timespec *abstime)
+{
+    int code = pthread_cond_timedwait(condvar, mutex, abstime);
+    opr_Assert(code == 0 || code == ETIMEDOUT);
+    return code;
+}
 
 # define opr_cv_signal(condvar) \
     opr_Verify(pthread_cond_signal(condvar) == 0)
