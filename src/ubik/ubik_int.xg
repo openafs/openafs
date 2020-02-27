@@ -181,7 +181,12 @@ DebugOld	(OUT ubik_debug_old *db) = VOTE_DEBUG_OLD;
 SDebugOld	(IN afs_int32 which,
 		OUT ubik_sdebug_old *db) = VOTE_SDEBUG_OLD;
 
-GetSyncSite	(IN afs_int32 *site) = VOTE_GETSYNCSITE;
+/*
+ * The output of GetSyncSite (site) is mistakenly marked as an input argument.
+ * As a result, this RPC can't be used to find the current sync-site.
+ */
+
+/* GetSyncSite	(IN afs_int32 *site) = VOTE_GETSYNCSITE; */
 
 Debug		(OUT ubik_debug *db) = VOTE_DEBUG;
 

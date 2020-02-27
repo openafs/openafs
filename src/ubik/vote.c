@@ -536,20 +536,6 @@ SVOTE_DebugOld(struct rx_call * rxcall,
 
 
 /*!
- * \brief Get the sync site; called by remote servers to find where they should go.
- */
-afs_int32
-SVOTE_GetSyncSite(struct rx_call * rxcall,
-		  afs_int32 * ahost)
-{
-    afs_int32 temp;
-
-    temp = uvote_GetSyncSite();
-    *ahost = ntohl(temp);
-    return 0;
-}
-
-/*!
  * \brief Called once/run to init the vote module
  */
 int

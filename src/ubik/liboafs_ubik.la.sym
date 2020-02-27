@@ -2,7 +2,6 @@ EndDISK_GetFile
 StartDISK_GetFile
 VOTE_Debug
 VOTE_DebugOld
-VOTE_GetSyncSite
 VOTE_SDebug
 VOTE_SDebugOld
 VOTE_XDebug

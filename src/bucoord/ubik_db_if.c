@@ -1002,13 +1002,10 @@ ubik_Call_SingleServer(int (*aproc) (), struct ubik_client *aclient,
 		       char *p14, char *p15, char *p16)
 {
     afs_int32 code;
-    afs_int32 someCode, newHost, thisHost;
-    afs_int32 i;
+    afs_int32 someCode;
     afs_int32 count;
-    int chaseCount;
     int pass;
     struct rx_connection *tc;
-    struct rx_peer *rxp;
 
     if ((aflags & (UF_SINGLESERVER | UF_END_SINGLESERVER)) != 0) {
 	if (((aflags & UF_SINGLESERVER) != 0)
@@ -1033,7 +1030,6 @@ ubik_Call_SingleServer(int (*aproc) (), struct ubik_client *aclient,
     }
 
     someCode = UNOSERVERS;
-    chaseCount = 0;
     pass = 0;
     count = 0;
     while (1) {			/*w */
@@ -1063,38 +1059,12 @@ ubik_Call_SingleServer(int (*aproc) (), struct ubik_client *aclient,
 	 * requires a sync site, ubik will return UNOTSYNC, indicating the
 	 * operation won't work until you find a sync site
 	 */
-	if (code == UNOTSYNC) {	/*ns */
-	    /* means that this requires a sync site to work */
-	    someCode = code;	/* remember an error, if this fails */
 
-	    /* now see if we can find the sync site host */
-	    code = VOTE_GetSyncSite(tc, &newHost);
-	    if (code == 0 && newHost != 0) {
-		newHost = htonl(newHost);	/* convert back to network order */
-
-		/* position count at the appropriate slot in the client
-		 * structure and retry. If we can't find in slot, we'll just
-		 * continue through the whole list
-		 */
-		for (i = 0; i < MAXSERVERS; i++) {	/*f */
-		    rxp = rx_PeerOf(aclient->conns[i]);
-		    if (!(thisHost = rx_HostOf(rxp))) {
-			count++;	/* host not found, try the next dude */
-			break;
-		    }
-		    if (thisHost == newHost) {
-			/* avoid asking in a loop */
-			if (chaseCount++ > 2)
-			    break;
-			count = i;	/* we were told to use this one */
-			break;
-		    }
-		}		/*f */
-	    } else
-		count++;	/* not directed, keep looking for a sync site */
-	    continue;
-	} /*ns */
-	else if (code == UNOQUORUM) {	/* this guy is still recovering */
+	/*
+	 * Means that this requires a sync site to work or this guy is still
+	 * recovering.
+	 */
+	if (code == UNOTSYNC || code == UNOQUORUM) {
 	    someCode = code;
 	    count++;
 	    continue;

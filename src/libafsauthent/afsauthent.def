@@ -111,7 +111,7 @@ EXPORTS
 ;	ka_KeyCheckSum					@110   /* duplicate */
 	rx_Finalize					@111
 	rx_InitHost					@112
-	VOTE_GetSyncSite				@113
+;	VOTE_GetSyncSite				@113   /* broken */
 	ubik_RefreshConn				@114
         rx_SetSecurityConfiguration                     @115
         pioctl_utf8                                     @116
