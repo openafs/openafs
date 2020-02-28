@@ -476,6 +476,34 @@ ubik_Call_New(int (*aproc) (), struct ubik_client *aclient,
     return rcode;
 }
 
+/**
+ * Find index of connection to ahost.
+ *
+ * @param[in]     aclient  client structure
+ * @param[in]     ahost    host to be found (IP address in net-byte order)
+ *
+ * @return index on success; -1 otherwise.
+ */
+static int
+IndexOf(struct ubik_client *aclient, int ahost)
+{
+    int i, thisHost, index = -1;
+    struct rx_peer *rxp;
+
+    for (i = 0; i < MAXSERVERS && aclient->conns[i]; i++) {
+	rxp = rx_PeerOf(aclient->conns[i]);
+	thisHost = rx_HostOf(rxp);
+
+	if (!thisHost)
+	    break;
+	if (thisHost == ahost) {
+	    index = i;
+	    break;
+	}
+    }
+    return index;
+}
+
 /*!
  * call this instead of stub and we'll guarantee to find a host that's up.
  *
@@ -487,7 +515,7 @@ ubik_Call(int (*aproc) (), struct ubik_client *aclient,
 	  long p5, long p6, long p7, long p8, long p9, long p10,
 	  long p11, long p12, long p13, long p14, long p15, long p16)
 {
-    afs_int32 rcode, newHost, thisHost, i, count;
+    afs_int32 rcode, code, count;
     int pass, needsync, inlist, j;
     struct rx_connection *tc;
     struct rx_peer *rxp;
@@ -526,26 +554,15 @@ ubik_Call(int (*aproc) (), struct ubik_client *aclient,
 	    if (needsync) {
 		/* Need a sync site. Lets try to quickly find it */
 		if (aclient->syncSite) {
-		    newHost = aclient->syncSite;	/* already in network order */
-		    aclient->syncSite = 0;	/* Will reset if it works */
-		} else {
-		    newHost = 0;
-		}
-		if (newHost) {
-		    /* position count at the appropriate slot in the client
-		     * structure and retry. If we can't find in slot, we'll
-		     * just continue through the whole list
+		    /*
+		     * Position "count" at the appropriate slot in the client
+		     * structure and retry. If we can't find in slot, we'll just
+		     * continue through the whole list.
 		     */
-		    for (i = 0; i < MAXSERVERS && aclient->conns[i]; i++) {
-			rxp = rx_PeerOf(aclient->conns[i]);
-			thisHost = rx_HostOf(rxp);
-			if (!thisHost)
-			    break;
-			if (thisHost == newHost) {
-			    count = i;	/* this index is the sync site */
-			    break;
-			}
-		    }
+		    code = IndexOf(aclient, aclient->syncSite);
+		    aclient->syncSite = 0;
+		    if (code != -1)
+			count = code;
 		}
 	    }
 	    /*needsync */
@@ -604,7 +621,7 @@ afs_int32
 ubik_CallRock(struct ubik_client *aclient, afs_int32 aflags,
 	      ubik_callrock_func proc, void *rock)
 {
-    afs_int32 rcode, newHost, thisHost, i, _ucount;
+    afs_int32 rcode, code, _ucount;
     int pass, needsync;
     struct rx_connection *tc;
     struct rx_peer *rxp;
@@ -630,27 +647,15 @@ ubik_CallRock(struct ubik_client *aclient, afs_int32 aflags,
 	    if (needsync) {
 		/* Need a sync site. Lets try to quickly find it */
 		if (aclient->syncSite) {
-		    newHost = aclient->syncSite;	/* already in network order */
-		    aclient->syncSite = 0;      /* Will reset if it works */
-		} else {
-		    newHost = 0;
-		}
-		if (newHost) {
 		    /*
-		     * position count at the appropriate slot in the client
-		     * structure and retry. If we can't find in slot, we'll
-		     * just continue through the whole list
+		     * Position "_ucount" at the appropriate slot in the client
+		     * structure and retry. If we can't find in slot, we'll just
+		     * continue through the whole list.
 		     */
-		    for (i = 0; i < MAXSERVERS && aclient->conns[i]; i++) {
-			rxp = rx_PeerOf(aclient->conns[i]);
-			thisHost = rx_HostOf(rxp);
-			if (!thisHost)
-			    break;
-			if (thisHost == newHost) {
-			    _ucount = i;  /* this index is the sync site */
-			    break;
-			}
-		    }
+		    code = IndexOf(aclient, aclient->syncSite);
+		    aclient->syncSite = 0;
+		    if (code != -1)
+			_ucount = code;
 		}
 	    }
 	    /*needsync */
