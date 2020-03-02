@@ -31,6 +31,9 @@ SRCS+= \
 	osi_vnodeops.c \
 	osi_module.c
 
+AFS_OS_OBJS = \
+	rand-fortuna-kernel.o
+
 #AFS_OS_NFSOBJS = \
 #	osi_vfsops_nfs.o
 
