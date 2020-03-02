@@ -72,7 +72,6 @@ depsrcs:
 
 AFSAOBJS = \
 	sha256-kernel.o \
-	rand-fortuna-kernel.o \
 	rand-timer-kernel.o \
 	afs_atomlist.o \
 	afs_lhash.o \
@@ -217,7 +216,6 @@ AFSNONFSOBJS = \
 # init daemons call pioctl
 AFSPAGOBJS = \
 	sha256-kernel.o \
-	rand-fortuna-kernel.o \
 	rand-timer-kernel.o \
 	md5.o		\
 	evp.o		\

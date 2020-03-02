@@ -28,8 +28,8 @@ AFS_OS_OBJS = \
 	osi_vcache.o \
 	osi_vm.o \
 	osi_vnodeops.o \
-	osi_module.o
-
+	osi_module.o \
+	rand-fortuna-kernel.o
 
 #AFS_OS_NFSOBJS = osi_vfsops_nfs.o
 

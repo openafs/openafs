@@ -24,7 +24,8 @@ AFS_OS_OBJS = \
 	osi_sleep.o \
 	osi_timeout.o \
 	osi_vcache.o \
-	osi_vm.o
+	osi_vm.o \
+	rand-fortuna-kernel.o
 
 AFSNOIAUTHOBJS = \
 	afs_call.o \
