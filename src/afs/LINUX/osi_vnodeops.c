@@ -1008,15 +1008,15 @@ iattr2vattr(struct vattr *vattrp, struct iattr *iattrp)
 	vattrp->va_size = iattrp->ia_size;
     if (iattrp->ia_valid & ATTR_ATIME) {
 	vattrp->va_atime.tv_sec = iattrp->ia_atime.tv_sec;
-	vattrp->va_atime.tv_usec = 0;
+	vattrp->va_atime.tv_nsec = 0;
     }
     if (iattrp->ia_valid & ATTR_MTIME) {
 	vattrp->va_mtime.tv_sec = iattrp->ia_mtime.tv_sec;
-	vattrp->va_mtime.tv_usec = 0;
+	vattrp->va_mtime.tv_nsec = 0;
     }
     if (iattrp->ia_valid & ATTR_CTIME) {
 	vattrp->va_ctime.tv_sec = iattrp->ia_ctime.tv_sec;
-	vattrp->va_ctime.tv_usec = 0;
+	vattrp->va_ctime.tv_nsec = 0;
     }
 }
 

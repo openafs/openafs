@@ -141,7 +141,7 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
     attrs->va_atime.tv_nsec = attrs->va_mtime.tv_nsec =
 	attrs->va_ctime.tv_nsec = 0;
     attrs->va_gen = hgetlo(avc->f.m.DataVersion);
-#elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
+#elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV) || defined(AFS_LINUX26_ENV)
     attrs->va_atime.tv_nsec = attrs->va_mtime.tv_nsec =
 	attrs->va_ctime.tv_nsec =
 	(hgetlo(avc->f.m.DataVersion) & 0x7ffff) * 1000;
@@ -433,7 +433,7 @@ afs_VAttrToAS(struct vcache *avc, struct vattr *av,
 #endif
 	mask |= AFS_SETMODTIME;
 #ifndef	AFS_SGI_ENV
-#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_LINUX26_ENV)
 	if (av->va_mtime.tv_nsec == -1)
 #else
 	if (av->va_mtime.tv_usec == -1)
