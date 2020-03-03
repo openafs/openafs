@@ -76,6 +76,10 @@
 #include "h/cred.h"
 #endif
 
+#if !defined(HAVE_LINUX_TIME_T)
+typedef time64_t time_t;
+#endif
+
 #if defined(HAVE_LINUX_KTIME_GET_COARSE_REAL_TS64)
 static inline time_t osi_Time(void) {
     struct timespec64 xtime;
