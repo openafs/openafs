@@ -3256,6 +3256,7 @@ namei_ConvertROtoRWvolume(char *pname, VolumeId volumeId)
     FSYNC_VolOp(volumeId, pname, FSYNC_VOL_DONE, 0, NULL);
     FSYNC_VolOp(h.id, pname, FSYNC_VOL_ON, 0, NULL);
 
+    code = 0;
  done:
 # ifdef AFS_DEMAND_ATTACH_FS
     if (locktype) {
