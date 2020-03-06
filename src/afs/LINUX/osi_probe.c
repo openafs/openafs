@@ -1173,14 +1173,14 @@ static void *try_harder(probectl *P, PROBETYPE *ptr, unsigned long datalen)
     if (probe_debug & 0x0001) {                                                              \
 	printk("<7>osi_probe: %s = 0x%016lx %s\n", P->symbol, (unsigned long)(x), (m)); \
     }                                                                                      \
-    if ((x) && ((int)(x)) != -ENOENT) {                                                    \
+    if ((x) && ((long)(x)) != -ENOENT) {                                                    \
 	*method = (m);                                                                     \
         final_answer = (void *)(x);                                                        \
     }                                                                                      \
 } while (0)
 #else
 #define check_result(x,m) do {  \
-    if ((x) && ((int)(x)) != -ENOENT) { \
+    if ((x) && ((long)(x)) != -ENOENT) { \
         *method = (m);          \
         return (void *)(x);     \
     }                           \
