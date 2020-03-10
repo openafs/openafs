@@ -368,7 +368,10 @@ emit_union(definition * def)
 	    object =
 		alloc(strlen(def->def_name) + strlen(format) +
 		      strlen(dflt->name) + 1);
-	    s_print(object, format, def->def_name, dflt->name);
+	    if (brief_flag)
+		s_print(object, briefformat, dflt->name);
+	    else
+		s_print(object, format, def->def_name, dflt->name);
 	    print_ifstat(2, dflt->prefix, dflt->type, dflt->rel,
 			 dflt->array_max, object, dflt->name);
 	    free(object);
