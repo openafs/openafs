@@ -219,7 +219,7 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
 #endif
     code = afs_osi_Stat(afile, &tstat);
     if (code || tstat.size <= asize)
-	return code;
+	goto done;
     AFS_GUNLOCK();
     afs_linux_lock_inode(inode);
 #ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
@@ -244,10 +244,11 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     up_write(&inode->i_alloc_sem);
 #endif
     afs_linux_unlock_inode(inode);
+    AFS_GLOCK();
+ done:
 #if defined(HAVE_LINUX_OVERRIDE_CREDS)
     revert_creds(cur_cred);
 #endif
-    AFS_GLOCK();
     return code;
 }
 
