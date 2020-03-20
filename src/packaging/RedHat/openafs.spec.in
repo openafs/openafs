@@ -1,4 +1,4 @@
-# Openafs Spec $Revision$
+# Openafs Spec
 
 %define afsvers @PACKAGE_VERSION@
 %define pkgvers @LINUX_PKGVER@
@@ -107,7 +107,6 @@ BuildRequires: elfutils-devel
 
 ExclusiveArch: %{ix86} x86_64 ia64 s390 s390x sparc64 ppc ppc64 ppc64le aarch64
 
-#    http://dl.openafs.org/dl/openafs/candidate/%{afsvers}/...
 Source0: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-src.tar.bz2
 Source1: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-doc.tar.bz2
 %define srcdir openafs-%{afsvers}
@@ -328,7 +327,6 @@ module.
 Summary: OpenAFS client compatibility symlinks
 Requires: openafs = %{version}, openafs-client = %{version}
 Group: Networking/Filesystems
-Obsoletes: openafs-client-compat
 
 %description compat
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -426,7 +424,6 @@ krb4 lookalike services.
 : @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # Install OpenAFS src and doc
-#%setup -q -n %{srcdir}
 %setup -q -b 1 -n %{srcdir}
 
 ##############################################################################
@@ -1466,7 +1463,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/akeyconvert.8.gz
 %{_mandir}/man8/asetkey.8.gz
 %endif
-%endif  # build_userspace
+%endif
 
 ##############################################################################
 ###
