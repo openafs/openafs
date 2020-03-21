@@ -1,6 +1,14 @@
 openafs (1.8.6~pre1-1) UNRELEASED; urgency=medium
 
-  * New upstream prerelease (Closes: #953709)
+  * New upstream prerelease (Closes: #953709):
+    - Code cleanup prompted by gcc9 errors
+    - Update "vos zap -force" to clean up empty directories
+    - Relax implementation-specific XDR array length limits for prdb types,
+      which were being hit in practice at some large sites
+    - Tighten up fileservers' -readonly mode, and add an option to allow
+      members of system:administrators to be able to write to readonly servers
+    - Support linux kernels up to version 5.6rc2
+    - Additional sundry changes; see upstream NEWS
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Sat, 21 Mar 2020 10:23:31 -0700
 
