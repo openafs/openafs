@@ -146,7 +146,7 @@ multiHomedExtent(struct vl_ctx *ctx, int srvidx, struct extentaddr **exp)
     return multiHomedExtentBase(ctx, srvidx, exp, &base);
 }
 
-#define AFS_RXINFO_LEN 128
+#define AFS_RXINFO_LEN 217
 static char *
 rxkadInfo(char *str, struct rx_connection *conn, struct in_addr hostAddr)
 {

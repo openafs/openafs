@@ -380,15 +380,17 @@ struct vNode {
 
 #define MAXNAMELEN 256
 
-afs_int32
-ReadVNode(afs_int32 count)
+static int
+ReadVNode(afs_int32 count, afs_int32 *return_tag)
 {
     struct vNode vn;
     int code, i, done;
     char tag;
-    char dirname[MAXNAMELEN], linkname[MAXNAMELEN], lname[MAXNAMELEN];
-    char parentdir[MAXNAMELEN], vflink[MAXNAMELEN];
-    char filename[MAXNAMELEN], fname[MAXNAMELEN];
+    char *dirname = NULL, *lname = NULL, *slinkname = NULL;
+    char linkname[MAXNAMELEN+1];
+    char *parentdir = NULL, *vflink = NULL;
+    char *filename = NULL;
+    char fname[MAXNAMELEN+1];
     int len;
     afs_int32 vnode;
     afs_int32 mode = 0;
@@ -467,35 +469,57 @@ ReadVNode(afs_int32 count)
 	     * The parent dir and symbolic link to it must exist.
 	     */
 	    vnode = ((vn.type == 2) ? vn.vnode : vn.parent);
-	    if (vnode == 1)
-		strncpy(parentdir, rootdir, sizeof parentdir);
-	    else {
-		snprintf(parentdir, sizeof parentdir,
-			 "%s" OS_DIRSEP "%s%d", rootdir, ADIR, vnode);
+	    if (vnode == 1) {
+		free(parentdir);
+		parentdir = strdup(rootdir);
+		if (!parentdir) {
+		    code = ENOMEM;
+		    goto common_exit;
+		}
+	    } else {
+		free(parentdir);
+		if (asprintf(&parentdir,
+			 "%s" OS_DIRSEP "%s%d", rootdir, ADIR, vnode) < 0) {
+		    parentdir = NULL;
+		    code = ENOMEM;
+		    goto common_exit;
+		}
 
 		len = readlink(parentdir, linkname, MAXNAMELEN);
 		if (len < 0) {
 		    /* parentdir does not exist. So create an orphan dir.
 		     * and then link the parentdir to the orphaned dir.
 		     */
-		    snprintf(linkname, sizeof linkname, "%s" OS_DIRSEP "%s%d",
-			     rootdir, ODIR, vnode);
-		    code = mkdir(linkname, 0777);
+		    if (asprintf(&lname, "%s" OS_DIRSEP "%s%d",
+			     rootdir, ODIR, vnode) < 0) {
+			lname = NULL;
+			code = ENOMEM;
+			goto common_exit;
+		    }
+
+		    code = mkdir(lname, 0777);
 		    if ((code < 0) && (errno != EEXIST)) {
 			fprintf(stderr,
 				"Error creating directory %s  code=%d;%d\n",
-				linkname, code, errno);
+				lname, code, errno);
+		    }
+		    free(lname);
+		    /* Link the parentdir to it - now parentdir exists */
+		    if (asprintf(&lname, "%s%d/", ODIR,
+			     vnode) < 0) {
+			lname = NULL;
+			code = ENOMEM;
+			goto common_exit;
 		    }
 
-		    /* Link the parentdir to it - now parentdir exists */
-		    snprintf(linkname, sizeof linkname, "%s%d/", ODIR,
-			     vnode);
-		    code = symlink(linkname, parentdir);
+		    code = symlink(lname, parentdir);
 		    if (code) {
 			fprintf(stderr,
 				"Error creating symlink %s -> %s  code=%d;%d\n",
-				parentdir, linkname, code, errno);
+				parentdir, lname, code, errno);
 		    }
+		    free(lname);
+		    lname = NULL;
 		}
 	    }
 
@@ -543,7 +567,11 @@ ReadVNode(afs_int32 count)
 
 
 		buffer = NULL;
-		buffer = malloc(vn.dataSize);
+		buffer = calloc(1, vn.dataSize);
+		if (!buffer) {
+		    code = ENOMEM;
+		    goto common_exit;
+		}
 
 		readdata(buffer, vn.dataSize);
 		page0 = (struct Page0 *)buffer;
@@ -571,12 +599,22 @@ ReadVNode(afs_int32 count)
 				/* dirname is the directory to create.
 				 * vflink is what will link to it.
 				 */
-			    snprintf(dirname, sizeof dirname,
+			    if (asprintf(&dirname,
 				     "%s" OS_DIRSEP "%s",
-				     parentdir, this_name);
-			    snprintf(vflink, sizeof vflink,
+				     parentdir, this_name) < 0) {
+				free(buffer);
+				code = ENOMEM;
+				goto common_exit;
+			    }
+
+			    if (asprintf(&vflink,
 				     "%s" OS_DIRSEP "%s%d",
-				     rootdir, ADIR, this_vn);
+				     rootdir, ADIR, this_vn) < 0) {
+				free(buffer);
+				free(dirname);
+				code = ENOMEM;
+				goto common_exit;
+			    }
 
 			    /* The link and directory may already exist */
 			    len = readlink(vflink, linkname, MAXNAMELEN);
@@ -595,24 +633,48 @@ ReadVNode(afs_int32 count)
 				 * It was created originally as orphaned.
 				 */
 				linkname[len - 1] = '\0';	/* remove '/' at end */
-				snprintf(lname, sizeof lname,
+				if (asprintf(&lname,
 				         "%s" OS_DIRSEP "%s",
-					 rootdir, linkname);
+					 rootdir, linkname) < 0) {
+				    free(buffer);
+				    free(dirname);
+				    free(vflink);
+				    lname = NULL;
+				    code = ENOMEM;
+				    goto common_exit;
+				}
+
 				code = rename(lname, dirname);
 				if (code) {
 				    fprintf(stderr,
 					    "Error renaming %s to %s  code=%d;%d\n",
 					    lname, dirname, code, errno);
 				}
+				free(lname);
+				lname = NULL;
 			    }
+			    free(dirname);
+			    dirname = NULL;
 
 			    /* Now create/update the link to the new/moved directory */
-			    if (vn.vnode == 1)
-				snprintf(dirname, sizeof dirname, "%s/",
-					 this_name);
-			    else
-				snprintf(dirname, sizeof dirname, "%s%d/%s/",
-					 ADIR, vn.vnode, this_name);
+			    if (vn.vnode == 1) {
+				if (asprintf(&dirname, "%s/",
+					 this_name) < 0) {
+				    free(buffer);
+				    free(vflink);
+				    code = ENOMEM;
+				    goto common_exit;
+				}
+			    } else {
+				if (asprintf(&dirname, "%s%d/%s/",
+					 ADIR, vn.vnode, this_name) < 0) {
+				    free(buffer);
+				    free(vflink);
+				    code = ENOMEM;
+				    goto common_exit;
+				}
+			    }
+
 			    unlink(vflink);
 			    code = symlink(dirname, vflink);
 			    if (code) {
@@ -620,6 +682,10 @@ ReadVNode(afs_int32 count)
 					"Error creating symlink %s -> %s  code=%d;%d\n",
 					vflink, dirname, code, errno);
 			    }
+			    free(dirname);
+			    free(vflink);
+			    dirname = NULL;
+			    vflink = NULL;
 			}
 			/*ADIRENTRY*/
 			    /* For a file entry, we remember the name of the file
@@ -628,9 +694,13 @@ ReadVNode(afs_int32 count)
 			     */
 			else {
 			     /*AFILEENTRY*/
-			    snprintf(vflink, sizeof vflink,
+			    if (asprintf(&vflink,
 				     "%s" OS_DIRSEP "%s%d", parentdir,
-				     AFILE, this_vn);
+				     AFILE, this_vn) < 0) {
+				free(buffer);
+				code = ENOMEM;
+				goto common_exit;
+			    }
 
 			    code = symlink(this_name, vflink);
 			    if ((code < 0) && (errno != EEXIST)) {
@@ -639,10 +709,13 @@ ReadVNode(afs_int32 count)
 					vflink, page0->entry[j].name, code,
 					errno);
 			    }
+			    free(vflink);
+			    vflink = NULL;
 			}
 		     /*AFILEENTRY*/}
 		}
 		free(buffer);
+		buffer = NULL;
 	    }
 	    /*ITSADIR*/
 	    else if (vn.type == 1) {
@@ -659,12 +732,19 @@ ReadVNode(afs_int32 count)
 		 * then the file will be an orphaned file.
 		 */
 		lfile = 1;
-		snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s%d",
-			 parentdir, AFILE, vn.vnode);
+		if (asprintf(&filename, "%s" OS_DIRSEP "%s%d",
+			 parentdir, AFILE, vn.vnode) < 0) {
+		    code = ENOMEM;
+		    goto common_exit;
+		}
 		len = readlink(filename, fname, MAXNAMELEN);
 		if (len < 0) {
-		    snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s%d",
-			     rootdir, OFILE, vn.vnode);
+		    free(filename);
+		    if (asprintf(&filename, "%s" OS_DIRSEP "%s%d",
+			     rootdir, OFILE, vn.vnode) < 0) {
+			code = ENOMEM;
+			goto common_exit;
+		    }
 		    lfile = 0;	/* no longer a linked file; a direct path */
 		}
 
@@ -690,12 +770,9 @@ ReadVNode(afs_int32 count)
 			    fprintf(stderr, "Code = %d; Errno = %d\n", code,
 				    errno);
 			else {
-			    char tmp[100];
-			    snprintf(tmp, sizeof tmp,
-				     "Read %llu bytes out of %llu",
+			    fprintf(stderr, "Read %llu bytes out of %llu\n",
 				     (afs_uintmax_t) (vn.dataSize - size),
 				     (afs_uintmax_t) vn.dataSize);
-			    fprintf(stderr, "%s\n", tmp);
 			}
 			break;
 		    }
@@ -725,6 +802,8 @@ open_fail:
 		if (lfile) {
 		    unlink(filename);
 		}
+		free(filename);
+		filename = NULL;
 	    }
 	    /*ITSAFILE*/
 	    else if (vn.type == 3) {
@@ -739,16 +818,28 @@ open_fail:
 		 * of the symbolic link. If it doesn't exist,
 		 * then the link will be an orphaned link.
 		 */
-		snprintf(linkname, sizeof linkname, "%s" OS_DIRSEP "%s%d",
-			 parentdir, AFILE, vn.vnode);
-		len = readlink(linkname, fname, MAXNAMELEN - 1);
+		if (asprintf(&slinkname, "%s" OS_DIRSEP "%s%d",
+			 parentdir, AFILE, vn.vnode) < 0) {
+		    code = ENOMEM;
+		    goto common_exit;
+		}
+
+		len = readlink(slinkname, fname, MAXNAMELEN);
 		if (len < 0) {
-		    snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s%d",
-			     rootdir, OFILE, vn.vnode);
+		    if (asprintf(&filename, "%s" OS_DIRSEP "%s%d",
+			     rootdir, OFILE, vn.vnode) < 0) {
+			free(slinkname);
+			code = ENOMEM;
+			goto common_exit;
+		    }
 		} else {
 		    fname[len] = '\0';
-		    snprintf(filename, sizeof filename, "%s" OS_DIRSEP "%s",
-			     parentdir, fname);
+		    if (asprintf(&filename, "%s" OS_DIRSEP "%s",
+			     parentdir, fname) < 0) {
+			free(slinkname);
+			code = ENOMEM;
+			goto common_exit;
+		    }
 		}
 
 		/* Read the link in, delete it, and then create it */
@@ -760,9 +851,27 @@ open_fail:
 		    && (buf[s - 1] == '.')) {
 		    /* This is a symbolic link */
 		    buf[s - 1] = 0;	/* Remove prefix '.' */
-		    strcpy(lname, &buf[1]);	/* Remove postfix '#' or '%' */
-		    strcpy(buf, mntroot);
-		    strcat(buf, lname);
+		    lname = strdup(&buf[1]);	/* Remove postfix '#' or '%' */
+		    if (!lname) {
+			free(filename);
+			free(slinkname);
+			code = ENOMEM;
+			goto common_exit;
+		    }
+		    if (strlcpy(buf, mntroot, BUFSIZE) >= BUFSIZE) {
+			free(filename);
+			free(slinkname);
+			code = EMSGSIZE;
+			goto common_exit;
+		    }
+		    if (strlcat(buf, lname, BUFSIZE) >= BUFSIZE) {
+			free(filename);
+			free(slinkname);
+			code = EMSGSIZE;
+			goto common_exit;
+		    }
+		    free(lname);
+		    lname = NULL;
 		}
 
 		unlink(filename);
@@ -774,7 +883,12 @@ open_fail:
 		}
 
 		/* Remove the symbolic link */
-		unlink(linkname);
+		unlink(slinkname);
+		free(slinkname);
+		free(filename);
+		slinkname = NULL;
+		filename = NULL;
+
 	    }
 	    /*ITSASYMLINK*/
 	    else {
@@ -790,7 +904,13 @@ open_fail:
     if (vn.type == 0)
 	inc_dump = 1;
 
-    return ((afs_int32) tag);
+
+    *return_tag  = (afs_int32)tag;
+    code = 0;
+  common_exit:
+    free(parentdir);
+    free(lname);
+    return code;
 }
 
 static int
@@ -800,13 +920,16 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     afs_int32 type, count, vcount;
     DIR *dirP, *dirQ;
     struct dirent *dirE, *dirF;
-    char name[2*MAXNAMELEN+1];
-    char thisdir[MAXPATHLEN+4], *t;
+    char *name = NULL;
+    char *thisdir, *t;
     struct DumpHeader dh;	/* Defined in dump.h */
 #if 0/*ndef HAVE_GETCWD*/	/* XXX enable when autoconf happens */
     extern char *getwd();
 #define getcwd(x,y) getwd(x)
 #endif
+    thisdir = calloc(1, MAXPATHLEN+4);
+    if (!thisdir)
+	goto mem_error_exit;
 
     if (as->parms[0].items) {	/* -file <dumpfile> */
 	dumpfile = fopen(as->parms[0].items->data, "r");
@@ -830,14 +953,17 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
     /* Get the root directory we restore to */
     if (as->parms[1].items) {	/* -dir <rootdir> */
-	strcpy(rootdir, as->parms[1].items->data);
+	if (strlcpy(rootdir, as->parms[1].items->data, sizeof(rootdir)) >= sizeof(rootdir))
+	    goto str_error_exit;
     } else {
 	strcpy(rootdir, ".");
     }
-    strcat(rootdir, "/");
+    if (strlcat(rootdir, "/", sizeof(rootdir)) >= sizeof(rootdir))
+	goto str_error_exit;
 
     /* Append the RW volume name to the root directory */
-    strcat(rootdir, dh.volumeName);
+    if (strlcat(rootdir, dh.volumeName, sizeof(rootdir)) >= sizeof(rootdir))
+	goto str_error_exit;
     len = strlen(rootdir);
     if (strcmp(".backup", rootdir + len - 7) == 0) {
 	rootdir[len - 7] = 0;
@@ -847,7 +973,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
     /* Append the extension we asked for */
     if (as->parms[2].items) {
-	strcat(rootdir, as->parms[2].items->data);	/* -extension <ext> */
+	if (strlcat(rootdir, as->parms[2].items->data, sizeof(rootdir)) >= sizeof(rootdir))    /* -extension <ext> */
+	    goto str_error_exit;
     }
 
     /* The mountpoint root is either specifid in -mountpoint
@@ -879,7 +1006,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    code = -1;
 	    goto cleanup;
 	}
-	strcat(mntroot, "/");	/* append '/' to end of it */
+	if (strlcat(mntroot, "/", sizeof(mntroot)) >= sizeof(mntroot))	/* append '/' to end of it */
+	    goto str_error_exit;
 	code = chdir(thisdir);	/* return to original working dir */
 	if (code) {
 	    fprintf(stderr, "Cannot find working directory: Error = %d\n",
@@ -896,7 +1024,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    goto cleanup;
 	}
     }
-    strcat(mntroot, "/");	/* append '/' to end of it */
+    if (strlcat(mntroot, "/", sizeof(mntroot)) >= sizeof(mntroot))	/* append '/' to end of it */
+	goto str_error_exit;
 
     /* Set the umask for the restore */
     if (as->parms[4].items) {	/* -umask */
@@ -916,8 +1045,13 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
     for (count = 1; type == 2; count++) {
 	type = ReadVolumeHeader(count);
-	for (vcount = 1; type == 3; vcount++)
-	    type = ReadVNode(vcount);
+	for (vcount = 1; type == 3; vcount++) {
+	    code = ReadVNode(vcount, &type);
+	    if (code == ENOMEM)
+		goto mem_error_exit;
+	    if (code == EMSGSIZE)
+		goto str_error_exit;
+	}
     }
 
     if (type != 4) {
@@ -935,38 +1069,70 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	dirP = opendir(rootdir);
 	while (dirP && (dirE = readdir(dirP))) {
 	    if (strncmp(dirE->d_name, ADIR, strlen(ADIR)) == 0) {
-		snprintf(name, sizeof name, "%s" OS_DIRSEP "%s", rootdir,
-			 dirE->d_name);
+		if (asprintf(&name, "%s" OS_DIRSEP "%s", rootdir,
+			 dirE->d_name) < 0)
+		    goto mem_error_exit;
+
 		dirQ = opendir(name);
+		free(name);
+		name = NULL;
 		while (dirQ && (dirF = readdir(dirQ))) {
 		    if (strncmp(dirF->d_name, AFILE, strlen(AFILE)) == 0) {
-			snprintf(name, sizeof name, "%s" OS_DIRSEP "%s/%s",
-				 rootdir, dirE->d_name, dirF->d_name);
+			if (asprintf(&name, "%s" OS_DIRSEP "%s/%s",
+				 rootdir, dirE->d_name, dirF->d_name) < 0)
+			    goto mem_error_exit;
+
 			unlink(name);
+			free(name);
+			name = NULL;
 		    }
 		}
-		closedir(dirQ);
+		if (dirQ)
+		    closedir(dirQ);
 	    } else if (strncmp(dirE->d_name, AFILE, strlen(AFILE)) == 0) {
-		snprintf(name, sizeof name, "%s" OS_DIRSEP "%s", rootdir,
-			 dirE->d_name);
+		if (asprintf(&name, "%s" OS_DIRSEP "%s", rootdir,
+			 dirE->d_name) < 0)
+		    goto mem_error_exit;
+
 		unlink(name);
+		free(name);
+		name = NULL;
 	    }
 	}
-	closedir(dirP);
+	if (dirP)
+	    closedir(dirP);
     }
 
     /* Now go through and remove all the directory links */
     dirP = opendir(rootdir);
     while (dirP && (dirE = readdir(dirP))) {
 	if (strncmp(dirE->d_name, ADIR, strlen(ADIR)) == 0) {
-	    snprintf(name, sizeof name, "%s" OS_DIRSEP "%s", rootdir,
-		     dirE->d_name);
+	    if (asprintf(&name, "%s" OS_DIRSEP "%s", rootdir,
+		     dirE->d_name) < 0)
+		goto mem_error_exit;
+
 	    unlink(name);
+	    free(name);
+	    name = NULL;
 	}
     }
-    closedir(dirP);
+    if (dirP)
+	closedir(dirP);
 
+    free(thisdir);
     return (code);
+
+  mem_error_exit:
+    /* Error allocating memory -- quick exit */
+    fprintf(stderr, "Memory allocation error!\n");
+    free(thisdir);
+    return -1;
+
+  str_error_exit:
+    /* Str length error */
+    fprintf(stderr, "String exceeded buffer size\n");
+    free(thisdir);
+    return -1;
 }
 
 int

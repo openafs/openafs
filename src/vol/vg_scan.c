@@ -452,8 +452,8 @@ _VVGC_dlist_lookup_r(struct DiskPartition64 *dp, VolumeId parent,
     for (queue_Scan(&VVGCache.part[dp->index].dlist_hash_buckets[bucket],
                     ent, nent,
 		    VVGCache_dlist_entry)) {
-
-	if (ent->child == child && ent->parent == parent) {
+	if (ent->child == child
+	    && (ent->parent == 0 || ent->parent == parent)) {
 	    return ent;
 	}
     }
@@ -501,7 +501,7 @@ _VVGC_flush_dlist(struct DiskPartition64 *dp)
  * back onto the VGC.
  *
  * @param[in] dp      the partition to whose dlist we are adding
- * @param[in] parent  the parent volumeID of the VGC entry
+ * @param[in] parent  the parent volumeID of the VGC entry, or 0 for any
  * @param[in] child   the child volumeID of the VGC entry
  *
  * @return operation status
@@ -525,7 +525,7 @@ _VVGC_dlist_add_r(struct DiskPartition64 *dp, VolumeId parent,
     }
 
     entry->child = child;
-    entry->parent = parent;
+    entry->parent = parent; /* May be zero to match any child. */
 
     queue_Append(&VVGCache.part[dp->index].dlist_hash_buckets[bucket],
                  entry);

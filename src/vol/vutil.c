@@ -115,7 +115,7 @@ VCreateVolume_r(Error * ec, char *partname, VolumeId volumeId, VolumeId parentId
 				 * no parent */
     VolumeDiskData vol;
     int i, rc;
-    char headerName[VMAXPATHLEN], volumePath[VMAXPATHLEN];
+    char headerName[VMAXPATHLEN], volumePath[VMAXPATHLEN + 1];
     Device device;
     struct DiskPartition64 *partition;
     struct VolumeDiskHeader diskHeader;
@@ -670,9 +670,6 @@ VCreateVolumeDiskHeader(VolumeDiskHeader_t * hdr,
  * @return operation status
  *    @retval 0 success
  *
- * @note if parent is 0, the parent volume ID will be looked up from the
- * fileserver
- *
  * @note for non-DAFS, parent is currently ignored
  */
 afs_int32
@@ -695,22 +692,8 @@ VDestroyVolumeDiskHeader(struct DiskPartition64 * dp,
     }
 
 #ifdef AFS_DEMAND_ATTACH_FS
+    /* Remove the volume entry from the fileserver's volume group cache, if found. */
     memset(&res, 0, sizeof(res));
-    if (!parent) {
-	FSSYNC_VGQry_response_t q_res;
-
-	code = FSYNC_VGCQuery(dp->name, volid, &q_res, &res);
-	if (code) {
-	    Log("VDestroyVolumeDiskHeader: FSYNC_VGCQuery(%s, %lu) failed "
-	        "with code %ld, reason %ld\n", dp->name,
-	        afs_printable_uint32_lu(volid), afs_printable_int32_ld(code),
-		afs_printable_int32_ld(res.hdr.reason));
-	    goto done;
-	}
-
-	parent = q_res.rw;
-
-    }
     code = FSYNC_VGCDel(dp->name, parent, volid, FSYNC_WHATEVER, &res);
     if (code) {
 	Log("VDestroyVolumeDiskHeader: FSYNC_VGCDel(%s, %" AFS_VOLID_FMT ", %" AFS_VOLID_FMT ") failed "

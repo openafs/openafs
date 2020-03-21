@@ -33,6 +33,7 @@ rx_FlushWrite
 rx_FreeStatistics
 rx_GetCachedConnection
 rx_GetCallAbortCode
+rx_GetCallStatus
 rx_GetConnection
 rx_GetConnectionEpoch
 rx_GetConnectionId

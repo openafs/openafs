@@ -869,32 +869,37 @@ _VVGC_entry_purge_r(struct DiskPartition64 * dp,
                     VolumeId parent, VolumeId child)
 {
     int code = 0, res;
-    VVGCache_entry_t * parent_ent, * child_ent;
+    VVGCache_entry_t * child_ent;
     VVGCache_hash_entry_t * child_hent;
 
-    /* check mappings for each volid */
-    res = _VVGC_lookup(dp, parent, &parent_ent, NULL);
-    if (res) {
-	code = res;
-	goto done;
-    }
     res = _VVGC_lookup(dp, child, &child_ent, &child_hent);
     if (res) {
 	code = res;
 	goto done;
     }
 
-    /* if the mappings don't match, we have a serious error */
-    if (parent_ent != child_ent) {
-	ViceLog(0, ("VVGCache_entry_del: trying to delete vol %lu from VG %lu, "
-	    "but vol %lu points to VGC entry %"AFS_PTR_FMT" and VG %lu "
-	    "points to VGC entry %"AFS_PTR_FMT"\n",
-	    afs_printable_uint32_lu(child),
-	    afs_printable_uint32_lu(parent),
-	    afs_printable_uint32_lu(child),
-	    child_ent, afs_printable_uint32_lu(parent), parent_ent));
-	code = -1;
-	goto done;
+    if (parent != 0) {
+	VVGCache_entry_t * parent_ent;
+
+	res = _VVGC_lookup(dp, parent, &parent_ent, NULL);
+	if (res) {
+	    code = res;
+	    goto done;
+	}
+
+	/* if the mappings don't match, we have a serious error */
+	if (parent_ent != child_ent) {
+	    ViceLog(0,
+		    ("VVGCache_entry_del: trying to delete vol %lu from VG %lu, "
+		     "but vol %lu points to VGC entry %" AFS_PTR_FMT
+		     " and VG %lu " "points to VGC entry %" AFS_PTR_FMT "\n",
+		     afs_printable_uint32_lu(child),
+		     afs_printable_uint32_lu(parent),
+		     afs_printable_uint32_lu(child), child_ent,
+		     afs_printable_uint32_lu(parent), parent_ent));
+	    code = -1;
+	    goto done;
+	}
     }
 
     code = _VVGC_hash_entry_del(child_hent);

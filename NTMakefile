@@ -257,7 +257,14 @@ fsint: procmgmt
 	$(NTMAKE)
 	$(CD) ..\..
 
-audit: fsint
+bubasics: fsint
+     @echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+audit: bubasics
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -362,14 +369,7 @@ usd: vlserver
 	$(NTMAKE)
 	$(CD) ..\..
 
-bubasics: usd
-     @echo ***** $@
-	$(DOCD) $(SRC)\$@
-	$(CD) $(SRC)\$@
-	$(NTMAKE)
-	$(CD) ..\..
-
-budb:	bubasics
+budb: usd
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@

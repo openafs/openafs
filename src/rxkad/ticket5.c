@@ -80,7 +80,16 @@
 #include "v5gen-rewrite.h"
 #include "v5gen.h"
 #include "der.h"
+
+#if defined(IGNORE_SOME_GCC_WARNINGS) && !defined(__clang__) && __GNUC__ >= 7
+# pragma GCC diagnostic push
+# pragma GCC diagnostic warning "-Wformat-truncation"
+#endif
 #include "v5der.c"
+#if defined(IGNORE_SOME_GCC_WARNINGS) && !defined(__clang__) && __GNUC__ >= 7
+# pragma GCC diagnostic pop
+#endif
+
 #include "v5gen.c"
 
 #define RFC3961_NO_ENUMS
@@ -615,7 +624,9 @@ cleanup:
     if (cr != NULL)
 	krb5_crypto_destroy(context, cr);
     krb5_free_keyblock_contents(context, &kb);
-    krb5_free_context(context);
+    if (context != NULL) {
+        krb5_free_context(context);
+    }
     rxi_Free(buf, allocsiz);
     if ((code & 0xFFFFFF00) == ERROR_TABLE_BASE_asn1)
 	return RXKADINCONSISTENCY;

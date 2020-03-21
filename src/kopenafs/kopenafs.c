@@ -71,7 +71,13 @@ k_hasafs(void)
 int
 k_setpag(void)
 {
-    return lsetpag();
+    int code;
+
+    do {
+	code = lsetpag();
+    } while (code && errno == EINTR);
+
+    return code;
 }
 
 int

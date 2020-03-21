@@ -133,9 +133,17 @@ int
 urecovery_AbortAll(struct ubik_dbase *adbase)
 {
     struct ubik_trans *tt;
+    int reads = 0, writes = 0;
+
     for (tt = adbase->activeTrans; tt; tt = tt->next) {
+	if (tt->type == UBIK_WRITETRANS)
+	    writes++;
+	else
+	    reads++;
 	udisk_abort(tt);
     }
+    ViceLog(0, ("urecovery_AbortAll: just aborted %d read and %d write transactions\n",
+		    reads, writes));
     return 0;
 }
 
@@ -599,19 +607,20 @@ urecovery_Interact(void *dummy)
 	    UBIK_ADDR_LOCK;
 	    rxcall = rx_NewCall(bestServer->disk_rxcid);
 
-	    ViceLog(0, ("Ubik: Synchronize database via DISK_GetFile to server %s\n",
+	    ViceLog(0, ("Ubik: Synchronize database: receive (via GetFile) "
+			"from server %s begin\n",
 		       afs_inet_ntoa_r(bestServer->addr[0], hoststr)));
 	    UBIK_ADDR_UNLOCK;
 
 	    code = StartDISK_GetFile(rxcall, file);
 	    if (code) {
-		ViceLog(5, ("StartDiskGetFile failed=%d\n", code));
+		ViceLog(0, ("StartDiskGetFile failed=%d\n", code));
 		goto FetchEndCall;
 	    }
 	    nbytes = rx_Read(rxcall, (char *)&length, sizeof(afs_int32));
 	    length = ntohl(length);
 	    if (nbytes != sizeof(afs_int32)) {
-		ViceLog(5, ("Rx-read length error=%d\n", BULK_ERROR));
+		ViceLog(0, ("Rx-read length error=%d\n", BULK_ERROR));
 		code = EIO;
 		goto FetchEndCall;
 	    }
@@ -622,7 +631,7 @@ urecovery_Interact(void *dummy)
 	    code = (*ubik_dbase->setlabel) (ubik_dbase, file, &tversion);
 	    UBIK_VERSION_UNLOCK;
 	    if (code) {
-		ViceLog(5, ("setlabel io error=%d\n", code));
+		ViceLog(0, ("setlabel io error=%d\n", code));
 		goto FetchEndCall;
 	    }
 	    snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP",
@@ -648,7 +657,7 @@ urecovery_Interact(void *dummy)
 #endif
 		nbytes = rx_Read(rxcall, tbuffer, tlen);
 		if (nbytes != tlen) {
-		    ViceLog(5, ("Rx-read bulk error=%d\n", BULK_ERROR));
+		    ViceLog(0, ("Rx-read bulk error=%d\n", BULK_ERROR));
 		    code = EIO;
 		    close(fd);
 		    goto FetchEndCall;
@@ -716,10 +725,17 @@ urecovery_Interact(void *dummy)
 		ubik_dbase->version.epoch = 0;
 		ubik_dbase->version.counter = 0;
 		UBIK_VERSION_UNLOCK;
-		ViceLog(0, ("Ubik: Synchronize database failed (error = %d)\n",
-			   code));
+		ViceLog(0,
+		    ("Ubik: Synchronize database: receive (via GetFile) "
+		    "from server %s failed (error = %d)\n",
+		    afs_inet_ntoa_r(bestServer->addr[0], hoststr), code));
 	    } else {
-		ViceLog(0, ("Ubik: Synchronize database completed\n"));
+		ViceLog(0,
+		    ("Ubik: Synchronize database: receive (via GetFile) "
+		    "from server %s complete, version: %d.%d\n",
+		    afs_inet_ntoa_r(bestServer->addr[0], hoststr),
+		    ubik_dbase->version.epoch, ubik_dbase->version.counter));
+
 		urecovery_state |= UBIK_RECHAVEDB;
 	    }
 	    udisk_Invalidate(ubik_dbase, 0);	/* data has changed */
@@ -798,16 +814,23 @@ urecovery_Interact(void *dummy)
 		UBIK_BEACON_LOCK;
 		if (!ts->up) {
 		    UBIK_BEACON_UNLOCK;
+		    /* It would be nice to have this message at loglevel
+		     * 0 as well, but it will log once every 4s for each
+		     * down server while in this recovery state.  This
+		     * should only be changed to loglevel 0 if it is
+		     * also rate-limited.
+		     */
 		    ViceLog(5, ("recovery cannot send version to %s\n",
 				afs_inet_ntoa_r(inAddr.s_addr, hoststr)));
 		    dbok = 0;
 		    continue;
 		}
 		UBIK_BEACON_UNLOCK;
-		ViceLog(5, ("recovery sending version to %s\n",
-			    afs_inet_ntoa_r(inAddr.s_addr, hoststr)));
+
 		if (vcmp(ts->version, ubik_dbase->version) != 0) {
-		    ViceLog(5, ("recovery stating local database\n"));
+		    ViceLog(0, ("Synchronize database: send (via SendFile) "
+				"to server %s begin\n",
+			    afs_inet_ntoa_r(inAddr.s_addr, hoststr)));
 
 		    /* Rx code to do the Bulk Store */
 		    code = (*ubik_dbase->stat) (ubik_dbase, 0, &ubikstat);
@@ -821,7 +844,7 @@ urecovery_Interact(void *dummy)
 			    StartDISK_SendFile(rxcall, file, length,
 					       &ubik_dbase->version);
 			if (code) {
-			    ViceLog(5, ("StartDiskSendFile failed=%d\n",
+			    ViceLog(0, ("StartDiskSendFile failed=%d\n",
 					code));
 			    goto StoreEndCall;
 			}
@@ -834,13 +857,13 @@ urecovery_Interact(void *dummy)
 						     tbuffer, offset, tlen);
 			    if (nbytes != tlen) {
 				code = UIOERROR;
-				ViceLog(5, ("Local disk read error=%d\n", code));
+				ViceLog(0, ("Local disk read error=%d\n", code));
 				goto StoreEndCall;
 			    }
 			    nbytes = rx_Write(rxcall, tbuffer, tlen);
 			    if (nbytes != tlen) {
 				code = BULK_ERROR;
-				ViceLog(5, ("Rx-write bulk error=%d\n", code));
+				ViceLog(0, ("Rx-write bulk error=%d\n", code));
 				goto StoreEndCall;
 			    }
 			    offset += tlen;
@@ -850,12 +873,24 @@ urecovery_Interact(void *dummy)
 		      StoreEndCall:
 			code = rx_EndCall(rxcall, code);
 		    }
+
 		    if (code == 0) {
 			/* we set a new file, process its header */
 			ts->version = ubik_dbase->version;
 			ts->currentDB = 1;
-		    } else
+			ViceLog(0,
+			    ("Ubik: Synchronize database: send (via SendFile) "
+			    "to server %s complete, version: %d.%d\n",
+			    afs_inet_ntoa_r(inAddr.s_addr, hoststr),
+			    ts->version.epoch, ts->version.counter));
+
+		    } else {
 			dbok = 0;
+			ViceLog(0,
+			    ("Ubik: Synchronize database: send (via SendFile) "
+			     "to server %s failed (error = %d)\n",
+			    afs_inet_ntoa_r(inAddr.s_addr, hoststr), code));
+		    }
 		} else {
 		    /* mark file up to date */
 		    ts->currentDB = 1;

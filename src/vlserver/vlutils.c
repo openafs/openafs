@@ -178,9 +178,15 @@ vlentryread(struct ubik_trans *trans, afs_int32 offset, char *buffer,
 	    nbufp->nextIdHash[i] = ntohl(oep->nextIdHash[i]);
 	nbufp->nextNameHash = ntohl(oep->nextNameHash);
 	memcpy(nbufp->name, oep->name, VL_MAXNAMELEN);
-	memcpy(nbufp->serverNumber, oep->serverNumber, NMAXNSERVERS);
-	memcpy(nbufp->serverPartition, oep->serverPartition, NMAXNSERVERS);
-	memcpy(nbufp->serverFlags, oep->serverFlags, NMAXNSERVERS);
+	memcpy(nbufp->serverNumber, oep->serverNumber, OMAXNSERVERS);
+	memcpy(nbufp->serverPartition, oep->serverPartition, OMAXNSERVERS);
+	memcpy(nbufp->serverFlags, oep->serverFlags, OMAXNSERVERS);
+	/* initilize the last elements to BADSERVERID */
+	for (i = OMAXNSERVERS; i < NMAXNSERVERS; i++) {
+	    nbufp->serverNumber[i] = BADSERVERID;
+	    nbufp->serverPartition[i] = BADSERVERID;
+	    nbufp->serverFlags[i] = BADSERVERID;
+	}
     }
     return 0;
 }

@@ -216,7 +216,7 @@ _GetSecurityObject(struct afscp_cell *cell)
 {
     int code = ENOENT;
 #ifdef HAVE_KERBEROS
-    krb5_context context;
+    krb5_context context = NULL;
     krb5_creds match;
     krb5_creds *cred;
     krb5_ccache cc;
@@ -286,7 +286,6 @@ _GetSecurityObject(struct afscp_cell *cell)
 	krb5_free_cred_contents(context, &match);
 	if (cc)
 	    krb5_cc_close(context, cc);
-	krb5_free_context(context);
 	goto try_anon;
     }
 
@@ -303,7 +302,6 @@ _GetSecurityObject(struct afscp_cell *cell)
 	    krb5_free_cred_contents(context, &match);
 	    if (cc)
 		krb5_cc_close(context, cc);
-	    krb5_free_context(context);
 	    goto try_anon;
 	}
     }
@@ -325,7 +323,10 @@ _GetSecurityObject(struct afscp_cell *cell)
     cell->scindex = 2;
     return 0;
 
-    try_anon:
+ try_anon:
+    if (context != NULL) {
+        krb5_free_context(context);
+    }
 #endif /* HAVE_KERBEROS */
     if (try_anonymous)
 	return _GetNullSecurityObject(cell);

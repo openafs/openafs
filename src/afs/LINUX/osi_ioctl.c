@@ -91,24 +91,31 @@ static long afs_unlocked_ioctl(struct file *file, unsigned int cmd,
     return afs_ioctl(FILE_INODE(file), file, cmd, arg);
 }
 #endif
-
-static struct file_operations afs_syscall_fops = {
-#ifdef HAVE_UNLOCKED_IOCTL
-    .unlocked_ioctl = afs_unlocked_ioctl,
-#else
-    .ioctl = afs_ioctl,
-#endif
-#ifdef HAVE_COMPAT_IOCTL
-    .compat_ioctl = afs_unlocked_ioctl,
-#endif
+#if defined(HAVE_LINUX_STRUCT_PROC_OPS)
+static struct proc_ops afs_syscall_ops = {
+    .proc_ioctl = afs_unlocked_ioctl,
+# ifdef STRUCT_PROC_OPS_HAS_PROC_COMPAT_IOCTL
+    .proc_compat_ioctl = afs_unlocked_ioctl,
+# endif
 };
-
+#else
+static struct file_operations afs_syscall_ops = {
+# ifdef HAVE_UNLOCKED_IOCTL
+    .unlocked_ioctl = afs_unlocked_ioctl,
+# else
+    .ioctl = afs_ioctl,
+# endif
+# ifdef HAVE_COMPAT_IOCTL
+    .compat_ioctl = afs_unlocked_ioctl,
+# endif
+};
+#endif /* HAVE_LINUX_STRUCT_PROC_OPS */
 void
 osi_ioctl_init(void)
 {
     struct proc_dir_entry *entry;
 
-    entry = afs_proc_create(PROC_SYSCALL_NAME, 0666, openafs_procfs, &afs_syscall_fops);
+    entry = afs_proc_create(PROC_SYSCALL_NAME, 0666, openafs_procfs, &afs_syscall_ops);
 #if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
     if (entry)
 	entry->owner = THIS_MODULE;

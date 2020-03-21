@@ -424,7 +424,7 @@ xdr_bytes(XDR * xdrs, char **cpp, u_int * sizep,
 	if (sp == NULL) {
 	    return (FALSE);
 	}
-	/* fall into ... */
+	/* fall through */
 
     case XDR_ENCODE:
 	return (xdr_opaque(xdrs, sp, nodesize));
@@ -547,7 +547,7 @@ xdr_string(XDR * xdrs, char **cpp, u_int maxsize)
 	    return (FALSE);
 	}
 	sp[size] = 0;
-	/* fall into ... */
+	/* fall through */
 
     case XDR_ENCODE:
 	return (xdr_opaque(xdrs, sp, size));

@@ -2219,9 +2219,8 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	    service = tcall->conn->service;
 	    if (QuotaOK(service)) {
 		MUTEX_ENTER(&rx_pthread_mutex);
-		/* XXX - If tcall->entry.next is NULL, then we're no longer
-		 * on a queue at all. This shouldn't happen. */
-		if (tno == rxi_fcfs_thread_num || !tcall->entry.next) {
+		if (tno == rxi_fcfs_thread_num
+			|| opr_queue_IsEnd(&rx_incomingCallQueue, cursor)) {
 		    MUTEX_EXIT(&rx_pthread_mutex);
 		    /* If we're the fcfs thread, then  we'll just use
 		     * this call. If we haven't been able to find an optimal
@@ -2380,7 +2379,7 @@ rx_EndCall(struct rx_call *call, afs_int32 rc)
 	call->abortCount = 0;
     }
 
-    call->arrivalProc = (void (*)())0;
+    call->arrivalProc = NULL;
     if (rc && call->error == 0) {
 	rxi_CallError(call, rc);
         call->app.mode = RX_MODE_ERROR;
@@ -3961,7 +3960,7 @@ rxi_ReceiveDataPacket(struct rx_call *call,
 	    if (call->arrivalProc) {
 		(*call->arrivalProc) (call, call->arrivalProcHandle,
 				      call->arrivalProcArg);
-		call->arrivalProc = (void (*)())0;
+		call->arrivalProc = NULL;
 	    }
 
 	    /* Update last packet received */
@@ -5307,7 +5306,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     if (call->arrivalProc) {
 	(*call->arrivalProc) (call, call->arrivalProcHandle,
 			      call->arrivalProcArg);
-	call->arrivalProc = (void (*)())0;
+	call->arrivalProc = NULL;
     }
 
 
