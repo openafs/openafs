@@ -51,7 +51,7 @@ DOC_PACKAGES = -popenafs-fuse
 # can use dh_install --fail-missing and catch anything new that shows up.
 IGNORE = -XAuthLog -Xaklog_dynamic_auth.8 -Xcopyauth -Xdlog -Xdpass	\
 	-Xfms.log -Xfs_chgrp.1 -Xfs_chown.1 -Xfs_cscpolicy.1		\
-	-Xfs_flushall.1 -Xfs_memdump.1 -Xfs_minidump.1 -Xfs_trace.1	\
+	-Xfs_memdump.1 -Xfs_minidump.1 -Xfs_trace.1	\
 	-Xkadb_check -Xkaserver -Xkdb -Xkdump -Xkpwvalid -Xpagsh.krb	\
 	-Xsymlink -Xtokens.krb -Xuss -Xvldb_convert -Xvsys		\
 	-Xxfs_size_check

@@ -51,6 +51,7 @@ debian/tmp/usr/share/man/man1/fs_diskfree.1           usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_examine.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_exportafs.1          usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_flush.1              usr/share/man/man1
+debian/tmp/usr/share/man/man1/fs_flushall.1           usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_flushmount.1         usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_flushvolume.1        usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_getcalleraccess.1    usr/share/man/man1
