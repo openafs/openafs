@@ -1473,6 +1473,8 @@ DoBosExecutableRestartTimeSet(struct cmd_syndesc *as, void *arock)
 	if (ktime_ParsePeriodic(as->parms[TIME].items->data, &time) == -1) {
 	    ERR_EXT("error parsing time");
 	}
+    } else {
+	ERR_EXT("Mandatory time argument not supplied");
     }
 
     if (!bos_ExecutableRestartTimeSet(bos_server, type, time, &st)) {

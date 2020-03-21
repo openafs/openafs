@@ -152,7 +152,10 @@ setpag(void)
     if (!(conn = rx_connection(&errorcode, "setpag"))) {
 	/* Remote call can't be performed for some reason.
 	 * Try the local 'setpag' system call ... */
-	errorcode = lsetpag();
+	do {
+	    errorcode = lsetpag();
+	} while (errorcode && errno == EINTR);
+
 	return errorcode;
     }
     ngroups = SetClientCreds(&creds, groups);

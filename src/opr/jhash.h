@@ -80,9 +80,12 @@ opr_jhash(const afs_uint32 *k, size_t length, afs_uint32 initval)
     /* All the case statements fall through */
     switch(length) {
       case 3 : c+=k[2];
+	/* fall through */
       case 2 : b+=k[1];
+	/* fall through */
       case 1 : a+=k[0];
 	opr_jhash_final(a, b, c);
+	/* fall through */
       case 0:     /* case 0: nothing left to add */
 	break;
     }

@@ -834,7 +834,8 @@ extern int HandleIoctl(struct vcache *avc, afs_int32 acom,
 /* afs_segments.c */
 extern int afs_StoreAllSegments(struct vcache *avc,
 				struct vrequest *areq, int sync);
-extern int afs_InvalidateAllSegments(struct vcache *avc);
+extern void afs_InvalidateAllSegments(struct vcache *avc);
+extern int  afs_InvalidateAllSegments_once(struct vcache *avc);
 extern int afs_ExtendSegments(struct vcache *avc,
 			      afs_size_t alen, struct vrequest *areq);
 extern int afs_TruncateAllSegments(struct vcache *avc,

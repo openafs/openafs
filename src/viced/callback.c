@@ -1035,6 +1035,7 @@ BreakDelayedCallBacks_r(struct host *host)
     cbstuff.nbreakers++;
     if (!(host->z.hostFlags & RESETDONE) && !(host->z.hostFlags & HOSTDELETED)) {
 	host->z.hostFlags &= ~ALTADDR;	/* alternate addresses are invalid */
+	host->z.hostFlags |= HWHO_INPROGRESS; /* ICBS(3) invokes thread quota */
 	cb_conn = host->z.callback_rxcon;
 	rx_GetConnection(cb_conn);
 	if (host->z.interface) {
@@ -1049,6 +1050,7 @@ BreakDelayedCallBacks_r(struct host *host)
 	cb_conn = NULL;
 	H_LOCK;
 	host->z.hostFlags |= ALTADDR;	/* alternate addresses are valid */
+	host->z.hostFlags &= ~HWHO_INPROGRESS;
 	if (code) {
 	    if (ShowProblems) {
 		ViceLog(0,
@@ -1642,6 +1644,7 @@ ClearHostCallbacks_r(struct host *hp, int locked)
     } else if (!(hp->z.hostFlags & HOSTDELETED)) {
 	/* host is up, try a call */
 	hp->z.hostFlags &= ~ALTADDR;	/* alternate addresses are invalid */
+	hp->z.hostFlags |= HWHO_INPROGRESS;   /* enable host thread quota enforcement */
 	cb_conn = hp->z.callback_rxcon;
 	rx_GetConnection(hp->z.callback_rxcon);
 	if (hp->z.interface) {
@@ -1656,6 +1659,7 @@ ClearHostCallbacks_r(struct host *hp, int locked)
 	cb_conn = NULL;
 	H_LOCK;
 	hp->z.hostFlags |= ALTADDR;	/* alternate addresses are valid */
+	hp->z.hostFlags &= ~HWHO_INPROGRESS;
 	if (code) {
 	    /* failed, mark host down and need reset */
 	    hp->z.hostFlags |= VENUSDOWN;

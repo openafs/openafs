@@ -179,6 +179,7 @@ afs_int32 BlocksSpare = 1024;	/* allow 1 MB overruns */
 afs_int32 PctSpare;
 extern afs_int32 implicitAdminRights;
 extern afs_int32 readonlyServer;
+extern afs_int32 adminwriteServer;
 extern int CopyOnWrite_calls, CopyOnWrite_off0, CopyOnWrite_size0;
 extern afs_fsize_t CopyOnWrite_maxsize;
 
@@ -1007,6 +1008,30 @@ VolumeRootVnode(Vnode * targetptr)
 
 }				/*VolumeRootVnode */
 
+/**
+ * Check if server can perform writes.
+ *
+ * This functions checks if the fileserver is read-only for the client received
+ * as an argument. Read-only fileservers allow write requests for members of
+ * system:administrators when started with both -readonly and -admin-write.
+ *
+ * @param[in]  client  calling user
+ *
+ * @return 1 if not read-only for this user; 0 otherwise
+ */
+static int
+IsWriteAllowed(struct client *client)
+{
+    if (readonlyServer) {
+	if (adminwriteServer && !VanillaUser(client)) {
+	    /* admins can write */
+	    return 1;
+	}
+	return 0;
+    }
+    return 1;
+}
+
 /*
  * Check if target file has the proper access permissions for the Fetch
  * (FetchData, FetchACL, FetchStatus) and Store (StoreData, StoreACL,
@@ -1077,6 +1102,9 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 		      AUD_END);
 	}
     } else {			/* a store operation */
+	if (!IsWriteAllowed(client)) {
+	    return (VREADONLY);
+	}
 	if ((rights & PRSFS_INSERT) && OWNSp(client, targetptr)
 	    && (CallingRoutine != CHK_STOREACL)
 	    && (targetptr->disk.type == vFile)) {
@@ -1085,9 +1113,7 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 	     * unless you are a system administrator */
 	  /******  InStatus->Owner && UnixModeBits better be SET!! */
 	    if (CHOWN(InStatus, targetptr) || CHGRP(InStatus, targetptr)) {
-		if (readonlyServer)
-		    return (VREADONLY);
-		else if (VanillaUser(client))
+		if (VanillaUser(client))
 		    return (EPERM);	/* Was EACCES */
 		else
 		    osi_audit(PrivilegeEvent, 0, AUD_ID,
@@ -1100,9 +1126,6 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 			  (client ? client->z.ViceId : 0), AUD_INT,
 			  CallingRoutine, AUD_END);
 	    } else {
-		if (readonlyServer) {
-		    return (VREADONLY);
-		}
 		if (CallingRoutine == CHK_STOREACL) {
 		    if (!(rights & PRSFS_ADMINISTER)
 			&& !VolumeOwner(client, targetptr))
@@ -1111,9 +1134,7 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 		    /* watch for chowns and chgrps */
 		    if (CHOWN(InStatus, targetptr)
 			|| CHGRP(InStatus, targetptr)) {
-			if (readonlyServer)
-			    return (VREADONLY);
-			else if (VanillaUser(client))
+			if (VanillaUser(client))
 			    return (EPERM);	/* Was EACCES */
 			else
 			    osi_audit(PrivilegeEvent, 0, AUD_ID,
@@ -1127,8 +1148,6 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 #else
 			(InStatus->UnixModeBits & (S_ISUID | S_ISGID)) != 0) {
 #endif
-			if (readonlyServer)
-			    return (VREADONLY);
 			if (VanillaUser(client))
 			    return (EACCES);
 			else
@@ -1137,8 +1156,6 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 				      CallingRoutine, AUD_END);
 		    }
 		    if (CallingRoutine == CHK_STOREDATA) {
-			if (readonlyServer)
-			    return (VREADONLY);
 			if (!(rights & PRSFS_WRITE))
 			    return (EACCES);
 			/* Next thing is tricky.  We want to prevent people
@@ -1166,8 +1183,6 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 #endif
 			    if ((targetptr->disk.type != vDirectory)
 				&& (!(targetptr->disk.modeBits & OWNERWRITE))) {
-			    if (readonlyServer)
-				return (VREADONLY);
 			    if (VanillaUser(client))
 				return (EACCES);
 			    else
@@ -1176,8 +1191,6 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 					  AUD_INT, CallingRoutine, AUD_END);
 			}
 		    } else {	/* a status store */
-			if (readonlyServer)
-			    return (VREADONLY);
 			if (targetptr->disk.type == vDirectory) {
 			    if (!(rights & PRSFS_DELETE)
 				&& !(rights & PRSFS_INSERT))
@@ -2025,9 +2038,10 @@ HandleLocking(Vnode * targetptr, struct client *client, afs_int32 rights, ViceLo
 /* Checks if caller has the proper AFS and Unix (WRITE) access permission to the target directory; Prfs_Mode refers to the AFS Mode operation while rights contains the caller's access permissions to the directory. */
 
 static afs_int32
-CheckWriteMode(Vnode * targetptr, afs_int32 rights, int Prfs_Mode)
+CheckWriteMode(Vnode * targetptr, afs_int32 rights, int Prfs_Mode,
+	       struct client *client)
 {
-    if (readonlyServer)
+    if (!IsWriteAllowed(client))
 	return (VREADONLY);
     if (!(rights & Prfs_Mode))
 	return (EACCES);
@@ -3293,7 +3307,7 @@ SAFSS_RemoveFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     SetVolumeSync(Sync, volptr);
 
     /* Does the caller has delete (& write) access to the parent directory? */
-    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_DELETE))) {
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_DELETE, client))) {
 	goto Bad_RemoveFile;
     }
 
@@ -3432,7 +3446,7 @@ SAFSS_CreateFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     SetVolumeSync(Sync, volptr);
 
     /* Can we write (and insert) onto the parent directory? */
-    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT))) {
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT, client))) {
 	goto Bad_CreateFile;
     }
 
@@ -3626,10 +3640,11 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     /* set volume synchronization information */
     SetVolumeSync(Sync, volptr);
 
-    if ((errorCode = CheckWriteMode(oldvptr, rights, PRSFS_DELETE))) {
+    if ((errorCode = CheckWriteMode(oldvptr, rights, PRSFS_DELETE, client))) {
 	goto Bad_Rename;
     }
-    if ((errorCode = CheckWriteMode(newvptr, newrights, PRSFS_INSERT))) {
+    if ((errorCode = CheckWriteMode(newvptr, newrights, PRSFS_INSERT,
+				    client))) {
 	goto Bad_Rename;
     }
 
@@ -3709,7 +3724,7 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
         goto Bad_Rename;
     }
     if (!code) {
-	if (readonlyServer) {
+	if (!IsWriteAllowed(client)) {
 	    errorCode = VREADONLY;
 	    goto Bad_Rename;
 	}
@@ -4085,7 +4100,7 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     SetVolumeSync(Sync, volptr);
 
     /* Does the caller has insert (and write) access to the parent directory? */
-    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT)))
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT, client)))
 	goto Bad_SymLink;
 
     /*
@@ -4094,7 +4109,7 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
      * to do this.
      */
     if ((InStatus->Mask & AFS_SETMODE) && !(InStatus->UnixModeBits & 0111)) {
-	if (readonlyServer) {
+	if (!IsWriteAllowed(client)) {
 	    errorCode = VREADONLY;
 	    goto Bad_SymLink;
 	}
@@ -4265,7 +4280,7 @@ SAFSS_Link(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     SetVolumeSync(Sync, volptr);
 
     /* Can the caller insert into the parent directory? */
-    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT))) {
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT, client))) {
 	goto Bad_Link;
     }
 
@@ -4449,10 +4464,11 @@ SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
      * implcit a access that goes with dir ownership, and proceed to
      * subvert quota in the volume.
      */
-    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT))
-	|| (errorCode = CheckWriteMode(parentptr, rights, PRSFS_WRITE))) {
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT, client))
+	|| (errorCode = CheckWriteMode(parentptr, rights, PRSFS_WRITE,
+				       client))) {
 #else
-    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT))) {
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT, client))) {
 #endif /* DIRCREATE_NEED_WRITE */
 	goto Bad_MakeDir;
     }
@@ -4598,7 +4614,7 @@ SAFSS_RemoveDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     SetVolumeSync(Sync, volptr);
 
     /* Does the caller has delete (&write) access to the parent dir? */
-    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_DELETE))) {
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_DELETE, client))) {
 	goto Bad_RemoveDir;
     }
 
@@ -5997,7 +6013,7 @@ SRXAFS_SetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
 			  &rights, &anyrights)))
 	goto Bad_SetVolumeStatus;
 
-    if (readonlyServer) {
+    if (!IsWriteAllowed(client)) {
 	errorCode = VREADONLY;
 	goto Bad_SetVolumeStatus;
     }

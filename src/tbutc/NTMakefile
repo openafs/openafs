@@ -70,7 +70,8 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	     $(DESTDIR)\lib\afsrpc.lib \
              $(DESTDIR)\lib\afsrxkad.lib \
 	     $(DESTDIR)\lib\afs\mtafsubik.lib \
-             $(DESTDIR)\lib\afs\afsutil.lib \
+             $(DESTDIR)\lib\afs\mtafsutil.lib \
+             $(DESTDIR)\lib\afs\afsaudit.lib \
              $(DESTDIR)\lib\afs\afsusd.lib \
 	     $(DESTDIR)\lib\afs\afspioctl.lib \
              $(DESTDIR)\lib\afs\afscmd.lib \

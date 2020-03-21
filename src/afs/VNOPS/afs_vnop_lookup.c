@@ -58,7 +58,7 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
     struct VenusFid tfid;
     struct cell *tcell;
     char *cpos, *volnamep = NULL;
-    char *buf, *endptr;
+    char *endptr;
     afs_int32 prefetch;		/* 1=>None  2=>RO  3=>BK */
     afs_int32 mtptCell, assocCell = 0, hac = 0;
     afs_int32 samecell, roname, len;
@@ -200,24 +200,6 @@ EvalMountData(char type, char *data, afs_uint32 states, afs_uint32 cellnum,
 				WRITE_LOCK);
     }
 
-    /* Still not found. If we are looking for the RO, then perhaps the RW 
-     * doesn't exist? Try adding ".readonly" to volname and look for that.
-     * Don't know why we do this. Would have still found it in above call - jpm.
-     */
-    if (!tvp && (prefetch == 2) && len < AFS_SMALLOCSIZ - 10) {
-	buf = osi_AllocSmallSpace(len + 10);
-
-	strcpy(buf, volnamep);
-	afs_strcat(buf, ".readonly");
-
-	tvp = afs_GetVolumeByName(buf, mtptCell, 1, areq, WRITE_LOCK);
-
-	/* Try the associated linked cell if failed */
-	if (!tvp && hac && areq->volumeError) {
-	    tvp = afs_GetVolumeByName(buf, assocCell, 1, areq, WRITE_LOCK);
-	}
-	osi_FreeSmallSpace(buf);
-    }
     /* done with volname */
     if (cpos)
 	*cpos = ':';

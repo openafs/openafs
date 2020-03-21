@@ -6,10 +6,20 @@ usage() {
     exec >&2
 
     echo 'Usage: pkgbuild.sh [-x] [--app-key <appkey>] [--inst-key <instkey>]'
+    echo '                   [--apple-id <appleid> <password>]'
     echo '                   [--pass N] [--csdb <CellServDB>] <binary-dir>'
     echo
     echo '--app-key and --inst-key are for signing. -x prints all comamnds as '
-    echo 'they are run.'
+    echo 'they are run. --apple-id is for notarizing.'
+    echo
+    echo 'Note: the password associated with <appleid> can be a reference to a'
+    echo 'keychain item. Including your password as cleartext is not'
+    echo 'recommended. e.g.'
+    echo
+    echo '--apple-id foo@bar.com "@keychain:PASSWORD"'
+    echo
+    echo 'In this case, keychain must hold a keychain item named PASSWORD with'
+    echo 'an account matching foo@bar.com.'
     echo
     echo 'By default, all passes are run. Available passes:'
     echo '    --pass 1: prepare pkgroot'
@@ -30,8 +40,12 @@ PASS2=
 
 APP_KEY=
 INST_KEY=
+APPLE_ID=
+APPLE_PW=
 DEST_DIR=
 CSDB=
+
+CODESIGN_OPTS=
 
 while [ x"$#" != x0 ] ; do
     key="$1"
@@ -44,6 +58,12 @@ while [ x"$#" != x0 ] ; do
 	;;
     --inst-key)
 	INST_KEY="$1"
+	shift
+	;;
+    --apple-id)
+	APPLE_ID="$1"
+	shift
+	APPLE_PW="$1"
 	shift
 	;;
     --csdb)
@@ -139,6 +159,10 @@ elif [ x"$majorvers" = x18 ]; then
     RELNAME="Mojave"
     THISREL=14
 
+elif [ x"$majorvers" = x19 ]; then
+    RELNAME="Catalina"
+    THISREL=15
+
 elif [ x"$majorvers" = x ] ; then
     echo "Error running uname" >&2
     exit 1
@@ -146,6 +170,11 @@ elif [ x"$majorvers" = x ] ; then
 else
     echo "Unknown major version $majorvers" >&2
     exit 1
+fi
+
+if [ $THISREL -ge 14 ]; then
+    # Enable the Hardened Runtime capability, required as of 10.14.5.
+    CODESIGN_OPTS="--options runtime"
 fi
 
 SEP=:
@@ -322,8 +351,12 @@ if [ x"$PASS1" = x1 ]; then
 		   "$PKGROOT"/Library/OpenAFS/Tools/tools/aklog.bundle \
 		   "$PLUGINS"/afscell.bundle
 	do
-	    codesign --verbose --force --timestamp --sign "$APP_KEY" "$obj"
+	    codesign --verbose --force --timestamp --sign "$APP_KEY" $CODESIGN_OPTS "$obj"
 	done
+
+	# To be notarized by Apple, all files must be signed.
+	find "$PKGROOT" -type f -exec codesign --verbose --force \
+	    --timestamp --sign "$APP_KEY" $CODESIGN_OPTS {} \;
 
 	# Check if our signatures for our kexts are valid. 'kextutil' will exit
 	# with an error and print out a message if something is wrong with the
@@ -504,4 +537,9 @@ if [ x"$PASS2" = x1 ]; then
 
     echo
     echo "Created $CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME".dmg
+
+    if [ x"$APPLE_ID" != x ] ; then
+	echo "Notarizing package..."
+	./notarize.pl "$APPLE_ID" "$APPLE_PW" "$CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME.dmg"
+    fi
 fi

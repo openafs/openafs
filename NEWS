@@ -1,5 +1,88 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.6 (in progress)
+
+  All platforms
+
+    * Address warnings and errors encountered when building OpenAFS with
+      modern compilers like gcc9 or recent clang (13727..45 13749..50 13756
+      13846 13879)
+
+    * Avoid some rare cases of Rx calls getting stuck in the incoming queue
+      (13892)
+
+    * Display the usage of simple commands (commands without subcommands) when
+      run only with the -help option (13894)
+
+    * Fix a memory leak in the cache manager and the fileserver while
+      processing "fs uuid" or "fs setcbaddr" (13899)
+
+    * Fix a memory leak when reopening krb local realms configuration (13900)
+
+    * Avoid possible crashes when freeing kerberos contexts (13902)
+
+  All server platforms
+
+    * Do not leave empty directories behind in the file server vice partition
+      when running the "vos zap -force" command (13896 13897)
+
+    * Relax the length limits on some membership lists used in ptserver RPCs,
+      introduced in release 1.8.0 to prevent denial of service attacks, to
+      accommodate use cases of some larger existing sites (13844)
+
+    * Improved diagnostics and error messages (13898 13906..8 13938)
+
+    * Ensure that fileservers running in readonly mode actually reject all
+      write requests, but introduce a -admin-write switch allowing writes
+      by members of the system:administrators group (14018 14019)
+
+  All client platforms
+
+    * Require the -insecure_des switch to be passed to aklog and klog.krb5
+      to make them work with single-DES encryption types (13791)
+
+    * Avoid a panic due to a retryable error - retry in a background request
+      instead (13847)
+
+    * Avoid blocking other functions on the completion of some potentially
+      long-running RPCs issued by the server (13893)
+
+    * Fix a potential memory leak in "fs getserverprefs" when the pioctl fails
+      with E2BIG (13895)
+
+    * Avoid the local cache incorrectly reflecting the state of a file on the
+      fileserver after flushing large chunks of data to the server. This
+      issue was present on FreeBSD clients, but probably not Linux/Solaris
+      ones (13951) (RT #135041)
+
+    * After a VLDB lookup of a read-write volume already failed, don't bother
+      looking up corresponding read-only or backup volumes since those lookups
+      are bound to fail, in order to make the client more responsive and
+      avoid unnecessary load on the vlserver (13968)
+
+    * Allow a "vos rename" to succeed if the new volume name is the same as
+      that in the current VLDB, to make it possible to complete a previously
+      interrupted volume rename (14055)
+
+  Linux clients
+
+    * Support mainline kernels up to and including 5.6-rc2 (14069)
+
+    * Make builds succeed with --enable-checking for mainline kernels
+      5.3-rc2 and later (13910)
+
+    * Avoid possible deadlocks (13748 13765)
+
+  macOS
+
+    * Support building, packaging and notarization on macOS 10.15 "Catalina"
+      (14031..7 14068)
+
+  Microsoft Windows
+
+    * Build fixes (13848..52)
+
+
 OpenAFS 1.8.5
 
 All platforms

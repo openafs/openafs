@@ -105,7 +105,7 @@ afs_UFSWriteUIO(struct vcache *avc, afs_dcache_id_t *inode, struct uio *tuiop)
 
     tfile = (struct osi_file *)osi_UFSOpen(inode);
     if (!tfile)
-	return -1;
+	return EIO;
 
 #if defined(AFS_AIX41_ENV)
     AFS_GUNLOCK();
@@ -302,9 +302,16 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
 #else
     afs_FakeOpen(avc);
 #endif
-    avc->f.states |= CDirty;
 
     while (totalLength > 0) {
+	/*
+	 * Note that we must set CDirty for every iteration of this loop.
+	 * CDirty may get cleared below (such as during afs_DoPartialStore),
+	 * but we're still writing to the file, so make sure CDirty is set
+	 * here.
+	 */
+	avc->f.states |= CDirty;
+
 	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, treq,
 					 noLock);
 	if (!tdc) {

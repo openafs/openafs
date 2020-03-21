@@ -234,7 +234,7 @@ main(int argc, char **argv)
     keymap_BindToString(frameB->keymap, "a", SwitchToACmd, NULL, NULL);
     keymap_BindToString(frameB->keymap, "b", StupidCmd, NULL, NULL);
     keymap_BindToString(frameB->keymap, "d", NoCallCmd, NULL, NULL);
-    keymap_BindToString(frameB->keymap, "d", (int (*)())0, NULL, NULL);
+    keymap_BindToString(frameB->keymap, "d", NULL, NULL, NULL);
     keymap_BindToString(frameB->keymap, "\033d", NoCallCmd, NULL, NULL);
     gtxframe_AddMenu(frameB, "FrameA", "a");
 

@@ -162,6 +162,8 @@ afs_pag_sleep(afs_ucred_t **acred)
 static int
 afs_pag_wait(afs_ucred_t **acred)
 {
+    int code = 0;
+
     if (afs_pag_sleep(acred)) {
 	if (!afs_pag_sleepcnt) {
 	    afs_warn("%s() PAG throttling triggered, pid %d... sleeping.  sleepcnt %d\n",
@@ -171,14 +173,13 @@ afs_pag_wait(afs_ucred_t **acred)
 	afs_pag_sleepcnt++;
 
 	do {
-	    /* XXX spins on EINTR */
-	    afs_osi_Wait(1000, (struct afs_osi_WaitHandle *)0, 0);
-	} while (afs_pag_sleep(acred));
+	    code = afs_osi_Wait(1000, (struct afs_osi_WaitHandle *)0, 0);
+	} while (!code && afs_pag_sleep(acred));
 
 	afs_pag_sleepcnt--;
     }
 
-    return 0;
+    return code;
 }
 
 int
@@ -212,7 +213,10 @@ afs_setpag(void)
 
     AFS_STATCNT(afs_setpag);
 
-    afs_pag_wait(acred);
+    code = afs_pag_wait(acred);
+    if (code) {
+	goto done;
+    }
 
 
 #if	defined(AFS_SUN5_ENV)
@@ -271,6 +275,7 @@ afs_setpag(void)
     code = AddPag(genpag(), &u.u_cred);
 #endif
 
+  done:
     afs_Trace1(afs_iclSetp, CM_TRACE_SETPAG, ICL_TYPE_INT32, code);
 
 #if defined(KERNEL_HAVE_UERROR)
@@ -322,7 +327,10 @@ afs_setpag_val(int pagval)
 
     AFS_STATCNT(afs_setpag);
 
-    afs_pag_wait(acred);
+    code = afs_pag_wait(acred);
+    if (code) {
+	goto done;
+    }
 
 #if	defined(AFS_SUN5_ENV)
     code = AddPag(pagval, credpp);
@@ -372,6 +380,7 @@ afs_setpag_val(int pagval)
     code = AddPag(pagval, &u.u_cred);
 #endif
 
+  done:
     afs_Trace1(afs_iclSetp, CM_TRACE_SETPAG, ICL_TYPE_INT32, code);
 #if defined(KERNEL_HAVE_UERROR)
     if (!getuerror())

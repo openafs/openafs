@@ -411,11 +411,13 @@ _afsconf_FreeRealms(struct afsconf_dir *dir)
 	if (dir->local_realms) {
 	    destroy_tree(dir->local_realms);
 	    free_realm_entries(&dir->local_realms->list);
+	    free(dir->local_realms);
 	    dir->local_realms = NULL;
 	}
 	if (dir->exclusions) {
 	    destroy_tree(dir->exclusions);
 	    free_realm_entries(&dir->exclusions->list);
+	    free(dir->exclusions);
 	    dir->exclusions = NULL;
 	}
     }
@@ -485,10 +487,12 @@ _afsconf_LoadRealms(struct afsconf_dir *dir)
     if (local_realms) {
 	destroy_tree(local_realms);
 	free_realm_entries(&local_realms->list);
+	free(local_realms);
     }
     if (exclusions) {
 	destroy_tree(dir->exclusions);
 	free_realm_entries(&exclusions->list);
+	free(exclusions);
     }
     return code;
 }

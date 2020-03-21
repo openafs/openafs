@@ -21,6 +21,7 @@ rx_EventPost
 rx_Finalize
 rx_GetCachedConnection
 rx_GetCall
+rx_GetCallStatus
 rx_GetIFInfo
 rx_Init
 rx_NewCall

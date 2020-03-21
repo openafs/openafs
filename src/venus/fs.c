@@ -761,7 +761,7 @@ QuickPrintSpace(VolumeStatus * status, char *name, int human)
 static char *
 AclToString(struct Acl *acl)
 {
-    static char mydata[AFS_PIOCTL_MAXSIZE];
+    static char mydata[AFS_PIOCTL_MAXSIZE + 24];
     char tstring[AFS_PIOCTL_MAXSIZE];
     char dfsstring[AFS_PIOCTL_MAXSIZE];
     struct AclEntry *tp;
@@ -3326,6 +3326,9 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
 	    if (code) {
 		if ((errno != E2BIG) || (2 * blob.out_size > 0x7FFF)) {
 		    perror("getserverprefs pioctl");
+		    if (blob.out != space) {
+			free(blob.out);
+		    }
 		    return 1;
 		}
 		blob.out_size *= 2;

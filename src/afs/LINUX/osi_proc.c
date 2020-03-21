@@ -124,12 +124,21 @@ afs_csdb_open(struct inode *inode, struct file *file)
     return seq_open(file, &afs_csdb_op);
 }
 
+#if defined(HAVE_LINUX_STRUCT_PROC_OPS)
+static struct proc_ops afs_csdb_operations = {
+    .proc_open    = afs_csdb_open,
+    .proc_read    = seq_read,
+    .proc_lseek  = seq_lseek,
+    .proc_release = seq_release,
+};
+#else
 static struct file_operations afs_csdb_operations = {
     .open    = afs_csdb_open,
     .read    = seq_read,
     .llseek  = seq_lseek,
     .release = seq_release,
 };
+#endif /* HAVE_LINUX_STRUCT_PROC_OPS */
 
 static void *
 uu_start(struct seq_file *m, loff_t *pos)
@@ -284,13 +293,21 @@ afs_unixuser_open(struct inode *inode, struct file *file)
     return seq_open(file, &afs_unixuser_seqop);
 }
 
-static struct file_operations afs_unixuser_fops = {
+#if defined(HAVE_LINUX_STRUCT_PROC_OPS)
+static struct proc_ops afs_unixuser_ops = {
+    .proc_open = afs_unixuser_open,
+    .proc_read = seq_read,
+    .proc_lseek = seq_lseek,
+    .proc_release = seq_release,
+};
+#else
+static struct file_operations afs_unixuser_ops = {
     .open    = afs_unixuser_open,
     .read    = seq_read,
     .llseek  = seq_lseek,
     .release = seq_release,
 };
-
+#endif /* HAVE_LINUX_STRUCT_PROC_OPS */
 
 #else /* HAVE_LINUX_SEQ_FILE_H */
 
@@ -381,7 +398,7 @@ osi_proc_init(void)
     openafs_procfs = proc_mkdir(path, NULL);
 #endif
 #ifdef HAVE_LINUX_SEQ_FILE_H
-    entry = afs_proc_create("unixusers", 0, openafs_procfs, &afs_unixuser_fops);
+    entry = afs_proc_create("unixusers", 0, openafs_procfs, &afs_unixuser_ops);
 # if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
     if (entry)
 	entry->owner = THIS_MODULE;

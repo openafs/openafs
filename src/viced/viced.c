@@ -128,6 +128,7 @@ int rxMaxMTU = -1;
 afs_int32 implicitAdminRights = PRSFS_LOOKUP;	/* The ADMINISTER right is
 						 * already implied */
 afs_int32 readonlyServer = 0;
+afs_int32 adminwriteServer = 0;
 
 int stackSize = 24000;
 int fiveminutes = 300;		/* 5 minutes.  Change this for debugging only */
@@ -891,6 +892,7 @@ enum optionsList {
     OPT_implicit,
     OPT_lock,
     OPT_readonly,
+    OPT_adminwrite,
     OPT_saneacls,
     OPT_buffers,
     OPT_callbacks,
@@ -984,6 +986,9 @@ ParseArgs(int argc, char *argv[])
 #endif
     cmd_AddParmAtOffset(opts, OPT_readonly, "-readonly", CMD_FLAG,
 			CMD_OPTIONAL, "be a readonly fileserver");
+    cmd_AddParmAtOffset(opts, OPT_adminwrite, "-admin-write", CMD_FLAG,
+			CMD_OPTIONAL, "if read-only, allow writes for users "
+			"from system:administrators");
     cmd_AddParmAtOffset(opts, OPT_saneacls, "-saneacls", CMD_FLAG,
 		        CMD_OPTIONAL, "set the saneacls capability bit");
 
@@ -1185,6 +1190,7 @@ ParseArgs(int argc, char *argv[])
     cmd_OptionAsFlag(opts, OPT_lock, &SawLock);
 #endif
     cmd_OptionAsFlag(opts, OPT_readonly, &readonlyServer);
+    cmd_OptionAsFlag(opts, OPT_adminwrite, &adminwriteServer);
     cmd_OptionAsFlag(opts, OPT_saneacls, &saneacls);
     cmd_OptionAsInt(opts, OPT_buffers, &buffs);
 

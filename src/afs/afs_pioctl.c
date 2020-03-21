@@ -5244,6 +5244,7 @@ DECL_PIOCTL(PCallBackAddr)
 	}
 	afs_PutConn(tc, rxconn, SHARED_LOCK);	/* done with it now */
     }				/* Outer loop over addrs */
+    afs_osi_Free(addrs, srvAddrCount * sizeof(*addrs));
 #endif /* UKERNEL */
     return 0;
 }

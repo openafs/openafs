@@ -4188,25 +4188,39 @@ VolserStatus(struct cmd_syndesc *as, void *arock)
 static int
 RenameVolume(struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 code1, code2, code;
+    afs_int32 code;
     struct nvldbentry entry;
+    struct nvldbentry entry2;
 
-    code1 = VLDB_GetEntryByName(as->parms[0].items->data, &entry);
-    if (code1) {
+    /* Get the entry of the volume to be renamed (-oldname), by name or id. */
+    code = VLDB_GetEntryByName(as->parms[0].items->data, &entry);
+    if (code) {
 	fprintf(STDERR, "vos: Could not find entry for volume %s\n",
 		as->parms[0].items->data);
-	exit(1);
-    }
-    code2 = VLDB_GetEntryByName(as->parms[1].items->data, &entry);
-    if ((!code1) && (!code2)) {	/*the newname already exists */
-	fprintf(STDERR, "vos: volume %s already exists\n",
-		as->parms[1].items->data);
+	PrintError("", code);
 	exit(1);
     }
 
-    if (code1 && code2) {
-	fprintf(STDERR, "vos: Could not find entry for volume %s or %s\n",
-		as->parms[0].items->data, as->parms[1].items->data);
+    /*
+     * Verify the new name is available before attempting to rename.
+     * Allow renaming of the same volume in order to complete a
+     * previously interrupted rename.
+     */
+    code = VLDB_GetEntryByName(as->parms[1].items->data, &entry2);
+    if (code != 0 && code != VL_NOENT) {
+	fprintf(STDERR, "vos: Could not check entry for volume %s\n",
+		as->parms[1].items->data);
+	PrintError("", code);
+	exit(1);
+    }
+    if (code == 0 && entry.volumeId[RWVOL] != entry2.volumeId[RWVOL]) {
+	fprintf(STDERR, "vos: Cannot rename volume %s (%lu) to %s;"
+			" volume %s (%lu) already exists\n",
+			as->parms[0].items->data,
+			(unsigned long)entry.volumeId[RWVOL],
+			as->parms[1].items->data,
+			as->parms[1].items->data,
+			(unsigned long)entry2.volumeId[RWVOL]);
 	exit(1);
     }
     if (!VolNameOK(as->parms[0].items->data)) {

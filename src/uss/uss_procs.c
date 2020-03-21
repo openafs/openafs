@@ -664,7 +664,7 @@ uss_procs_PickADir(char *path, char *cp)
     int i, count, MinIndex = 0, mina = 10000;
     struct dirent *dp;
     DIR *dirp;
-    char dirname[300];
+    char dirname[301];
 
     if (uss_NumGroups == 0) {
 	fprintf(stderr, "%s: No choice yet given to replace $AUTO\n",
@@ -698,7 +698,7 @@ uss_procs_PickADir(char *path, char *cp)
      * each and pick the minimum.
      */
     for (i = 0; i < uss_NumGroups; i++) {
-	sprintf(dirname, "%s/%s", cd, uss_DirPool[i]);
+	snprintf(dirname, sizeof(dirname), "%s/%s", cd, uss_DirPool[i]);
 	if ((dirp = opendir(dirname)) == NULL) {
 	    if (errno != ENOTDIR)
 		fprintf(stderr,
@@ -771,7 +771,9 @@ uss_procs_FindAndOpen(char *a_fileToOpen)
 
     FILE *rv;			/*Template file descriptor */
     int i;			/*Loop counter */
-    char tmp_str[uss_MAX_SIZE];	/*Tmp string */
+    char *tmp_str;		/*Points to the name of the file */
+				/* -> a_fileToOpen or -> buffer @tmp_str_free */
+    char *tmp_str_free = NULL;  /*Dynamically built filename */
     static char
       TemplatePath[NUM_TPL_PATHS][1024];	/*Template directories */
     int cant_read;		/*Can't read the file? */
@@ -780,13 +782,14 @@ uss_procs_FindAndOpen(char *a_fileToOpen)
      * If a full pathname was given, just take it as is.
      */
     if (strchr(a_fileToOpen, '/')) {
-	strcpy(tmp_str, a_fileToOpen);
+	tmp_str = a_fileToOpen;
 	rv = fopen(a_fileToOpen, "r");
     } else {
 	/*
 	 * A relative pathname was given.  Try to find the file in each of
 	 * the default template directories.
 	 */
+	int mem_error = 0;
 	cant_read = 0;
 
 	sprintf(TemplatePath[0], "%s", ".");
@@ -794,7 +797,19 @@ uss_procs_FindAndOpen(char *a_fileToOpen)
 	sprintf(TemplatePath[2], "%s", "/etc");
 
 	for (i = 0; i < NUM_TPL_PATHS; i++) {
-	    sprintf(tmp_str, "%s/%s", TemplatePath[i], a_fileToOpen);
+	    int code;
+	    free(tmp_str_free);
+	    tmp_str_free = NULL;
+	    code = asprintf(&tmp_str_free, "%s/%s",
+			    TemplatePath[i], a_fileToOpen);
+	    if (code == -1) {
+		tmp_str_free = NULL;
+		mem_error = 1;
+		rv = NULL;
+		break;
+	    }
+	    tmp_str = tmp_str_free;
+
 	    if ((rv = fopen(tmp_str, "r")) != NULL)
 		break;
 
@@ -821,7 +836,11 @@ uss_procs_FindAndOpen(char *a_fileToOpen)
 	     * Check to see if we specifically found the file but
 	     * couldn't read it.
 	     */
-	    if (cant_read)
+	    if (mem_error) {
+		fprintf(stderr, "%s: Error allocating memory\n",
+			uss_whoami);
+	    }
+	    else if (cant_read)
 		fprintf(stderr, "%s: Can't open template '%s': %s\n",
 			uss_whoami, tmp_str, strerror(errno));
 	    else {
@@ -837,6 +856,7 @@ uss_procs_FindAndOpen(char *a_fileToOpen)
     /*
      * Whatever happened, return what we got.
      */
+    free(tmp_str_free);
     return (rv);
 
 }				/*uss_procs_FindAndOpen */
