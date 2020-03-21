@@ -1,13 +1,13 @@
 # Italian translation of openafs debconf messages
 # Copyright (C) 2012 openafs package copyright holder
 # This file is distributed under the same license as the openafs package.
-# Beatrice Torracca <beatricet@libero.it>, 2012, 2013.
+# Beatrice Torracca <beatricet@libero.it>, 2012, 2013, 2020.
 msgid ""
 msgstr ""
 "Project-Id-Version: openafs\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
 "POT-Creation-Date: 2017-07-10 15:27-0500\n"
-"PO-Revision-Date: 2013-04-21 13:21+0200\n"
+"PO-Revision-Date: 2020-02-29 14:16+0100\n"
 "Last-Translator: Beatrice Torracca <beatricet@libero.it>\n"
 "Language-Team: Italian <debian-l10n-italian@lists.debian.org>\n"
 "Language: it\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Virtaal 0.7.1\n"
+"X-Generator: Poedit 2.2.4\n"
 
 #. Type: string
 #. Description
@@ -95,13 +95,6 @@ msgstr "Eseguire il client Openafs ora e all'avvio?"
 #. Type: boolean
 #. Description
 #: ../openafs-client.templates:4001
-#, fuzzy
-#| msgid ""
-#| "Normally, most users who install the openafs-client package expect AFS to "
-#| "be mounted automatically at boot.  However, if you are planning on "
-#| "setting up a new cell or are on a laptop, you may not want it started at "
-#| "boot time.  If you choose not to start AFS at boot, run /etc/init.d/"
-#| "openafs-client force-start to start the client when you wish to run it."
 msgid ""
 "Normally, most users who install the openafs-client package expect AFS to be "
 "mounted automatically at boot.  However, if you are planning on setting up a "
@@ -113,7 +106,7 @@ msgstr ""
 "client si aspetta che AFS venga automaticamente montato all'avvio. Tuttavia, "
 "se si ha intenzione di impostare una nuova cella o se si usa un portatile, "
 "si potrebbe non volerlo eseguire all'avvio. Se si sceglie di non eseguire "
-"AFS all'avvio, eseguire /etc/init.d/openafs-client force-start per avviare "
+"AFS all'avvio, eseguire \"service openafs-client force-start\" per avviare "
 "il client al momento desiderato."
 
 #. Type: boolean
