@@ -54,6 +54,7 @@ libafsrpc.so.2 libafsrpc2 #MINVER#
  rx_GetCachedConnection@Base 1.8.0~pre1
  rx_GetCall@Base 1.8.0~pre1
  rx_GetCallAbortCode@Base 1.8.1~pre2
+ rx_GetCallStatus@Base 1.8.6~pre1
  rx_GetConnectionEpoch@Base 1.8.0~pre1
  rx_GetConnectionId@Base 1.8.0~pre1
  rx_GetIFInfo@Base 1.8.0~pre1
