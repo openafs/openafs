@@ -3,8 +3,8 @@ Section: net
 Priority: optional
 Maintainer: Benjamin Kaduk <kaduk@mit.edu>
 Uploaders: Sam Hartman <hartmans@debian.org>, Anders Kaseorg <andersk@mit.edu>
-Build-Depends: debhelper (>= 9.20160709~), autoconf, automake, bison, comerr-dev,
- cpio, flex, libfuse-dev, libkrb5-dev, libncurses5-dev,
+Build-Depends: debhelper, debhelper-compat (= 12), autoconf, automake, bison,
+ comerr-dev, cpio, flex, libfuse-dev, libkrb5-dev, libncurses5-dev,
  libpam0g-dev, libxml2-utils, perl, pkg-config,
  libtool, heimdal-multidev (>= 1.7~git20150920)
 Build-Depends-Indep: dblatex, dkms (>= 2.1.1.1), docbook-xsl, doxygen (>= 1.8.4-1~),
@@ -17,6 +17,7 @@ Vcs-Browser: https://salsa.debian.org/debian/openafs
 Package: openafs-client
 Architecture: alpha amd64 arm arm64 armel armhf i386 ia64 powerpc powerpcspe ppc64 ppc64el s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}, lsb-base (>= 3.0-6)
+Pre-Depends: ${misc:Pre-Depends}
 Recommends: lsof, openafs-modules-dkms (>= ${source:Version})
  | openafs-modules-source (>= ${source:Version})
  | openafs-modules3
@@ -51,6 +52,7 @@ Package: openafs-fileserver
 Architecture: alpha amd64 arm arm64 armel armhf i386 ia64 powerpc powerpcspe ppc64 ppc64el s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}, lsb-base (>= 3.0-6), openafs-client,
  openafs-krb5 (>= 1.8.0~pre1-1)
+Pre-Depends: ${misc:Pre-Depends}
 Recommends: ntp | time-daemon
 Suggests: openafs-doc
 Description: AFS distributed filesystem file server

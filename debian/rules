@@ -48,7 +48,7 @@ HTML_XSL   = /usr/share/xml/docbook/stylesheet/nwalsh/html/chunk.xsl
 DOC_PACKAGES = -popenafs-fuse
 
 # These are files that we know we don't want to install.  List them so that we
-# can use dh_install --fail-missing and catch anything new that shows up.
+# can use dh_missing --fail-missing and catch anything new that shows up.
 IGNORE = -XAuthLog -Xaklog_dynamic_auth.8 -Xcopyauth -Xdlog -Xdpass	\
 	-Xfms.log -Xfs_chgrp.1 -Xfs_chown.1 -Xfs_cscpolicy.1		\
 	-Xfs_memdump.1 -Xfs_minidump.1 -Xfs_trace.1	\
@@ -86,8 +86,9 @@ get-orig-source:
 	    | xz > 'openafs_$(DEBVERS).orig.tar.xz'
 
 # Use dh for most actions, with overrides below.
+# openafs provides regen.sh that supersedes autoreconf.
 %:
-	dh $@ --with-systemd
+	dh $@ --without-autoreconf
 
 # Handle the renaming of the up man page to afs-up here since the man pages
 # are generated from POD source by regen.sh.
@@ -153,7 +154,7 @@ override_dh_auto_install:
 # that scripts we install are executable
 override_dh_install-arch:
 	chmod +x debian/afs-rootvol debian/afs-newcell
-	dh_install --fail-missing $(IGNORE)
+	dh_install $(IGNORE)
 
 	mv debian/openafs-client/usr/bin/pagsh \
 	    debian/openafs-client/usr/bin/pagsh.openafs
@@ -227,9 +228,11 @@ override_dh_install-indep:
 
 # We don't want to stop the init scripts on upgrade.
 override_dh_installinit:
-	dh_systemd_enable
 	dh_installinit -popenafs-client -r
 	dh_installinit -popenafs-fileserver -r
+
+override_dh_installsystemd:
+	dh_installsystemd -r
 
 # Symlink /usr/share/doc for some packages.
 override_dh_installdocs:
@@ -239,6 +242,10 @@ override_dh_installdocs:
 # Install the upstream NEWS file as the upstream changelog.
 override_dh_installchangelogs:
 	dh_installchangelogs NEWS
+
+# We want --fail-missing behavior, but --list-missing is the default
+override_dh_missing:
+	dh_missing --fail-missing $(IGNORE)
 
 # Override some of our permissions.
 override_dh_fixperms-arch:

@@ -16,6 +16,7 @@ openafs (1.8.6~pre1-1) UNRELEASED; urgency=medium
   * Fix typo preventing ppc64el support from working (Closes: #946520)
   * Update Italian debconf translation; thanks Beatrice Torracca
     (Closes: #952799)
+  * Update to debhelper-compat 12
 
  -- Benjamin Kaduk <kaduk@mit.edu>  Sat, 21 Mar 2020 10:23:31 -0700
 
