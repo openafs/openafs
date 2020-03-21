@@ -12,6 +12,7 @@ openafs (1.8.6~pre1-1) UNRELEASED; urgency=medium
   * Pull in additional patches from upstream:
     - Support linux kernel 5.6 release
     - Recognize ppc64le in configure's OS-detection logic
+    - Skip vos tests if vlserver port is already bound (Closes: 953729)
   * Fix typo preventing ppc64el support from working (Closes: #946520)
   * Update Italian debconf translation; thanks Beatrice Torracca
     (Closes: #952799)

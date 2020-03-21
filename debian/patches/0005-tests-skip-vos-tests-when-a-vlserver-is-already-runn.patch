@@ -1,0 +1,94 @@
+From: Michael Meffie <mmeffie@sinenomine.net>
+Date: Fri, 10 Jan 2020 10:54:20 -0500
+Subject: tests: skip vos tests when a vlserver is already running
+
+The vos tests start a temporary vlserver process, which is problematic
+when the local system already has an installed vlserver. Attempt to
+temporarily bind a socket to the vlserver port, and if unable to bind
+with an EADDRINUSE error, assume the vlserver is already running and
+skip these tests.
+
+Change-Id: I1dd3bc4c7ebcd2c7bffc8aca422222a50058090e
+Reviewed-on: https://gerrit.openafs.org/14021
+Reviewed-by: Cheyenne Wills <cwills@sinenomine.net>
+Reviewed-by: Andrew Deason <adeason@sinenomine.net>
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+(cherry picked from commit bf1b3e2fc12a7502cfd74eb109eeb7131f7230d3)
+---
+ tests/common/common.h  |  1 +
+ tests/common/network.c | 41 +++++++++++++++++++++++++++++++++++++++++
+ tests/volser/vos-t.c   |  2 ++
+ 3 files changed, 44 insertions(+)
+
+diff --git a/tests/common/common.h b/tests/common/common.h
+index c9f7349..5491fd4 100644
+--- a/tests/common/common.h
++++ b/tests/common/common.h
+@@ -55,3 +55,4 @@ extern int afstest_GetUbikClient(struct afsconf_dir *dir, char *service,
+ extern int afstest_IsLoopbackNetworkDefault(void);
+ extern int afstest_SkipTestsIfLoopbackNetIsDefault(void);
+ extern void afstest_SkipTestsIfBadHostname(void);
++extern void afstest_SkipTestsIfServerRunning(char *name);
+diff --git a/tests/common/network.c b/tests/common/network.c
+index 474fc61..c664505 100644
+--- a/tests/common/network.c
++++ b/tests/common/network.c
+@@ -61,3 +61,44 @@ afstest_SkipTestsIfBadHostname(void)
+     if (!host)
+ 	skip_all("Can't resolve hostname %s\n", hostname);
+ }
++
++/*!
++ * Skips all TAP tests if a server is already running on this system.
++ *
++ * \param name[in]  IANA service name, e.g. "afs3-vlserver"
++ */
++void
++afstest_SkipTestsIfServerRunning(char *name)
++{
++    afs_int32 code;
++    osi_socket sock;
++    struct sockaddr_in addr;
++    afs_int32 service;
++
++    service = afsconf_FindService(name);
++    if (service == -1) {
++	fprintf(stderr, "Unknown service name: %s\n", name);
++	exit(1);
++    }
++    sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
++    if (sock == OSI_NULLSOCKET) {
++	fprintf(stderr, "Failed to get socket file descriptor.\n");
++	exit(1);
++    }
++    addr.sin_family = AF_INET;
++    addr.sin_addr.s_addr = htonl(INADDR_ANY);
++    addr.sin_port = service; /* Already in network byte order. */
++#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
++    addr.sin_len = sizeof(addr);
++#endif
++    code = bind(sock, (struct sockaddr *)&addr, sizeof(addr));
++    if (code < 0) {
++	if (errno == EADDRINUSE) {
++	    skip_all("Service %s is already running.\n", name);
++	} else {
++	    perror("bind");
++	    exit(1);
++	}
++    }
++    close(sock);
++}
+diff --git a/tests/volser/vos-t.c b/tests/volser/vos-t.c
+index 57161f4..1ec75a1 100644
+--- a/tests/volser/vos-t.c
++++ b/tests/volser/vos-t.c
+@@ -105,6 +105,8 @@ main(int argc, char **argv)
+     afstest_SkipTestsIfBadHostname();
+     /* Skip all tests if the current hostname is on the loopback network */
+     afstest_SkipTestsIfLoopbackNetIsDefault();
++    /* Skip all tests if a vlserver is already running on this system. */
++    afstest_SkipTestsIfServerRunning("afs3-vlserver");
+ 
+     plan(6);
+ 
