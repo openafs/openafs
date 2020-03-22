@@ -244,7 +244,7 @@ override_dh_installchangelogs:
 	dh_installchangelogs NEWS
 
 # We want --fail-missing behavior, but --list-missing is the default
-override_dh_missing:
+override_dh_missing-arch:
 	dh_missing --fail-missing $(IGNORE)
 
 # Override some of our permissions.
