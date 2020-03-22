@@ -1,4 +1,4 @@
-openafs (1.8.6~pre1-2) UNRELEASED; urgency=medium
+openafs (1.8.6~pre1-2) unstable; urgency=medium
 
   * Pull in upstream patch to not resolve IP addresses to names in the
     vos tests (Closes: #953729)
@@ -6,7 +6,7 @@ openafs (1.8.6~pre1-2) UNRELEASED; urgency=medium
     the behavior used by the debhelper-compat-9 packaging prior to
     1.8.6~pre1-1 (Closes: #953709)
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Sat, 21 Mar 2020 18:42:25 -0700
+ -- Benjamin Kaduk <kaduk@mit.edu>  Sat, 21 Mar 2020 18:58:47 -0700
 
 openafs (1.8.6~pre1-1) unstable; urgency=medium
 
