@@ -3,3 +3,4 @@
 0003-LINUX-Avoid-building-rand-fortuna-kernel.o.patch
 0004-LINUX-5.6-define-time_t-and-use-timespec-timespec64.patch
 0005-tests-skip-vos-tests-when-a-vlserver-is-already-runn.patch
+0006-tests-do-not-resolve-addresses-in-vos-vl-test.patch

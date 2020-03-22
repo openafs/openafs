@@ -1,0 +1,44 @@
+From: Michael Meffie <mmeffie@sinenomine.net>
+Date: Fri, 10 Jan 2020 09:06:38 -0500
+Subject: tests: do not resolve addresses in vos/vl test
+
+The vos-t test adds a set of 10.* test addresses to a test vlserver and
+runs vos to read them back.  When the test is run in an environment
+where hosts have been assigned in the 10.* internal network, vos will resolve
+the addresses to hostnames and the test fails.  Pass the -noresolve
+option to vos for this test when checking for the expected list of
+addresses.
+
+Example test output before this commit:
+
+    ./vos-t
+    ...
+    #   seen: 10.0.0.0
+    10.0.0.1
+    myhost.example.com
+    10.0.0.3
+    ...
+    not ok 5 - vos output matches
+
+Change-Id: Ief43fe180a0dfff211f28d5f47be6224270907a3
+Reviewed-on: https://gerrit.openafs.org/14020
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+(cherry picked from commit dcf44ab5fc5c1f5e2e759ea4b6156f7e1faa4b7a)
+---
+ tests/volser/vos-t.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/volser/vos-t.c b/tests/volser/vos-t.c
+index 1ec75a1..e80a195 100644
+--- a/tests/volser/vos-t.c
++++ b/tests/volser/vos-t.c
+@@ -78,7 +78,7 @@ TestListAddrs(struct ubik_client *client, char *dirname)
+ 	    exit(1);
+ 	}
+ 	execl(binPath, "vos",
+-	      "listaddrs", "-config", dirname, "-noauth", NULL);
++	      "listaddrs", "-config", dirname, "-noauth", "-noresolve", NULL);
+ 	exit(1);
+     }
+     close(outpipe[1]);
