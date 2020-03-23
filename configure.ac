@@ -6,7 +6,6 @@ AC_CONFIG_SRCDIR([src/config/stds.h])
 
 AC_CONFIG_HEADER([src/config/afsconfig.h])
 MACOS_VERSION=1.8.0fc1
-LINUX_PKGREL=1.8.0pre1
 
 AC_SUBST([MACOS_VERSION])
 
