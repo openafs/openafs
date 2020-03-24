@@ -1,3 +1,9 @@
+openafs (1.8.6~pre1-3) UNRELEASED; urgency=medium
+
+  * Temporarily disable a test that fails on armhf buildd but not porterbox
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 24 Mar 2020 15:36:32 -0700
+
 openafs (1.8.6~pre1-2) unstable; urgency=medium
 
   * Pull in upstream patch to not resolve IP addresses to names in the
