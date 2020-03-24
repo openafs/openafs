@@ -84,6 +84,7 @@ typedef unsigned int afs_lock_tracker_t;
 typedef struct task_struct * afs_lock_tracker_t;
 # define MyPidxx (current)
 # define MyPidxx2Pid(x) (x? (x)->pid : 0)
+# define MyPid_NULL (NULL)
 #elif defined(AFS_DARWIN_ENV)
 # if defined(AFS_DARWIN80_ENV)
 typedef unsigned int afs_lock_tracker_t;
@@ -106,6 +107,10 @@ typedef unsigned int afs_lock_tracker_t;
 typedef unsigned int afs_lock_tracker_t;
 # define MyPidxx (u.u_procp->p_pid )
 # define MyPidxx2Pid(x) (x)
+#endif
+
+#ifndef MyPid_NULL
+# define MyPid_NULL (0)
 #endif
 
 /* all locks wait on excl_locked except for READ_LOCK, which waits on readers_reading */
@@ -219,7 +224,7 @@ extern int afs_trclock;
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    ((lock)->readers_reading)++;\
 	    (lock)->pid_last_reader = MyPidxx ; \
-	    (lock)->pid_writer = 0;\
+	    (lock)->pid_writer = MyPid_NULL;\
 	    Afs_Lock_ReleaseR(lock);\
 	ENDMAC
 
@@ -229,7 +234,7 @@ extern int afs_trclock;
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    ((lock)->readers_reading)++;\
 	    (lock)->pid_last_reader = MyPidxx ; \
-	    (lock)->pid_writer = 0;\
+	    (lock)->pid_writer = MyPid_NULL;\
 	    Afs_Lock_ReleaseR(lock);\
 	ENDMAC
 
@@ -239,7 +244,7 @@ extern int afs_trclock;
 	    if (!(--((lock)->readers_reading)) && (lock)->wait_states)\
 		Afs_Lock_ReleaseW(lock) ; \
 	if ( (lock)->pid_last_reader == MyPidxx ) \
-		(lock)->pid_last_reader =0;\
+		(lock)->pid_last_reader = MyPid_NULL;\
 	ENDMAC
 
 #define ReleaseWriteLock(lock)\
@@ -247,7 +252,7 @@ extern int afs_trclock;
 	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, WRITE_LOCK);\
 	    (lock)->excl_locked &= ~WRITE_LOCK;\
 	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
-	    (lock)->pid_writer=0; \
+	    (lock)->pid_writer = MyPid_NULL; \
         ENDMAC
 
 /* can be used on shared or boosted (write) locks */
@@ -256,7 +261,7 @@ extern int afs_trclock;
 	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, SHARED_LOCK);\
 	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
 	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
-	    (lock)->pid_writer=0; \
+	    (lock)->pid_writer = MyPid_NULL; \
         ENDMAC
 
 #else /* INSTRUMENT_LOCKS */
