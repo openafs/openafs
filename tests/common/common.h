@@ -40,7 +40,7 @@ extern struct rx_securityClass
 struct rx_call;
 extern int afstest_StartVLServer(char *dirname, pid_t *serverPid);
 extern int afstest_StopServer(pid_t serverPid);
-extern int afstest_StartTestRPCService(const char *, u_short, u_short,
+extern int afstest_StartTestRPCService(const char *, pid_t, u_short, u_short,
 				       afs_int32 (*proc)(struct rx_call *));
 
 /* ubik.c */
