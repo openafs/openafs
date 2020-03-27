@@ -57,6 +57,9 @@ system ("git archive --format=tar --prefix=$name/ $tagName ".
         " | tar -C $tempDir -x") == 0
     or die "Git archive failed with: $?";
 
+# Make the output path, if not already present.
+File::Path::mkpath($outDir);
+
 # Construct the ChangeLog
 if ($last) {
     system("git log $last..$tagName > $outDir/ChangeLog");
@@ -167,7 +170,7 @@ changes between I<object> and the current tag
 =item B<--dir> I<directory>
 
 Instead of generating all of the output in the current directory, place it
-in <directory>, which must already exist.
+in <directory>, which is created if it does not already exist.
 
 =item B<--tagpoint> I<commit|branch>
 
