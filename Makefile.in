@@ -758,7 +758,6 @@ clean2:
 	-/bin/rm -rf libafs_tree ${SYS_NAME}
 
 dist:
-	mkdir -p packages
 	./build-tools/make-release --dir=packages HEAD
 
 srpm: dist
