@@ -356,6 +356,21 @@ isPowerOf2(int value)
     return (value > 0) && (value & (value - 1)) == 0;
 }
 
+static_inline int
+nextPowerOf2(int target)
+{
+    int next = 1;
+    /*
+     * Make sure we have a reasonable target and cannot overflow; callers
+     * should do their own range checks before we get here.
+     */
+    opr_Assert(target > 0 && target <= 0x40000000);
+    while (next < target) {
+	next *= 2;
+    }
+    return next;
+}
+
 /**
  * Create a new opr_cache.
  *
@@ -369,16 +384,19 @@ int
 opr_cache_init(struct opr_cache_opts *opts, struct opr_cache **a_cache)
 {
     struct opr_cache *cache;
+    int n_buckets = opts->n_buckets;
 
-    if (opts->n_buckets < MIN_BUCKETS || opts->n_buckets > MAX_BUCKETS) {
-	return EINVAL;
-    }
-    if (!isPowerOf2(opts->n_buckets)) {
+    if (n_buckets < MIN_BUCKETS || n_buckets > MAX_BUCKETS) {
 	return EINVAL;
     }
     if (opts->max_entries < MIN_ENTRIES || opts->max_entries > MAX_ENTRIES) {
 	return EINVAL;
     }
+
+    n_buckets = nextPowerOf2(n_buckets);
+    opr_Assert(isPowerOf2(n_buckets));
+    opr_Assert(n_buckets >= MIN_BUCKETS);
+    opr_Assert(n_buckets <= MAX_BUCKETS);
 
     cache = calloc(1, sizeof(*cache));
     if (cache == NULL) {
@@ -388,7 +406,7 @@ opr_cache_init(struct opr_cache_opts *opts, struct opr_cache **a_cache)
     opr_mutex_init(&cache->lock);
     cache->max_entries = opts->max_entries;
 
-    cache->dict = opr_dict_Init(opts->n_buckets);
+    cache->dict = opr_dict_Init(n_buckets);
     if (cache->dict == NULL) {
 	opr_cache_free(&cache);
 	return ENOMEM;

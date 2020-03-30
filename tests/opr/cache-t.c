@@ -102,9 +102,27 @@ run_seed(int seed)
     ok(opr_cache_init(&opts, &cache) != 0,
        "Initializing a cache with a huge n_buckets fails");
 
-    opts.n_buckets = 23;
+    opts.n_buckets = 1024*1024 + 1;
     ok(opr_cache_init(&opts, &cache) != 0,
-       "Initializing a cache with non-power-of-2 n_buckets fails");
+       "Initializing a cache with 1024*1024+1 n_buckets fails");
+
+    opts.n_buckets = 1024*1024;
+    code = opr_cache_init(&opts, &cache);
+    is_int(0, code,
+       "Initializing a cache with 1024*1024 n_buckets succeeds");
+    opr_cache_free(&cache);
+
+    opts.n_buckets = 1024*1024 - 1;
+    code = opr_cache_init(&opts, &cache);
+    is_int(0, code,
+       "Initializing a cache with 1024*1024-1 n_buckets succeeds");
+    opr_cache_free(&cache);
+
+    opts.n_buckets = 23;
+    code = opr_cache_init(&opts, &cache);
+    is_int(0, code,
+       "Initializing a cache with non-power-of-2 n_buckets succeeds");
+    opr_cache_free(&cache);
 
     opts.n_buckets = 64;
     opts.max_entries = 1;
@@ -237,7 +255,7 @@ main(void)
 {
     int seed;
 
-    plan(113 * 32);
+    plan(116 * 32);
 
     for (seed = 0; seed < 32; seed++) {
 	run_seed(seed);
