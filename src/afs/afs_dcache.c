@@ -428,19 +428,10 @@ afs_MaybeWaitForCacheDrain(void)
     }
 }
 
-/*!
- * /struct CTD_stats
- *
- * Keep statistics on run time for afs_CacheTruncateDaemon. This is a
- * struct so we need only export one symbol for AIX.
+/*
+ * Keep statistics on run time for afs_CacheTruncateDaemon.
  */
-static struct CTD_stats {
-    osi_timeval32_t CTD_beforeSleep;
-    osi_timeval32_t CTD_afterSleep;
-    osi_timeval32_t CTD_sleepTime;
-    osi_timeval32_t CTD_runTime;
-    int CTD_nSleeps;
-} CTD_stats;
+struct afs_CTD_stats CTD_stats;
 
 u_int afs_min_cache = 0;
 

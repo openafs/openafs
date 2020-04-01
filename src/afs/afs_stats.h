@@ -1170,6 +1170,17 @@ struct afs_stats_CMFullPerf {
     struct afs_stats_AuthorInfo author;	/*Authorship stats */
 };
 
+/*
+ * Statistics on run time for afs_CacheTruncateDaemon.
+ */
+struct afs_CTD_stats {
+    osi_timeval32_t CTD_beforeSleep;
+    osi_timeval32_t CTD_afterSleep;
+    osi_timeval32_t CTD_sleepTime;
+    osi_timeval32_t CTD_runTime;
+    int CTD_nSleeps;
+};
+
 #ifndef AFS_NOSTATS
 /*
  * We define routines to keep running counts and means.  For the
