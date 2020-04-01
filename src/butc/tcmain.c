@@ -565,7 +565,7 @@ GetConfigParams(char *filename, afs_int32 port)
 
 	else if (!strcmp(cmd, "BUFFERSIZE")) {
 	    afs_int32 size;
-	    afs_int32 tapeblocks;
+	    afs_int32 numTapeblocks;
 
 	    if (!CONF_XBSA) {
 		if (atocl(value, 'K', &size)) {
@@ -576,11 +576,11 @@ GetConfigParams(char *filename, afs_int32 port)
 		/* A tapeblock is 16KB. Determine # of tapeblocks. Then
 		 * determine BufferSize needed for that many tapeblocks.
 		 */
-		tapeblocks = size / 16;
-		if (tapeblocks <= 0)
-		    tapeblocks = 1;
-		printf("BUFFERSIZE is %u KBytes\n", (tapeblocks * 16));
-		BufferSize = tapeblocks * BUTM_BLOCKSIZE;
+		numTapeblocks = size / 16;
+		if (numTapeblocks <= 0)
+		    numTapeblocks = 1;
+		printf("BUFFERSIZE is %u KBytes\n", (numTapeblocks * 16));
+		BufferSize = numTapeblocks * BUTM_BLOCKSIZE;
 	    } else {
 #ifdef xbsa
 		if (atocl(value, 'B', &size)) {
