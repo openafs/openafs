@@ -4053,33 +4053,32 @@ VolserStatus(struct cmd_syndesc *as, void *arock)
 	}
 	if (pntr->iflags) {
 	    fprintf(STDOUT, "attachFlags:  ");
-	    switch (pntr->iflags) {
-	    case ITOffline:
+	    if ((pntr->iflags & ITOffline) != 0) {
 		fprintf(STDOUT, "offline ");
-		break;
-	    case ITBusy:
+	    }
+	    if ((pntr->iflags & ITBusy) != 0) {
 		fprintf(STDOUT, "busy ");
-		break;
-	    case ITReadOnly:
+	    }
+	    if ((pntr->iflags & ITReadOnly) != 0) {
 		fprintf(STDOUT, "readonly ");
-		break;
-	    case ITCreate:
+	    }
+	    if ((pntr->iflags & ITCreate) != 0) {
 		fprintf(STDOUT, "create ");
-		break;
-	    case ITCreateVolID:
+	    }
+	    if ((pntr->iflags & ITCreateVolID) != 0) {
 		fprintf(STDOUT, "create volid ");
-		break;
 	    }
 	    fprintf(STDOUT, "\n");
 	}
 	if (pntr->vflags) {
 	    fprintf(STDOUT, "volumeStatus: ");
-	    switch (pntr->vflags) {
-	    case VTDeleteOnSalvage:
+	    if ((pntr->vflags & VTDeleteOnSalvage) != 0) {
 		fprintf(STDOUT, "deleteOnSalvage ");
-	    case VTOutOfService:
+	    }
+	    if ((pntr->vflags & VTOutOfService) != 0) {
 		fprintf(STDOUT, "outOfService ");
-	    case VTDeleted:
+	    }
+	    if ((pntr->vflags & VTDeleted) != 0) {
 		fprintf(STDOUT, "deleted ");
 	    }
 	    fprintf(STDOUT, "\n");
