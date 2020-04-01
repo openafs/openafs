@@ -120,9 +120,6 @@ pthread_cond_t vol_vinit_cond;
 int vol_attach_threads = 1;
 #endif /* AFS_PTHREAD_ENV */
 
-/* start-time configurable I/O parameters */
-ih_init_params vol_io_params;
-
 #ifdef AFS_DEMAND_ATTACH_FS
 pthread_mutex_t vol_salvsync_mutex;
 

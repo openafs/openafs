@@ -43,8 +43,7 @@ extern int isafile;
 extern int forcemultiple;
 
 extern struct ubik_client *cstruct;
-dlqlinkT savedEntries;
-dlqlinkT entries_to_flush;
+extern dlqlinkT savedEntries;
 
 extern afs_int32 groupId;
 extern afs_int32 BufferSize;
@@ -62,8 +61,8 @@ extern char *xbsalGName;
 extern char *globalButcLog;
 #endif /*xbsa */
 
-afs_int32 dataSize;		/* Size of data to read on each rx_Read() call */
-afs_int32 tapeblocks;		/* Number of 16K tape datablocks in buffer (!CONF_XBSA) */
+extern afs_int32 dataSize;		/* Size of data to read on each rx_Read() call */
+extern afs_int32 tapeblocks;		/* Number of 16K tape datablocks in buffer (!CONF_XBSA) */
 
 /* TBD
  *

@@ -66,7 +66,7 @@
 #define TL_PREFIX  "TL"
 #define CFG_PREFIX "CFG"
 
-struct ubik_client *cstruct;
+extern struct ubik_client *cstruct;
 FILE *logIO, *ErrorlogIO, *centralLogIO, *lastLogIO;
 char lFile[AFSDIR_PATH_MAX];
 char logFile[AFSDIR_PATH_MAX + 256];

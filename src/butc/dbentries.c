@@ -32,7 +32,7 @@
 #include "error_macros.h"
 
 dlqlinkT savedEntries;
-dlqlinkT entries_to_flush;
+static dlqlinkT entries_to_flush;
 
 int dbWatcherinprogress;
 

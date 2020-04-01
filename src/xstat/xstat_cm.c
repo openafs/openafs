@@ -31,9 +31,7 @@
 int xstat_cm_numServers;	/*Num connected servers */
 struct xstat_cm_ConnectionInfo
  *xstat_cm_ConnInfo;		/*Ptr to connection array */
-int numCollections;		/*Number of data collections */
 struct xstat_cm_ProbeResults xstat_cm_Results;	/*Latest probe results */
-char terminationEvent;		/*One-shot termination event */
 
 afs_int32 xstat_cmData[AFSCB_MAX_XSTAT_LONGS];	/*Buffer for collected data */
 

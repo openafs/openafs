@@ -51,7 +51,7 @@ extern int forcemultiple;
 #endif
 
 /* XBSA Global Parameters */
-afs_int32 xbsaType;
+extern afs_int32 xbsaType;
 #ifdef xbsa
 struct butx_transactionInfo butxInfo;
 #endif

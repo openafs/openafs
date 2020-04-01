@@ -32,9 +32,7 @@
 int xstat_fs_numServers;	/*Num connected servers */
 struct xstat_fs_ConnectionInfo
  *xstat_fs_ConnInfo;		/*Ptr to connection array */
-int numCollections;		/*Number of data collections */
 struct xstat_fs_ProbeResults xstat_fs_Results;	/*Latest probe results */
-char terminationEvent;		/*One-shot termination event */
 
 afs_int32 xstat_fsData[AFS_MAX_XSTAT_LONGS];	/*Buffer for collected data */
 

@@ -67,6 +67,8 @@ int hostCount = 0;		/* number of hosts in hostList */
 int rxcon_ident_key;
 int rxcon_client_key;
 
+struct host *(hosttableptrs[h_MAXHOSTTABLES]);
+
 static struct rx_securityClass *sc = NULL;
 static int h_quota_limit;
 
