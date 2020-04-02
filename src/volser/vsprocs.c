@@ -5268,7 +5268,8 @@ UV_RemoveSite(afs_uint32 server, afs_int32 part, afs_uint32 volid)
 		      LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	    return (vcode);
 	}
-	VDONE;
+	fprintf(STDOUT, " done\n");
+	fflush(STDOUT);
     }
     return 0;
 }
