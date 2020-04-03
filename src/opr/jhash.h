@@ -150,19 +150,19 @@ opr_jhash_opaque(const void *val, size_t length, afs_uint32 initval)
 
     /* All the case statements fall through */
     switch(length) {
-      case 12 : c += (afs_uint32) str[11]<<24;
-      case 11 : c += (afs_uint32) str[10]<<16;
-      case 10 : c += (afs_uint32) str[9]<<8;
-      case 9  : c += (afs_uint32) str[8];
-      case 8  : b += (afs_uint32) str[7]<<24;
-      case 7  : b += (afs_uint32) str[6]<<16;
-      case 6  : b += (afs_uint32) str[5]<<8;
-      case 5  : b += (afs_uint32) str[4];
-      case 4  : a += (afs_uint32) str[3]<<24;
-      case 3  : a += (afs_uint32) str[2]<<16;
-      case 2  : a += (afs_uint32) str[1]<<8;
+      case 12 : c += (afs_uint32) str[11]<<24; 	/* fall through */
+      case 11 : c += (afs_uint32) str[10]<<16; 	/* fall through */
+      case 10 : c += (afs_uint32) str[9]<<8; 	/* fall through */
+      case 9  : c += (afs_uint32) str[8]; 	/* fall through */
+      case 8  : b += (afs_uint32) str[7]<<24; 	/* fall through */
+      case 7  : b += (afs_uint32) str[6]<<16;	/* fall through */
+      case 6  : b += (afs_uint32) str[5]<<8;	/* fall through */
+      case 5  : b += (afs_uint32) str[4];	/* fall through */
+      case 4  : a += (afs_uint32) str[3]<<24;	/* fall through */
+      case 3  : a += (afs_uint32) str[2]<<16;	/* fall through */
+      case 2  : a += (afs_uint32) str[1]<<8;	/* fall through */
       case 1  : a += (afs_uint32) str[0];
-	opr_jhash_final(a, b, c);
+	opr_jhash_final(a, b, c);       	/* fall through */
       case 0:     /* case 0: nothing left to add */
 	break;
     }
