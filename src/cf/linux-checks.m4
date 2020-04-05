@@ -14,12 +14,9 @@ AC_DEFUN([_OPENAFS_LINUX_KBUILD_SETUP],[
 if test "x$enable_debug_kernel" = "xno"; then
     LINUX_GCC_KOPTS="$LINUX_GCC_KOPTS -fomit-frame-pointer"
 fi
-OPENAFS_GCC_SUPPORTS_MARCH
-AC_SUBST(P5PLUS_KOPTS)
-OPENAFS_GCC_NEEDS_NO_STRENGTH_REDUCE
-OPENAFS_GCC_NEEDS_NO_STRICT_ALIASING
-OPENAFS_GCC_SUPPORTS_NO_COMMON
-OPENAFS_GCC_SUPPORTS_PIPE
+AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing -fno-strength-reduce \
+                         -fno-common -pipe],
+                        [LINUX_GCC_KOPTS])
 AC_SUBST(LINUX_GCC_KOPTS)
 
 dnl Setup the kernel build environment
