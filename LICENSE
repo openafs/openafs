@@ -418,10 +418,13 @@ src/cf/lib-pathname.m4 are covered by the following license:
 
 ====================================================
 
-The file src/cf/ax_gcc_func_attribute.m4 covered by
-the following license:
+The files under src/external/autoconf-archive/m4/ are covered by the following
+license:
 
+  Copyright (c) 2008 Guido U. Draheim <guidod@gmx.de>
+  Copyright (c) 2011 Maarten Bosmans <mkbosmans@gmail.com>
   Copyright (c) 2013 Gabriele Svelto <gabriele.svelto@gmail.com>
+  Copyright (c) 2014 Mike Frysinger <vapier@gentoo.org>
 
   Copying and distribution of this file, with or without modification, are
   permitted in any medium without royalty provided the copyright notice

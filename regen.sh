@@ -26,11 +26,15 @@ else
   exit 1
 fi
 
+M4_INCS="-I src/cf"
+M4_INCS="$M4_INCS -I src/external/rra-c-util/m4"
+M4_INCS="$M4_INCS -I src/external/autoconf-archive/m4"
+
 echo "Running aclocal"
 if which aclocal > /dev/null 2>&1; then
-  aclocal -I src/cf -I src/external/rra-c-util/m4
+  aclocal $M4_INCS
 elif which aclocal-1.10 > /dev/null 2>&1; then
-  aclocal-1.10 -I src/cf -I src/external/rra-c-util/m4
+  aclocal-1.10 $M4_INCS
 else
   echo "No aclocal found on your system (looked for aclocal & aclocal-1.10)"
   exit 1
