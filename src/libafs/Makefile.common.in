@@ -52,6 +52,11 @@ system:	all
 install:	all $(INSTDIRS)
 dest:		all $(DESTDIRS)
 
+# Don't let INSTDIRS or DESTDIRS run in parallel with COMPDIRS. They both do
+# some work in sub-makes in the same directory that may conflict with each
+# other (e.g. generating AFS_component_version_number.c).
+$(INSTDIRS) $(DESTDIRS): $(COMPDIRS)
+
 all:	setup $(COMPDIRS)
 
 single_compdir single_instdir single_destdir: setup
