@@ -910,10 +910,6 @@ extern struct afs_stats_CMPerf afs_stats_cmperf;
 extern struct afs_stats_CMFullPerf afs_stats_cmfullperf;
 extern afs_int32 afs_stats_XferSumBytes[AFS_STATS_NUM_FS_XFER_OPS];
 extern void afs_InitStats(void);
-extern void afs_GetCMStat(char **ptr, unsigned *size);
-#ifndef AFS_NOSTATS
-extern void afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue);
-#endif
 
 /* afs_syscall.c */
 #ifdef AFS_DARWIN100_ENV

@@ -72,19 +72,3 @@ afs_InitStats(void)
 	xferP->minBytes = 999999999;
     }
 }
-
-void
-afs_GetCMStat(char **ptr, unsigned *size)
-{
-#ifndef AFS_NOSTATS
-    AFS_STATCNT(afs_GetCMStat);
-    *ptr = (char *)&afs_cmstats;
-    *size = sizeof(afs_cmstats);
-#endif /* AFS_NOSTATS */
-}
-
-void
-afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue)
-{
-    AFS_STATCNT(afs_AddToMean);
-}

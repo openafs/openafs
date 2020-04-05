@@ -523,8 +523,8 @@ struct afs_MeanStats {
     AFS_CS(HaveCallBacksFrom)	/* afs_resource.c */ \
     AFS_CS(ServerDown)		/* afs_resource.c */ \
     AFS_CS(afs_CheckServers)	/* afs_resource.c */ \
-    AFS_CS(afs_AddToMean)	/* afs_stat.c */ \
-    AFS_CS(afs_GetCMStat)	/* afs_stat.c */ \
+    AFS_CS(afs_AddToMean)	/* UNUSED */ \
+    AFS_CS(afs_GetCMStat)	/* UNUSED */ \
     AFS_CS(afs_getpage)		/* afs_sun_subr.c */ \
     AFS_CS(afs_putpage)		/* afs_sun_subr.c */ \
     AFS_CS(afs_nfsrdwr)		/* afs_sun_subr.c */ \
@@ -1185,9 +1185,6 @@ struct afs_stats_CMFullPerf {
  * field name.
  */
 #define AFS_STATCNT(arg)  ((afs_cmstats.callInfo.C_ ## arg)++)
-
-#define AFS_MEANCNT(arg, value) \
-    (afs_AddToMean(((afs_cmstats.meanInfo).(arg)),value))
 
 #endif /* AFS_NOSTATS */
 
