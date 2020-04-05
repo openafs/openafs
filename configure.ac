@@ -1,4 +1,4 @@
-AC_PREREQ([2.60])
+AC_PREREQ([2.64])
 AC_INIT([OpenAFS],[m4_esyscmd(build-tools/git-version .)],[openafs-bugs@openafs.org],[],[http://www.openafs.org/])
 AC_CONFIG_AUX_DIR([build-tools])
 AC_CONFIG_MACRO_DIR([src/cf])
