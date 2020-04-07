@@ -3054,7 +3054,7 @@ vldbentry_to_vlentry(struct vl_ctx *ctx,
 	VlEntry->serverPartition[i] = VldbEntry->serverPartition[i];
 	VlEntry->serverFlags[i] = VldbEntry->serverFlags[i];
     }
-    for (; i < OMAXNSERVERS; i++)
+    for (; i < NMAXNSERVERS; i++)
 	VlEntry->serverNumber[i] = VlEntry->serverPartition[i] =
 	    VlEntry->serverFlags[i] = BADSERVERID;
     for (i = 0; i < MAXTYPES; i++)
