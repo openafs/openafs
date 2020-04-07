@@ -858,8 +858,10 @@ extern void afspag_SetPrimaryCell(char *acell);
 extern struct afs_CMStats afs_cmstats;
 extern struct afs_stats_CMPerf afs_stats_cmperf;
 extern struct afs_stats_CMFullPerf afs_stats_cmfullperf;
+extern struct afs_stats_CMCacheTrunc afs_stats_cmcachetrunc;
 extern afs_int32 afs_stats_XferSumBytes[AFS_STATS_NUM_FS_XFER_OPS];
 extern void afs_InitStats(void);
+extern void afs_RecordCacheStats(void);
 
 /* ARCH/osi_kstat.c */
 extern void afs_kstat_init(void);

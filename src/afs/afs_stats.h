@@ -1162,12 +1162,54 @@ struct afs_stats_CMFullPerf {
  * Statistics on run time for afs_CacheTruncateDaemon.
  */
 struct afs_CTD_stats {
-    osi_timeval32_t CTD_beforeSleep;
-    osi_timeval32_t CTD_afterSleep;
-    osi_timeval32_t CTD_sleepTime;
-    osi_timeval32_t CTD_runTime;
-    int CTD_nSleeps;
+    osi_timeval32_t CTD_beforeSleep;	/* time CTD last began sleeping */
+    osi_timeval32_t CTD_afterSleep;	/* time CTD last awakened */
+    osi_timeval32_t CTD_sleepTime;	/* total time CTD spent sleeping (idle) */
+    osi_timeval32_t CTD_runTime;	/* total time CTD spent actively evicting */
+    afs_uint64 CTD_nSleeps;		/* number of times CTD went to sleep */
 };
+
+struct afs_CacheEvict_hour {
+    osi_timeval32_t time_recorded;
+    afs_int64 cacheBlocksEvicted;
+    /* additional stats may be added here in future */
+};
+
+#define XSTATS_CTDSTATS_HOURS 24	/* max number of hours we retain and report */
+
+/*
+ * Structure holding cache truncation CM peformance measurements.
+ */
+struct afs_stats_CMCacheTrunc {
+    afs_int32 numCTPerfCalls;			    /* Number of accesses */
+    struct afs_CTD_stats CTD_perf;		    /* CacheTruncateDaemon times */
+    afs_int64 cacheBlocksEvictedAccum;		    /* cache blocks evicted since init */
+    struct afs_CacheEvict_hour current_hour;	    /* stats for current interval */
+    afs_int32 hour_cursor;
+    struct afs_CacheEvict_hour hourly[XSTATS_CTDSTATS_HOURS];  /* last 24 hrs */
+};
+
+/*
+ * Wire-safe structure for exporting the CTD stats; must be comprised
+ * entirely of afs_int32 (or things like it)..
+ */
+#define XSTATS_SIZE_CTDHOUR 16
+struct afs_stats_CTD_hour_wire {
+    afs_hyper_t time_recorded;	    /* afs_time64 ticks */
+    afs_hyper_t blocks_evicted;
+};
+
+#define XSTATS_SIZE_CTDSTATS 436
+struct afs_stats_CMCacheTrunc_wire {
+    afs_int32 numCTPerfCalls;
+    afs_hyper_t afs_CTD_sleepTime;  /* afs_time64 ticks */
+    afs_hyper_t afs_CTD_runTime;    /* afs_time64 ticks */
+    afs_hyper_t afs_CTD_nSleeps;
+    afs_hyper_t afs_CTD_blocks_evicted;
+    struct afs_stats_CTD_hour_wire current_hour;
+    struct afs_stats_CTD_hour_wire hourly[XSTATS_CTDSTATS_HOURS];
+};
+
 
 /*
  * We define routines to keep running counts and means.  For the

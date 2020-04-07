@@ -246,6 +246,7 @@ afs_Daemon(void)
 	    afs_Trace1(afs_iclSetp, CM_TRACE_PROBEVOLUME, ICL_TYPE_INT32,
 		       3600);
 	    afs_CheckRootVolume();
+	    afs_RecordCacheStats();
 #if AFS_GCPAGS
 	    if (afs_gcpags == AFS_GCPAGS_OK) {
 		afs_int32 didany;

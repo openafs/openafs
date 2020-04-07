@@ -123,6 +123,7 @@ typedef afs_int32 AFS_CollData<AFS_MAX_XSTAT_LONGS>;
 const AFSCB_XSTATSCOLL_CALL_INFO = 0;	 /*CM call counting & info*/
 const AFSCB_XSTATSCOLL_PERF_INFO = 1;	 /*CM performance info*/
 const AFSCB_XSTATSCOLL_FULL_PERF_INFO = 2;	 /*CM performance info*/
+const AFSCB_XSTATSCOLL_CACHETRUNC_INFO = 3;	 /*CM cache truncation and eviction info */
 
 const AFS_XSTATSCOLL_CALL_INFO = 0;	 /*FS call counting & info*/
 const AFS_XSTATSCOLL_PERF_INFO = 1;	 /*FS performance info*/

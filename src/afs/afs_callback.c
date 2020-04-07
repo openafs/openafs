@@ -23,6 +23,7 @@
 #include "afs/afscbint.h"
 #include "afs/afs_stats.h"	/*Cache Manager stats */
 #include "afs/afs_args.h"
+#include <opr/time.h>
 
 afs_int32 afs_allCBs = 0;	/*Break callbacks on all objects */
 afs_int32 afs_oddCBs = 0;	/*Break callbacks on dirs */
@@ -781,6 +782,52 @@ SRXAFSCB_XStatsVersion(struct rx_call *a_call, afs_int32 * a_versionP)
 }				/*SRXAFSCB_XStatsVersion */
 
 
+static void
+timeval32_to_time64AsHyper(osi_timeval32_t tv32_in, afs_hyper_t *hyper_out)
+{
+    afs_int32 code;
+    struct afs_time64 t64_recorded;
+
+    code = opr_time64_fromTimeval_safe(tv32_in.tv_sec, tv32_in.tv_usec, &t64_recorded);
+    if (code != 0) {
+	t64_recorded = opr_time64_fromTicks(-1);
+    }
+    hsplit64(*hyper_out, opr_time64_toTicks(t64_recorded));
+}
+
+static void
+ctd_stats2wire(struct afs_stats_CMCacheTrunc_wire *CTD_wire,
+	       struct afs_stats_CMCacheTrunc *CTD_source)
+{
+    int hour;
+
+    memset(CTD_wire, 0, sizeof(*CTD_wire));
+    CTD_wire->numCTPerfCalls = CTD_source->numCTPerfCalls;
+    /* don't export CTD_beforeSleep, CTD_afterSleep; they're not useful. */
+
+    timeval32_to_time64AsHyper(CTD_source->CTD_perf.CTD_sleepTime, &CTD_wire->afs_CTD_sleepTime);
+
+    timeval32_to_time64AsHyper(CTD_source->CTD_perf.CTD_runTime, &CTD_wire->afs_CTD_runTime);
+
+    hsplit64(CTD_wire->afs_CTD_nSleeps, CTD_source->CTD_perf.CTD_nSleeps);
+    hsplit64(CTD_wire->afs_CTD_blocks_evicted, CTD_source->cacheBlocksEvictedAccum);
+    hsplit64(CTD_wire->current_hour.blocks_evicted, CTD_source->current_hour.cacheBlocksEvicted);
+
+    timeval32_to_time64AsHyper(CTD_source->current_hour.time_recorded, &CTD_wire->current_hour.time_recorded);
+
+    for (hour = 0; hour < XSTATS_CTDSTATS_HOURS; hour++) {
+	int ix = (hour + CTD_source->hour_cursor) % XSTATS_CTDSTATS_HOURS;
+	struct afs_CacheEvict_hour *source = &CTD_source->hourly[ix];
+
+	if (source->time_recorded.tv_sec == 0) {
+	    continue;	    /* empty slot */
+	}
+	timeval32_to_time64AsHyper(source->time_recorded, &CTD_wire->hourly[hour].time_recorded);
+
+	hsplit64(CTD_wire->hourly[hour].blocks_evicted, source->cacheBlocksEvicted);
+    }
+}
+
 /*------------------------------------------------------------------------
  * EXPORTED SRXAFSCB_GetXStats
  *
@@ -898,6 +945,40 @@ SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	a_dataP->AFSCB_CollData_val = dataBuffP;
 	break;
 
+    case AFSCB_XSTATSCOLL_CACHETRUNC_INFO:
+	{
+	struct afs_stats_CMCacheTrunc_wire *CTD_wire;
+	struct afs_stats_CMCacheTrunc *CTD_source;
+
+	/*
+	 * Pass back cache truncation statistics
+	 */
+	afs_stats_cmperf.numPerfCalls++;
+	afs_stats_cmcachetrunc.numCTPerfCalls++;
+
+	opr_StaticAssert(sizeof(*CTD_wire) == XSTATS_SIZE_CTDSTATS);
+	/*
+	 * RXAFSCB_GetXStats is designed to handle arrays of 32-bit
+	 * values, but we have some 64-bit values to tranfer.
+	 * First, manually marshall the stats to an intermediate "wire"
+	 * array comprised of 32-bit members, as expected by
+	 * AFSCB_CollData.  This ensures that the stats we are sending
+	 * may be correctly decoded by the client, regardless of
+	 * differences in:
+	 *  - padding and/or alignment of structs
+	 *  - endianness (for 64-bit counters)
+	 */
+	dataBytes = sizeof(*CTD_wire);
+	CTD_wire = afs_osi_Calloc(dataBytes);
+	osi_Assert(CTD_wire != NULL);
+
+	CTD_source = &afs_stats_cmcachetrunc;
+	ctd_stats2wire(CTD_wire, CTD_source);
+
+	a_dataP->AFSCB_CollData_len = dataBytes >> 2;
+	a_dataP->AFSCB_CollData_val = (afs_int32 *) CTD_wire;
+	break;
+	}
     default:
 	/*
 	 * Illegal collection number.

@@ -402,11 +402,6 @@ afs_MaybeWaitForCacheDrain(void)
     }
 }
 
-/*
- * Keep statistics on run time for afs_CacheTruncateDaemon.
- */
-struct afs_CTD_stats CTD_stats;
-
 u_int afs_min_cache = 0;
 
 /*!
@@ -439,7 +434,7 @@ void
 afs_CacheTruncateDaemon(void)
 {
     osi_timeval32_t CTD_tmpTime;
-    struct afs_CTD_stats *ctd_stats = &CTD_stats;
+    struct afs_CTD_stats *ctd_stats = &(afs_stats_cmcachetrunc.CTD_perf);
     u_int counter;
     u_int cb_lowat;
     u_int dc_hiwat =
@@ -901,7 +896,13 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
 			discard = 0;
 		    }
 		    if (discard) {
+			/* round up as afs_DiscardDCache will */
+			afs_int32 blks_evicted = afs_round_to_fsfragsize(tdc->f.chunkBytes);
+
 			afs_DiscardDCache(tdc);
+			afs_stats_cmcachetrunc.cacheBlocksEvictedAccum += blks_evicted;
+			afs_stats_cmcachetrunc.current_hour.cacheBlocksEvicted += blks_evicted;
+			osi_GetTime(&afs_stats_cmcachetrunc.current_hour.time_recorded);
 		    } else {
 			afs_FreeDCache(tdc);
 		    }

@@ -21,6 +21,7 @@ struct afs_CMStats afs_cmstats;
 struct afs_stats_CMPerf afs_stats_cmperf;
 struct afs_stats_CMFullPerf afs_stats_cmfullperf;
 afs_int32 afs_stats_XferSumBytes[AFS_STATS_NUM_FS_XFER_OPS];
+struct afs_stats_CMCacheTrunc afs_stats_cmcachetrunc;
 
 #if defined(AFS_DARWIN_ENV)
 /*
@@ -71,6 +72,7 @@ afs_InitStats(void)
     memset((&afs_stats_cmperf), 0, sizeof(struct afs_stats_CMPerf));
     memset((&afs_stats_cmfullperf), 0,
 	   sizeof(struct afs_stats_CMFullPerf));
+    memset((&afs_stats_cmcachetrunc), 0, sizeof(afs_stats_cmcachetrunc));
 
     /*
      * Some fields really should be non-zero at the start, so set 'em up.
@@ -100,4 +102,31 @@ afs_InitStats(void)
 #if !defined(AFS_VCACHE_EMBEDDED_VNODE)
     afs_stats_cmperf.stat_entry_size += afs_stats_cmperf.sizeof_struct_vnode;
 #endif
+
+    osi_GetTime(&afs_stats_cmcachetrunc.current_hour.time_recorded);
+}
+
+void
+afs_RecordCacheStats(void)
+{
+    int hour;
+    osi_timeval32_t record_time;
+    struct afs_stats_CMCacheTrunc *cstats = &afs_stats_cmcachetrunc;
+
+    osi_GetTime(&record_time);
+
+    AFS_ASSERT_GLOCK();
+    hour = cstats->hour_cursor++;
+    osi_Assert(hour < XSTATS_CTDSTATS_HOURS);
+
+    /* handle cursor rollover */
+    if (cstats->hour_cursor >= XSTATS_CTDSTATS_HOURS) {
+	cstats->hour_cursor = 0;
+    }
+
+    cstats->hourly[hour] = cstats->current_hour;
+    cstats->hourly[hour].time_recorded = record_time;
+
+    memset(&(cstats->current_hour), 0, sizeof(cstats->current_hour));
+    cstats->current_hour.time_recorded = record_time;
 }

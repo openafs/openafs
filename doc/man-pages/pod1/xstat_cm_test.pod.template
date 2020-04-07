@@ -50,7 +50,7 @@ Specifies each data collection to return, which defines the type and
 amount of data the command interpreter gathers about the Cache Manager.
 Data is returned in a predefined data structure.
 
-There are three acceptable values:
+These are the acceptable values:
 
 =over 4
 
@@ -73,6 +73,12 @@ setting, plus some additional, detailed performance figures (for example,
 statistics about the number of RPCs sent by the Cache Manager and how long
 they take to complete, and statistics regarding authentication, access,
 and PAG information associated with data access).
+
+=item C<3>
+
+Reports internal metrics concerning the cache truncation daemon and its cache
+eviction activities.  Cache eviction counts are reported for the previous 24
+hours, the current hour, and the total since the cache manager was initialized.
 
 =back
 

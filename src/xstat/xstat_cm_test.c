@@ -22,6 +22,8 @@
 #include <afs/cmd.h>		/*Command line interpreter */
 #include <afs/afsutil.h>
 #include <opr/softsig.h>
+#include <afs/opr.h>
+#include <opr/time.h>
 
 /*
  * Command line parameter indices.
@@ -584,6 +586,106 @@ PrintFullPerfInfo(void)
 
 }				/*PrintFullPerfInfo */
 
+/*------------------------------------------------------------------------
+ * PrintCacheTruncInfo
+ *
+ * Description:
+ *	Print out a set of cache truncation and eviction stats.
+ *
+ * Arguments:
+ *	None.
+ *
+ * Returns:
+ *	Nothing.
+ *
+ * Environment:
+ *	Nothing interesting.
+ *
+ * Side Effects:
+ *	As advertised.
+ *------------------------------------------------------------------------*/
+
+void
+PrintCacheTruncInfo(void)
+{				/*PrintCacheTruncInfo */
+
+    afs_int32 numInt32s;	/*# int32s actually received */
+    struct afs_stats_CMCacheTrunc_wire *CTP;	/*Ptr to cache trunc info */
+    static afs_int32 fullCTInt32s = (sizeof(*CTP) >> 2);	/*Correct #int32s */
+    char *printableTime;
+    time_t probeTime = xstat_cm_Results.probeTime;
+    int hour;
+    struct afs_stats_CTD_hour_wire *hour_stats, *hour_stat;
+    struct afs_time64 worktime;
+    afs_int64 work;
+
+    opr_StaticAssert(sizeof(*CTP) == XSTATS_SIZE_CTDSTATS);
+
+    numInt32s = xstat_cm_Results.data.AFSCB_CollData_len;
+    if (numInt32s != fullCTInt32s) {
+	printf("** Data size mismatch in performance collection!");
+	printf("** Expecting %u, got %u\n", fullCTInt32s, numInt32s);
+	printf("** Version mismatch with Cache Manager\n");
+	return;
+    }
+
+    printableTime = ctime(&probeTime);
+    printableTime[strlen(printableTime) - 1] = '\0';
+
+    /* recast the pointer to the payload */
+    CTP = (struct afs_stats_CMCacheTrunc_wire *)
+	    (xstat_cm_Results.data.AFSCB_CollData_val);
+
+    printf
+	("AFSCB_XSTATSCOLL_CACHETRUNC_INFO (coll %d) for CM %s\n[Probe %u, %s]\n\n",
+	 xstat_cm_Results.collectionNumber, xstat_cm_Results.connP->hostName,
+	 xstat_cm_Results.probeNum, printableTime);
+
+    printf("\t%10u numCTPerfCalls\n", CTP->numCTPerfCalls);
+    printf("\n");
+
+    printf("CacheTruncateDaemon wakeups:\n----------------------------\n");
+    printf("\t%10"AFS_UINT64_FMT"        run count\n",
+	   hfill64(work, CTP->afs_CTD_nSleeps));
+    hfill64(work, CTP->afs_CTD_runTime);
+    worktime = opr_time64_fromTicks(work);
+    printf("\t%10"AFS_UINT64_FMT".%06u run time total (seconds)\n",
+	   opr_time64_toSecs(worktime), opr_time64_toFracMicrosecs(worktime));
+
+    printf("\n");
+
+    printf("Cache eviction metrics:\n-----------------------\n");
+    hour_stats = CTP->hourly;
+    printf("\tstats by hour for (up to) the previous %d hours:\n", XSTATS_CTDSTATS_HOURS);
+    printf("\tblocks evicted time period ending\n");
+    printf("\t-------------- ------------------------\n");
+    for (hour = 0; hour < XSTATS_CTDSTATS_HOURS; hour++) {
+	hour_stat = &(hour_stats[hour]);
+	hfill64(work, hour_stat->time_recorded);
+	if (work == 0) {
+	    continue;	    /* nothing recorded here yet */
+	}
+	worktime = opr_time64_fromTicks(work);
+	printf("\t%14"AFS_UINT64_FMT" %s\n",
+	       hfill64(work, hour_stat->blocks_evicted), opr_time64_ctime(worktime));
+    }
+    printf("\t-end of hourly data-\n\n");
+
+    printf("\tstats for current hour:\n");
+    hour_stat = &(CTP->current_hour);
+    hfill64(work, hour_stat->time_recorded);
+    worktime = opr_time64_fromTicks(work);
+    printf("\t%14"AFS_UINT64_FMT" blocks evicted as of %s\n",
+	   hfill64(work, hour_stat->blocks_evicted), opr_time64_ctime(worktime));
+    printf("\n");
+
+    printf("\ttotals since initialization:\n");
+    printf("\t%14"AFS_UINT64_FMT" total blocks evicted\n",
+	   hfill64(work, CTP->afs_CTD_blocks_evicted));
+    printf("\n");
+
+}				/*PrintCacheTruncInfo */
+
 
 /*------------------------------------------------------------------------
  * CM_Handler
@@ -653,6 +755,10 @@ CM_Handler(void)
 
     case AFSCB_XSTATSCOLL_FULL_PERF_INFO:
 	PrintFullPerfInfo();
+	break;
+
+    case AFSCB_XSTATSCOLL_CACHETRUNC_INFO:
+	PrintCacheTruncInfo();
 	break;
 
     default:

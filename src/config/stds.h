@@ -147,6 +147,8 @@ typedef struct afs_hyper_t {	/* unsigned 64 bit integers */
 #define hset64(a,hi,lo) ((a).high = (hi), (a).low = (lo))
 #define hgetlo(a) ((a).low)
 #define hgethi(a) ((a).high)
+#define hsplit64(a,i) SplitInt64(i, (a).high, (a).low)
+#define hfill64(i,a) FillInt64(i, (a).high, (a).low)
 #define hshlft(a,n)                                                        \
      { /*Shift Left n bits*/                                               \
         int s = sizeof((a).low) * 8; /*#bits*/                             \
