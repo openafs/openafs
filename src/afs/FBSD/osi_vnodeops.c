@@ -210,7 +210,6 @@ afs_vop_lookup(ap)
     struct vnode *vp, *dvp;
     int flags = ap->a_cnp->cn_flags;
     int lockparent;		/* 1 => lockparent flag is set */
-    int wantparent;		/* 1 => wantparent or lockparent flag */
 
     dvp = ap->a_dvp;
     if (dvp->v_type != VDIR) {
@@ -223,7 +222,6 @@ afs_vop_lookup(ap)
     GETNAME();
 
     lockparent = flags & LOCKPARENT;
-    wantparent = flags & (LOCKPARENT | WANTPARENT);
 
 #if __FreeBSD_version < 1000021
     cnp->cn_flags |= MPSAFE; /* steel */
@@ -274,8 +272,7 @@ afs_vop_lookup(ap)
     }
     *ap->a_vpp = vp;
 
-    if ((cnp->cn_nameiop == RENAME && wantparent && (flags & ISLASTCN))
-	|| (cnp->cn_nameiop != LOOKUP && (flags & ISLASTCN)))
+    if (cnp->cn_nameiop != LOOKUP && (flags & ISLASTCN))
 	cnp->cn_flags |= SAVENAME;
 
     DROPNAME();
