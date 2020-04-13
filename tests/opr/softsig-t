@@ -88,6 +88,7 @@ is($? & 0x7f, SIGSEGV, "Helper exited on SEGV signal.");
 SKIP: {
     my $sigbus = eval "SIGBUS";
     skip("Skipping buserror test; SIGBUS constant is not defined.", 1) unless $sigbus;
+    skip("Skipping buserror test; test unreliable on FreeBSD.", 1) if ($^O eq 'freebsd');
 
     my ($fh, $path) = mkstemp("/tmp/softsig-t_XXXXXX");
     $pid = open(HELPER, "-|", $softsig_helper, "-buserror", $path)
