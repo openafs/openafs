@@ -465,14 +465,16 @@ void
 afs_CacheTruncateDaemon(void)
 {
     osi_timeval32_t CTD_tmpTime;
+    struct afs_CTD_stats *ctd_stats = &CTD_stats;
     u_int counter;
     u_int cb_lowat;
     u_int dc_hiwat =
 	PERCENT((100 - CM_DCACHECOUNTFREEPCT + CM_DCACHEEXTRAPCT), afs_cacheFiles);
+
     afs_min_cache =
 	(((10 * AFS_CHUNKSIZE(0)) + afs_fsfragsize) & ~afs_fsfragsize) >> 10;
 
-    osi_GetTime(&CTD_stats.CTD_afterSleep);
+    osi_GetTime(&ctd_stats->CTD_afterSleep);
     afs_TruncateDaemonRunning = 1;
     while (1) {
 	cb_lowat = PERCENT((CM_DCACHESPACEFREEPCT - CM_DCACHEEXTRAPCT), afs_cacheBlocks);
@@ -539,20 +541,20 @@ afs_CacheTruncateDaemon(void)
 	if (!afs_WaitForCacheDrain && !afs_CacheTooFull
 	    && (afs_termState != AFSOP_STOP_TRUNCDAEMON)) {
 	    /* Collect statistics on truncate daemon. */
-	    CTD_stats.CTD_nSleeps++;
-	    osi_GetTime(&CTD_stats.CTD_beforeSleep);
-	    afs_stats_GetDiff(CTD_tmpTime, CTD_stats.CTD_afterSleep,
-			      CTD_stats.CTD_beforeSleep);
-	    afs_stats_AddTo(CTD_stats.CTD_runTime, CTD_tmpTime);
+	    ctd_stats->CTD_nSleeps++;
+	    osi_GetTime(&ctd_stats->CTD_beforeSleep);
+	    afs_stats_GetDiff(CTD_tmpTime, ctd_stats->CTD_afterSleep,
+			      ctd_stats->CTD_beforeSleep);
+	    afs_stats_AddTo(ctd_stats->CTD_runTime, CTD_tmpTime);
 
 	    afs_TruncateDaemonRunning = 0;
 	    afs_osi_Sleep((int *)afs_CacheTruncateDaemon);
 	    afs_TruncateDaemonRunning = 1;
 
-	    osi_GetTime(&CTD_stats.CTD_afterSleep);
-	    afs_stats_GetDiff(CTD_tmpTime, CTD_stats.CTD_beforeSleep,
-			      CTD_stats.CTD_afterSleep);
-	    afs_stats_AddTo(CTD_stats.CTD_sleepTime, CTD_tmpTime);
+	    osi_GetTime(&ctd_stats->CTD_afterSleep);
+	    afs_stats_GetDiff(CTD_tmpTime, ctd_stats->CTD_beforeSleep,
+			      ctd_stats->CTD_afterSleep);
+	    afs_stats_AddTo(ctd_stats->CTD_sleepTime, CTD_tmpTime);
 	}
 	if (afs_termState == AFSOP_STOP_TRUNCDAEMON) {
 	    afs_termState = AFSOP_STOP_AFSDB;
