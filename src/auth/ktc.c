@@ -297,6 +297,15 @@ SetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 #endif /* NO_AFS_CLIENT */
     if (code)
 	return KTC_PIOCTLFAIL;
+#if defined(AFS_LINUX26_ENV) && defined(SYS_keyctl)
+    else
+        /*
+         * If we're using keyring based PAGs and the SESSION_TO_PARENT keyctl
+         * is available, use it to copy the session keyring to the parent process
+         */
+        if (flags & AFS_SETTOK_SETPAG)
+            syscall(SYS_keyctl, KEYCTL_SESSION_TO_PARENT);
+#endif
     return 0;
 }
 
