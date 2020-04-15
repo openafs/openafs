@@ -1832,19 +1832,40 @@ _settok_tokenCell(char *cellName, int *cellNum, int *primary) {
 }
 
 
+#if defined(AFS_LINUX26_ENV)
 static_inline int
-_settok_setParentPag(afs_ucred_t **cred) {
+_settok_setParentPag(afs_ucred_t **cred)
+{
     afs_uint32 pag;
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+    int code;
+    afs_ucred_t *old_cred = *cred;
+    code = setpag(cred, -1, &pag, 1);
+    if (code == 0) {
+	/* setpag() may have changed our credentials */
+	*cred = crref();
+	crfree(old_cred);
+    }
+    return code;
+}
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+static_inline int
+_settok_setParentPag(afs_ucred_t **cred)
+{
+    afs_uint32 pag;
     char procname[256];
     osi_procname(procname, 256);
     afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
 	         MyPidxx2Pid(MyPidxx), procname);
     return setpag(osi_curproc(), cred, -1, &pag, 1);
-#else
-    return setpag(cred, -1, &pag, 1);
-#endif
 }
+#else
+static_inline int
+_settok_setParentPag(afs_ucred_t **cred)
+{
+    afs_uint32 pag;
+    return setpag(cred, -1, &pag, 1);
+}
+#endif
 
 /*!
  * VIOCSETTOK (3) - Set authentication tokens
@@ -5369,15 +5390,7 @@ DECL_PIOCTL(PSetTokens2)
     }
 
     if (tokenSet.flags & AFSTOKEN_EX_SETPAG) {
-#if defined(AFS_LINUX26_ENV)
-	afs_ucred_t *old_cred = *acred;
-#endif
 	if (_settok_setParentPag(acred) == 0) {
-#if defined(AFS_LINUX26_ENV)
-	    /* setpag() may have changed our credentials */
-	    *acred = crref();
-	    crfree(old_cred);
-#endif
 	    code = afs_CreateReq(&treq, *acred);
 	    if (code) {
 		xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
