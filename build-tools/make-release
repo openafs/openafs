@@ -45,12 +45,15 @@ if ($tagPoint) {
 
 my $version = `git describe --abbrev=4 $tagName`;
 chomp $version;
-$version=~s/openafs-[^-]*-//;
-$version=~s/_/./g;
+if (!$version) {
+    die "Failed to describe $tagName.\n";
+}
+my $suffix = $version;
+$suffix =~ s/openafs-[^-]*-//;
+$suffix =~ s/_/./g;
+my $name = "openafs-$suffix";
 
 # Grab the tagged code into a temporary directory
-
-my $name = "openafs-".$version;
 
 my $tempDir = File::Temp::tempdir();
 system ("git archive --format=tar --prefix=$name/ $tagName ".
@@ -68,7 +71,10 @@ if ($last) {
 }
 
 # Describe the tree
-system("git describe --abbrev=4 $tagName > $tempDir/$name/.version");
+open(my $fh, ">", "$tempDir/$name/.version") or
+    die "Failed to open $tempDir/$name/.version: $!\n";
+print $fh "$version\n";
+close($fh);
 
 # Run regen.sh to create the rest of the tree
 system ("cd $tempDir/$name && ./regen.sh") == 0
