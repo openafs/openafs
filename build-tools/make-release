@@ -13,11 +13,13 @@ my $tagPoint;
 my $last;
 my $outDir = ".";
 
-GetOptions("help|?" => \$help,
-	   "man" => \$man,
-	   "tagpoint=s" => \$tagPoint,
- 	   "last=s" => \$last,
-	   "dir=s" => \$outDir) or pod2usage(2);
+GetOptions(
+    "help|?" => \$help,
+    "man" => \$man,
+    "tagpoint=s" => \$tagPoint,
+    "last=s" => \$last,
+    "dir=s" => \$outDir,
+) or pod2usage(2);
 
 pod2usage(1) if $help;
 pod2usage(-exitstatus => 0, -verbose => 2) if $man;
@@ -35,7 +37,7 @@ if ($tagPoint) {
 
     # Push the tag upstream
     system ("git push ssh://gerrit.openafs.org:29418/openafs tag $tagName") == 0
-    	or die "git push failed with : $!";
+        or die "git push failed with : $!";
 }
 
 $version = `git describe --abbrev=4 $tagName`;
@@ -49,7 +51,7 @@ my $name = "openafs-".$version;
 
 my $tempDir = File::Temp::tempdir();
 system ("git archive --format=tar --prefix=$name/ $tagName ".
-	" | tar -C $tempDir -x") == 0
+        " | tar -C $tempDir -x") == 0
     or die "Git archive failed with: $?";
 
 # Construct the ChangeLog
@@ -95,11 +97,11 @@ my @toMD5;
 # and also set up a list for md5 checksumming.
 foreach my $file (@toCompress) {
     system("gzip < $file > $file.gz") == 0
-	or die "Unable to create gzip file of '$file' : $!";
+        or die "Unable to create gzip file of '$file' : $!";
     push @toMD5, "$file.gz";
 
     system("bzip2 < $file > $file.bz2") == 0
-	or die "Unable to create bzip file of '$file' : $!";
+        or die "Unable to create bzip file of '$file' : $!";
     push @toMD5, "$file.bz2";
 
     # Delete the uncompressed tar files.
@@ -113,38 +115,38 @@ foreach my $file (@toCompress) {
 
 foreach my $file (@toMD5) {
     if (-x "/sbin/md5") {
-	system("/sbin/md5 -q $file > $file.md5");
+        system("/sbin/md5 -q $file > $file.md5");
     } elsif (-x "/usr/bin/md5sum") {
-	system("/usr/bin/md5sum $file > $file.md5");
+        system("/usr/bin/md5sum $file > $file.md5");
     } else {
-	print STDERR "No md5 utiltiy found. Not producing checksums\n";
+        print STDERR "No md5 utility found. Not producing checksums\n";
     }
 }
- 
+
 
 __END__
 
 =head1 NAME
 
-make_release - Make an OpenAFS release from git
+make-release - Make an OpenAFS release from git
 
 =head1 SYNOPSIS
 
-make_release [options] <tag> [<version>]
+make-release [options] <tag> [<version>]
 
  Options:
-    --help	         brief help message
-    --man	         full documentation
+    --help               brief help message
+    --man                full documentation
     --tagpoint <object>  create new tag
     --last <object>      generate changelog and diffs from this point
     --dir <dir>          output results into this directory
 
 =head1 DESCRIPTION
 
-make_release constructs an OpenAFS release from a local git clone. If run
+make-release constructs an OpenAFS release from a local git clone. If run
 with just the standard arguments, it will extract the contents of the
 specified tag into the current directory, creating src and doc tarballs,
-gziping and bziping them, and generating md5 hashes. It will also create a
+gzipping and bzipping them, and generating md5 hashes. It will also create a
 ChangeLog file, listing all of the changes in that release.
 
 This standard behaviour may be modified by the following options
@@ -155,7 +157,7 @@ This standard behaviour may be modified by the following options
 
 =item B<--last> I<object>
 
-Generate the ChangeLog starting from I<object>. Also generate a 
+Generate the ChangeLog starting from I<object>. Also generate a
 openafs-$version.diff file in the output directory containing all of the
 changes between I<object> and the current tag
 
@@ -169,5 +171,7 @@ in <directory>, which must already exist.
 Rather than using an existing tag, create a new one on the specified commit,
 or on the tip of the specified branch. This will GPG sign the new tag, and
 push it into gerrit.
+
+=back
 
 =cut
