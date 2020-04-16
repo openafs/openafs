@@ -1841,7 +1841,7 @@ ListAttributesN2(struct rx_call *rxcall,
 		 * pick up entries marked NEWREPSITEs and DONTUSE.
 		 */
 		else {
-		    if (tentry.flags & VLF_ROEXISTS) {
+		    if ((tentry.serverFlags[k] & VLSF_ROVOL) != 0) {
 			if (findname) {
 			    if (namematchRO) {
 				thismatch =
