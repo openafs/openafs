@@ -25,9 +25,12 @@ pod2usage(1) if $help;
 pod2usage(-exitstatus => 0, -verbose => 2) if $man;
 
 my $tagName = shift;
-my $version = shift;
+my $notused = shift;  # Used to be "version".
 
 pod2usage(2) if !defined($tagName);
+if (defined $notused) {
+    warn "Warning: argument '$notused' is ignored.\n";
+}
 
 # Tag the repository
 
@@ -40,7 +43,7 @@ if ($tagPoint) {
         or die "git push failed with : $!";
 }
 
-$version = `git describe --abbrev=4 $tagName`;
+my $version = `git describe --abbrev=4 $tagName`;
 chomp $version;
 $version=~s/openafs-[^-]*-//;
 $version=~s/_/./g;
@@ -132,7 +135,7 @@ make-release - Make an OpenAFS release from git
 
 =head1 SYNOPSIS
 
-make-release [options] <tag> [<version>]
+make-release [options] <tag>
 
  Options:
     --help               brief help message
