@@ -1169,14 +1169,6 @@ struct afs_stats_CMFullPerf {
     struct afs_stats_AuthorInfo author;	/*Authorship stats */
 };
 
-/*
- * These are the storage declarations for the structures accessible
- * via the xstat package.
- */
-/* extern struct afs_stats_CMPerf afs_stats_cmperf; */
-/* extern struct afs_stats_CMFullPerf afs_stats_cmfullperf; */
-/* extern afs_int32 afs_stats_XferSumBytes[]; */
-
 #ifndef AFS_NOSTATS
 /*
  * We define routines to keep running counts and means.  For the
