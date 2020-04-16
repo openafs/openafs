@@ -11,7 +11,6 @@
 
 # General rules
 
-.*
 *.orig
 *.rej
 *.o
@@ -95,3 +94,26 @@ config.log
 
 # Result of make libafs_tree
 /libafs_tree
+
+# Other generated files
+src/audit/.libs/
+src/auth/.libs/
+src/cmd/.libs/
+src/comerr/.libs/
+src/crypto/hcrypto/.libs/
+src/crypto/rfc3961/.libs/
+src/fsint/.libs/
+src/kopenafs/.libs/
+src/libacl/.libs/
+src/libafsrpc/.libs/
+src/lwp/.libs/
+src/opr/.libs/
+src/ptserver/.libs/
+src/roken/.libs/
+src/rx/.libs/
+src/rxkad/.libs/
+src/rxstat/.libs/
+src/sys/.libs/
+src/ubik/.libs/
+src/usd/.libs/
+src/util/.libs/
