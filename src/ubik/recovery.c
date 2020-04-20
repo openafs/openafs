@@ -465,6 +465,8 @@ urecovery_Interact(void *dummy)
     int fd = -1;
     afs_int32 pass;
 
+    memset(pbuffer, 0, sizeof(pbuffer));
+
     opr_threadname_set("recovery");
 
     /* otherwise, begin interaction */
@@ -601,6 +603,8 @@ urecovery_Interact(void *dummy)
 	    /* we don't have the best version; we should fetch it. */
 	    urecovery_AbortAll(ubik_dbase);
 
+	    pbuffer[0] = '\0';
+
 	    /* Rx code to do the Bulk fetch */
 	    file = 0;
 	    offset = 0;
@@ -716,7 +720,9 @@ urecovery_Interact(void *dummy)
 #endif
 	    }
 	    if (code) {
-		unlink(pbuffer);
+		if (pbuffer[0] != '\0') {
+		    unlink(pbuffer);
+		}
 		/*
 		 * We will effectively invalidate the old data forever now.
 		 * Unclear if we *should* but we do.
