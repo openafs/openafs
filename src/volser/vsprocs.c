@@ -6993,7 +6993,39 @@ UV_RenameVolume(struct nvldbentry *entry, char oldname[], char newname[])
 	goto rvfail;
     }
     islocked = 1;
+
+    /*
+     * Match the flags we just set via SetLock,
+     * so we don't invalidate our compare below.
+     */
+    entry->flags &= ~VLOP_ALLOPERS;
+    entry->flags |= VLOP_ADDSITE;
+
+    /*
+     * Now get the entry again (under lock) and
+     * verify the volume hasn't otherwise changed.
+     */
+    vcode = VLDB_GetEntryByID(entry->volumeId[RWVOL], RWVOL, &storeEntry);
+    if (vcode) {
+	fprintf(STDERR,
+		"Could not obtain the VLDB entry for the volume %u\n",
+		entry->volumeId[RWVOL]);
+	error = vcode;
+	goto rvfail;
+    }
+    /* Convert to net order to match entry, which was passed in net order. */
+    MapHostToNetwork(&storeEntry);
+    if (memcmp(entry, &storeEntry, sizeof(*entry)) != 0) {
+	fprintf(STDERR,
+		"VLDB entry for volume %u has changed; "
+		"please reissue the command.\n",
+		entry->volumeId[RWVOL]);
+	error = VL_BADENTRY;	/* an arbitrary choice, but closest to the truth */
+	goto rvfail;
+    }
+
     strncpy(entry->name, newname, VOLSER_OLDMAXVOLNAME);
+    /* Note that we are reusing storeEntry. */
     MapNetworkToHost(entry, &storeEntry);
     vcode = VLDB_ReplaceEntry(entry->volumeId[RWVOL], RWVOL, &storeEntry, 0);
     if (vcode) {
