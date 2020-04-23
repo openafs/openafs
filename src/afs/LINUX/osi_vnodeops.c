@@ -533,9 +533,9 @@ afs_linux_mmap(struct file *fp, struct vm_area_struct *vmap)
     int code;
 
     AFS_GLOCK();
-    afs_Trace3(afs_iclSetp, CM_TRACE_GMAP, ICL_TYPE_POINTER, vcp,
-	       ICL_TYPE_POINTER, vmap->vm_start, ICL_TYPE_INT32,
-	       vmap->vm_end - vmap->vm_start);
+    afs_Trace4(afs_iclSetp, CM_TRACE_GMAP, ICL_TYPE_POINTER, vcp,
+	       ICL_TYPE_POINTER, vmap->vm_start, ICL_TYPE_LONG,
+	       vmap->vm_end - vmap->vm_start, ICL_TYPE_LONG, 0);
 
     /* get a validated vcache entry */
     code = afs_linux_VerifyVCache(vcp, NULL);
