@@ -179,7 +179,7 @@ main(void)
 
     ok(1, "Added %d events", NUMEVENTS);
 
-    sleep(3);
+    sleep(4);
 
     fired = 0;
     cancelled = 0;
@@ -193,7 +193,9 @@ main(void)
 	    fail = 1;
     }
     ok(!fail, "Didn't fire any cancelled events");
-    ok(fired+cancelled == NUMEVENTS,
+    diag("fired %d/%d events", fired, NUMEVENTS);
+    diag("cancelled %d/%d events", cancelled, NUMEVENTS);
+    is_int(NUMEVENTS, fired+cancelled,
 	"Number of fired and cancelled events sum to correct total");
 
     return 0;
