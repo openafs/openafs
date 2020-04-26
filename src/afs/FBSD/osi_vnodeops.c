@@ -743,11 +743,13 @@ afs_vop_putpages(struct vop_putpages_args *ap)
     relpbuf(bp, &afs_pbuf_freecnt);
 
     if (!code) {
+	AFS_VM_OBJECT_WLOCK(vp->v_object);
 	size = ap->a_count - uio.uio_resid;
 	for (i = 0; i < round_page(size) / PAGE_SIZE; i++) {
 	    ap->a_rtvals[i] = VM_PAGER_OK;
 	    vm_page_undirty(ap->a_m[i]);
 	}
+	AFS_VM_OBJECT_WUNLOCK(vp->v_object);
     }
     return ap->a_rtvals[0];
 }
