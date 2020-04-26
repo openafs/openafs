@@ -2062,7 +2062,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 		}
 		MUTEX_ENTER(&rx_pthread_mutex);
 		if (tno == rxi_fcfs_thread_num
-			|| opr_queue_IsEnd(&rx_incomingCallQueue, cursor)) {
+			|| opr_queue_IsLast(&rx_incomingCallQueue, cursor)) {
 		    MUTEX_EXIT(&rx_pthread_mutex);
 		    /* If we're the fcfs thread , then  we'll just use
 		     * this call. If we haven't been able to find an optimal
@@ -2238,7 +2238,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	    if (QuotaOK(service)) {
 		MUTEX_ENTER(&rx_pthread_mutex);
 		if (tno == rxi_fcfs_thread_num
-			|| opr_queue_IsEnd(&rx_incomingCallQueue, cursor)) {
+			|| opr_queue_IsLast(&rx_incomingCallQueue, cursor)) {
 		    MUTEX_EXIT(&rx_pthread_mutex);
 		    /* If we're the fcfs thread, then  we'll just use
 		     * this call. If we haven't been able to find an optimal
