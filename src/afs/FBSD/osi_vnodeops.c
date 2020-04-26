@@ -386,6 +386,14 @@ afs_vop_close(ap)
     else
 	code = afs_close(avc, ap->a_fflag, afs_osi_credp);
     osi_FlushPages(avc, ap->a_cred);	/* hold GLOCK, but not basic vnode lock */
+
+    ObtainWriteLock(&avc->lock, 808);
+    if (avc->cred != NULL) {
+	crfree(avc->cred);
+	avc->cred = NULL;
+    }
+    ReleaseWriteLock(&avc->lock);
+
     AFS_GUNLOCK();
     return code;
 }
@@ -695,6 +703,7 @@ afs_vop_putpages(struct vop_putpages_args *ap)
     vm_offset_t kva;
     struct vnode *vp;
     struct vcache *avc;
+    struct ucred *cred;
 
     memset(&uio, 0, sizeof(uio));
     memset(&iov, 0, sizeof(iov));
@@ -736,7 +745,22 @@ afs_vop_putpages(struct vop_putpages_args *ap)
      * sync |= IO_INVAL; */
 
     AFS_GLOCK();
-    code = afs_write(avc, &uio, sync, osi_curcred(), 0);
+
+    ObtainReadLock(&avc->lock);
+    if (avc->cred != NULL) {
+	/*
+	 * Use the creds from the process that opened this file for writing; if
+	 * any. Otherwise, if we use the current process's creds, we may use
+	 * the creds for uid 0 if we are writing back pages from the syncer(4)
+	 * process.
+	 */
+	cred = crhold(avc->cred);
+    } else {
+	cred = crhold(curthread->td_ucred);
+    }
+    ReleaseReadLock(&avc->lock);
+
+    code = afs_write(avc, &uio, sync, cred, 0);
     AFS_GUNLOCK();
 
     pmap_qremove(kva, npages);
@@ -751,6 +775,7 @@ afs_vop_putpages(struct vop_putpages_args *ap)
 	}
 	AFS_VM_OBJECT_WUNLOCK(vp->v_object);
     }
+    crfree(cred);
     return ap->a_rtvals[0];
 }
 
