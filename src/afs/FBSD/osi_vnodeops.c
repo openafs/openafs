@@ -670,11 +670,19 @@ afs_vop_write(ap)
 {
     int code;
     struct vcache *avc = VTOAFS(ap->a_vp);
+    off_t start, end;
+    start = AFS_UIO_OFFSET(ap->a_uio);
+    end = start + AFS_UIO_RESID(ap->a_uio);
+
     AFS_GLOCK();
     osi_FlushPages(avc, ap->a_cred);	/* hold GLOCK, but not basic vnode lock */
     code =
 	afs_write(VTOAFS(ap->a_vp), ap->a_uio, ap->a_ioflag, ap->a_cred, 0);
     AFS_GUNLOCK();
+
+    /* Invalidate any pages in the written area. */
+    vn_pages_remove(ap->a_vp, OFF_TO_IDX(start), OFF_TO_IDX(end));
+
     return code;
 }
 
