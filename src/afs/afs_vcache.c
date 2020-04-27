@@ -2978,6 +2978,9 @@ shutdown_vcache(void)
 {
     int i;
     struct afs_cbr *tsp;
+    struct afs_cbr *cbr, *cbr_next;
+    struct server *ts;
+
     /*
      * XXX We may potentially miss some of the vcaches because if when
      * there are no free vcache entries and all the vcache entries are active
@@ -3047,6 +3050,20 @@ shutdown_vcache(void)
 	    afs_vhashT[i] = 0;
 	}
     }
+
+    /*
+     * Remove any reference to CBRs in the server structs before we free the
+     * memory for our CBRs below.
+     */
+    for (i = 0; i < NSERVERS; i++) {
+	for (ts = afs_servers[i]; ts; ts = ts->next) {
+	    for (cbr = ts->cbrs; cbr; cbr = cbr_next) {
+		cbr_next = cbr->next;
+		afs_FreeCBR(cbr);
+	    }
+	}
+    }
+
     /*
      * Free any leftover callback queue
      */
