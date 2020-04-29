@@ -14,3 +14,4 @@ EXPORTS
 	oafs_h_krb5_copy_keyblock_contents          @13
 	oafs_h_krb5_free_keyblock                   @14
 	oafs_h_krb5_free_keyblock_contents          @15
+	oafs_h_krb5_enctype_keysize                 @16
