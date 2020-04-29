@@ -273,12 +273,11 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	    krb5_free_context(context);
 	    goto unknown_key;
 	}
-	code = krb5_enctype_keybits(context,  t5.enc_part.etype, &keysize);
+	code = krb5_enctype_keysize(context,  t5.enc_part.etype, &keysize);
 	if (code != 0) {
 	    krb5_free_context(context);
 	    goto unknown_key;
 	}
-	keysize = keysize / 8;
 	allocsiz = keysize;
 	keybuf = rxi_Alloc(allocsiz);
 	/* this is not quite a hole for afsconf_GetKeyByTypes. A wrapper
