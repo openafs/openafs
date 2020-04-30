@@ -31,7 +31,11 @@
 #endif
 #include <linux/pagemap.h>
 #include <linux/writeback.h>
-#include <linux/pagevec.h>
+#if defined(HAVE_LINUX_LRU_CACHE_ADD_FILE)
+# include <linux/swap.h>
+#else
+# include <linux/pagevec.h>
+#endif
 #include <linux/aio.h>
 #include "afs/lock.h"
 #include "afs/afs_bypasscache.h"
@@ -67,6 +71,36 @@ extern struct vcache *afs_globalVp;
 
 /* Handle interfacing with Linux's pagevec/lru facilities */
 
+#if defined(HAVE_LINUX_LRU_CACHE_ADD_FILE)
+
+/*
+ * Linux's lru_cache_add_file provides a simplified LRU interface without
+ * needing a pagevec
+ */
+struct afs_lru_pages {
+    char unused;
+};
+
+static inline void
+afs_lru_cache_init(struct afs_lru_pages *alrupages)
+{
+    return;
+}
+
+static inline void
+afs_lru_cache_add(struct afs_lru_pages *alrupages, struct page *page)
+{
+    lru_cache_add_file(page);
+}
+
+static inline void
+afs_lru_cache_finalize(struct afs_lru_pages *alrupages)
+{
+    return;
+}
+#else
+
+/* Linux's pagevec/lru interfaces require a pagevec */
 struct afs_lru_pages {
     struct pagevec lrupv;
 };
@@ -74,16 +108,16 @@ struct afs_lru_pages {
 static inline void
 afs_lru_cache_init(struct afs_lru_pages *alrupages)
 {
-#if defined(PAGEVEC_INIT_COLD_ARG)
+# if defined(PAGEVEC_INIT_COLD_ARG)
     pagevec_init(&alrupages->lrupv, 0);
-#else
+# else
     pagevec_init(&alrupages->lrupv);
-#endif
+# endif
 }
 
-#ifndef HAVE_LINUX_PAGEVEC_LRU_ADD_FILE
-# define __pagevec_lru_add_file __pagevec_lru_add
-#endif
+# ifndef HAVE_LINUX_PAGEVEC_LRU_ADD_FILE
+#  define __pagevec_lru_add_file __pagevec_lru_add
+# endif
 
 static inline void
 afs_lru_cache_add(struct afs_lru_pages *alrupages, struct page *page)
@@ -99,6 +133,7 @@ afs_lru_cache_finalize(struct afs_lru_pages *alrupages)
     if (pagevec_count(&alrupages->lrupv))
 	__pagevec_lru_add_file(&alrupages->lrupv);
 }
+#endif /* !HAVE_LINUX_LRU_ADD_FILE */
 
 /* This function converts a positive error code from AFS into a negative
  * code suitable for passing into the Linux VFS layer. It checks that the
