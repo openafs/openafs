@@ -3,14 +3,30 @@
 use strict;
 use warnings;
 
+use Getopt::Long;
+use Pod::Usage;
 use IO::Dir;
 use IO::File;
 use File::Path;
 use File::Copy;
 use File::Temp;
+use File::Basename;
+use File::Spec;
 
 # Build an SRPM for OpenAFS, given a src and doc tarball, release notes,
 # and ChangeLog.
+
+my $help = 0;
+my $man = 0;
+my $dir = ".";
+
+GetOptions(
+    "help|?" => \$help,
+    "man" => \$man,
+    "dir=s" => \$dir,
+) or pod2usage(-exitval => 1, -verbose => 1);
+pod2usage(-exitval => 0, -verbose => 1) if $help;
+pod2usage(-exitval => 0, -verbose => 2, -noperldoc => 1) if $man;
 
 my $srcball = shift;
 my $docball = shift;
@@ -18,9 +34,8 @@ my $relnotes = shift;
 my $changelog = shift;
 my $cellservdb = shift;
 
-if (!$srcball && !$docball) {
-  printf "Usage:  makesrpm <src.tar.bz2> <doc.tar.bz2> [<relnotes> [<changelog> [<cellservdb>]]]\n";
-  exit(1);
+if (!defined($srcball) || !defined($docball)) {
+    pod2usage(-exitval => 1, -verbose => 1);
 }
 
 if (! -f $srcball) {
@@ -77,15 +92,12 @@ if ($afsversion=~m/(.*)-([0-9]+)-(g[a-f0-9]+)$/) {
     $linuxrel.=".$2.$3";
 }
 
-print "Linux release is $linuxrel\n";
-print "Linux version is $linuxver\n";
+# Avoid illegal characters in RPM package version and release strings.
+$linuxver =~ s/-/_/g;
+$linuxrel =~ s/-/_/g;
 
-# Figure out a major, minor and release so that we know which version we're
-# building, and therefore what the srpm is going to be called
-$linuxver=~/([0-9]+)\.([0-9]+)\.([0-9]+)/;
-my $major = $1;
-my $minor = $2;
-my $patchlevel = $3;
+print "Package version is $linuxver\n";
+print "Package release is $linuxrel\n";
 
 # Build the RPM root
 
@@ -165,18 +177,49 @@ system("rpmbuild -bs --nodeps --define \"dist %undefined\" ".
   or die "rpmbuild failed : $!\n";
 
 # Copy it out to somewhere useful
-if (!defined($major) || $major > 1 || ($major == 1 && $minor >= 6)) {
-  File::Copy::copy("$tmpdir/rpmdir/SRPMS/openafs-$linuxver-$linuxrel.src.rpm",
-	           "openafs-$linuxver-$linuxrel.src.rpm")
-    or die "Unable to copy output RPM : $!\n";
-
-  print "SRPM is openafs-$linuxver-$linuxrel.src.rpm\n";
-} else {
-  File::Copy::copy("$tmpdir/rpmdir/SRPMS/openafs-$linuxver-1.$linuxrel.src.rpm",
-	           "openafs-$linuxver-1.$linuxrel.src.rpm")
-    or die "Unable to copy output RPM : $!\n";
-
-  print "SRPM is openafs-$linuxver-1.$linuxrel.src.rpm\n";
+my @srpms = glob("$tmpdir/rpmdir/SRPMS/*.src.rpm");
+if (scalar(@srpms) != 1) {
+    die "Generated SRPM file not found.\n";
 }
+my $filename = File::Basename::fileparse($srpms[0]);
+my $srpm = File::Spec->rel2abs("$dir/$filename");
+File::Path::make_path($dir);
+File::Copy::copy($srpms[0], $srpm)
+    or die "Failed to copy '$srpms[0]' to '$srpm': $!\n";
+print "SRPM is $srpm\n";
 
+__END__
 
+=head1 NAME
+
+makesrpm.pl - Build the SRPM for OpenAFS from source distibution files
+
+=head1 SYNOPSIS
+
+makesrpm.pl [options] <src.tar.bz2> <doc.tar.bz2> [<relnotes> [<changelog> [<cellservdb>]]]
+
+=head1 DESCRIPTION
+
+Build the SRPM for OpenAFS from source distibution files. Generate empty RELNOTES
+and ChangeLog files if not provided. Download the CellServDB file from
+grand.central.org if one is not provided.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<--help>
+
+Print help message and exit.
+
+=item B<--man>
+
+Print full man page and exit.
+
+=item B<--dir> I<path>
+
+Place the generated SRPM file in I<path> instead of the current directory.
+
+=back
+
+=cut

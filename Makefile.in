@@ -761,8 +761,10 @@ dist:
 	mkdir -p packages
 	./build-tools/make-release --dir=packages HEAD
 
-srpm:
-	(cd packages && ../src/packaging/RedHat/makesrpm.pl *-src.tar.bz2 *-doc.tar.bz2)
+srpm: dist
+	./src/packaging/RedHat/makesrpm.pl --dir=packages \
+	  packages/openafs-*-src.tar.bz2 \
+	  packages/openafs-*-doc.tar.bz2
 
 dox:
 	if test "x$(DOXYGEN)" != "x"; then \
