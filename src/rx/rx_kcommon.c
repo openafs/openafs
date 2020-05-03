@@ -268,13 +268,7 @@ rx_ServerProc(void *unused)
     threadID = rxi_availProcs++;
     MUTEX_EXIT(&rx_quota_mutex);
 
-# ifdef RX_ENABLE_LOCKS
-    AFS_GUNLOCK();
-# endif /* RX_ENABLE_LOCKS */
     rxi_ServerProc(threadID, NULL, NULL);
-# ifdef RX_ENABLE_LOCKS
-    AFS_GLOCK();
-# endif /* RX_ENABLE_LOCKS */
 
     return NULL;
 }
@@ -857,8 +851,6 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 #  if (defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)) && defined(KERNEL_FUNNEL)
     thread_funnel_switch(KERNEL_FUNNEL, NETWORK_FUNNEL);
 #  endif
-    AFS_ASSERT_GLOCK();
-    AFS_GUNLOCK();
 #  if	defined(AFS_HPUX102_ENV)
 #   if     defined(AFS_HPUX110_ENV)
     /* we need a file associated with the socket so sosend in NetSend
@@ -998,14 +990,12 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 #   endif /* else defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) */
 #  endif /* else AFS_HPUX110_ENV */
 
-    AFS_GLOCK();
 #  if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
     thread_funnel_switch(NETWORK_FUNNEL, KERNEL_FUNNEL);
 #  endif
     return (osi_socket *)newSocket;
 
   bad:
-    AFS_GLOCK();
 #  if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
     thread_funnel_switch(NETWORK_FUNNEL, KERNEL_FUNNEL);
 #  endif
