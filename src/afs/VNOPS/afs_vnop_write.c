@@ -453,6 +453,12 @@ afs_DoPartialWrite(struct vcache *avc, struct vrequest *areq)
     return code;
 }
 
+#ifdef AFS_FBSD_ENV
+static int bkg_store_disabled = 1;
+#else
+static int bkg_store_disabled = 0;
+#endif
+
 /* handle any closing cleanup stuff */
 int
 #if defined(AFS_SGI65_ENV)
@@ -539,7 +545,7 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
     }
 #endif
     if (aflags & (FWRITE | FTRUNC)) {
-	if (afs_BBusy() || (AFS_NFSXLATORREQ(acred)) || AFS_IS_DISCONNECTED) {
+	if (bkg_store_disabled || afs_BBusy() || (AFS_NFSXLATORREQ(acred)) || AFS_IS_DISCONNECTED) {
 	    /* do it yourself if daemons are all busy */
 	    ObtainWriteLock(&avc->lock, 124);
 	    code = afs_StoreOnLastReference(avc, treq);
