@@ -695,14 +695,21 @@ shutdown_cache(void)
 	pag_epoch = 0;
 	pagCounter = 0;
 #if defined(AFS_XBSD_ENV)
-	/* memcache never sets this, so don't panic on shutdown */
-	if (volumeVnode != NULL) {
-	    vrele(volumeVnode);	/* let it go, finally. */
+	{
+	    struct vnode *volumeVnode_free = volumeVnode;
+	    struct vnode *cacheDev_free = cacheDev.held_vnode;
 	    volumeVnode = NULL;
-	}
-	if (cacheDev.held_vnode) {
-	    vrele(cacheDev.held_vnode);
 	    cacheDev.held_vnode = NULL;
+
+	    AFS_GUNLOCK();
+	    /* memcache never sets these, so they may be NULL. */
+	    if (volumeVnode_free != NULL) {
+		vrele(volumeVnode_free);	/* let it go, finally. */
+	    }
+	    if (cacheDev_free != NULL) {
+		vrele(cacheDev_free);
+	    }
+	    AFS_GLOCK();
 	}
 #endif /* AFS_XBSD_ENV */
 #ifdef AFS_CACHE_VNODE_PATH

@@ -1078,12 +1078,12 @@ afs_vop_symlink(struct vop_symlink_args *ap)
 		    cnp->cn_cred);
     if (error == 0) {
 	error = afs_lookup(VTOAFS(dvp), name, &vcp, cnp->cn_cred);
-	if (error == 0) {
-	    newvp = AFSTOV(vcp);
-	    vn_lock(newvp, LK_EXCLUSIVE | LK_RETRY);
-	}
     }
     AFS_GUNLOCK();
+    if (error == 0) {
+	newvp = AFSTOV(vcp);
+	vn_lock(newvp, LK_EXCLUSIVE | LK_RETRY);
+    }
     DROPNAME();
     *(ap->a_vpp) = newvp;
     return error;
@@ -1201,7 +1201,9 @@ afs_vop_reclaim(struct vop_reclaim_args *ap)
      * vnode is already VI_DOOMED. We just want to lock it again, and skip the
      * VI_DOOMED check.
      */
+    AFS_GUNLOCK();
     VOP_LOCK(vp, LK_EXCLUSIVE);
+    AFS_GLOCK();
 
     code = afs_FlushVCache(avc, &slept);
 
