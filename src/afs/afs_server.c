@@ -1520,7 +1520,9 @@ afs_GetCapabilities(struct server *ts)
     }
     /* InitCallBackStateN, triggered by our RPC, may need this */
     ReleaseWriteLock(&afs_xserver);
+    AFS_GUNLOCK();
     code = RXAFS_GetCapabilities(rxconn, &caps);
+    AFS_GLOCK();
     ObtainWriteLock(&afs_xserver, 723);
     /* we forced a conn above; important we mark it down if needed */
     if ((code < 0) && (code != RXGEN_OPCODE)) {
