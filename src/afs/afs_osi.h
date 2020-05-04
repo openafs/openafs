@@ -178,6 +178,7 @@ extern int osi_vnhold(struct vcache *);
  * different platforms.  We require a fixed size timeval, at least for the
  * xstats.
  */
+#define SIZEOF_OSI_TIMEVAL32_T 8
 typedef struct {
     afs_int32 tv_sec;
     afs_int32 tv_usec;
