@@ -943,12 +943,6 @@ osi_GetTime(struct timeval *tv)
 }
 
 int
-osi_SetTime(struct timeval *tv)
-{
-    return 0;
-}
-
-int
 osi_Active(struct vcache *avc)
 {
     AFS_STATCNT(osi_Active);
