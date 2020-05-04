@@ -20,6 +20,7 @@
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
 #include "afs/afs_stats.h"	/*Cache Manager stats */
+#include "afs/opr.h"
 #include "afs/afs_args.h"
 
 afs_int32 afs_allCBs = 0;	/*Break callbacks on all objects */
@@ -841,6 +842,8 @@ SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
     afs_int32 *dataBuffP;	/*Ptr to data to be returned */
     afs_int32 dataBytes;	/*Bytes in data buffer */
     XSTATS_DECLS;
+
+    opr_StaticAssert(sizeof(osi_timeval32_t) == SIZEOF_OSI_TIMEVAL32_T);
 
     RX_AFS_GLOCK();
 
