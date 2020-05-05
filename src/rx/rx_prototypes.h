@@ -188,9 +188,6 @@ extern int clock_UnInit(void);
 #if !defined(clock_UpdateTime)
 extern void clock_UpdateTime(void);
 #endif
-#if defined(UKERNEL) && !defined(osi_GetTime)
-extern int osi_GetTime(struct timeval *tv);
-#endif
 
 /* rx_clock_nt.c */
 
