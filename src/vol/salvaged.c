@@ -215,11 +215,13 @@ handleit(struct cmd_syndesc *opts, void *arock)
     cmd_OptionAsFlag(opts, OPT_salvagedirs, &RebuildDirs);
     cmd_OptionAsFlag(opts, OPT_blockreads, &forceR);
     if (cmd_OptionAsString(opts, OPT_parallel, &optstring) == 0) {
+	char *input = optstring;
 	if (strncmp(optstring, "all", 3) == 0) {
 	    PartsPerDisk = 1;
+	    input += 3;
 	}
-	if (strlen(optstring) != 0) {
-	    Parallel = atoi(optstring);
+	if (strlen(input) != 0) {
+	    Parallel = atoi(input);
 	    if (Parallel < 1)
 		Parallel = 1;
 	    if (Parallel > MAXPARALLEL) {
