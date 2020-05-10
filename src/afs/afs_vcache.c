@@ -1847,7 +1847,10 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq)
 	    VOP_UNLOCK(vp, LK_EXCLUSIVE, current_proc());
 #  elif defined(AFS_FBSD_ENV)
 	AFS_GUNLOCK();
-	iheldthelock = VOP_ISLOCKED(vp);
+	iheldthelock = 0;
+	if (VOP_ISLOCKED(vp) == LK_EXCLUSIVE) {
+	    iheldthelock = 1;
+	}
 	if (!iheldthelock) {
 	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
 	}
