@@ -233,15 +233,15 @@ tryagain:
 	AFS_GUNLOCK();
 	error = vget(vp, LK_EXCLUSIVE | LK_RETRY, td);
 	AFS_GLOCK();
+	if (error != 0) {
+	    goto tryagain;
+	}
 	/* we dropped the glock, so re-check everything it had serialized */
 	if (!afs_globalVp || !(afs_globalVp->f.states & CStatd) ||
 		tvp != afs_globalVp) {
 	    vput(vp);
-	    afs_PutVCache(tvp);
 	    goto tryagain;
 	}
-	if (error != 0)
-	    goto tryagain;
 	/*
 	 * I'm uncomfortable about this.  Shouldn't this happen at a
 	 * higher level, and shouldn't we busy the top-level directory
