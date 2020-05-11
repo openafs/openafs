@@ -18,12 +18,6 @@
 #ifndef _OSI_MACHDEP_H_
 #define _OSI_MACHDEP_H_
 
-#ifdef XAFS_DARWIN_ENV
-#ifndef _MACH_ETAP_H_
-#define _MACH_ETAP_H_
-typedef unsigned short etap_event_t;
-#endif
-#endif
 
 #ifdef AFS_DARWIN80_ENV
 #include <kern/locks.h>
