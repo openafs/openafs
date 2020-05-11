@@ -553,6 +553,7 @@ if [ x"$PASS2" = x1 ]; then
 
     if [ x"$APP_KEY" != x ] ; then
 	codesign --verbose --force --timestamp --sign "$APP_KEY" "$CURDIR"/dmg/Uninstall.command
+	codesign --verbose --force --timestamp --sign "$APP_KEY" "$CURDIR"/dmg/OpenAFS.pkg
     fi
 
     hdiutil create -srcfolder "$CURDIR"/dmg -volname OpenAFS \
