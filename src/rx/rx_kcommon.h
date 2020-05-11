@@ -26,12 +26,6 @@ struct coda_inode_info {
 };
 #endif
 #endif
-#ifdef AFS_DARWIN_ENV
-#ifndef _MACH_ETAP_H_
-#define _MACH_ETAP_H_
-typedef unsigned short etap_event_t;
-#endif
-#endif
 
 
 #include "h/types.h"
