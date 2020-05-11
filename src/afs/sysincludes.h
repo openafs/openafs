@@ -182,12 +182,6 @@ struct xfs_inode_info {
 # endif
 
 #else /* AFS_LINUX22_ENV */
-# if defined(AFS_DARWIN_ENV)
-#  ifndef _MACH_ETAP_H_
-#   define _MACH_ETAP_H_
-typedef unsigned short etap_event_t;
-#  endif
-# endif
 
 # include "h/errno.h"
 # include "h/types.h"
