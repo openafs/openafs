@@ -347,6 +347,10 @@ if [ x"$PASS1" = x1 ]; then
     chmod  og-rx "$PKGROOT"/private/var/db/openafs/cache
 
     if [ x"$APP_KEY" != x ] ; then
+	# To be notarized by Apple, all files must be signed.
+	find "$PKGROOT" -type f -exec codesign --verbose --force \
+	    --timestamp --sign "$APP_KEY" $CODESIGN_OPTS {} \;
+
 	# Sign each 'thing' that we have (commands, kexts, etc)
 	for obj in "$DPKGROOT"/Library/OpenAFS/Debug/afs.kext \
 		   "$PKGROOT"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext \
@@ -356,14 +360,13 @@ if [ x"$PASS1" = x1 ]; then
 		   "$PKGROOT"/Library/Security/SecurityAgentPlugins/aklog.bundle \
 		   "$PKGROOT"/Library/OpenAFS/Tools/tools/growlagent-openafs.app \
 		   "$PKGROOT"/Library/OpenAFS/Tools/tools/aklog.bundle \
+		   "$PKGROOT"/Library/OpenAFS/Tools/tools/OpenAFS.prefPane/Contents/Resources/AFSBackgrounder.app \
+		   "$PKGROOT"/Library/OpenAFS/Tools/tools/OpenAFS.prefPane \
 		   "$PLUGINS"/afscell.bundle
 	do
 	    codesign --verbose --force --timestamp --sign "$APP_KEY" $CODESIGN_OPTS "$obj"
 	done
 
-	# To be notarized by Apple, all files must be signed.
-	find "$PKGROOT" -type f -exec codesign --verbose --force \
-	    --timestamp --sign "$APP_KEY" $CODESIGN_OPTS {} \;
 
 	# Check if our signatures for our kexts are valid. 'kextutil' will exit
 	# with an error and print out a message if something is wrong with the
