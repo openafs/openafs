@@ -377,7 +377,13 @@ if [ x"$PASS1" = x1 ]; then
 		    "$PKGROOT"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext \
 		    "$PKGROOT"/private/var/db/openafs/etc/afs.kext
 	do
-	    kextutil -no-load -print-diagnostics "$kext"
+	    # This check will fail on systems that require notarization, because we haven't
+	    # notarized anything yet.  For now, just disable the check for those versions.
+	    if [ $THISREL -ge 14 ]; then
+	    	echo "Skipping kextutil checks for $kext"
+	    else
+	    	kextutil -no-load -print-diagnostics "$kext"
+	    fi
 	done
     fi
 
