@@ -146,6 +146,11 @@ AC_CHECK_LINUX_FUNC([inode_lock],
                     [#include <linux/fs.h>],
                     [inode_lock(NULL);])
 
+dnl lru_cache_add_file added to Linux 2.6.28.
+AC_CHECK_LINUX_FUNC([lru_cache_add_file],
+                    [#include <linux/swap.h>],
+                    [lru_cache_add_file(NULL);])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
