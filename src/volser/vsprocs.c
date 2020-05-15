@@ -4601,41 +4601,40 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
             noresolve ? afs_inet_ntoa_r(toserver, hoststr) :
 	    hostutil_GetNameByINet(toserver), partName);
     fflush(STDOUT);
-    code =
-	AFSVolCreateVolume(toconn, topart, tovolreal, volsertype, pparentid, &pvolid,
-			   &totid);
-    if (code) {
-	if (flags & RV_FULLRST) {	/* full restore: delete then create anew */
-	    code = DoVolDelete(toconn, pvolid, topart, "the previous", 0,
-			       &tstatus, NULL);
-	    if (code && code != VNOVOL) {
-		error = code;
-		goto refail;
-	    }
 
-	    code =
-		AFSVolCreateVolume(toconn, topart, tovolreal, volsertype, pparentid,
-				   &pvolid, &totid);
+    /*
+     * Obtain a transaction and get the status of the target volume. Create a new
+     * volume if the target volume does not already exist.
+     */
+    memset(&tstatus, 0, sizeof(tstatus));
+    if ((flags & RV_FULLRST) != 0) {
+	/* Full restore: Delete existing volume then create anew. */
+	code = DoVolDelete(toconn, pvolid, topart, "the previous", 0, &tstatus, NULL);
+	if (code && code != VNOVOL) {
+	    error = code;
+	    goto refail;
+	}
+	code = AFSVolCreateVolume(toconn, topart, tovolreal, volsertype, pparentid,
+			          &pvolid, &totid);
+	EGOTO1(refail, code, "Could not create new volume %u\n", pvolid);
+    } else {
+	/* Incremental restore: Obtain a transaction on the existing volume. */
+	code = AFSVolTransCreate_retry(toconn, pvolid, topart, ITOffline, &totid);
+	if (code == 0) {
+	    code = AFSVolGetStatus(toconn, totid, &tstatus);
+	    EGOTO1(refail, code, "Could not get timestamp from volume %u\n", pvolid);
+	} else if (code == VNOVOL) {
+	    code = AFSVolCreateVolume(toconn, topart, tovolreal, volsertype,
+				      pparentid, &pvolid, &totid);
 	    EGOTO1(refail, code, "Could not create new volume %u\n", pvolid);
 	} else {
-	    code =
-		AFSVolTransCreate_retry(toconn, pvolid, topart, ITOffline, &totid);
-	    EGOTO1(refail, code, "Failed to start transaction on %u\n",
-		   pvolid);
-
-	    code = AFSVolGetStatus(toconn, totid, &tstatus);
-	    EGOTO1(refail, code, "Could not get timestamp from volume %u\n",
-		   pvolid);
-
+	    EGOTO1(refail, code, "Failed to start transaction on %u\n", pvolid);
 	}
-	oldCreateDate = tstatus.creationDate;
-	oldUpdateDate = tstatus.updateDate;
-	oldCloneId = tstatus.cloneID;
-	oldBackupId = tstatus.backupID;
-    } else {
-	oldCreateDate = 0;
-	oldUpdateDate = 0;
     }
+    oldCreateDate = tstatus.creationDate;
+    oldUpdateDate = tstatus.updateDate;
+    oldCloneId = tstatus.cloneID;
+    oldBackupId = tstatus.backupID;
 
     cookie.parent = pparentid;
     cookie.type = voltype;
