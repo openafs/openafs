@@ -95,7 +95,7 @@ extern void clock_UpdateTime(void);
 #else /* KERNEL */
 #define clock_Init()
 #if defined(AFS_SGI61_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX_64BIT_KERNEL)
-#define clock_GetTime(cv) osi_GetTime((osi_timeval_t *)cv)
+#define clock_GetTime(cv) osi_GetTime((osi_timeval32_t *)cv)
 #else
 #if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || (defined(AFS_DARWIN100_ENV) && defined(__amd64__)) || defined(AFS_XBSD_ENV)
 #define        clock_GetTime(cv)                               \
@@ -106,7 +106,7 @@ extern void clock_UpdateTime(void);
        (cv)->usec = (afs_int32)tv.tv_usec;             \
     END
 #else /* defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL) */
-#define clock_GetTime(cv) osi_GetTime((osi_timeval_t *)(cv))
+#define clock_GetTime(cv) osi_GetTime((osi_timeval32_t *)(cv))
 #endif /* defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL) */
 #endif
 #define clock_Sec() osi_Time()

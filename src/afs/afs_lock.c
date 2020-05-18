@@ -122,7 +122,7 @@ ReleaseLock(struct afs_lock *lock, int how)
 void
 Afs_Lock_Obtain(struct afs_lock *lock, int how)
 {
-    osi_timeval_t tt1, tt2, et;
+    osi_timeval32_t tt1, tt2, et;
     afs_uint32 us;
 
     AFS_STATCNT(Lock_Obtain);

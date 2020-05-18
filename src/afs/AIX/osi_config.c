@@ -56,7 +56,7 @@
 #include <sys/timer.h>		/* For the timer related defines                */
 #include <sys/intr.h>		/* for the serialization defines                */
 #include <sys/malloc.h>		/* for the parameters to xmalloc()              */
-#include "afs/afs_osi.h"	/* pick up osi_timeval_t for afs_stats.h */
+#include "afs/afs_osi.h"	/* pick up osi_timeval32_t for afs_stats.h */
 #include "afs/afs_stats.h"
 #include "../export.h"
 
