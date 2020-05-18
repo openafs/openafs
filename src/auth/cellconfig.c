@@ -195,12 +195,39 @@ afsconf_fgets(char *s, int n, afsconf_FILE *iop)
 	}
     }
 }
-#define fopen afsconf_fopen
-#define fclose afsconf_fclose
-#define fgets afsconf_fgets
-#else
-#define afsconf_FILE FILE
-#endif /* AFS_SUN5_ENV && ! __sparcv9 */
+
+#else /* AFS_SUN5_ENV && !__sparcv9 */
+
+/*
+ * On all other platforms, we use the native stdio functions. We still go
+ * through our afsconf_f* wrappers here, to still do compile-time checks to
+ * make sure we don't mix afsconf_fopen with real stdio calls.
+ */
+struct afsconf_iobuffer;
+
+typedef struct afsconf_iobuffer afsconf_FILE;
+
+static afsconf_FILE *
+afsconf_fopen(const char *fname, const char *fmode)
+{
+    return (afsconf_FILE*)fopen(fname, fmode);
+}
+
+static int
+afsconf_fclose(afsconf_FILE *iop)
+{
+    FILE *fh = (FILE *)iop;
+    return fclose(fh);
+}
+
+static char *
+afsconf_fgets(char *s, int n, afsconf_FILE *iop)
+{
+    FILE *fh = (FILE *)iop;
+    return fgets(s, n, fh);
+}
+
+#endif /* AFS_SUN5_ENV && !__sparcv9 */
 
 /* return port number in network byte order in the low 16 bits of a long; return -1 if not found */
 afs_int32
@@ -446,12 +473,12 @@ ReadFirstLine(const char *pathname, char **aline)
     afsconf_FILE *fp;
     size_t len = 0;
 
-    fp = fopen(pathname, "r");
+    fp = afsconf_fopen(pathname, "r");
     if (!fp)
 	return ENOENT;
-    if (fgets(buffer, sizeof(buffer), fp) != NULL)
+    if (afsconf_fgets(buffer, sizeof(buffer), fp) != NULL)
 	len = strlen(buffer);
-    fclose(fp);
+    afsconf_fclose(fp);
     if (len == 0)
 	return EIO;
     /* Trim the trailing newline, if one. */
@@ -578,12 +605,12 @@ GetCellUnix(struct afsconf_dir *adir)
 
     strcompose(tbuffer, 256, adir->name, "/", AFSDIR_THISCELL_FILE,
 	(char *)NULL);
-    fp = fopen(tbuffer, "r");
+    fp = afsconf_fopen(tbuffer, "r");
     if (fp == 0) {
 	return -1;
     }
-    rc = fgets(tbuffer, 256, fp);
-    fclose(fp);
+    rc = afsconf_fgets(tbuffer, 256, fp);
+    afsconf_fclose(fp);
     if (rc == NULL)
         return -1;
 
@@ -745,7 +772,7 @@ LoadConfig(struct afsconf_dir *adir)
 	adir->timeRead = 0;
     }
 
-    tf = fopen(adir->cellservDB, "r");
+    tf = afsconf_fopen(adir->cellservDB, "r");
     if (!tf) {
 	return -1;
     }
@@ -763,7 +790,7 @@ LoadConfig(struct afsconf_dir *adir)
      */
 
     while (1) {
-	tp = fgets(tbuffer, sizeof(tbuffer), tf);
+	tp = afsconf_fgets(tbuffer, sizeof(tbuffer), tf);
 	if (!tp)
 	    break;
 	TrimLine(tbuffer, sizeof tbuffer);	/* remove white space */
@@ -783,7 +810,7 @@ LoadConfig(struct afsconf_dir *adir)
 		ParseCellLine(tbuffer, curEntry->cellInfo.name, linkedcell);
 	    if (code) {
 		UnloadConfig(adir);
-		fclose(tf);
+		afsconf_fclose(tf);
 		free(curEntry);
 		return -1;
 	    }
@@ -793,7 +820,7 @@ LoadConfig(struct afsconf_dir *adir)
 	    /* new host in the current cell */
 	    if (!curEntry) {
 		UnloadConfig(adir);
-		fclose(tf);
+		afsconf_fclose(tf);
 		return -1;
 	    }
 	    i = curEntry->cellInfo.numServers;
@@ -814,7 +841,7 @@ LoadConfig(struct afsconf_dir *adir)
 				tbuffer, adir->cellservDB);
 		    }
 		    free(curEntry);
-		    fclose(tf);
+		    afsconf_fclose(tf);
 		    UnloadConfig(adir);
 		    return -1;
 		}
@@ -826,7 +853,7 @@ LoadConfig(struct afsconf_dir *adir)
 	    }
 	}
     }
-    fclose(tf);			/* close the file now */
+    afsconf_fclose(tf);			/* close the file now */
 
     /* end the last partially-completed cell */
     if (curEntry) {
@@ -850,11 +877,11 @@ LoadConfig(struct afsconf_dir *adir)
     strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLALIAS_FILE,
 	(char *)NULL);
 
-    tf = fopen(tbuffer, "r");
+    tf = afsconf_fopen(tbuffer, "r");
     while (tf) {
 	char *aliasPtr;
 
-	tp = fgets(tbuffer, sizeof(tbuffer), tf);
+	tp = afsconf_fgets(tbuffer, sizeof(tbuffer), tf);
 	if (!tp)
 	    break;
 	TrimLine(tbuffer, sizeof tbuffer);	/* remove white space */
@@ -889,7 +916,7 @@ LoadConfig(struct afsconf_dir *adir)
     }
 
     if (tf != NULL)
-	fclose(tf);
+	afsconf_fclose(tf);
 
     /* now read the fs keys, if possible */
     code = _afsconf_LoadKeys(adir);
