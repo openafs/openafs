@@ -429,10 +429,10 @@ afs_MaybeWaitForCacheDrain(void)
  * struct so we need only export one symbol for AIX.
  */
 static struct CTD_stats {
-    osi_timeval_t CTD_beforeSleep;
-    osi_timeval_t CTD_afterSleep;
-    osi_timeval_t CTD_sleepTime;
-    osi_timeval_t CTD_runTime;
+    osi_timeval32_t CTD_beforeSleep;
+    osi_timeval32_t CTD_afterSleep;
+    osi_timeval32_t CTD_sleepTime;
+    osi_timeval32_t CTD_runTime;
     int CTD_nSleeps;
 } CTD_stats;
 
@@ -467,7 +467,7 @@ afs_WakeCacheWaitersIfDrained(void)
 void
 afs_CacheTruncateDaemon(void)
 {
-    osi_timeval_t CTD_tmpTime;
+    osi_timeval32_t CTD_tmpTime;
     u_int counter;
     u_int cb_lowat;
     u_int dc_hiwat =

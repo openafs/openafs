@@ -25,12 +25,12 @@ extern int cacheDiskType;
 
 #ifndef AFS_NOSTATS
 static void
-FillStoreStats(int code, int idx, osi_timeval_t xferStartTime,
+FillStoreStats(int code, int idx, osi_timeval32_t xferStartTime,
 	       afs_size_t bytesToXfer, afs_size_t bytesXferred)
 {
     struct afs_stats_xferData *xferP;
-    osi_timeval_t xferStopTime;
-    osi_timeval_t elapsedTime;
+    osi_timeval32_t xferStopTime;
+    osi_timeval32_t elapsedTime;
 
     xferP = &(afs_stats_cmfullperf.rpc.fsXferTimes[idx]);
     osi_GetuTime(&xferStopTime);
@@ -450,7 +450,7 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
     afs_size_t bytesXferred;
 
 #ifndef AFS_NOSTATS
-    osi_timeval_t xferStartTime;	/*FS xfer start time */
+    osi_timeval32_t xferStartTime;	/*FS xfer start time */
     afs_size_t bytesToXfer = 10000;	/* # bytes to xfer */
 #endif /* AFS_NOSTATS */
     XSTATS_DECLS;
@@ -1116,7 +1116,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct rx_connection *rxconn,
 
     XSTATS_DECLS;
 #ifndef AFS_NOSTATS
-    osi_timeval_t xferStartTime;	/*FS xfer start time */
+    osi_timeval32_t xferStartTime;	/*FS xfer start time */
     afs_size_t bytesToXfer = 0, bytesXferred = 0;
 #endif
 

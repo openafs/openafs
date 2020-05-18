@@ -481,7 +481,7 @@ int
 rx_InitHost(u_int host, u_int port)
 {
 #ifdef KERNEL
-    osi_timeval_t tv;
+    osi_timeval32_t tv;
 #else /* KERNEL */
     struct timeval tv;
 #endif /* KERNEL */

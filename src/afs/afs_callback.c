@@ -66,7 +66,7 @@ static struct ltable {
 };
 unsigned long lastCallBack_vnode;
 unsigned int lastCallBack_dv;
-osi_timeval_t lastCallBack_time;
+osi_timeval32_t lastCallBack_time;
 
 /* these are for storing alternate interface addresses */
 struct interfaceAddr afs_cb_interface;

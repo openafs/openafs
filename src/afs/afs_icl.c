@@ -614,7 +614,7 @@ afs_icl_AppendRecord(struct afs_icl_log *logp, afs_int32 op,
 {
     int rsize;			/* record size in longs */
     int tsize;		/* temp size */
-    osi_timeval_t tv;
+    osi_timeval32_t tv;
     int t1, t2, t3, t4;
 
     t4 = types & 0x3f;		/* decode types */

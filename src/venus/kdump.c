@@ -355,7 +355,7 @@ typedef void *afs_kcondvar_t;
 typedef struct {
     int tv_sec;
     int tv_usec;
-} osi_timeval_t;		/* Needed here since KERNEL defined. */
+} osi_timeval32_t;		/* Needed here since KERNEL defined. */
 
 /*#include "afs/volerrors.h"*/
 #ifdef AFS_LINUX20_ENV

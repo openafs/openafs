@@ -178,28 +178,19 @@ extern int osi_vnhold(struct vcache *);
  */
 #define osi_GetuTime(x) osi_GetTime(x)
 
-/* osi_timeval_t exists because SGI 6.x has two sizes of timeval. */
-/** In 64 bit Solaris the timeval structure has members that are 64 bit
-  * In the GetTime() interface we expect pointers to afs_int32. So the need to
-  * define osi_timeval_t to have 32 bit members. To make this less ambiguous
-  * we now use 32 bit quantities consistently all over the code.
-  * In 64 bit HP-UX the timeval structure has a 64 bit member.
-  */
-
+/*
+ * We use osi_timeval32_t because the native timeval varies in size on
+ * different platforms.  We require a fixed size timeval, at least for the
+ * xstats.
+ */
 #if defined(AFS_HPUX_ENV) || defined(AFS_LINUX_64BIT_KERNEL) || (defined(AFS_LINUX26_ENV) && !defined(HAVE_LINUX_TIME_T)) || (defined(AFS_SGI61_ENV) && defined(KERNEL) && defined(_K64U64))
-typedef struct {
-    afs_int32 tv_sec;
-    afs_int32 tv_usec;
-} osi_timeval_t;
 typedef struct {
     afs_int32 tv_sec;
     afs_int32 tv_usec;
 } osi_timeval32_t;
 #elif defined(AFS_SUN5_ENV)
-typedef struct timeval32 osi_timeval_t;
 typedef struct timeval32 osi_timeval32_t;
 #else
-typedef struct timeval osi_timeval_t;
 typedef struct timeval osi_timeval32_t;
 #endif /* AFS_SGI61_ENV */
 

@@ -129,7 +129,7 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 {
     struct server *a_serverP = sa->server;
     struct srvAddr *sap;
-    osi_timeval_t currTime, *currTimeP;	/*Current time */
+    osi_timeval32_t currTime, *currTimeP;	/*Current time */
     afs_int32 downTime;		/*Computed downtime, in seconds */
     struct afs_stats_SrvUpDownInfo *upDownP;	/*Ptr to up/down info record */
 
@@ -354,8 +354,8 @@ afs_CountServers(void)
     int currIdx;		/*Curr idx into srv table */
     struct server *currSrvP;	/*Ptr to curr server record */
     afs_int32 currChainLen;	/*Length of curr hash chain */
-    osi_timeval_t currTime;	/*Current time */
-    osi_timeval_t *currTimeP;	/*Ptr to above */
+    osi_timeval32_t currTime;	/*Current time */
+    osi_timeval32_t *currTimeP;	/*Ptr to above */
     afs_int32 srvRecordAge;	/*Age of server record, in secs */
     struct afs_stats_SrvUpDownInfo *upDownP;	/*Ptr to current up/down
 						 * info being manipulated */
@@ -823,7 +823,7 @@ afs_random(void)
 
     AFS_STATCNT(afs_random);
     if (!state) {
-	osi_timeval_t t;
+	osi_timeval32_t t;
 	osi_GetTime(&t);
 	/*
 	 * Clear the low nybble of tv_usec in a size-independent manner before adding
@@ -1820,8 +1820,8 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 void
 afs_ActivateServer(struct srvAddr *sap)
 {
-    osi_timeval_t currTime;	/*Filled with current time */
-    osi_timeval_t *currTimeP;	/*Ptr to above */
+    osi_timeval32_t currTime;	/*Filled with current time */
+    osi_timeval32_t *currTimeP;	/*Ptr to above */
     struct afs_stats_SrvUpDownInfo *upDownP;	/*Ptr to up/down info record */
     struct server *aserver = sap->server;
 

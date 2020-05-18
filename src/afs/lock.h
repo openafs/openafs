@@ -115,7 +115,7 @@ struct afs_lock {
     unsigned short readers_reading;	/* # readers actually with read locks */
     unsigned short num_waiting;	/* probably need this soon */
     unsigned short spare;	/* not used now */
-    osi_timeval_t time_waiting;	/* for statistics gathering */
+    osi_timeval32_t time_waiting;	/* for statistics gathering */
 #if defined(INSTRUMENT_LOCKS)
     /* the following are useful for debugging
      ** the field 'src_indicator' is updated only by ObtainLock() and
