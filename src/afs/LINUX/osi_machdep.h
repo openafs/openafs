@@ -104,7 +104,7 @@ static inline time_t osi_Time(void) {
 	(V)->tv_sec = (afs_int32)__afs_tv.tv_sec;            \
 	(V)->tv_usec = (afs_int32)__afs_tv.tv_nsec / 1000;   \
     } while(0)
-#elif defined(AFS_LINUX_64BIT_KERNEL)
+#elif defined(AFS_LINUX_64BIT_KERNEL) || !defined(HAVE_LINUX_TIME_T)
 # define osi_GetTime(V)                                 \
     do {                                               \
        struct timeval __afs_tv;                              \
