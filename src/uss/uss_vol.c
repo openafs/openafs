@@ -61,7 +61,7 @@ extern int line;
  * will work and we can avoid nasty little core dumps.
  */
 struct ubik_client *uconn_vldbP;	/*Ubik connection struct */
-struct ubik_client *cstruct;	/*Required name for above */
+extern struct ubik_client *cstruct;	/*Required name for above */
 
 /*
  * ------------------------ Private globals -----------------------
