@@ -158,6 +158,12 @@ struct afs_cacheOps afs_MemCacheOps = {
 int cacheDiskType;		/*Type of backing disk for cache */
 struct afs_cacheOps *afs_cacheType;
 
+/* calculate number of 1k blocks needed, rounded up to nearest afs_fsfragsize */
+static_inline afs_int32
+afs_round_to_fsfragsize(afs_int32 bytes)
+{
+    return (((bytes + afs_fsfragsize) ^ afs_fsfragsize) >> 10);
+}
 
 /*
  * The PFlush algorithm makes use of the fact that Fid.Unique is not used in
@@ -604,11 +610,11 @@ afs_AdjustSize(struct dcache *adc, afs_int32 newSize)
     }
 
     adc->dflags |= DFEntryMod;
-    oldSize = ((adc->f.chunkBytes + afs_fsfragsize) ^ afs_fsfragsize) >> 10;	/* round up */
+    oldSize = afs_round_to_fsfragsize(adc->f.chunkBytes);
     adc->f.chunkBytes = newSize;
     if (!newSize)
 	adc->validPos = 0;
-    newSize = ((newSize + afs_fsfragsize) ^ afs_fsfragsize) >> 10;	/* round up */
+    newSize = afs_round_to_fsfragsize(newSize);
     afs_DCAdjustSize(adc, oldSize, newSize);
     if ((newSize > oldSize) && !AFS_IS_DISCONNECTED) {
 
@@ -1121,7 +1127,7 @@ afs_DiscardDCache(struct dcache *adc)
 
     osi_Assert(adc->refCount == 1);
 
-    size = ((adc->f.chunkBytes + afs_fsfragsize) ^ afs_fsfragsize) >> 10;	/* round up */
+    size = afs_round_to_fsfragsize(adc->f.chunkBytes);
     afs_blocksDiscarded += size;
     afs_stats_cmperf.cacheBlocksDiscarded = afs_blocksDiscarded;
 
@@ -1205,7 +1211,7 @@ afs_FreeDiscardedDCache(void)
     }
 
     afs_discardDCCount--;
-    size = ((tdc->f.chunkBytes + afs_fsfragsize) ^ afs_fsfragsize) >> 10;	/* round up */
+    size = afs_round_to_fsfragsize(tdc->f.chunkBytes);
     afs_blocksDiscarded -= size;
     afs_stats_cmperf.cacheBlocksDiscarded = afs_blocksDiscarded;
     /* We can lock because we just took it off the free list */
@@ -1652,9 +1658,7 @@ afs_AllocDiscardDSlot(struct dcache **adc, afs_int32 lock)
     afs_indexFlags[tdc->index] &= ~IFDiscarded;
     ObtainWriteLock(&tdc->lock, 605);
     afs_discardDCCount--;
-    size =
-	((tdc->f.chunkBytes +
-	  afs_fsfragsize) ^ afs_fsfragsize) >> 10;
+    size = afs_round_to_fsfragsize(tdc->f.chunkBytes);
     tdc->f.states &= ~(DRO|DBackup|DRW);
     afs_DCMoveBucket(tdc, size, 0);
     afs_blocksDiscarded -= size;
