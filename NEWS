@@ -75,12 +75,17 @@ OpenAFS 1.8.6 (in progress)
 
   Linux clients
 
-    * Support mainline kernels up to and including 5.6 (14069 14094 14095)
+    * Support mainline kernels up to and including 5.7 (14069 14094 14095
+      14209 14210)
 
     * Make builds succeed with --enable-checking for mainline kernels
       5.3-rc2 and later (13910)
 
     * Avoid possible deadlocks (13748 13765)
+
+    * Fix build of libuafs on ppc64le (14104)
+
+    * Fix build on certain recent 32-bit distributions (14234) (RT #135084)
 
   macOS
 
