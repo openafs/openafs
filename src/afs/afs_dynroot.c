@@ -301,7 +301,6 @@ afs_dynroot_addDirEnt(struct DirHeader *dirHeader, int *curPageP,
 void
 afs_DynrootInvalidate(void)
 {
-    afs_int32 retry;
     struct vcache *tvc;
     struct VenusFid tfid;
 
@@ -314,12 +313,9 @@ afs_DynrootInvalidate(void)
     ReleaseWriteLock(&afs_dynrootDirLock);
 
     afs_GetDynrootFid(&tfid);
-    do {
-	retry = 0;
-	ObtainReadLock(&afs_xvcache);
-	tvc = afs_FindVCache(&tfid, &retry, 0);
-	ReleaseReadLock(&afs_xvcache);
-    } while (retry);
+    ObtainReadLock(&afs_xvcache);
+    tvc = afs_FindVCache(&tfid, 0);
+    ReleaseReadLock(&afs_xvcache);
     if (tvc) {
 	afs_StaleVCacheFlags(tvc, AFS_STALEVC_NOCB, CUnique);
 	afs_PutVCache(tvc);

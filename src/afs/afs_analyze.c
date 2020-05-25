@@ -315,7 +315,7 @@ afs_ClearStatus(struct VenusFid *afid, int op, struct volume *avp)
     if (tvp) {
 	struct vcache *tvc;
 	ObtainReadLock(&afs_xvcache);
-	if ((tvc = afs_FindVCache(afid, 0, 0))) {
+	if ((tvc = afs_FindVCache(afid, 0))) {
 	    ReleaseReadLock(&afs_xvcache);
 	    afs_StaleVCacheFlags(tvc, AFS_STALEVC_NOCB | AFS_STALEVC_NODNLC,
 				 CUnique);

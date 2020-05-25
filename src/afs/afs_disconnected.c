@@ -263,7 +263,7 @@ afs_GetVnodeName(struct vcache *avc, struct VenusFid *afid, char *aname,
 
 	/* Get the parent dir's vcache that contains the shadow fid. */
 	ObtainSharedLock(&afs_xvcache, 755);
-	parent_vc = afs_FindVCache(&parent_fid, 0, 1);
+	parent_vc = afs_FindVCache(&parent_fid, 1);
 	ReleaseSharedLock(&afs_xvcache);
 	if (!parent_vc) {
 	    return ENETDOWN;
@@ -334,7 +334,7 @@ chk_del_children_hook(void *hdata, char *aname, afs_int32 vnode,
     tfid.Fid.Unique = unique;
 
     ObtainSharedLock(&afs_xvcache, 757);
-    tvc = afs_FindVCache(&tfid, 0, 1);
+    tvc = afs_FindVCache(&tfid, 1);
     ReleaseSharedLock(&afs_xvcache);
 
     /* Count unfinished dirty children. */
@@ -415,7 +415,7 @@ fix_children_fids_hook(void *hdata, char *aname, afs_int32 vnode,
 
 	/* Get the vcache. */
 	ObtainSharedLock(&afs_xvcache, 759);
-	tvc = afs_FindVCache(&tfid, 0, 1);
+	tvc = afs_FindVCache(&tfid, 1);
 	ReleaseSharedLock(&afs_xvcache);
 
 	/* Change the fields. */
@@ -519,7 +519,7 @@ afs_GetParentVCache(struct vcache *avc, int deleted, struct VenusFid *afid,
     }
 
     ObtainSharedLock(&afs_xvcache, 766);
-    *adp = afs_FindVCache(afid, 0, 1);
+    *adp = afs_FindVCache(afid, 1);
     ReleaseSharedLock(&afs_xvcache);
     if (!*adp) {
 	/* printf("afs_GetParentVCache: Couldn't find parent dir's vcache\n"); */
@@ -1371,7 +1371,7 @@ afs_GenShadowFid(struct VenusFid *afid)
 
 	/* Is this a used vnode? */
     	ObtainSharedLock(&afs_xvcache, 762);
-    	tvc = afs_FindVCache(afid, 0, 1);
+    	tvc = afs_FindVCache(afid, 1);
     	ReleaseSharedLock(&afs_xvcache);
 	if (tvc)
 	    afs_PutVCache(tvc);

@@ -201,7 +201,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	fileFid.Cell = aodp->f.fid.Cell;
 	fileFid.Fid.Volume = aodp->f.fid.Fid.Volume;
 	ObtainSharedLock(&afs_xvcache, 754);
-	tvc = afs_FindVCache(&fileFid, 0 , 1);
+	tvc = afs_FindVCache(&fileFid, 1);
 	ReleaseSharedLock(&afs_xvcache);
 
 	if (tvc) {

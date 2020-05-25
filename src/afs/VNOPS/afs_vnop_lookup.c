@@ -373,17 +373,8 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
     }
     if (tvc->mvid.target_root && (tvc->f.states & CMValid)) {
 	if (!canblock) {
-	    afs_int32 retry;
-
-	    do {
-		retry = 0;
-		ObtainReadLock(&afs_xvcache);
-		root_vp = afs_FindVCache(tvc->mvid.target_root, &retry, 0);
-		if (root_vp && retry) {
-		    ReleaseReadLock(&afs_xvcache);
-		    afs_PutVCache(root_vp);
-		}
-	    } while (root_vp && retry);
+	    ObtainReadLock(&afs_xvcache);
+	    root_vp = afs_FindVCache(tvc->mvid.target_root, 0);
 	    ReleaseReadLock(&afs_xvcache);
 	} else {
 	    root_vp = afs_GetVCache(tvc->mvid.target_root, areq);
@@ -724,7 +715,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     int i;
     struct VenusFid afid;	/* file ID we are using now */
     struct VenusFid tfid;	/* another temp. file ID */
-    afs_int32 retry;		/* handle low-level SGI MP race conditions */
+    afs_int32 retry;		/* handle low-level VFS race conditions */
     long volStates;		/* flags from vol structure */
     struct volume *volp = 0;	/* volume ptr */
     struct VenusFid dotdot = {0, {0, 0, 0}};
@@ -870,15 +861,8 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    tfid.Fid.Volume = adp->f.fid.Fid.Volume;
 	    tfid.Fid.Vnode = ntohl(dirEntryp->fid.vnode);
 	    tfid.Fid.Unique = ntohl(dirEntryp->fid.vunique);
-	    do {
-		retry = 0;
-		ObtainSharedLock(&afs_xvcache, 130);
-		tvcp = afs_FindVCache(&tfid, &retry, IS_SLOCK /* no stats | LRU */ );
-		if (tvcp && retry) {
-		    ReleaseSharedLock(&afs_xvcache);
-		    afs_PutVCache(tvcp);
-		}
-	    } while (tvcp && retry);
+	    ObtainSharedLock(&afs_xvcache, 130);
+	    tvcp = afs_FindVCache(&tfid, IS_SLOCK /* no stats | LRU */ );
 	    if (!tvcp) {	/* otherwise, create manually */
 		UpgradeSToWLock(&afs_xvcache, 129);
 		tvcp = afs_NewBulkVCache(&tfid, hostp, statSeqNo);
@@ -1009,12 +993,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		afid.Fid.Vnode = fidsp[i].Vnode;
 		afid.Fid.Unique = fidsp[i].Unique;
 
-		do {
-		    retry = 0;
-		    ObtainReadLock(&afs_xvcache);
-		    tvcp = afs_FindVCache(&afid, &retry, 0 /* !stats&!lru */);
-		    ReleaseReadLock(&afs_xvcache);
-		} while (tvcp && retry);
+		ObtainReadLock(&afs_xvcache);
+		tvcp = afs_FindVCache(&afid, 0 /* !stats&!lru */);
+		ReleaseReadLock(&afs_xvcache);
 
 		if (!tvcp) {
 		    continue;
@@ -1170,12 +1151,10 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	afid.Fid.Volume = adp->f.fid.Fid.Volume;
 	afid.Fid.Vnode = fidsp[i].Vnode;
 	afid.Fid.Unique = fidsp[i].Unique;
-	do {
-	    retry = 0;
-	    ObtainReadLock(&afs_xvcache);
-	    tvcp = afs_FindVCache(&afid, &retry, 0/* !stats&!lru */);
-	    ReleaseReadLock(&afs_xvcache);
-	} while (tvcp && retry);
+
+	ObtainReadLock(&afs_xvcache);
+	tvcp = afs_FindVCache(&afid, 0/* !stats&!lru */);
+	ReleaseReadLock(&afs_xvcache);
 
 	/* The entry may no longer exist */
 	if (tvcp == NULL) {
@@ -1349,12 +1328,10 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	afid.Fid.Volume = adp->f.fid.Fid.Volume;
 	afid.Fid.Vnode = fidsp[i].Vnode;
 	afid.Fid.Unique = fidsp[i].Unique;
-	do {
-	    retry = 0;
-	    ObtainReadLock(&afs_xvcache);
-	    tvcp = afs_FindVCache(&afid, &retry, 0 /* !stats&!lru */);
-	    ReleaseReadLock(&afs_xvcache);
-	} while (tvcp && retry);
+
+	ObtainReadLock(&afs_xvcache);
+	tvcp = afs_FindVCache(&afid, 0 /* !stats&!lru */);
+	ReleaseReadLock(&afs_xvcache);
 	if (tvcp != NULL) {
 	    if ((tvcp->f.states & CBulkFetching)
 		&& (tvcp->f.m.Length == statSeqNo)) {
@@ -1820,16 +1797,12 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	 * dirCookie tells us where to start prefetching from.
 	 */
 	if (afs_ShouldTryBulkStat(adp)) {
-	    afs_int32 retry;
 	    /* if the entry is not in the cache, or is in the cache,
 	     * but hasn't been statd, then do a bulk stat operation.
 	     */
-	    do {
-		retry = 0;
-		ObtainReadLock(&afs_xvcache);
-		tvc = afs_FindVCache(&tfid, &retry, 0 /* !stats,!lru */ );
-		ReleaseReadLock(&afs_xvcache);
-	    } while (tvc && retry);
+	    ObtainReadLock(&afs_xvcache);
+	    tvc = afs_FindVCache(&tfid, 0 /* !stats,!lru */ );
+	    ReleaseReadLock(&afs_xvcache);
 
 	    if (!tvc || !(tvc->f.states & CStatd))
 		bulkcode = afs_DoBulkStat(adp, dirCookie, treq);

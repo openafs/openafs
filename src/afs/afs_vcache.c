@@ -1774,24 +1774,12 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq)
     afs_int32 code, newvcache = 0;
     struct vcache *tvc;
     struct volume *tvp;
-    afs_int32 retry;
 
     AFS_STATCNT(afs_GetVCache);
 
-#if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
-  loop:
-#endif
-
     ObtainSharedLock(&afs_xvcache, 5);
 
-    tvc = afs_FindVCache(afid, &retry, DO_STATS | DO_VLRU | IS_SLOCK);
-    if (tvc && retry) {
-#if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
-	ReleaseSharedLock(&afs_xvcache);
-	spunlock_psema(tvc->v.v_lock, retry, &tvc->v.v_sync, PINOD);
-	goto loop;
-#endif
-    }
+    tvc = afs_FindVCache(afid, DO_STATS | DO_VLRU | IS_SLOCK);
     if (tvc) {
 	osi_Assert((tvc->f.states & CVInit) == 0);
 	/* If we are in readdir, return the vnode even if not statd */
@@ -1996,25 +1984,14 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     struct AFSVolSync tsync;
     struct server *serverp = 0;
     afs_int32 origCBs;
-    afs_int32 retry;
 
     AFS_STATCNT(afs_GetVCache);
 
-#if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
-  loop1:
-#endif
-
     ObtainReadLock(&afs_xvcache);
-    tvc = afs_FindVCache(afid, &retry, DO_STATS /* no vlru */ );
+    tvc = afs_FindVCache(afid, DO_STATS /* no vlru */ );
 
     if (tvc) {
 	ReleaseReadLock(&afs_xvcache);
-	if (retry) {
-#if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
-	    spunlock_psema(tvc->v.v_lock, retry, &tvc->v.v_sync, PINOD);
-	    goto loop1;
-#endif
-	}
 	ObtainReadLock(&tvc->lock);
 
 	if (tvc->f.states & CStatd) {
@@ -2043,20 +2020,8 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 	    afs_RemoteLookup(&adp->f.fid, areq, aname, &nfid, &OutStatus,
 	                     &CallBack, &serverp, &tsync);
 
-#if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
-  loop2:
-#endif
-
     ObtainSharedLock(&afs_xvcache, 6);
-    tvc = afs_FindVCache(&nfid, &retry, DO_VLRU | IS_SLOCK/* no xstats now */ );
-    if (tvc && retry) {
-#if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
-	ReleaseSharedLock(&afs_xvcache);
-	spunlock_psema(tvc->v.v_lock, retry, &tvc->v.v_sync, PINOD);
-	goto loop2;
-#endif
-    }
-
+    tvc = afs_FindVCache(&nfid, DO_VLRU | IS_SLOCK/* no xstats now */ );
     if (!tvc) {
 	/* no cache entry, better grab one */
 	UpgradeSToWLock(&afs_xvcache, 22);
@@ -2652,8 +2617,6 @@ afs_RefVCache(struct vcache *tvc)
  * Find a vcache entry given a fid.
  *
  * \param afid Pointer to the fid whose cache entry we desire.
- * \param retry (SGI-specific) tell the caller to drop the lock on xvcache,
- *  unlock the vnode, and try again.
  * \param flag Bit 1 to specify whether to compute hit statistics.  Not
  *  set if FindVCache is called as part of internal bookkeeping.
  *
@@ -2663,7 +2626,7 @@ afs_RefVCache(struct vcache *tvc)
  */
 
 struct vcache *
-afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
+afs_FindVCache(struct VenusFid *afid, afs_int32 flag)
 {
 
     struct vcache *tvc;
@@ -2775,8 +2738,6 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
  *
  * \param avcp Fill in pointer if we found one and only one.
  * \param afid Pointer to the fid whose cache entry we desire.
- * \param retry (SGI-specific) tell the caller to drop the lock on xvcache,
- *             unlock the vnode, and try again.
  * \param flags bit 1 to specify whether to compute hit statistics.  Not
  *             set if FindVCache is called as part of internal bookkeeping.
  *

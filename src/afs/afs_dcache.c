@@ -765,7 +765,7 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
 		/* xdcache is lower than the xvcache lock */
 		ReleaseWriteLock(&afs_xdcache);
 		ObtainReadLock(&afs_xvcache);
-		tvc = afs_FindVCache(afid, 0, 0 /* no stats, no vlru */ );
+		tvc = afs_FindVCache(afid, 0 /* no stats, no vlru */ );
 		ReleaseReadLock(&afs_xvcache);
 		ObtainWriteLock(&afs_xdcache, 527);
 		skip = 0;
