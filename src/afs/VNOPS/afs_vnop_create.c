@@ -435,7 +435,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
      * freeing of the vnode will change evenZaps.  Don't need to update the VLRU
      * queue, since the find will only succeed in the event of a create race, and 
      * then the vcache will be at the front of the VLRU queue anyway...  */
-    if (!(tvc = afs_FindVCache(&newFid, 0, DO_STATS))) {
+    if (!(tvc = afs_FindVCache(&newFid, DO_STATS))) {
 	tvc = afs_NewVCache(&newFid, hostp);
 	if (tvc) {
 	    int finalCBs;

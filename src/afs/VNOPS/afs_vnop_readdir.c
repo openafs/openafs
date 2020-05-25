@@ -267,7 +267,7 @@ afs_readdir_type(struct vcache *avc, struct DirEntry *ade)
 	return DT_DIR;
     }
     ObtainReadLock(&afs_xvcache);
-    if ((tvc = afs_FindVCache(&tfid, 0, 0))) {
+    if ((tvc = afs_FindVCache(&tfid, 0))) {
         ReleaseReadLock(&afs_xvcache);
 	if (tvc->mvstat != AFS_MVSTAT_FILE) {
 	    afs_PutVCache(tvc);

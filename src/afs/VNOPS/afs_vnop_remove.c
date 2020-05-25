@@ -259,7 +259,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 					 aname);
 		} else {
 		    ObtainReadLock(&afs_xvcache);
-		    tvc = afs_FindVCache(&unlinkFid, 0, DO_STATS);
+		    tvc = afs_FindVCache(&unlinkFid, DO_STATS);
 		    ReleaseReadLock(&afs_xvcache);
 		}
 	    }

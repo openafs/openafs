@@ -524,7 +524,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	    afid.Fid.Unique = ntohl(de->fid.vunique);
 	    if ((avc->f.states & CForeign) == 0 && (ntohl(de->fid.vnode) & 1)) {
 		type = DT_DIR;
-	    } else if ((tvc = afs_FindVCache(&afid, 0, 0))) {
+	    } else if ((tvc = afs_FindVCache(&afid, 0))) {
 		if (tvc->mvstat != AFS_MVSTAT_FILE) {
 		    type = DT_DIR;
 		} else if (((tvc->f.states) & (CStatd | CTruth))) {

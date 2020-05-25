@@ -1042,8 +1042,7 @@ extern struct osi_file *afs_vcacheMetaInodep;
 
 extern void afs_FlushReclaimedVcaches(void);
 void afs_vcacheInit(int astatSize);
-extern struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 * retry,
-				     afs_int32 flag);
+extern struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 flag);
 extern void afs_BadFetchStatus(struct afs_conn *tc);
 extern int afs_CheckFetchStatus(struct afs_conn *tc,
                                 struct AFSFetchStatus *status);

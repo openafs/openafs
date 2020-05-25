@@ -327,7 +327,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 		    afs_LookupVCache(&unlinkFid, treq, adp, aname);
 	    } else {
 		ObtainReadLock(&afs_xvcache);
-		tvc = afs_FindVCache(&unlinkFid, 0, 1 /* do xstats */ );
+		tvc = afs_FindVCache(&unlinkFid, 1 /* do xstats */ );
 		ReleaseReadLock(&afs_xvcache);
 	    }
 	}
@@ -389,7 +389,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	    code = afs_dir_Lookup(tdc, aname, &tfid.Fid);
 
 	    ObtainSharedLock(&afs_xvcache, 764);
-	    tvc = afs_FindVCache(&tfid, 0, 1 /* do xstats */ );
+	    tvc = afs_FindVCache(&tfid, 1 /* do xstats */ );
 	    ReleaseSharedLock(&afs_xvcache);
 	    
 	    if (!tvc) {
