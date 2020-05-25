@@ -34,7 +34,7 @@
   * up 2 bytes
   */
 
-#if defined(AFS_SUN5_64BIT_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZPTR==64)) || defined(AFS_LINUX_64BIT_KERNEL)
+#if defined(AFS_SUN5_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZPTR==64)) || defined(AFS_LINUX_64BIT_KERNEL)
 #define	AFS_XLATOR_MAGIC	0x8765	/* XXX */
 #else
 #define	AFS_XLATOR_MAGIC	0x87654321

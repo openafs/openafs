@@ -31,11 +31,8 @@ extern void init_hckernel_mutex(void);
 
 afs_lock_t afs_ftf;		/* flush text lock */
 
-#ifdef AFS_SGI53_ENV
+#ifdef AFS_SGI_ENV
 lock_t afs_event_lock;
-#endif
-
-#ifdef AFS_SGI64_ENV
 flid_t osi_flid;
 #endif
 
@@ -43,10 +40,6 @@ afs_ucred_t *afs_osi_credp;
 
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 kmutex_t afs_global_lock;
-#endif
-
-#if defined(AFS_SGI_ENV) && !defined(AFS_SGI64_ENV)
-long afs_global_owner;
 #endif
 
 #if defined(AFS_DARWIN_ENV)
@@ -118,7 +111,7 @@ osi_Init(void)
 #endif
 	afs_osicred_initialized = 1;
     }
-#ifdef AFS_SGI64_ENV
+#ifdef AFS_SGI_ENV
     osi_flid.fl_pid = osi_flid.fl_sysid = 0;
 #endif
 

@@ -180,7 +180,7 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
     dcList = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     afs_Trace2(afs_iclSetp, CM_TRACE_STOREALL, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length));
-#if !defined(AFS_AIX32_ENV) && !defined(AFS_SGI65_ENV)
+#if !defined(AFS_AIX32_ENV) && !defined(AFS_SGI_ENV)
     /* In the aix vm implementation we need to do the vm_writep even
      * on the memcache case since that's we adjust the file's size
      * and finish flushing partial vm pages.
@@ -191,7 +191,7 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
     } else if ((cacheDiskType != AFS_FCACHE_TYPE_MEM) ||
 	(sync & AFS_VMSYNC_INVAL) || (sync & AFS_VMSYNC) ||
 	(sync & AFS_LASTSTORE))
-#endif /* !AFS_AIX32_ENV && !AFS_SGI65_ENV */
+#endif /* !AFS_AIX32_ENV && !AFS_SGI_ENV */
     {
 	/* If we're not diskless, reading a file may stress the VM
 	 * system enough to cause a pageout, and this vnode would be

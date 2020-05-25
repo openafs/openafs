@@ -29,16 +29,16 @@
  * I think we can get away without it, but I'm not sure.  Note that
  * afs_setattr is called in here for truncation.
  */
-#ifdef AFS_SGI64_ENV
+#ifdef AFS_SGI_ENV
 int
 afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, int flags,
 	   int amode, struct vcache **avcp, afs_ucred_t *acred)
-#else /* AFS_SGI64_ENV */
+#else /* AFS_SGI_ENV */
 int
 afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	   enum vcexcl aexcl, int amode, struct vcache **avcp,
 	   afs_ucred_t *acred)
-#endif				/* AFS_SGI64_ENV */
+#endif				/* AFS_SGI_ENV */
 {
     afs_int32 origCBs, origZaps, finalZaps;
     struct vrequest *treq = NULL;
@@ -74,7 +74,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
     afs_InitFakeStat(&fakestate);
 
-#ifdef AFS_SGI65_ENV
+#ifdef AFS_SGI_ENV
     /* If avcp is passed not null, it's the old reference to this file.
      * We can use this to avoid create races. For now, just decrement
      * the reference count on it.
@@ -165,7 +165,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    ReleaseSharedLock(&tdc->lock);
 	    afs_PutDCache(tdc);
 	    ReleaseWriteLock(&adp->lock);
-#ifdef AFS_SGI64_ENV
+#ifdef AFS_SGI_ENV
 	    if (flags & VEXCL) {
 #else
 	    if (aexcl != NONEXCL) {
@@ -247,17 +247,15 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    ObtainWriteLock(&tvc->lock, 136);
 		    tvc->f.states |= CCreating;
 		    ReleaseWriteLock(&tvc->lock);
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-#if defined(AFS_SGI64_ENV)
+#if defined(AFS_SGI_ENV)
 		    code =
 			afs_setattr(VNODE_TO_FIRST_BHV((vnode_t *) tvc),
 				    attrs, 0, acred);
-#else
+#elif defined(AFS_SUN5_ENV)
 		    code = afs_setattr(tvc, attrs, 0, acred);
-#endif /* AFS_SGI64_ENV */
-#else /* SUN5 || SGI */
+#else
 		    code = afs_setattr(tvc, attrs, acred);
-#endif /* SUN5 || SGI */
+#endif
 		    ObtainWriteLock(&tvc->lock, 137);
 		    tvc->f.states &= ~CCreating;
 		    ReleaseWriteLock(&tvc->lock);
@@ -336,9 +334,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	          SHARED_LOCK, NULL));
 
 	if ((code == EEXIST || code == UAEEXIST) &&
-#ifdef AFS_SGI64_ENV
+#ifdef AFS_SGI_ENV
     	!(flags & VEXCL)
-#else /* AFS_SGI64_ENV */
+#else /* AFS_SGI_ENV */
     	aexcl == NONEXCL
 #endif
     	) {
@@ -350,10 +348,10 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    ReleaseWriteLock(&adp->lock);
 
 
-#if defined(AFS_SGI64_ENV)
+#if defined(AFS_SGI_ENV)
 	    code = afs_lookup(VNODE_TO_FIRST_BHV((vnode_t *) adp), aname, avcp,
 				  NULL, 0, NULL, acred);
-#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#elif defined(AFS_SUN5_ENV)
 	    code = afs_lookup(adp, aname, avcp, NULL, 0, NULL, acred);
 #elif defined(UKERNEL)
 	    code = afs_lookup(adp, aname, avcp, acred, 0);

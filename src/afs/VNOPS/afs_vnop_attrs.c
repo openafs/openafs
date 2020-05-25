@@ -320,7 +320,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 # else
 			vp = vp->v_vfsp->vfs_vnodecovered;
 			if (vp) {	/* Ignore weird failures */
-#  ifdef AFS_SGI62_ENV
+#  ifdef AFS_SGI_ENV
 			    attrs->va_nodeid = VnodeToIno(vp);
 #  else
 			    struct inode *ip;
@@ -328,7 +328,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 			    ip = (struct inode *)VTOI(vp);
 			    if (ip)	/* Ignore weird failures */
 				attrs->va_nodeid = ip->i_number;
-#  endif /* AFS_SGI62_ENV */
+#  endif /* AFS_SGI_ENV */
 			}
 # endif /* AFS_DARWIN80_ENV */
 		    }

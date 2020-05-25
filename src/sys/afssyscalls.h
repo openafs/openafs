@@ -21,12 +21,12 @@ typedef afs_uint64 Inode;
 
 #else /* AFS_NAMEI_ENV */
 #ifdef AFS_64BIT_IOPS_ENV
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
 typedef uint64_t Inode;
 #else
 #include <sys/types.h>
 typedef afs_uint64 Inode;
-#endif				/* AFS_SGI62_ENV */
+#endif				/* AFS_SGI_ENV */
 #else /* AFS_64BIT_IOPS_ENV */
 typedef unsigned int Inode;
 #endif

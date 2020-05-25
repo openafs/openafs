@@ -42,7 +42,7 @@
 # endif
 # include <netinet/in.h>
 
-# ifdef AFS_SGI62_ENV
+# ifdef AFS_SGI_ENV
 #  include "h/hashing.h"
 # endif
 # if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN_ENV)
@@ -1155,7 +1155,7 @@ afsi_SetServerIPRank(struct srvAddr *sa, rx_ifaddr_t ifa)
 # endif /* (DARWIN || OBSD47 || FBSD) && USEIFADDR */
 #endif /* AFS_USERSPACE_IP_ADDR */
 
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
 static int
 afsi_enum_set_rank(struct hashbucket *h, caddr_t mkey, caddr_t arg1,
 		   caddr_t arg2)
@@ -1163,7 +1163,7 @@ afsi_enum_set_rank(struct hashbucket *h, caddr_t mkey, caddr_t arg1,
     afsi_SetServerIPRank((struct srvAddr *)arg1, (struct in_ifaddr *)h);
     return 0;			/* Never match, so we enumerate everyone */
 }
-#endif				/* AFS_SGI62_ENV */
+#endif				/* AFS_SGI_ENV */
 static int
 afs_SetServerPrefs(struct srvAddr *const sa)
 {
@@ -1329,7 +1329,7 @@ afs_SetServerPrefs(struct srvAddr *const sa)
 #  else /* USEIFADDR */
 
     sa->sa_iprank = LO;
-#   ifdef AFS_SGI62_ENV
+#   ifdef AFS_SGI_ENV
     (void)hash_enum(&hashinfo_inaddr, afsi_enum_set_rank, HTF_INET, NULL,
 		    (caddr_t) sa, NULL);
 #   elif defined(AFS_DARWIN80_ENV)

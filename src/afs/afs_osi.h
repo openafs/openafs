@@ -167,7 +167,7 @@ extern int osi_vnhold(struct vcache *);
  * Is DEBUG only for turning the ASSERT() macro?  If so, we should
  * be able to eliminate DEBUG entirely.
  */
-#if !defined(AFS_SGI65_ENV) && !defined(AFS_NBSD_ENV)
+#if !defined(AFS_SGI_ENV) && !defined(AFS_NBSD_ENV)
 #ifndef	DEBUG
 #define	DEBUG	1		/* Default is to enable debugging/logging */
 #endif

@@ -19,11 +19,11 @@ main(argc, argv)
 {
     int inode;
     struct stat status;
-#ifdef AFS_SGI61_ENV
+#ifdef AFS_SGI_ENV
     int vnode, unique, datav;
-#else /* AFS_SGI61_ENV */
+#else /* AFS_SGI_ENV */
     afs_int32 vnode, unique, datav;
-#endif /* AFS_SGI61_ENV */
+#endif /* AFS_SGI_ENV */
 
     if (stat("/vicepa", &status) == -1) {
 	perror("stat");

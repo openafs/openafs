@@ -413,12 +413,8 @@ afs_InitCacheInfo(char *afile)
 # endif /* AFS_SUN5_ENV */
 
 # if defined(AFS_SGI_ENV)
-#  ifdef AFS_SGI65_ENV
 	VFS_STATVFS(filevp->v_vfsp, &st, NULL, code);
 	if (!code)
-#  else
-	if (!VFS_STATFS(filevp->v_vfsp, &st, NULL))
-#  endif /* AFS_SGI65_ENV */
 # elif defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
 	if (!VFS_STATVFS(filevp->v_vfsp, &st))
 # elif defined(AFS_AIX41_ENV)

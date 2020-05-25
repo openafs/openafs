@@ -14,7 +14,6 @@
 #include "afs/param.h"
 
 
-#ifdef	AFS_SGI62_ENV
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
@@ -66,21 +65,12 @@ idbg_prafsnode(OSI_VC_DECL(avc))
 	    avc->execsOrWriters, avc->flockCount, avc->f.states);
     printflags(avc->f.states, tab_vcache);
     qprintf("\n");
-#ifdef AFS_SGI64_ENV
     qprintf("   mapcnt %llu, mvstat %d anyAcc 0x%x Access 0x%x\n",
 	    avc->mapcnt, avc->mvstat, avc->f.anyAccess, avc->Access);
     qprintf("   mvid 0x%x &lock 0x%x cred 0x%x\n", avc->mvid.target_root, &avc->lock,
 	    avc->cred);
     qprintf("   rwlock 0x%x (%d) id %llu trips %d\n", &avc->vc_rwlock,
 	    valusema(&avc->vc_rwlock), avc->vc_rwlockid, avc->vc_locktrips);
-#else
-    qprintf("   mapcnt %d mvstat %d anyAcc 0x%x Access 0x%x\n", avc->mapcnt,
-	    avc->mvstat, avc->f.anyAccess, avc->Access);
-    qprintf("   mvid 0x%x &lock 0x%x cred 0x%x\n", avc->mvid.target_root, &avc->lock,
-	    avc->cred);
-    qprintf("   rwlock 0x%x (%d) id %d trips %d\n", &avc->vc_rwlock,
-	    valusema(&avc->vc_rwlock), avc->vc_rwlockid, avc->vc_locktrips);
-#endif
     AFS_GUNLOCK();
     return 0;
 }
@@ -173,5 +163,3 @@ idbg_afsuser(void *x)
     AFS_GUNLOCK();
     return 0;
 }
-
-#endif /* AFS_SGI62_ENV */

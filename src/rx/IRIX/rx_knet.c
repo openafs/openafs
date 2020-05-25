@@ -53,10 +53,8 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     struct mbuf *maddr = NULL;
     struct sockaddr_in *taddr;
     struct iovec tmpvec[RX_MAXWVECS + 2];
-#ifdef AFS_SGI65_ENV
     bhv_desc_t bhv;
     BHV_PDATA(&bhv) = (void *)so;
-#endif
 
     memset(&tuio, 0, sizeof(tuio));
     memset(&tmpvec, 0, sizeof(tmpvec));
@@ -74,14 +72,9 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 	osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", nvecs);
     }
     memcpy(tmpvec, (char *)dvec, (RX_MAXWVECS + 1) * sizeof(struct iovec));
-#ifdef AFS_SGI65_ENV
     code = soreceive(&bhv, &maddr, &tuio, NULL, NULL);
-#else
-    code = soreceive(so, &maddr, &tuio, NULL, NULL);
-#endif
 
     if (code) {
-#ifdef AFS_SGI65_ENV
 	/* Clear the error before using the socket again. I've tried being nice
 	 * and blocking SIGKILL and SIGSTOP from the kernel, but they get
 	 * delivered anyway. So, time to be crude and just clear the signals
@@ -97,7 +90,6 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 	    ut_unlock(ut, s);
 	    rxk_nSignalsCleared++;
 	}
-#endif
 	/* Clear the error before using the socket again. */
 	so->so_error = 0;
 	rxk_lastSocketError = code;
@@ -124,13 +116,8 @@ static struct protosw parent_proto;	/* udp proto switch */
  * RX input, fast timer and initialization routines. 
  */
 
-#ifdef AFS_SGI64_ENV
 static void
 rxk_input(struct mbuf *am, struct ifnet *aif, struct ipsec *spec)
-#else
-static void
-rxk_input(struct mbuf *am, struct ifnet *aif)
-#endif
 {
     void (*tproc) ();
     unsigned short *tsp;
@@ -416,7 +403,6 @@ rxi_GetIFInfo()
 #define _MP_NETLOCKS
 #endif
 
-#ifdef AFS_SGI65_ENV
 osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
      osi_socket *asocket;
      struct iovec *dvec;
@@ -464,132 +450,3 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
     m_freem(to);
     return code;
 }
-#else /* AFS_SGI65_ENV */
-
-int
-dummy_sblock(struct sockbuf *a, int b, struct socket *c, int *d, int e)
-{
-    afs_warn
-	("sblock was called before it was installed. Install proper afsd.\n");
-}
-
-void
-dummy_sbunlock(struct sockbuf *a, int b, struct socket *c, int d)
-{
-    afs_warn
-	("sbunlock was called before it was installed. Install proper afsd.\n");
-}
-
-int (*afs_sblockp) (struct sockbuf *, int, struct socket *, int *, int) =
-    dummy_sblock;
-void (*afs_sbunlockp) (struct sockbuf *, int, struct socket *, int) =
-    dummy_sbunlock;
-#define AFS_SBUNLOCK(SB, EV, SO, O) (*afs_sbunlockp)(SB, EV, SO, O)
-
-/* osi_NetSend - send asize bytes at adata from asocket to host at addr.
- *
- * Now, why do we allocate a new buffer when we could theoretically use the one
- * pointed to by adata?  Because PRU_SEND returns after queueing the message,
- * not after sending it.  If the sender changes the data after queueing it,
- * we'd see the already-queued data change.  One attempt to fix this without
- * adding a copy would be to have this function wait until the datagram is
- * sent; however this doesn't work well.  In particular, if a host is down, and
- * an ARP fails to that host, this packet will be queued until the ARP request
- * comes back, which could be hours later.  We can't block in this routine that
- * long, since it prevents RPC timeouts from happening.
- */
-/* XXX In the brave new world, steal the data bufs out of the rx_packet iovec,
- * and just queue those.  XXX
- */
-int
-osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
-     struct socket *asocket;
-     struct iovec *dvec;
-     int nvec;
-     afs_int32 asize;
-     struct sockaddr_in *addr;
-     int istack;
-{
-    struct mbuf *tm, *um;
-    afs_int32 code;
-    int s;
-    struct mbuf *top = 0;
-    struct mbuf *m, **mp;
-    int len;
-    char *tdata;
-    caddr_t tpa;
-    int i, tl, rlen;
-
-    NETSPL_DECL(s1)
-	AFS_STATCNT(osi_NetSend);
-
-    (*afs_sblockp) (&asocket->so_snd, NETEVENT_SODOWN, asocket, &s1, istack);
-
-    s = splnet();
-    mp = &top;
-    i = 0;
-    tdata = dvec[i].iov_base;
-    tl = dvec[i].iov_len;
-    while (1) {
-	if ((m = m_vget(M_DONTWAIT, MIN(asize, VCL_MAX), MT_DATA)) == NULL) {
-	    if (top)
-		m_freem(top);
-	    splx(s);
-	    AFS_SBUNLOCK(&asocket->so_snd, NETEVENT_SODOWN, asocket, s1);
-	    return 1;
-	}
-	len = MIN(m->m_len, asize);
-	m->m_len = 0;
-	tpa = mtod(m, caddr_t);
-	while (len) {
-	    rlen = MIN(len, tl);
-	    memcpy(tpa, tdata, rlen);
-	    asize -= rlen;
-	    len -= rlen;
-	    tpa += rlen;
-	    m->m_len += rlen;
-	    tdata += rlen;
-	    tl -= rlen;
-	    if (tl <= 0) {
-		i++;
-		if (i > nvec) {
-		    /* shouldn't come here! */
-		    asize = 0;	/* so we make progress toward completion */
-		    break;
-		}
-		tdata = dvec[i].iov_base;
-		tl = dvec[i].iov_len;
-	    }
-	}
-	*mp = m;
-	mp = &m->m_next;
-	if (asize <= 0)
-	    break;
-    }
-    tm = top;
-
-    tm->m_act = NULL;
-
-    /* setup mbuf corresponding to destination address */
-    um = m_get(M_DONTWAIT, MT_SONAME);
-    if (!um) {
-	if (top)
-	    m_freem(top);	/* free mbuf chain */
-	/* if this were vfs40, we'd do sbunlock(asocket, &asocket->so_snd), but
-	 * we don't do the locking at all for vfs40 systems */
-	splx(s);
-	AFS_SBUNLOCK(&asocket->so_snd, NETEVENT_SODOWN, asocket, s1);
-	return 1;
-    }
-    memcpy(mtod(um, caddr_t), addr, sizeof(*addr));
-    um->m_len = sizeof(*addr);
-    /* note that udp_usrreq frees funny mbuf.  We hold onto data, but mbuf
-     * around it is gone.  we free address ourselves.  */
-    code = (*asocket->so_proto->pr_usrreq) (asocket, PRU_SEND, tm, um, 0);
-    splx(s);
-    m_free(um);
-    AFS_SBUNLOCK(&asocket->so_snd, NETEVENT_SODOWN, asocket, s1);
-
-    return code;
-}
-#endif /* AFS_SGI65_ENV */

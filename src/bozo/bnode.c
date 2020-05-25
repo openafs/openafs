@@ -770,7 +770,7 @@ hdl_notifier(struct bnode_proc *tp)
 	FILE *fout;
 	struct bnode *tb = tp->bnode;
 
-#if defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI51_ENV)
+#if defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 	setsid();
 #elif defined(AFS_DARWIN90_ENV)
 	setpgid(0, 0);

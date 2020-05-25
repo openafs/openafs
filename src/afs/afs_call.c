@@ -21,7 +21,7 @@
 #if !defined(UKERNEL)
 # if !defined(AFS_LINUX_ENV)
 #  include "net/if.h"
-#  ifdef AFS_SGI62_ENV
+#  ifdef AFS_SGI_ENV
 #   include "h/hashing.h"
 #  endif
 #  if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN_ENV)
@@ -897,11 +897,11 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #endif
 {
     afs_int32 code = 0;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     size_t bufferSize;
-#else /* AFS_SGI61_ENV */
+#else /* AFS_SGI_ENV */
     u_int bufferSize;
-#endif /* AFS_SGI61_ENV */
+#endif /* AFS_SGI_ENV */
 #ifdef AFS_DARWIN100_ENV
     /* AFSKPTR macro relies on this name format/mapping */
     afs_uint32 parm = (afs_uint32)kparm;
@@ -1290,7 +1290,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	get_vfs_context();
 #endif
 	/* do it by inode */
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
 	ainode = (ainode << 32) | (parm3 & 0xffffffff);
 #endif
 	code = afs_InitCacheFile(NULL, ainode);

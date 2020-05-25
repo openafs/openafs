@@ -34,9 +34,9 @@
 #  if	defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DARWIN80_ENV)
 #   include "afs/sysincludes.h"
 #  endif
-#  if !defined(AFS_SGI64_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD48_ENV) && !defined(AFS_NBSD_ENV)
+#  if !defined(AFS_SGI_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD48_ENV) && !defined(AFS_NBSD_ENV)
 #   include "h/user.h"
-#  endif /* AFS_SGI64_ENV */
+#  endif /* AFS_SGI_ENV */
 #  include "h/uio.h"
 #  if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_HPUX110_ENV)
 #   include "h/mbuf.h"

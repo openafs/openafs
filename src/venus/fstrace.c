@@ -29,7 +29,7 @@ int afs_icl_sizeofLong = ICL_LONG;
 
 #if ICL_LONG == 2
 int afs_64bit_kernel = 1;	/* Default for 6.2+, and always for 6.1 */
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
 
 /* If _SC_KERN_POINTERS not in sysconf, then we can assume a 32 bit abi. */
 void
@@ -48,7 +48,7 @@ set_kernel_sizeof_long(void)
     }
 }
 
-#endif /* AFS_SGI62_ENV */
+#endif /* AFS_SGI_ENV */
 #endif /* ICL_LONG == 2 */
 
 int afs_syscall(long call, long parm0, long parm1, long parm2, long parm3,
@@ -211,9 +211,6 @@ CheckTypes(char *bufferp, int *typesp, int typeCount)
  * alp points at the first word in the array to be interpreted
  * rsize gives the # of words in the array
  */
-#if defined(AFS_SGI61_ENV) && !defined(AFS_SGI62_ENV)
-#define uint64_t long long
-#endif
 static void
 DisplayRecord(FILE *outFilep, afs_int32 *alp, afs_int32 rsize)
 {
@@ -1163,7 +1160,7 @@ DoDump(struct cmd_syndesc *as, void *arock)
 	    return 1;
 	}
     }
-#ifdef AFS_SGI64_ENV
+#ifdef AFS_SGI_ENV
     startTime = time((time_t *) 0);
 #else
     startTime = time(0);
@@ -1563,7 +1560,7 @@ int
 main(int argc, char *argv[])
 {
     setlocale(LC_ALL, "");
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
     set_kernel_sizeof_long();
 #endif
 

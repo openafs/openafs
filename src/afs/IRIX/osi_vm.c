@@ -75,28 +75,12 @@ osi_VM_FlushVCache(struct vcache *avc)
     osi_Assert(!AFS_VN_MAPPED(vp));
     osi_Assert(!AFS_VN_DIRTY(&avc->v));
 
-#if defined(AFS_SGI65_ENV)
     if (vp->v_filocks)
 	cleanlocks(vp, IGN_PID, 0);
     mutex_destroy(&vp->v_filocksem);
-#else /* AFS_SGI65_ENV */
-    if (vp->v_filocksem) {
-	if (vp->v_filocks)
-#ifdef AFS_SGI64_ENV
-	    cleanlocks(vp, &curprocp->p_flid);
-#else
-	    cleanlocks(vp, IGN_PID, 0);
-#endif
-	osi_Assert(vp->v_filocks == NULL);
-	mutex_destroy(vp->v_filocksem);
-	kmem_free(vp->v_filocksem, sizeof *vp->v_filocksem);
-	vp->v_filocksem = NULL;
-    }
-#endif /* AFS_SGI65_ENV */
 
     if (avc->vrefCount)
 	osi_Panic("flushVcache: vm race");
-#ifdef AFS_SGI64_ENV
     AFS_GUNLOCK();
     vnode_pcache_reclaim(vp);	/* this can sleep */
     vnode_pcache_free(vp);
@@ -104,7 +88,6 @@ osi_VM_FlushVCache(struct vcache *avc)
 	VOP_RECLAIM(vp, FSYNC_WAIT, code);
     }
     AFS_GLOCK();
-#ifdef AFS_SGI65_ENV
 #ifdef VNODE_TRACING
     ktrace_free(vp->v_trace);
 #endif /* VNODE_TRACING */
@@ -112,10 +95,6 @@ osi_VM_FlushVCache(struct vcache *avc)
     vn_bhv_head_destroy(&(vp->v_bh));
     destroy_bitlock(&vp->v_pcacheflag);
     mutex_destroy(&vp->v_buf_lock);
-#else
-    bhv_remove(VN_BHV_HEAD(vp), &(avc->vc_bhv_desc));
-    bhv_head_destroy(&(vp->v_bh));
-#endif
     vp->v_flag = 0;		/* debug */
 #if defined(DEBUG) && defined(VNODE_INIT_BITLOCK)
     destroy_bitlock(&vp->v_flag);
@@ -123,7 +102,6 @@ osi_VM_FlushVCache(struct vcache *avc)
 #ifdef INTR_KTHREADS
     AFS_VN_DESTROY_BUF_LOCK(vp);
 #endif
-#endif /* AFS_SGI64_ENV */
 
     return 0;
 }

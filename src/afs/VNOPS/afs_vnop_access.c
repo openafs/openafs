@@ -187,7 +187,7 @@ afs_AccessOK(struct vcache *avc, afs_int32 arights, struct vrequest *areq,
 }
 
 
-#if defined(AFS_SUN5_ENV) || (defined(AFS_SGI_ENV) && !defined(AFS_SGI65_ENV))
+#if defined(AFS_SUN5_ENV)
 int
 afs_access(OSI_VC_DECL(avc), afs_int32 amode, int flags,
 	   afs_ucred_t *acred)

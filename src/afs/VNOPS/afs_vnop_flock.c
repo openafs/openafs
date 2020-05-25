@@ -57,26 +57,14 @@ lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 void
 lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 {
-# if defined(AFS_SGI65_ENV)
     flid_t flid;
     get_current_flid(&flid);
-# else
-    afs_proc_t *procp = OSI_GET_CURRENT_PROCP();
-# endif
 
     if (slp) {
-# ifdef AFS_SGI65_ENV
 	slp->sysid = flid.fl_sysid;
-# else
-	slp->sysid = OSI_GET_CURRENT_SYSID();
-# endif
 	slp->pid = clid;
     } else {
-# ifdef AFS_SGI65_ENV
 	flock->l_sysid = flid.fl_sysid;
-# else
-	flock->l_sysid = OSI_GET_CURRENT_SYSID();
-# endif
 	flock->l_pid = clid;
     }
 }
@@ -173,14 +161,12 @@ lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
 #if	defined(AFS_SUN5_ENV)
     proc_t *procp = ttoproc(curthread);
 #else
-#if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
-#ifdef AFS_SGI64_ENV
-    afs_proc_t *procp = curprocp;
-#elif defined(UKERNEL)
+#if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
+#if defined(UKERNEL)
     afs_proc_t *procp = get_user_struct()->u_procp;
 #else
     afs_proc_t *procp = u.u_procp;
-#endif /* AFS_SGI64_ENV */
+#endif /* UKERNEL */
 #endif
 #endif
 
@@ -194,7 +180,7 @@ lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
 #if defined(AFS_AIX41_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_HPUX_ENV)
 	    (!onlymine && (flock1->l_pid == getppid()))
 #else
-#if defined(AFS_SGI65_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	    /* XXX check this. used to be *only* irix for some reason. */
 	    (!onlymine && (flock1->l_pid == clid))
 #else

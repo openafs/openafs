@@ -45,14 +45,6 @@ osi_NewVnode(void)
     avc->vc_rwlockid = OSI_NO_LOCKID;
     initnsema(&avc->vc_rwlock, 1,
 	      makesname(name, "vrw", avc->v.v_number));
-#ifndef	AFS_SGI53_ENV
-    initnsema(&avc->v.v_sync, 0,
-	      makesname(name, "vsy", avc->v.v_number));
-#endif
-#ifndef AFS_SGI62_ENV
-    initnlock(&avc->v.v_lock,
-	      makesname(name, "vlk", avc->v.v_number));
-#endif
     return avc;
 }
 
@@ -74,7 +66,6 @@ osi_PostPopulateVCache(struct vcache *avc)
     memset(&(avc->vc_bhv_desc), 0, sizeof(avc->vc_bhv_desc));
     bhv_desc_init(&(avc->vc_bhv_desc), avc, avc, &Afs_vnodeops);
 
-#if defined(AFS_SGI65_ENV)
     vn_bhv_head_init(&(avc->v.v_bh), "afsvp");
     vn_bhv_insert_initial(&(avc->v.v_bh), &(avc->vc_bhv_desc));
     avc->v.v_mreg = avc->v.v_mregb = (struct pregion *)avc;
@@ -85,10 +76,6 @@ osi_PostPopulateVCache(struct vcache *avc)
 		 avc->v.v_number);
     init_mutex(&avc->v.v_filocksem, MUTEX_DEFAULT, "afsvfl", (long)avc);
     init_mutex(&avc->v.v_buf_lock, MUTEX_DEFAULT, "afsvnbuf", (long)avc);
-#else
-    bhv_head_init(&(avc->v.v_bh));
-    bhv_insert_initial(&(avc->v.v_bh), &(avc->vc_bhv_desc));
-#endif
 
     vnode_pcache_init(&avc->v);
 
@@ -111,14 +98,9 @@ osi_PostPopulateVCache(struct vcache *avc)
     osi_Assert(avc->mapcnt == 0 && avc->vc_locktrips == 0);
     osi_Assert(avc->vc_rwlockid == OSI_NO_LOCKID);
     osi_Assert(avc->v.v_filocks == NULL);
-# if !defined(AFS_SGI65_ENV)
-    osi_Assert(avc->v.v_filocksem == NULL);
-# endif
     osi_Assert(avc->cred == NULL);
-# if defined(AFS_SGI64_ENV)
     vnode_pcache_reinit(&avc->v);
     avc->v.v_rdev = NODEV;
-# endif
     vn_initlist((struct vnlist *)&avc->v);
     avc->lastr = 0;
 }

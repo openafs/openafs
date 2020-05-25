@@ -944,7 +944,7 @@ struct vcache {
 
 #if defined(AFS_LINUX_ENV)
     off_t next_seq_offset;	/* Next sequential offset (used by prefetch/readahead) */
-#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI65_ENV)
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     off_t next_seq_blk_offset; /* accounted in blocks for Solaris & IRIX */
 #endif
 
@@ -956,18 +956,12 @@ struct vcache {
     unsigned int readdir_pid;   /* pid of the thread in readdir */
 #if defined(AFS_SGI_ENV)
     daddr_t lastr;		/* for read-ahead */
-#ifdef AFS_SGI64_ENV
     uint64_t vc_rwlockid;	/* kthread owning rwlock */
-#else
-    short vc_rwlockid;		/* pid of process owning rwlock */
-#endif
     short vc_locktrips;		/* # of rwlock reacquisitions */
     sema_t vc_rwlock;		/* vop_rwlock for afs */
     pgno_t mapcnt;		/* # of pages mapped */
     struct cred *cred;		/* last writer's cred */
-#ifdef AFS_SGI64_ENV
     struct bhv_desc vc_bhv_desc;	/* vnode's behavior data. */
-#endif
 #endif				/* AFS_SGI_ENV */
 #if defined(AFS_LINUX_ENV) || defined(AFS_FBSD_ENV)
     afs_ucred_t *cred;		/* last writer's cred */
@@ -1011,35 +1005,13 @@ struct pagewriter {
 #if defined(AFS_SGI_ENV)
 #define AVCRWLOCK(avc)		(valusema(&(avc)->vc_rwlock) <= 0)
 
-/* SGI vnode rwlock macros and flags. */
-#ifndef AFS_SGI62_ENV
-/* The following are defined here. SGI 6.2 declares them in vnode.h */
-#define VRWLOCK_READ		0
-#define VRWLOCK_WRITE		1
-#define VRWLOCK_WRITE_DIRECT	2
-#endif
-
-#ifdef AFS_SGI53_ENV
-#ifdef AFS_SGI62_ENV
 #define AFS_RWLOCK_T vrwlock_t
-#else
-#define AFS_RWLOCK_T int
-#endif /* AFS_SGI62_ENV */
-#ifdef AFS_SGI64_ENV
 #include <ksys/behavior.h>
 #define AFS_RWLOCK(V,F) \
 	afs_rwlock(&VTOAFS(V)->vc_bhv_desc, (F));
 #define AFS_RWUNLOCK(V,F) \
 	afs_rwunlock(&VTOAFS(V)->vc_bhv_desc, (F));
 
-#else
-#define AFS_RWLOCK(V,F) afs_rwlock((vnode_t *)(V), (F) )
-#define AFS_RWUNLOCK(V,F) afs_rwunlock((vnode_t *)(V), (F) )
-#endif
-#else /* AFS_SGI53_ENV */
-#define AFS_RWLOCK(V,F) afs_rwlock((V))
-#define AFS_RWUNLOCK(V,F) afs_rwunlock((V))
-#endif /* AFS_SGI53_ENV */
 #endif /* AFS_SGI_ENV */
 
 struct vcxstat {
@@ -1142,7 +1114,7 @@ typedef user_addr_t iparmtype; /* 64 bit */
 typedef user_addr_t uparmtype; /* 64 bit */
 #else
 typedef char * uparmtype;
-#ifdef AFS_SGI65_ENV
+#ifdef AFS_SGI_ENV
 typedef afs_uint32 iparmtype;
 #else
 typedef long iparmtype;
@@ -1197,7 +1169,7 @@ struct afs_fheader {
 
 #if defined(AFS_CACHE_VNODE_PATH)
 typedef char *afs_ufs_dcache_id_t;
-#elif defined(AFS_SGI61_ENV) || defined(AFS_SUN5_64BIT_ENV)
+#elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_64BIT_ENV)
 /* Using ino64_t here so that user level debugging programs compile
  * the size correctly.
  */
@@ -1480,16 +1452,16 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 
 /* get a file's serial number from a vnode */
 #ifndef afs_vnodeToInumber
-#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
 #define afs_vnodeToInumber(V) VnodeToIno(V)
 #else
 #define afs_vnodeToInumber(V) (VTOI(V)->i_number)
-#endif /* AFS_SGI62_ENV */
+#endif /* AFS_SGI_ENV */
 #endif
 
 /* get a file's device number from a vnode */
 #ifndef afs_vnodeToDev
-#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
 #define afs_vnodeToDev(V) VnodeToDev(V)
 #elif defined(UKERNEL)
 #define afs_vnodeToDev(V) (VTOI(V) ? (VTOI(V)->i_dev) : (-1))

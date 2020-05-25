@@ -648,7 +648,7 @@ extern int afs_syscall_icreate(dev_t, long, long, long, long, long,
 extern int afs_syscall_iopen(dev_t, int, int, rval_t *, afs_ucred_t *);
 extern int afs_syscall_iincdec(dev_t, int, int, int, rval_t *,
 			       afs_ucred_t *);
-#elif defined(AFS_SGI65_ENV)
+#elif defined(AFS_SGI_ENV)
 extern int afs_syscall_icreate(afs_uint32, afs_uint32, afs_uint32, afs_uint32, afs_uint32, afs_uint32, rval_t *);
 extern int afs_syscall_iopen(int, ino_t, int, rval_t *);
 extern int afs_syscall_iincdec(int, int, int, int);
@@ -1135,7 +1135,7 @@ extern afs_int32 afs_GetAccessBits(struct vcache *avc,
 				   struct vrequest *areq);
 extern int afs_AccessOK(struct vcache *avc, afs_int32 arights,
 			struct vrequest *areq, afs_int32 check_mode_bits);
-#if defined(AFS_SUN5_ENV) || (defined(AFS_SGI_ENV) && !defined(AFS_SGI65_ENV))
+#if defined(AFS_SUN5_ENV)
 extern int afs_access(OSI_VC_DECL(avc), afs_int32 amode, int flags,
 		      afs_ucred_t *acred);
 #else
@@ -1169,15 +1169,15 @@ extern int afs_CreateAttr(struct vattr **out);
 extern void afs_DestroyAttr(struct vattr *vattr);
 
 /* VNOPS/afs_vnop_create.c */
-#ifdef AFS_SGI64_ENV
+#ifdef AFS_SGI_ENV
 extern int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		      int flags, int amode, struct vcache **avcp,
 		      afs_ucred_t *acred);
-#else /* AFS_SGI64_ENV */
+#else /* AFS_SGI_ENV */
 extern int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		      enum vcexcl aexcl, int amode, struct vcache **avcp,
 		      afs_ucred_t *acred);
-#endif /* AFS_SGI64_ENV */
+#endif /* AFS_SGI_ENV */
 extern int afs_LocalHero(struct vcache *avc,
 			 struct dcache *adc,
 			 AFSFetchStatus * astat, int aincr);
@@ -1259,7 +1259,7 @@ extern int afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp,
 #endif
 
 /* VNOPS/afs_vnop_open.c */
-#ifdef AFS_SGI64_ENV
+#ifdef AFS_SGI_ENV
 extern int afs_open(bhv_desc_t * bhv, struct vcache **avcp, afs_int32 aflags,
 		    afs_ucred_t *acred);
 #else
@@ -1342,17 +1342,9 @@ extern int afs_DoPartialWrite(struct vcache *avc,
 			      struct vrequest *areq);
 extern int afs_closex(struct file *afd);
 
-#ifdef AFS_SGI65_ENV
+#ifdef AFS_SGI_ENV
 extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags,
 		     lastclose_t lastclose, afs_ucred_t *acred);
-#elif defined(AFS_SGI64_ENV)
-extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags,
-		     lastclose_t lastclose, off_t offset,
-		     afs_ucred_t *acred, struct flid *flp);
-#elif defined(AFS_SGI_ENV)
-extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags,
-		     lastclose_t lastclose, off_t offset,
-		     afs_ucred_t *acred);
 #elif defined(AFS_SUN5_ENV)
 extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags, int count,
 		     offset_t offset, afs_ucred_t *acred);
@@ -1361,10 +1353,10 @@ extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags,
 		     afs_ucred_t *acred);
 #endif
 
-#if defined(AFS_SGI65_ENV)
+#if defined(AFS_SGI_ENV)
 extern int afs_fsync(OSI_VC_DECL(avc), int flags, afs_ucred_t *acred,
 		     off_t start, off_t stop);
-#elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)
+#elif defined(AFS_SUN5_ENV)
 extern int afs_fsync(OSI_VC_DECL(avc), int flag, afs_ucred_t *acred);
 #else
 extern int afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred);
@@ -1411,7 +1403,7 @@ extern void afs_ntohuuid(afsUUID * uuidp);
 extern afs_int32 afs_uuid_create(afsUUID * uuid);
 extern u_short afs_uuid_hash(afsUUID * uuid);
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI62_ENV) || defined(UKERNEL)
+#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI_ENV) || defined(UKERNEL)
 #include "osi_prototypes.h"
 #endif
 

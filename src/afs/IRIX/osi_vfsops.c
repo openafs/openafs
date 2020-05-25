@@ -110,11 +110,7 @@ Afs_init(struct vfssw *vswp, int fstype)
 
 
 extern int afs_mount(), afs_unmount(), afs_root(), afs_statfs();
-#ifdef AFS_SGI65_ENV
 extern int afs_sync(OSI_VFS_DECL(afsp), int flags, struct cred *cr);
-#else
-extern int afs_sync(OSI_VFS_DECL(afsp), short flags, struct cred *cr);
-#endif
 extern int afs_vget(OSI_VFS_DECL(afsp), vnode_t ** vpp, struct fid *afidp);
 #ifdef MP
 struct vfsops afs_lockedvfsops =
@@ -122,42 +118,26 @@ struct vfsops afs_lockedvfsops =
 struct vfsops Afs_vfsops =
 #endif
 {
-#ifdef AFS_SGI64_ENV
-#ifdef AFS_SGI65_ENV
     BHV_IDENTITY_INIT_POSITION(VFS_POSITION_BASE),
-#else
-    VFS_POSITION_BASE,
-#endif
-#endif
     afs_mount,
-#ifdef AFS_SGI64_ENV
     fs_nosys,			/* rootinit */
     fs_nosys,			/* mntupdate */
     fs_dounmount,
-#endif
     afs_unmount,
     afs_root,
     afs_statfs,
     afs_sync,
     afs_vget,
     fs_nosys,			/* mountroot */
-#ifdef AFS_SGI65_ENV
     fs_nosys,			/* realvfsops */
     fs_import,			/* import */
     fs_nosys,			/* quotactl */
-#else
-    fs_nosys,			/* swapvp */
-#endif
 };
 extern struct afs_q VLRU;	/*vcache LRU */
 
-#ifdef AFS_SGI64_ENV
 static bhv_desc_t afs_vfs_bhv;
-#endif
 afs_mount(struct vfs *afsp, vnode_t * mvp, struct mounta *uap,
-#ifdef AFS_SGI65_ENV
 	  char *attrs,
-#endif
 	  cred_t * cr)
 {
     AFS_STATCNT(afs_mount);
@@ -176,11 +156,7 @@ afs_mount(struct vfs *afsp, vnode_t * mvp, struct mounta *uap,
     afsp->vfs_bsize = 8192;
     afsp->vfs_fsid.val[0] = AFS_VFSMAGIC;	/* magic */
     afsp->vfs_fsid.val[1] = afs_fstype;
-#ifdef AFS_SGI64_ENV
     vfs_insertbhv(afsp, &afs_vfs_bhv, &Afs_vfsops, &afs_vfs_bhv);
-#else
-    afsp->vfs_data = NULL;
-#endif
     afsp->vfs_fstype = afs_fstype;
     afsp->vfs_dev = 0xbabebabe;	/* XXX this should be unique */
 
@@ -246,9 +222,7 @@ afs_unmount(OSI_VFS_ARG(afsp), flags, cr)
     ReleaseWriteLock(&afs_xvcache);
     afs_globalVFS = 0;
     afs_shutdown(AFS_WARM);
-#ifdef AFS_SGI65_ENV
     VFS_REMOVEBHV(afsp, &afs_vfs_bhv);
-#endif
     return 0;
 }
 
@@ -347,17 +321,11 @@ afs_statfs(OSI_VFS_ARG(afsp), abp, avp)
 
 extern afs_int32 vcachegen;
 #define PREEMPT_MASK    0x7f
-#ifdef AFS_SGI64_ENV
 #define PREEMPT()
-#endif
 
 int
 afs_sync(OSI_VFS_DECL(afsp),
-#ifdef AFS_SGI65_ENV
 	 int flags,
-#else
-	 short flags,
-#endif
 	 struct cred *cr)
 {
     /* Why enable the vfs sync operation?? */
@@ -374,13 +342,8 @@ afs_sync(OSI_VFS_DECL(afsp),
     /*
      * if not interested in vnodes, skip all this
      */
-#ifdef AFS_SGI61_ENV
     if ((flags & (SYNC_CLOSE | SYNC_DELWRI | SYNC_PDFLUSH)) == 0)
 	goto end;
-#else /* AFS_SGI61_ENV */
-    if ((flags & (SYNC_CLOSE | SYNC_DELWRI | SYNC_ATTR)) == 0)
-	goto end;
-#endif /* AFS_SGI61_ENV */
   loop:
     ObtainReadLock(&afs_xvcache);
     for (tq = VLRU.prev; tq != &VLRU; tq = uq) {
@@ -411,14 +374,12 @@ afs_sync(OSI_VFS_DECL(afsp),
 		continue;
 	    }
 	}
-#ifdef AFS_SGI61_ENV
 	else if (flags & SYNC_PDFLUSH) {
 	    if (!VN_GET_DPAGES(vp)) {
 		VN_UNLOCK(vp, s);
 		continue;
 	    }
 	}
-#endif /* AFS_SGI61_ENV */
 
 	vp->v_count++;
 	VN_UNLOCK(vp, s);
@@ -430,11 +391,7 @@ afs_sync(OSI_VFS_DECL(afsp),
 	 * sleep for rwlock.
 	 */
 	if (afs_rwlock_nowait(vp, 1) == 0) {
-#ifdef AFS_SGI61_ENV
 	    if (flags & (SYNC_BDFLUSH | SYNC_PDFLUSH))
-#else /* AFS_SGI61_ENV */
-	    if (flags & SYNC_BDFLUSH)
-#endif /* AFS_SGI61_ENV */
 	    {
 		AFS_RELE(vp);
 		ObtainReadLock(&afs_xvcache);
@@ -451,31 +408,16 @@ afs_sync(OSI_VFS_DECL(afsp),
 	if (flags & SYNC_CLOSE) {
 	    PFLUSHINVALVP(vp, (off_t) 0, (off_t) tvc->f.m.Length);
 	}
-#ifdef AFS_SGI61_ENV
 	else if (flags & SYNC_PDFLUSH) {
 	    if (VN_GET_DPAGES(vp)) {
 		pdflush(vp, B_ASYNC);
 	    }
 	}
-#endif /* AFS_SGI61_ENV */
 
 
 	if ((flags & SYNC_DELWRI) && AFS_VN_DIRTY(vp)) {
-#ifdef AFS_SGI61_ENV
 	    PFLUSHVP(vp, (off_t) tvc->f.m.Length,
 		     (flags & SYNC_WAIT) ? 0 : B_ASYNC, error);
-#else /* AFS_SGI61_ENV */
-	    if (flags & SYNC_WAIT)
-		/* push all and wait */
-		PFLUSHVP(vp, (off_t) tvc->f.m.Length, (off_t) 0, error);
-	    else if (flags & SYNC_BDFLUSH) {
-		/* push oldest */
-		error = pdflush(vp, B_ASYNC);
-	    } else {
-		/* push all but don't wait */
-		PFLUSHVP(vp, (off_t) tvc->f.m.Length, (off_t) B_ASYNC, error);
-	    }
-#endif /* AFS_SGI61_ENV */
 	}
 
 	/*
@@ -513,7 +455,7 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t ** avcp, struct fid * fidp)
     afs_int32 code = 0;
     afs_int32 ret;
 
-#if defined(AFS_SGI64_ENV) && defined(CKPT) && !defined(_R5000_CVT_WAR)
+#if defined(CKPT) && !defined(_R5000_CVT_WAR)
     afs_fid2_t *afid2;
 #endif
 
@@ -523,7 +465,7 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t ** avcp, struct fid * fidp)
 
     *avcp = NULL;
 
-#if defined(AFS_SGI64_ENV) && defined(CKPT) && !defined(_R5000_CVT_WAR)
+#if defined(CKPT) && !defined(_R5000_CVT_WAR)
     afid2 = (afs_fid2_t *) fidp;
     if (afid2->af_len == sizeof(afs_fid2_t) - sizeof(afid2->af_len)) {
 	/* It's a checkpoint restart fid. */
@@ -564,25 +506,17 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t ** avcp, struct fid * fidp)
 #ifdef MP			/* locked versions of vfs operations. */
 
 /* wrappers for vfs calls */
-#ifdef AFS_SGI64_ENV
 #define AFS_MP_VFS_ARG(A) bhv_desc_t A
-#else
-#define AFS_MP_VFS_ARG(A) struct vfs A
-#endif
 
 int
 mp_afs_mount(struct vfs *a, struct vnode *b, struct mounta *c,
-#ifdef AFS_SGI65_ENV
 	     char *d,
-#endif
 	     struct cred *e)
 {
     int rv;
     AFS_GLOCK();
     rv = afs_lockedvfsops.vfs_mount(a, b, c, d
-#ifdef AFS_SGI65_ENV
 				    , e
-#endif
 	);
     AFS_GUNLOCK();
     return rv;
@@ -620,11 +554,7 @@ mp_afs_statvfs(AFS_MP_VFS_ARG(*a), struct statvfs *b, struct vnode *c)
 
 int
 mp_afs_sync(AFS_MP_VFS_ARG(*a),
-#ifdef AFS_SGI65_ENV
 	    int b,
-#else
-	    short b,
-#endif
 	    struct cred *c)
 {
     int rv;
@@ -645,32 +575,20 @@ mp_afs_vget(AFS_MP_VFS_ARG(*a), struct vnode **b, struct fid *c)
 }
 
 struct vfsops Afs_vfsops = {
-#ifdef AFS_SGI64_ENV
-#ifdef AFS_SGI65_ENV
     BHV_IDENTITY_INIT_POSITION(VFS_POSITION_BASE),
-#else
-    VFS_POSITION_BASE,
-#endif
-#endif
     mp_afs_mount,
-#ifdef AFS_SGI64_ENV
     fs_nosys,			/* rootinit */
     fs_nosys,			/* mntupdate */
     fs_dounmount,
-#endif
     mp_afs_unmount,
     mp_afs_root,
     mp_afs_statvfs,
     mp_afs_sync,
     mp_afs_vget,
     fs_nosys,			/* mountroot */
-#ifdef AFS_SGI65_ENV
     fs_nosys,			/* realvfsops */
     fs_import,			/* import */
     fs_nosys,			/* quotactl */
-#else
-    fs_nosys,			/* swapvp */
-#endif
 };
 
 #endif /* MP */

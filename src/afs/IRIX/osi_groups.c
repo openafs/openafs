@@ -35,7 +35,6 @@ static int
 /* This is common code between SGI's DFS and our AFS. Do *not* alter it's
  * interface or semantics without notifying SGI.
  */
-#ifdef AFS_SGI65_ENV
 /* fixup_pags returns error code if relevant or 0 on no error.
  * Sets up the cred for the call to estgroups. This is pretty convoluted
  * in order to avoid including the private proc.h header file.
@@ -115,56 +114,6 @@ fixup_pags(int **credpp, int ngroups, gid_t * gidset, int old_afs_pag,
     }
     return 0;
 }
-#else
-/*
- * Generic routine to set the PAG in the cred for AFS and DFS.
- * If flag = 0 this is a DFS pag held in one group.
- * If flag = 1 this is a AFS pag held in two group entries
- */
-static int
-afsDFS_SetPagInCred(struct ucred *credp, int pag, int flag)
-{
-    int *gidset;
-    int i, ngrps;
-    gid_t g0, g1;
-    int n = 0;
-    struct ucred *newcredp;
-    int groups_taken = (flag ? 2 : 1);
-
-    ngrps = credp->cr_ngroups + groups_taken;
-    if (ngrps >= ngroups_max)
-	return E2BIG;
-
-
-    if (flag) {
-	/* Break out the AFS pag into two groups */
-	afs_get_groups_from_pag(pag, &g0, &g1);
-    }
-
-    newcredp = crdup(credp);
-    newcredp->cr_ngroups = ngrps;
-
-    if (flag) {
-	/* AFS case */
-	newcredp->cr_groups[0] = g0;
-	newcredp->cr_groups[1] = g1;
-    } else {
-	/* DFS case */
-	if (PagInCred(newcredp) != NOPAG) {
-	    /* found an AFS PAG is set in this cred */
-	    n = 2;
-	}
-	newcredp->cr_groups[n] = pag;
-    }
-    for (i = n; i < credp->cr_ngroups; i++)
-	newcredp->cr_groups[i + groups_taken] = credp->cr_groups[i];
-
-    /* estgroups sets current threads cred from newcredp and crfree's credp */
-    estgroups(credp, newcredp);
-
-    return 0;
-}
-#endif /* AFS_SGI65_ENV */
 
 /* SGI's osi_GetPagFromCred - They return a long. */
 int
@@ -187,17 +136,7 @@ osi_DFSGetPagFromCred(struct ucred *credp)
      *  This means we don't really know if our DFS PAG is in
      *  the first or third group entry.
      */
-#ifdef AFS_SGI65_ENV
     pag = credp->cr_groups[ngroups - 1];
-#else
-    pag = credp->cr_groups[0];
-    if (PagInCred(credp) != NOPAG) {
-	/* AFS has a PAG value in the first two group entries */
-	if (ngroups < 3)
-	    return NOPAG;
-	pag = credp->cr_groups[2];
-    }
-#endif
     if (((pag >> 24) & 0xff) == 'A')
 	return pag;
     else
@@ -223,7 +162,6 @@ Afs_xsetgroups(int ngroups, gid_t * gidset)
     if (code = setgroups(ngroups, gidset))
 	return code;
 
-#ifdef AFS_SGI65_ENV
     if (old_afs_pag == NOPAG && old_dfs_pag == NOPAG)
 	return 0;
 
@@ -238,27 +176,6 @@ Afs_xsetgroups(int ngroups, gid_t * gidset)
 		   (old_dfs_pag == NOPAG) ? 0 : old_dfs_pag);
     if (!code && modcredp)
 	estgroups(OSI_GET_CURRENT_PROCP(), modcredp);
-#else
-
-    /*
-     * The setgroups gave our curent thread a new cred pointer
-     * Get the value again
-     */
-    credp = OSI_GET_CURRENT_CRED();
-    if ((PagInCred(credp) == NOPAG) && (old_afs_pag != NOPAG)) {
-	/* reset the AFS PAG */
-	code = afsDFS_SetPagInCred(credp, old_afs_pag, 1);
-    }
-    /*
-     * Once again get the credp because the afsDFS_SetPagInCred might have
-     * assigned a new one.
-     */
-    credp = OSI_GET_CURRENT_CRED();
-    if ((osi_DFSGetPagFromCred(credp) == NOPAG)
-	&& (old_dfs_pag != NOPAG)) {
-	code = afsDFS_SetPagInCred(credp, old_dfs_pag, 0);
-    }
-#endif /* AFS_SGI65_ENV */
     return code;
 }
 
@@ -342,11 +259,7 @@ afs_setgroups(struct ucred **cred, int ngroups, gid_t * gidset,
     while (ngroups--)
 	*gp++ = *gidset++;
     if (!change_parent) {
-#ifdef AFS_SGI65_ENV
 	estgroups(OSI_GET_CURRENT_PROCP(), newcr);
-#else
-	estgroups(cr, newcr);
-#endif
     }
     *cred = newcr;
     return (0);
