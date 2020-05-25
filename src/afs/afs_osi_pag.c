@@ -206,10 +206,10 @@ afs_setpag(void)
 
     int code = 0;
 
-#if defined(AFS_SGI53_ENV) && defined(MP)
+#if defined(AFS_SGI_ENV) && defined(MP)
     /* This is our first chance to get the global lock. */
     AFS_GLOCK();
-#endif /* defined(AFS_SGI53_ENV) && defined(MP) */
+#endif /* defined(AFS_SGI_ENV) && defined(MP) */
 
     AFS_STATCNT(afs_setpag);
 
@@ -283,9 +283,9 @@ afs_setpag(void)
 	setuerror(code);
 #endif
 
-#if defined(AFS_SGI53_ENV) && defined(MP)
+#if defined(AFS_SGI_ENV) && defined(MP)
     AFS_GUNLOCK();
-#endif /* defined(AFS_SGI53_ENV) && defined(MP) */
+#endif /* defined(AFS_SGI_ENV) && defined(MP) */
 
     return (code);
 }
@@ -320,10 +320,10 @@ afs_setpag_val(int pagval)
 
     int code = 0;
 
-#if defined(AFS_SGI53_ENV) && defined(MP)
+#if defined(AFS_SGI_ENV) && defined(MP)
     /* This is our first chance to get the global lock. */
     AFS_GLOCK();
-#endif /* defined(AFS_SGI53_ENV) && defined(MP) */
+#endif /* defined(AFS_SGI_ENV) && defined(MP) */
 
     AFS_STATCNT(afs_setpag);
 
@@ -386,9 +386,9 @@ afs_setpag_val(int pagval)
     if (!getuerror())
 	setuerror(code);
 #endif
-#if defined(AFS_SGI53_ENV) && defined(MP)
+#if defined(AFS_SGI_ENV) && defined(MP)
     AFS_GUNLOCK();
-#endif /* defined(AFS_SGI53_ENV) && defined(MP) */
+#endif /* defined(AFS_SGI_ENV) && defined(MP) */
     return (code);
 }
 

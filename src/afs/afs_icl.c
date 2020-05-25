@@ -17,7 +17,7 @@
 #include "rx/rx_globals.h"
 #if !defined(UKERNEL) && !defined(AFS_LINUX_ENV)
 #include "net/if.h"
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
 #include "h/hashing.h"
 #endif
 #if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN_ENV)
@@ -120,15 +120,15 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
     afs_int32 code;
     struct afs_icl_log *logp;
     struct afs_icl_set *setp;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     size_t temp;
-#else /* AFS_SGI61_ENV */
+#else /* AFS_SGI_ENV */
 #if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
     afs_uint64 temp;
 #else
     afs_uint32 temp;
 #endif
-#endif /* AFS_SGI61_ENV */
+#endif /* AFS_SGI_ENV */
     char tname[65];
     afs_int32 startCookie;
     afs_int32 allocated;

@@ -99,7 +99,7 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 #define	MOUNT_AFS AFS_MOUNT_AFS
 #endif /* MOUNT_AFS */
 
-#ifdef AFS_SGI65_ENV
+#ifdef AFS_SGI_ENV
 # include <sched.h>
 # define SET_RTPRI(P) {  \
     struct sched_param sp; \

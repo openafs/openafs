@@ -2008,7 +2008,7 @@ main(int argc, char *argv[])
     else if (stackSize > 44000)
 	stackSize = 44000;
 #endif
-#if defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV) || defined(AFS_SGI51_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_XBSD_ENV)
     rx_SetStackSize(1, stackSize);
 #endif
     if (udpBufSize)

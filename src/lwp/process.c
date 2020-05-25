@@ -82,7 +82,7 @@ returnto(struct lwp_context *savearea)
 /*
  * Magic stack pointer
  */
-#if	defined(AFS_SGI64_ENV)
+#if	defined(AFS_SGI_ENV)
 # ifdef _BSD_COMPAT
 #  define LWP_SP 34
 # else
@@ -122,7 +122,7 @@ Need offset to SP in jmp_buf for this platform.
   * differs based on the ISA chosen. It is int for mips1 and mips2 and
   * __uint64_t for mips3 and mips4
   */
-#ifdef AFS_SGI64_ENV
+#ifdef AFS_SGI_ENV
 #if (_MIPS_ISA == _MIPS_ISA_MIPS3 || _MIPS_ISA == _MIPS_ISA_MIPS4)
 typedef __uint64_t jmp_buf_type;
 #endif

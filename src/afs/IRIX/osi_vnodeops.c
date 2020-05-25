@@ -14,7 +14,6 @@
 #include "afs/param.h"
 
 
-#ifdef	AFS_SGI62_ENV
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
@@ -31,9 +30,6 @@ extern void afs_chkpgoob(vnode_t *, pgno_t);
 static void afs_strategy();
 static int afs_xread(), afs_xwrite();
 static int afs_xbmap(), afs_map(), afs_reclaim();
-#ifndef AFS_SGI65_ENV
-static int afs_addmap(), afs_delmap();
-#endif
 extern int afs_open(), afs_close(), afs_ioctl(), afs_getattr(), afs_setattr();
 extern int afs_access(), afs_lookup();
 extern int afs_create(), afs_remove(), afs_link(), afs_rename();
@@ -41,11 +37,7 @@ extern int afs_mkdir(), afs_rmdir(), afs_readdir();
 extern int afs_symlink(), afs_readlink(), afs_fsync(), afs_fid(),
 afs_frlock();
 static int afs_seek(OSI_VC_DECL(a), off_t b, off_t * c);
-#ifdef AFS_SGI64_ENV
 extern int afs_xinactive();
-#else
-extern void afs_xinactive();
-#endif
 
 extern void afs_rwlock(OSI_VN_DECL(vp), AFS_RWLOCK_T b);
 extern void afs_rwunlock(OSI_VN_DECL(vp), AFS_RWLOCK_T b);
@@ -54,11 +46,7 @@ extern int afs_fid2();
 
 static int afsrwvp(struct vcache *avc, struct uio *uio,
 		   enum uio_rw rw, int ioflag,
-#ifdef AFS_SGI64_ENV
 		   struct cred *cr, struct flid *flp);
-#else
-		   struct cred *cr);
-#endif
 #ifdef MP
 static void mp_afs_rwlock(OSI_VN_DECL(a), AFS_RWLOCK_T b);
 static void mp_afs_rwunlock(OSI_VN_DECL(a), AFS_RWLOCK_T b);
@@ -67,13 +55,7 @@ struct vnodeops afs_lockedvnodeops =
 struct vnodeops Afs_vnodeops =
 #endif
 {
-#ifdef AFS_SGI64_ENV
-#ifdef AFS_SGI65_ENV
     BHV_IDENTITY_INIT_POSITION(VNODE_POSITION_BASE),
-#else
-    VNODE_POSITION_BASE,
-#endif
-#endif
     afs_open,
     afs_close,
     afs_xread,
@@ -106,13 +88,8 @@ struct vnodeops Afs_vnodeops =
     afs_xbmap,
     afs_strategy,
     afs_map,
-#ifdef AFS_SGI65_ENV
     fs_noerr,			/* addmap - devices only */
     fs_noerr,			/* delmap - devices only */
-#else
-    afs_addmap,
-    afs_delmap,
-#endif
     fs_poll,			/* poll */
     fs_nosys,			/* dump */
     fs_pathconf,
@@ -123,8 +100,6 @@ struct vnodeops Afs_vnodeops =
     fs_nosys,			/* attr_set */
     fs_nosys,			/* attr_remove */
     fs_nosys,			/* attr_list */
-#ifdef AFS_SGI64_ENV
-#ifdef AFS_SGI65_ENV
     fs_cover,
     (vop_link_removed_t) fs_noval,
     fs_vnode_change,
@@ -137,10 +112,6 @@ struct vnodeops Afs_vnodeops =
     (vop_readbuf_t) fs_nosys,
     fs_strgetmsg,
     fs_strputmsg,
-#else
-    fs_mount,
-#endif
-#endif
 };
 
 #ifndef MP
@@ -150,19 +121,15 @@ struct vnodeops *afs_ops = &Afs_vnodeops;
 int
 afs_frlock(OSI_VN_DECL(vp), int cmd, struct flock *lfp, int flag,
 	   off_t offset,
-#ifdef AFS_SGI65_ENV
 	   vrwlock_t vrwlock,
-#endif
 	   cred_t * cr)
 {
     int error;
     OSI_VN_CONVERT(vp);
-#ifdef AFS_SGI65_ENV
     struct flid flid;
     int pid;
     get_current_flid(&flid);
     pid = flid.fl_pid;
-#endif
 
     /*
      * Since AFS doesn't support byte-wise locks (and simply
@@ -180,12 +147,8 @@ afs_frlock(OSI_VN_DECL(vp), int cmd, struct flock *lfp, int flag,
 	|| (lfp->l_len != MAXEND && lfp->l_len != 0)) {
 	AFS_RWLOCK(vp, VRWLOCK_WRITE);
 	AFS_GUNLOCK();
-#ifdef AFS_SGI65_ENV
 	error =
 	    fs_frlock(OSI_VN_ARG(vp), cmd, lfp, flag, offset, vrwlock, cr);
-#else
-	error = fs_frlock(vp, cmd, lfp, flag, offset, cr);
-#endif
 	AFS_GLOCK();
 	AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
 	if (error || cmd != F_GETLK)
@@ -222,18 +185,12 @@ afs_frlock(OSI_VN_DECL(vp), int cmd, struct flock *lfp, int flag,
     AFS_GUNLOCK();
 
     error = convoff(vp, lfp, 0, offset, SEEKLIMIT
-#ifdef AFS_SGI64_ENV
 		    , OSI_GET_CURRENT_CRED()
-#endif /* AFS_SGI64_ENV */
 	);
 
     AFS_GLOCK();
     if (!error) {
-#ifdef AFS_SGI65_ENV
 	error = afs_lockctl(vp, lfp, cmd, cr, pid);
-#else
-	error = afs_lockctl(vp, lfp, cmd, cr, OSI_GET_CURRENT_PID());
-#endif
     }
     return error;
 }
@@ -260,14 +217,9 @@ afs_frlock(OSI_VN_DECL(vp), int cmd, struct flock *lfp, int flag,
  * doing direct I/O on the read side....
  */
 /* ARGSUSED */
-#ifdef AFS_SGI64_ENV
 static int
 afs_xread(OSI_VC_ARG(avc), uiop, ioflag, cr, flp)
      struct flid *flp;
-#else
-static int
-afs_xread(OSI_VC_ARG(avc), uiop, ioflag, cr)
-#endif
 OSI_VC_DECL(avc);
      struct uio *uiop;
      int ioflag;
@@ -280,31 +232,18 @@ OSI_VC_DECL(avc);
     if (avc->v.v_type != VREG)
 	return EISDIR;
 
-#ifdef AFS_SGI64_ENV
-#ifdef AFS_SGI65_ENV
     if (!(ioflag & IO_ISLOCKED))
 	AFS_RWLOCK((vnode_t *) avc, VRWLOCK_READ);
-#endif
     code = afsrwvp(avc, uiop, UIO_READ, ioflag, cr, flp);
-#ifdef AFS_SGI65_ENV
     if (!(ioflag & IO_ISLOCKED))
 	AFS_RWUNLOCK((vnode_t *) avc, VRWLOCK_READ);
-#endif
-#else
-    code = afsrwvp(avc, uiop, UIO_READ, ioflag, cr);
-#endif
     return code;
 }
 
 /* ARGSUSED */
-#ifdef AFS_SGI64_ENV
 static int
 afs_xwrite(OSI_VC_ARG(avc), uiop, ioflag, cr, flp)
      struct flid *flp;
-#else
-static int
-afs_xwrite(OSI_VC_ARG(avc), uiop, ioflag, cr)
-#endif
 OSI_VC_DECL(avc);
      struct uio *uiop;
      int ioflag;
@@ -319,19 +258,11 @@ OSI_VC_DECL(avc);
 
     if (ioflag & IO_APPEND)
 	uiop->uio_offset = avc->f.m.Length;
-#ifdef AFS_SGI64_ENV
-#ifdef AFS_SGI65_ENV
     if (!(ioflag & IO_ISLOCKED))
 	AFS_RWLOCK(((vnode_t *) avc), VRWLOCK_WRITE);
-#endif
     code = afsrwvp(avc, uiop, UIO_WRITE, ioflag, cr, flp);
-#ifdef AFS_SGI65_ENV
     if (!(ioflag & IO_ISLOCKED))
 	AFS_RWUNLOCK((vnode_t *) avc, VRWLOCK_WRITE);
-#endif
-#else
-    code = afsrwvp(avc, uiop, UIO_WRITE, ioflag, cr);
-#endif
     return code;
 }
 
@@ -343,11 +274,7 @@ static int acdrop = 0;
 static int
 afsrwvp(struct vcache *avc, struct uio *uio, enum uio_rw rw,
 	int ioflag,
-#ifdef AFS_SGI64_ENV
 	struct cred *cr, struct flid *flp)
-#else
-	struct cred *cr)
-#endif
 {
     struct vnode *vp = AFSTOV(avc);
     struct buf *bp;
@@ -492,10 +419,8 @@ afsrwvp(struct vcache *avc, struct uio *uio, enum uio_rw rw,
 	    bmv[0].pboff = off;
 	    bmv[0].pbsize = MIN(cnt, uio->uio_resid);
 	    bmv[0].eof = 0;
-#ifdef AFS_SGI64_ENV
 	    bmv[0].pbdev = vp->v_rdev;
 	    bmv[0].pmp = uio->uio_pmp;
-#endif
 	    osi_Assert(cnt > 0);
 	    /*
 	     * initiate read-ahead if it looks like
@@ -507,11 +432,7 @@ afsrwvp(struct vcache *avc, struct uio *uio, enum uio_rw rw,
 	     */
 	    if ((avc->lastr + BTOBB(AFSBSIZE) == bn
 		 || uio->uio_resid > AFSBSIZE)
-#ifdef AFS_SGI61_ENV
 		&& (!AFS_VN_MAPPED(vp))
-#else /* AFS_SGI61_ENV */
-		&& ((vp->v_flag & VWASMAP) == 0)
-#endif /* AFS_SGI61_ENV */
 		) {
 		rem -= cnt;
 		if (rem > 0) {
@@ -527,10 +448,8 @@ afsrwvp(struct vcache *avc, struct uio *uio, enum uio_rw rw,
 		    bmv[1].bsize = bsize;
 		    bmv[1].pboff = 0;
 		    bmv[1].pbsize = acnt;
-#ifdef AFS_SGI64_ENV
 		    bmv[1].pmp = uio->uio_pmp;
 		    bmv[1].pbdev = vp->v_rdev;
-#endif
 		}
 	    }
 #ifdef DEBUG
@@ -591,9 +510,7 @@ afsrwvp(struct vcache *avc, struct uio *uio, enum uio_rw rw,
 	    bmv[0].bsize = bsize;
 	    bmv[0].pboff = off;
 	    bmv[0].pbsize = cnt;
-#ifdef AFS_SGI64_ENV
 	    bmv[0].pmp = uio->uio_pmp;
-#endif
 
 	    if (cnt == bsize)
 		bp = getchunk(vp, bmv, cr);
@@ -677,20 +594,12 @@ afsrwvp(struct vcache *avc, struct uio *uio, enum uio_rw rw,
     }
 
     if (!error) {
-#ifdef AFS_SGI61_ENV
 	if (((ioflag & IO_SYNC) || (ioflag & IO_DSYNC)) && (rw == UIO_WRITE)
 	    && !AFS_NFSXLATORREQ(cr)) {
 	    error = afs_fsync(avc, 0, cr
-#ifdef AFS_SGI65_ENV
 	                      , 0, 0
-#endif
 	                      );
 	}
-#else /* AFS_SGI61_ENV */
-	if ((ioflag & IO_SYNC) && (rw == UIO_WRITE) && !AFS_NFSXLATORREQ(cr)) {
-	    error = afs_fsync(avc, 0, cr);
-	}
-#endif /* AFS_SGI61_ENV */
     }
     if (didFakeOpen) {
 	ObtainWriteLock(&avc->lock, 236);
@@ -743,10 +652,8 @@ OSI_VC_DECL(avc);
     bsize = ctob(btoc(off + cnt));
     bmv->pbsize = MIN(cnt, count);
     bmv->eof = 0;
-#ifdef AFS_SGI64_ENV
     bmv->pmp = NULL;
     bmv->pbdev = avc->v.v_rdev;
-#endif
     bmv->bsize = bsize;
     bmv->length = BTOBBT(bsize);
     *nbmv = 1;
@@ -843,9 +750,7 @@ OSI_VC_DECL(avc);
     uio->uio_offset = BBTOB(bp->b_blkno);
     uio->uio_segflg = UIO_SYSSPACE;
     uio->uio_limit = RLIM_INFINITY;	/* we checked the limit earlier */
-#ifdef AFS_SGI64_ENV
     uio->uio_pmp = NULL;
-#endif
 
     if (bp->b_flags & B_READ) {
 	uio->uio_fmode = FREAD;
@@ -883,128 +788,11 @@ OSI_VC_DECL(avc);
     return *noffp < 0 ? EINVAL : 0;
 }
 
-#if !defined(AFS_SGI65_ENV)
-/* Irix 6.5 uses addmap/delmap only for devices. */
-/* ARGSUSED */
-static int
-afs_addmap(OSI_VC_ARG(avc), off, prp, addr, len, prot, maxprot, flags, cr)
-     off_t off;
-OSI_VC_DECL(avc);
-     struct pregion *prp;
-     addr_t addr;
-     size_t len;
-     u_int prot, maxprot;
-     u_int flags;
-     struct cred *cr;
-{
-    OSI_VC_CONVERT(avc);
-    struct vnode *vp = AFSTOV(avc);
-
-    if (vp->v_flag & VNOMAP)
-	return ENOSYS;
-    if (len == 0)
-	return 0;
-    AFS_RWLOCK(vp, VRWLOCK_WRITE);
-    if (avc->mapcnt == 0) {
-	/* on first mapping add a open reference */
-	ObtainWriteLock(&avc->lock, 237);
-	avc->execsOrWriters++;
-	avc->opens++;
-	ReleaseWriteLock(&avc->lock);
-    }
-    avc->mapcnt += btoc(len);
-    AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
-    return 0;
-}
-
- /*ARGSUSED*/ static int
-afs_delmap(OSI_VC_ARG(avc), off, prp, addr, len, prot, maxprot, flags, acred)
-     off_t off;
-OSI_VC_DECL(avc);
-     struct pregion *prp;
-     addr_t addr;
-     size_t len;
-     u_int prot, maxprot;
-     u_int flags;
-     struct cred *acred;
-{
-    OSI_VC_CONVERT(avc);
-    struct vnode *vp = AFSTOV(avc);
-    struct brequest *tb;
-    struct vrequest treq;
-    afs_int32 code;
-
-    if (vp->v_flag & VNOMAP)
-	return ENOSYS;
-    if (len == 0)
-	return 0;
-    AFS_RWLOCK(vp, VRWLOCK_WRITE);
-    osi_Assert(avc->mapcnt > 0);
-    avc->mapcnt -= btoc(len);
-    osi_Assert(avc->mapcnt >= 0);
-    if (avc->mapcnt == 0) {
-	/* on last mapping push back and remove our reference */
-	osi_Assert(avc->execsOrWriters > 0);
-	osi_Assert(avc->opens > 0);
-	if (avc->f.m.LinkCount == 0) {
-	    ObtainWriteLock(&avc->lock, 238);
-	    AFS_GUNLOCK();
-	    PTOSSVP(vp, (off_t) 0, (off_t) MAXLONG);
-	    AFS_GLOCK();
-	    ReleaseWriteLock(&avc->lock);
-	}
-	/*
-	 * mimic afs_close
-	 */
-	code = afs_InitReq(&treq, acred);
-	if (code) {
-	    code = afs_CheckCode(code, NULL, 64);
-	    AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
-	} else if (afs_BBusy()) {
-	    /* do it yourself if daemons are all busy */
-	    ObtainWriteLock(&avc->lock, 239);
-	    code = afs_StoreOnLastReference(avc, &treq);
-	    ReleaseWriteLock(&avc->lock);
-	    /* BStore does CheckCode so we should also */
-	    /* VNOVNODE is "acceptable" error code from close, since
-	     * may happen when deleting a file on another machine while
-	     * it is open here. */
-	    if (code == VNOVNODE)
-		code = 0;
-	    if (code) {
-		afs_StoreWarn(code, avc->f.fid.Fid.Volume,	/* /dev/console */
-			      1);
-	    }
-	    code = afs_CheckCode(code, &treq, 52);
-	    AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
-	} else {
-	    AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
-	    /* at least one daemon is idle, so ask it to do the store.
-	     * Also, note that  we don't lock it any more... */
-	    tb = afs_BQueue(BOP_STORE, avc, 0, 1, acred,
-			    (afs_size_t) afs_cr_uid(acred), 0L, (void *)0,
-			    (void *)0, (void *)0);
-	    /* sleep waiting for the store to start, then retrieve error code */
-	    while ((tb->flags & BUVALID) == 0) {
-		tb->flags |= BUWAIT;
-		afs_osi_Sleep(tb);
-	    }
-	    afs_BRelease(tb);
-	}
-    } else {
-	AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
-    }
-    return 0;
-}
-#endif /* ! AFS_SGI65_ENV */
-
-
 /* ARGSUSED */
 /*
  * Note - if mapping in an ELF interpreter, one can get called without vp
  * ever having been 'opened'
  */
-#ifdef AFS_SGI65_ENV
 static int
 afs_map(OSI_VC_ARG(avc), off, len, prot, flags, cr, vpp)
      off_t off;
@@ -1014,18 +802,6 @@ OSI_VC_DECL(avc);
      u_int flags;
      struct cred *cr;
      vnode_t **vpp;
-#else
-static int
-afs_map(OSI_VC_ARG(avc), off, prp, addrp, len, prot, maxprot, flags, cr)
-     off_t off;
-OSI_VC_DECL(avc);
-     struct pregion *prp;
-     addr_t *addrp;
-     size_t len;
-     u_int prot, maxprot;
-     u_int flags;
-     struct cred *cr;
-#endif
 {
     OSI_VC_CONVERT(avc);
     struct vnode *vp = AFSTOV(avc);
@@ -1042,7 +818,6 @@ OSI_VC_DECL(avc);
 	return afs_CheckCode(error, &treq, 53);
 
     osi_FlushPages(avc, cr);	/* ensure old pages are gone */
-#ifdef AFS_SGI65_ENV
     /* If the vnode is currently opened for write, there's the potential
      * that this mapping might (now or in the future) have PROT_WRITE.
      * So assume it does and we'll have to call afs_StoreOnLastReference.
@@ -1056,21 +831,8 @@ OSI_VC_DECL(avc);
     }
     ReleaseWriteLock(&avc->lock);
     AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
-#else
-    AFS_RWLOCK(vp, VRWLOCK_WRITE);
-    AFS_GUNLOCK();
-    error =
-	fs_map_subr(vp, (off_t) avc->f.m.Length, (u_int) avc->f.m.Mode, off, prp,
-		    *addrp, len, prot, maxprot, flags, cr);
-    AFS_GLOCK();
-    AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
-#endif /* AFS_SGI65_ENV */
     afs_Trace4(afs_iclSetp, CM_TRACE_GMAP, ICL_TYPE_POINTER, vp,
-#ifdef AFS_SGI65_ENV
 	       ICL_TYPE_POINTER, NULL,
-#else
-	       ICL_TYPE_POINTER, *addrp,
-#endif
 	       ICL_TYPE_INT32, len, ICL_TYPE_INT32, off);
     return error;
 }
@@ -1078,11 +840,7 @@ OSI_VC_DECL(avc);
 
 extern afs_rwlock_t afs_xvcache;
 extern afs_lock_t afs_xdcache;
-#ifdef AFS_SGI64_ENV
 int
-#else
-void
-#endif
 afs_xinactive(OSI_VC_ARG(avc), acred)
 OSI_VC_DECL(avc);
      struct ucred *acred;
@@ -1099,11 +857,7 @@ OSI_VC_DECL(avc);
 	/* inactive was already done, or someone did a VN_HOLD; just return */
 	vp->v_flag &= ~VINACT;
 	VN_UNLOCK(vp, s);
-#ifdef AFS_SGI64_ENV
 	return VN_INACTIVE_CACHE;
-#else
-	return;
-#endif
     }
     osi_Assert((vp->v_flag & VSHARE) == 0);
     vp->v_flag &= ~VINACT;
@@ -1112,7 +866,6 @@ OSI_VC_DECL(avc);
      */
     VN_UNLOCK(vp, s);
 
-#ifdef AFS_SGI65_ENV
     /* In Irix 6.5, the last unmap of a dirty mmap'd file does not
      * get an explicit vnode op. Instead we only find out at VOP_INACTIVE.
      */
@@ -1176,7 +929,6 @@ OSI_VC_DECL(avc);
 	    }
 	}
     }
-#endif
 
     osi_Assert((avc->f.states & (CCore | CMAPPED)) == 0);
 
@@ -1196,33 +948,14 @@ OSI_VC_DECL(avc);
 	PTOSSVP(vp, (off_t) 0, (off_t) MAXLONG);
 	AFS_GLOCK();
     }
-#ifndef AFS_SGI65_ENV
-    osi_Assert(avc->mapcnt == 0);
-    afs_chkpgoob(&avc->v, btoc(avc->f.m.Length));
-
-    avc->f.states &= ~CDirty;	/* Give up on store-backs */
-    if (avc->f.states & CUnlinked) {
-	if (CheckLock(&afs_xvcache) || CheckLock(&afs_xdcache)) {
-	    avc->f.states |= CUnlinkedDel;
-	} else {
-	    afs_remunlink(avc, 1);	/* ignore any return code */
-	}
-    }
-#endif
-#ifdef AFS_SGI64_ENV
     return VN_INACTIVE_CACHE;
-#endif
 }
 
 static int
 afs_reclaim(OSI_VC_DECL(avc), int flag)
 {
-#ifdef AFS_SGI64_ENV
     /* Get's called via VOP_RELCAIM in afs_FlushVCache to clear repl_vnodeops */
     return 0;
-#else
-    panic("afs_reclaim");
-#endif
 }
 
 void
@@ -1280,7 +1013,7 @@ afs_rwlock_nowait(vnode_t * vp, AFS_RWLOCK_T flag)
     return 0;
 }
 
-#if defined(AFS_SGI64_ENV) && defined(CKPT) && !defined(_R5000_CVT_WAR)
+#if defined(CKPT) && !defined(_R5000_CVT_WAR)
 int
 afs_fid2(OSI_VC_DECL(avc), struct fid *fidp)
 {
@@ -1323,7 +1056,7 @@ afs_fid2(OSI_VC_DECL(avc), struct fid *fidp)
     return EINVAL;
 #endif
 }
-#endif /* AFS_SGI64_ENV && CKPT */
+#endif /* CKPT */
 
 
 /*
@@ -1345,114 +1078,62 @@ afs_chkpgoob(vnode_t * vp, pgno_t pgno)
 
 #ifdef MP
 
-#ifdef AFS_SGI64_ENV
 #define AFS_MP_VC_ARG(A) bhv_desc_t A
-#else
-#define AFS_MP_VC_ARG(A) vnode_t A
-#endif
 
-#ifdef AFS_SGI64_ENV
 int
 mp_afs_open(bhv_desc_t * bhp, vnode_t ** a, mode_t b, struct cred *c)
-#else
-int
-mp_afs_open(vnode_t ** a, mode_t b, struct cred *c)
-#endif
 {
     int rv;
     AFS_GLOCK();
-#ifdef AFS_SGI64_ENV
     rv = afs_lockedvnodeops.vop_open(bhp, a, b, c);
-#else
-    rv = afs_lockedvnodeops.vop_open(a, b, c);
-#endif
     AFS_GUNLOCK();
     return rv;
 }
 
-#if defined(AFS_SGI64_ENV)
-#if defined(AFS_SGI65_ENV)
 int
 mp_afs_close(AFS_MP_VC_ARG(*a), int b, lastclose_t c, struct cred *d)
-#else
-int
-mp_afs_close(AFS_MP_VC_ARG(*a), int b, lastclose_t c, off_t d, struct cred *e,
-	     struct flid *f)
-#endif
-#else
-int
-mp_afs_close(AFS_MP_VC_ARG(*a), int b, lastclose_t c, off_t d, struct cred *e)
-#endif
 {
     int rv;
     AFS_GLOCK();
     rv = afs_lockedvnodeops.vop_close(a, b, c, d
-#if !defined(AFS_SGI65_ENV)
-				      , e
-#if defined(AFS_SGI64_ENV)
-				      , f
-#endif
-#endif
 	);
 
     AFS_GUNLOCK();
     return rv;
 }
 
-#ifdef AFS_SGI64_ENV
 int
 mp_afs_read(AFS_MP_VC_ARG(*a), struct uio *b, int c, struct cred *d,
 	    struct flid *f)
-#else
-int
-mp_afs_read(AFS_MP_VC_ARG(*a), struct uio *b, int c, struct cred *d)
-#endif
 {
     int rv;
     AFS_GLOCK();
-#ifdef AFS_SGI64_ENV
     rv = afs_lockedvnodeops.vop_read(a, b, c, d, f);
-#else
-    rv = afs_lockedvnodeops.vop_read(a, b, c, d);
-#endif
     AFS_GUNLOCK();
     return rv;
 }
 
 
-#ifdef AFS_SGI64_ENV
 int
 mp_afs_write(AFS_MP_VC_ARG(*a), struct uio *b, int c, struct cred *d,
 	     struct flid *f)
-#else
-int
-mp_afs_write(AFS_MP_VC_ARG(*a), struct uio *b, int c, struct cred *d)
-#endif
 {
     int rv;
     AFS_GLOCK();
-#ifdef AFS_SGI64_ENV
     rv = afs_lockedvnodeops.vop_write(a, b, c, d, f);
-#else
-    rv = afs_lockedvnodeops.vop_write(a, b, c, d);
-#endif
     AFS_GUNLOCK();
     return rv;
 }
 
 int
 mp_afs_ioctl(AFS_MP_VC_ARG(*a), int b, void *c, int d, struct cred *e, int *f
-#ifdef AFS_SGI65_ENV
 	     , struct vopbd *vbds
-#endif
     )
 {
     int rv;
     AFS_GLOCK();
     rv = afs_lockedvnodeops.vop_ioctl(a, b, c, d, e, f
-#ifdef AFS_SGI65_ENV
 				      , vbds
-#endif
 	);
     AFS_GUNLOCK();
     return rv;
@@ -1490,17 +1171,11 @@ mp_afs_setattr(AFS_MP_VC_ARG(*a), struct vattr *b, int c, struct cred *d)
 
 int
 mp_afs_access(AFS_MP_VC_ARG(*a), int b,
-#ifndef AFS_SGI65_ENV
-	      int c,
-#endif
 	      struct cred *d)
 {
     int rv;
     AFS_GLOCK();
     rv = afs_lockedvnodeops.vop_access(a, b,
-#ifndef AFS_SGI65_ENV
-				       c,
-#endif
 				       d);
     AFS_GUNLOCK();
     return rv;
@@ -1517,15 +1192,9 @@ mp_afs_lookup(AFS_MP_VC_ARG(*a), char *b, vnode_t ** c, struct pathname *d,
     return rv;
 }
 
-#ifdef AFS_SGI64_ENV
 int
 mp_afs_create(AFS_MP_VC_ARG(*a), char *b, struct vattr *c, int d, int e,
 	      vnode_t ** f, struct cred *g)
-#else
-int
-mp_afs_create(AFS_MP_VC_ARG(*a), char *b, struct vattr *c, enum vcexcl d,
-	      int e, vnode_t ** f, struct cred *g)
-#endif
 {
     int rv;
     AFS_GLOCK();
@@ -1619,17 +1288,13 @@ mp_afs_readlink(AFS_MP_VC_ARG(*a), struct uio *b, struct cred *c)
 
 int
 mp_afs_fsync(AFS_MP_VC_ARG(*a), int b, struct cred *c
-#ifdef AFS_SGI65_ENV
 	     , off_t start, off_t stop
-#endif
     )
 {
     int rv;
     AFS_GLOCK();
     rv = afs_lockedvnodeops.vop_fsync(a, b, c
-#ifdef AFS_SGI65_ENV
 				      , start, stop
-#endif
 	);
     AFS_GUNLOCK();
     return rv;
@@ -1702,17 +1367,13 @@ mp_fs_cmp(AFS_MP_VC_ARG(*a), vnode_t * b)
 
 int
 mp_afs_frlock(AFS_MP_VC_ARG(*a), int b, struct flock *c, int d, off_t e,
-#ifdef AFS_SGI65_ENV
 	      vrwlock_t vrwlock,
-#endif
 	      struct cred *f)
 {
     int rv;
     AFS_GLOCK();
     rv = afs_lockedvnodeops.vop_frlock(a, b, c, d, e,
-#ifdef AFS_SGI65_ENV
 				       vrwlock,
-#endif
 				       f);
     AFS_GUNLOCK();
     return rv;
@@ -1749,66 +1410,28 @@ mp_afs_strategy(AFS_MP_VC_ARG(*a), struct buf *b)
     return;
 }
 
-#ifdef AFS_SGI65_ENV
 int
 mp_afs_map(AFS_MP_VC_ARG(*a), off_t b, size_t c, mprot_t d, u_int e,
 	   struct cred *f, vnode_t ** g)
-#else
-int
-mp_afs_map(AFS_MP_VC_ARG(*a), off_t b, struct pregion *c, char **d, size_t e,
-	   u_int f, u_int g, u_int h, struct cred *i)
-#endif
 {
     int rv;
     AFS_GLOCK();
     rv = afs_lockedvnodeops.vop_map(a, b, c, d, e, f, g
-#ifndef AFS_SGI65_ENV
-				    , h, i
-#endif
 	);
     AFS_GUNLOCK();
     return rv;
 }
 
 
-#ifndef AFS_SGI65_ENV
-/* As of Irix 6.5, addmap and delmap are only for devices */
-int
-mp_afs_addmap(AFS_MP_VC_ARG(*a), off_t b, struct pregion *c, addr_t d,
-	      size_t e, u_int f, u_int g, u_int h, struct cred *i)
-{
-    int rv;
-    AFS_GLOCK();
-    rv = afs_lockedvnodeops.vop_addmap(a, b, c, d, e, f, g, h, i);
-    AFS_GUNLOCK();
-    return rv;
-}
-
-int
-mp_afs_delmap(AFS_MP_VC_ARG(*a), off_t b, struct pregion *c, addr_t d,
-	      size_t e, u_int f, u_int g, u_int h, struct cred *i)
-{
-    int rv;
-    AFS_GLOCK();
-    rv = afs_lockedvnodeops.vop_delmap(a, b, c, d, e, f, g, h, i);
-    AFS_GUNLOCK();
-    return rv;
-}
-#endif /* ! AFS_SGI65_ENV */
-
 int
 mp_fs_poll(AFS_MP_VC_ARG(*a), short b, int c, short *d, struct pollhead **e
-#ifdef AFS_SGI65_ENV
 	   , unsigned int *f
-#endif
     )
 {
     int rv;
     AFS_GLOCK();
     rv = afs_lockedvnodeops.vop_poll(a, b, c, d, e
-#ifdef AFS_SGI65_ENV
 				     , f
-#endif
 	);
     AFS_GUNLOCK();
     return rv;
@@ -1816,13 +1439,7 @@ mp_fs_poll(AFS_MP_VC_ARG(*a), short b, int c, short *d, struct pollhead **e
 
 
 struct vnodeops Afs_vnodeops = {
-#ifdef AFS_SGI64_ENV
-#ifdef AFS_SGI65_ENV
     BHV_IDENTITY_INIT_POSITION(VNODE_POSITION_BASE),
-#else
-    VNODE_POSITION_BASE,
-#endif
-#endif
     mp_afs_open,
     mp_afs_close,
     mp_afs_read,
@@ -1855,13 +1472,8 @@ struct vnodeops Afs_vnodeops = {
     mp_afs_bmap,
     mp_afs_strategy,
     mp_afs_map,
-#ifdef AFS_SGI65_ENV
     fs_noerr,			/* addmap - devices only */
     fs_noerr,			/* delmap - devices only */
-#else
-    mp_afs_addmap,
-    mp_afs_delmap,
-#endif
     mp_fs_poll,			/* poll */
     fs_nosys,			/* dump */
     fs_pathconf,
@@ -1872,8 +1484,6 @@ struct vnodeops Afs_vnodeops = {
     fs_nosys,			/* attr_set */
     fs_nosys,			/* attr_remove */
     fs_nosys,			/* attr_list */
-#ifdef AFS_SGI64_ENV
-#ifdef AFS_SGI65_ENV
     fs_cover,
     (vop_link_removed_t) fs_noval,
     fs_vnode_change,
@@ -1886,10 +1496,6 @@ struct vnodeops Afs_vnodeops = {
     (vop_readbuf_t) fs_nosys,
     fs_strgetmsg,
     fs_strputmsg,
-#else
-    fs_mount,
-#endif
-#endif
 };
 struct vnodeops *afs_ops = &Afs_vnodeops;
 #endif /* MP */
@@ -1949,4 +1555,3 @@ VnodeToSize(vnode_t * vp)
     }
     return vattr.va_size;
 }
-#endif /* AFS_SGI62_ENV */

@@ -14,7 +14,6 @@
 #include "afs/param.h"
 
 
-#ifdef	AFS_SGI62_ENV
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
@@ -152,6 +151,3 @@ int afs_ipno = 35;
 #else
 int afs_ipno = -1;
 #endif
-
-
-#endif /* AFS_SGI62_ENV */

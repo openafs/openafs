@@ -31,11 +31,7 @@ struct xfs_mount;
 extern int xfs_iget(struct mount *, struct xfs_trans *, xfs_ino_t, uint,
 		    xfs_inode_t **, daddr_t);
 
-#ifdef AFS_SGI64_ENV
 #define XFS_ITOV(ip) BHV_TO_VNODE((struct bhv_desc *)(((char*)(ip)) + 6*sizeof(void*)))
-#else
-#define XFS_ITOV(ip) (*((vnode_t**)((((char*)(ip)) + 6*sizeof(void*)))))
-#endif
 
 /* When we have XFS only clients, then these macros will be defined in
  * terms of the XFS inode only.
@@ -289,7 +285,7 @@ extern struct pregion *vnode_get_mreg(vnode_t *);
 #endif
 
 
-#if defined(AFS_SGI64_ENV) && defined(CKPT)
+#if defined(CKPT)
 /* This is a fid for checkpoint restart. Note that the length will be
  * greater than 10 and so afs_vget can distinguish this fid.
  */

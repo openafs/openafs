@@ -53,9 +53,9 @@ afs_int32 afs_vcount = 0;	/* number of vcache in use now */
 int afsvnumbers = 0;
 #endif
 
-#ifdef AFS_SGI64_ENV
+#ifdef AFS_SGI_ENV
 char *makesname();
-#endif /* AFS_SGI64_ENV */
+#endif /* AFS_SGI_ENV */
 
 /* Exported variables */
 afs_rwlock_t afs_xvcdirty;	/*Lock: discon vcache dirty list mgmt */
@@ -2948,12 +2948,6 @@ afs_vcacheInit(int astatSize)
 	tvc->vc_rwlockid = OSI_NO_LOCKID;
 	initnsema(&tvc->vc_rwlock, 1,
 		  makesname(name, "vrw", tvc->v.v_number));
-#ifndef	AFS_SGI53_ENV
-	initnsema(&tvc->v.v_sync, 0, makesname(name, "vsy", tvc->v.v_number));
-#endif
-#ifndef AFS_SGI62_ENV
-	initnlock(&tvc->v.v_lock, makesname(name, "vlk", tvc->v.v_number));
-#endif /* AFS_SGI62_ENV */
     }
 #endif
     QInit(&VLRU);

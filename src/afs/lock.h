@@ -70,16 +70,10 @@ typedef afs_proc_t * afs_lock_tracker_t;
 #  define MyPidxx (u.u_procp)
 #  define MyPidxx2Pid(x) (x ? (afs_int32)p_pid(x) : 0)
 # endif
-#elif defined(AFS_SGI64_ENV)
-# if defined(AFS_SGI65_ENV)
+#elif defined(AFS_SGI_ENV)
 typedef unsigned int afs_lock_tracker_t;
-#  define MyPidxx proc_pid(curproc())
-#  define MyPidxx2Pid(x) (x)
-# else
-typedef unsigned int afs_lock_tracker_t;
-#  define MyPidxx current_pid()
-#  define MyPidxx2Pid(x) (x)
-# endif
+# define MyPidxx proc_pid(curproc())
+# define MyPidxx2Pid(x) (x)
 #elif defined(AFS_LINUX_ENV)
 typedef struct task_struct * afs_lock_tracker_t;
 # define MyPidxx (current)

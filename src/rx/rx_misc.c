@@ -121,7 +121,7 @@ int rx_callHoldType = 0;
  * RX_LOCKS_DB versions of MUTEX_{ENTER, EXIT, TRYENTER} and CV_*WAIT to
  * rx_kmutex.h and define lock macros below.
  */
-#if (defined(AFS_AIX41_ENV) || (defined(AFS_SGI53_ENV) && defined(MP))) && defined(KERNEL)
+#if (defined(AFS_AIX41_ENV) || (defined(AFS_SGI_ENV) && defined(MP))) && defined(KERNEL)
 
 #ifdef AFS_AIX41_ENV
 Simple_lock rxdb_lock;
@@ -130,12 +130,12 @@ Simple_lock rxdb_lock;
 #define RXDB_LOCK_ENTER()	simple_lock(&rxdb_lock)
 #define RXDB_LOCK_EXIT()	simple_unlock(&rxdb_lock)
 #else /* AFS_AIX41_ENV */
-#ifdef AFS_SGI53_ENV
+#ifdef AFS_SGI_ENV
 afs_kmutex_t rxdb_lock;
 #define RXDB_LOCK_INIT()	mutex_init(&rxdb_lock, "rxdb lock", 0, 0)
 #define RXDB_LOCK_ENTER()	AFS_MUTEX_ENTER(&rxdb_lock)
 #define RXDB_LOCK_EXIT()	mutex_exit(&rxdb_lock)
-#endif /* AFS_SGI53_ENV */
+#endif /* AFS_SGI_ENV */
 #endif /* AFS_AIX41_ENV */
 
 
@@ -350,6 +350,6 @@ rxdb_droplock(a, id, fileId, line)
     RXDB_LOCK_EXIT();
 }
 
-#endif /* (AIX41 || SGI53) && KERNEL */
+#endif /* (AIX41 || SGI) && KERNEL */
 
 #endif /* RX_LOCKS_DB */

@@ -41,7 +41,7 @@ rxk_portRocks_t rxk_portRocks;
 
 int rxk_initDone = 0;
 
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_SGI62_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV)
 # define ADDRSPERSITE 16
 static afs_uint32 myNetAddrs[ADDRSPERSITE];
 static int myNetMTUs[ADDRSPERSITE];
@@ -391,7 +391,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 
     RX_NET_EPOCH_ENTER();
 
-#  if !defined(AFS_SGI62_ENV)
+#  if !defined(AFS_SGI_ENV)
     if (numMyNetAddrs == 0)
 	(void)rxi_GetIFInfo();
 #  endif
@@ -488,7 +488,7 @@ shutdown_rxkernel(void)
 }
 #endif /* !AIX && !SUN && !NCR  && !UKERNEL */
 
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_SGI62_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV)
 /* Determine what the network interfaces are for this machine. */
 
 # ifdef AFS_USERSPACE_IP_ADDR
@@ -815,7 +815,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 }
 #  endif /* else DARWIN || XBSD */
 # endif /* else AFS_USERSPACE_IP_ADDR */
-#endif /* !SUN5 && !SGI62 */
+#endif /* !SUN5 && !SGI */
 
 
 /* rxk_NewSocket, rxk_FreeSocket and osi_NetSend are from the now defunct
@@ -849,7 +849,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     struct file *fp;
     extern struct fileops socketops;
 #  endif
-#  ifdef AFS_SGI65_ENV
+#  ifdef AFS_SGI_ENV
     bhv_desc_t bhv;
 #  endif
 
@@ -878,7 +878,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 #   else /* AFS_HPUX110_ENV */
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0, SS_NOWAIT);
 #   endif /* else AFS_HPUX110_ENV */
-#  elif defined(AFS_SGI65_ENV) || defined(AFS_OBSD_ENV)
+#  elif defined(AFS_SGI_ENV) || defined(AFS_OBSD_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP);
 #  elif defined(AFS_FBSD_ENV)
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, IPPROTO_UDP,
@@ -978,7 +978,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     }
     nam->m_len = sizeof(myaddr);
     memcpy(mtod(nam, caddr_t), &myaddr, sizeof(myaddr));
-#    if defined(AFS_SGI65_ENV)
+#    if defined(AFS_SGI_ENV)
     BHV_PDATA(&bhv) = (void *)newSocket;
     code = sobind(&bhv, nam);
     m_freem(nam);
@@ -990,7 +990,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     if (code) {
 	dpf(("sobind fails (%d)\n", (int)code));
 	soclose(newSocket);
-#    ifndef AFS_SGI65_ENV
+#    ifndef AFS_SGI_ENV
 	m_freem(nam);
 #    endif
 	goto bad;

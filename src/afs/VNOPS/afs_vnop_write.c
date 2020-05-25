@@ -452,15 +452,9 @@ afs_DoPartialWrite(struct vcache *avc, struct vrequest *areq)
 
 /* handle any closing cleanup stuff */
 int
-#if defined(AFS_SGI65_ENV)
+#if defined(AFS_SGI_ENV)
 afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose,
 	  afs_ucred_t *acred)
-#elif defined(AFS_SGI64_ENV)
-afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose,
-	  off_t offset, afs_ucred_t *acred, struct flid *flp)
-#elif defined(AFS_SGI_ENV)
-afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose
-	  off_t offset, afs_ucred_t *acred)
 #elif defined(AFS_SUN5_ENV)
 afs_close(OSI_VC_DECL(avc), afs_int32 aflags, int count, offset_t offset, 
 	 afs_ucred_t *acred)
@@ -472,7 +466,7 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
     afs_int32 code_checkcode = 0;
     struct brequest *tb;
     struct vrequest *treq = NULL;
-#ifdef AFS_SGI65_ENV
+#ifdef AFS_SGI_ENV
     struct flid flid;
 #endif
     struct afs_fakestat_state fakestat;
@@ -506,18 +500,9 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
     }
     /* unlock any locks for pid - could be wrong for child .. */
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
-# ifdef AFS_SGI65_ENV
     get_current_flid(&flid);
     cleanlocks((vnode_t *) avc, flid.fl_pid, flid.fl_sysid);
     HandleFlock(avc, LOCK_UN, treq, flid.fl_pid, 1 /*onlymine */ );
-# else
-#  ifdef AFS_SGI64_ENV
-    cleanlocks((vnode_t *) avc, flp);
-#  else /* AFS_SGI64_ENV */
-    cleanlocks((vnode_t *) avc, u.u_procp->p_epid, u.u_procp->p_sysid);
-#  endif /* AFS_SGI64_ENV */
-    HandleFlock(avc, LOCK_UN, treq, OSI_GET_CURRENT_PID(), 1 /*onlymine */ );
-# endif /* AFS_SGI65_ENV */
     /* afs_chkpgoob will drop and re-acquire the global lock. */
     afs_chkpgoob(&avc->v, btoc(avc->f.m.Length));
 #elif defined(AFS_SUN5_ENV)
@@ -661,9 +646,9 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
 int
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)
 afs_fsync(OSI_VC_DECL(avc), int flag, afs_ucred_t *acred
-# ifdef AFS_SGI65_ENV
+# ifdef AFS_SGI_ENV
 	  , off_t start, off_t stop
-# endif /* AFS_SGI65_ENV */
+# endif /* AFS_SGI_ENV */
     )
 #else /* !SUN5 && !SGI */
 afs_fsync(OSI_VC_DECL(avc), afs_ucred_t *acred)

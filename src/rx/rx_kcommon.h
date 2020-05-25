@@ -69,7 +69,7 @@ struct coda_inode_info {
 #endif
 #endif /* !defined(AFS_SUN5_ENV) && !defined(AFS_XBSD_ENV) */
 #endif /* !defined(AFS_LINUX_ENV) && !defined(AFS_OBSD_ENV) */
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
 #include "h/hashing.h"
 #endif
 #ifdef AFS_FBSD_ENV
@@ -102,10 +102,10 @@ struct coda_inode_info {
 #include "netinet/ip_icmp.h"
 #endif /* AFS_LINUX_ENV */
 #include "netinet/udp.h"
-#if !defined(AFS_SGI62_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_SGI_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN_ENV)
 #include "netinet/udp_var.h"
 #endif
-#if defined(AFS_HPUX102_ENV) || (defined(AFS_SGI62_ENV) && !defined(AFS_SGI64_ENV))
+#if defined(AFS_HPUX102_ENV)
 #include "h/user.h"
 #endif
 #ifdef AFS_LINUX_ENV

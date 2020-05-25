@@ -138,13 +138,8 @@ struct irix5_min_dirent {	/* miniature dirent structure */
     afs_int32 d_off;
     u_short d_reclen;
 };
-#ifdef AFS_SGI62_ENV
 #define AFS_DIRENT32BASESIZE IRIX5_DIRENTBASESIZE
 #define AFS_DIRENT64BASESIZE DIRENT64BASESIZE
-#else
-#define AFS_DIRENT32BASESIZE IRIX5_DIRENTBASESIZE
-#define AFS_DIRENT64BASESIZE DIRENTBASESIZE
-#endif /* AFS_SGI62_ENV */
 #else
 struct min_direct {		/* miniature direct structure */
     /* If struct direct changes, this must too */
@@ -238,12 +233,7 @@ int afs_rd_stash_i = 0;
 #define DIRSIZ_LEN(len) \
     ((sizeof (struct dirent) - (MAXNAMLEN+1)) + (((len)+1 + 3) &~ 3))
 #else
-#if defined(AFS_SGI_ENV)
-#ifndef AFS_SGI53_ENV
-/* SGI 5.3 and later use 32/64 bit versions of directory size. */
-#define DIRSIZ_LEN(len)		DIRENTSIZE(len)
-#endif
-#else /* AFS_SGI_ENV */
+#ifndef AFS_SGI_ENV
 #define DIRSIZ_LEN(len) \
     ((sizeof (struct direct) - (MAXNAMLEN+1)) + (((len)+1 + 3) &~ 3))
 #endif /* AFS_SGI_ENV */
@@ -303,7 +293,7 @@ afs_readdir_type(struct vcache *avc, struct DirEntry *ade)
 #endif
 char bufofzeros[64];		/* gotta fill with something */
 
-#ifdef AFS_SGI65_ENV
+#ifdef AFS_SGI_ENV
 int
 afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio, 
 		 int slen, ssize_t rlen, afs_size_t off)
@@ -324,10 +314,10 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
     struct dirent *direntp;
 #endif
 #endif /* AFS_SUN5_ENV */
-#ifndef	AFS_SGI53_ENV
+#ifndef	AFS_SGI_ENV
     struct min_direct sdirEntry;
     memset(&sdirEntry, 0, sizeof(sdirEntry));
-#endif /* AFS_SGI53_ENV */
+#endif /* AFS_SGI_ENV */
 
     AFS_STATCNT(afs_readdir_move);
 
@@ -403,27 +393,12 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
     }
 #endif
 
-#ifdef	AFS_SGI53_ENV
+#ifdef	AFS_SGI_ENV
     {
 	afs_int32 use64BitDirent;
 
-#ifdef AFS_SGI61_ENV
-#ifdef AFS_SGI62_ENV
 	use64BitDirent =
 	    ABI_IS(ABI_IRIX5_64, GETDENTS_ABI(OSI_GET_CURRENT_ABI(), auio));
-#else
-	use64BitDirent =
-	    (auio->uio_segflg !=
-	     UIO_USERSPACE) ? ABI_IRIX5_64 : (ABI_IS(ABI_IRIX5_64 |
-						     ABI_IRIX5_N32,
-						     u.u_procp->p_abi));
-#endif
-#else /* AFS_SGI61_ENV */
-	use64BitDirent =
-	    (auio->uio_segflg !=
-	     UIO_USERSPACE) ? ABI_IRIX5_64 : (ABI_IS(ABI_IRIX5_64,
-						     u.u_procp->p_abi));
-#endif /* AFS_SGI61_ENV */
 
 	if (use64BitDirent) {
 	    struct min_dirent sdirEntry;
@@ -474,7 +449,7 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
 	    }
 	}
     }
-#else /* AFS_SGI53_ENV */
+#else /* AFS_SGI_ENV */
 #if  defined(AFS_SUN5_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
     direntp = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     direntp->d_ino = afs_calc_inum(vc->f.fid.Cell, Volume, ntohl(Vnode));
@@ -557,7 +532,7 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
     }
 #endif
 #endif /* AFS_SUN5_ENV */
-#endif /* AFS_SGI53_ENV */
+#endif /* AFS_SGI_ENV */
     return (code);
 }
 
@@ -611,9 +586,9 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
     int o_slen = 0, n_slen = 0;
     afs_int32 us;
     struct afs_fakestat_state fakestate;
-#if defined(AFS_SGI53_ENV)
+#if defined(AFS_SGI_ENV)
     afs_int32 use64BitDirent, dirsiz;
-#endif /* defined(AFS_SGI53_ENV) */
+#endif /* defined(AFS_SGI_ENV) */
 #ifndef	AFS_HPUX_ENV
     OSI_VC_CONVERT(avc);
 #else
@@ -637,24 +612,10 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
     memset(&oldEntry, 0, sizeof(struct DirBuffer));
     memset(&nextEntry, 0, sizeof(struct DirBuffer));
 
-#if defined(AFS_SGI53_ENV)
-#ifdef AFS_SGI61_ENV
-#ifdef AFS_SGI62_ENV
+#if defined(AFS_SGI_ENV)
     use64BitDirent =
 	ABI_IS(ABI_IRIX5_64, GETDENTS_ABI(OSI_GET_CURRENT_ABI(), auio));
-#else
-    use64BitDirent =
-	(auio->uio_segflg !=
-	 UIO_USERSPACE) ? ABI_IRIX5_64 : (ABI_IS(ABI_IRIX5_64 | ABI_IRIX5_N32,
-						 u.u_procp->p_abi));
-#endif /* AFS_SGI62_ENV */
-#else /* AFS_SGI61_ENV */
-    use64BitDirent =
-	(auio->uio_segflg !=
-	 UIO_USERSPACE) ? ABI_IRIX5_64 : (ABI_IS(ABI_IRIX5_64,
-						 u.u_procp->p_abi));
-#endif /* AFS_SGI61_ENV */
-#endif /* defined(AFS_SGI53_ENV) */
+#endif /* defined(AFS_SGI_ENV) */
 
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     /* Not really used by the callee so we ignore it for now */
@@ -821,13 +782,13 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 #else
 	n_slen = strlen(nde->name);
 #endif
-#ifdef	AFS_SGI53_ENV
+#ifdef	AFS_SGI_ENV
 	dirsiz =
 	    use64BitDirent ? DIRENTSIZE(n_slen) : IRIX5_DIRENTSIZE(n_slen);
 	if (dirsiz >= (AFS_UIO_RESID(auio) - len)) {
 #else
 	if (DIRSIZ_LEN(n_slen) >= (AFS_UIO_RESID(auio) - len)) {
-#endif /* AFS_SGI53_ENV */
+#endif /* AFS_SGI_ENV */
 	    /* No can do no more now; ya know... at this time */
 	    DRelease(&nextEntry, 0);	/* can't use this one. */
 	    if (len) {
@@ -920,13 +881,13 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	    code = afs_readdir_move(ode, avc, auio, o_slen, len, origOffset);
 #endif /* AFS_HPUX_ENV */
 	}
-#ifdef	AFS_SGI53_ENV
+#ifdef	AFS_SGI_ENV
 	len = use64BitDirent ? DIRENTSIZE(o_slen =
 					  n_slen) : IRIX5_DIRENTSIZE(o_slen =
 								     n_slen);
 #else
 	len = DIRSIZ_LEN(o_slen = n_slen);
-#endif /* AFS_SGI53_ENV */
+#endif /* AFS_SGI_ENV */
 	
 	DRelease(&oldEntry, 0);
 	oldEntry = nextEntry;

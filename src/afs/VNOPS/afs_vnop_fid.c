@@ -104,12 +104,12 @@ afs_fid(OSI_VC_DECL(avc), struct fid **fidpp)
 	if (avc->f.fid.Fid.Unique > 0xffffff)
 	    afs_fid_uniqueoverflow++;
     } else {
-#if defined(AFS_SUN5_64BIT_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZPTR == 64))
+#if defined(AFS_SUN5_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZPTR == 64))
 	addr[1] = (long)AFS_XLATOR_MAGIC << 48;
-#else /* defined(AFS_SGI61_ENV) && (_MIPS_SZPTR == 64) */
+#else /* defined(AFS_SGI_ENV) && (_MIPS_SZPTR == 64) */
 	addr[1] = AFS_XLATOR_MAGIC;
 	SizeOfSmallFid = sizeof(addr);
-#endif /* defined(AFS_SGI61_ENV) && (_MIPS_SZPTR == 64) */
+#endif /* defined(AFS_SGI_ENV) && (_MIPS_SZPTR == 64) */
 	addr[0] = (long)avc;
 #ifndef AFS_AIX41_ENV
 	/* No post processing, so don't hold ref count. */

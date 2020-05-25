@@ -148,11 +148,7 @@
 #include <afs/afsutil.h>
 #include <afs/sys_prototypes.h>
 
-#if defined(AFS_SGI62_ENV) && !defined(AFS_SGI65_ENV)
-#include <sym.h>
-#include <symconst.h>
-#endif
-#ifdef AFS_SGI65_ENV
+#ifdef AFS_SGI_ENV
 #include <sched.h>
 #endif
 
@@ -290,7 +286,7 @@ static int rxmaxmtu = 0;       /* Are we forcing a limit on the mtu? */
 static int rxmaxfrags = 0;      /* Are we forcing a limit on frags? */
 static int volume_ttl = 0;      /* enable vldb cache timeout support */
 
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
 #define AFSD_INO_T ino64_t
 #else
 #define AFSD_INO_T afs_uint32
@@ -980,7 +976,7 @@ doSweepAFSCache(int *vFilesFound,
     char fullpn_FileToDelete[1024];	/*File to be deleted from cache */
     char *fileToDelete;		/*Ptr to last component of above */
     DIR *cdirp;			/*Ptr to cache directory structure */
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
     struct dirent64 *currp;	/*Current directory entry */
 #else
     struct dirent *currp;	/*Current directory entry */
@@ -1013,7 +1009,7 @@ doSweepAFSCache(int *vFilesFound,
     sprintf(fullpn_FileToDelete, "%s/", directory);
     fileToDelete = fullpn_FileToDelete + strlen(fullpn_FileToDelete);
 
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
     for (currp = readdir64(cdirp); currp; currp = readdir64(cdirp))
 #else
     for (currp = readdir(cdirp); currp; currp = readdir(cdirp))
@@ -1021,7 +1017,7 @@ doSweepAFSCache(int *vFilesFound,
     {
 	if (afsd_debug) {
 	    printf("%s: Current directory entry:\n", rn);
-#if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN90_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_DARWIN90_ENV)
 	    printf("\tinode=%" AFS_INT64_FMT ", reclen=%d, name='%s'\n", currp->d_ino,
 		   currp->d_reclen, currp->d_name);
 #elif defined(AFS_DFBSD_ENV) || defined(AFS_USR_DFBSD_ENV)
@@ -2147,7 +2143,7 @@ CheckOptions(struct cmd_syndesc *as)
 #ifdef	AFS_SUN5_ENV
     struct stat st;
 #endif
-#ifdef AFS_SGI65_ENV
+#ifdef AFS_SGI_ENV
     struct sched_param sp;
 #endif
 
@@ -2933,7 +2929,7 @@ afsd_run(void)
 		}
 		/* fall through to setup-by-inode */
 	    }
-#if defined(AFS_SGI62_ENV) || !(defined(AFS_LINUX_ENV) || defined(AFS_CACHE_VNODE_PATH))
+#if defined(AFS_SGI_ENV) || !(defined(AFS_LINUX_ENV) || defined(AFS_CACHE_VNODE_PATH))
 	    afsd_syscall(AFSOP_CACHEINODE, inode_for_V[currVFile]);
 #else
 	    printf
@@ -3219,7 +3215,7 @@ afsd_syscall_populate(struct afsd_syscall_args *args, int syscall, va_list ap)
 	params[3] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
 	break;
     case AFSOP_CACHEINODE:
-#if defined AFS_SGI62_ENV
+#if defined AFS_SGI_ENV
 	{
 	    afs_int64 tmp = va_arg(ap, afs_int64);
 	    params[0] = CAST_SYSCALL_PARAM((afs_uint32)(tmp >> 32));

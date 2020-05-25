@@ -2118,13 +2118,8 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
     if (doAdjustSize || overWriteWholeChunk) {
 #if	defined(AFS_AIX32_ENV) || defined(AFS_SGI_ENV)
 #ifdef	AFS_SGI_ENV
-#ifdef AFS_SGI64_ENV
 	if (doAdjustSize)
 	    adjustsize = NBPP;
-#else /* AFS_SGI64_ENV */
-	if (doAdjustSize)
-	    adjustsize = 8192;
-#endif /* AFS_SGI64_ENV */
 #else /* AFS_SGI_ENV */
 	if (doAdjustSize)
 	    adjustsize = 4096;

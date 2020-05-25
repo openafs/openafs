@@ -98,11 +98,11 @@ struct ncp_sb_info {
 #include <netdb.h>
 #endif
 
-/* For AFS_SGI61_ENV and a 64 bit OS, _KMEMUSER should be defined on the
+/* For AFS_SGI_ENV and a 64 bit OS, _KMEMUSER should be defined on the
  * compile line for kdump.o in the Makefile. This lets us pick up
  * app32_ptr_t from types.h when included from afs/param.h.
  */
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
 #define _KERNEL 1
 #endif
 
@@ -121,15 +121,9 @@ struct ncp_sb_info {
 struct vnode foo;
 #endif
 
-#ifdef AFS_SGI53_ENV
+#ifdef AFS_SGI_ENV
 #define _KERNEL 1
 #include <sys/sema.h>
-#ifndef AFS_SGI62_ENV
-#undef _KERNEL 1
-#endif
-#endif
-
-#ifdef AFS_SGI62_ENV
 #include <sys/fcntl.h>
 #ifndef L_SET
 #define L_SET 0
@@ -138,7 +132,7 @@ struct vnode foo;
 
 #include <sys/param.h>
 
-#ifndef AFS_SGI64_ENV
+#ifndef AFS_SGI_ENV
 #include <sys/user.h>
 #endif
 
@@ -327,7 +321,7 @@ typedef struct {
 typedef char *afs_kcondvar_t;
 #endif /* AFS_HPUX110_ENV */
 
-#ifdef AFS_SGI65_ENV
+#ifdef AFS_SGI_ENV
 #define RX_ENABLE_LOCKS 1
 typedef struct {
     __psunsigned_t opaque1;
@@ -336,7 +330,7 @@ typedef struct {
 typedef struct {
     __psunsigned_t opaque;
 } afs_kcondvar_t;
-#endif /* AFS_SGI65_ENV */
+#endif /* AFS_SGI_ENV */
 
 #ifdef AFS_LINUX_ENV
 #include <asm/atomic.h>
@@ -377,12 +371,12 @@ typedef struct {
 #endif
 
 
-#ifdef AFS_SGI61_ENV
+#ifdef AFS_SGI_ENV
 extern off64_t lseek64();
 #define KDUMP_SIZE_T size_t
-#else /* AFS_SGI61_ENV */
+#else /* AFS_SGI_ENV */
 #define KDUMP_SIZE_T int
-#endif /* AFS_SGI61_ENV */
+#endif /* AFS_SGI_ENV */
 
 #include "afs/afs.h"		/* XXXX Getting it from the obj tree XXX */
 #include "afs/afs_axscache.h"	/* XXXX Getting it from the obj tree XXX */
@@ -474,7 +468,7 @@ int opencore();
 #define afs_nlist nlist64
 #define AFSNLIST(N, C) nlist64((N), (C))
 #else /* defined(AFS_HPUX_ENV) && defined(__LP64__) */
-#ifdef AFS_SGI61_ENV
+#ifdef AFS_SGI_ENV
 #ifdef AFS_32BIT_KERNEL_ENV
 #define afs_nlist nlist
 #define AFSNLIST(N, C) nlist((N), (C))
@@ -482,7 +476,7 @@ int opencore();
 #define afs_nlist nlist64
 #define AFSNLIST(N, C) nlist64((N), (C))
 #endif /* AFS_32BIT_KERNEL_ENV */
-#else /* AFS_SGI61_ENV */
+#else /* AFS_SGI_ENV */
 #ifdef AFS_LINUX_ENV
 struct afs_nlist {
     char *n_name;
@@ -492,7 +486,7 @@ struct afs_nlist {
 #define afs_nlist nlist
 #endif /* AFS_LINUX_ENV */
 #define AFSNLIST(N, C) nlist((N), (C))
-#endif /* AFS_SGI61_ENV */
+#endif /* AFS_SGI_ENV */
 #endif /* defined(AFS_HPUX_ENV) && defined(__LP64__) */
 
 char *obj = UNIX, *core = CORE;
@@ -1003,13 +997,9 @@ kdump(void)
 
 #ifdef KDUMP_RX_LOCK
     /* Test to see if kernel is using RX_ENABLE_LOCKS in rx structs. */
-#ifdef AFS_SGI53_ENV
-#ifdef AFS_SGI64_ENV
+#ifdef AFS_SGI_ENV
     use_rx_lock = 1;		/* Always using fine gain locking. */
-#else
-    use_rx_lock = (sysmp(MP_NPROCS) > 1) ? 1 : 0;
-#endif
-#endif /* AFS_SGI53_ENV */
+#endif /* AFS_SGI_ENV */
 #endif /* KDUMP_RX_LOCK */
 
     if (Dcells || Dall) {
@@ -1699,7 +1689,7 @@ print_buffers(int pnt)
     kread(kmem, table, buffers, count * sizeof(struct buffer));
     bp = (struct buffer *)buffers;
     for (i = 0, j = 0; i < count; i++, bp++) {
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
 	if (pnt)
 	    printf
 		("Buffer #%d:\tfid=%llu page=%d, accTime=%d,\n\tHash=%x, data=%x, lockers=%x, dirty=%d, hashI=%d\n",
@@ -2138,7 +2128,7 @@ kread(int kmem, off_t loc, void *buf, KDUMP_SIZE_T len)
 #endif
 #endif
 #if	! defined(AFS_SUN5_ENV)
-#if defined(AFS_SGI61_ENV) && !defined(AFS_32BIT_KERNEL_ENV)
+#if defined(AFS_SGI_ENV) && !defined(AFS_32BIT_KERNEL_ENV)
     if (lseek64(kmem, loc, L_SET /*0 */ ) != loc)
 #else
     if (lseek(kmem, loc, L_SET /*0 */ ) != loc)
@@ -2563,7 +2553,7 @@ print_vnode(int kmem, struct vnode *vep, struct vnode *ptr, int pnt)
 #ifdef AFS_AIX_ENV
     vep->v_gnode = save_gnode;
 #endif /* AFS_AIX_ENV */
-#ifdef AFS_SGI65_ENV
+#ifdef AFS_SGI_ENV
 #if defined(AFS_32BIT_KERNEL_ENV)
     printf("%lx: v_mreg=0x%lx", ptr, vep->v_mreg);
 #else
@@ -2745,7 +2735,7 @@ print_dcache(int kmem, struct dcache *dcp, struct dcache *dp, int pnt)
     printf("\tf.hvn=%d, f.hcn=%d, f.modtime=%d, f.versNo=%d\n",
 	   dcp->f.hvNextp, dcp->f.hcNextp, dcp->f.modTime, dcp->f.versionNo);
 #endif
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
     printf
 	("\tf.chunk=%d, f.inode=%" AFS_INT64_FMT ", f.chunkBytes=%d, f.states=%x",
 	 dcp->f.chunk, dcp->f.inode, dcp->f.chunkBytes, dcp->f.states);
@@ -3005,7 +2995,7 @@ print_global_afs_resource(int kmem)
     kread(kmem, (off_t) addr, sysname, (KDUMP_SIZE_T) 30);
     printf("\tafs_sysname = %s\n", sysname);
 #endif
-#ifdef AFS_SGI65_ENV
+#ifdef AFS_SGI_ENV
     findsym("afs_ipno", &symoff);
     kread(kmem, symoff, (char *)&count, sizeof count);
     printf("\tCPU BOARD = IP%d\n", count);
@@ -3019,7 +3009,7 @@ print_global_afs_cache(int kmem)
     off_t symoff;
     char sysname[100];
     afs_int32 count;
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
     ino64_t inode;
 #endif
 #ifndef	AFS32
@@ -3048,7 +3038,7 @@ print_global_afs_cache(int kmem)
     findsym("afs_freeDSList", &symoff);
     kread(kmem, symoff, (char *)&count, sizeof count);
     printf("\tfreeDSList= 0x%x XXXX\n", count);
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
     findsym("cacheInode", &symoff);
     kread(kmem, symoff, (char *)&inode, sizeof inode);
     printf("\tcacheInode = 0x%llx (%" AFS_INT64_FMT ")\n", inode, inode);

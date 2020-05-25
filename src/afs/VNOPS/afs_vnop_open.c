@@ -32,7 +32,7 @@
  * both called by the vn_open call.
  */
 int
-#ifdef AFS_SGI64_ENV
+#ifdef AFS_SGI_ENV
 afs_open(bhv_desc_t * bhv, struct vcache **avcp, afs_int32 aflags,
 	 afs_ucred_t *acred)
 #else
@@ -48,7 +48,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
     AFS_STATCNT(afs_open);
     if ((code = afs_CreateReq(&treq, acred)))
 	return code;
-#ifdef AFS_SGI64_ENV
+#ifdef AFS_SGI_ENV
     /* avcpp can be, but is not necesarily, bhp's vnode. */
     tvc = VTOAFS(BHV_TO_VNODE(bhv));
 #else

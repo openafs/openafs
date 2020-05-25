@@ -21,7 +21,7 @@
 #include "rx/rx_globals.h"
 #if !defined(UKERNEL) && !defined(AFS_LINUX_ENV)
 #include "net/if.h"
-#ifdef AFS_SGI62_ENV
+#ifdef AFS_SGI_ENV
 #include "h/hashing.h"
 #endif
 #if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN_ENV)

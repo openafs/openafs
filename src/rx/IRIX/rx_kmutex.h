@@ -16,8 +16,6 @@
 #ifndef _RX_KMUTEX_H_
 #define _RX_KMUTEX_H_
 
-#ifdef AFS_SGI62_ENV
-
 #ifdef MP
 #define	RX_ENABLE_LOCKS	1
 
@@ -36,30 +34,20 @@ typedef kcondvar_t afs_kcondvar_t;
 #define	MUTEX_DEFAULT	0
 #endif
 
-#ifdef AFS_SGI62_ENV
 #define MUTEX_INIT(m, nm, type , a)  mutex_init(m, type, nm)
-#else
-#define MUTEX_INIT(a,b,c,d)  mutex_init(a,b,c,d)
-#endif
 #define MUTEX_DESTROY(a) mutex_destroy(a)
 #define MUTEX_ASSERT(a)
 #define CV_INIT(cv, a,b,c)	cv_init(cv, a, b, c)
 #define CV_SIGNAL(_cv)		cv_signal(_cv)
 #define CV_BROADCAST(_cv)	cv_broadcast(_cv)
 #define CV_DESTROY(_cv)		cv_destroy(_cv)
-#ifdef AFS_SGI64_ENV
 /* Add PLTWAIT for afsd's to wait so we don't rack up the load average. */
-#ifdef AFS_SGI65_ENV
 #define AFSD_PRI() ((kt_basepri(curthreadp) == PTIME_SHARE) ? PZERO : (PZERO|PLTWAIT))
-#else
-#define AFSD_PRI() ((curprocp && curprocp->p_rss==0) ? (PZERO|PLTWAIT) : PZERO)
-#endif /* SGI65 */
 #undef cv_wait
 #define cv_wait(cv, mp)	{ \
 	sv_wait(cv, AFSD_PRI(), mp, 0); \
 	AFS_MUTEX_ENTER(mp); \
 }
-#endif /* AFS_SGI64_ENV */
 #ifdef RX_LOCKS_DB
 #define MUTEX_ENTER(a)		do { \
 				     AFS_MUTEX_ENTER(a); \
@@ -154,7 +142,5 @@ typedef kcondvar_t afs_kcondvar_t;
 #define CV_TIMEDWAIT(cv,lck,t)
 
 #endif /* MP */
-
-#endif /* SGI62 */
 
 #endif /* _RX_KMUTEX_H_ */

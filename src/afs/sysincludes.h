@@ -225,15 +225,13 @@ struct xfs_inode_info {
 #  include "values.h"
 #  include "sys/sema.h"
 #  include "sys/cmn_err.h"
-#  ifdef AFS_SGI64_ENV
-#   include <ksys/behavior.h>
+#  include <ksys/behavior.h>
 /* in 6.5.20f, ksys/behavior.h doesn't bother to define BHV_IS_BHVL,
  * but sys/vnode.h uses it in VNODE_TO_FIRST_BHV. It looks like from
  * older headers like we want the old behavior, so we fake it. */
-#   if defined(BHV_PREPARE) && !defined(CELL_CAPABLE)
-#    define BHV_IS_BHVL(bhp) (0)
-#   endif
-#  endif /* AFS_SGI64_ENV */
+#  if defined(BHV_PREPARE) && !defined(CELL_CAPABLE)
+#   define BHV_IS_BHVL(bhp) (0)
+#  endif
 #  include "fs/efs_inode.h"
 #  include "sys/kmem.h"
 #  include "sys/cred.h"
@@ -248,7 +246,7 @@ struct xfs_inode_info {
  *
  * Instead of using ASSERT(), we use our own osi_Assert().
  */
-#  if defined(AFS_SGI65_ENV) && !defined(DEBUG)
+#  if !defined(DEBUG)
 #   define DEBUG
 #   include "sys/debug.h"
 #   undef DEBUG
@@ -302,10 +300,10 @@ struct xfs_inode_info {
 #  include "h/dir.h"
 # endif /* SGI || SUN || HPUX */
 
-# if !defined(AFS_SGI64_ENV) && !defined(AFS_FBSD_ENV) && !defined(AFS_DARWIN80_ENV) && \
+# if !defined(AFS_SGI_ENV) && !defined(AFS_FBSD_ENV) && !defined(AFS_DARWIN80_ENV) && \
   !defined(AFS_NBSD40_ENV)
 #  include "h/user.h"
-# endif /* AFS_SGI64_ENV */
+# endif /* AFS_SGI_ENV */
 # define	MACH_USER_API	1
 # if defined(AFS_FBSD_ENV)
 #  include "h/bio.h"

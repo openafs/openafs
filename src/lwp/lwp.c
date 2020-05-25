@@ -377,7 +377,7 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 	savecontext(Create_Process_Part2, &temp2->context,
 		    stackptr + MINFRAME);
 #else
-#if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #ifdef sys_x86_darwin_80
 	savecontext(Create_Process_Part2, &temp2->context, stackptr + stacksize - 16 - sizeof(void *));	/* 16 = 2 * jmp_buf_type */
 #else /* !sys_x86_darwin_80 */
@@ -397,7 +397,7 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 		    stackptr + stacksize - sizeof(void *));
 #endif /* AFS_S390_LINUX_ENV */
 #endif /* AFS_SPARC64_LINUX_ENV || AFS_SPARC_LINUX_ENV */
-#endif /* AFS_SGI62_ENV */
+#endif /* AFS_SGI_ENV */
 #endif
 	/* End of gross hack */
 
@@ -517,7 +517,7 @@ LWP_DestroyProcess(PROCESS pid)
 #if defined(__hp9000s800)
 	    savecontext(Dispatcher, &(temp->context),
 			&(LWPANCHOR.dsptchstack[MINFRAME]));
-#elif defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_SGI_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	    savecontext(Dispatcher, &(temp->context),
 			&(LWPANCHOR.
 			  dsptchstack[(sizeof LWPANCHOR.dsptchstack) - 8]));

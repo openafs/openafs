@@ -19,13 +19,6 @@
 #define AFS_ENV			1	/* NOBODY uses this.... */
 #define CMUSTD_ENV		1	/* NOBODY uses this.... */
 #define AFS_SGI_ENV		1
-#define AFS_SGI51_ENV		1	/* Dist from 5.0.1 */
-#define	AFS_SGI52_ENV		1
-#define	AFS_SGI53_ENV		1
-#define AFS_SGI61_ENV		1
-#define AFS_SGI62_ENV		1
-#define AFS_SGI63_ENV		1
-#define AFS_SGI64_ENV		1
 #define AFS_SGI65_ENV		1
 #define AFS_SGI_EXMAG		1	/* use magic fields in extents for AFS extra fields */
 /* AFS_SGI_SHORTSTACK not required since we have a 16K stack. */
@@ -138,9 +131,6 @@
 #define AFS_GREEDY43_ENV	1	/* Used only in rx/rx_user.c */
 #define AFS_ENV			1
 #define AFS_USR_SGI_ENV		1
-#define AFS_USR_SGI62_ENV	1
-#define AFS_USR_SGI63_ENV	1
-#define AFS_USR_SGI64_ENV	1
 #define AFS_USR_SGI65_ENV	1
 
 													       /*#define AFS_GLOBAL_SUNLOCK    1 *//* For global locking */

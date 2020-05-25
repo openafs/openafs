@@ -632,13 +632,8 @@ kioctl(int fdes, int com, caddr_t arg, caddr_t ext)
 # endif
 
 #elif defined(AFS_SGI_ENV)
-# if defined(AFS_SGI65_ENV)
 afs_ioctl(OSI_VN_DECL(tvc), int cmd, void *arg, int flag, cred_t * cr,
 	  rval_t * rvalp, struct vopbd * vbds)
-# else
-afs_ioctl(OSI_VN_DECL(tvc), int cmd, void *arg, int flag, cred_t * cr,
-	  rval_t * rvalp, struct vopbd * vbds)
-# endif
 {
     struct afs_ioctl data;
     int error = 0;
@@ -968,11 +963,7 @@ afs_pioctl(struct pioctlargs *uap, rval_t * rvp)
     AFS_GLOCK();
     code = afs_syscall_pioctl(uap->path, uap->cmd, uap->cmarg, uap->follow);
     AFS_GUNLOCK();
-# ifdef AFS_SGI64_ENV
     return code;
-# else
-    return u.u_error;
-# endif
 }
 
 #elif defined(AFS_FBSD_ENV)
@@ -2789,7 +2780,7 @@ Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
 {
     char *tp;
     afs_int32 code;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     size_t bufferSize;
 #else
     u_int bufferSize;
@@ -4521,7 +4512,7 @@ DECL_PIOCTL(PGetInitParams)
 			   sizeof(struct cm_initparams));
 }
 
-#ifdef AFS_SGI65_ENV
+#ifdef AFS_SGI_ENV
 /* They took crget() from us, so fake it. */
 static cred_t *
 crget(void)
@@ -4647,10 +4638,6 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
      */
     i = (*com) & 0xff;
     if (!afs_osi_suser(credp)) {
-#if defined(AFS_SGI_ENV) && !defined(AFS_SGI64_ENV)
-	/* Since SGI's suser() returns explicit failure after the call.. */
-	u.u_error = 0;
-#endif
 	/* check for acceptable opcodes for normal folks, which are, so far,
 	 * get/set tokens, sysname, and unlog.
 	 */
