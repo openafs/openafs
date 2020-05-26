@@ -701,7 +701,7 @@ void
 SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 {
     char *name, *tdir;
-    char inodeListPath[256];
+    char *inodeListPath = NULL;
     FD_t inodeFile = INVALID_FD;
     static char tmpDevName[100];
     static char wpath[100];
@@ -811,10 +811,16 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
     tdir = (tmpdir ? tmpdir : salvinfo->fileSysPath);
 #ifdef AFS_NT40_ENV
     (void)_putenv("TMP=");	/* If "TMP" is set, then that overrides tdir. */
-    (void)strncpy(inodeListPath, _tempnam(tdir, "salvage.inodes."), 255);
+    inodeListPath = strdup(_tempnam(tdir, "salvage.inodes."));
+    if (inodeListPath == NULL) {
+	Abort("Error allocating memory for inodeListPath\n");
+    }
 #else
-    snprintf(inodeListPath, 255, "%s" OS_DIRSEP "salvage.inodes.%s.%d", tdir, name,
+    code = asprintf(&inodeListPath, "%s" OS_DIRSEP "salvage.inodes.%s.%d", tdir, name,
 	     getpid());
+    if (code == -1) {
+	Abort("Error allocating memory for inodeListPath\n");
+    }
 #endif
 
     inodeFile = OS_OPEN(inodeListPath, O_RDWR|O_TRUNC|O_CREAT, 0666);
@@ -843,11 +849,16 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 
     if (GetInodeSummary(salvinfo, inodeFile, singleVolumeNumber) < 0) {
 	OS_CLOSE(inodeFile);
+	free(inodeListPath);
 	return;
     }
     salvinfo->inodeFd = inodeFile;
     if (salvinfo->inodeFd == INVALID_FD)
 	Abort("Temporary file %s is missing...\n", inodeListPath);
+
+    free(inodeListPath);
+    inodeListPath = NULL;
+
     OS_SEEK(salvinfo->inodeFd, 0L, SEEK_SET);
     if (ListInodeOption) {
 	PrintInodeList(salvinfo);
