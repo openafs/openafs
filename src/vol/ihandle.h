@@ -59,7 +59,6 @@
  *
  * Replacements for C runtime file operations
  * FDH_READ/FDH_WRITE - read/write using the file descriptor.
- * FDH_READV/FDH_WRITEV - readv/writev (Unix only)
  * FDH_SEEK - set file handle's read/write position
  * FDH_CLOSE - return a file descriptor to the cache
  * FDH_REALLYCLOSE - Close a file descriptor, do not return to the cache
@@ -563,11 +562,6 @@ extern Inode ih_icreate(IHandle_t * ih, int dev, char *part, Inode nI, int p1,
 
 #define OS_SIZE(FD) ih_size(FD)
 extern afs_sfsize_t ih_size(FD_t);
-
-#ifndef AFS_NT40_ENV
-# define FDH_READV(H, I, N) readv((H)->fd_fd, I, N)
-# define FDH_WRITEV(H, I, N) writev((H)->fd_fd, I, N)
-#endif
 
 #ifdef HAVE_PIOV
 # ifdef O_LARGEFILE
