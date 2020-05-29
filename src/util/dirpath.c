@@ -560,6 +560,9 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
 
     *fullPathBufp = NULL;
 
+    if (cpath == NULL)
+	return ENOENT;
+
     while (isspace(*cpath)) {
 	cpath++;
     }
@@ -653,6 +656,9 @@ ConstructLocalPath(const char *cpath, const char *relativeTo,
     }
 
     *fullPathBufp = NULL;
+
+    if (cpath == NULL)
+	return ENOENT;
 
     while (isspace(*cpath)) {
 	cpath++;
