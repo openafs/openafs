@@ -456,14 +456,10 @@ bit32 VolumeCacheCheck;		/* Incremented everytime a volume goes on line--
 void
 VOptDefaults(ProgramType pt, VolumePackageOptions *opts)
 {
+    memset(opts, 0, sizeof(*opts));
+
     opts->nLargeVnodes = opts->nSmallVnodes = 5;
-    opts->volcache = 0;
 
-    opts->canScheduleSalvage = 0;
-    opts->canUseFSSYNC = 0;
-    opts->canUseSALVSYNC = 0;
-
-    opts->interrupt_rxcall = NULL;
     opts->offline_timeout = -1;
     opts->offline_shutdown_timeout = -1;
     opts->usage_threshold = 128;
@@ -471,9 +467,7 @@ VOptDefaults(ProgramType pt, VolumePackageOptions *opts)
 
 #ifdef FAST_RESTART
     opts->unsafe_attach = 1;
-#else /* !FAST_RESTART */
-    opts->unsafe_attach = 0;
-#endif /* !FAST_RESTART */
+#endif
 
     switch (pt) {
     case fileServer:
