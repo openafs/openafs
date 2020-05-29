@@ -1629,13 +1629,13 @@ GetFreeTag(IHandle_t * ih, int vno)
     if (fdP == NULL)
 	return -1;
 
+    offset = (vno << LINKTABLE_SHIFT) + 8;	/* * 2 + sizeof stamp */
+
     /* Only one manipulates at a time. */
     if (FDH_LOCKFILE(fdP, offset) != 0) {
 	FDH_REALLYCLOSE(fdP);
 	return -1;
     }
-
-    offset = (vno << LINKTABLE_SHIFT) + 8;	/* * 2 + sizeof stamp */
 
     nBytes = FDH_PREAD(fdP, (char *)&row, sizeof(row), offset);
     if (nBytes != sizeof(row)) {
