@@ -122,4 +122,11 @@ error_table uae
  ec UAEDQUOT, "Quota exceeded"
  ec UAENOMEDIUM, "No medium found"
  ec UAEMEDIUMTYPE, "Wrong medium type"
+ ec UAECANCELED, "Operation canceled"
+ ec UAENOTRECOVERABLE, "State not recoverable"
+ ec UAENOTSUP, "Not supported"
+ ec UAEOTHER, "Other"
+ ec UAEOWNERDEAD, "Owner dead"
+ ec UAEPROCLIM, "Too many processes"
+ ec UAEDISCON, "Graceful shutdown in progress"
 end

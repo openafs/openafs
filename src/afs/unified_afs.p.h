@@ -375,3 +375,24 @@
 #ifndef EMEDIUMTYPE
 #define EMEDIUMTYPE EIO
 #endif /* EMEDIUMTYPE */
+#ifndef ECANCELED
+#define ECANCELED EIO
+#endif /* ECANCELED */
+#ifndef ENOTRECOVERABLE
+#define ENOTRECOVERABLE EIO
+#endif /* ENOTRECOVERABLE */
+#ifndef ENOTSUP
+#define ENOTSUP EIO
+#endif /* ENOTSUP */
+#ifndef EOTHER
+#define EOTHER EIO
+#endif /* EOTHER */
+#ifndef EOWNERDEAD
+#define EOWNERDEAD EIO
+#endif /* EOWNERDEAD */
+#ifndef EPROCLIM
+#define EPROCLIM EIO
+#endif /* EPROCLIM */
+#ifndef EDISCON
+#define EDISCON EIO
+#endif /* EDISCON */

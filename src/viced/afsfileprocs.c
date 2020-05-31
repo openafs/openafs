@@ -6755,6 +6755,13 @@ init_sys_error_to_et(void)
     sys2et[EDQUOT] = UAEDQUOT;
     sys2et[ENOMEDIUM] = UAENOMEDIUM;
     sys2et[EMEDIUMTYPE] = UAEMEDIUMTYPE;
+    sys2et[ECANCELED] = UAECANCELED;
+    sys2et[ENOTRECOVERABLE] = UAENOTRECOVERABLE;
+    sys2et[ENOTSUP] = UAENOTSUP;
+    sys2et[EOTHER] = UAEOTHER;
+    sys2et[EOWNERDEAD] = UAEOWNERDEAD;
+    sys2et[EPROCLIM] = UAEPROCLIM;
+    sys2et[EDISCON] = UAEDISCON;
 
     sys2et[EIO] = UAEIO;
 }
