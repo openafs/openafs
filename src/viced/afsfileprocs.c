@@ -6315,7 +6315,7 @@ GetLinkCountAndSize(Volume * vp, FdHandle_t * fdP, int *lc,
     FDH_CLOSE(lhp);
     if (*lc < 0)
 	return -1;
-    *size = OS_SIZE(fdP->fd_fd);
+    *size = FDH_SIZE(fdP);
     return (*size == -1) ? -1 : 0;
 #else
     struct afs_stat status;

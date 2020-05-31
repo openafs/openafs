@@ -6484,7 +6484,7 @@ VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class)
     opr_Assert(file != NULL);
     vnode = malloc(vcp->diskSize);
     opr_Assert(vnode != NULL);
-    size = OS_SIZE(fdP->fd_fd);
+    size = FDH_SIZE(fdP);
     opr_Assert(size != -1);
     nVnodes = (size <= vcp->diskSize ? 0 : size - vcp->diskSize)
 	>> vcp->logSize;

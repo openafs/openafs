@@ -2715,7 +2715,7 @@ SalvageIndex(struct SalvInfo *salvinfo, Inode ino, VnodeClass class, int RW,
     file = FDH_FDOPEN(fdP, "r+");
     opr_Assert(file != NULL);
     vcp = &VnodeClassInfo[class];
-    size = OS_SIZE(fdP->fd_fd);
+    size = FDH_SIZE(fdP);
     opr_Assert(size != -1);
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
@@ -3387,7 +3387,7 @@ DistilVnodeEssence(struct SalvInfo *salvinfo, VolumeId rwVId,
     opr_Assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r+");
     opr_Assert(file != NULL);
-    size = OS_SIZE(fdP->fd_fd);
+    size = FDH_SIZE(fdP);
     opr_Assert(size != -1);
     vip->nVnodes = (size / vcp->diskSize) - 1;
     if (vip->nVnodes > 0) {

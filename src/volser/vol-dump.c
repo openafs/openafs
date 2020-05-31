@@ -769,7 +769,7 @@ DumpVnodeIndex(int dumpfd, Volume * vp, VnodeClass class, afs_int32 fromtime,
 
     fdP = IH_OPEN(vp->vnodeIndex[class].handle);
     file = FDH_FDOPEN(fdP, "r+");
-    size = OS_SIZE(fdP->fd_fd);
+    size = FDH_SIZE(fdP);
     nVnodes = (size / vcp->diskSize) - 1;
 
     if (nVnodes > 0) {

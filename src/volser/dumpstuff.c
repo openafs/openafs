@@ -968,7 +968,7 @@ DumpVnodeIndex(struct iod *iodp, Volume * vp, VnodeClass class,
     opr_Assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r+");
     opr_Assert(file != NULL);
-    size = OS_SIZE(fdP->fd_fd);
+    size = FDH_SIZE(fdP);
     opr_Assert(size != -1);
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
@@ -1172,7 +1172,7 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 	STREAM_FLUSH(afile);	/* ensure 0s are on the disk */
 	OS_SYNC(afile->str_fd);
     } else {
-	size = OS_SIZE(fdP->fd_fd);
+	size = FDH_SIZE(fdP);
 	opr_Assert(size != -1);
 	nVnodes =
 	    (size <=
@@ -1922,7 +1922,7 @@ SizeDumpVnodeIndex(struct iod *iodp, Volume * vp, VnodeClass class,
     opr_Assert(fdP != NULL);
     file = FDH_FDOPEN(fdP, "r+");
     opr_Assert(file != NULL);
-    size = OS_SIZE(fdP->fd_fd);
+    size = FDH_SIZE(fdP);
     opr_Assert(size != -1);
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
