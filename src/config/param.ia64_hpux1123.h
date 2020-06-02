@@ -69,7 +69,6 @@
 #define	AFS_UIOUSER	UIOSEG_USER
 #define	AFS_CLBYTES	CLBYTES
 #define	AFS_MINCHANGE	2
-#define	osi_GetTime(x)	do { struct timeval osi_GetTimeVar; uniqtime(&osi_GetTimeVar); (x)->tv_sec = osi_GetTimeVar.tv_sec; (x)->tv_usec = osi_GetTimeVar.tv_usec; } while(0)
 #define	AFS_KALLOC	kmem_alloc
 #define	AFS_KFREE	kmem_free
 #define	VATTR_NULL	vattr_null

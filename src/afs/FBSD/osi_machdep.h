@@ -133,4 +133,6 @@ extern struct thread *afs_global_owner;
 
 #define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
 
+#define osi_GetTime(x) microtime(x)
+
 #endif /* _OSI_MACHDEP_H_ */

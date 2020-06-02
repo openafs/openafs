@@ -125,4 +125,6 @@ struct afs_ifinfo {
 
 #define osi_procname(procname, size) strncpy(procname, PTOU(ttoproc(curthread))->u_comm, size)
 
+#define	osi_GetTime(x) uniqtime32(x)
+
 #endif /* _OSI_MACHDEP_H_ */

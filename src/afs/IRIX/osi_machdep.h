@@ -387,5 +387,10 @@ extern long afs_global_owner;
 
 #define osi_procname(procname, size) strncpy(procname, proc_name(curproc()), size)
 
+#ifdef _K64U64
+# define osi_GetTime(x) irix5_microtime((struct __irix5_timeval*)(x))
+#else
+# define osi_GetTime(x) microtime(x)
+#endif
 
 #endif /* _OSI_MACHDEP_H_ */
