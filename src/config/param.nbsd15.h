@@ -67,7 +67,6 @@
 #define	AFS_UIOSYS	UIO_SYSSPACE
 #define	AFS_UIOUSER	UIO_USERSPACE
 #define	AFS_CLBYTES	CLBYTES
-#define	osi_GetTime(x)	microtime(x)
 #define	AFS_KALLOC(x)	kalloc(x)
 #define	AFS_KFREE(x,y)	kfree(x,y)
 #define	v_count		v_usecount

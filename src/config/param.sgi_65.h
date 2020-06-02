@@ -91,11 +91,6 @@
 #define	AFS_UIOUSER	UIO_USERSPACE
 #define	AFS_CLBYTES	MCLBYTES
 #define	AFS_MINCHANGE	2
-#ifdef _K64U64
-#define	osi_GetTime(x)	irix5_microtime((struct __irix5_timeval*)(x))
-#else
-#define	osi_GetTime(x)	microtime(x)
-#endif
 #define	AFS_KALLOC(n)	kmem_alloc(n, KM_SLEEP)
 #define	AFS_KALLOC_NOSLEEP(n)	kmem_alloc(n, KM_NOSLEEP)
 #define	AFS_KFREE	kmem_free

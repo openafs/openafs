@@ -241,4 +241,6 @@ extern int (**afs_vnodeop_p) ();
 #define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
 #endif
 
+#define osi_GetTime(x) microtime(x)
+
 #endif /* _OSI_MACHDEP_H_ */

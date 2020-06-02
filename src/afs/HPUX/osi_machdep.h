@@ -121,4 +121,6 @@ extern caddr_t kmem_alloc();
 
 #define osi_procname(procname, size) strncpy(procname, "", size)
 
+#define	osi_GetTime(x)	do { struct timeval osi_GetTimeVar; uniqtime(&osi_GetTimeVar); (x)->tv_sec = osi_GetTimeVar.tv_sec; (x)->tv_usec = osi_GetTimeVar.tv_usec; } while(0)
+
 #endif /* _OSI_MACHDEP_H_ */

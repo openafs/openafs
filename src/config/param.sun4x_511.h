@@ -77,7 +77,6 @@
 #define	AFS_UIOUSER		UIO_USERSPACE
 #define	AFS_CLBYTES		MCLBYTES
 #define	AFS_MINCHANGE		2
-#define	osi_GetTime(x)		uniqtime32(x)
 
 /**
   * These defines are for the 64 bit Solaris 7 port

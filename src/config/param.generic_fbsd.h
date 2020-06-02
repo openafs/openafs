@@ -68,7 +68,6 @@
 #define	AFS_UIOSYS		UIO_SYSSPACE
 #define	AFS_UIOUSER		UIO_USERSPACE
 #define	AFS_CLBYTES		CLBYTES
-#define	osi_GetTime(x)		microtime(x)
 #define AFS_KALLOC(x)		osi_fbsd_alloc((x), 1)
 #undef AFS_KALLOC_NOSLEEP
 #define	AFS_KALLOC_NOSLEEP(x) 	osi_fbsd_alloc((x), 0)

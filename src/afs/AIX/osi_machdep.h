@@ -84,4 +84,6 @@ extern simple_lock_data afs_global_lock;
  * src/afs/AIX/osi_gcpags.c for how to look at the process list */
 #define osi_procname(procname, size) strncpy(procname, "", size)
 
+#define osi_GetTime(x)          do {curtime(x); (x)->tv_usec = (x)->tv_usec/1000;} while (0)
+
 #endif /* _OSI_MACHDEP_H_ */

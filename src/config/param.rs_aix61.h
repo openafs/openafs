@@ -72,7 +72,6 @@
 #define	AFS_UIOUSER	UIO_USERSPACE
 #define	AFS_CLBYTES	CLBYTES
 #define	AFS_MINCHANGE	2
-#define osi_GetTime(x)          do {curtime(x); (x)->tv_usec = (x)->tv_usec/1000;} while (0)
 #define	osi_GTime(x)	time	/* something for the silly time(0)?? */
 #define	AFS_KALLOC	kmem_alloc
 #define	AFS_KFREE	kmem_free
