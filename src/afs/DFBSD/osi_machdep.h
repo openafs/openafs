@@ -19,6 +19,13 @@
 #ifndef _OSI_MACHDEP_H_
 #define _OSI_MACHDEP_H_
 
-#define osi_GetTime(x) microtime(x)
+static_inline void
+osi_GetTime(osi_timeval32_t *atv)
+{
+    struct timeval now;
+    microtime(&now);
+    atv->tv_sec = now.tv_sec;
+    atv->tv_usec = now.tv_usec;
+}
 
 #endif /* _OSI_MACHDEP_H_ */

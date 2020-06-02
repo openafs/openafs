@@ -99,23 +99,23 @@ static inline time_t osi_Time(void) {
 #endif
 
 #if defined(HAVE_LINUX_KTIME_GET_REAL_TS64)
-# define osi_GetTime(V)                                      \
-    do {                                                     \
-	struct timespec64 __afs_tv;                          \
-	ktime_get_real_ts64(&__afs_tv);                      \
-	(V)->tv_sec = (afs_int32)__afs_tv.tv_sec;            \
-	(V)->tv_usec = (afs_int32)__afs_tv.tv_nsec / 1000;   \
-    } while(0)
-#elif defined(AFS_LINUX_64BIT_KERNEL) || !defined(HAVE_LINUX_TIME_T)
-# define osi_GetTime(V)                                 \
-    do {                                               \
-       struct timeval __afs_tv;                              \
-       do_gettimeofday(&__afs_tv);                           \
-       (V)->tv_sec = (afs_int32)__afs_tv.tv_sec;             \
-       (V)->tv_usec = (afs_int32)__afs_tv.tv_usec;           \
-    } while (0)
+static inline void
+osi_GetTime(osi_timeval32_t *atv)
+{
+    struct timespec64 now;
+    ktime_get_real_ts64(&now);
+    atv->tv_sec = now.tv_sec;
+    atv->tv_usec = now.tv_nsec / 1000;
+}
 #else
-# define osi_GetTime(V) do_gettimeofday((V))
+static inline void
+osi_GetTime(osi_timeval32_t *atv)
+{
+    struct timeval now;
+    do_gettimeofday(&now);
+    atv->tv_sec = now.tv_sec;
+    atv->tv_usec = now.tv_usec;
+}
 #endif
 
 #undef gop_lookupname

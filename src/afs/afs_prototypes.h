@@ -971,7 +971,6 @@ extern int afs_ExtractTokensForPioctl(struct tokenJar *, time_t,
 extern void uafs_Shutdown(void);
 extern void osi_ReleaseVM(struct vcache *avc, int len,
 			  afs_ucred_t *credp);
-extern int osi_GetTime(struct timeval *tv);
 extern int iodone(struct usr_buf *bp);
 extern int usr_ioctl(void);
 extern int lookupname(char *fnamep, int segflg, int followlink,

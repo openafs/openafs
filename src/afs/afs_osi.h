@@ -183,16 +183,10 @@ extern int osi_vnhold(struct vcache *);
  * different platforms.  We require a fixed size timeval, at least for the
  * xstats.
  */
-#if defined(AFS_HPUX_ENV) || defined(AFS_LINUX_64BIT_KERNEL) || (defined(AFS_LINUX26_ENV) && !defined(HAVE_LINUX_TIME_T)) || (defined(AFS_SGI61_ENV) && defined(KERNEL) && defined(_K64U64))
 typedef struct {
     afs_int32 tv_sec;
     afs_int32 tv_usec;
 } osi_timeval32_t;
-#elif defined(AFS_SUN5_ENV)
-typedef struct timeval32 osi_timeval32_t;
-#else
-typedef struct timeval osi_timeval32_t;
-#endif /* AFS_SGI61_ENV */
 
 #ifndef UKERNEL
 #define osi_getpid() 		getpid()

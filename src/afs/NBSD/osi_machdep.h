@@ -96,7 +96,6 @@ typedef struct kauth_cred afs_ucred_t;
 
 /* time */
 #define	afs_hz		hz
-#define osi_GetTime(x)	getmicrotime(x)
 #define osi_Time()      time_second
 
 /* str */
@@ -206,5 +205,14 @@ extern int (**afs_vnodeop_p) __P((void *));
 extern int afs_debug;
 
 #define AFS_USE_NBSD_NAMECACHE 0
+
+static_inline void
+osi_GetTime(osi_timeval32_t *atv)
+{
+    struct timeval now;
+    getmicrotime(&now);
+    atv->tv_sec = now.tv_sec;
+    atv->tv_usec = now.tv_usec;
+}
 
 #endif /* _OSI_MACHDEP_H_ */

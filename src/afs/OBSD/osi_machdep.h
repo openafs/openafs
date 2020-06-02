@@ -97,7 +97,6 @@ typedef struct ucred afs_ucred_t;
 
 /* time */
 #define	afs_hz		hz
-#define osi_GetTime(x)	microtime(x)
 extern time_t osi_Time();
 
 /* str */
@@ -242,5 +241,14 @@ extern int (**afs_vnodeop_p) ();
 #define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
 
 #define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
+
+static_inline void
+osi_GetTime(osi_timeval32_t *atv)
+{
+    struct timeval now;
+    microtime(&now);
+    atv->tv_sec = now.tv_sec;
+    atv->tv_usec = now.tv_usec;
+}
 
 #endif /* _OSI_MACHDEP_H_ */

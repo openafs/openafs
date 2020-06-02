@@ -83,4 +83,14 @@ extern int afs_suser(void *credp);
 #define osi_curcred()    get_user_struct()->u_cred
 
 #define osi_procname(procname, size) strncpy(procname, "(unknown)", size)
+
+static_inline void
+osi_GetTime(osi_timeval32_t *atv)
+{
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    atv->tv_sec = now.tv_sec;
+    atv->tv_usec = now.tv_usec;
+}
+
 #endif /* _OSI_MACHDEP_H_ */

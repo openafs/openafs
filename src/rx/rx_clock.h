@@ -94,21 +94,14 @@ extern void clock_UpdateTime(void);
 #endif /* AFS_USE_GETTIMEOFDAY || AFS_PTHREAD_ENV */
 #else /* KERNEL */
 #define clock_Init()
-#if defined(AFS_SGI61_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX_64BIT_KERNEL)
-#define clock_GetTime(cv) osi_GetTime((osi_timeval32_t *)cv)
-#else
-#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || (defined(AFS_DARWIN100_ENV) && defined(__amd64__)) || defined(AFS_XBSD_ENV)
-#define        clock_GetTime(cv)                               \
-    BEGIN                                              \
-       struct timeval tv;                              \
-       osi_GetTime(&tv);                        \
-       (cv)->sec = (afs_int32)tv.tv_sec;               \
-       (cv)->usec = (afs_int32)tv.tv_usec;             \
-    END
-#else /* defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL) */
-#define clock_GetTime(cv) osi_GetTime((osi_timeval32_t *)(cv))
-#endif /* defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL) */
-#endif
+static_inline void
+clock_GetTime(struct clock *cv)
+{
+    osi_timeval32_t now;
+    osi_GetTime(&now);
+    cv->sec = now.tv_sec;
+    cv->usec = now.tv_usec;
+}
 #define clock_Sec() osi_Time()
 #define	clock_NewTime()		/* don't do anything; clock is fast enough in kernel */
 #endif /* KERNEL */

@@ -936,13 +936,6 @@ afs_osi_Visible(void)
 }
 
 int
-osi_GetTime(struct timeval *tv)
-{
-    gettimeofday(tv, NULL);
-    return 0;
-}
-
-int
 osi_Active(struct vcache *avc)
 {
     AFS_STATCNT(osi_Active);
