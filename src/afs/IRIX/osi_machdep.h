@@ -387,10 +387,18 @@ extern long afs_global_owner;
 
 #define osi_procname(procname, size) strncpy(procname, proc_name(curproc()), size)
 
+static_inline void
+osi_GetTime(osi_timeval32_t *atv)
+{
 #ifdef _K64U64
-# define osi_GetTime(x) irix5_microtime((struct __irix5_timeval*)(x))
+    struct __irix5_timeval now;
+    irix5_microtime(&now);
 #else
-# define osi_GetTime(x) microtime(x)
+    struct timeval now;
+    microtime(&now);
 #endif
+    atv->tv_sec = now.tv_sec;
+    atv->tv_usec = now.tv_usec;
+}
 
 #endif /* _OSI_MACHDEP_H_ */
