@@ -54,13 +54,13 @@ typedef struct {
 
 #define XSTATS_START_TIME(arg) \
   opP = &(afs_stats_cmfullperf.rpc.fsRPCTimes[arg]); \
-  osi_GetuTime(&opStartTime);
+  osi_GetTime(&opStartTime);
 
 #define XSTATS_START_CMTIME(arg) \
   opP = &(afs_stats_cmfullperf.rpc.cmRPCTimes[arg]); \
-  osi_GetuTime(&opStartTime);
+  osi_GetTime(&opStartTime);
 
-#define XSTATS_END_TIME osi_GetuTime(&opStopTime); \
+#define XSTATS_END_TIME osi_GetTime(&opStopTime); \
   (opP->numOps)++; \
   if (!code) { (opP->numSuccesses)++; \
      afs_stats_GetDiff(elapsedTime, opStartTime, opStopTime); \

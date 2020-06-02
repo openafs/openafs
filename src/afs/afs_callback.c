@@ -556,7 +556,7 @@ loop2:
 #ifdef CBDEBUG
 		    lastCallBack_vnode = afid->Vnode;
 		    lastCallBack_dv = tvc->mstat.DataVersion.low;
-		    osi_GetuTime(&lastCallBack_time);
+		    osi_GetTime(&lastCallBack_time);
 #endif /* CBDEBUG */
 #ifdef AFS_DARWIN80_ENV
 		    vnode_put(AFSTOV(tvc));

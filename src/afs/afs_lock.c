@@ -128,7 +128,7 @@ Afs_Lock_Obtain(struct afs_lock *lock, int how)
     AFS_STATCNT(Lock_Obtain);
 
     AFS_ASSERT_GLOCK();
-    osi_GetuTime(&tt1);
+    osi_GetTime(&tt1);
 
     switch (how) {
 
@@ -176,7 +176,7 @@ Afs_Lock_Obtain(struct afs_lock *lock, int how)
 	osi_Panic("afs locktype");
     }
 
-    osi_GetuTime(&tt2);
+    osi_GetTime(&tt2);
     afs_stats_GetDiff(et, tt1, tt2);
     afs_stats_AddTo((lock->time_waiting), et);
     us = (et.tv_sec << 20) + et.tv_usec;

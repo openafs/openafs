@@ -172,7 +172,7 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
      * updated; we'll need them one way or another.
      */
     currTimeP = &currTime;
-    osi_GetuTime(currTimeP);
+    osi_GetTime(currTimeP);
 
     upDownP = GetUpDownStats(a_serverP);
 
@@ -400,7 +400,7 @@ afs_CountServers(void)
      * Compute the current time, used to figure out server record ages.
      */
     currTimeP = &currTime;
-    osi_GetuTime(currTimeP);
+    osi_GetTime(currTimeP);
 
     /*
      * Sweep the server hash table, tallying all we need to know.
@@ -1827,7 +1827,7 @@ afs_ActivateServer(struct srvAddr *sap)
 	 */
 	aserver->flags |= AFS_SERVER_FLAG_ACTIVATED;
 	currTimeP = &currTime;
-	osi_GetuTime(currTimeP);
+	osi_GetTime(currTimeP);
 	aserver->activationTime = currTime.tv_sec;
 	upDownP = GetUpDownStats(aserver);
 	if (aserver->flags & SRVR_ISDOWN) {

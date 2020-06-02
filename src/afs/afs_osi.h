@@ -174,11 +174,6 @@ extern int osi_vnhold(struct vcache *);
 #endif
 
 /*
- * Time related macros
- */
-#define osi_GetuTime(x) osi_GetTime(x)
-
-/*
  * We use osi_timeval32_t because the native timeval varies in size on
  * different platforms.  We require a fixed size timeval, at least for the
  * xstats.

@@ -33,7 +33,7 @@ FillStoreStats(int code, int idx, osi_timeval32_t xferStartTime,
     osi_timeval32_t elapsedTime;
 
     xferP = &(afs_stats_cmfullperf.rpc.fsXferTimes[idx]);
-    osi_GetuTime(&xferStopTime);
+    osi_GetTime(&xferStopTime);
     (xferP->numXfers)++;
     if (!code) {
 	(xferP->numSuccesses)++;
@@ -492,7 +492,7 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 	 */
 	bytesToXfer = size;
 
-	osi_GetuTime(&xferStartTime);
+	osi_GetTime(&xferStartTime);
 #endif /* AFS_NOSTATS */
 	bytesXferred = 0;
 
@@ -1132,7 +1132,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct rx_connection *rxconn,
 		tc, rxconn, avc, base, size, &length, adc, fP, &ops, &rock);
 
 #ifndef AFS_NOSTATS
-    osi_GetuTime(&xferStartTime);
+    osi_GetTime(&xferStartTime);
 #endif /* AFS_NOSTATS */
 
     adc->validPos = base;
