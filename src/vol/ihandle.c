@@ -22,6 +22,10 @@
 #include <sys/resource.h>
 #endif
 
+#ifdef AFS_AIX_ENV
+# include <sys/statfs.h>
+#endif
+
 #include <afs/opr.h>
 #ifdef AFS_PTHREAD_ENV
 # include <opr/lock.h>
@@ -1153,4 +1157,81 @@ ih_fdsync(FdHandle_t *fdP)
     default:
 	opr_Assert(0);
     }
+}
+
+#ifdef AFS_NT40_ENV
+
+static int
+os_blocksize(FD_t fd, afs_sfsize_t *a_size, afs_sfsize_t *a_blksize)
+{
+    LARGE_INTEGER fileSize;
+
+    if (!GetFileSizeEx(fd, &fileSize)) {
+	return GetLastError();
+    }
+
+    *a_size = fileSize.QuadPart;
+    *a_blksize = 4096;
+
+    return 0;
+}
+
+#else /* AFS_NT40_ENV */
+
+# ifdef AFS_AIX_ENV
+static int
+get_blksize_aix(FD_t fd, afs_sfsize_t *a_blksize)
+{
+    int code;
+#  ifdef AFS_AIX52_ENV
+    struct statfs64 tstatfs;
+    code = fstatfs64(fd, &tstatfs);
+#  else
+    struct statfs tstatfs;
+    code = fstatfs(fd, &tstatfs);
+#  endif
+    if (code != 0) {
+	return errno;
+    }
+    *a_blksize = tstatfs.f_bsize;
+    return 0;
+}
+# endif /* AFS_AIX_ENV */
+
+static int
+os_blocksize(FD_t fd, afs_sfsize_t *a_size, afs_sfsize_t *a_blksize)
+{
+    int code;
+    struct afs_stat status;
+    code = afs_fstat(fd, &status);
+    if (code < 0) {
+	return errno;
+    }
+
+    *a_size = status.st_size;
+
+# ifdef AFS_AIX_ENV
+    /* In AIX, st_blksize is not in struct stat; get it from fstatfs instead. */
+    return get_blksize_aix(fd, a_blksize);
+# else
+    *a_blksize = status.st_blksize;
+    return 0;
+# endif
+}
+
+#endif /* AFS_NT40_ENV */
+
+/**
+ * Get the size and blocksize for a file handle.
+ *
+ * @param[in] fdP   The file handle to query
+ * @param[out] a_size	    The size of the underlying file
+ * @param[out] a_blksize    The block size of the underlying file
+ *
+ * @return errno error codes
+ */
+int
+fd_blocksize(FdHandle_t *fdP, afs_sfsize_t *a_size, afs_sfsize_t *a_blksize)
+{
+    return os_blocksize(fdP->fd_fd, a_size, a_blksize);
 }

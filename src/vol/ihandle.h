@@ -70,6 +70,7 @@
  *
  * status information:
  * FDH_SIZE - returns the size of the file.
+ * FDH_BLOCKSIZE - returns the size and blocksize of the file.
  * FDH_NLINK - returns the link count of the file.
  * FDH_ISUNLINKED - returns if the file has been unlinked out from under us
  *
@@ -349,6 +350,9 @@ extern int ih_release(IHandle_t * ihP);
 extern int ih_condsync(IHandle_t * ihP);
 extern FdHandle_t *ih_attachfd(IHandle_t * ihP, FD_t fd);
 
+extern int fd_blocksize(FdHandle_t *fdP, afs_sfsize_t *a_size,
+			afs_sfsize_t *a_blksize);
+
 /* Macros common to user space and inode API's. */
 #define IH_INIT(H, D, V, I) ((H) = ih_init((D), (V), (I)))
 
@@ -588,6 +592,7 @@ extern afs_sfsize_t ih_size(FD_t);
 #define FDH_SYNC(H) ih_fdsync(H)
 #define FDH_TRUNC(H, L) OS_TRUNC((H)->fd_fd, L)
 #define FDH_SIZE(H) OS_SIZE((H)->fd_fd)
+#define FDH_BLOCKSIZE(H, S, B) fd_blocksize(H, S, B)
 #define FDH_LOCKFILE(H, O) OS_LOCKFILE((H)->fd_fd, O)
 #define FDH_UNLOCKFILE(H, O) OS_UNLOCKFILE((H)->fd_fd, O)
 #define FDH_ISUNLINKED(H) OS_ISUNLINKED((H)->fd_fd)

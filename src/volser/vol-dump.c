@@ -536,57 +536,26 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
     int code = 0;
     afs_int32 pad = 0;
     afs_foff_t offset = 0;
-    afs_sfsize_t nbytes, howBig;
+    afs_sfsize_t nbytes, size, howMany;
     ssize_t n = 0;
-    size_t howMany;
     afs_foff_t howFar = 0;
     byte *p;
     afs_uint32 hi, lo;
     afs_ino_str_t stmp;
-#ifndef AFS_NT40_ENV
-    struct afs_stat status;
-#else
-    LARGE_INTEGER fileSize;
-#endif
-    afs_sfsize_t size;
-#ifdef	AFS_AIX_ENV
-#include <sys/statfs.h>
-    struct statfs tstatfs;
-#endif
 
     if (verbose)
 	fprintf(stderr, "dumping file for vnode %d\n", vnode);
 
-#ifdef AFS_NT40_ENV
-    if (!GetFileSizeEx(handleP->fd_fd, &fileSize)) {
-        Log("DumpFile: GetFileSizeEx returned error code %d on descriptor %d\n", GetLastError(), handleP->fd_fd);
-	    return VOLSERDUMPERROR;
+    code = FDH_BLOCKSIZE(handleP, &size, &howMany);
+    if (code != 0) {
+	fprintf(stderr, "FDH_BLOCKSIZE returned error code %d on descriptor %d\n",
+		code, handleP->fd_fd);
+	return VOLSERDUMPERROR;
     }
-    howBig = fileSize.QuadPart;
-    howMany = 4096;
-
-#else
-    afs_fstat(handleP->fd_fd, &status);
-    howBig = status.st_size;
-
-#ifdef	AFS_AIX_ENV
-    /* Unfortunately in AIX valuable fields such as st_blksize are
-     * gone from the stat structure.
-     */
-    fstatfs(handleP->fd_fd, &tstatfs);
-    howMany = tstatfs.f_bsize;
-#else
-    howMany = status.st_blksize;
-#endif /* AFS_AIX_ENV */
-#endif /* AFS_NT40_ENV */
-
-
-    size = FDH_SIZE(handleP);
 
     if (verbose)
-	fprintf(stderr, "  howBig = %u, howMany = %u, fdh size = %u\n",
-		(unsigned int) howBig, (unsigned int) howMany,
-		(unsigned int) size);
+	fprintf(stderr, "  howMany = %u, fdh size = %u\n",
+		(unsigned int) howMany, (unsigned int) size);
 
     SplitInt64(size, hi, lo);
     if (hi == 0L) {
