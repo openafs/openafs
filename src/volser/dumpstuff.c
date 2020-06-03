@@ -704,59 +704,19 @@ static int
 DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 {
     int code = 0, error = 0;
-    afs_sfsize_t nbytes, howBig;
+    afs_sfsize_t nbytes, howBig, howMany;
     ssize_t n = 0;
-    size_t howMany;
     afs_foff_t howFar = 0;
     byte *p;
     afs_uint32 hi, lo;
     afs_ino_str_t stmp;
-#ifndef AFS_NT40_ENV
-    struct afs_stat status;
-#else
-    LARGE_INTEGER fileSize;
-#endif
-#ifdef	AFS_AIX_ENV
-#include <sys/statfs.h>
-#if defined(AFS_AIX52_ENV)
-    struct statfs64 tstatfs;
-#else /* !AFS_AIX52_ENV */
-    struct statfs tstatfs;
-#endif /* !AFS_AIX52_ENV */
-    int statfs_code;
-#endif
 
-#ifdef AFS_NT40_ENV
-    if (!GetFileSizeEx(handleP->fd_fd, &fileSize)) {
-        Log("DumpFile: GetFileSizeEx returned error code %d on descriptor %d\n", GetLastError(), handleP->fd_fd);
-	    return VOLSERDUMPERROR;
-    }
-    howBig = fileSize.QuadPart;
-    howMany = 4096;
-
-#else
-    afs_fstat(handleP->fd_fd, &status);
-    howBig = status.st_size;
-
-#ifdef	AFS_AIX_ENV
-    /* Unfortunately in AIX valuable fields such as st_blksize are
-     * gone from the stat structure.
-     */
-#if defined(AFS_AIX52_ENV)
-    statfs_code = fstatfs64(handleP->fd_fd, &tstatfs);
-#else /* !AFS_AIX52_ENV */
-    statfs_code = fstatfs(handleP->fd_fd, &tstatfs);
-#endif /* !AFS_AIX52_ENV */
-    if (statfs_code != 0) {
-        Log("DumpFile: fstatfs returned error code %d on descriptor %d\n", errno, handleP->fd_fd);
+    code = FDH_BLOCKSIZE(handleP, &howBig, &howMany);
+    if (code != 0) {
+	Log("DumpFile: FDH_BLOCKSIZE returned error code %d on descriptor %d\n",
+	    code, handleP->fd_fd);
 	return VOLSERDUMPERROR;
     }
-    howMany = tstatfs.f_bsize;
-#else
-    howMany = status.st_blksize;
-#endif /* AFS_AIX_ENV */
-#endif /* AFS_NT40_ENV */
-
 
     SplitInt64(howBig, hi, lo);
     if (hi == 0L) {
