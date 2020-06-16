@@ -379,7 +379,7 @@ waitforsig(int signo, int nsecs)
 
     for (nsleeps = 0; nsleeps < nsecs * 10; nsleeps++) {
 	sigset_t set;
-	struct timespec timeo;
+	int code;
 
 	opr_Verify(sigpending(&set) == 0);
 	if (sigismember(&set, signo)) {
@@ -387,9 +387,8 @@ waitforsig(int signo, int nsecs)
 	}
 
 	/* Sleep for 100ms */
-	timeo.tv_sec = 0;
-	timeo.tv_nsec = 100 * 1000 * 1000;
-	opr_Verify(nanosleep(&timeo, NULL) == 0);
+	code = usleep(100000);
+	opr_Assert(code == 0 || errno == EINTR);
     }
 
     return -1;
