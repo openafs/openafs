@@ -4,7 +4,7 @@ abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-TESTS = authcon-t superuser-t keys-t realms-t
+TESTS = authcon-t superuser-t keys-t realms-t writekeyfile
 
 MODULE_CFLAGS=-I$(TOP_OBJDIR) -I$(srcdir)/../common/
 
@@ -33,8 +33,8 @@ keys-t: keys-t.o ../common/config.o ../common/network.o
 realms-t: realms-t.o ../common/config.o ../common/network.o
 	$(LT_LDRULE_static) realms-t.o ../common/config.o ../common/network.o $(MODULE_LIBS)
 
-writekeyfile: writekeyfile.o
-	$(LT_LDRULE_static) writekeyfile.o $(MODULE_LIBS)
+writekeyfile: writekeyfile.o ../common/config.o
+	$(LT_LDRULE_static) writekeyfile.o ../common/config.o $(MODULE_LIBS)
 
 test.cs.c: test.xg
 	$(RXGEN) -A -x -C -o $@ $(srcdir)/test.xg
@@ -53,4 +53,4 @@ superuser-t.o: test.h
 clean:
 	$(LT_CLEAN)
 	rm -f *.o *.cs.c *.ss.c *.xdr.c test.h \
-		writekeyfile $(TESTS)
+		$(TESTS)

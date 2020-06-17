@@ -1,0 +1,47 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use Test::More;
+use File::Temp qw/tempdir/;
+use FindBin qw($Bin);
+use Cwd qw/abs_path/;
+use File::Compare;
+use Sys::Hostname;
+use Socket;
+
+# Run tests/auth/writekeyfile, and check that the KeyFile that it generates
+# matches what we expect.
+
+if (!defined(gethostbyname(hostname()))) {
+    # writekeyfile needs a hostname to generate a config dir
+    plan skip_all => 'Cannot resolve hostname';
+}
+plan tests => 1;
+
+my $cmd;
+if (defined($ENV{BUILD})) {
+    $cmd = $ENV{BUILD} . "/auth/writekeyfile";
+} else {
+    $cmd = $Bin . "/writekeyfile";
+}
+$cmd = abs_path($cmd);
+
+my $keyfile;
+if (defined($ENV{SOURCE})) {
+    $keyfile = $ENV{SOURCE} . "/auth/KeyFile.short";
+} else {
+    $keyfile = $Bin . "/KeyFile.short";
+}
+$keyfile = abs_path($keyfile);
+
+my $dir = tempdir('afs_XXXXXX', CLEANUP => 1);
+
+chdir($dir)
+    or die("chdir $dir failed: $?");
+
+system($cmd) == 0
+    or die("$cmd failed: $?");
+
+ok(compare("KeyFile", $keyfile) == 0,
+   "writekeyfile generates expected KeyFile");

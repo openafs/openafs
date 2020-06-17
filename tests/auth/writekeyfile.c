@@ -8,40 +8,29 @@
 #include <afs/param.h>
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
+#include <afs/opr.h>
 
 #include <roken.h>
+
+#include "common.h"
 
 int
 main(int argc, char **argv)
 {
     struct afsconf_dir *dir;
-    char buffer[1024];
+    char *dirname;
     char *block;
-    char *dirEnd;
-    FILE *file;
+    char *keyfile = NULL;
     int in, out;
     size_t len;
-    int code;
 
-    snprintf(buffer, sizeof(buffer), "%s/afs_XXXXXX", gettmpdir());
-    afstest_mkdtemp(buffer);
-    dirEnd = buffer + strlen(buffer);
+    dirname = afstest_BuildTestConfig();
+    if (dirname == NULL) {
+	fprintf(stderr, "Unable to create tmp config dir\n");
+	exit(1);
+    }
 
-    /* Create a CellServDB file */
-    strcpy(dirEnd, "/CellServDB");
-    file = fopen(buffer, "w");
-    fprintf(file, ">example.org # An example cell\n");
-    fprintf(file, "127.0.0.1 #test.example.org\n");
-    fclose(file);
-
-    /* Create a ThisCell file */
-    strcpy(dirEnd, "/ThisCell");
-    file = fopen(buffer, "w");
-    fprintf(file, "example.org\n");
-    fclose(file);
-
-    *dirEnd='\0';
-    dir = afsconf_Open(strdup(buffer));
+    dir = afsconf_Open(dirname);
     if (dir == NULL) {
 	fprintf(stderr, "Unable to open configuration directory\n");
 	exit(1);
@@ -54,15 +43,18 @@ main(int argc, char **argv)
     afsconf_Close(dir);
 
     /* Copy out the resulting keyfile into our homedirectory */
-    strcpy(dirEnd, "/KeyFile");
-    in = open(buffer, O_RDONLY);
+    opr_Verify(asprintf(&keyfile, "%s/KeyFile", dirname) > 0);
+    in = open(keyfile, O_RDONLY);
     out = open("KeyFile", O_WRONLY | O_CREAT, 0644);
 
     block = malloc(1024);
     do {
 	len = read(in, block, 1024);
-	if (len > 0)
-	    write(out, block, len);
+	if (len > 0) {
+	    if (write(out, block, len) != len) {
+		len = -1;
+	    }
+	}
     } while (len > 0);
 
     if (len == -1) {
@@ -73,14 +65,7 @@ main(int argc, char **argv)
     close(in);
     close(out);
 
-    strcpy(dirEnd, "/KeyFile");
-    unlink(buffer);
-    strcpy(dirEnd, "/CellServDB");
-    unlink(buffer);
-    strcpy(dirEnd, "/ThisCell");
-    unlink(buffer);
-    strcpy(dirEnd, "/UserList");
-    unlink(buffer);
-    *dirEnd='\0';
-    rmdir(buffer);
+    afstest_UnlinkTestConfig(dirname);
+
+    return 0;
 }

@@ -5,6 +5,7 @@ auth/keys
 auth/superuser
 auth/authcon
 auth/realms
+auth/writeoldkey
 cmd/command
 opr/cache
 opr/dict
