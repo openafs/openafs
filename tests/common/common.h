@@ -25,6 +25,7 @@
 /* config.c */
 extern char *afstest_BuildTestConfig(void);
 extern void afstest_UnlinkTestConfig(char *);
+extern char *afstest_mkdtemp(char *template);
 
 struct afsconf_dir;
 extern int afstest_AddDESKeyFile(struct afsconf_dir *dir);

@@ -12,6 +12,7 @@ AC_CHECK_FUNCS([ \
     getuid \
     getrlimit \
     issetugid \
+    mkdtemp \
     mkstemp \
     openlog \
     poll \

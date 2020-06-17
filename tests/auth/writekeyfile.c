@@ -24,7 +24,7 @@ main(int argc, char **argv)
     int code;
 
     snprintf(buffer, sizeof(buffer), "%s/afs_XXXXXX", gettmpdir());
-    mkdtemp(buffer);
+    afstest_mkdtemp(buffer);
     dirEnd = buffer + strlen(buffer);
 
     /* Create a CellServDB file */

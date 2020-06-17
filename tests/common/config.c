@@ -62,6 +62,30 @@ unlinkConfigFile(char *dirname, char *filename) {
 }
 
 /*!
+ *  Wrapper for mkdtemp
+ */
+
+char *
+afstest_mkdtemp(char *template)
+{
+#if defined(HAVE_MKDTEMP)
+    return mkdtemp(template);
+#else
+    /*
+     * Note that using the following is not a robust replacement
+     * for mkdtemp as there is a possible race condition between
+     * creating the name and creating the directory itself.  The
+     * use of this routine is limited to running tests.
+     */
+    if (mktemp(template) == NULL)
+	return NULL;
+    if (mkdir(template, 0700))
+	return NULL;
+    return template;
+#endif
+}
+
+/*!
  * Build a test configuration directory, containing a CellServDB and ThisCell
  * file for the "example.org" cell
  *
@@ -82,7 +106,7 @@ afstest_BuildTestConfig(void) {
     if (asprintf(&dir, "%s/afs_XXXXXX", gettmpdir()) == -1)
 	goto fail;
 
-    if (mkdtemp(dir) == NULL)
+    if (afstest_mkdtemp(dir) == NULL)
 	goto fail;
 
     /* Work out which IP address to use in our CellServDB. We figure this out
