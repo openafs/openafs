@@ -154,6 +154,12 @@ AC_CHECK_LINUX_FUNC([lru_cache_add_file],
                     [#include <linux/swap.h>],
                     [lru_cache_add_file(NULL);])
 
+dnl Linux 5.8 replaced kernel_setsockopt with helper functions
+dnl e.g. ip_sock_set_mtu_discover, ip_sock_set_recverr
+AC_CHECK_LINUX_FUNC([ip_sock_set],
+                    [#include <net/ip.h>],
+                    [ip_sock_set_mtu_discover(NULL, 0);])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
