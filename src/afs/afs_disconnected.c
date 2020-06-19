@@ -709,7 +709,12 @@ afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 	}
 	ObtainReadLock(&tdc->lock);
 	tfile = afs_CFileOpen(&tdc->f.inode);
-        osi_Assert(tfile);
+	if (!tfile) {
+	    ReleaseReadLock(&tdc->lock);
+	    afs_PutDCache(tdc);
+	    code = EIO;
+	    goto end;
+	}
 	code = afs_CFileRead(tfile, 0, ttargetName, tlen);
 	ttargetName[tlen-1] = '\0';
 	afs_CFileClose(tfile);

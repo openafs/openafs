@@ -727,7 +727,12 @@ afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq)
 	    toAdd = AFS_CHUNKTOSIZE(tdc->f.chunk) - offset;
 	}
         tfile = afs_CFileOpen(&tdc->f.inode);
-        osi_Assert(tfile);
+	if (!tfile) {
+	    ReleaseWriteLock(&tdc->lock);
+	    afs_PutDCache(tdc);
+	    code = EIO;
+	    break;
+	}
 	while(tdc->validPos < avc->f.m.Length + toAdd) {
 	     afs_size_t towrite;
 

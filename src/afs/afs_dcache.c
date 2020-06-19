@@ -3810,9 +3810,9 @@ afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
 {
     int i, code, ret_code = 0, written, trans_size;
     struct dcache *new_dc = NULL;
-    struct osi_file *tfile_src, *tfile_dst;
+    struct osi_file *tfile_src = NULL, *tfile_dst = NULL;
     struct VenusFid shadow_fid;
-    char *data;
+    char *data = NULL;
 
     /* Is this a dir? */
     if (vType(avc) != VDIR)
@@ -3867,9 +3867,16 @@ afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
 
     /* Open the files. */
     tfile_src = afs_CFileOpen(&adc->f.inode);
+    if (!tfile_src) {
+	ret_code = EIO;
+	goto done;
+    }
+
     tfile_dst = afs_CFileOpen(&new_dc->f.inode);
-    osi_Assert(tfile_src);
-    osi_Assert(tfile_dst);
+    if (!tfile_dst) {
+	ret_code = EIO;
+	goto done;
+    }
 
     /* And now copy dir dcache data into this dcache,
      * 4k at a time.
@@ -3897,10 +3904,14 @@ afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
 	written+=trans_size;
     }
 
-    afs_CFileClose(tfile_dst);
-    afs_CFileClose(tfile_src);
+ done:
+    if (tfile_dst)
+	afs_CFileClose(tfile_dst);
+    if (tfile_src)
+	afs_CFileClose(tfile_src);
 
-    afs_osi_Free(data, 4096);
+    if (data)
+	afs_osi_Free(data, 4096);
 
     ReleaseWriteLock(&new_dc->lock);
     afs_PutDCache(new_dc);
@@ -3917,7 +3928,6 @@ afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
 	avc->f.shadow.unique = shadow_fid.Fid.Unique;
     }
 
-done:
     return ret_code;
 }
 
