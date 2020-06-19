@@ -196,11 +196,15 @@ static int DumpCallBackState_r(void);
 #define FreeCB(cb) iFreeCB((struct CallBack *)cb, &cbstuff.nCBs)
 #define FreeFE(fe) iFreeFE((struct FileEntry *)fe, &cbstuff.nFEs)
 
+static afs_uint32 *HashTable;	/* File entry hash table */
+static afs_int32 FEhashsize;	/* number of buckets in HashTable */
+
+#define FEHASH_SIZE_OLD 512 /* Historical hard-coded FEhashsize */
+#define FE_CHAIN_TARGET 16  /* Target chain length for dynamic FEhashsize */
+#define FEHash(volume, unique) (((volume)+(unique))&(FEhashsize - 1))
 
 /* Other protos - move out sometime */
 void PrintCB(struct CallBack *cb, afs_uint32 now);
-
-static afs_uint32 HashTable[FEHASH_SIZE];	/* File entry hash table */
 
 static struct FileEntry *
 FindFE(AFSFid * fid)
@@ -422,6 +426,8 @@ FDel(struct FileEntry *fe)
 int
 InitCallBack(int nblks)
 {
+    afs_int32 workingHashSize;
+
     opr_Assert(nblks > 0);
 
     H_LOCK;
@@ -444,6 +450,45 @@ InitCallBack(int nblks)
     cbstuff.nCBs = nblks;
     while (cbstuff.nCBs)
 	FreeCB(&CB[cbstuff.nCBs]);	/* This is correct */
+
+    if (nblks > 64000) {
+	/*
+	 * We may have a large number of callbacks to keep track of (more than
+	 * 64000, the default with the '-L' fileserver switch). Figure out a
+	 * hashtable size so our hash chains are around FE_CHAIN_TARGET long.
+	 * Start at the old historical hashtable size (FEHASH_SIZE_OLD), and
+	 * count up until we get a reasonable number.
+	 */
+	workingHashSize = FEHASH_SIZE_OLD;
+	while (nblks / workingHashSize > FE_CHAIN_TARGET) {
+	    opr_Assert(workingHashSize < MAX_AFS_INT32 / 2);
+	    workingHashSize *= 2;
+	}
+
+    } else {
+	/*
+	 * It looks like we're using one of the historical default values for
+	 * our callback limit (64000 is the amount given by '-L' in the
+	 * fileserver; all other defaults are smaller).
+	 *
+	 * In this case, we're not using a huge number of callbacks, so the
+	 * size of the hashtable is not a big concern. Use the old hard-coded
+	 * hashtable size of 512 (FEHASH_SIZE_OLD), so any fsstate.dat file we
+	 * may save to disk is understandable by old fileservers and other
+	 * tools.
+	 */
+	workingHashSize = FEHASH_SIZE_OLD;
+    }
+
+    /* hashtable size must be a power of 2 */
+    opr_Assert(workingHashSize > 0);
+    opr_Assert((workingHashSize & (workingHashSize - 1)) == 0);
+
+    HashTable = calloc(workingHashSize, sizeof(HashTable[0]));
+    if (HashTable == NULL) {
+	ViceLogThenPanic(0, ("Failed malloc in InitCallBack\n"));
+    }
+    FEhashsize = workingHashSize;
     cbstuff.nblks = nblks;
     cbstuff.nbreakers = 0;
     H_UNLOCK;
@@ -1230,7 +1275,7 @@ BreakVolumeCallBacksLater(VolumeId volume)
     ViceLog(25, ("Setting later on volume %" AFS_VOLID_FMT "\n",
 		 afs_printable_VolumeId_lu(volume)));
     H_LOCK;
-    for (hash = 0; hash < FEHASH_SIZE; hash++) {
+    for (hash = 0; hash < FEhashsize; hash++) {
 	for (feip = &HashTable[hash]; (fe = itofe(*feip)) != NULL; ) {
 	    if (fe->volid == volume) {
 		struct CallBack *cbnext;
@@ -1282,7 +1327,7 @@ BreakLaterCallBacks(void)
     /* Pick the first volume we see to clean up */
     fid.Volume = fid.Vnode = fid.Unique = 0;
 
-    for (hash = 0; hash < FEHASH_SIZE; hash++) {
+    for (hash = 0; hash < FEhashsize; hash++) {
 	for (feip = &HashTable[hash]; (fe = itofe(*feip)) != NULL; ) {
 	    if (fe && (fe->status & FE_LATER)
 		&& (fid.Volume == 0 || fid.Volume == fe->volid)) {
@@ -1691,12 +1736,14 @@ PrintCallBackStats(void)
 	    cbstuff.nblks, (int) sizeof(struct CallBack));
     fprintf(stderr, "%d GSS1, %d GSS2, %d GSS3, %d GSS4, %d GSS5 (internal counters)\n",
 	    cbstuff.GSS1, cbstuff.GSS2, cbstuff.GSS3, cbstuff.GSS4, cbstuff.GSS5);
-
+    fprintf(stderr, "%d FEhashsize\n",
+	    FEhashsize);
     return 0;
 }
 
 #define MAGIC 0x12345678	/* To check byte ordering of dump when it is read in */
 #define MAGICV2 0x12345679      /* To check byte ordering & version of dump when it is read in */
+#define MAGICV3 0x1234567A
 
 
 #ifndef INTERPRET_DUMP
@@ -1941,7 +1988,7 @@ cb_stateVerifyFEHash(struct fs_dump_state * state)
 
     max_FEs = cbstuff.nblks;
 
-    for (i = 0; i < FEHASH_SIZE; i++) {
+    for (i = 0; i < FEhashsize; i++) {
 	chain_len = 0;
 	for (fei = HashTable[i], fe = itofe(fei);
 	     fe;
@@ -2243,23 +2290,52 @@ cb_stateSaveFEHash(struct fs_dump_state * state)
     AssignInt64(state->eof_offset, &state->cb_hdr->fehash_offset);
 
     state->cb_fehash_hdr->magic = CALLBACK_STATE_FEHASH_MAGIC;
-    state->cb_fehash_hdr->records = FEHASH_SIZE;
-    state->cb_fehash_hdr->len = sizeof(struct callback_state_fehash_header) +
-	(state->cb_fehash_hdr->records * sizeof(afs_uint32));
 
-    iov[0].iov_base = (char *)state->cb_fehash_hdr;
-    iov[0].iov_len = sizeof(struct callback_state_fehash_header);
-    iov[1].iov_base = (char *)HashTable;
-    iov[1].iov_len = sizeof(HashTable);
+    if (FEhashsize != FEHASH_SIZE_OLD) {
+	/*
+	 * If our hashtable size is not the historical FEHASH_SIZE_OLD, don't
+	 * write out the hashtable at all. The hashtable data on disk is not
+	 * very useful; we only write it out because older fileservers or other
+	 * utilities may need it for interpreting fsstate.dat. But if our
+	 * hashtable size is not FEHASH_SIZE_OLD, then they won't be able to
+	 * read it anwyay, since the hashtable size has changed. So just don't
+	 * write out the data; just write the header that says we have 0
+	 * hashtable buckets.
+	 */
+	state->cb_fehash_hdr->records = 0;
+	state->cb_fehash_hdr->len = sizeof(struct callback_state_fehash_header);
 
-    if (fs_stateSeek(state, &state->cb_hdr->fehash_offset)) {
-	ret = 1;
-	goto done;
-    }
+	if (fs_stateWriteHeader(state, &state->cb_hdr->fehash_offset,
+				state->cb_fehash_hdr,
+				sizeof(*state->cb_fehash_hdr))) {
+	    ret = 1;
+	    goto done;
+	}
 
-    if (fs_stateWriteV(state, iov, 2)) {
-	ret = 1;
-	goto done;
+    } else {
+	/*
+	 * Write out our HashTable data. This information is not terribly
+	 * useful, but older fileservers and other utilities may need it.
+	 * Someday this can probably be removed.
+	 */
+	state->cb_fehash_hdr->records = FEhashsize;
+	state->cb_fehash_hdr->len = sizeof(struct callback_state_fehash_header) +
+	    (state->cb_fehash_hdr->records * sizeof(afs_uint32));
+
+	iov[0].iov_base = (char *)state->cb_fehash_hdr;
+	iov[0].iov_len = sizeof(struct callback_state_fehash_header);
+	iov[1].iov_base = (char *)HashTable;
+	iov[1].iov_len = sizeof(HashTable[0]) * FEhashsize;
+
+	if (fs_stateSeek(state, &state->cb_hdr->fehash_offset)) {
+	    ret = 1;
+	    goto done;
+	}
+
+	if (fs_stateWriteV(state, iov, 2)) {
+	    ret = 1;
+	    goto done;
+	}
     }
 
     fs_stateIncEOF(state, state->cb_fehash_hdr->len);
@@ -2277,7 +2353,7 @@ cb_stateSaveFEs(struct fs_dump_state * state)
 
     AssignInt64(state->eof_offset, &state->cb_hdr->fe_offset);
 
-    for (hash = 0; hash < FEHASH_SIZE ; hash++) {
+    for (hash = 0; hash < FEhashsize ; hash++) {
 	for (fei = HashTable[hash]; fei; fei = fe->fnext) {
 	    fe = itofe(fei);
 	    if (cb_stateSaveFE(state, fe)) {
@@ -2670,7 +2746,7 @@ static int
 DumpCallBackState_r(void)
 {
     int fd, oflag;
-    afs_uint32 magic = MAGICV2, now = (afs_int32) time(NULL), freelisthead;
+    afs_uint32 magic = MAGICV3, now = (afs_int32) time(NULL), freelisthead;
 
     oflag = O_WRONLY | O_CREAT | O_TRUNC;
 #ifdef AFS_NT40_ENV
@@ -2690,6 +2766,7 @@ DumpCallBackState_r(void)
     DumpBytes(fd, &magic, sizeof(magic));
     DumpBytes(fd, &now, sizeof(now));
     DumpBytes(fd, &cbstuff, sizeof(cbstuff));
+    DumpBytes(fd, &FEhashsize, sizeof(FEhashsize));
     DumpBytes(fd, TimeOuts, sizeof(TimeOuts));
     DumpBytes(fd, timeout, sizeof(timeout));
     DumpBytes(fd, &tfirst, sizeof(tfirst));
@@ -2697,7 +2774,7 @@ DumpCallBackState_r(void)
     DumpBytes(fd, &freelisthead, sizeof(freelisthead));	/* This is a pointer */
     freelisthead = fetoi((struct FileEntry *)FEfree);
     DumpBytes(fd, &freelisthead, sizeof(freelisthead));	/* This is a pointer */
-    DumpBytes(fd, HashTable, sizeof(HashTable));
+    DumpBytes(fd, HashTable, sizeof(HashTable[0]) * FEhashsize);
     DumpBytes(fd, &CB[1], sizeof(CB[1]) * cbstuff.nblks);	/* CB stuff */
     DumpBytes(fd, &FE[1], sizeof(FE[1]) * cbstuff.nblks);	/* FE stuff */
     close(fd);
@@ -2756,17 +2833,22 @@ ReadDump(char *file, int timebits)
 	exit(1);
     }
     ReadBytes(fd, &magic, sizeof(magic));
-    if (magic == MAGICV2) {
+    if (magic == MAGICV3) {
+	/* V3 contains a new field for FEhashsize */
 	timebits = 32;
+	FEhashsize = 0;
+    } else if (magic == MAGICV2) {
+	timebits = 32;
+	FEhashsize = FEHASH_SIZE_OLD;
+    } else if (magic == MAGIC) {
+	FEhashsize = FEHASH_SIZE_OLD;
     } else {
-	if (magic != MAGIC) {
-	    fprintf(stderr,
-		    "Magic number of %s is invalid.  You might be trying to\n",
-		    file);
-	    fprintf(stderr,
-		    "run this program on a machine type with a different byte ordering.\n");
-	    exit(1);
-	}
+	fprintf(stderr,
+		"Magic number of %s is invalid (0x%x).  You might be trying to\n",
+		file, magic);
+	fprintf(stderr,
+		"run this program on a machine type with a different byte ordering.\n");
+	exit(1);
     }
     if (timebits == 64) {
 	ReadBytes(fd, &now64, sizeof(afs_int64));
@@ -2775,6 +2857,13 @@ ReadDump(char *file, int timebits)
 	ReadBytes(fd, &now, sizeof(afs_int32));
 
     ReadBytes(fd, &cbstuff, sizeof(cbstuff));
+    if (FEhashsize == 0) {
+	ReadBytes(fd, &FEhashsize, sizeof(FEhashsize));
+	if (FEhashsize == 0) {
+	    fprintf(stderr, "FEhashsize of 0 is not supported.\n");
+	    exit(1);
+	}
+    }
     ReadBytes(fd, TimeOuts, sizeof(TimeOuts));
     ReadBytes(fd, timeout, sizeof(timeout));
     ReadBytes(fd, &tfirst, sizeof(tfirst));
@@ -2786,7 +2875,9 @@ ReadDump(char *file, int timebits)
     CBfree = (struct CallBack *)itocb(freelisthead);
     ReadBytes(fd, &freelisthead, sizeof(freelisthead));
     FEfree = (struct FileEntry *)itofe(freelisthead);
-    ReadBytes(fd, HashTable, sizeof(HashTable));
+    HashTable = calloc(FEhashsize, sizeof(HashTable[0]));
+    opr_Assert(HashTable != NULL);
+    ReadBytes(fd, HashTable, sizeof(HashTable[0]) * FEhashsize);
     ReadBytes(fd, &CB[1], sizeof(CB[1]) * cbstuff.nblks);	/* CB stuff */
     ReadBytes(fd, &FE[1], sizeof(FE[1]) * cbstuff.nblks);	/* FE stuff */
     if (close(fd)) {
@@ -2893,7 +2984,7 @@ main(int argc, char **argv)
 	struct CallBack *cb;
 	struct FileEntry *fe;
 
-	for (hash = 0; hash < FEHASH_SIZE; hash++) {
+	for (hash = 0; hash < FEhashsize; hash++) {
 	    for (feip = &HashTable[hash]; (fe = itofe(*feip));) {
 		if (!vol || (fe->volid == vol)) {
 		    afs_uint32 fe_i = fetoi(fe);

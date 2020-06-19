@@ -100,6 +100,7 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 CBD = $(DESTDIR)\root.server\usr\afs\bin\cbd.exe
 
 CBDLIBS =\
+	$(DESTDIR)\lib\opr.lib \
 	$(DESTDIR)\lib\afsroken.lib
 
 CBDRES = $(OUT)\cbd.res
