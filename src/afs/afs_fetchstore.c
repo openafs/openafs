@@ -270,7 +270,9 @@ afs_GenericStoreProc(struct storeOps *ops, void *rock,
     size = tdc->f.chunkBytes;
 
     tfile = afs_CFileOpen(&tdc->f.inode);
-    osi_Assert(tfile);
+    if (!tfile) {
+	return EIO;
+    }
 
     while ( size > 0 ) {
 	code = (*ops->prepare)(rock, size, &tlen);
