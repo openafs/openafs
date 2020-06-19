@@ -2357,6 +2357,9 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
     return 1;
 
 out:
+    if (cacheFp != NULL) {
+	filp_close(cacheFp, NULL);
+    }
     ReleaseWriteLock(&avc->lock);
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
