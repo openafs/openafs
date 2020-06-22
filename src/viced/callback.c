@@ -1686,9 +1686,9 @@ PrintCallBackStats(void)
 	    cbstuff.AddCallBacks, cbstuff.BreakCallBacks,
 	    cbstuff.DeleteCallBacks, cbstuff.DeleteFiles, cbstuff.CBsTimedOut,
 	    cbstuff.GotSomeSpaces, cbstuff.DeleteAllCallBacks);
-    fprintf(stderr, "%d CBs, %d FEs, (%d of total of %d 16-byte blocks)\n",
+    fprintf(stderr, "%d CBs, %d FEs, (%d of total of %d %d-byte blocks)\n",
 	    cbstuff.nCBs, cbstuff.nFEs, cbstuff.nCBs + cbstuff.nFEs,
-	    cbstuff.nblks);
+	    cbstuff.nblks, (int) sizeof(struct CallBack));
     fprintf(stderr, "%d GSS1, %d GSS2, %d GSS3, %d GSS4, %d GSS5 (internal counters)\n",
 	    cbstuff.GSS1, cbstuff.GSS2, cbstuff.GSS3, cbstuff.GSS4, cbstuff.GSS5);
 
@@ -2077,7 +2077,7 @@ cb_stateVerifyHCBList(struct fs_dump_state * state, struct host * host)
 	    goto done;
 	}
 	if (chain_len > FS_STATE_HCB_MAX_LIST_LEN) {
-	    ViceLog(0, ("cb_stateVerifyFCBList: error: list length exceeds %d (h->index=%d); assuming there's a loop\n",
+	    ViceLog(0, ("cb_stateVerifyHCBList: error: list length exceeds %d (h->index=%d); assuming there's a loop\n",
 			FS_STATE_HCB_MAX_LIST_LEN, hi));
 	    ret = 1;
 	    goto done;
@@ -2561,7 +2561,7 @@ cb_stateDiskEntryToFE(struct fs_dump_state * state,
 
     /* setup FE map entry */
     if (!in->index || (in->index >= state->fe_map.len)) {
-	ViceLog(0, ("cb_stateDiskEntryToFE: index (%d) out of range",
+	ViceLog(0, ("cb_stateDiskEntryToFE: index (%d) out of range\n",
 		    in->index));
 	ret = 1;
 	goto done;
