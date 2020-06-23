@@ -9,7 +9,7 @@ voldump - Dump an AFS volume without using the Volume Server
 
 B<voldump> S<<< B<-part> <I<partition>> >>> S<<< B<-volumeid> <I<volume id>> >>>
     S<<< [B<-file> <I<dump file>>] >>> [B<-time> <I<dump from time>>]
-    [B<-verbose>] [B<-help>]
+    [B<-pad-errors>] [B<-verbose>] [B<-help>]
 
 B<voldump> S<<< B<-p> <I<partition>> >>> S<<< B<-vo> <I<volume id>> >>>
     S<<< [B<-f> <I<dump file>>] >>> [B<-time> <I<dump from time>>]
@@ -69,6 +69,18 @@ volume will be dumped to standard output.
 
 Specifies whether the dump is full or incremental. Omit this argument to create
 a full dump, or provide one of the valid values listed in L<vos_dump(1)>.
+
+=item B<-pad-errors>
+
+When reading vnode data from disk, if B<voldump> encounters an I/O error or
+unexpected EOF, by default B<voldump> will print an error and exit. If
+B<-pad-errors> is given, instead B<voldump> will pad the unreadable region with
+NUL bytes, and continue with the dump.
+
+This option may be useful when trying to extract data from volumes where the
+underlying disk is failing, or the volume data is corrupted. Data may be
+missing from files in the volume in such cases (replaced by NUL bytes), but at
+least some data may be extracted.
 
 =item B<-verbose>
 
