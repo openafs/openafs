@@ -1371,10 +1371,12 @@ BreakLaterCallBacks(void)
 int
 CleanupTimedOutCallBacks(void)
 {
+    int code;
+
     H_LOCK;
-    CleanupTimedOutCallBacks_r();
+    code = CleanupTimedOutCallBacks_r();
     H_UNLOCK;
-    return 0;
+    return code;
 }
 
 int
