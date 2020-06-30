@@ -1192,8 +1192,12 @@ FSYNC_com_VolMove(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     }
 
     if ((code == SYNC_OK) && (V_BreakVolumeCallbacks != NULL)) {
-	Log("fssync: volume %" AFS_VOLID_FMT " moved to %x; breaking all call backs\n",
-	    afs_printable_VolumeId_lu(vcom->vop->volume), vcom->hdr->reason);
+	char hoststr[20];
+
+	Log("fssync: volume %" AFS_VOLID_FMT " moved to %s; breaking all call backs\n",
+	    afs_printable_VolumeId_lu(vcom->vop->volume),
+	    afs_inet_ntoa_r(vcom->hdr->reason, hoststr));
+
 	VOL_UNLOCK;
 	(*V_BreakVolumeCallbacks) (vcom->vop->volume);
 	VOL_LOCK;
