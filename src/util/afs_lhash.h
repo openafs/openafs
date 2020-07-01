@@ -20,7 +20,7 @@
  * For more information on the algorithm, see
  *
  *	Dynamic Hash Tables
- *	Per-Åke Larson (Per-Ake Larson)
+ *	Per-Ã…ke Larson (Per-Ake Larson)
  *	Communications of the ACM
  *	Vol. 31, No. 4 (April 1988), Pages 446-457
  */
