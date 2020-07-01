@@ -1,11 +1,11 @@
-openafs (1.8.6-1) UNRELEASED; urgency=medium
+openafs (1.8.6-1) unstable; urgency=medium
 
   * New upstream release:
     - Support linux kernel 5.7 (thanks Paolo Pisati for an early backport)
       (Closes: #964027)
     - other changes noted in the 1.8.6~pre1-1 entry
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 30 Jun 2020 20:38:20 -0700
+ -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 30 Jun 2020 21:32:42 -0700
 
 openafs (1.8.6~pre1-3) unstable; urgency=medium
 
