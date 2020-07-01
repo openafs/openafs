@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.8.6 (in progress)
+OpenAFS 1.8.6
 
   All platforms
 
@@ -24,7 +24,11 @@ OpenAFS 1.8.6 (in progress)
   All server platforms
 
     * Do not leave empty directories behind in the file server vice partition
-      when running the "vos zap -force" command (13896 13897)
+      when running the "vos zap -force" command (13897)
+
+    * Fix "vos zap -force" failures when the volume being zapped does not have
+      an entry in the fileserver's volume group cache (e.g., during fileserver
+      startup) (13896)
 
     * Relax the length limits on some membership lists used in ptserver RPCs,
       introduced in release 1.8.0 to prevent denial of service attacks, to
@@ -64,14 +68,24 @@ OpenAFS 1.8.6 (in progress)
       that in the current VLDB, to make it possible to complete a previously
       interrupted volume rename (14055)
 
+    * Allow processes which are sleeping due to PAG throttling to be killable
+      (13974).
+
+    * Fix set PAG failures due to signals (13975).
+
   Linux clients
 
-    * Support mainline kernels up to and including 5.6-rc2 (14069)
+    * Support mainline kernels up to and including 5.7 (14069 14094 14095
+      14209 14210)
 
     * Make builds succeed with --enable-checking for mainline kernels
       5.3-rc2 and later (13910)
 
     * Avoid possible deadlocks (13748 13765)
+
+    * Fix build of libuafs on ppc64le (14104)
+
+    * Fix build on certain recent 32-bit distributions (14234) (RT #135084)
 
   macOS
 

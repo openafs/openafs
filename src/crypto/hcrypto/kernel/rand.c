@@ -15,6 +15,15 @@
  */
 afs_kmutex_t hckernel_mutex;
 
+/*
+ * For these platforms, we use the fortuna RNG from heimdal (seeded from afsd
+ * userspace on startup). Otherwise, we rely on osi_readRandom() as the source
+ * of random data.
+ */
+#if defined(AFS_AIX_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI_ENV)
+# define USE_FORTUNA
+#endif
+
 /* Called from osi_Init(); will only run once. */
 void
 init_hckernel_mutex(void)
@@ -25,8 +34,10 @@ init_hckernel_mutex(void)
 void
 RAND_seed(const void *indata, size_t size)
 {
+#ifdef USE_FORTUNA
     const RAND_METHOD *m = RAND_fortuna_method();
     m->seed(indata, size);
+#endif
 }
 
 int
@@ -34,7 +45,7 @@ RAND_bytes(void *outdata, size_t size)
 {
     if (size == 0)
 	return 0;
-#if defined(AFS_AIX_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI_ENV)
+#ifdef USE_FORTUNA
     const RAND_METHOD *m = RAND_fortuna_method();
     return m->bytes(outdata, size);
 #else

@@ -70,9 +70,15 @@ typedef struct vattr {
     dev_t	va_rdev;
     ino_t	va_nodeid;	/* Inode number */
     nlink_t	va_nlink;	/* link count for file. */
-    struct timeval va_atime;
-    struct timeval va_mtime;
-    struct timeval va_ctime;
+#if defined(IATTR_TAKES_64BIT_TIME)
+    struct timespec64 va_atime;
+    struct timespec64 va_mtime;
+    struct timespec64 va_ctime;
+#else
+    struct timespec va_atime;
+    struct timespec va_mtime;
+    struct timespec va_ctime;
+#endif
 } vattr_t;
 
 #define VATTR_NULL(A) memset(A, 0, sizeof(struct vattr))

@@ -31,17 +31,17 @@
 #endif
 #include <linux/pagemap.h>
 #include <linux/writeback.h>
-#include <linux/pagevec.h>
+#if defined(HAVE_LINUX_LRU_CACHE_ADD_FILE)
+# include <linux/swap.h>
+#else
+# include <linux/pagevec.h>
+#endif
 #include <linux/aio.h>
 #include "afs/lock.h"
 #include "afs/afs_bypasscache.h"
 
 #include "osi_compat.h"
 #include "osi_pagecopy.h"
-
-#ifndef HAVE_LINUX_PAGEVEC_LRU_ADD_FILE
-#define __pagevec_lru_add_file __pagevec_lru_add
-#endif
 
 #ifndef MAX_ERRNO
 #define MAX_ERRNO 1000L
@@ -68,6 +68,72 @@ int cachefs_noreadpage = 0;
 extern struct backing_dev_info *afs_backing_dev_info;
 
 extern struct vcache *afs_globalVp;
+
+/* Handle interfacing with Linux's pagevec/lru facilities */
+
+#if defined(HAVE_LINUX_LRU_CACHE_ADD_FILE)
+
+/*
+ * Linux's lru_cache_add_file provides a simplified LRU interface without
+ * needing a pagevec
+ */
+struct afs_lru_pages {
+    char unused;
+};
+
+static inline void
+afs_lru_cache_init(struct afs_lru_pages *alrupages)
+{
+    return;
+}
+
+static inline void
+afs_lru_cache_add(struct afs_lru_pages *alrupages, struct page *page)
+{
+    lru_cache_add_file(page);
+}
+
+static inline void
+afs_lru_cache_finalize(struct afs_lru_pages *alrupages)
+{
+    return;
+}
+#else
+
+/* Linux's pagevec/lru interfaces require a pagevec */
+struct afs_lru_pages {
+    struct pagevec lrupv;
+};
+
+static inline void
+afs_lru_cache_init(struct afs_lru_pages *alrupages)
+{
+# if defined(PAGEVEC_INIT_COLD_ARG)
+    pagevec_init(&alrupages->lrupv, 0);
+# else
+    pagevec_init(&alrupages->lrupv);
+# endif
+}
+
+# ifndef HAVE_LINUX_PAGEVEC_LRU_ADD_FILE
+#  define __pagevec_lru_add_file __pagevec_lru_add
+# endif
+
+static inline void
+afs_lru_cache_add(struct afs_lru_pages *alrupages, struct page *page)
+{
+    get_page(page);
+    if (!pagevec_add(&alrupages->lrupv, page))
+	__pagevec_lru_add_file(&alrupages->lrupv);
+}
+
+static inline void
+afs_lru_cache_finalize(struct afs_lru_pages *alrupages)
+{
+    if (pagevec_count(&alrupages->lrupv))
+	__pagevec_lru_add_file(&alrupages->lrupv);
+}
+#endif /* !HAVE_LINUX_LRU_ADD_FILE */
 
 /* This function converts a positive error code from AFS into a negative
  * code suitable for passing into the Linux VFS layer. It checks that the
@@ -1008,15 +1074,15 @@ iattr2vattr(struct vattr *vattrp, struct iattr *iattrp)
 	vattrp->va_size = iattrp->ia_size;
     if (iattrp->ia_valid & ATTR_ATIME) {
 	vattrp->va_atime.tv_sec = iattrp->ia_atime.tv_sec;
-	vattrp->va_atime.tv_usec = 0;
+	vattrp->va_atime.tv_nsec = 0;
     }
     if (iattrp->ia_valid & ATTR_MTIME) {
 	vattrp->va_mtime.tv_sec = iattrp->ia_mtime.tv_sec;
-	vattrp->va_mtime.tv_usec = 0;
+	vattrp->va_mtime.tv_nsec = 0;
     }
     if (iattrp->ia_valid & ATTR_CTIME) {
 	vattrp->va_ctime.tv_sec = iattrp->ia_ctime.tv_sec;
-	vattrp->va_ctime.tv_usec = 0;
+	vattrp->va_ctime.tv_nsec = 0;
     }
 }
 
@@ -2093,7 +2159,7 @@ afs_linux_put_link(struct dentry *dentry, struct nameidata *nd)
  */
 static int
 afs_linux_read_cache(struct file *cachefp, struct page *page,
-		     int chunk, struct pagevec *lrupv,
+		     int chunk, struct afs_lru_pages *alrupages,
 		     struct afs_pagecopy_task *task) {
     loff_t offset = page_offset(page);
     struct inode *cacheinode = cachefp->f_dentry->d_inode;
@@ -2135,11 +2201,7 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 	    if (code == 0) {
 	        cachepage = newpage;
 	        newpage = NULL;
-
-	        get_page(cachepage);
-                if (!pagevec_add(lrupv, cachepage))
-                    __pagevec_lru_add_file(lrupv);
-
+		afs_lru_cache_add(alrupages, cachepage);
 	    } else {
 		put_page(newpage);
 		newpage = NULL;
@@ -2199,7 +2261,7 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
     struct file *cacheFp = NULL;
     int code;
     int dcLocked = 0;
-    struct pagevec lrupv;
+    struct afs_lru_pages lrupages;
 
     /* Not a UFS cache, don't do anything */
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
@@ -2285,16 +2347,12 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
 	AFS_GLOCK();
 	goto out;
     }
-#if defined(PAGEVEC_INIT_COLD_ARG)
-    pagevec_init(&lrupv, 0);
-#else
-    pagevec_init(&lrupv);
-#endif
 
-    code = afs_linux_read_cache(cacheFp, pp, tdc->f.chunk, &lrupv, NULL);
+    afs_lru_cache_init(&lrupages);
 
-    if (pagevec_count(&lrupv))
-       __pagevec_lru_add_file(&lrupv);
+    code = afs_linux_read_cache(cacheFp, pp, tdc->f.chunk, &lrupages, NULL);
+
+    afs_lru_cache_finalize(&lrupages);
 
     filp_close(cacheFp, NULL);
     AFS_GLOCK();
@@ -2424,7 +2482,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
     struct iovec* iovecp;
     struct nocache_read_request *ancr;
     struct page *pp;
-    struct pagevec lrupv;
+    struct afs_lru_pages lrupages;
     afs_int32 code = 0;
 
     cred_t *credp;
@@ -2449,11 +2507,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
     ancr->offset = auio->uio_offset;
     ancr->length = auio->uio_resid;
 
-#if defined(PAGEVEC_INIT_COLD_ARG)
-    pagevec_init(&lrupv, 0);
-#else
-    pagevec_init(&lrupv);
-#endif
+    afs_lru_cache_init(&lrupages);
 
     for(page_ix = 0; page_ix < num_pages; ++page_ix) {
 
@@ -2499,27 +2553,18 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 		lock_page(pp);
 	    }
 
-            /* increment page refcount--our original design assumed
-             * that locking it would effectively pin it;  protect
-             * ourselves from the possiblity that this assumption is
-             * is faulty, at low cost (provided we do not fail to
-             * do the corresponding decref on the other side) */
-            get_page(pp);
-
 	    /* save the page for background map */
             iovecp[page_ix].iov_base = (void*) pp;
 
 	    /* and put it on the LRU cache */
-	    if (!pagevec_add(&lrupv, pp))
-		__pagevec_lru_add_file(&lrupv);
+	    afs_lru_cache_add(&lrupages, pp);
         }
     }
 
     /* If there were useful pages in the page list, make sure all pages
      * are in the LRU cache, then schedule the read */
     if(page_count) {
-	if (pagevec_count(&lrupv))
-	    __pagevec_lru_add_file(&lrupv);
+	afs_lru_cache_finalize(&lrupages);
 	credp = crref();
         code = afs_ReadNoCache(avc, ancr, credp);
 	crfree(credp);
@@ -2650,7 +2695,7 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
     int code;
     unsigned int page_idx;
     loff_t offset;
-    struct pagevec lrupv;
+    struct afs_lru_pages lrupages;
     struct afs_pagecopy_task *task;
 
     if (afs_linux_bypass_check(inode))
@@ -2675,11 +2720,9 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
     task = afs_pagecopy_init_task();
 
     tdc = NULL;
-#if defined(PAGEVEC_INIT_COLD_ARG)
-    pagevec_init(&lrupv, 0);
-#else
-    pagevec_init(&lrupv);
-#endif
+
+    afs_lru_cache_init(&lrupages);
+
     for (page_idx = 0; page_idx < num_pages; page_idx++) {
 	struct page *page = list_entry(page_list->prev, struct page, lru);
 	list_del(&page->lru);
@@ -2719,18 +2762,15 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 
 	if (tdc && !add_to_page_cache(page, mapping, page->index,
 				      GFP_KERNEL)) {
-	    get_page(page);
-	    if (!pagevec_add(&lrupv, page))
-		__pagevec_lru_add_file(&lrupv);
+	    afs_lru_cache_add(&lrupages, page);
 
 	    /* Note that add_to_page_cache() locked 'page'.
 	     * afs_linux_read_cache() is guaranteed to handle unlocking it. */
-	    afs_linux_read_cache(cacheFp, page, tdc->f.chunk, &lrupv, task);
+	    afs_linux_read_cache(cacheFp, page, tdc->f.chunk, &lrupages, task);
 	}
 	put_page(page);
     }
-    if (pagevec_count(&lrupv))
-       __pagevec_lru_add_file(&lrupv);
+    afs_lru_cache_finalize(&lrupages);
 
 out:
     if (tdc)
