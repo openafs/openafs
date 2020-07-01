@@ -1,3 +1,9 @@
+openafs (1.8.6-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Tue, 30 Jun 2020 20:38:20 -0700
+
 openafs (1.8.6~pre1-3) unstable; urgency=medium
 
   * Temporarily disable a test that fails on armhf buildd but not porterbox
