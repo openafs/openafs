@@ -10,9 +10,9 @@ MODULE_CFLAGS = -I$(TOP_OBJDIR)
 LIBS = ../tap/libtap.a \
        $(abs_top_builddir)/src/rx/liboafs_rx.la
 
-tests = event-t
+BINS = event-t
 
-all check test tests: $(tests)
+all check test tests: $(BINS)
 
 event-t: event-t.o $(LIBS)
 	$(LT_LDRULE_static) event-t.o $(LIBS) $(LIB_roken) $(XLIBS)
@@ -20,4 +20,4 @@ install:
 
 clean distclean:
 	$(LT_CLEAN)
-	$(RM) -f $(tests) *.o core
+	$(RM) -f $(BINS) *.o core

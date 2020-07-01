@@ -4,11 +4,11 @@ abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-TESTS = authcon-t superuser-t keys-t realms-t writekeyfile
+BINS = authcon-t superuser-t keys-t realms-t writekeyfile
 
 MODULE_CFLAGS=-I$(TOP_OBJDIR) -I$(srcdir)/../common/
 
-all check test tests: $(TESTS)
+all check test tests: $(BINS)
 
 MODULE_LIBS = 	../tap/libtap.a \
 		$(abs_top_builddir)/src/auth/liboafs_auth.la \
@@ -53,4 +53,4 @@ superuser-t.o: test.h
 clean:
 	$(LT_CLEAN)
 	rm -f *.o *.cs.c *.ss.c *.xdr.c test.h \
-		$(TESTS)
+		$(BINS)

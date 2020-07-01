@@ -660,7 +660,7 @@ test_build_nolibafs: finale_nolibafs_notest
 	cd tests && $(MAKE) all
 
 check test: finale_notest
-	cd tests && $(MAKE) check
+	cd tests && $(MAKE) check TESTS="$(TESTS)"
 
 force:
 

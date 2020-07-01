@@ -13,9 +13,9 @@ LIBS = ../tap/libtap.a \
        $(abs_top_builddir)/src/opr/liboafs_opr.la \
        $(abs_top_builddir)/src/opr/liboafs_opr.la
 
-tests = command-t
+BINS = command-t
 
-all check test tests: $(tests)
+all check test tests: $(BINS)
 
 command-t: command-t.o $(LIBS)
 	$(LT_LDRULE_static) command-t.o $(LIBS) $(LIB_roken) $(XLIBS)
@@ -24,4 +24,4 @@ install:
 
 clean distclean:
 	$(LT_CLEAN)
-	$(RM) -f $(tests) *.o core
+	$(RM) -f $(BINS) *.o core

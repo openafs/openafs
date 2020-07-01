@@ -7,10 +7,10 @@ MODULE_CFLAGS = -I$(TOP_OBJDIR)
 
 LIBS=../tap/libtap.a $(abs_top_builddir)/src/opr/liboafs_opr.la
 
-tests = cache-t dict-t fmt-t jhash-t queues-t rbtree-t softsig-helper time-t \
-	uuid-t
+BINS = cache-t dict-t fmt-t jhash-t queues-t rbtree-t softsig-helper time-t \
+       uuid-t
 
-all check test tests: $(tests)
+all check test tests: $(BINS)
 
 cache-t: cache-t.o
 	$(LT_LDRULE_static) cache-t.o $(LIBS) $(XLIBS)
@@ -41,4 +41,4 @@ softsig-helper: softsig-helper.o $(LIBS)
 
 clean distclean:
 	$(LT_CLEAN)
-	$(RM) -f $(tests) *.o core
+	$(RM) -f $(BINS) *.o core

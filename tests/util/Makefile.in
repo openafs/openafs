@@ -11,9 +11,9 @@ LIBS = ../tap/libtap.a \
        $(abs_top_builddir)/lib/util.a \
        $(abs_top_builddir)/lib/libopr.a
 
-tests = ktime-t exec-alt-t volutil-t
+BINS = ktime-t exec-alt-t volutil-t
 
-all check test tests: $(tests)
+all check test tests: $(BINS)
 
 ktime-t: ktime-t.o $(LIBS)
 	$(AFS_LDRULE) ktime-t.o $(LIBS) $(XLIBS)
@@ -27,4 +27,4 @@ volutil-t: volutil-t.o $(LIBS)
 install:
 
 clean distclean:
-	$(RM) -f $(tests) *.o core
+	$(RM) -f $(BINS) *.o core

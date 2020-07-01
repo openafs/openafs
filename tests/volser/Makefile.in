@@ -4,11 +4,11 @@ abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-TESTS = vos-t
+BINS = vos-t
 
 MODULE_CFLAGS=-I$(TOP_OBJDIR) -I$(srcdir)/../common/
 
-all check test tests: $(TESTS)
+all check test tests: $(BINS)
 
 MODULE_LIBS = 	../tap/libtap.a \
 		$(abs_top_builddir)/src/vlserver/liboafs_vldb.la \
@@ -22,4 +22,4 @@ vos-t: vos-t.o ../common/config.o ../common/servers.o ../common/ubik.o \
 
 clean:
 	$(LT_CLEAN)
-	rm -f *.o $(TESTS)
+	rm -f *.o $(BINS)
