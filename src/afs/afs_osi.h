@@ -177,7 +177,7 @@ extern void osi_AttachVnode(struct vcache *, int seq);
   * In 64 bit HP-UX the timeval structure has a 64 bit member.
   */
 
-#if defined(AFS_HPUX_ENV) || defined(AFS_LINUX_64BIT_KERNEL) || (defined(AFS_SGI61_ENV) && defined(KERNEL) && defined(_K64U64))
+#if defined(AFS_HPUX_ENV) || defined(AFS_LINUX_64BIT_KERNEL) || (defined(AFS_LINUX26_ENV) && !defined(HAVE_LINUX_TIME_T)) || (defined(AFS_SGI61_ENV) && defined(KERNEL) && defined(_K64U64))
 typedef struct {
     afs_int32 tv_sec;
     afs_int32 tv_usec;
