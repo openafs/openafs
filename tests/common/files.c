@@ -37,6 +37,58 @@
 
 #include "common.h"
 
+char *
+afstest_mkdtemp(void)
+{
+    char *template;
+
+    template = afstest_asprintf("%s/afs_XXXXXX", gettmpdir());
+
+#if defined(HAVE_MKDTEMP)
+    return mkdtemp(template);
+#else
+    /*
+     * Note that using the following is not a robust replacement
+     * for mkdtemp as there is a possible race condition between
+     * creating the name and creating the directory itself.  The
+     * use of this routine is limited to running tests.
+     */
+    if (mktemp(template) == NULL)
+	return NULL;
+    if (mkdir(template, 0700))
+	return NULL;
+    return template;
+#endif
+}
+
+void
+afstest_rmdtemp(char *path)
+{
+    int code;
+    struct stat st;
+
+    /* Sanity check, only zap directories that look like ours */
+    opr_Assert(strstr(path, "afs_") != NULL);
+    if (getenv("MAKECHECK") == NULL) {
+	/* Don't delete tmp dirs if we're not running under 'make check'. */
+	return;
+    }
+    code = lstat(path, &st);
+    if (code != 0) {
+	/* Given path doesn't exist (or we can't access it?) */
+	return;
+    }
+    if (!S_ISDIR(st.st_mode)) {
+	/* Path isn't a dir; that's weird. Bail out to be on the safe side. */
+	return;
+    }
+    afstest_systemlp("rm", "-rf",
+#if defined(AFS_LINUX_ENV) || defined(AFS_SUN511_ENV)
+		     "--one-file-system",
+#endif
+		     path, (char*)NULL);
+}
+
 static char *
 path_from_tdir(char *env_var, char *filename)
 {

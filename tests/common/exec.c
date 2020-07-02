@@ -32,6 +32,8 @@
 #include <roken.h>
 #include <afs/opr.h>
 
+#include <afs/opr.h>
+
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -195,4 +197,80 @@ is_command(struct afstest_cmdinfo *cmdinfo, const char *format, ...)
     va_end(args);
 
     return ret;
+}
+
+static int
+do_systemvp(char *command, char **argv)
+{
+    pid_t child;
+
+    child = fork();
+    if (child < 0) {
+	sysbail("fork");
+    }
+
+    if (child > 0) {
+	int status = -1;
+	/* parent */
+	if (waitpid(child, &status, 0) <= 0) {
+	    sysbail("waitpid");
+	}
+	return status;
+    }
+
+    execvp(command, argv);
+    sysbail("execvp");
+    exit(1);
+}
+
+/*
+ * This function is mostly the same as system(), in that the given command is
+ * run with the same stdout, stderr, etc, and we return the exit status when it
+ * finishes running. But instead of giving the command as a single string,
+ * interpreted by the shell, the command is given as a list of arguments, like
+ * execlp().
+ *
+ * For example, the following two are equivalent:
+ *
+ * code = afstest_systemlp("echo", "foo", "bar", (char*)NULL);
+ * code = system("echo foo bar");
+ *
+ * Except that with afstest_systemlp, the arguments don't go through the shell,
+ * so you don't need to worry about quoting arguments or escaping shell
+ * metacharacters.
+ */
+int
+afstest_systemlp(char *command, ...)
+{
+    va_list ap;
+    int n_args = 1;
+    int arg_i;
+    int status;
+    char **argv;
+
+    va_start(ap, command);
+    while (va_arg(ap, char*) != NULL) {
+	n_args++;
+    }
+    va_end(ap);
+
+    argv = calloc(n_args + 1, sizeof(argv[0]));
+    opr_Assert(argv != NULL);
+
+    argv[0] = command;
+
+    va_start(ap, command);
+    for (arg_i = 1; arg_i < n_args; arg_i++) {
+	argv[arg_i] = va_arg(ap, char*);
+	opr_Assert(argv[arg_i] != NULL);
+    }
+    va_end(ap);
+
+    /* Note that argv[n_args] is NULL, since we allocated an extra arg in
+     * calloc(), above. */
+
+    status = do_systemvp(command, argv);
+    free(argv);
+
+    return status;
 }

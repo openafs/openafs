@@ -92,6 +92,6 @@ main(int argc, char **argv)
     ok(afsconf_UpToDate(dir), "afsconf_GetLatestKeyByTypes resest UpToDate");
 
 out:
-    afstest_UnlinkTestConfig(dirname);
+    afstest_rmdtemp(dirname);
     return code;
 }

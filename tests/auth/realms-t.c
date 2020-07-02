@@ -258,7 +258,7 @@ test_edges(void)
 	exit(1);
     }
     run_edge_tests(dir);
-    afstest_UnlinkTestConfig(dirname);
+    afstest_rmdtemp(dirname);
 }
 
 void
@@ -275,7 +275,7 @@ test_no_config_files(void)
 	exit(1);
     }
     run_tests(dir, 0, "no config");
-    afstest_UnlinkTestConfig(dirname);
+    afstest_rmdtemp(dirname);
 }
 
 void
@@ -294,7 +294,7 @@ test_with_config_files(void)
 	exit(1);
     }
     run_tests(dir, 2, "config");
-    afstest_UnlinkTestConfig(dirname);
+    afstest_rmdtemp(dirname);
 }
 
 void
@@ -317,7 +317,7 @@ test_set_local_realms(void)
     }
     write_krb_conf(dirname, "SOME.REALM.ORG");
     run_tests(dir, 1, "set realm test");
-    afstest_UnlinkTestConfig(dirname);
+    afstest_rmdtemp(dirname);
 }
 
 void
@@ -353,7 +353,7 @@ test_update_config_files(void)
     code = afsconf_IsLocalRealmMatch(dir, &local, "admin", NULL, "MY.REALM.ORG");
     ok(code == 0 && local == 0, "after update: admin@MY.REALM.ORG");
 
-    afstest_UnlinkTestConfig(dirname);
+    afstest_rmdtemp(dirname);
 }
 
 int

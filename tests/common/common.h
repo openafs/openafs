@@ -24,8 +24,6 @@
 
 /* config.c */
 extern char *afstest_BuildTestConfig(void);
-extern void afstest_UnlinkTestConfig(char *);
-extern char *afstest_mkdtemp(char *template);
 
 struct afsconf_dir;
 extern int afstest_AddDESKeyFile(struct afsconf_dir *dir);
@@ -48,9 +46,12 @@ struct afstest_cmdinfo {
 extern int is_command(struct afstest_cmdinfo *cmdinfo,
 		      const char *format, ...)
 	AFS_ATTRIBUTE_FORMAT(__printf__, 2, 3);
+extern int afstest_systemlp(char *command, ...);
 
 /* files.c */
 
+extern char *afstest_mkdtemp(void);
+extern void afstest_rmdtemp(char *path);
 extern char *afstest_src_path(char *path);
 extern char *afstest_obj_path(char *path);
 

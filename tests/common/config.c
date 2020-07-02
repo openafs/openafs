@@ -31,7 +31,6 @@
 #include <roken.h>
 
 #include <afs/cellconfig.h>
-#include <afs/afsutil.h>
 
 #include <hcrypto/des.h>
 
@@ -48,39 +47,6 @@ openConfigFile(char *dirname, char *filename) {
     file = fopen(path, "w");
     free(path);
     return file;
-}
-
-static void
-unlinkConfigFile(char *dirname, char *filename) {
-    char *path;
-
-    path = afstest_asprintf("%s/%s", dirname, filename);
-    unlink(path);
-    free(path);
-}
-
-/*!
- *  Wrapper for mkdtemp
- */
-
-char *
-afstest_mkdtemp(char *template)
-{
-#if defined(HAVE_MKDTEMP)
-    return mkdtemp(template);
-#else
-    /*
-     * Note that using the following is not a robust replacement
-     * for mkdtemp as there is a possible race condition between
-     * creating the name and creating the directory itself.  The
-     * use of this routine is limited to running tests.
-     */
-    if (mktemp(template) == NULL)
-	return NULL;
-    if (mkdir(template, 0700))
-	return NULL;
-    return template;
-#endif
 }
 
 /*!
@@ -101,10 +67,10 @@ afstest_BuildTestConfig(void) {
     char hostname[255];
     struct in_addr iaddr;
 
-    dir = afstest_asprintf("%s/afs_XXXXXX", gettmpdir());
-
-    if (afstest_mkdtemp(dir) == NULL)
+    dir = afstest_mkdtemp();
+    if (dir == NULL) {
 	goto fail;
+    }
 
     /* Work out which IP address to use in our CellServDB. We figure this out
      * according to the IP address which ubik is most likely to pick for one of
@@ -133,29 +99,6 @@ fail:
     if (dir)
 	free(dir);
     return NULL;
-}
-
-/*!
- * Delete at test configuration directory
- */
-
-void
-afstest_UnlinkTestConfig(char *dir)
-{
-    DIR *dirp;
-    struct dirent *de;
-
-    /* Sanity check, only zap directories that look like ours */
-    if (!strstr(dir, "afs_"))
-	return;
-    if (getenv("MAKECHECK") != NULL) {
-	dirp = opendir(dir);
-	if (!dirp)
-	    return;
-	while ((de = readdir(dirp)))
-	    unlinkConfigFile(dir, de->d_name);
-	rmdir(dir);
-    }
 }
 
 int

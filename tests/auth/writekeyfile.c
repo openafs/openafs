@@ -65,7 +65,7 @@ main(int argc, char **argv)
     close(in);
     close(out);
 
-    afstest_UnlinkTestConfig(dirname);
+    afstest_rmdtemp(dirname);
 
     return 0;
 }

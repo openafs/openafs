@@ -139,6 +139,6 @@ out:
 	is_int(0, code, "Server exited cleanly");
     }
 
-    afstest_UnlinkTestConfig(dirname);
+    afstest_rmdtemp(dirname);
     return ret;
 }

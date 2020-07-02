@@ -561,7 +561,7 @@ int main(int argc, char **argv)
 
     afsconf_Close(dir);
 
-    afstest_UnlinkTestConfig(dirname);
+    afstest_rmdtemp(dirname);
     free(dirname);
     free(keyfile);
 
@@ -587,7 +587,7 @@ int main(int argc, char **argv)
        " ... with the right key");
 
 out:
-    afstest_UnlinkTestConfig(dirname);
+    afstest_rmdtemp(dirname);
 
     return 0;
 }

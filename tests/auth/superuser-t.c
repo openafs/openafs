@@ -489,7 +489,7 @@ int main(int argc, char **argv)
 
 out:
     /* Client and server are both done, so cleanup after everything */
-    afstest_UnlinkTestConfig(dirname);
+    afstest_rmdtemp(dirname);
 
     return ret;
 }
