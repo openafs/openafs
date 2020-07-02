@@ -65,8 +65,12 @@ afs_linux_raw_open(afs_dcache_id_t *ainode)
 
     dp = afs_get_dentry_from_fh(afs_cacheSBp, ainode, cache_fh_len, cache_fh_type,
 		afs_fh_acceptable);
-    if ((!dp) || IS_ERR(dp))
-           osi_Panic("Can't get dentry\n");
+    if ((!dp) || IS_ERR(dp)) {
+	   afs_warn("afs: Cannot get dentry for cache file (code %d). Trying to continue, "
+		    "but AFS accesses may return errors or panic the system\n",
+		    (int) PTR_ERR(dp));
+	   return NULL;
+    }
     tip = dp->d_inode;
     tip->i_flags |= S_NOATIME;	/* Disable updating access times. */
 
@@ -115,8 +119,11 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     AFS_GUNLOCK();
     afile = kmalloc(sizeof(struct osi_file), GFP_NOFS);
     if (!afile) {
-	osi_Panic("osi_UFSOpen: Failed to allocate %d bytes for osi_file.\n",
-		  (int)sizeof(struct osi_file));
+	afs_warn("afs: Failed to allocate memory for opening a cache file. "
+		 "Trying to continue, but AFS access may return errors or panic "
+		 "the system\n");
+	AFS_GLOCK();
+	return NULL;
     }
     memset(afile, 0, sizeof(struct osi_file));
 

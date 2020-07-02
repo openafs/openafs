@@ -2398,7 +2398,11 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
     /* XXX - I suspect we should be locking the inodes before we use them! */
     AFS_GUNLOCK();
     cacheFp = afs_linux_raw_open(&tdc->f.inode);
-    osi_Assert(cacheFp);
+    if (cacheFp == NULL) {
+	/* Problem getting the inode */
+	AFS_GLOCK();
+	goto out;
+    }
     if (!cacheFp->f_dentry->d_inode->i_mapping->a_ops->readpage) {
 	cachefs_noreadpage = 1;
 	AFS_GLOCK();
@@ -2794,8 +2798,10 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 	    afs_PutDCache(tdc);
 	    AFS_GUNLOCK();
 	    tdc = NULL;
-	    if (cacheFp)
+	    if (cacheFp) {
 		filp_close(cacheFp, NULL);
+		cacheFp = NULL;
+	    }
 	}
 
 	if (!tdc) {
@@ -2812,7 +2818,10 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 	    AFS_GUNLOCK();
 	    if (tdc) {
 		cacheFp = afs_linux_raw_open(&tdc->f.inode);
-                osi_Assert(cacheFp);
+		if (cacheFp == NULL) {
+		    /* Problem getting the inode */
+		    goto out;
+		}
 		if (!cacheFp->f_dentry->d_inode->i_mapping->a_ops->readpage) {
 		    cachefs_noreadpage = 1;
 		    goto out;
@@ -2833,7 +2842,7 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
     afs_lru_cache_finalize(&lrupages);
 
 out:
-    if (tdc)
+    if (cacheFp)
 	filp_close(cacheFp, NULL);
 
     afs_pagecopy_put_task(task);
