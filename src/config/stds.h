@@ -200,11 +200,6 @@ struct afsUUID {
 };
 typedef struct afsUUID afsUUID;
 
-/* for now, demand attach fileserver is only support on unix pthreads builds */
-#if defined(DEMAND_ATTACH_ENABLE) && defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
-#define AFS_DEMAND_ATTACH_FS 1
-#endif
-
 #if defined(BUILD_RXGK) && defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
 /* Only build GSS bits of code on non-kernel pthread builds */
 # define AFS_RXGK_GSS_ENV 1
