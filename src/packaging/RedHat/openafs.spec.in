@@ -229,8 +229,7 @@ Summary:        DKMS-ready kernel source for AFS distributed filesystem
 Group:          Development/Kernel
 Provides:       openafs-kernel = %{version}
 Provides: %{name}-kmod = %{version}
-Requires(pre):  dkms
-Requires(pre):  flex
+Requires(pre):  dkms, make, flex
 Requires(post): dkms
 Requires:	%{name}-kmod-common = %{version}
 
