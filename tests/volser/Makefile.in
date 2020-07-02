@@ -10,15 +10,12 @@ MODULE_CFLAGS=-I$(TOP_OBJDIR) -I$(srcdir)/../common/
 
 all check test tests: $(BINS)
 
-MODULE_LIBS = 	../tap/libtap.a \
+MODULE_LIBS = 	$(abs_top_builddir)/tests/common/libafstest_common.la \
 		$(abs_top_builddir)/src/vlserver/liboafs_vldb.la \
 		$(XLIBS)
 
-vos-t: vos-t.o ../common/config.o ../common/servers.o ../common/ubik.o \
-		../common/network.o ../common/misc.o
-	$(LT_LDRULE_static) vos-t.o ../common/config.o ../common/servers.o \
-		../common/ubik.o ../common/network.o ../common/misc.o \
-		$(MODULE_LIBS)
+vos-t: vos-t.o
+	$(LT_LDRULE_static) vos-t.o $(MODULE_LIBS)
 
 clean:
 	$(LT_CLEAN)

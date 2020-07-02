@@ -5,12 +5,13 @@ tapdir=$(srcdir)/../../src/external/c-tap-harness/tests/tap
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-objects = basic.o
+LT_objs = basic.lo
 
-all check test tests: libtap.a basic.h macros.h libtap.sh
+all check test tests: libafstest_tap.la basic.h macros.h libtap.sh
 
-basic.o: $(tapdir)/basic.c $(tapdir)/basic.h
-	$(CC) $(AFS_CFLAGS) @CFLAGS_NOERROR@ -I$(tapdir)/../.. -c $(tapdir)/basic.c
+CFLAGS_basic.lo = @CFLAGS_NOERROR@ -I$(tapdir)/../..
+basic.lo: $(tapdir)/basic.c $(tapdir)/basic.h
+	$(LT_CCRULE) $(tapdir)/basic.c
 
 basic.h: $(tapdir)/basic.h
 	cp $(tapdir)/basic.h basic.h
@@ -21,12 +22,11 @@ macros.h: $(tapdir)/macros.h
 libtap.sh: $(tapdir)/libtap.sh
 	cp $(tapdir)/libtap.sh libtap.sh
 
-libtap.a: $(objects)
-	$(RM) -f libtap.a
-	$(AR) crv libtap.a $(objects)
-	$(RANLIB) libtap.a
-
-install:
+# Use LT_LDLIB_shlib_internal, since this is an internal-only library (just
+# used for the tests), so we don't need a symbol export list.
+libafstest_tap.la: $(LT_objs)
+	$(LT_LDLIB_shlib_internal) $(LT_objs)
 
 clean distclean:
-	$(RM) -f *.o *.a core basic.h macros.h libtap.sh
+	$(LT_CLEAN)
+	$(RM) -f *.o basic.h macros.h libtap.sh

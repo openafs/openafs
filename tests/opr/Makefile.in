@@ -5,36 +5,37 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 MODULE_CFLAGS = -I$(TOP_OBJDIR)
 
-LIBS=../tap/libtap.a $(abs_top_builddir)/src/opr/liboafs_opr.la
+LIBS=	$(abs_top_builddir)/tests/common/libafstest_common.la \
+	$(abs_top_builddir)/src/opr/liboafs_opr.la
 
 BINS = cache-t dict-t fmt-t jhash-t queues-t rbtree-t softsig-helper time-t \
        uuid-t
 
 all check test tests: $(BINS)
 
-cache-t: cache-t.o
+cache-t: cache-t.o $(LIBS)
 	$(LT_LDRULE_static) cache-t.o $(LIBS) $(XLIBS)
 
-dict-t: dict-t.o
+dict-t: dict-t.o $(LIBS)
 	$(LT_LDRULE_static) dict-t.o $(LIBS) $(XLIBS)
 
 fmt-t: fmt-t.o
 	$(LT_LDRULE_static) fmt-t.o $(LIBS) $(XLIBS)
 
-queues-t: queues-t.o
-	$(LT_LDRULE_static) queues-t.o ../tap/libtap.a $(XLIBS)
+queues-t: queues-t.o $(LIBS)
+	$(LT_LDRULE_static) queues-t.o $(LIBS) $(XLIBS)
 
 rbtree-t: rbtree-t.o $(LIBS)
-	$(LT_LDRULE_static) rbtree-t.o ../tap/libtap.a $(LIBS) $(XLIBS)
+	$(LT_LDRULE_static) rbtree-t.o $(LIBS) $(XLIBS)
 
 jhash-t: jhash-t.o
-	$(LT_LDRULE_static) jhash-t.o ../tap/libtap.a $(XLIBS)
+	$(LT_LDRULE_static) jhash-t.o $(LIBS) $(XLIBS)
 
 time-t: time-t.o
-	$(LT_LDRULE_static) time-t.o ../tap/libtap.a $(XLIBS)
+	$(LT_LDRULE_static) time-t.o $(LIBS) $(XLIBS)
 
 uuid-t: uuid-t.o
-	$(LT_LDRULE_static) uuid-t.o ../tap/libtap.a $(LIBS) $(XLIBS)
+	$(LT_LDRULE_static) uuid-t.o $(LIBS) $(XLIBS)
 
 softsig-helper: softsig-helper.o $(LIBS)
 	$(LT_LDRULE_static) softsig-helper.o $(LIBS) $(XLIBS)

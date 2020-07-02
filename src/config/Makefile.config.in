@@ -251,18 +251,21 @@ LT_current=0
 LT_revision=0
 LT_age=0
 
-# Basic rule to link a shared library.
-LT_LDLIB_shlib_common=$(LIBTOOL) --quiet --mode=link --tag=CC \
+# Basic rule to link a shared library. Only use LT_LDLIB_shlib_internal
+# directly when creating an internal-only library that is not intended for
+# public use (and so does not need an export symbol list). All other libraries
+# should be using one of the other LT_LDLIB_shlib* rules.
+LT_LDLIB_shlib_internal=$(LIBTOOL) --quiet --mode=link --tag=CC \
 		      $(LD_WRAPPER) $(MT_CC) -rpath $(libdir) \
 		      $(PTH_LDFLAGS) $(PTH_CFLAGS) $(LDFLAGS_$(@)) \
 		      -o $@ \
 		      -version-info $(LT_current):$(LT_revision):$(LT_age)
 
-LT_LDLIB_shlib=$(LT_LDLIB_shlib_common) -export-symbols $(srcdir)/$@.sym
+LT_LDLIB_shlib=$(LT_LDLIB_shlib_internal) -export-symbols $(srcdir)/$@.sym
 
-LT_LDLIB_shlib_only=$(LT_LDLIB_shlib_common) -shared -export-symbols $(srcdir)/$@.sym
+LT_LDLIB_shlib_only=$(LT_LDLIB_shlib_internal) -shared -export-symbols $(srcdir)/$@.sym
 
-LT_LDLIB_shlib_missing=$(LT_LDLIB_shlib_common) -shared -export-symbols-regex \
+LT_LDLIB_shlib_missing=$(LT_LDLIB_shlib_internal) -shared -export-symbols-regex \
 	"($$(sed -e 's/^/^/' -e 's/$$/$$|/' -e '$$ s/|$$//' $(srcdir)/$@.sym | \
 	tr -d '\n'))"
 

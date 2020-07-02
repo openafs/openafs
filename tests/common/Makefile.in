@@ -1,12 +1,23 @@
 
 srcdir=@srcdir@
-abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
+include @TOP_OBJDIR@/src/config/Makefile.libtool
 
 MODULE_CFLAGS=-I$(TOP_OBJDIR)
 
-all check test tests:	config.o servers.o ubik.o rxkad.o network.o
+LT_objs = config.lo misc.lo network.lo rxkad.lo servers.lo ubik.lo
+LT_libs = $(LIB_rfc3961) $(LIB_roken)
+LT_deps = $(top_builddir)/tests/tap/libafstest_tap.la \
+	  $(top_builddir)/src/util/liboafs_util.la
+
+all check test tests: libafstest_common.la
+
+# This library is just used internally for our tests, so use
+# LT_LDLIB_shlib_internal so we don't need to manage a .sym export list.
+libafstest_common.la: $(LT_objs) $(LT_deps)
+	$(LT_LDLIB_shlib_internal) $(LT_objs) $(LT_deps) $(LT_libs)
 
 clean:
+	$(LT_CLEAN)
 	rm -f *.o

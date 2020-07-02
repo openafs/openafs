@@ -7,10 +7,9 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 MODULE_CFLAGS = -I$(TOP_OBJDIR)
 
-LIBS = ../tap/libtap.a \
+LIBS = $(abs_top_builddir)/tests/common/libafstest_common.la \
        $(abs_top_builddir)/src/cmd/liboafs_cmd.la \
        $(abs_top_builddir)/src/comerr/liboafs_comerr.la \
-       $(abs_top_builddir)/src/opr/liboafs_opr.la \
        $(abs_top_builddir)/src/opr/liboafs_opr.la
 
 BINS = command-t
