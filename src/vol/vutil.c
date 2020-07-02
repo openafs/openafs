@@ -745,9 +745,9 @@ _VHandleVolumeHeader(struct DiskPartition64 *dp, VWalkVolFunc volfunc,
 	OS_CLOSE(fd);
     }
 
-#ifdef AFSFS_DEMAND_ATTACH_FS
+#ifdef AFS_DEMAND_ATTACH_FS
     if (locked) {
-	VPartHeaderUnlock(dp);
+	VPartHeaderUnlock(dp, WRITE_LOCK);
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
@@ -797,8 +797,9 @@ _VHandleVolumeHeader(struct DiskPartition64 *dp, VWalkVolFunc volfunc,
  * This function looks through all of the .vol headers on a partition, reads in
  * each header, and calls the supplied volfunc function on each one. If the
  * header cannot be read (or volfunc returns a positive error code), DAFS will
- * VPartHeaderExLock() and retry. If that fails, or if we are non-DAFS, errfunc
- * will be called (which typically will unlink the problem volume header).
+ * VPartHeaderLock(WRITE_LOCK) and retry. If that fails, or if we are non-DAFS,
+ * errfunc will be called (which typically will unlink the problem volume
+ * header).
  *
  * If volfunc returns a negative error code, walking the partition will stop
  * and we will return an error immediately.
@@ -842,7 +843,7 @@ VWalkVolumeHeaders(struct DiskPartition64 *dp, const char *partpath,
 
 	    snprintf(name, VMAXPATHLEN, "%s" OS_DIRSEP "%s", partpath, dentry->d_name);
 
-	    code = _VHandleVolumeHeader(dp, volfunc, name, &diskHeader, -1, rock);
+	    code = _VHandleVolumeHeader(dp, volfunc, name, &diskHeader, 0, rock);
 	    if (code < 0) {
 		/* fatal error, stop walking */
 		goto done;
