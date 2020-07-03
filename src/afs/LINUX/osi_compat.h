@@ -314,9 +314,22 @@ zero_user_segment(struct page *pp, unsigned int from1, unsigned int to1)
 }
 #endif
 
-#ifndef HAVE_LINUX_KERNEL_SETSOCKOPT
+#if defined(HAVE_LINUX_IP_SOCK_SET)
+# include <net/ip.h>
+/* ip_sock_set_* introduced in linux 5.8 */
+static inline void
+afs_linux_sock_set_mtu_discover(struct socket *sockp, int pmtu)
+{
+    ip_sock_set_mtu_discover(sockp->sk, pmtu);
+}
+static inline void
+afs_linux_sock_set_recverr(struct socket *sockp)
+{
+    ip_sock_set_recverr(sockp->sk);
+}
+#else
+# if !defined(HAVE_LINUX_KERNEL_SETSOCKOPT)
 /* Available from 2.6.19 */
-
 static inline int
 kernel_setsockopt(struct socket *sockp, int level, int name, char *val,
 		  unsigned int len) {
@@ -329,20 +342,22 @@ kernel_setsockopt(struct socket *sockp, int level, int name, char *val,
 
     return ret;
 }
+# endif /* !HAVE_LINUX_KERNEL_SETSOCKOPT */
 
-static inline int
-kernel_getsockopt(struct socket *sockp, int level, int name, char *val,
-		  int *len) {
-    mm_segment_t old_fs = get_fs();
-    int ret;
-
-    set_fs(get_ds());
-    ret = sockp->ops->getsockopt(sockp, level, name, val, len);
-    set_fs(old_fs);
-
-    return ret;
+static inline void
+afs_linux_sock_set_mtu_discover(struct socket *sockp, int pmtu)
+{
+    kernel_setsockopt(sockp, SOL_IP, IP_MTU_DISCOVER, (char *)&pmtu,
+		      sizeof(pmtu));
 }
-#endif
+static inline void
+afs_linux_sock_set_recverr(struct socket *sockp)
+{
+    int recverr = 1;
+    kernel_setsockopt(sockp, SOL_IP, IP_RECVERR, (char *)&recverr,
+		      sizeof(recverr));
+}
+#endif /* !HAVE_LINUX_IP_SOCK_SET */
 
 #ifdef HAVE_TRY_TO_FREEZE
 static inline int

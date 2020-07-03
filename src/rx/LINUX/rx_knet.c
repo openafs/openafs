@@ -34,7 +34,6 @@
 #include <linux/errqueue.h>
 #include <linux/icmp.h>
 #endif
-
 #include "osi_compat.h"
 
 /* rxk_NewSocket
@@ -76,14 +75,10 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 	return NULL;
     }
 
-    kernel_setsockopt(sockp, SOL_IP, IP_MTU_DISCOVER, (char *)&pmtu,
-		      sizeof(pmtu));
+    afs_linux_sock_set_mtu_discover(sockp, pmtu);
+
 #ifdef AFS_RXERRQ_ENV
-    {
-	int recverr = 1;
-	kernel_setsockopt(sockp, SOL_IP, IP_RECVERR, (char *)&recverr,
-	                  sizeof(recverr));
-    }
+    afs_linux_sock_set_recverr(sockp);
 #endif
     return (osi_socket *)sockp;
 }
