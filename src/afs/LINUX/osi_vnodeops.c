@@ -71,7 +71,7 @@ extern struct vcache *afs_globalVp;
 
 /* Handle interfacing with Linux's pagevec/lru facilities */
 
-#if defined(HAVE_LINUX_LRU_CACHE_ADD_FILE)
+#if defined(HAVE_LINUX_LRU_CACHE_ADD_FILE) || defined(HAVE_LINUX_LRU_CACHE_ADD)
 
 /*
  * Linux's lru_cache_add_file provides a simplified LRU interface without
@@ -90,7 +90,13 @@ afs_lru_cache_init(struct afs_lru_pages *alrupages)
 static inline void
 afs_lru_cache_add(struct afs_lru_pages *alrupages, struct page *page)
 {
+# if defined(HAVE_LINUX_LRU_CACHE_ADD)
+    lru_cache_add(page);
+# elif defined(HAVE_LINUX_LRU_CACHE_ADD_FILE)
     lru_cache_add_file(page);
+# else
+#  error need a kernel function to add a page to the kernel lru cache
+# endif
 }
 
 static inline void

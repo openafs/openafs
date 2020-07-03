@@ -147,9 +147,16 @@ AC_CHECK_LINUX_FUNC([inode_lock],
                     [inode_lock(NULL);])
 
 dnl lru_cache_add_file added to Linux 2.6.28.
+dnl                    removed in Linux 5.8
 AC_CHECK_LINUX_FUNC([lru_cache_add_file],
                     [#include <linux/swap.h>],
                     [lru_cache_add_file(NULL);])
+
+dnl lru_cache_add exported in Linux 5.8
+dnl    replaces lru_cache_add_file
+AC_CHECK_LINUX_FUNC([lru_cache_add],
+                    [#include <linux/swap.h>],
+                    [lru_cache_add(NULL);])
 
 dnl Linux 5.8 replaced kernel_setsockopt with helper functions
 dnl e.g. ip_sock_set_mtu_discover, ip_sock_set_recverr
