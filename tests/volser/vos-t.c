@@ -63,21 +63,14 @@ TestListAddrs(struct ubik_client *client, char *dirname)
     }
     pid = fork();
     if (pid == 0) {
-	char *build, *binPath;
+	char *vos;
 
 	dup2(outpipe[1], STDOUT_FILENO); /* Redirect stdout into pipe */
 	close(outpipe[0]);
 	close(outpipe[1]);
 
-	build = getenv("C_TAP_BUILD");
-	if (build == NULL)
-	    build = "..";
-
-	if (asprintf(&binPath, "%s/../src/volser/vos", build) < 0) {
-	    fprintf(stderr, "Out of memory building vos arguments\n");
-	    exit(1);
-	}
-	execl(binPath, "vos",
+	vos = afstest_obj_path("src/volser/vos");
+	execl(vos, "vos",
 	      "listaddrs", "-config", dirname, "-noauth", "-noresolve", NULL);
 	exit(1);
     }

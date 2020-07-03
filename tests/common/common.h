@@ -30,6 +30,11 @@ extern char *afstest_mkdtemp(char *template);
 struct afsconf_dir;
 extern int afstest_AddDESKeyFile(struct afsconf_dir *dir);
 
+/* files.c */
+
+extern char *afstest_src_path(char *path);
+extern char *afstest_obj_path(char *path);
+
 /* rxkad.c */
 
 extern struct rx_securityClass

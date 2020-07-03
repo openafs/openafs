@@ -34,6 +34,7 @@
 #include <afs/cmd.h>
 
 #include <tests/tap/basic.h>
+#include "common.h"
 
 enum cmdOptions {
    copt_flag = 0,
@@ -361,19 +362,10 @@ main(int argc, char **argv)
     cmd_FreeArgv(tv);
 
     /* Now, try adding a configuration file into the mix */
-    if (getenv("C_TAP_SOURCE") == NULL)
-	path = strdup("test1.conf");
-    else {
-	if (asprintf(&path, "%s/cmd/test1.conf", getenv("C_TAP_SOURCE")) < 0)
-	    path = NULL;
-    }
-    if (path != NULL) {
-	cmd_SetCommandName("test");
-	code = cmd_OpenConfigFile(path);
-	is_int(0, code, "cmd_OpenConfigFile succeeds");
-    } else {
-	skip("no memory to build config file path");
-    }
+    path = afstest_src_path("tests/cmd/test1.conf");
+    cmd_SetCommandName("test");
+    code = cmd_OpenConfigFile(path);
+    is_int(0, code, "cmd_OpenConfigFile succeeds");
 
     code = cmd_ParseLine("-first 1", tv, &tc, 100);
     is_int(0, code, "cmd_ParseLine succeeds");

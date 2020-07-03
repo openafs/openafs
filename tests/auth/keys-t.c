@@ -126,14 +126,7 @@ int main(int argc, char **argv)
 
     keyfile = afstest_asprintf("%s/KeyFile", dirname);
 
-    /* Work out the path to our KeyFile. If the test harness hasn't set
-     * the C_TAP_SOURCE environment variable, then assume it is in our CWD */
-    if (getenv("C_TAP_SOURCE") == NULL) {
-	keyfilesrc = strdup("KeyFile");
-    } else {
-	if (asprintf(&keyfilesrc, "%s/auth/KeyFile", getenv("C_TAP_SOURCE")) == -1)
-	    goto out;
-    }
+    keyfilesrc = afstest_src_path("tests/auth/KeyFile");
 
     /* First, copy in a known keyfile */
     code = copy(keyfilesrc, keyfile);

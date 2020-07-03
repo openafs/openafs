@@ -31,15 +31,10 @@ afstest_StartVLServer(char *dirname, pid_t *serverPid)
 	exit(1);
 	/* Argggggghhhhh */
     } else if (pid == 0) {
-	char *binPath, *logPath, *dbPath, *build;
+	char *binPath, *logPath, *dbPath;
 
 	/* Child */
-	build = getenv("C_TAP_BUILD");
-
-	if (build == NULL)
-	    build = "..";
-
-	binPath = afstest_asprintf("%s/../src/tvlserver/vlserver", build);
+	binPath = afstest_obj_path("src/tvlserver/vlserver");
 	logPath = afstest_asprintf("%s/VLLog", dirname);
 	dbPath = afstest_asprintf("%s/vldb", dirname);
 
