@@ -121,7 +121,9 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
     code = super_setup_bdi(sb);
     if (code)
         goto out;
+# if defined(STRUCT_BACKING_DEV_INFO_HAS_NAME)
     sb->s_bdi->name = "openafs";
+# endif
     sb->s_bdi->ra_pages = 32;
 #else
     /* used for inodes backing_dev_info field, also */
