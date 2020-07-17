@@ -216,13 +216,7 @@ struct idx_map_entry_t {
  * make them fairly large so we don't get
  * false positives
  */
-#define FS_STATE_H_MAX_UUID_HASH_CHAIN_LEN    100000     /* max elements in a host uuid-hash chain */
-#define FS_STATE_H_MAX_ADDR_HASH_CHAIN_LEN    2000000    /* max elements in a host ipv4-hash chain */
-#define FS_STATE_FE_MAX_HASH_CHAIN_LEN        100000     /* max elements in a FE fid-hash chain */
-#define FS_STATE_FCB_MAX_LIST_LEN             100000     /* max elements in a per-FE CB list */
-#define FS_STATE_HCB_MAX_LIST_LEN             100000     /* max elements in a per-host CB list */
-#define FS_STATE_TCB_MAX_LIST_LEN             100000     /* max elements in a per-timeout CB list */
-
+#define FS_STATE_H_MAX_LIST_LEN		    100000000	/* max number of hosts (100M) */
 
 /*
  * main state serialization state structure

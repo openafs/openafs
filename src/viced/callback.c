@@ -1942,7 +1942,9 @@ cb_stateVerifyFEHash(struct fs_dump_state * state)
 {
     int ret = 0, i;
     struct FileEntry * fe;
-    afs_uint32 fei, chain_len;
+    afs_uint32 fei, chain_len, max_FEs;
+
+    max_FEs = cbstuff.nblks;
 
     for (i = 0; i < FEHASH_SIZE; i++) {
 	chain_len = 0;
@@ -1957,9 +1959,9 @@ cb_stateVerifyFEHash(struct fs_dump_state * state)
 	    if (cb_stateVerifyFE(state, fe)) {
 		ret = 1;
 	    }
-	    if (chain_len > FS_STATE_FE_MAX_HASH_CHAIN_LEN) {
+	    if (chain_len > max_FEs) {
 		ViceLog(0, ("cb_stateVerifyFEHash: error: hash chain %d length exceeds %d; assuming there's a loop\n",
-			    i, FS_STATE_FE_MAX_HASH_CHAIN_LEN));
+			    i, max_FEs));
 		ret = 1;
 		break;
 	    }
@@ -1996,9 +1998,10 @@ static int
 cb_stateVerifyFCBList(struct fs_dump_state * state, struct FileEntry * fe)
 {
     int ret = 0;
-    afs_uint32 cbi, fei, chain_len = 0;
+    afs_uint32 cbi, fei, chain_len = 0, max_CBs;
     struct CallBack * cb;
 
+    max_CBs = cbstuff.nblks;
     fei = fetoi(fe);
 
     for (cbi = fe->firstcb, cb = itocb(cbi);
@@ -2015,9 +2018,9 @@ cb_stateVerifyFCBList(struct fs_dump_state * state, struct FileEntry * fe)
 			fei, cb->fhead));
 	    ret = 1;
 	}
-	if (chain_len > FS_STATE_FCB_MAX_LIST_LEN) {
+	if (chain_len > max_CBs) {
 	    ViceLog(0, ("cb_stateVerifyFCBList: error: list length exceeds %d (fei=%d); assuming there's a loop\n",
-			FS_STATE_FCB_MAX_LIST_LEN, fei));
+			max_CBs, fei));
 	    ret = 1;
 	    goto done;
 	}
@@ -2038,9 +2041,10 @@ int
 cb_stateVerifyHCBList(struct fs_dump_state * state, struct host * host)
 {
     int ret = 0;
-    afs_uint32 hi, chain_len, cbi;
+    afs_uint32 hi, chain_len, cbi, max_CBs;
     struct CallBack *cb, *ncb;
 
+    max_CBs = cbstuff.nblks;
     hi = h_htoi(host);
     chain_len = 0;
 
@@ -2076,9 +2080,10 @@ cb_stateVerifyHCBList(struct fs_dump_state * state, struct host * host)
 	    ret = 1;
 	    goto done;
 	}
-	if (chain_len > FS_STATE_HCB_MAX_LIST_LEN) {
+
+	if (chain_len > max_CBs) {
 	    ViceLog(0, ("cb_stateVerifyHCBList: error: list length exceeds %d (h->index=%d); assuming there's a loop\n",
-			FS_STATE_HCB_MAX_LIST_LEN, hi));
+			max_CBs, hi));
 	    ret = 1;
 	    goto done;
 	}
@@ -2093,8 +2098,10 @@ static int
 cb_stateVerifyTimeoutQueues(struct fs_dump_state * state)
 {
     int ret = 0, i;
-    afs_uint32 cbi, chain_len;
+    afs_uint32 cbi, chain_len, max_CBs;
     struct CallBack *cb, *ncb;
+
+    max_CBs = cbstuff.nblks;
 
     for (i = 0; i < CB_NUM_TIMEOUT_QUEUES; i++) {
 	chain_len = 0;
@@ -2136,9 +2143,10 @@ cb_stateVerifyTimeoutQueues(struct fs_dump_state * state)
 		ret = 1;
 		break;
 	    }
-	    if (chain_len > FS_STATE_TCB_MAX_LIST_LEN) {
+
+	    if (chain_len > max_CBs) {
 		ViceLog(0, ("cb_stateVerifyTimeoutQueues: list length exceeds %d (tindex=%d); assuming there's a loop\n",
-			    FS_STATE_TCB_MAX_LIST_LEN, i));
+			    max_CBs, i));
 		ret = 1;
 		break;
 	    }
