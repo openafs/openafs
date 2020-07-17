@@ -3285,6 +3285,21 @@ h_stateVerify(struct fs_dump_state * state)
 }
 
 static int
+h_stateVerifyMaxHosts(struct fs_dump_state * state, int *a_maxHosts)
+{
+    if (state->mode == FS_STATE_DUMP_MODE) {
+	*a_maxHosts = hostCount;	/* state not fully populated yet */
+	return 0;
+    } else if (state->mode == FS_STATE_LOAD_MODE) {
+	*a_maxHosts = state->h_hdr->records;
+	return 0;
+    } else {
+	ViceLog(0, ("h_stateVerifyMaxHosts: bad state mode %d\n", state->mode));
+	return 1;
+    }
+}
+
+static int
 h_stateVerifyHost(struct host * h, void* rock)
 {
     struct fs_dump_state *state = (struct fs_dump_state *)rock;
@@ -3344,7 +3359,13 @@ h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h,
     struct h_AddrHashChain *chain;
     int index = h_HashIndex(addr);
     char tmp[16];
-    int chain_len = 0;
+    int chain_len = 0, maxHosts;
+
+    ret = h_stateVerifyMaxHosts(state, &maxHosts);
+    if (ret != 0) {
+	ret = 1;
+	goto done;
+    }
 
     for (chain = hostAddrHashTable[index]; chain; chain = chain->next) {
 	host = chain->hostPtr;
@@ -3375,9 +3396,9 @@ h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h,
 	    found = 1;
 	    break;
 	}
-	if (chain_len > FS_STATE_H_MAX_ADDR_HASH_CHAIN_LEN) {
+	if (chain_len > maxHosts) {
 	    ViceLog(0, ("h_stateVerifyAddrHash: error: hash chain length exceeds %d; assuming there's a loop\n",
-			FS_STATE_H_MAX_ADDR_HASH_CHAIN_LEN));
+			maxHosts));
 	    ret = 1;
 	    goto done;
 	}
@@ -3416,7 +3437,13 @@ h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h)
     afsUUID * uuidp = &h->z.interface->uuid;
     int index = h_UuidHashIndex(uuidp);
     struct uuid_fmtbuf tmp;
-    int chain_len = 0;
+    int chain_len = 0, maxHosts;
+
+    ret = h_stateVerifyMaxHosts(state, &maxHosts);
+    if (ret != 0) {
+	ret = 1;
+	goto done;
+    }
 
     for (chain = hostUuidHashTable[index]; chain; chain = chain->next) {
 	host = chain->hostPtr;
@@ -3436,9 +3463,9 @@ h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h)
 	    }
 	    goto done;
 	}
-	if (chain_len > FS_STATE_H_MAX_UUID_HASH_CHAIN_LEN) {
+	if (chain_len > maxHosts) {
 	    ViceLog(0, ("h_stateVerifyUuidHash: error: hash chain length exceeds %d; assuming there's a loop\n",
-			FS_STATE_H_MAX_UUID_HASH_CHAIN_LEN));
+			maxHosts));
 	    ret = 1;
 	    goto done;
 	}
@@ -3489,6 +3516,11 @@ h_stateCheckHeader(struct host_state_header * hdr)
     }
     else if (hdr->stamp.version != HOST_STATE_VERSION) {
 	ViceLog(0, ("check_host_state_header: unknown version number\n"));
+	ret = 1;
+    }
+    else if (hdr->records > FS_STATE_H_MAX_LIST_LEN) {
+	ViceLog(0, ("check_host_state_header: saved host state too large "
+		"(%d > %d)\n", hdr->records, FS_STATE_H_MAX_LIST_LEN));
 	ret = 1;
     }
     return ret;
