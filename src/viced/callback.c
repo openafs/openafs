@@ -2157,7 +2157,6 @@ cb_stateSaveTimeouts(struct fs_dump_state * state)
 
     AssignInt64(state->eof_offset, &state->cb_hdr->timeout_offset);
 
-    memset(state->cb_timeout_hdr, 0, sizeof(struct callback_state_fehash_header));
     state->cb_timeout_hdr->magic = CALLBACK_STATE_TIMEOUT_MAGIC;
     state->cb_timeout_hdr->records = CB_NUM_TIMEOUT_QUEUES;
     state->cb_timeout_hdr->len = sizeof(struct callback_state_timeout_header) +
@@ -2230,7 +2229,6 @@ cb_stateSaveFEHash(struct fs_dump_state * state)
 
     AssignInt64(state->eof_offset, &state->cb_hdr->fehash_offset);
 
-    memset(state->cb_fehash_hdr, 0, sizeof(struct callback_state_fehash_header));
     state->cb_fehash_hdr->magic = CALLBACK_STATE_FEHASH_MAGIC;
     state->cb_fehash_hdr->records = FEHASH_SIZE;
     state->cb_fehash_hdr->len = sizeof(struct callback_state_fehash_header) +
