@@ -230,8 +230,8 @@ struct idx_map_entry_t {
 
 struct fs_dump_state {
     enum {
-	FS_STATE_DUMP_MODE,
-	FS_STATE_LOAD_MODE
+	FS_STATE_DUMP_MODE = 0x1,
+	FS_STATE_LOAD_MODE = 0x2
     } mode;
     struct {
 	byte do_host_restore;              /* whether host restore should be done */

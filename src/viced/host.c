@@ -3394,10 +3394,15 @@ h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h,
 	                tmp, (unsigned)htons(port)));
 	    ret = 1;
 	    goto done;
-	} else {
+	} else if (state->mode == FS_STATE_DUMP_MODE) {
 	    ViceLog(0, ("h_stateVerifyAddrHash: warning: addr %s:%u not found in hash\n",
 	                tmp, (unsigned)htons(port)));
 	    state->flags.warnings_generated = 1;
+	} else {
+	    ViceLog(0, ("h_stateVerifyAddrHash: error: bad state mode %d\n",
+			state->mode));
+	    ret = 1;
+	    goto done;
 	}
     }
 
@@ -3449,9 +3454,14 @@ h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h)
 	ViceLog(0, ("h_stateVerifyUuidHash: error: uuid %s not found in hash\n", tmp));
 	ret = 1;
 	goto done;
-    } else {
+    } else if (state->mode == FS_STATE_DUMP_MODE) {
 	ViceLog(0, ("h_stateVerifyUuidHash: warning: uuid %s not found in hash\n", tmp));
 	state->flags.warnings_generated = 1;
+    } else {
+	ViceLog(0, ("h_stateVerifyUuidHash: bad state mode %d\n",
+		    state->mode));
+	ret = 1;
+	goto done;
     }
 
  done:

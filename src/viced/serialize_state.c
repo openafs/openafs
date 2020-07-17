@@ -123,6 +123,8 @@ fs_stateSave(void)
 	goto done;
     }
 
+    state.mode = FS_STATE_DUMP_MODE;
+
     /* XXX
      * on busy servers, these checks will inevitably fail since stuff drops H_LOCK
      * all over the place (with structs left in inconsistent states) while RPCs to
@@ -328,7 +330,6 @@ fs_stateCreateDump(struct fs_dump_state * state)
     }
 
     state->fd = fd;
-    state->mode = FS_STATE_DUMP_MODE;
     memset(state->hdr, 0, sizeof(struct fs_state_header));
     fs_stateIncEOF(state, sizeof(struct fs_state_header));
 
@@ -769,7 +770,7 @@ fs_stateMapFile(struct fs_dump_state * state, int preserve_flag )
 	flags = PROT_WRITE;
 	break;
     default:
-	ViceLog(0, ("fs_stateMapFile: invalid dump state mode\n"));
+	ViceLog(0, ("fs_stateMapFile: invalid dump state mode %d\n", state->mode));
 	return 1;
     }
 
