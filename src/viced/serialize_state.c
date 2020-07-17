@@ -1015,13 +1015,11 @@ fs_stateAlloc(struct fs_dump_state * state)
     memset(state, 0, sizeof(struct fs_dump_state));
     state->fd = -1;
     state->fn = (char *)AFSDIR_SERVER_FSSTATE_FILEPATH;
-    state->hdr = malloc(sizeof(struct fs_state_header));
-    state->h_hdr = malloc(sizeof(struct host_state_header));
-    state->cb_hdr = malloc(sizeof(struct callback_state_header));
-    state->cb_timeout_hdr =
-	malloc(sizeof(struct callback_state_timeout_header));
-    state->cb_fehash_hdr =
-	malloc(sizeof(struct callback_state_fehash_header));
+    state->hdr = calloc(1, sizeof(*state->hdr));
+    state->h_hdr = calloc(1, sizeof(*state->h_hdr));
+    state->cb_hdr = calloc(1, sizeof(*state->cb_hdr));
+    state->cb_timeout_hdr = calloc(1, sizeof(*state->cb_timeout_hdr));
+    state->cb_fehash_hdr = calloc(1, sizeof(*state->cb_fehash_hdr));
     if ((state->hdr == NULL) || (state->h_hdr == NULL) || (state->cb_hdr == NULL) ||
 	(state->cb_timeout_hdr == NULL) || (state->cb_fehash_hdr == NULL))
 	ret = 1;
