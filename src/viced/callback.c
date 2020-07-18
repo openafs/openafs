@@ -1789,32 +1789,38 @@ cb_stateRestore(struct fs_dump_state * state)
 
     if (fs_stateReadHeader(state, &state->hdr->cb_offset, state->cb_hdr,
 			   sizeof(struct callback_state_header))) {
+	ViceLog(0, ("cb_stateRestore: failed to read cb_hdr\n"));
 	ret = 1;
 	goto done;
     }
 
     if (cb_stateCheckHeader(state->cb_hdr)) {
+	ViceLog(0, ("cb_stateRestore: failed check of cb_hdr\n"));
 	ret = 1;
 	goto done;
     }
 
     if (cb_stateAllocMap(state)) {
+	ViceLog(0, ("cb_stateRestore: failed to allocate map\n"));
 	ret = 1;
 	goto done;
     }
 
     if (cb_stateRestoreTimeouts(state)) {
+	ViceLog(0, ("cb_stateRestore: failed to restore timeouts\n"));
 	ret = 1;
 	goto done;
     }
 
     if (cb_stateRestoreFEHash(state)) {
+	ViceLog(0, ("cb_stateRestore: failed to restore FE HashTable slab\n"));
 	ret = 1;
 	goto done;
     }
 
     /* restore FEs and CBs from disk */
     if (cb_stateRestoreFEs(state)) {
+	ViceLog(0, ("cb_stateRestore: failed to restore FEs and CBs\n"));
 	ret = 1;
 	goto done;
     }
@@ -2199,15 +2205,20 @@ cb_stateRestoreTimeouts(struct fs_dump_state * state)
     if (fs_stateReadHeader(state, &state->cb_hdr->timeout_offset,
 			   state->cb_timeout_hdr,
 			   sizeof(struct callback_state_timeout_header))) {
+	ViceLog(0, ("cb_stateRestoreTimeouts: failed to read cb_timeout_hdr\n"));
 	ret = 1;
 	goto done;
     }
 
     if (state->cb_timeout_hdr->magic != CALLBACK_STATE_TIMEOUT_MAGIC) {
+	ViceLog(0, ("cb_stateRestoreTimeouts: bad header magic 0x%x != 0x%x\n",
+		state->cb_timeout_hdr->magic, CALLBACK_STATE_TIMEOUT_MAGIC));
 	ret = 1;
 	goto done;
     }
     if (state->cb_timeout_hdr->records != CB_NUM_TIMEOUT_QUEUES) {
+	ViceLog(0, ("cb_stateRestoreTimeouts: records %d != %d\n",
+		state->cb_timeout_hdr->records, CB_NUM_TIMEOUT_QUEUES));
 	ret = 1;
 	goto done;
     }
@@ -2216,11 +2227,16 @@ cb_stateRestoreTimeouts(struct fs_dump_state * state)
 
     if (state->cb_timeout_hdr->len !=
 	(sizeof(struct callback_state_timeout_header) + len)) {
+	ViceLog(0, ("cb_stateRestoreTimeouts: header len %d != %d + %d\n",
+		state->cb_timeout_hdr->len,
+		(int)sizeof(struct callback_state_timeout_header),
+		len));
 	ret = 1;
 	goto done;
     }
 
     if (fs_stateRead(state, timeout, len)) {
+	ViceLog(0, ("cb_stateRestoreTimeouts: failed read of timeout table\n"));
 	ret = 1;
 	goto done;
     }
@@ -2271,15 +2287,20 @@ cb_stateRestoreFEHash(struct fs_dump_state * state)
     if (fs_stateReadHeader(state, &state->cb_hdr->fehash_offset,
 			   state->cb_fehash_hdr,
 			   sizeof(struct callback_state_fehash_header))) {
+	ViceLog(0, ("cb_stateRestoreFEHash: failed to restore cb_fehash_hdr\n"));
 	ret = 1;
 	goto done;
     }
 
     if (state->cb_fehash_hdr->magic != CALLBACK_STATE_FEHASH_MAGIC) {
+	ViceLog(0, ("cb_stateRestoreFEHash: invalid cb_fehash_hdr magic 0x%x != 0x%x\n",
+		state->cb_fehash_hdr->magic, CALLBACK_STATE_FEHASH_MAGIC));
 	ret = 1;
 	goto done;
     }
     if (state->cb_fehash_hdr->records != FEHASH_SIZE) {
+	ViceLog(0, ("cb_stateRestoreFEHash: records %d != %d\n",
+		    state->cb_fehash_hdr->records, FEHASH_SIZE));
 	ret = 1;
 	goto done;
     }
@@ -2288,11 +2309,16 @@ cb_stateRestoreFEHash(struct fs_dump_state * state)
 
     if (state->cb_fehash_hdr->len !=
 	(sizeof(struct callback_state_fehash_header) + len)) {
+	ViceLog(0, ("cb_stateRestoreFEHash: header len %d != %d + %d\n",
+		    state->cb_fehash_hdr->len,
+		    (int)sizeof(struct callback_state_fehash_header),
+		    len));
 	ret = 1;
 	goto done;
     }
 
     if (fs_stateRead(state, HashTable, len)) {
+	ViceLog(0, ("cb_stateRestoreFEHash: failed read of HashTable\n"));
 	ret = 1;
 	goto done;
     }
@@ -2449,6 +2475,8 @@ cb_stateRestoreFE(struct fs_dump_state * state)
     }
 
     if (hdr.magic != CALLBACK_STATE_ENTRY_MAGIC) {
+	ViceLog(0, ("cb_stateRestoreFE: magic 0x%x != 0x%x\n",
+		hdr.magic, CALLBACK_STATE_ENTRY_MAGIC));
 	ret = 1;
 	goto done;
     }
@@ -2538,11 +2566,17 @@ cb_stateCheckHeader(struct callback_state_header * hdr)
     int ret = 0;
 
     if (hdr->stamp.magic != CALLBACK_STATE_MAGIC) {
+	ViceLog(0, ("cb_stateCheckHeader: magic 0x%x != 0x%x\n",
+		hdr->stamp.magic, CALLBACK_STATE_MAGIC));
 	ret = 1;
     } else if (hdr->stamp.version != CALLBACK_STATE_VERSION) {
+	ViceLog(0, ("cb_stateCheckHeader: version %d != %d\n",
+		hdr->stamp.version, CALLBACK_STATE_VERSION));
 	ret = 1;
     } else if ((hdr->nFEs > cbstuff.nblks) || (hdr->nCBs > cbstuff.nblks)) {
-	ViceLog(0, ("cb_stateCheckHeader: saved callback state larger than callback memory allocation\n"));
+	ViceLog(0, ("cb_stateCheckHeader: saved callback state larger than "
+		"callback memory allocation (%d FEs, %d CBs > %d)\n",
+		hdr->nFEs, hdr->nCBs, cbstuff.nblks));
 	ret = 1;
     }
     return ret;

@@ -3234,12 +3234,14 @@ h_stateRestore(struct fs_dump_state * state)
     /* seek to the right position and read in the host state header */
     if (fs_stateReadHeader(state, &state->hdr->h_offset, state->h_hdr,
 			   sizeof(struct host_state_header))) {
+	ViceLog(0, ("h_stateRestore: failed to read h_hdr\n"));
 	state->bail = 1;
 	goto done;
     }
 
     /* check the validity of the header */
     if (h_stateCheckHeader(state->h_hdr)) {
+	ViceLog(0, ("h_stateRestore: failed check of h_hdr\n"));
 	state->bail = 1;
 	goto done;
     }
@@ -3247,6 +3249,7 @@ h_stateRestore(struct fs_dump_state * state)
     records = state->h_hdr->records;
 
     if (h_stateAllocMap(state)) {
+	ViceLog(0, ("h_stateRestore: failed to allocate map\n"));
 	state->bail = 1;
 	goto done;
     }
