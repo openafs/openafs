@@ -806,7 +806,6 @@ extern void VFreeBitMapEntry(Error * ec, Volume *vp, struct vnodeIndex *index,
 extern void VFreeBitMapEntry_r(Error * ec, Volume *vp, struct vnodeIndex *index,
 			       unsigned bitNumber, int flags);
 extern int VolumeNumber(char *name);
-extern char *VolumeExternalName(VolumeId volumeId);
 extern int VolumeExternalName_r(VolumeId volumeId, char *name, size_t len);
 extern Volume *VAttachVolumeByName(Error * ec, char *partition, char *name,
 				   int mode);

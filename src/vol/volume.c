@@ -6630,32 +6630,6 @@ VolumeNumber(char *name)
     return strtoul(name + 1, NULL, 10);
 }
 
-/**
- * compute the volume header filename.
- *
- * @param[in] volumeId
- *
- * @return volume header filename
- *
- * @post volume header filename string is constructed
- *
- * @warning this function is NOT re-entrant -- the returned string is
- *          stored in a static char array.  see VolumeExternalName_r
- *          for a re-entrant equivalent.
- *
- * @see VolumeExternalName_r
- *
- * @deprecated due to the above re-entrancy warning, this interface should
- *             be considered deprecated.  Please use VolumeExternalName_r
- *             in its stead.
- */
-char *
-VolumeExternalName(VolumeId volumeId)
-{
-    static char name[VMAXPATHLEN];
-    snprintf(name, sizeof name, VFORMAT, afs_printable_VolumeId_lu(volumeId));
-    return name;
-}
 
 /**
  * compute the volume header filename.
@@ -6666,10 +6640,7 @@ VolumeExternalName(VolumeId volumeId)
  *
  * @return result code from afs_snprintf
  *
- * @see VolumeExternalName
  * @see afs_snprintf
- *
- * @note re-entrant equivalent of VolumeExternalName
  */
 int
 VolumeExternalName_r(VolumeId volumeId, char * name, size_t len)
