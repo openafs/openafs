@@ -48,7 +48,7 @@ uss: uss.o ${OBJS} $(LIBS)
 
 uss.o:  uss.c AFS_component_version_number.c
 
-CFLAGS_lex.yy.o = @CFLAGS_NOUNUSED@ @CFLAGS_NOOLDSTYLE@
+CFLAGS_lex.yy.o = @CFLAGS_NOUNUSED@ @CFLAGS_NOOLDSTYLE@ @CFLAGS_NOIMPLICIT_FALLTHROUGH@
 lex.yy.o : lex.yy.c y.tab.c
 
 lex.yy.c : lex.l

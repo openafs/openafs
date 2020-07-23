@@ -317,7 +317,10 @@ If you add a new warning inhibition, please also add it to the list below.
 
 Inhibited warnings
 ------------------
-
+uss/lex.i            : fallthrough   : clang fallthrough, flex generated code
+comerr/et_lex.lex.l  : fallthrough   : clang fallthrough, flex generated code
+                                       pragma set to ignored where included in
+                                       error_table.y
 afs/afs_syscall.c    : old-style
 		     : strict-proto
 		     : all (ukernel) : syscall pointer issues
