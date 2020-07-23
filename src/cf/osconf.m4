@@ -622,6 +622,7 @@ CFLAGS_NOERROR=
 CFLAGS_NOSTRICT=-fno-strict-aliasing
 CFLAGS_NOUNUSED=
 CFLAGS_NOOLDSTYLE=
+CFLAGS_NOIMPLICIT_FALLTHROUGH=
 XCFLAGS_NOCHECKING="$XCFLAGS"
 
 if test "x$GCC" = "xyes"; then
@@ -635,6 +636,8 @@ if test "x$GCC" = "xyes"; then
       CFLAGS_NOERROR="-Wno-error"
       CFLAGS_NOUNUSED="-Wno-unused"
       CFLAGS_NOOLDSTYLE="-Wno-old-style-definition"
+      AX_APPEND_COMPILE_FLAGS([-Wno-implicit-fallthrough],
+                               [CFLAGS_NOIMPLICIT_FALLTHROUGH])
       AC_DEFINE(IGNORE_SOME_GCC_WARNINGS, 1, [define to disable some gcc warnings in warnings-as-errors mode])
     else
       CFLAGS_NOSTRICT=
@@ -715,6 +718,7 @@ AC_SUBST(CFLAGS_NOERROR)
 AC_SUBST(CFLAGS_NOSTRICT)
 AC_SUBST(CFLAGS_NOUNUSED)
 AC_SUBST(CFLAGS_NOOLDSTYLE)
+AC_SUBST(CFLAGS_NOIMPLICIT_FALLTHROUGH)
 AC_SUBST(CFLAGS_WERROR)
 AC_SUBST(XCFLAGS64)
 AC_SUBST(XLDFLAGS)

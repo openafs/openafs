@@ -389,6 +389,11 @@ int char_to_1num(char c)
         exit (1);
 }
 
+#if defined(IGNORE_SOME_GCC_WARNINGS) && defined(__clang__) && defined(HAVE_FUNC_ATTRIBUTE_FALLTHROUGH)
+/* flex generates fallthroughs in case blocks that get flagged by clang */
+# pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#endif
+
 #ifdef AFS_NT40_ENV
 #include "et_lex.lex_nt.c"
 #else
