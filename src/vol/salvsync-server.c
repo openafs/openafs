@@ -940,7 +940,7 @@ LinkNode(struct SalvageQueueNode * parent,
     switch (clone->state) {
     case SALVSYNC_STATE_QUEUED:
 	DeleteFromSalvageQueue(clone);
-	/* fall through */
+	AFS_FALLTHROUGH;
     case SALVSYNC_STATE_SALVAGING:
 	switch (parent->state) {
 	case SALVSYNC_STATE_UNKNOWN:

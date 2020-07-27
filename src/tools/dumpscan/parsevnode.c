@@ -27,7 +27,7 @@
  */
 
 /* parsevnode.c - Parse a VNode */
-
+#include <afsconfig.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <errno.h>
@@ -480,7 +480,7 @@ parse_vdata(XFILE * X, unsigned char *tag, tagged_field * field,
 		    return r;
 		break;
 	    }
-	    /* fall through */
+	    AFS_FALLTHROUGH;
 	default:
 	    if ((r = xfskip(X, v->size)))
 		return r;

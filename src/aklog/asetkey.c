@@ -288,7 +288,7 @@ addRandomKey(struct afsconf_dir *dir, int argc, char **argv)
     switch (argc) {
     case 5:
         subtype = atoi(argv[4]);
-        /* fall through */
+        AFS_FALLTHROUGH;
     case 4:
         type = stringToType(argv[2]);
         kvno = atoi(argv[3]);

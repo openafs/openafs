@@ -213,7 +213,7 @@ pass5()
 	    case DCLEAR:
 	    case DFOUND:
 		newcg->cg_cs.cs_ndir++;
-		/* fall through */
+		AFS_FALLTHROUGH;
 
 #ifdef VICE
 	    case VSTATE:

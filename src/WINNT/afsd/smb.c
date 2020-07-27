@@ -9471,7 +9471,7 @@ void smb_Server(VOID *parmp)
         case NRC_SNUMOUT:
 	case NRC_SABORT:
 	    LogEvent(EVENTLOG_WARNING_TYPE, MSG_UNEXPECTED_SMB_SESSION_CLOSE, ncb_error_string(rc));
-	    /* fallthrough */
+	    AFS_FALLTHROUGH;
 	case NRC_SCLOSED:
             /* Client closed session */
             vcp = smb_FindVC(ncbp->ncb_lsn, 0, lanas[idx_session]);

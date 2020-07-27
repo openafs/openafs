@@ -750,7 +750,7 @@ tkt_DeriveDesKey(int enctype, void *keydata, size_t keylen,
     case KRB5_ENCTYPE_DES3_CBC_SHA1:
 	if (compress_parity_bits(keydata, &keylen))
 	    return 1;
-	/* FALLTHROUGH */
+	AFS_FALLTHROUGH;
     default:
 	if (enctype < 0)
 	    return 1;

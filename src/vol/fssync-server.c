@@ -954,6 +954,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 
 		VOL_CV_WAIT(&V_attachCV(vp));
 	    }
+	    break;
 
 	case debugUtility:
 	    break;
@@ -996,7 +997,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	     * attaching the volume would be safe */
 	    VRegisterVolOp_r(vp, &info);
 	    vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningUnknown;
-	    /* fall through */
+	    goto done;
 
 	case VOL_STATE_DELETED:
 	    goto done;
@@ -1026,7 +1027,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
                  * attaching the volume would be safe */
                 VRegisterVolOp_r(vp, &info);
                 vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningUnknown;
-		/* fall through */
+		goto done;
 
             case VOL_STATE_DELETED:
                 goto done;

@@ -868,7 +868,7 @@ dumpPass(struct dumpRock * dparamsPtr, int passNumber)
 		    dparamsPtr->volumesFailed++;
 		    continue;
 		}
-		/* fall through */
+		AFS_FALLTHROUGH;
 	    case RWVOL:
 		for (e = 0; e < vldbEntry.nServers; e++) {	/* Find the RW volume */
 		    if (vldbEntry.serverFlags[e] & VLSF_RWVOL)

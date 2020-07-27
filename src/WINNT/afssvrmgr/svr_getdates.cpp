@@ -97,7 +97,7 @@ BOOL WINAPI Server_GetDates_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                {
                case IDOK:
                   Server_GetDates_OnOK (hDlg);
-                  // fall through
+                  AFS_FALLTHROUGH;
 
                case IDCANCEL:
                   DestroyWindow (hDlg);

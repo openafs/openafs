@@ -877,12 +877,12 @@ NET_API_STATUS NetrShareGetInfo(
                 NetrIntGenerateSharePath(ServerName, &scp->fid);
             /* must be the empty string */
             InfoStruct->ShareInfo2->shi2_passwd = wcsdup(L"");
-            /* fall-through */
+            AFS_FALLTHROUGH;
         case 1:
             InfoStruct->ShareInfo1->shi1_type = STYPE_DISKTREE;
             InfoStruct->ShareInfo1->shi1_remark =
                 NetrIntGenerateShareRemark(scp, &scp->fid);
-            /* fall-through */
+            AFS_FALLTHROUGH;
         case 0:
             /* Canonicalized version of NetName parameter */
             InfoStruct->ShareInfo0->shi0_netname = wcsdup(NetName);
@@ -995,7 +995,7 @@ NET_API_STATUS NetrServerGetInfo(
     switch (Level) {
     case 103:
         InfoStruct->ServerInfo103->sv103_capabilities = 0;
-        /* fall-through */
+        AFS_FALLTHROUGH;
     case 102:
         InfoStruct->ServerInfo102->sv102_users = 0xFFFFFFFF;
         InfoStruct->ServerInfo102->sv102_disc = SV_NODISC;
@@ -1004,13 +1004,13 @@ NET_API_STATUS NetrServerGetInfo(
         InfoStruct->ServerInfo102->sv102_anndelta = 0;
         InfoStruct->ServerInfo102->sv102_licenses = 0;
         InfoStruct->ServerInfo102->sv102_userpath = wcsdup(L"C:\\");
-        /* fall-through */
+        AFS_FALLTHROUGH;
     case 101:
         InfoStruct->ServerInfo101->sv101_version_major = AFSPRODUCT_VERSION_MAJOR;
         InfoStruct->ServerInfo101->sv101_version_minor = AFSPRODUCT_VERSION_MINOR;
         InfoStruct->ServerInfo101->sv101_type = SV_TYPE_WORKSTATION | SV_TYPE_SERVER | SV_TYPE_SERVER_UNIX;
         InfoStruct->ServerInfo101->sv101_comment = wcsdup(wAFSVersion);
-        /* fall-through */
+        AFS_FALLTHROUGH;
     case 100:
         InfoStruct->ServerInfo100->sv100_platform_id = SV_PLATFORM_ID_AFS;
         /* The Netbios Name */

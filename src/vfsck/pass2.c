@@ -140,7 +140,7 @@ pass2()
 #else /* no ACLS */
 	statemap[ROOTINO] = DSTATE;
 #endif /* ACLS */
-	/* fall into ... */
+	AFS_FALLTHROUGH;
 
     case DSTATE:
 	descend(&rootdesc, ROOTINO);
@@ -347,7 +347,7 @@ pass2check(idesc)
 		else if ((n = reply("REMOVE")) == 1)
 		    break;
 	    }
-	    /* fall through */
+	    AFS_FALLTHROUGH;
 
 	case FSTATE:
 #ifdef VICE
