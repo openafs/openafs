@@ -1050,6 +1050,9 @@ ih_icreate(IHandle_t * ih, int dev, char *part, Inode nI, int p1, int p2,
 	   int p3, int p4)
 {
     Inode ino;
+
+    ih_PkgDefaults();
+
 #ifdef	AFS_3DISPARES
     /* See viceinode.h */
     if (p2 == INODESPECIAL) {
