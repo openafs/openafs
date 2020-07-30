@@ -839,6 +839,8 @@ namei_icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint
     memset((void *)&tmp, 0, sizeof(IHandle_t));
     memset(&tfd, 0, sizeof(FdHandle_t));
 
+    ih_PkgDefaults();
+
     tmp.ih_dev = nt_DriveToDev(part);
     if (tmp.ih_dev == -1) {
 	errno = EINVAL;
@@ -971,6 +973,8 @@ icreate(IHandle_t * lh, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3,
     int ogm_parm;
 
     memset((void *)&tmp, 0, sizeof(IHandle_t));
+
+    ih_PkgDefaults();
 
     tmp.ih_dev = volutil_GetPartitionID(part);
     if (tmp.ih_dev == -1) {
