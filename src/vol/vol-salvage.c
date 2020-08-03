@@ -1886,7 +1886,7 @@ CheckDupLinktable(struct SalvInfo *salvinfo, struct InodeSummary *isp, struct Vi
 #endif
 
 int
-CreateLinkTable(struct SalvInfo *salvinfo, struct InodeSummary *isp, Inode ino)
+CreateLinkTable(struct SalvInfo *salvinfo, struct InodeSummary *isp, Inode ino, int nVols)
 {
     struct versionStamp version;
     FdHandle_t *fdP;
@@ -1916,6 +1916,11 @@ CreateLinkTable(struct SalvInfo *salvinfo, struct InodeSummary *isp, Inode ino)
 	!= sizeof(version))
 	Abort("Can't truncate link table for volume %" AFS_VOLID_FMT " (error = %d)\n",
 	      afs_printable_VolumeId_lu(isp->RWvolumeId), errno);
+
+    /* Set the link table's self-count, one count per vol in VG */
+    if (namei_SetLinkCount(fdP, (Inode) 0, nVols, 0) != 0) {
+	Abort("Failed to set link table count\n");
+    }
 
     FDH_REALLYCLOSE(fdP);
 
@@ -2042,7 +2047,7 @@ DoSalvageVolumeGroup(struct SalvInfo *salvinfo, struct InodeSummary *isp, int nV
 	} else {
 	    int i, j;
 	    struct ViceInodeInfo *ip;
-	    CreateLinkTable(salvinfo, isp, ino);
+	    CreateLinkTable(salvinfo, isp, ino, nVols);
 	    fdP = IH_OPEN(salvinfo->VGLinkH);
 	    /* Sync fake 1 link counts to the link table, now that it exists */
 	    if (fdP) {
