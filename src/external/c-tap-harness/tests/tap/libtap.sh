@@ -7,11 +7,11 @@
 #
 # This file provides a TAP-compatible shell function library useful for
 # writing test cases.  It is part of C TAP Harness, which can be found at
-# <http://www.eyrie.org/~eagle/software/c-tap-harness/>.
+# <https://www.eyrie.org/~eagle/software/c-tap-harness/>.
 #
-# Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2009, 2010, 2011, 2012 Russ Allbery <rra@stanford.edu>
-# Copyright 2006, 2007, 2008
+# Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2009-2012, 2016 Russ Allbery <eagle@eyrie.org>
+# Copyright 2006-2008, 2013
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,6 +31,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
+#
+# SPDX-License-Identifier: MIT
 
 # Print out the number of test cases we expect to run.
 plan () {
@@ -204,7 +206,7 @@ strip_colon_error() {
 # Bail out with an error message.
 bail () {
     echo 'Bail out!' "$@"
-    exit 1
+    exit 255
 }
 
 # Output a diagnostic on standard error, preceded by the required # mark.
@@ -212,32 +214,32 @@ diag () {
     echo '#' "$@"
 }
 
-# Search for the given file first in $BUILD and then in $SOURCE and echo the
-# path where the file was found, or the empty string if the file wasn't
-# found.
+# Search for the given file first in $C_TAP_BUILD and then in $C_TAP_SOURCE
+# and echo the path where the file was found, or the empty string if the file
+# wasn't found.
 #
 # This macro uses puts, so don't run it using backticks inside double quotes
 # or bizarre quoting behavior will happen with Solaris sh.
 test_file_path () {
-    if [ -n "$BUILD" ] && [ -f "$BUILD/$1" ] ; then
-        puts "$BUILD/$1"
-    elif [ -n "$SOURCE" ] && [ -f "$SOURCE/$1" ] ; then
-        puts "$SOURCE/$1"
+    if [ -n "$C_TAP_BUILD" ] && [ -f "$C_TAP_BUILD/$1" ] ; then
+        puts "$C_TAP_BUILD/$1"
+    elif [ -n "$C_TAP_SOURCE" ] && [ -f "$C_TAP_SOURCE/$1" ] ; then
+        puts "$C_TAP_SOURCE/$1"
     else
         echo ''
     fi
 }
 
-# Create $BUILD/tmp for use by tests for storing temporary files and return
-# the path (via standard output).
+# Create $C_TAP_BUILD/tmp for use by tests for storing temporary files and
+# return the path (via standard output).
 #
 # This macro uses puts, so don't run it using backticks inside double quotes
 # or bizarre quoting behavior will happen with Solaris sh.
 test_tmpdir () {
-    if [ -z "$BUILD" ] ; then
+    if [ -z "$C_TAP_BUILD" ] ; then
         tap_tmpdir="./tmp"
     else
-        tap_tmpdir="$BUILD"/tmp
+        tap_tmpdir="$C_TAP_BUILD"/tmp
     fi
     if [ ! -d "$tap_tmpdir" ] ; then
         mkdir "$tap_tmpdir" || bail "Error creating $tap_tmpdir"
