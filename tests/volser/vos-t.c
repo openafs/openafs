@@ -69,7 +69,7 @@ TestListAddrs(struct ubik_client *client, char *dirname)
 	close(outpipe[0]);
 	close(outpipe[1]);
 
-	build = getenv("BUILD");
+	build = getenv("C_TAP_BUILD");
 	if (build == NULL)
 	    build = "..";
 

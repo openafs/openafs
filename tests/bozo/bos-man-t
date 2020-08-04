@@ -8,7 +8,7 @@ use mancheck_utils;
 
 # Set this to the bare command to test
 my $command = 'bos';
-my $builddir = $ENV{BUILD};
+my $builddir = $ENV{C_TAP_BUILD};
 if (!$builddir) {
     $builddir = dirname($0) . "/..";
 }

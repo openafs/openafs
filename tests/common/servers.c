@@ -30,7 +30,7 @@ afstest_StartVLServer(char *dirname, pid_t *serverPid)
 	char *binPath, *logPath, *dbPath, *build;
 
 	/* Child */
-	build = getenv("BUILD");
+	build = getenv("C_TAP_BUILD");
 
 	if (build == NULL)
 	    build = "..";

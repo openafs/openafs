@@ -6,7 +6,7 @@ use warnings;
 use File::Basename;
 use Test::More tests=>2;
 
-my $builddir = $ENV{BUILD};
+my $builddir = $ENV{C_TAP_BUILD};
 if (!$builddir) {
   $builddir = dirname($0)."/..";
 }

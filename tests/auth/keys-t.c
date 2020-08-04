@@ -128,11 +128,11 @@ int main(int argc, char **argv)
 	goto out;
 
     /* Work out the path to our KeyFile. If the test harness hasn't set
-     * the SOURCE environment variable, then assume it is in our CWD */
-    if (getenv("SOURCE") == NULL) {
+     * the C_TAP_SOURCE environment variable, then assume it is in our CWD */
+    if (getenv("C_TAP_SOURCE") == NULL) {
 	keyfilesrc = strdup("KeyFile");
     } else {
-	if (asprintf(&keyfilesrc, "%s/auth/KeyFile", getenv("SOURCE")) == -1)
+	if (asprintf(&keyfilesrc, "%s/auth/KeyFile", getenv("C_TAP_SOURCE")) == -1)
 	    goto out;
     }
 

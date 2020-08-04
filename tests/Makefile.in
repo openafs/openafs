@@ -6,8 +6,8 @@ abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-MODULE_CFLAGS = -DSOURCE='"$(abs_top_srcdir)/tests"' \
-	-DBUILD='"$(abs_top_builddir)/tests"'
+MODULE_CFLAGS = -DC_TAP_SOURCE='"$(abs_top_srcdir)/tests"' \
+	-DC_TAP_BUILD='"$(abs_top_builddir)/tests"'
 
 SUBDIRS = tap common auth util cmd volser opr rx
 
@@ -23,7 +23,7 @@ runtests.o: $(srcdir)/runtests.c
 check test tests: runtests
 	@for A in $(SUBDIRS); do cd $$A && $(MAKE) $@ && cd .. || exit 1; done
 	MAKECHECK=1 ./libwrap @TOP_OBJDIR@/lib \
-	    ./runtests $(abs_top_srcdir)/tests/TESTS
+	    ./runtests -v -l $(abs_top_srcdir)/tests/TESTS
 
 install:
 
