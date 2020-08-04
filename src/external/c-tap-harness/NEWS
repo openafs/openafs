@@ -1,5 +1,275 @@
                     User-Visible C TAP Harness Changes
 
+C TAP Harness 4.7 (2020-05-16)
+
+    Allow the package test suite to be run with C_TAP_VERBOSE without
+    breaking test results via inheritance of that setting.
+
+    Fix warnings with GCC 10.
+
+C TAP Harness 4.6 (2020-01-07)
+
+    Reformat all C source using clang-format 10 and the formatting rules
+    specified in .clang-format.
+
+    Update to rra-c-util 8.1:
+
+    * Drop support for Perl versions prior to Perl 5.8.
+
+C TAP Harness 4.5 (2019-08-31)
+
+    Add new bcalloc_type and breallocarray_type macros that take a type
+    instead of a size as their third argument and cast the return value to
+    a pointer to that type.  These are more friendly to C++ code than
+    C-style allocation functions returning void *.
+
+    The test harness and libtap C library can now alternatively be
+    compiled with a C++ compiler, making it easier to incorporate them
+    into a C++ project.  Thanks to Peter Paris for the initial report.
+
+C TAP Harness 4.4 (2018-12-25)
+
+    Add test_cleanup_register_with_data to the C TAP library.  This is the
+    same as test_cleanup_register except takes a generic pointer, which is
+    then passed to the cleanup function as a third argument.  This should
+    have been the only API from the beginning, but test_cleanup_register
+    is preserved for backward compatibility.  Patch from Marc Dionne.
+
+    Fix error checking for malloc failure in bstrndup function (caught by
+    cppcheck).
+
+    Update to rra-c-util 8.0:
+
+    * Skip tests requiring Test::More if it isn't available.
+    * Check for pre-SPDX license grant strings.
+    * Improved test for obsolete strings in package source files.
+
+C TAP Harness 4.3 (2018-05-06)
+
+    Add support for valgrind and libtool test options in test lists.  Test
+    lists now take a space-separated set of options after the test name.
+    If the valgrind option is present and C_TAP_VALGRIND is set in the
+    environment, the test will be run by passing it as an option to the
+    command given in C_TAP_VALGRIND.  If the libtool option is also set,
+    valgrind will be run via the libtool script set in C_TAP_LIBTOOL,
+    using --mode=execute, so that valgrind will run on the underlying
+    binary and not the libtool shell wrapper.
+
+    On test failures, report the values as left and right instead of
+    wanted and seen.  This idea is stolen from the Rust assert framework.
+    It avoids having to care about the order in which values are passed
+    into the test functions.
+
+    Fix is_string comparisons involving NULL pointers so that the string
+    "(null)" will no longer compare equal to NULL (although the diagnostic
+    output on test failure is still mildly confusing).
+
+    Add new check-cppcheck target that runs cppcheck on all source code,
+    and fix one unnecessary check for NULL that it uncovered.
+
+    Add SPDX-License-Identifier headers to all substantial source files,
+    and add a test to check for them.  This imports more supporting test
+    machinery whose canonical home is in rra-c-util.  If you want to use
+    files in tests/tap/perl, copy them from rra-c-util instead of this
+    package.
+
+    C TAP Harness now imports the Perl test modules from rra-c-util to
+    support some checks, so tests/docs/pod-spelling-t and tests/docs/pod-t
+    have been updated to the versions from rra-c-util.  Projects that were
+    previously copying those tests should be able to continue to use them,
+    but will now need the modules in tests/tap/perl (the canonical version
+    of which are maintained in rra-c-util).
+
+C TAP Harness 4.2 (2017-12-30)
+
+    Add is_blob function to the C test library.  This tests whether two
+    regions of memory are identical, similar to ok(memcmp(...)) but
+    reporting where the regions differ.  Patch from Daniel Collins.
+
+    Avoid zero-length realloc allocations in breallocarray.
+
+    Fix new fall-through warning in GCC 7.
+
+    Switch to the compiler warning Autoconf macros and warning set from
+    rra-c-util with the addition of -ansi -pedantic for GCC and
+    -pedantic-errors for Clang.  Add some casts to fix warnings from
+    -Wconversion, and suppress some spurious warnings from Clang about
+    tests/tap/float.c.
+
+C TAP Harness 4.1 (2016-12-23)
+
+    Add is_bool function to the C test library.  This compares its two
+    arguments only for their truthfulness.  is_bool(true, arg) is the same
+    as ok(arg), but there are times (such as when testing for a false
+    value) where this allows for clearer code or clearer output.
+
+C TAP Harness 4.0 (2016-05-07)
+
+    When building runtests, one must now set the C_TAP_SOURCE and
+    C_TAP_BUILD C preprocessor symbols to the source and build
+    directories, instead of SOURCE and BUILD.  An updated Makefile.am
+    recipe is documented in README.
+
+    runtests now sets C_TAP_SOURCE and C_TAP_BUILD in the environment in
+    addition to SOURCE and BUILD.  All test programs using this harness
+    should switch to the new C_TAP_SOURCE and C_TAP_BUILD environment
+    variables.  SOURCE and BUILD are very generic and may conflict with
+    other programs and uses, and setting them will be removed in a later
+    version.
+
+    The TAP test libraries (C and shell) now use C_TAP_SOURCE and
+    C_TAP_BUILD environment variables instead of SOURCE and BUILD for the
+    test_file_path() and test_tmpdir() functions.  If you were using these
+    libraries with another test harness, you will need to set the new
+    environment variables.
+
+    Fix missing va_end() call in is_double(), which would have caused
+    compilation failures or other problems on some platforms.  Thanks,
+    Julien ÉLIE.
+
+    Rename the script to bootstrap from a Git checkout to bootstrap,
+    matching the emerging consensus in the Autoconf world.
+
+C TAP Harness 3.4 (2015-08-18)
+
+    Fix segfault in runtests when given a test list containing only
+    comments and blank lines.  Thanks, aherbert.
+
+C TAP Harness 3.3 (2015-04-26)
+
+    If runtests is given the -v option, or if the environment variable
+    C_TAP_VERBOSE is set, the complete output of each test program will be
+    shown instead of the summary of total and failing tests.  Based on
+    work by D. Brashear.
+
+    C TAP Harness now compiles cleanly with Clang with -Weverything
+    -Wno-padded -pedantic-errors, and automatically detects Clang and
+    switches warning flags for make warnings.
+
+C TAP Harness 3.2 (2014-12-25)
+
+    The runtests harness now supports ignoring comments and blank lines in
+    the test list specified with -l.  Leading whitespace before the test
+    name is also ignored.
+
+C TAP Harness 3.1 (2014-07-02)
+
+    ok, okv, and all is_* functions now return true if the test succeeds
+    and false if it fails, matching the return status of the corresponding
+    Perl Test::More functions.  This allows more succinct code when the
+    actions of a test program should vary based on the success or failure
+    of previous tests.  Based on a patch by Peter Pöschl.
+
+    diag and sysdiag now always return 1, making it easier to insert calls
+    into compound statements when debugging tests.  Based on a patch by
+    Peter Pöschl.
+
+    Add new breallocarray API that does the same as realloc but takes
+    calloc-style arguments to specify the size and checks internally for
+    integer overflow.  Inspired by the OpenBSD reallocarray function.
+
+    Check for integer overflows on memory allocation.  All the possible
+    issues for this code are rather theoretical, but one may as well
+    strive for correctness.
+
+    Replace all uses of sprintf with a simpler string concatenation
+    function that checks for allocation overflow.  (The standards
+    assumptions for this package don't permit assuming asprintf or a
+    sufficiently non-broken snprintf to simulate asprintf.)
+
+C TAP Harness 3.0 (2014-01-28)
+
+    The test_cleanup_register API has changed in this release.  Cleanup
+    functions must now take two parameters, not one, and are called from
+    all test processes, not just the primary one.  The new second argument
+    indicates whether the cleanup function was called in the primary
+    process (the one in which plan or plan_lazy was called).  External
+    resources, such as files, should generally only be freed when the
+    cleanup function is called in the primary process, but tests may want
+    to free internal resources, like memory, in all processes to ease
+    analysis with tools like valgrind.
+
+    When running test programs from a list, reopen standard input for each
+    program to /dev/null, and be more careful about closing all duplicates
+    of file descriptors left behind after setting up standard output and
+    standard error so that extraneous file descriptors aren't leaked to
+    the child process.
+
+C TAP Harness 2.4 (2013-12-25)
+
+    Add new diag_file_add and diag_file_remove APIs to the basic C TAP
+    library.  These functions manage a list of registered file that
+    contains supplemental diagnostic information.  Each registered file is
+    checked before each output function for any new lines, and any lines
+    are displayed as if they'd been passed to diag().  This can be useful
+    if, for example, the test involves a background daemon whose output
+    can be logged to a disk file.
+
+C TAP Harness 2.3 (2013-11-13)
+
+    Add new test_cleanup_register API to the basic C TAP library.  This
+    registers a C callback function that's called during exit from the
+    test and passed in a boolean argument indicating whether the test
+    succeeded or failed.
+
+    Suppress lazy plans and the summary of tests at the end of a test
+    program if the program aborted with bail or sysbail.
+
+    Add warn_unused_result gcc attributes to the C TAP library functions
+    where ignoring the return value is almost certainly a bug (such as all
+    the malloc functions).
+
+    Add portability for warn_unsed_result attributes to tap/macros.h.
+
+C TAP Harness 2.2 (2013-08-14)
+
+    bail and sysbail now exit with status 255 to match the behavior of
+    BAIL_OUT in Perl's Test::More.
+
+    Document that runtests handling of test cases that bail out differs
+    from the documented behavior of BAIL_OUT in Perl's Test::More and the
+    behavior of prove, and document why.
+
+C TAP Harness 2.1 (2013-03-15)
+
+    When locating test programs, try a suffix (-t, .t, or no suffix) with
+    all bases before moving on to the next suffix.  The behavior in the
+    previous release was not backward-compatible: it would find the
+    unsuffixed helper program in the build directory instead of the actual
+    test in the source directory for some rra-c-util tests when the build
+    directory and the source directory weren't the same.
+
+    Document that TAP version directives in the TAP output are ignored.
+
+C TAP Harness 2.0 (2013-03-14)
+
+    The default behavior of tests/runtests has changed to make it act more
+    like other test drivers.  Now, to provide a file containing a list of
+    tests, use the -l option.  Existing users should add -l to the command
+    line in front of the test list.  Otherwise, the command-line arguments
+    are taken as tests to run, as if they were all listed in a test list
+    file.
+
+    runtests now tries the test name without any extension if the test
+    name with either -t or .t was not found.  It also does not consider a
+    directory to be a valid test when searching for the executable, even
+    if the directory is executable.
+
+    Flush the harness output after each test.  This effectively implements
+    line buffering even when standard output is not a terminal and
+    therefore output isn't flushed after each line of test output.
+
+    When displaying partial status of tests with a deferred plan, show the
+    total number of tests as ? rather than the number of tests seen so
+    far.  This matches the behavior of Perl's prove utility.
+
+    More correctly handle backspacing over the test count in several abort
+    cases when reporting status to a terminal.
+
+    Add GCC annotations to some internal functions in runtests to help
+    clang --analyze better understand code correctness.  Remove a dead
+    store caught by clang --analyze.
+
 C TAP Harness 1.12 (2012-05-11)
 
     Fix additional uses of local in the shell TAP library for portability
@@ -54,7 +324,7 @@ C TAP Harness 1.11 (2012-04-25)
 
     Move the is_double C TAP test function into a separate source file.
     Including this function may require linking with libm on some
-    platforms, which is undesireable if the package otherwise doesn't use
+    platforms, which is undesirable if the package otherwise doesn't use
     math functions.  The new tests/tap/float.c and tests/tap/float.h files
     need only be included in a package that wants to do floating point
     tests.  Users of is_double will now need to include tests/tap/float.h

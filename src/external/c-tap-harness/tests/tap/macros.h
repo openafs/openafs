@@ -6,9 +6,9 @@
  * everyone can pull them in.
  *
  * This file is part of C TAP Harness.  The current version plus supporting
- * documentation is at <http://www.eyrie.org/~eagle/software/c-tap-harness/>.
+ * documentation is at <https://www.eyrie.org/~eagle/software/c-tap-harness/>.
  *
- * Copyright 2008, 2012 Russ Allbery <rra@stanford.edu>
+ * Copyright 2008, 2012-2013, 2015 Russ Allbery <eagle@eyrie.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,6 +27,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #ifndef TAP_MACROS_H
@@ -40,9 +42,9 @@
  * the other attributes to work with GCC versions between 2.7 and 2.96.
  */
 #ifndef __attribute__
-# if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 96)
-#  define __attribute__(spec)   /* empty */
-# endif
+#    if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 96)
+#        define __attribute__(spec) /* empty */
+#    endif
 #endif
 
 /*
@@ -53,9 +55,18 @@
  * variadic macro support.
  */
 #if !defined(__attribute__) && !defined(__alloc_size__)
-# if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 3)
-#  define __alloc_size__(spec, args...) /* empty */
-# endif
+#    if defined(__GNUC__) && !defined(__clang__)
+#        if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 3)
+#            define __alloc_size__(spec, args...) /* empty */
+#        endif
+#    endif
+#endif
+
+/* Suppress __warn_unused_result__ if gcc is too old. */
+#if !defined(__attribute__) && !defined(__warn_unused_result__)
+#    if __GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4)
+#        define __warn_unused_result__ /* empty */
+#    endif
 #endif
 
 /*
@@ -65,7 +76,7 @@
  * compilation context, but there's no push and pop available.
  */
 #if !defined(__attribute__) && (defined(__llvm__) || defined(__clang__))
-# pragma GCC diagnostic ignored "-Wattributes"
+#    pragma GCC diagnostic ignored "-Wattributes"
 #endif
 
 /* Used for unused parameters to silence gcc warnings. */
@@ -78,11 +89,11 @@
 #undef BEGIN_DECLS
 #undef END_DECLS
 #ifdef __cplusplus
-# define BEGIN_DECLS    extern "C" {
-# define END_DECLS      }
+#    define BEGIN_DECLS extern "C" {
+#    define END_DECLS   }
 #else
-# define BEGIN_DECLS    /* empty */
-# define END_DECLS      /* empty */
+#    define BEGIN_DECLS /* empty */
+#    define END_DECLS   /* empty */
 #endif
 
 #endif /* TAP_MACROS_H */

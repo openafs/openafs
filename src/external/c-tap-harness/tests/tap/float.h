@@ -2,9 +2,9 @@
  * Floating point check function for the TAP protocol.
  *
  * This file is part of C TAP Harness.  The current version plus supporting
- * documentation is at <http://www.eyrie.org/~eagle/software/c-tap-harness/>.
+ * documentation is at <https://www.eyrie.org/~eagle/software/c-tap-harness/>.
  *
- * Copyright 2008, 2010, 2012 Russ Allbery <rra@stanford.edu>
+ * Copyright 2008, 2010, 2012, 2014, 2018 Russ Allbery <eagle@eyrie.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -23,6 +23,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 #ifndef TAP_FLOAT_H
@@ -32,9 +34,8 @@
 
 BEGIN_DECLS
 
-/* Check an expected value against a seen value within epsilon. */
-void is_double(double wanted, double seen, double epsilon,
-               const char *format, ...)
+/* Compare two values within epsilon. */
+int is_double(double, double, double epsilon, const char *format, ...)
     __attribute__((__format__(printf, 4, 5)));
 
 END_DECLS

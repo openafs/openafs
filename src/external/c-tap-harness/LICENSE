@@ -1,138 +1,154 @@
-The C TAP Harness package as a whole is:
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Comment: This file documents the copyright statements and licenses for
+ every file in this package in a machine-readable format.  For a less
+ detailed, higher-level overview, see README.
+ .
+ For any copyright year range specified as YYYY-ZZZZ in this file, the
+ range specifies every single year in that closed interval.
 
-  Copyright 2000, 2001, 2004, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-      Russ Allbery <rra@stanford.edu>
-  Copyright 2006, 2007, 2008, 2009, 2011, 2012
-      The Board of Trustees of the Leland Stanford Junior University
+Files: *
+Copyright: 2000-2001, 2004, 2006-2020 Russ Allbery <eagle@eyrie.org>
+  2001-2002, 2004-2014
+    The Board of Trustees of the Leland Stanford Junior University
+License: Expat
 
-and released under the following license:
+Files: .clang-format docs/api/bail.3 docs/api/bail.pod
+ docs/api/bcalloc_type.3 docs/api/bcalloc_type.pod docs/api/bmalloc.3
+ docs/api/bmalloc.pod docs/api/breallocarray.3 docs/api/breallocarray.pod
+ docs/api/diag.3 docs/api/diag.pod docs/api/diag_file_add.3
+ docs/api/diag_file_add.pod docs/api/is_int.3 docs/api/is_int.pod
+ docs/api/ok.3 docs/api/ok.pod docs/api/plan.3 docs/api/plan.pod
+ docs/api/skip.3 docs/api/skip.pod docs/api/skip_all.3
+ docs/api/skip_all.pod docs/api/test_cleanup_register.3
+ docs/api/test_cleanup_register.pod docs/api/test_file_path.3
+ docs/api/test_file_path.pod docs/api/test_tmpdir.3
+ docs/api/test_tmpdir.pod docs/runtests.1 docs/runtests.pod
+ docs/writing-tests tests/data/cppcheck.supp
+Copyright: 2009-2020 Russ Allbery <eagle@eyrie.org>
+License: all-permissive
+ Copying and distribution of this file, with or without modification, are
+ permitted in any medium without royalty provided the copyright notice and
+ this notice are preserved.  This file is offered as-is, without any
+ warranty.
 
-  Permission is hereby granted, free of charge, to any person obtaining a
-  copy of this software and associated documentation files (the
-  "Software"), to deal in the Software without restriction, including
-  without limitation the rights to use, copy, modify, merge, publish,
-  distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so, subject to
-  the following conditions:
+Files: Makefile.in
+Copyright: 1994-2020 Free Software Foundation, Inc.
+  2008-2020 Russ Allbery <eagle@eyrie.org>
+License: FSF-unlimited and Expat
 
-  The above copyright notice and this permission notice shall be included
-  in all copies or substantial portions of the Software.
+Files: aclocal.m4
+Copyright: 1996-2020 Free Software Foundation, Inc.
+License: FSF-unlimited
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Files: build-aux/ar-lib build-aux/compile build-aux/depcomp
+ build-aux/missing
+Copyright: 1996-2020 Free Software Foundation, Inc.
+License: GPL-2+ with Autoconf exception or Expat
 
-All individual files without an explicit exception below are released
-under this license.  Some files may have additional copyright holders as
-noted in those files.
+Files: build-aux/install-sh
+Copyright: 1994 X Consortium
+License: X11
+ Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the
+ "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish,
+ distribute, sublicense, and/or sell copies of the Software, and to permit
+ persons to whom the Software is furnished to do so, subject to the
+ following conditions:
+ .
+ The above copyright notice and this permission notice shall be included
+ in all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ OTHER DEALINGS IN THE SOFTWARE.
+ .
+ Except as contained in this notice, the name of the X Consortium shall
+ not be used in advertising or otherwise to promote the sale, use or other
+ dealings in this Software without prior written authorization from the X
+ Consortium.
 
-Some files in this distribution are individually released under different
-licenses, all of which are compatible with the above general package
-license but which may require preservation of additional notices.  All
-required notices are preserved in this file.  Of the files intended to be
-copied into other packages, only docs/writing-tests has a different
-license notice, and its requirements are met by preserving the license
-section of that document in any derivative works.
+Files: configure
+Copyright: 1992-1996, 1998-2012 Free Software Foundation, Inc.
+License: FSF-configure
+ This script is free software; the Free Software Foundation gives unlimited
+ permission to copy, distribute and modify it.
 
-Collected copyright notices for the entire package:
+Files: m4/cc-flags.m4
+Copyright: 2006, 2009, 2016 Internet Systems Consortium, Inc.
+  2016-2020 Russ Allbery <eagle@eyrie.org>
+License: ISC
+ Permission to use, copy, modify, and distribute this software for any
+ purpose with or without fee is hereby granted, provided that the above
+ copyright notice and this permission notice appear in all copies.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH
+ REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ MERCHANTABILITY AND FITNESS.  IN NO EVENT SHALL ISC BE LIABLE FOR ANY
+ SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-  Copyright 2000, 2001, 2004, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-      Russ Allbery <rra@stanford.edu>
-  Copyright 2006, 2007, 2008, 2009, 2011, 2012
-      The Board of Trustees of the Leland Stanford Junior University
-  Copyright 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-      2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
-      Free Software Foundation, Inc.
-  Copyright 1994 X Consortium
+Files: m4/clang.m4
+Copyright: 2015 Russ Allbery <eagle@eyrie.org>
+License: unlimited
+ This file is free software; the authors give unlimited permission to copy
+ and/or distribute it, with or without modifications, as long as this
+ notice is preserved.
 
-The file docs/writing-tests is released under the following license:
+License: Expat
+ Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the
+ "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish,
+ distribute, sublicense, and/or sell copies of the Software, and to permit
+ persons to whom the Software is furnished to do so, subject to the
+ following conditions:
+ .
+ The above copyright notice and this permission notice shall be included
+ in all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+ OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+ THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-  Copying and distribution of this file, with or without modification, are
-  permitted in any medium without royalty provided the copyright notice
-  and this notice are preserved.  This file is offered as-is, without any
-  warranty.
+License: FSF-unlimited
+ This file is free software; the Free Software Foundation gives unlimited
+ permission to copy and/or distribute it, with or without modifications, as
+ long as this notice is preserved.
+ .
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-The files Makefile.in and aclocal.m4 are generated by GNU Automake and
-released under the following copyright and license:
+License: GPL-2+ with Autoconf exception
+ This file is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the
+ Free Software Foundation; either version 2 of the License, or (at your
+ option) any later version.
+ .
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+ Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License along
+ with this program.  If not, see <https://www.gnu.org/licenses/>.
+ .
+ As a special exception to the GNU General Public License, if you
+ distribute this file as part of a program that contains a configuration
+ script generated by Autoconf, you may include it under the same
+ distribution terms that you use for the rest of that program.
+Comment: The option described in the license has been accepted and these
+ files are distributed under the same terms as the package as a whole, as
+ described at the top of this file.
 
-  Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-  2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software
-  Foundation, Inc.  This file is free software; the Free Software
-  Foundation gives unlimited permission to copy and/or distribute it, with
-  or without modifications, as long as this notice is preserved.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY, to the extent permitted by law; without
-  even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-  PARTICULAR PURPOSE.
-
-The file configure is generated by GNU Autoconf and is released under the
-following copyright and license:
-
-  Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000, 2001,
-  2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software
-  Foundation, Inc.  This configure script is free software; the Free
-  Software Foundation gives unlimited permission to copy, distribute and
-  modify it.
-
-The files build-aux/compile, build-aux/depcomp, and build-aux/missing are
-taken from GNU Automake and are released under the following copyright and
-license:
-
-  Copyright (C) 1996, 1997, 1999, 2000, 2002, 2003, 2004, 2005, 2006,
-  2007, 2008, 2009, 2010, 2011, 2012 Free Software Foundation, Inc.
-
-  This program is free software; you can redistribute it and/or modify it
-  under the terms of the GNU General Public License as published by the
-  Free Software Foundation; either version 2, or (at your option) any
-  later version.
-
-  This program is distributed in the hope that it will be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
-
-  As a special exception to the GNU General Public License, if you
-  distribute this file as part of a program that contains a configuration
-  script generated by Autoconf, you may include it under the same
-  distribution terms that you use for the rest of that program.
-
-For the C TAP Harness distribution, the option described in the last
-paragraph has been accepted and these files are distributed under the same
-terms as the C TAP Harness package as a whole, as described at the top of
-this file.
-
-The file build-aux/install-sh is released under the following copyright
-and license:
-
-  Copyright (C) 1994 X Consortium
-
-  Permission is hereby granted, free of charge, to any person obtaining a
-  copy of this software and associated documentation files (the
-  "Software"), to deal in the Software without restriction, including
-  without limitation the rights to use, copy, modify, merge, publish,
-  distribute, sublicense, and/or sell copies of the Software, and to
-  permit persons to whom the Software is furnished to do so, subject to
-  the following conditions:
-
-  The above copyright notice and this permission notice shall be included
-  in all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-  IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
-  OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-  OTHER DEALINGS IN THE SOFTWARE.
-
-  Except as contained in this notice, the name of the X Consortium shall
-  not be used in advertising or otherwise to promote the sale, use or
-  other dealings in this Software without prior written authorization
-  from the X Consortium.
-
-  FSF changes to this file are in the public domain.

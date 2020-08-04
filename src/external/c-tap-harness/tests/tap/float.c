@@ -8,9 +8,9 @@
  * otherwise care about floating point.
  *
  * This file is part of C TAP Harness.  The current version plus supporting
- * documentation is at <http://www.eyrie.org/~eagle/software/c-tap-harness/>.
+ * documentation is at <https://www.eyrie.org/~eagle/software/c-tap-harness/>.
  *
- * Copyright 2008, 2010, 2012 Russ Allbery <rra@stanford.edu>
+ * Copyright 2008, 2010, 2012-2019 Russ Allbery <eagle@eyrie.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -29,13 +29,15 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
+ *
+ * SPDX-License-Identifier: MIT
  */
 
 /* Required for isnan() and isinf(). */
 #if defined(__STRICT_ANSI__) || defined(PEDANTIC)
-# ifndef _XOPEN_SOURCE
-#  define _XOPEN_SOURCE 600
-# endif
+#    ifndef _XOPEN_SOURCE
+#        define _XOPEN_SOURCE 600
+#    endif
 #endif
 
 #include <math.h>
@@ -46,22 +48,49 @@
 #include <tests/tap/float.h>
 
 /*
- * Takes an expected double and a seen double and assumes the test passes if
- * those two numbers are within delta of each other.
+ * Clang 4.0.1 gets very confused by this file and produces warnings about
+ * floating point implicit conversion from the isnan() and isinf() macros.
  */
-void
-is_double(double wanted, double seen, double epsilon, const char *format, ...)
+#if defined(__llvm__) || defined(__clang__)
+#    pragma clang diagnostic ignored "-Wconversion"
+#    pragma clang diagnostic ignored "-Wdouble-promotion"
+#endif
+
+/*
+ * Returns true if the two doubles are equal infinities, false otherwise.
+ * This requires a bit of machination since isinf is not required to return
+ * different values for positive and negative infinity, and we're trying to
+ * avoid direct comparisons between floating point numbers.
+ */
+static int
+is_equal_infinity(double left, double right)
+{
+    if (!isinf(left) || !isinf(right))
+        return 0;
+    return !!(left < 0) == !!(right < 0);
+}
+
+/*
+ * Takes two doubles and requires they be within epsilon of each other.
+ */
+int
+is_double(double left, double right, double epsilon, const char *format, ...)
 {
     va_list args;
+    int success;
 
     va_start(args, format);
     fflush(stderr);
-    if ((isnan(wanted) && isnan(seen))
-        || (isinf(wanted) && isinf(seen) && wanted == seen)
-        || fabs(wanted - seen) <= epsilon)
+    if ((isnan(left) && isnan(right)) || is_equal_infinity(left, right)
+        || fabs(left - right) <= epsilon) {
+        success = 1;
         okv(1, format, args);
-    else {
-        printf("# wanted: %g\n#   seen: %g\n", wanted, seen);
+    } else {
+        success = 0;
+        diag(" left: %g", left);
+        diag("right: %g", right);
         okv(0, format, args);
     }
+    va_end(args);
+    return success;
 }
