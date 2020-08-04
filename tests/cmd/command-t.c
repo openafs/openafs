@@ -360,10 +360,10 @@ main(int argc, char **argv)
     cmd_FreeArgv(tv);
 
     /* Now, try adding a configuration file into the mix */
-    if (getenv("SOURCE") == NULL)
+    if (getenv("C_TAP_SOURCE") == NULL)
 	path = strdup("test1.conf");
     else {
-	if (asprintf(&path, "%s/cmd/test1.conf", getenv("SOURCE")) < 0)
+	if (asprintf(&path, "%s/cmd/test1.conf", getenv("C_TAP_SOURCE")) < 0)
 	    path = NULL;
     }
     if (path != NULL) {

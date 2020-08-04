@@ -99,12 +99,12 @@ sub test_command_man_pages {
 sub run_manpage_tests($$) {
     my ($subdir, $command) = @_;
 
-    # When run from 'runtests', our cwd will be TOP_OBJDIR/tests. $SOURCE is
-    # set to TOP_SRCDIR/tests, and $BUILD is set to TOP_OBJDIR/tests. We want
-    # the top-level src and obj dirs, in order to find the relevant binaries
-    # and manpages.
-    my $srcdir = $ENV{SOURCE} . "/..";
-    my $objdir = $ENV{BUILD} . "/..";
+    # When run from 'runtests', our cwd will be TOP_OBJDIR/tests. $C_TAP_SOURCE
+    # is set to TOP_SRCDIR/tests, and $C_TAP_BUILD is set to TOP_OBJDIR/tests.
+    # We want the top-level src and obj dirs, in order to find the relevant
+    # binaries and manpages.
+    my $srcdir = $ENV{C_TAP_SOURCE} . "/..";
+    my $objdir = $ENV{C_TAP_BUILD} . "/..";
 
     my @sub_commands = lookup_sub_commands("$objdir/$subdir", $command);
     die("No subcommands found in $objdir/$subdir/$command?") unless(@sub_commands);

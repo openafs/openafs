@@ -36,10 +36,10 @@ use FindBin qw($Bin);
 my $softsig_helper;
 
 # Our softsig helper should be in $TOP_OBJDIR/tests/opr. To calculate that
-# path, use the BUILD env var if the test harness has set it; otherwise, our
-# next best guess is that it's in the same dir as this script.
-if (defined($ENV{BUILD})) {
-    $softsig_helper = $ENV{BUILD} . "/opr/softsig-helper";
+# path, use the C_TAP_BUILD env var if the test harness has set it; otherwise,
+# our next best guess is that it's in the same dir as this script.
+if (defined($ENV{C_TAP_BUILD})) {
+    $softsig_helper = $ENV{C_TAP_BUILD} . "/opr/softsig-helper";
 } else {
     $softsig_helper = $Bin . "/softsig-helper";
 }

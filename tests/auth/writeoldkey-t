@@ -20,16 +20,16 @@ if (!defined(gethostbyname(hostname()))) {
 plan tests => 1;
 
 my $cmd;
-if (defined($ENV{BUILD})) {
-    $cmd = $ENV{BUILD} . "/auth/writekeyfile";
+if (defined($ENV{C_TAP_BUILD})) {
+    $cmd = $ENV{C_TAP_BUILD} . "/auth/writekeyfile";
 } else {
     $cmd = $Bin . "/writekeyfile";
 }
 $cmd = abs_path($cmd);
 
 my $keyfile;
-if (defined($ENV{SOURCE})) {
-    $keyfile = $ENV{SOURCE} . "/auth/KeyFile.short";
+if (defined($ENV{C_TAP_SOURCE})) {
+    $keyfile = $ENV{C_TAP_SOURCE} . "/auth/KeyFile.short";
 } else {
     $keyfile = $Bin . "/KeyFile.short";
 }

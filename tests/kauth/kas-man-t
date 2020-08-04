@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use lib $ENV{SOURCE} . "/tests-lib/perl5";
+use lib $ENV{C_TAP_SOURCE} . "/tests-lib/perl5";
 use mancheck_utils;
 
 run_manpage_tests("src/kauth", "kas");
