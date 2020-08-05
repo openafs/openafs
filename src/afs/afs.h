@@ -46,14 +46,19 @@ extern enum afs_shutdown_state afs_shuttingdown;
  * Macros to uniquely identify the AFS vfs struct
  */
 #define	AFS_VFSMAGIC		0x1234
-#if defined(AFS_SUN5_ENV) || defined(AFS_HPUX90_ENV) || defined(AFS_LINUX20_ENV)
-#define	AFS_VFSFSID		99
+
+#if defined(UKERNEL)
+# if defined(AFS_USR_AIX_ENV) || defined(AFS_USR_SGI_ENV)
+#  define AFS_VFSFSID		AFS_MOUNT_AFS
+# else
+#  define AFS_VFSFSID		99
+# endif
+#elif defined(AFS_SUN5_ENV) || defined(AFS_HPUX90_ENV) || defined(AFS_LINUX20_ENV)
+# define AFS_VFSFSID		99
+#elif defined(AFS_SGI_ENV)
+# define AFS_VFSFSID		afs_fstype
 #else
-#if defined(AFS_SGI_ENV)
-#define AFS_VFSFSID		afs_fstype
-#else
-#define	AFS_VFSFSID		AFS_MOUNT_AFS
-#endif
+# define AFS_VFSFSID		AFS_MOUNT_AFS
 #endif
 /* use this value for reporting total space, free space, etc.
  * fake a high number to satisfy programs that use the statfs call to make sure
