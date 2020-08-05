@@ -237,10 +237,11 @@ atocl(char *numstring, char crunit, afs_int32 *number)
 	total *= 1024.0;
 
     total += 0.5;		/* Round up */
-    if ((total > 0x7fffffff) || (total < 0))	/* Don't go over 2G */
-	total = 0x7fffffff;
+    if ((total >= 2147483648.0) || (total < 0))	/* Don't go over 2G */
+	*number = 2147483647;
+    else
+	*number = total;
 
-    *number = total;
     return (0);
 }
 
