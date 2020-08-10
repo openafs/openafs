@@ -1711,7 +1711,6 @@ static int cb_stateSaveFEHash(struct fs_dump_state * state);
 static int cb_stateSaveFEs(struct fs_dump_state * state);
 static int cb_stateSaveFE(struct fs_dump_state * state, struct FileEntry * fe);
 static int cb_stateRestoreTimeouts(struct fs_dump_state * state);
-static int cb_stateRestoreFEHash(struct fs_dump_state * state);
 static int cb_stateRestoreFEs(struct fs_dump_state * state);
 static int cb_stateRestoreFE(struct fs_dump_state * state);
 static int cb_stateRestoreCBs(struct fs_dump_state * state, struct FileEntry * fe,
@@ -1812,11 +1811,15 @@ cb_stateRestore(struct fs_dump_state * state)
 	goto done;
     }
 
-    if (cb_stateRestoreFEHash(state)) {
-	ViceLog(0, ("cb_stateRestore: failed to restore FE HashTable slab\n"));
-	ret = 1;
-	goto done;
-    }
+    /*
+     * Note that we do not look at fehash_offset, and we skip reading in
+     * state->cb_fehash_hdr and all of the FE hash entries. Instead of loading
+     * the FE hashtable from disk, we'll just populate our hashtable ourselves
+     * as we load in the FEs. Loading the hashtable from disk currently isn't
+     * any faster (since we need to fixup the indices regardless), and
+     * populating the hashtable ourselves is a bit simpler and makes it easier
+     * to alter our hashing scheme.
+     */
 
     /* restore FEs and CBs from disk */
     if (cb_stateRestoreFEs(state)) {
@@ -1843,12 +1846,6 @@ cb_stateRestoreIndices(struct fs_dump_state * state)
     for (i = 1; i < state->fe_map.len; i++) {
 	if (state->fe_map.entries[i].new_idx) {
 	    fe = itofe(state->fe_map.entries[i].new_idx);
-
-	    /* restore the fe->fnext entry */
-	    if (fe_OldToNew(state, fe->fnext, &fe->fnext)) {
-		ret = 1;
-		goto done;
-	    }
 
 	    /* restore the fe->firstcb entry */
 	    if (cb_OldToNew(state, fe->firstcb, &fe->firstcb)) {
@@ -1910,14 +1907,6 @@ cb_stateRestoreIndices(struct fs_dump_state * state)
     /* restore the timeout queue head indices */
     for (i = 0; i < state->cb_timeout_hdr->records; i++) {
 	if (cb_OldToNew(state, timeout[i], &timeout[i])) {
-	    ret = 1;
-	    goto done;
-	}
-    }
-
-    /* restore the FE hash table queue heads */
-    for (i = 0; i < state->cb_fehash_hdr->records; i++) {
-	if (fe_OldToNew(state, HashTable[i], &HashTable[i])) {
 	    ret = 1;
 	    goto done;
 	}
@@ -2280,54 +2269,6 @@ cb_stateSaveFEHash(struct fs_dump_state * state)
 }
 
 static int
-cb_stateRestoreFEHash(struct fs_dump_state * state)
-{
-    int ret = 0, len;
-
-    if (fs_stateReadHeader(state, &state->cb_hdr->fehash_offset,
-			   state->cb_fehash_hdr,
-			   sizeof(struct callback_state_fehash_header))) {
-	ViceLog(0, ("cb_stateRestoreFEHash: failed to restore cb_fehash_hdr\n"));
-	ret = 1;
-	goto done;
-    }
-
-    if (state->cb_fehash_hdr->magic != CALLBACK_STATE_FEHASH_MAGIC) {
-	ViceLog(0, ("cb_stateRestoreFEHash: invalid cb_fehash_hdr magic 0x%x != 0x%x\n",
-		state->cb_fehash_hdr->magic, CALLBACK_STATE_FEHASH_MAGIC));
-	ret = 1;
-	goto done;
-    }
-    if (state->cb_fehash_hdr->records != FEHASH_SIZE) {
-	ViceLog(0, ("cb_stateRestoreFEHash: records %d != %d\n",
-		    state->cb_fehash_hdr->records, FEHASH_SIZE));
-	ret = 1;
-	goto done;
-    }
-
-    len = state->cb_fehash_hdr->records * sizeof(afs_uint32);
-
-    if (state->cb_fehash_hdr->len !=
-	(sizeof(struct callback_state_fehash_header) + len)) {
-	ViceLog(0, ("cb_stateRestoreFEHash: header len %d != %d + %d\n",
-		    state->cb_fehash_hdr->len,
-		    (int)sizeof(struct callback_state_fehash_header),
-		    len));
-	ret = 1;
-	goto done;
-    }
-
-    if (fs_stateRead(state, HashTable, len)) {
-	ViceLog(0, ("cb_stateRestoreFEHash: failed read of HashTable\n"));
-	ret = 1;
-	goto done;
-    }
-
- done:
-    return ret;
-}
-
-static int
 cb_stateSaveFEs(struct fs_dump_state * state)
 {
     int ret = 0;
@@ -2354,6 +2295,12 @@ static int
 cb_stateRestoreFEs(struct fs_dump_state * state)
 {
     int count, nFEs, ret = 0;
+
+    if (fs_stateSeek(state, &state->cb_hdr->fe_offset)) {
+	ViceLog(0, ("cb_stateRestoreFEs: error seeking to FE offset\n"));
+	ret = 1;
+	goto done;
+    }
 
     nFEs = state->cb_hdr->nFEs;
 
@@ -2596,6 +2543,7 @@ cb_stateDiskEntryToFE(struct fs_dump_state * state,
 		      struct FEDiskEntry * in, struct FileEntry * out)
 {
     int ret = 0;
+    int hash;
 
     memcpy(out, &in->fe, sizeof(struct FileEntry));
 
@@ -2609,6 +2557,11 @@ cb_stateDiskEntryToFE(struct fs_dump_state * state,
     state->fe_map.entries[in->index].valid = FS_STATE_IDX_VALID;
     state->fe_map.entries[in->index].old_idx = in->index;
     state->fe_map.entries[in->index].new_idx = fetoi(out);
+
+    /* Add this new FE to the HashTable. */
+    hash = FEHash(out->volid, out->unique);
+    out->fnext = HashTable[hash];
+    HashTable[hash] = fetoi(out);
 
  done:
     return ret;
