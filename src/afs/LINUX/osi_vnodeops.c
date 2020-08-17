@@ -589,13 +589,11 @@ out1:
 extern int afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
 		      unsigned long arg);
 
-#if defined(HAVE_UNLOCKED_IOCTL) || defined(HAVE_COMPAT_IOCTL)
 static long afs_unlocked_xioctl(struct file *fp, unsigned int com,
                                unsigned long arg) {
     return afs_xioctl(FILE_INODE(fp), fp, com, arg);
 
 }
-#endif
 
 
 static int
@@ -891,14 +889,8 @@ struct file_operations afs_dir_fops = {
 #else
   .readdir =	afs_linux_readdir,
 #endif
-#ifdef HAVE_UNLOCKED_IOCTL
   .unlocked_ioctl = afs_unlocked_xioctl,
-#else
-  .ioctl =	afs_xioctl,
-#endif
-#ifdef HAVE_COMPAT_IOCTL
   .compat_ioctl = afs_unlocked_xioctl,
-#endif
   .open =	afs_linux_open,
   .release =	afs_linux_release,
   .llseek =	default_llseek,
@@ -926,14 +918,8 @@ struct file_operations afs_file_fops = {
   .read =	afs_linux_read,
   .write =	afs_linux_write,
 #endif
-#ifdef HAVE_UNLOCKED_IOCTL
   .unlocked_ioctl = afs_unlocked_xioctl,
-#else
-  .ioctl =	afs_xioctl,
-#endif
-#ifdef HAVE_COMPAT_IOCTL
   .compat_ioctl = afs_unlocked_xioctl,
-#endif
   .mmap =	afs_linux_mmap,
   .open =	afs_linux_open,
   .flush =	afs_linux_flush,
