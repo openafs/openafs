@@ -139,7 +139,7 @@ GetConn(struct cmd_syndesc *as, int aencrypt)
 	exit(1);
     }
 
-    if (scIndex == RX_SECIDX_NULL)
+    if (scIndex == RX_SECIDX_NULL && !(secFlags & AFSCONF_SECOPTS_NOAUTH))
 	fprintf(stderr, "bos: running unauthenticated\n");
 
     tconn =
