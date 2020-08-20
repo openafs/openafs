@@ -152,7 +152,10 @@ release_conns_user_server(struct unixuser *xu, struct server *xs)
 			if (sa->natping == tc) {
 			    int cin;
 			    struct afs_conn *tcn;
+			    sa->natping = NULL;
 			    for (tcvn = sa->conns; tcvn; tcvn = tcvn->next) {
+				if (sa->natping != NULL)
+				    break;
 				if (tcvn == tcv)
 				    continue;
 				for(cin = 0; cin < CVEC_LEN; ++cin) {
