@@ -4052,8 +4052,15 @@ SalvageVolume(struct SalvInfo *salvinfo, struct InodeSummary *rwIsp, IHandle_t *
 	     * link count was not incremented in JudgeEntry().
 	     */
 	    if (class == vLarge) {	/* directory vnode */
-		pv = vnodeIdToBitNumber(vep->parent);
-		if (salvinfo->vnodeInfo[vLarge].vnodes[pv].unique != 0) {
+		struct VnodeEssence *parent_vep;
+
+		parent_vep = CheckVnodeNumber(salvinfo, vep->parent);
+
+		if (!parent_vep)
+		    Log("Vnode %d has invalid or out-of-range parent vnode %d;" \
+			" ignore parent count adjustment\n",
+			ThisVnode, vep->parent);
+		else if (parent_vep->unique != 0) {
 		    if (vep->parent == 1 && newrootdir) {
 			/* this vnode's parent was the volume root, and
 			 * we just created the volume root. So, the parent
@@ -4064,7 +4071,7 @@ SalvageVolume(struct SalvInfo *salvinfo, struct InodeSummary *rwIsp, IHandle_t *
 			 /* noop */
 
 		    } else {
-			salvinfo->vnodeInfo[vLarge].vnodes[pv].count++;
+			parent_vep->count++;
 		    }
 		}
 	    }
