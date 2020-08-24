@@ -788,6 +788,10 @@ srpm: dist
 	  packages/openafs-*-src.tar.bz2 \
 	  packages/openafs-*-doc.tar.bz2
 
+rpm: srpm
+	rpmbuild --rebuild --define "_topdir @TOP_OBJDIR@/packages/rpmbuild" \
+	  packages/openafs-*.src.rpm
+
 dox:
 	if test "x$(DOXYGEN)" != "x"; then \
 	    mkdir -p doc/doxygen/output && $(DOXYGEN) doc/doxygen/Doxyfile; \
