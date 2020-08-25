@@ -112,10 +112,6 @@ static void get1_param_type(definition * defp, declaration * dec,
 			    char **param_type);
 static void get_param_type(definition * defp, declaration * dec,
 			   char **param_type, char **typename);
-#ifdef undef
-static void hndle_param_tail(definition * defp, declaration * dec,
-			     token * tokp, char *typename);
-#endif
 static void cs_Proc_CodeGeneration(definition * defp, int split_flag,
 				   char *procheader);
 static void cs_ProcName_setup(definition * defp, char *procheader,
@@ -1018,32 +1014,6 @@ get_param_type(definition * defp, declaration * dec, char **param_type,
 	strcpy(*param_type, typecontents);
     }
 }
-
-
-#ifdef undef
-static void
-hndle_param_tail(definition * defp, declaration * dec, token * tokp,
-		 char *typename)
-{
-    char *amp;
-
-    if (dec->rel == REL_POINTER)
-	Proc_list->pl.param_flag |= INDIRECT_PARAM;
-    else
-	Proc_list->pl.param_flag &= ~INDIRECT_PARAM;
-    amp = "";
-    if (!(Proc_list->pl.param_flag & INDIRECT_PARAM))
-	amp = "&";
-
-    sprintf(Proc_list->code, "xdr_%s(&z_xdrs, %s%s)", typename, amp,
-	    Proc_list->pl.param_name);
-    sprintf(Proc_list->scode, "xdr_%s(z_xdrs, &%s)", typename,
-	    Proc_list->pl.param_name);
-    scan2(TOK_COMMA, TOK_RPAREN, tokp);
-    if (tokp->kind == TOK_COMMA)
-	peek(tokp);
-}
-#endif
 
 
 static void
