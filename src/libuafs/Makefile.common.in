@@ -216,7 +216,7 @@ ${TOP_LIBDIR}/perl/AFS/ukernel.pm: setup_perllib PERLUAFS/ukernel.pm
 LIBUAFS_BUILD_PERL: ${TOP_LIBDIR}/perl/ukernel.so ${TOP_LIBDIR}/perl/AFS/ukernel.pm
 
 linktest: libuafs.a
-	$(CC) $(CFLAGS) $(TEST_CFLAGS) $(TEST_LDFLAGS) \
+	$(CC) $(COMMON_CFLAGS) $(TEST_CFLAGS) $(TEST_LDFLAGS) \
 		$(LDFLAGS_roken) $(LDFLAGS_hcrypto) -o linktest \
 		${srcdir}/linktest.c $(MODULE_INCLUDE) -DUKERNEL \
 		libuafs.a ${TOP_LIBDIR}/libcmd.a \
