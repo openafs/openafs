@@ -28,9 +28,6 @@
 #define AFS_WARNUSER_MARINER_ENV 1
 #define DARWIN_REFBASE 3
 
-/* File system entry (used if mount.h doesn't define MOUNT_AFS */
-#define AFS_MOUNT_AFS    "afs"
-
 /* Machine / Operating system information */
 #if defined(__ppc__)
 #define sys_ppc_darwin_12	1
@@ -118,9 +115,6 @@
 #define AFS_WARNUSER_MARINER_ENV 1
 #define DARWIN_REFBASE 0
 #define AFS_NEW_BKG 1
-
-/* File system entry (used if mount.h doesn't define MOUNT_AFS */
-#define AFS_MOUNT_AFS    "afs"
 
 /* Machine / Operating system information */
 #if defined(__ppc__)

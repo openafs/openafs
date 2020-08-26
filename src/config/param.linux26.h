@@ -20,7 +20,6 @@
 #define AFS_LINUX24_ENV		1
 #define AFS_LINUX26_ENV		1
 
-#define AFS_MOUNT_AFS		"afs"	/* The name of the filesystem type */
 #define AFS_64BIT_IOPS_ENV	1
 #define AFS_NAMEI_ENV		1	/* User space interface to file system */
 #define AFS_64BIT_CLIENT	1
@@ -74,7 +73,6 @@
 #define AFS_64BIT_CLIENT	1
 #undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS 		1
-#define AFS_MOUNT_AFS 		"afs"	/* The name of the filesystem type. */
 #define AFS_64BIT_IOPS_ENV	1
 #define AFS_NAMEI_ENV		1	/* User space interface to file system */
 #define AFS_USERSPACE_IP_ADDR 	1

@@ -35,8 +35,7 @@
 #define AFS_GLOBAL_SUNLOCK 1
 #define AFS_GCPAGS		1	/* if nonzero, garbage collect PAGs */
 
-/* File system entry (used if vmount.h doesn't define MNT_AFS */
-#define AFS_MOUNT_AFS	4
+#define AFS_FSNO	4
 #define AFS_SYSCALL    31
 
 /* Machine / Operating system information */
@@ -136,8 +135,7 @@
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
 #define	AFS_SYSCALL		105
 
-/* File system entry (used if mount.h doesn't define MOUNT_AFS */
-#define AFS_MOUNT_AFS	 4
+#define AFS_FSNO	 4
 
 /* Machine / Operating system information */
 #define sys_rs_aix51	1

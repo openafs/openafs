@@ -96,8 +96,9 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 #include <mach/mach_init.h>
 #endif /* AFS_DARWIN_ENV */
 
+#define AFS_MOUNT_STR "afs"
 #ifndef MOUNT_AFS
-#define	MOUNT_AFS AFS_MOUNT_AFS
+#define	MOUNT_AFS AFS_MOUNT_STR
 #endif /* MOUNT_AFS */
 
 #ifdef AFS_SGI65_ENV
@@ -399,11 +400,11 @@ aix_vmount(const char *cacheMountDir)
     vmountp->vmt_revision = VMT_REVISION;
     vmountp->vmt_length = size;
     vmountp->vmt_fsid.fsid_dev = 0;
-    vmountp->vmt_fsid.fsid_type = AFS_MOUNT_AFS;
+    vmountp->vmt_fsid.fsid_type = AFS_FSNO;
     vmountp->vmt_vfsnumber = 0;
     vmountp->vmt_time = 0;	/* We'll put the time soon! */
     vmountp->vmt_flags = VFS_DEVMOUNT;	/* read/write permission */
-    vmountp->vmt_gfstype = AFS_MOUNT_AFS;
+    vmountp->vmt_gfstype = AFS_FSNO;
     vmountdata(vmountp, "AFS", cacheMountDir, "", "", "", "rw");
 
     /* Do the actual mount system call */

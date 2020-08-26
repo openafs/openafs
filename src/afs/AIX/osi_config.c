@@ -116,7 +116,7 @@ afs_config(cmd, uiop)
 	 */
 	if (err = pincode(afs_config))
 	    goto out;
-	err = gfsadd(AFS_MOUNT_AFS, &afs_gfs);
+	err = gfsadd(AFS_FSNO, &afs_gfs);
 	/*
 	 * ok, if already installed
 	 */
@@ -139,7 +139,7 @@ afs_config(cmd, uiop)
 	    koff_addsyms(db_syms, db_nsyms);
 	}
     } else if (cmd == CFG_TERM) {	/* delete AFS gfs       */
-	err = gfsdel(AFS_MOUNT_AFS);
+	err = gfsdel(AFS_FSNO);
 	/*
 	 * ok, if already deleted
 	 */

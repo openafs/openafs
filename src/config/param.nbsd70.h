@@ -7,7 +7,6 @@
 #define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_64BIT_CLIENT 1
 
-#define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 210
 
 #define AFS_KALLOC(n)           kmem_alloc(n, KM_SLEEP)

@@ -146,7 +146,7 @@ static const struct vnodeopv_desc *afs_vnodeopv_descs[] = {
 };
 
 struct vfsops afs_vfsops = {
-    AFS_MOUNT_AFS,
+    AFS_MOUNT_STR,
 #ifdef AFS_NBSD50_ENV
 	0,						/* vfs_min_mount_data */
 #endif
@@ -273,7 +273,7 @@ afs_mount(struct mount *mp, const char *path, void *data,
     memset(mp->mnt_stat.f_mntfromname, 0, MNAMELEN);
     strcpy(mp->mnt_stat.f_mntfromname, "AFS");
     /* null terminated string "AFS" will fit, just leave it be. */
-    strcpy(mp->mnt_stat.f_fstypename, AFS_MOUNT_AFS);
+    strcpy(mp->mnt_stat.f_fstypename, AFS_MOUNT_STR);
     AFS_GUNLOCK();
     (void)afs_statvfs(mp, &mp->mnt_stat);
 

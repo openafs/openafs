@@ -42,14 +42,9 @@
 #define AFS_ENV			1
 
 #define AFS_SYSCALL		339
-#define AFS_MOUNT_AFS		"afs"
 
 #ifndef MOUNT_UFS
 #define MOUNT_UFS "ufs"
-#endif
-
-#ifndef	MOUNT_AFS
-#define	MOUNT_AFS AFS_MOUNT_AFS
 #endif
 
 #define RXK_LISTENER_ENV	1
@@ -146,7 +141,6 @@ enum vcexcl { NONEXCL, EXCL };
 #undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS		1
 
-#define AFS_MOUNT_AFS		"afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL		339
 #define AFS_NAMEI_ENV		1	/* User space interface to file system */
 #define AFS_64BIT_IOPS_ENV	1	/* Needed for NAMEI */
