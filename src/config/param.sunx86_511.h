@@ -48,9 +48,6 @@
 /* so we get _IOW() when we include sys/ioctl.h */
 #define BSD_COMP
 
-/* File system entry (used if mount.h doesn't define MOUNT_AFS */
-#define AFS_MOUNT_AFS		"afs"
-
 /* Machine / Operating system information */
 #define sys_sunx86_511		1
 #define SYS_NAME		"sunx86_511"
@@ -139,8 +136,7 @@
 /* so we get _IOW() when we include sys/ioctl.h */
 #define BSD_COMP
 
-/* File system entry (used if mount.h doesn't define MOUNT_AFS */
-#define AFS_MOUNT_AFS		1
+#define AFS_FSNO		1
 
 /* Machine / Operating system information */
 #define sys_sunx86_511         1

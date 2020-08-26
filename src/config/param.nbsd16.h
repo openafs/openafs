@@ -38,16 +38,11 @@
 #define AFS_GREEDY43_ENV	1
 #define AFS_ENV  	1
 
-#define AFS_MOUNT_AFS	"afs"
 #define AFS_SYSCALL 210
 
 
 #ifndef MOUNT_UFS
 #define MOUNT_UFS "ufs"
-#endif
-
-#ifndef	MOUNT_AFS
-#define	MOUNT_AFS AFS_MOUNT_AFS
 #endif
 
 #define AFS_HAVE_FFS            1	/* Use system's ffs. */

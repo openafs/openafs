@@ -7,12 +7,7 @@
 #define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_64BIT_CLIENT 1
 
-#define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 210
-
-#ifndef	MOUNT_AFS
-#define	MOUNT_AFS AFS_MOUNT_AFS
-#endif
 
 #define AFS_XBSD_ENV 1		/* {Free,Open,Net}BSD */
 

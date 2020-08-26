@@ -130,8 +130,7 @@ struct uio;
 
 #define AFS_SYSCALL   48	/* slot reserved for AFS */
 
-/* File system entry (used if mount.h doesn't define MOUNT_AFS */
-#define AFS_MOUNT_AFS	 1
+#define AFS_FSNO	 1
 
 /* Machine / Operating system information */
 #define SYS_NAME	"hp_ux110"

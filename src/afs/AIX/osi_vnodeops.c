@@ -2580,7 +2580,7 @@ struct vnodeops locked_afs_gn_vnodeops = {
 struct gfs afs_gfs = {
     &locked_Afs_vfsops,
     &locked_afs_gn_vnodeops,
-    AFS_MOUNT_AFS,
+    AFS_FSNO,
     "afs",
     Afs_init,
     GFS_VERSION4 | GFS_VERSION42 | GFS_REMOTE,

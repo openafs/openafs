@@ -55,9 +55,6 @@
 #define AFS_SGI_XFS_IOPS_ENV 	1	/* turns on XFS inode ops. */
 #define AFS_64BIT_IOPS_ENV	1	/* inode ops expect 64 bit inodes */
 
-/* File system entry (used if mount.h doesn't define MOUNT_AFS */
-#define AFS_MOUNT_AFS	 "afs"
-
 /* Machine / Operating system information */
 #define sys_sgi_65	1
 #define SYS_NAME	"sgi_65"
@@ -139,9 +136,6 @@
 
 #define AFS_PIOCTL    64+1000
 #define AFS_SYSCALL   73+1000
-
-/* File system entry (used if mount.h doesn't define MOUNT_AFS */
-#define AFS_MOUNT_AFS	 1
 
 /* Machine / Operating system information */
 #define sgi_65		1

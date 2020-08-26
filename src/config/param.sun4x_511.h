@@ -38,9 +38,6 @@
 #define AFS_GCPAGS		1	/* if nonzero, garbage collect PAGs */
 #define AFS_PAG_ONEGROUP_ENV	1	/* Use a single gid to indicate a PAG */
 
-/* File system entry (used if mount.h doesn't define MOUNT_AFS */
-#define AFS_MOUNT_AFS	 "afs"
-
 /* Machine / Operating system information */
 #define sys_sun4x_511		1
 #define SYS_NAME		"sun4x_511"
@@ -130,8 +127,7 @@
 /* so we get _IOW() when we include sys/ioctl.h */
 #define BSD_COMP
 
-/* File system entry (used if mount.h doesn't define MOUNT_AFS */
-#define AFS_MOUNT_AFS		1
+#define AFS_FSNO		1
 
 /* Machine / Operating system information */
 #define sys_sun4x_511		1

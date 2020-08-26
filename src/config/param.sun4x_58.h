@@ -31,9 +31,6 @@
 
 #define	AFS_SYSCALL		65
 
-/* File system entry (used if mount.h doesn't define MOUNT_AFS */
-#define AFS_MOUNT_AFS	 "afs"
-
 /* Machine / Operating system information */
 #define sys_sun4x_58	1
 #define SYS_NAME	"sun4x_58"
@@ -122,8 +119,7 @@
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
 #define	AFS_SYSCALL		65
 
-/* File system entry (used if mount.h doesn't define MOUNT_AFS */
-#define AFS_MOUNT_AFS	 1
+#define AFS_FSNO	 1
 
 /* Machine / Operating system information */
 #define sys_sun4x_58	1

@@ -35,23 +35,33 @@ enum afs_shutdown_state {
 extern enum afs_shutdown_state afs_shuttingdown;
 
 /*
+ * The string that we use for the "device" we mount /afs on. That is, we're not
+ * mounted on a drive like /dev/sda, but instead mounted on "afs".
+ */
+#define AFS_MOUNT_STR "afs"
+#ifndef MOUNT_AFS
+# define MOUNT_AFS AFS_MOUNT_STR
+#endif
+
+/*
  * Macros to uniquely identify the AFS vfs struct
  */
 #define	AFS_VFSMAGIC		0x1234
 
-#if defined(UKERNEL)
-# if defined(AFS_USR_AIX_ENV) || defined(AFS_USR_SGI_ENV)
-#  define AFS_VFSFSID		AFS_MOUNT_AFS
-# else
-#  define AFS_VFSFSID		99
-# endif
-#elif defined(AFS_SUN5_ENV) || defined(AFS_HPUX90_ENV) || defined(AFS_LINUX_ENV)
-# define AFS_VFSFSID		99
-#elif defined(AFS_SGI_ENV)
-# define AFS_VFSFSID		afs_fstype
+/*
+ * Define AFS_VFSFSID, an id number corresponding to the AFS filesystem. On
+ * Irix, this is stored in a global var (afs_fstype); everywhere else, we have
+ * a constant. If we have a platform-defined value for this, use it (AFS_FSNO);
+ * otherwise, we just make up an arbitrary value here (99).
+ */
+#ifdef AFS_SGI_ENV
+# define AFS_VFSFSID	afs_fstype
+#elif defined(AFS_FSNO)
+# define AFS_VFSFSID	AFS_FSNO
 #else
-# define AFS_VFSFSID		AFS_MOUNT_AFS
+# define AFS_VFSFSID	99
 #endif
+
 /* use this value for reporting total space, free space, etc.
  * fake a high number to satisfy programs that use the statfs call to make sure
  * that there's enough space in the device partition before storing something
