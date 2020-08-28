@@ -1356,7 +1356,6 @@ DirAccessOK(void)
 		     (~e->proPerm & 0777),
 		     e->rootOwner ? ", owned by root" : "");
 	    result = 0;
-	    break;
 	}
     }
 
