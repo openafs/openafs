@@ -60,10 +60,6 @@ static void findconst(char **str, char **val);
 static int cppline(char *line);
 static int directive(char *line);
 static void docppline(char *line, int *lineno, char **fname);
-#ifdef undef
-static void deverbatim(void);
-#endif
-
 
 /*
  * scan expecting 1 given token
@@ -521,27 +517,3 @@ docppline(char *line, int *lineno, char **fname)
     }
     *lineno = num - 1;
 }
-
-
-#ifdef undef
-/* doesn't appear to be used */
-static void
-deverbatim(void)
-{
-    for (where += 2; !verbatimend(where); where++) {
-	if (*where == 0) {
-	    if (!fgets(curline, MAXLINESIZE, fin)) {
-		error("unterminated code: %} is missing");
-	    }
-	    linenum++;
-	    where = curline - 1;
-	    if (verbatimend(curline)) {
-		where++;
-		break;
-	    }
-	    fputs(curline, fout);
-	}
-    }
-    where += 2;
-}
-#endif
