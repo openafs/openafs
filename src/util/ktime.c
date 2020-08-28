@@ -419,39 +419,6 @@ ktime_next(struct ktime * aktime, afs_int32 afrom)
 
 
 /* compare date in both formats, and return as in strcmp */
-#ifdef undef
-static int
-KTimeCmp(struct ktime *aktime, struct tm *atm)
-{
-    afs_int32 tmask;
-
-    /* don't compare day of the week, since we can't tell the
-     * order in a cyclical set.  Caller must check for equality, if
-     * she cares */
-    tmask = aktime->mask;
-    if (tmask & KTIME_HOUR) {
-	if (aktime->hour > atm->tm_hour)
-	    return 1;
-	if (aktime->hour < atm->tm_hour)
-	    return -1;
-    }
-    if (tmask & KTIME_MIN) {
-	if (aktime->min > atm->tm_min)
-	    return 1;
-	if (aktime->min < atm->tm_min)
-	    return -1;
-    }
-    if (tmask & KTIME_SEC) {
-	if (aktime->sec > atm->tm_sec)
-	    return 1;
-	if (aktime->sec < atm->tm_sec)
-	    return -1;
-    }
-    return 0;
-}
-#endif
-
-/* compare date in both formats, and return as in strcmp */
 static int
 KDateCmp(struct ktime_date *akdate, struct tm *atm)
 {
