@@ -693,10 +693,6 @@ h_Alloc_r(struct rx_connection *r_con)
     host->z.hcps.prlist_val = NULL;
     host->z.hcps.prlist_len = 0;
     host->z.interface = NULL;
-#ifdef undef
-    host->z.hcpsfailed = 0;	/* save cycles */
-    h_gethostcps(host);		/* do this under host hold/lock */
-#endif
     host->z.FirstClient = NULL;
     h_InsertList_r(host);	/* update global host List */
     /*
