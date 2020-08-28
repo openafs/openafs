@@ -4536,6 +4536,11 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 		goto refail;
 	    }
 	    reuseID = 0;
+	} else if (vcode) {
+	    fprintf(STDERR, "Could not fetch the VLDB entry for the volume %s\n",
+		    tovolname);
+	    error = vcode;
+	    goto refail;
 	} else if (flags & RV_RDONLY) {
 	    if (entry.flags & VLF_RWEXISTS) {
 		fprintf(STDERR,
