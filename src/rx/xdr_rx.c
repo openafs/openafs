@@ -225,22 +225,6 @@ xdrrx_putbytes(XDR *axdrs, caddr_t addr, u_int len)
     return code;
 }
 
-#ifdef undef			/* not used */
-static u_int
-xdrrx_getpos(XDR * xdrs)
-{
-    /* Not supported.  What error code should we return? (It doesn't matter:  it will never be called, anyway!) */
-    return -1;
-}
-
-static bool_t
-xdrrx_setpos(XDR * xdrs, u_int pos)
-{
-    /* Not supported */
-    return FALSE;
-}
-#endif
-
 static afs_int32 *
 xdrrx_inline(XDR *axdrs, u_int len)
 {
