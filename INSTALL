@@ -203,9 +203,7 @@ D  Linux Notes
    last kernel you built for, the previous kernel module will be
    overwritten.
 
-   The Linux 2.4 series (and older) are no longer supported. The OpenAFS 1.6
-   series of releases are the last ones supporting those old kernels and in
-   particular their LinuxThreads.
+   The minimum supported Linux kernel is 2.6.18.
 
 E  HP-UX 11.0 Notes
 
@@ -218,7 +216,8 @@ E  HP-UX 11.0 Notes
 F  OpenBSD Notes
 
    If you need to run regen.sh to make the configure script, you should
-   first install autoconf-2.59, then setenv AUTOCONF_VERSION 2.59.
+   set the environment variable AUTOCONF_VERSION to the installed autoconf
+   version, e.g. 'setenv AUTOCONF_VERSION 2.64' (see 'J' below).
 
    You need kernel source installed to build OpenAFS.  Use the
    --with-bsd-kernel-headers= configure option if your kernel source is
@@ -563,3 +562,22 @@ I  Other configure options
 
    YFLAGS
        Additional flags to pass to yacc.
+
+J  Creating 'configure'
+
+   Normally you can use the configure script provided with the OpenAFS release
+   tar file, but if you are patching the autoconf logic or building directly
+   from source pulled from the git repository you may need to (re-)generate
+   the configure script.
+
+   To create the configure script autoconf-2.64 or later and libtool-1.9b or
+   later are needed.
+
+   Running the script 'regen.sh' creates the configure script.  In addition
+   to creating the configure script, regen.sh will also, by default, build
+   the man pages, which requires the pod2man utility. Use 'regen.sh -q' to
+   skip building the man pages.
+
+   It is possible to create the configure script on one system to be used on
+   another. Ensure that the files created by 'regen.sh' are copied to the
+   target system.
