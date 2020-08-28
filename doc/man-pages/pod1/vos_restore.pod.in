@@ -193,7 +193,8 @@ Leaves the new volume flagged as off-line in the volume database.
 
 =item B<-readonly>
 
-Flags the new volume as read-only in the volume database.
+Flags the new volume as read-only in the volume database.  This option
+is prohibited if an RW volume is already defined in the VLDB entry.
 
 =item B<-creation> <I<dump | keep | new>>
 

@@ -4542,6 +4542,7 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 	    error = vcode;
 	    goto refail;
 	} else if (flags & RV_RDONLY) {
+	    /* -readonly restore is prohibited if an RW already exists */
 	    if (entry.flags & VLF_RWEXISTS) {
 		fprintf(STDERR,
 			"Entry for ReadWrite volume %s already exists!\n",
