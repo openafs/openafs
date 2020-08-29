@@ -415,6 +415,52 @@ void init_volintInfo(struct volintInfo *vinfo) {
     vinfo->spare3 = -1;
 }
 
+/**
+ * @brief   Return a locked, network-order VLDB entry
+ *
+ * @param[in]   volid	    volid of the desired volume entry
+ * @param[in]   voltype	    volume type of the desired volume entry (e.g.,
+ *			    RWVOL), or -1
+ * @param[in]   vlop	    VLOP_* code for the operation requesting to update
+ *			    the entry
+ * @param[out]  vlentry	    on success, contains the volume entry with server
+ *			    addresses in net byte order
+ *
+ * @return  error code
+ */
+static afs_int32
+GetLockedEntry(afs_uint32 volid, afs_int32 voltype, int vlop,
+	       struct nvldbentry *vlentry)
+{
+    afs_int32 code;
+
+    code = ubik_VL_SetLock(cstruct, 0, volid, voltype, vlop);
+    if (code != 0) {
+	goto error;
+    }
+
+    code = VLDB_GetEntryByID(volid, voltype, vlentry);
+    if (code != 0) {
+	afs_int32 savecode = code;
+
+	code = ubik_VL_ReleaseLock(cstruct, 0, volid, voltype,
+				   LOCKREL_OPCODE | LOCKREL_AFSID |
+				   LOCKREL_TIMESTAMP);
+	if (code != 0) {
+	    EPRINT1(code,
+		   "Could not release lock on VLDB entry for volume %lu",
+		    (unsigned long)volid);
+	}
+
+	code = savecode;
+	goto error;
+    }
+    MapHostToNetwork(vlentry);
+
+  error:
+    return code;
+}
+
 static struct rx_securityClass *uvclass = 0;
 static int uvindex = -1;
 /* called by VLDBClient_Init to set the security module to be used in the RPC */
@@ -785,21 +831,16 @@ UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
 
     memset(&storeEntry, 0, sizeof(struct nvldbentry));
 
-    /* Find and read bhe VLDB entry for this volume */
-    code = ubik_VL_SetLock(cstruct, 0, avolid, avoltype, VLOP_DELETE);
+    /* Find and read the VLDB entry for this volume */
+    code = GetLockedEntry(avolid, avoltype, VLOP_DELETE, &entry);
     if (code) {
 	if (code != VL_NOENT) {
 	    EGOTO1(error_exit, code,
-		   "Could not lock VLDB entry for the volume %u\n", avolid);
+		   "Could not fetch locked VLDB entry for volume %u\n", avolid);
 	}
 	notinvldb = 1;
     } else {
 	islocked = 1;
-
-	code = VLDB_GetEntryByID(avolid, avoltype, &entry);
-	EGOTO1(error_exit, code, "Could not fetch VLDB entry for volume %u\n",
-	       avolid);
-	MapHostToNetwork(&entry);
 
 	if (verbose)
 	    EnumerateEntry(&entry);
@@ -1233,31 +1274,20 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
 
     memset(&storeEntry, 0, sizeof(struct nvldbentry));
 
-    vcode =
-	ubik_VL_SetLock(cstruct, 0, entry->volumeId[RWVOL], RWVOL,
-		  VLOP_MOVE);
-    if (vcode) {
-	fprintf(STDERR,
-		"Unable to lock volume %lu, code %d\n",
-		(unsigned long)entry->volumeId[RWVOL],vcode);
-	PrintError("", vcode);
-	return -1;
-    }
-    islocked = 1;
-
     /* make sure the VLDB entry hasn't changed since we started */
     memset(&checkEntry, 0, sizeof(checkEntry));
-    vcode = VLDB_GetEntryByID(volid, -1, &checkEntry);
+    vcode = GetLockedEntry(entry->volumeId[RWVOL], RWVOL,
+			   VLOP_MOVE, &checkEntry);
     if (vcode) {
 	fprintf(STDERR,
-                "Could not fetch the entry for volume %lu from VLDB\n",
-                (unsigned long)volid);
+		"Could not fetch locked VLDB entry for volume %lu\n",
+		(unsigned long)entry->volumeId[RWVOL]);
 	PrintError("convertROtoRW ", vcode);
 	code = vcode;
 	goto error_exit;
     }
 
-    MapHostToNetwork(&checkEntry);
+    islocked = 1;
     entry->flags &= ~VLOP_ALLOPERS;  /* clear any stale lock operation flags */
     entry->flags |= VLOP_MOVE;        /* set to match SetLock operation above */
     if (memcmp(entry, &checkEntry, sizeof(*entry)) != 0) {
@@ -1463,17 +1493,11 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	exit(1);
     }
 
-    vcode = ubik_VL_SetLock(cstruct, 0, afromvol, RWVOL, VLOP_MOVE);
-    EGOTO1(mfail, vcode, "Could not lock entry for volume %u \n", afromvol);
+    vcode = GetLockedEntry(afromvol, RWVOL, VLOP_MOVE, &entry);
+    EGOTO1(mfail, vcode, "Could not fetch locked entry for volume %u \n", afromvol);
     islocked = 1;
 
-    vcode = VLDB_GetEntryByID(afromvol, RWVOL, &entry);
-    EGOTO1(mfail, vcode,
-	   "Could not fetch the entry for the volume  %u from the VLDB \n",
-	   afromvol);
-
     backupId = entry.volumeId[BACKVOL];
-    MapHostToNetwork(&entry);
 
     if (!Lp_Match(afromserver, afrompart, &entry)) {
 	/* the from server and partition do not exist in the vldb entry corresponding to volid */
@@ -2654,26 +2678,15 @@ UV_BackupVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
 	(entry.flags & VLOP_ALLOPERS) ||	/* vldb lock already held */
 	(entry.volumeId[BACKVOL] == INVALID_BID)) {	/* no assigned backup volume id */
 
-	code = ubik_VL_SetLock(cstruct, 0, avolid, RWVOL, VLOP_BACKUP);
+	code = GetLockedEntry(avolid, RWVOL, VLOP_BACKUP, &entry);
 	if (code) {
 	    fprintf(STDERR,
-		    "Could not lock the VLDB entry for the volume %lu\n",
+		    "Could not fetch locked VLDB entry for volume %lu\n",
 		    (unsigned long)avolid);
 	    error = code;
 	    goto bfail;
 	}
 	vldblocked = 1;
-
-	/* Reread the vldb entry */
-	code = VLDB_GetEntryByID(avolid, RWVOL, &entry);
-	if (code) {
-	    fprintf(STDERR,
-		    "Could not fetch the entry for the volume %lu from the VLDB \n",
-		    (unsigned long)avolid);
-	    error = code;
-	    goto bfail;
-	}
-	MapHostToNetwork(&entry);
     }
 
     if (!ISNAMEVALID(entry.name)) {
@@ -4877,23 +4890,15 @@ UV_AddSite2(afs_uint32 server, afs_int32 part, afs_uint32 volid,
     afs_int32 vcode, error = 0;
     char apartName[10];
 
-    error = ubik_VL_SetLock(cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
+    error = GetLockedEntry(volid, RWVOL, VLOP_ADDSITE, &entry);
     if (error) {
 	fprintf(STDERR,
-		" Could not lock the VLDB entry for the volume %lu \n",
+		" Could not fetch locked VLDB entry for volume %lu \n",
 		(unsigned long)volid);
 	goto asfail;
     }
     islocked = 1;
 
-    error = VLDB_GetEntryByID(volid, RWVOL, &entry);
-    if (error) {
-	fprintf(STDERR,
-		"Could not fetch the VLDB entry for volume number %lu  \n",
-		(unsigned long)volid);
-	goto asfail;
-
-    }
     if (!ISNAMEVALID(entry.name)) {
 	fprintf(STDERR,
 		"Volume name %s is too long, rename before adding site\n",
@@ -4901,7 +4906,6 @@ UV_AddSite2(afs_uint32 server, afs_int32 part, afs_uint32 volid,
 	error = VOLSERBADOP;
 	goto asfail;
     }
-    MapHostToNetwork(&entry);
 
     /* See if it's too many entries */
     if (entry.nServers >= NMAXNSERVERS) {
@@ -5005,22 +5009,14 @@ UV_RemoveSite(afs_uint32 server, afs_int32 part, afs_uint32 volid)
     afs_int32 vcode;
     struct nvldbentry entry, storeEntry;
 
-    vcode = ubik_VL_SetLock(cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
+    vcode = GetLockedEntry(volid, RWVOL, VLOP_ADDSITE, &entry);
     if (vcode) {
-	fprintf(STDERR, " Could not lock the VLDB entry for volume %lu \n",
+	fprintf(STDERR, " Could not fetch locked VLDB entry for volume %lu \n",
 		(unsigned long)volid);
 	PrintError("", vcode);
 	return (vcode);
     }
-    vcode = VLDB_GetEntryByID(volid, RWVOL, &entry);
-    if (vcode) {
-	fprintf(STDERR,
-		"Could not fetch the entry for volume number %lu from VLDB \n",
-		(unsigned long)volid);
-	PrintError("", vcode);
-	return (vcode);
-    }
-    MapHostToNetwork(&entry);
+
     if (!Lp_ROMatch(server, part, &entry)) {
 	/*this site doesnot exist  */
 	fprintf(STDERR, "This site is not a replication site \n");
@@ -5085,22 +5081,14 @@ UV_ChangeLocation(afs_uint32 server, afs_int32 part, afs_uint32 volid)
     struct nvldbentry entry, storeEntry;
     int index;
 
-    vcode = ubik_VL_SetLock(cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
+    vcode = GetLockedEntry(volid, RWVOL, VLOP_ADDSITE, &entry);
     if (vcode) {
-	fprintf(STDERR, " Could not lock the VLDB entry for volume %lu \n",
+	fprintf(STDERR, " Could not fetch locked VLDB entry for volume %lu \n",
 		(unsigned long)volid);
 	PrintError("", vcode);
 	return (vcode);
     }
-    vcode = VLDB_GetEntryByID(volid, RWVOL, &entry);
-    if (vcode) {
-	fprintf(STDERR,
-		"Could not fetch the entry for volume number %lu from VLDB \n",
-		(unsigned long)volid);
-	PrintError("", vcode);
-	return (vcode);
-    }
-    MapHostToNetwork(&entry);
+
     index = Lp_GetRwIndex(&entry);
     if (index < 0) {
 	/* no RW site exists  */
@@ -6518,24 +6506,14 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified, afs_int32 * deleted)
      * then make the changes to it (pass 2).
      */
     if (++pass == 2) {
-	code =
-	    ubik_VL_SetLock(cstruct, 0, entry->volumeId[RWVOL], RWVOL,
-		      VLOP_DELETE);
+	code = GetLockedEntry(entry->volumeId[RWVOL], RWVOL,
+			      VLOP_DELETE, entry);
 	if (code) {
-	    fprintf(STDERR, "Could not lock VLDB entry for %u \n",
+	    fprintf(STDERR, "Could not fetch locked VLDB entry for volume %u \n",
 		    entry->volumeId[RWVOL]);
 	    ERROR_EXIT(code);
 	}
 	islocked = 1;
-
-	code = VLDB_GetEntryByID(entry->volumeId[RWVOL], RWVOL, entry);
-	if (code) {
-	    fprintf(STDERR, "Could not read VLDB entry for volume %s\n",
-		    entry->name);
-	    ERROR_EXIT(code);
-	} else {
-	    MapHostToNetwork(entry);
-	}
     }
 
     modentry = 0;
@@ -6756,10 +6734,16 @@ UV_RenameVolume(struct nvldbentry *entry, char oldname[], char newname[])
     tid = 0;
     islocked = 0;
 
-    vcode = ubik_VL_SetLock(cstruct, 0, entry->volumeId[RWVOL], RWVOL, VLOP_ADDSITE);	/*last param is dummy */
+    /*
+     * Get the entry again (under lock) and verify the volume hasn't otherwise
+     * changed.  We use VLOP_ADDSITE due to the lack of a specific define for
+     * renames.
+     */
+    vcode = GetLockedEntry(entry->volumeId[RWVOL], RWVOL, VLOP_ADDSITE,
+			   &storeEntry);
     if (vcode) {
 	fprintf(STDERR,
-		" Could not lock the VLDB entry for the  volume %u \n",
+		" Could not fetch locked VLDB entry for volume %u \n",
 		entry->volumeId[RWVOL]);
 	error = vcode;
 	goto rvfail;
@@ -6773,20 +6757,6 @@ UV_RenameVolume(struct nvldbentry *entry, char oldname[], char newname[])
     entry->flags &= ~VLOP_ALLOPERS;
     entry->flags |= VLOP_ADDSITE;
 
-    /*
-     * Now get the entry again (under lock) and
-     * verify the volume hasn't otherwise changed.
-     */
-    vcode = VLDB_GetEntryByID(entry->volumeId[RWVOL], RWVOL, &storeEntry);
-    if (vcode) {
-	fprintf(STDERR,
-		"Could not obtain the VLDB entry for the volume %u\n",
-		entry->volumeId[RWVOL]);
-	error = vcode;
-	goto rvfail;
-    }
-    /* Convert to net order to match entry, which was passed in net order. */
-    MapHostToNetwork(&storeEntry);
     if (memcmp(entry, &storeEntry, sizeof(*entry)) != 0) {
 	fprintf(STDERR,
 		"VLDB entry for volume %u has changed; "
