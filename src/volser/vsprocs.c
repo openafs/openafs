@@ -426,6 +426,10 @@ void init_volintInfo(struct volintInfo *vinfo) {
  * @param[out]  vlentry	    on success, contains the volume entry with server
  *			    addresses in net byte order
  *
+ * @note If the given 'vlop' is VLOP_RELEASE and the vlserver responds to our
+ * VL_SetLock request with a VL_RERELEASE error, we ignore the error and
+ * pretend the volume was locked, to preserve historical behavior.
+ *
  * @return  error code
  */
 static afs_int32
@@ -435,6 +439,32 @@ GetLockedEntry(afs_uint32 volid, afs_int32 voltype, int vlop,
     afs_int32 code;
 
     code = ubik_VL_SetLock(cstruct, 0, volid, voltype, vlop);
+    if (vlop == VLOP_RELEASE && code == VL_RERELEASE) {
+	/*
+	 * VL_RERELEASE indicates that the vlentry VLOP_RELEASE lock flag is
+	 * set, but the lock timestamp is not. Before openafs
+	 * 1.0, maybe this was more common for failed/interrupted 'vos release'
+	 * runs, but is currently very rare in openafs: 'vos release' would
+	 * have to fail to VL_ReleaseLock the vlentry, which we currently
+	 * always try to do.
+	 *
+	 * Historically, we ignore VL_RERELEASE when doing a 'vos release', so
+	 * we can fix the volume by re-releasing it without the user needing to
+	 * manually unlock the partially locked vlentry.
+	 *
+	 * So, pretend that the lock succeeded; the volume is still (partially)
+	 * locked, after all. This behavior isn't ideal, since another 'vos
+	 * release' running in parallel could hit this same code path and also
+	 * pretend that they locked the volume. But this is the historical
+	 * behavior of vos, so preserve this behavior for now.
+	 */
+	fprintf(STDERR, "Warning: VLDB entry for volume %lu is still partially locked from a\n"
+		"previous failed/interrupted release (VL_RERELEASE). Proceeding anyway so we can\n"
+		"re-release the volume to fix it; please do not run another release for this\n"
+		"volume in parallel. This behavior may change in the future.\n",
+		(unsigned long)volid);
+	code = 0;
+    }
     if (code != 0) {
 	goto error;
     }
@@ -3334,17 +3364,10 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     memset(&results, 0, sizeof(results));
     memset(origflags, 0, sizeof(origflags));
 
-    vcode = ubik_VL_SetLock(cstruct, 0, afromvol, RWVOL, VLOP_RELEASE);
-    if (vcode != VL_RERELEASE)
-	ONERROR(vcode, afromvol,
-		"Could not lock the VLDB entry for the volume %u.\n");
-    islocked = 1;
-
-    /* Get the vldb entry in readable format */
-    vcode = VLDB_GetEntryByID(afromvol, RWVOL, &entry);
+    vcode = GetLockedEntry(afromvol, RWVOL, VLOP_RELEASE, &entry);
     ONERROR(vcode, afromvol,
-	    "Could not fetch the entry for the volume %u from the VLDB.\n");
-    MapHostToNetwork(&entry);
+	    "Could not fetch locked VLDB entry for volume %u.\n");
+    islocked = 1;
 
     if (verbose)
 	EnumerateEntry(&entry);
