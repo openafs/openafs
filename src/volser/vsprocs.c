@@ -4675,16 +4675,17 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 	/* Volume was restored on the file server, update the
 	 * VLDB to reflect the change.
 	 */
-	vcode = VLDB_GetEntryByID(pvolid, voltype, &entry);
+	vcode = GetLockedEntry(pvolid, voltype, VLOP_RESTORE, &entry);
 	if (vcode != 0 && vcode != VL_NOENT) {
 	    fprintf(STDERR,
-		    "Could not fetch the entry for volume number %lu from VLDB \n",
+		    "Could not fetch locked VLDB entry for volume %lu\n",
 		    (unsigned long)pvolid);
 	    error = vcode;
 	    goto refail;
 	}
 	if (!vcode)
-	    MapHostToNetwork(&entry);
+	    islocked = 1;
+
 	if (vcode == VL_NOENT) {	/* it doesnot exist already */
 	    /*make the vldb return this indication specifically */
 	    VPRINT("------- Creating a new VLDB entry ------- \n");
@@ -4716,7 +4717,6 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 		error = vcode;
 		goto refail;
 	    }
-	    islocked = 0;
 	    if (verbose)
 		EnumerateEntry(&entry);
 	} else {		/*update the existing entry */
@@ -4726,17 +4726,7 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 		EnumerateEntry(&entry);
 		fprintf(STDOUT, "------- New entry -------\n");
 	    }
-	    vcode =
-		ubik_VL_SetLock(cstruct, 0, pvolid, voltype,
-			  VLOP_RESTORE);
-	    if (vcode) {
-		fprintf(STDERR,
-			"Could not lock the entry for volume number %lu \n",
-			(unsigned long)pvolid);
-		error = vcode;
-		goto refail;
-	    }
-	    islocked = 1;
+
 	    strcpy(entry.name, tovolname);
 
 	    /* Update the vlentry with the new information */
