@@ -5411,7 +5411,367 @@ UV_XListOneVolume(afs_uint32 a_serverID, afs_int32 a_partID, afs_uint32 a_volID,
     return code;
 }
 
-/* CheckVolume()
+static afs_int32
+CheckVolumeRW(struct volintInfo *volumeinfo, afs_uint32 aserver,
+	      afs_uint32 apart, struct nvldbentry *entry, int createentry,
+	      int pass, afs_uint32 rwvolid, int *modified)
+{
+    afs_int32 code;
+    afs_int32 error = 0;
+    int addvolume = 0;
+    int mod;
+    int idx = 0;
+    char pname[10];
+    char hoststr[16];
+
+    if (createentry) {
+	idx = 0;
+	entry->nServers = 1;
+	addvolume++;
+    } else {
+	/* Check existence of RW and BK volumes */
+	code = CheckVldbRWBK(entry, &mod);
+	if (code)
+	    ERROR_EXIT(code);
+	if (mod)
+	    *modified = 1;
+
+	idx = Lp_GetRwIndex(entry);
+	if (idx == -1) {	/* RW index not found in the VLDB entry */
+	    idx = entry->nServers;	/* put it into next index */
+	    entry->nServers++;
+	    addvolume++;
+	} else {		/* RW index found in the VLDB entry. */
+	    /* Verify if this volume's location matches where the VLDB says it is */
+	    if (!Lp_Match(aserver, apart, entry)) {
+		if (entry->flags & VLF_RWEXISTS) {
+		    /* The RW volume exists elsewhere - report this one a duplicate */
+		    if (pass == 1) {
+			MapPartIdIntoName(apart, pname);
+			fprintf(STDERR,
+				"*** Warning: Orphaned RW volume %lu exists on %s %s\n",
+				(unsigned long)rwvolid,
+				noresolve ?
+				afs_inet_ntoa_r(aserver, hoststr) :
+				hostutil_GetNameByINet(aserver), pname);
+			MapPartIdIntoName(entry->serverPartition[idx],
+					    pname);
+			fprintf(STDERR,
+				"    VLDB reports RW volume %lu exists on %s %s\n",
+				(unsigned long)rwvolid,
+				noresolve ?
+				afs_inet_ntoa_r(entry->serverNumber[idx], hoststr) :
+				hostutil_GetNameByINet(entry->
+							serverNumber[idx]),
+				pname);
+		    }
+		} else {
+		    /* The RW volume does not exist - have VLDB point to this one */
+		    addvolume++;
+
+		    /* Check for orphaned BK volume on old partition */
+		    if (entry->flags & VLF_BACKEXISTS) {
+			if (pass == 1) {
+			    MapPartIdIntoName(entry->serverPartition[idx],
+						pname);
+			    fprintf(STDERR,
+				    "*** Warning: Orphaned BK volume %u exists on %s %s\n",
+				    entry->volumeId[BACKVOL],
+				    noresolve ?
+				    afs_inet_ntoa_r(entry->serverNumber[idx], hoststr) :
+				    hostutil_GetNameByINet(entry->
+							    serverNumber
+							    [idx]), pname);
+			    MapPartIdIntoName(apart, pname);
+			    fprintf(STDERR,
+				    "    VLDB reports its RW volume %lu exists on %s %s\n",
+				    (unsigned long)rwvolid,
+				    noresolve ?
+				    afs_inet_ntoa_r(aserver, hoststr) :
+				    hostutil_GetNameByINet(aserver),
+				    pname);
+			}
+		    }
+		}
+	    } else {
+		/* Volume location matches the VLDB location */
+		if ((volumeinfo->backupID && !entry->volumeId[BACKVOL])
+		    || (volumeinfo->cloneID && !entry->volumeId[ROVOL])
+		    ||
+		    (strncmp
+			(entry->name, volumeinfo->name,
+			VOLSER_OLDMAXVOLNAME) != 0)) {
+		    addvolume++;
+		}
+	    }
+	}
+    }
+
+    if (addvolume) {
+	entry->flags |= VLF_RWEXISTS;
+	entry->volumeId[RWVOL] = rwvolid;
+	if (!entry->volumeId[BACKVOL])
+	    entry->volumeId[BACKVOL] = volumeinfo->backupID;
+	if (!entry->volumeId[ROVOL])
+	    entry->volumeId[ROVOL] = volumeinfo->cloneID;
+
+	entry->serverFlags[idx] = VLSF_RWVOL;
+	entry->serverNumber[idx] = aserver;
+	entry->serverPartition[idx] = apart;
+	strncpy(entry->name, volumeinfo->name, VOLSER_OLDMAXVOLNAME);
+
+	*modified = 1;
+
+	/* One last check - to update BK if need to */
+	code = CheckVldbRWBK(entry, &mod);
+	if (code)
+	    ERROR_EXIT(code);
+	if (mod)
+	    *modified = 1;
+    }
+
+ error_exit:
+    return error;
+}
+
+
+static afs_int32
+CheckVolumeBK(struct volintInfo *volumeinfo, afs_uint32 aserver,
+	      afs_uint32 apart, struct nvldbentry *entry, int createentry,
+	      int pass, afs_uint32 rwvolid, int *modified)
+{
+    afs_int32 code;
+    afs_int32 error = 0;
+    int addvolume = 0;
+    int mod;
+    int idx = 0;
+    char pname[10];
+    char hoststr[16];
+
+    if (createentry) {
+	idx = 0;
+	entry->nServers = 1;
+	addvolume++;
+    } else {
+	/* Check existence of RW and BK volumes */
+	code = CheckVldbRWBK(entry, &mod);
+	if (code)
+	    ERROR_EXIT(code);
+	if (mod)
+	    *modified = 1;
+
+	idx = Lp_GetRwIndex(entry);
+	if (idx == -1) {	/* RW index not found in the VLDB entry */
+	    idx = entry->nServers;	/* Put it into next index */
+	    entry->nServers++;
+	    addvolume++;
+	} else {		/* RW index found in the VLDB entry */
+	    /* Verify if this volume's location matches where the VLDB says it is */
+	    if (!Lp_Match(aserver, apart, entry)) {
+		/* VLDB says RW and/or BK is elsewhere - report this BK volume orphaned */
+		if (pass == 1) {
+		    MapPartIdIntoName(apart, pname);
+		    fprintf(STDERR,
+			    "*** Warning: Orphaned BK volume %lu exists on %s %s\n",
+			    (unsigned long)volumeinfo->volid,
+			    noresolve ?
+			    afs_inet_ntoa_r(aserver, hoststr) :
+			    hostutil_GetNameByINet(aserver), pname);
+		    MapPartIdIntoName(entry->serverPartition[idx], pname);
+		    fprintf(STDERR,
+			    "    VLDB reports its RW/BK volume %lu exists on %s %s\n",
+			    (unsigned long)rwvolid,
+			    noresolve ?
+			    afs_inet_ntoa_r(entry->serverNumber[idx], hoststr) :
+			    hostutil_GetNameByINet(entry->serverNumber[idx]),
+						    pname);
+		}
+	    } else {
+		if (volumeinfo->volid != entry->volumeId[BACKVOL]) {
+		    if (!(entry->flags & VLF_BACKEXISTS)) {
+			addvolume++;
+		    } else if (volumeinfo->volid >
+				entry->volumeId[BACKVOL]) {
+			addvolume++;
+
+			if (pass == 1) {
+			    MapPartIdIntoName(entry->serverPartition[idx],
+						pname);
+			    fprintf(STDERR,
+				    "*** Warning: Orphaned BK volume %u exists on %s %s\n",
+				    entry->volumeId[BACKVOL],
+				    noresolve ?
+				    afs_inet_ntoa_r(aserver, hoststr) :
+				    hostutil_GetNameByINet(aserver),
+				    pname);
+			    fprintf(STDERR,
+				    "    VLDB reports its BK volume ID is %lu\n",
+				    (unsigned long)volumeinfo->volid);
+			}
+		    } else {
+			if (pass == 1) {
+			    MapPartIdIntoName(entry->serverPartition[idx],
+						pname);
+			    fprintf(STDERR,
+				    "*** Warning: Orphaned BK volume %lu exists on %s %s\n",
+				    (unsigned long)volumeinfo->volid,
+				    noresolve ?
+				    afs_inet_ntoa_r(aserver, hoststr) :
+				    hostutil_GetNameByINet(aserver),
+				    pname);
+			    fprintf(STDERR,
+				    "    VLDB reports its BK volume ID is %u\n",
+				    entry->volumeId[BACKVOL]);
+			}
+		    }
+		} else if (!entry->volumeId[BACKVOL]) {
+		    addvolume++;
+		}
+	    }
+	}
+    }
+    if (addvolume) {
+	entry->flags |= VLF_BACKEXISTS;
+	entry->volumeId[RWVOL] = rwvolid;
+	entry->volumeId[BACKVOL] = volumeinfo->volid;
+
+	entry->serverNumber[idx] = aserver;
+	entry->serverPartition[idx] = apart;
+	entry->serverFlags[idx] = VLSF_RWVOL;
+
+	*modified = 1;
+    }
+ error_exit:
+    return error;
+}
+
+
+static afs_int32
+CheckVolumeRO(struct volintInfo *volumeinfo, afs_uint32 aserver,
+	      afs_uint32 apart, struct nvldbentry *entry, int createentry,
+	      int pass, afs_uint32 rwvolid, int *modified)
+{
+    afs_int32 code;
+    afs_int32 error = 0;
+    int addvolume = 0;
+    int mod;
+    int idx = 0;
+    char pname[10];
+    char hoststr[16];
+
+    if (volumeinfo->volid == entry->volumeId[ROVOL]) {
+	/* This is a quick check to see if the RO entry exists in the
+	 * VLDB so we avoid the CheckVldbRO() call (which checks if each
+	 * RO volume listed in the VLDB exists).
+	 */
+	idx = Lp_ROMatch(aserver, apart, entry) - 1;
+	if (idx == -1) {
+	    idx = entry->nServers;
+	    entry->nServers++;
+	    addvolume++;
+	} else {
+	    if (!(entry->flags & VLF_ROEXISTS)) {
+		addvolume++;
+	    }
+	}
+    } else {
+	/* Before we correct the VLDB entry, make sure all the
+	 * ROs listed in the VLDB exist.
+	 */
+	code = CheckVldbRO(entry, &mod);
+	if (code)
+	    ERROR_EXIT(code);
+	if (mod)
+	    *modified = 1;
+
+	if (!(entry->flags & VLF_ROEXISTS)) {
+	    /* No RO exists in the VLDB entry - add this one */
+	    idx = entry->nServers;
+	    entry->nServers++;
+	    addvolume++;
+	} else if (volumeinfo->volid > entry->volumeId[ROVOL]) {
+	    int j;
+
+	    /* The volume headers's RO ID does not match that in the VLDB entry,
+	     * and the vol hdr's ID is greater (implies more recent). So delete
+	     * all the RO volumes listed in VLDB entry and add this volume.
+	     */
+	    for (j = 0; j < entry->nServers; j++) {
+		if (entry->serverFlags[j] & VLSF_ROVOL) {
+		    /* Verify this volume exists and print message we are orphaning it */
+		    if (pass == 1) {
+			MapPartIdIntoName(apart, pname);
+			fprintf(STDERR,
+				"*** Warning: Orphaned RO volume %u exists on %s %s\n",
+				entry->volumeId[ROVOL],
+				noresolve ?
+				afs_inet_ntoa_r(entry->serverNumber[j], hoststr) :
+				hostutil_GetNameByINet(entry->serverNumber[j]),
+							pname);
+			fprintf(STDERR,
+				"    VLDB reports its RO volume ID is %lu\n",
+				(unsigned long)volumeinfo->volid);
+		    }
+
+		    Lp_SetRWValue(entry, entry->serverNumber[idx],
+				    entry->serverPartition[idx], 0L, 0L);
+		    entry->nServers--;
+		    *modified = 1;
+		    j--;
+		}
+	    }
+
+	    idx = entry->nServers;
+	    entry->nServers++;
+	    addvolume++;
+	} else if (volumeinfo->volid < entry->volumeId[ROVOL]) {
+	    /* The volume headers's RO ID does not match that in the VLDB entry,
+	     * and the vol hdr's ID is lower (implies its older). So orphan it.
+	     */
+	    if (pass == 1) {
+		MapPartIdIntoName(apart, pname);
+		fprintf(STDERR,
+			"*** Warning: Orphaned RO volume %lu exists on %s %s\n",
+			(unsigned long)volumeinfo->volid,
+			noresolve ?
+			afs_inet_ntoa_r(aserver, hoststr) :
+			hostutil_GetNameByINet(aserver), pname);
+		fprintf(STDERR,
+			"    VLDB reports its RO volume ID is %u\n",
+			entry->volumeId[ROVOL]);
+	    }
+	} else {
+	    /* The RO volume ID in the volume header match that in the VLDB entry,
+	     * and there exist RO volumes in the VLDB entry. See if any of them
+	     * are this one. If not, then we add it.
+	     */
+	    idx = Lp_ROMatch(aserver, apart, entry) - 1;
+	    if (idx == -1) {
+		idx = entry->nServers;
+		entry->nServers++;
+		addvolume++;
+	    }
+	}
+    }
+
+    if (addvolume) {
+	entry->flags |= VLF_ROEXISTS;
+	entry->volumeId[RWVOL] = rwvolid;
+	entry->volumeId[ROVOL] = volumeinfo->volid;
+
+	entry->serverNumber[idx] = aserver;
+	entry->serverPartition[idx] = apart;
+	entry->serverFlags[idx] = VLSF_ROVOL;
+
+	*modified = 1;
+    }
+
+ error_exit:
+    return error;
+}
+
+/**
+ * CheckVolume()
  *    Given a volume we read from a partition, check if it is
  *    represented in the VLDB correctly.
  *
@@ -5428,21 +5788,32 @@ UV_XListOneVolume(afs_uint32 a_serverID, afs_int32 a_partID, afs_uint32 a_volID,
  *       says the BK exists but no BK volume is there, we will detect
  *       this when we check the RW volume.
  *    VLDB entries are locked only when a change needs to be done.
- *    Output changed to look a lot like the "vos syncserv" otuput.
+ *    Output changed to look a lot like the "vos syncserv" output.
+ *
+ * @param[in]	    volumeinfo  Summary of known info about this volume
+ * @param[in]	    aserver	Net-order IP address of server
+ * @param[in]	    apart	Partition number
+ * @param[inout]    modentry    On entry, set to 1 for -dryrun option.
+ *				On return, set to 0 if the entry was
+ *				not modified, 1 otherwise.
+ * @param[inout]    maxvolid    Set to largest volid in the given volume,
+ *				or maxvolid seen so far, whichever is larger.
+ * @param[inout]    aentry	Optional; if non-NULL on entry, this is
+ *				the vlentry in network order.
+ *				On successful return, replaced with the
+ *				modified entry (in network order) if the
+ *				volume was modified.
+ *
  */
 static afs_int32
 CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 	    afs_int32 * modentry, afs_uint32 * maxvolid,
             struct nvldbentry *aentry)
 {
-    int idx = 0;
-    int j;
     afs_int32 code, error = 0;
     struct nvldbentry entry;
-    char pname[10];
-    int pass = 0, createentry, addvolume, modified, mod, doit = 1;
+    int pass = 0, createentry, modified, doit = 1;
     afs_uint32 rwvolid;
-    char hoststr[16];
 
     if (modentry) {
 	if (*modentry == 1)
@@ -5468,7 +5839,6 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
     }
 
     createentry = 0;		/* Do we need to create a VLDB entry */
-    addvolume = 0;		/* Add this volume to the VLDB entry */
     modified = 0;		/* The VLDB entry was modified */
 
     if (aentry) {
@@ -5507,316 +5877,19 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
     }
 
     if (volumeinfo->type == RWVOL) {	/* RW volume exists */
-	if (createentry) {
-	    idx = 0;
-	    entry.nServers = 1;
-	    addvolume++;
-	} else {
-	    /* Check existence of RW and BK volumes */
-	    code = CheckVldbRWBK(&entry, &mod);
-	    if (code)
-		ERROR_EXIT(code);
-	    if (mod)
-		modified++;
-
-	    idx = Lp_GetRwIndex(&entry);
-	    if (idx == -1) {	/* RW index not found in the VLDB entry */
-		idx = entry.nServers;	/* put it into next index */
-		entry.nServers++;
-		addvolume++;
-	    } else {		/* RW index found in the VLDB entry. */
-		/* Verify if this volume's location matches where the VLDB says it is */
-		if (!Lp_Match(aserver, apart, &entry)) {
-		    if (entry.flags & VLF_RWEXISTS) {
-			/* The RW volume exists elsewhere - report this one a duplicate */
-			if (pass == 1) {
-			    MapPartIdIntoName(apart, pname);
-			    fprintf(STDERR,
-				    "*** Warning: Orphaned RW volume %lu exists on %s %s\n",
-				    (unsigned long)rwvolid,
-                                    noresolve ?
-                                    afs_inet_ntoa_r(aserver, hoststr) :
-				    hostutil_GetNameByINet(aserver), pname);
-			    MapPartIdIntoName(entry.serverPartition[idx],
-					      pname);
-			    fprintf(STDERR,
-				    "    VLDB reports RW volume %lu exists on %s %s\n",
-				    (unsigned long)rwvolid,
-                                    noresolve ?
-                                    afs_inet_ntoa_r(entry.serverNumber[idx], hoststr) :
-				    hostutil_GetNameByINet(entry.
-							   serverNumber[idx]),
-				    pname);
-			}
-		    } else {
-			/* The RW volume does not exist - have VLDB point to this one */
-			addvolume++;
-
-			/* Check for orphaned BK volume on old partition */
-			if (entry.flags & VLF_BACKEXISTS) {
-			    if (pass == 1) {
-				MapPartIdIntoName(entry.serverPartition[idx],
-						  pname);
-				fprintf(STDERR,
-					"*** Warning: Orphaned BK volume %u exists on %s %s\n",
-					entry.volumeId[BACKVOL],
-                                        noresolve ?
-                                        afs_inet_ntoa_r(entry.serverNumber[idx], hoststr) :
-					hostutil_GetNameByINet(entry.
-							       serverNumber
-							       [idx]), pname);
-				MapPartIdIntoName(apart, pname);
-				fprintf(STDERR,
-					"    VLDB reports its RW volume %lu exists on %s %s\n",
-					(unsigned long)rwvolid,
-                                        noresolve ?
-                                        afs_inet_ntoa_r(aserver, hoststr) :
-					hostutil_GetNameByINet(aserver),
-					pname);
-			    }
-			}
-		    }
-		} else {
-		    /* Volume location matches the VLDB location */
-		    if ((volumeinfo->backupID && !entry.volumeId[BACKVOL])
-			|| (volumeinfo->cloneID && !entry.volumeId[ROVOL])
-			||
-			(strncmp
-			 (entry.name, volumeinfo->name,
-			  VOLSER_OLDMAXVOLNAME) != 0)) {
-			addvolume++;
-		    }
-		}
-	    }
-	}
-
-	if (addvolume) {
-	    entry.flags |= VLF_RWEXISTS;
-	    entry.volumeId[RWVOL] = rwvolid;
-	    if (!entry.volumeId[BACKVOL])
-		entry.volumeId[BACKVOL] = volumeinfo->backupID;
-	    if (!entry.volumeId[ROVOL])
-		entry.volumeId[ROVOL] = volumeinfo->cloneID;
-
-	    entry.serverFlags[idx] = VLSF_RWVOL;
-	    entry.serverNumber[idx] = aserver;
-	    entry.serverPartition[idx] = apart;
-	    strncpy(entry.name, volumeinfo->name, VOLSER_OLDMAXVOLNAME);
-
-	    modified++;
-
-	    /* One last check - to update BK if need to */
-	    code = CheckVldbRWBK(&entry, &mod);
-	    if (code)
-		ERROR_EXIT(code);
-	    if (mod)
-		modified++;
-	}
+	code = CheckVolumeRW(volumeinfo, aserver, apart, &entry,
+			     createentry, pass, rwvolid, &modified);
     }
-
     else if (volumeinfo->type == BACKVOL) {	/* A BK volume */
-	if (createentry) {
-	    idx = 0;
-	    entry.nServers = 1;
-	    addvolume++;
-	} else {
-	    /* Check existence of RW and BK volumes */
-	    code = CheckVldbRWBK(&entry, &mod);
-	    if (code)
-		ERROR_EXIT(code);
-	    if (mod)
-		modified++;
-
-	    idx = Lp_GetRwIndex(&entry);
-	    if (idx == -1) {	/* RW index not found in the VLDB entry */
-		idx = entry.nServers;	/* Put it into next index */
-		entry.nServers++;
-		addvolume++;
-	    } else {		/* RW index found in the VLDB entry */
-		/* Verify if this volume's location matches where the VLDB says it is */
-		if (!Lp_Match(aserver, apart, &entry)) {
-		    /* VLDB says RW and/or BK is elsewhere - report this BK volume orphaned */
-		    if (pass == 1) {
-			MapPartIdIntoName(apart, pname);
-			fprintf(STDERR,
-				"*** Warning: Orphaned BK volume %lu exists on %s %s\n",
-				(unsigned long)volumeinfo->volid,
-                                noresolve ?
-                                afs_inet_ntoa_r(aserver, hoststr) :
-				hostutil_GetNameByINet(aserver), pname);
-			MapPartIdIntoName(entry.serverPartition[idx], pname);
-			fprintf(STDERR,
-				"    VLDB reports its RW/BK volume %lu exists on %s %s\n",
-				(unsigned long)rwvolid,
-                                noresolve ?
-                                afs_inet_ntoa_r(entry.serverNumber[idx], hoststr) :
-				hostutil_GetNameByINet(entry.
-						       serverNumber[idx]),
-				pname);
-		    }
-		} else {
-		    if (volumeinfo->volid != entry.volumeId[BACKVOL]) {
-			if (!(entry.flags & VLF_BACKEXISTS)) {
-			    addvolume++;
-			} else if (volumeinfo->volid >
-				   entry.volumeId[BACKVOL]) {
-			    addvolume++;
-
-			    if (pass == 1) {
-				MapPartIdIntoName(entry.serverPartition[idx],
-						  pname);
-				fprintf(STDERR,
-					"*** Warning: Orphaned BK volume %u exists on %s %s\n",
-					entry.volumeId[BACKVOL],
-                                        noresolve ?
-                                        afs_inet_ntoa_r(aserver, hoststr) :
-					hostutil_GetNameByINet(aserver),
-					pname);
-				fprintf(STDERR,
-					"    VLDB reports its BK volume ID is %lu\n",
-					(unsigned long)volumeinfo->volid);
-			    }
-			} else {
-			    if (pass == 1) {
-				MapPartIdIntoName(entry.serverPartition[idx],
-						  pname);
-				fprintf(STDERR,
-					"*** Warning: Orphaned BK volume %lu exists on %s %s\n",
-                                        (unsigned long)volumeinfo->volid,
-                                        noresolve ?
-                                        afs_inet_ntoa_r(aserver, hoststr) :
-                                        hostutil_GetNameByINet(aserver),
-					pname);
-				fprintf(STDERR,
-					"    VLDB reports its BK volume ID is %u\n",
-					entry.volumeId[BACKVOL]);
-			    }
-			}
-		    } else if (!entry.volumeId[BACKVOL]) {
-			addvolume++;
-		    }
-		}
-	    }
-	}
-	if (addvolume) {
-	    entry.flags |= VLF_BACKEXISTS;
-	    entry.volumeId[RWVOL] = rwvolid;
-	    entry.volumeId[BACKVOL] = volumeinfo->volid;
-
-	    entry.serverNumber[idx] = aserver;
-	    entry.serverPartition[idx] = apart;
-	    entry.serverFlags[idx] = VLSF_RWVOL;
-
-	    modified++;
-	}
+	code = CheckVolumeBK(volumeinfo, aserver, apart, &entry,
+			     createentry, pass, rwvolid, &modified);
     }
-
     else if (volumeinfo->type == ROVOL) {	/* A RO volume */
-	if (volumeinfo->volid == entry.volumeId[ROVOL]) {
-	    /* This is a quick check to see if the RO entry exists in the
-	     * VLDB so we avoid the CheckVldbRO() call (which checks if each
-	     * RO volume listed in the VLDB exists).
-	     */
-	    idx = Lp_ROMatch(aserver, apart, &entry) - 1;
-	    if (idx == -1) {
-		idx = entry.nServers;
-		entry.nServers++;
-		addvolume++;
-	    } else {
-		if (!(entry.flags & VLF_ROEXISTS)) {
-		    addvolume++;
-		}
-	    }
-	} else {
-	    /* Before we correct the VLDB entry, make sure all the
-	     * ROs listed in the VLDB exist.
-	     */
-	    code = CheckVldbRO(&entry, &mod);
-	    if (code)
-		ERROR_EXIT(code);
-	    if (mod)
-		modified++;
-
-	    if (!(entry.flags & VLF_ROEXISTS)) {
-		/* No RO exists in the VLDB entry - add this one */
-		idx = entry.nServers;
-		entry.nServers++;
-		addvolume++;
-	    } else if (volumeinfo->volid > entry.volumeId[ROVOL]) {
-		/* The volume headers's RO ID does not match that in the VLDB entry,
-		 * and the vol hdr's ID is greater (implies more recent). So delete
-		 * all the RO volumes listed in VLDB entry and add this volume.
-		 */
-		for (j = 0; j < entry.nServers; j++) {
-		    if (entry.serverFlags[j] & VLSF_ROVOL) {
-			/* Verify this volume exists and print message we are orphaning it */
-			if (pass == 1) {
-			    MapPartIdIntoName(apart, pname);
-			    fprintf(STDERR,
-				    "*** Warning: Orphaned RO volume %u exists on %s %s\n",
-				    entry.volumeId[ROVOL],
-                                    noresolve ?
-                                    afs_inet_ntoa_r(entry.serverNumber[j], hoststr) :
-                                    hostutil_GetNameByINet(entry.
-							   serverNumber[j]),
-				    pname);
-			    fprintf(STDERR,
-				    "    VLDB reports its RO volume ID is %lu\n",
-				    (unsigned long)volumeinfo->volid);
-			}
-
-			Lp_SetRWValue(&entry, entry.serverNumber[idx],
-				      entry.serverPartition[idx], 0L, 0L);
-			entry.nServers--;
-			modified++;
-			j--;
-		    }
-		}
-
-		idx = entry.nServers;
-		entry.nServers++;
-		addvolume++;
-	    } else if (volumeinfo->volid < entry.volumeId[ROVOL]) {
-		/* The volume headers's RO ID does not match that in the VLDB entry,
-		 * and the vol hdr's ID is lower (implies its older). So orphan it.
-		 */
-		if (pass == 1) {
-		    MapPartIdIntoName(apart, pname);
-		    fprintf(STDERR,
-			    "*** Warning: Orphaned RO volume %lu exists on %s %s\n",
-                            (unsigned long)volumeinfo->volid,
-                            noresolve ?
-                            afs_inet_ntoa_r(aserver, hoststr) :
-                            hostutil_GetNameByINet(aserver), pname);
-		    fprintf(STDERR,
-			    "    VLDB reports its RO volume ID is %u\n",
-			    entry.volumeId[ROVOL]);
-		}
-	    } else {
-		/* The RO volume ID in the volume header match that in the VLDB entry,
-		 * and there exist RO volumes in the VLDB entry. See if any of them
-		 * are this one. If not, then we add it.
-		 */
-		idx = Lp_ROMatch(aserver, apart, &entry) - 1;
-		if (idx == -1) {
-		    idx = entry.nServers;
-		    entry.nServers++;
-		    addvolume++;
-		}
-	    }
-	}
-
-	if (addvolume) {
-	    entry.flags |= VLF_ROEXISTS;
-	    entry.volumeId[RWVOL] = rwvolid;
-	    entry.volumeId[ROVOL] = volumeinfo->volid;
-
-	    entry.serverNumber[idx] = aserver;
-	    entry.serverPartition[idx] = apart;
-	    entry.serverFlags[idx] = VLSF_ROVOL;
-
-	    modified++;
-	}
+	code = CheckVolumeRO(volumeinfo, aserver, apart, &entry,
+			     createentry, pass, rwvolid, &modified);
+    }
+    if (code != 0) {
+	ERROR_EXIT(code);
     }
 
     /* Remember largest volume id */
