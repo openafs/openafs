@@ -854,12 +854,10 @@ UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
     afs_int32 ttid = 0;
     afs_int32 code, rcode;
     afs_int32 error = 0;
-    struct nvldbentry entry, storeEntry;
+    struct nvldbentry entry;
     int islocked = 0;
     afs_int32 avoltype = -1, vtype;
     int notondisk = 0, notinvldb = 0;
-
-    memset(&storeEntry, 0, sizeof(struct nvldbentry));
 
     /* Find and read the VLDB entry for this volume */
     code = GetLockedEntry(avolid, avoltype, VLOP_DELETE, &entry);
@@ -987,6 +985,9 @@ UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
 	       "Could not delete the VLDB entry for the volume %u \n",
 	       avolid);
     } else {
+	struct nvldbentry storeEntry;
+
+	memset(&storeEntry, 0, sizeof(storeEntry));
 	MapNetworkToHost(&entry, &storeEntry);
 	code =
 	    VLDB_ReplaceEntry(avolid, vtype, &storeEntry,
@@ -2213,7 +2214,7 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     afs_int32 volflag;
     struct volser_status tstatus;
     struct destServer destination;
-    struct nvldbentry entry, newentry, storeEntry;
+    struct nvldbentry entry, newentry;
     afs_int32 error;
     afs_int32 tmp;
     afs_uint32 tmpVol;
@@ -2524,6 +2525,8 @@ cpincr:
     }
 
     if (!(flags & RV_NOVLDB)) {
+	struct nvldbentry storeEntry;
+
 	/* create the vldb entry for the copied volume */
 	strncpy(newentry.name, atovolname, VOLSER_OLDMAXVOLNAME);
 	newentry.nServers = 1;
@@ -2683,7 +2686,7 @@ UV_BackupVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
     afs_int32 ttid = 0, btid = 0;
     afs_uint32 backupID;
     afs_int32 code = 0, rcode = 0;
-    struct nvldbentry entry, storeEntry;
+    struct nvldbentry entry;
     afs_int32 error = 0;
     int vldblocked = 0, vldbmod = 0;
 
@@ -2811,6 +2814,8 @@ UV_BackupVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
     /* Now update the vldb - if modified */
     if (vldblocked) {
 	if (vldbmod) {
+	    struct nvldbentry storeEntry;
+
 	    MapNetworkToHost(&entry, &storeEntry);
 	    code =
 		VLDB_ReplaceEntry(avolid, RWVOL, &storeEntry,
@@ -5443,7 +5448,7 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
     int idx = 0;
     int j;
     afs_int32 code, error = 0;
-    struct nvldbentry entry, storeEntry;
+    struct nvldbentry entry;
     char pname[10];
     int pass = 0, createentry, addvolume, modified, mod, doit = 1;
     afs_uint32 rwvolid;
@@ -5833,6 +5838,8 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 	*maxvolid = entry.volumeId[RWVOL];
 
     if (modified && doit) {
+	struct nvldbentry storeEntry;
+
 	MapNetworkToHost(&entry, &storeEntry);
 
 	if (createentry) {
@@ -6500,7 +6507,6 @@ static afs_int32
 CheckVldb(struct nvldbentry * entry, afs_int32 * modified, afs_int32 * deleted)
 {
     afs_int32 code, error = 0;
-    struct nvldbentry storeEntry;
     int islocked = 0, mod, modentry, delentry = 0;
     int pass = 0, doit=1;
 
@@ -6580,6 +6586,8 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified, afs_int32 * deleted)
 	    }
 	    delentry = 1;
 	} else {
+	    struct nvldbentry storeEntry;
+
 	    /* Replace old entry with our new one */
 	    MapNetworkToHost(entry, &storeEntry);
 	    code =
