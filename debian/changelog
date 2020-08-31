@@ -1,3 +1,9 @@
+openafs (1.8.6-2) UNRELEASED; urgency=medium
+
+  * Pull in upstream patches for -fcommon support (Closes: #966881)
+
+ -- Benjamin Kaduk <kaduk@mit.edu>  Sun, 30 Aug 2020 17:47:32 -0700
+
 openafs (1.8.6-1) unstable; urgency=medium
 
   * New upstream release:
