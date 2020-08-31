@@ -3451,7 +3451,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     if (entry.volumeId[ROVOL] == INVALID_BID) {
 	/* need to get a new RO volume id */
 	vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, &roVolId);
-	ONERROR(vcode, entry.name, "Cant allocate ID for RO volume of %s\n");
+	ONERROR(vcode, entry.name, "Can't allocate ID for RO volume of %s\n");
 
 	entry.volumeId[ROVOL] = roVolId;
 	MapNetworkToHost(&entry, &storeEntry);
@@ -5357,7 +5357,7 @@ UV_GenerateVolumeClones(afs_uint32 aserver, afs_int32 apart,
 		VPRINT2("Clone for volume %s %u failed \n", curPtr->volName,
 			curPtr->volId);
 	    if (code) {
-		curPtr->volFlags &= ~CLONEVALID;	/*cant clone */
+		curPtr->volFlags &= ~CLONEVALID;	/* can't clone */
 		curPos++;
 		continue;
 	    }
