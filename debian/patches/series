@@ -2,3 +2,5 @@
 0005-tests-skip-vos-tests-when-a-vlserver-is-already-runn.patch
 0006-tests-do-not-resolve-addresses-in-vos-vl-test.patch
 0007-Temporarily-disable-flaky-test.patch
+0005-Avoid-duplicate-definitions-of-globals.patch
+0006-afsmonitor-remove-unused-LWP_WaitProcess.patch
