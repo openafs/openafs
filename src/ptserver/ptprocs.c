@@ -1795,10 +1795,6 @@ listSuperGroups(struct rx_call *call, afs_int32 aid, prlist *alist,
     if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
 	ABORT_WITH(tt, PRPERM);
 
-    code = ubik_SetLock(tt, 1, 1, LOCKREAD);
-    if (code)
-	ABORT_WITH(tt, code);
-
     temp = FindByID(tt, aid);
     if (!temp)
 	ABORT_WITH(tt, PRNOENT);
