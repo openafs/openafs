@@ -5825,24 +5825,33 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 	  RWVOL) ? volumeinfo->volid : volumeinfo->parentID);
 
   retry:
+    createentry = 0;		/* Do we need to create a VLDB entry */
+    modified = 0;		/* The VLDB entry was modified */
+
     /* Check to see if the VLDB is ok without locking it (pass 1).
      * If it will change, then lock the VLDB entry, read it again,
      * then make the changes to it (pass 2).
      */
     if (++pass == 2) {
-	code = ubik_VL_SetLock(cstruct, 0, rwvolid, RWVOL, VLOP_DELETE);
+	/*
+	 * For pass 2, we must fetch a locked entry from the net. Don't simply
+	 * lock the volume; we must fetch it again in case someone else changed
+	 * it before we locked it.
+	 */
+	code = GetLockedEntry(rwvolid, RWVOL, VLOP_DELETE, &entry);
 	if (code) {
-	    fprintf(STDERR, "Could not lock VLDB entry for %lu\n",
+	    fprintf(STDERR, "Could not fetch locked VLDB entry for volume %lu\n",
 		    (unsigned long)rwvolid);
 	    ERROR_EXIT(code);
 	}
-    }
 
-    createentry = 0;		/* Do we need to create a VLDB entry */
-    modified = 0;		/* The VLDB entry was modified */
-
-    if (aentry) {
+    } else if (aentry != NULL) {
+	/*
+	 * If we were given a VLDB entry, use that instead of fetching from the
+	 * net.
+	 */
 	memcpy(&entry, aentry, sizeof(entry));
+
     } else {
 	/* Read the entry from VLDB by its RW volume id */
 	code = VLDB_GetEntryByID(rwvolid, RWVOL, &entry);
