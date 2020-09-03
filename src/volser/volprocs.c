@@ -3033,7 +3033,8 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
 #endif
             ttc = NewTrans(volumeId, partId);
             if (!ttc) {
-		return VOLSERVOLBUSY;
+		ret = VOLSERVOLBUSY;
+		goto done;
             }
 #ifdef AFS_NAMEI_ENV
 	    ret = namei_ConvertROtoRWvolume(pname, volumeId);
@@ -3043,7 +3044,7 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
 	    break;
 	}
     }
-
+  done:
     if (ttc)
         DeleteTrans(ttc, 1);
 
