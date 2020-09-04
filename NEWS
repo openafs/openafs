@@ -20,6 +20,12 @@ OpenAFS 1.9.0
 
     Fix potential Rx hang when an incoming call must wait (14158).
 
+    Fix latent bug preventing RX_CONN_NAT_PING from working (13041).
+
+    Fix potential rx_connection leak in pthreaded programs (13042).
+
+    Avoid NatPing storm with many connections to the same server (14312).
+
     Do not leave empty directories behind in the file server vice partition
     when running the "vos zap -force" command (12879, 12839).
 
@@ -29,6 +35,8 @@ OpenAFS 1.9.0
     only with the -help option (10983).
 
     Replace SOURCE-MAP with a README.md (14003).
+
+    Improve documentation of minimum required dependency versions (14305).
 
     Remove unused definition of LINUX_PKGREL from configure.ac (14117).
 
@@ -62,9 +70,9 @@ OpenAFS 1.9.0
     Fix many (but not all) of the new warnings issued by recent versions of
     gcc and clang (12987..12989, 13010, 13287, 13462..13464, 13467..13468,
     13470..13476, 13494, 13660..13664, 13684, 13726, 13754, 14049, 14092,
-    14106).
+    14106, 14207, 14273, 14277, 14274, 14275, 14279, 14292, 14125).
 
-    Added unit tests for functions mapping vide partition to id (13176).
+    Added unit tests for functions mapping vice partition to id (13176).
 
     Fix issues resulting in parallel "make install" to fail (13786, 14137).
 
@@ -75,11 +83,12 @@ OpenAFS 1.9.0
     (12988, 13204, 13209, 13210, 13213, 13226, 13227, 13260, 13271, 13277,
     13309, 13310, 13324, 13325, 13339, 13345, 13346, 13351, 13361, 13362, 13363,
     13390, 13397, 13408, 13414, 13458, 13490, 13500, 13509, 13514, 13557, 13640,
-    13655, 13282, 13683).
+    13655, 13282, 13683, 13995, 14218, 14219, 14236, 14246, 14322, 14338).
 
     Build system clean up and fixes
     (12956, 12961, 12962, 12963, 12992, 12993, 12994, 13237, 13275, 13338,
-    13357, 13360, 13387, 13419, 13594, 13652).
+    13357, 13360, 13387, 13419, 13594, 13652, 14115, 14148..14150, 14132,
+    14133, 14135, 14153).
 
   All server platforms
 
@@ -89,8 +98,12 @@ OpenAFS 1.9.0
     Log a warning message when starting server processes with no encryption
     keys available (13911).
 
+    Fix use of triple-DES cell-wide keys for rxkad.krb5 (14203).
+
     Remove redundant lseek system calls and use positional I/O in the database
     servers to improve performance (12271, 12272).
+
+    Fix option parsing to enable parallel salvageserver operation (14201).
 
     Fix an edge case where writes were errneously allowed on readonly
     fileservers (13934).
@@ -101,11 +114,25 @@ OpenAFS 1.9.0
     Allow "vos rename" to be re-run to finish a previously interrupted
     volume rename operation (13720).
 
-    Take volumes offline during convertROtoRW operations, since volume access
-    during the conversion can leave it in an inconsistent state (14066).
+    Return errors for short reads during volume dumps instead of silently
+    padding with NUL bytes (14255).
+
+    Work around potential deadlocks when the salvageserver spawns a child
+    at the same time another thread is writing to the log (14239).
 
     Do not overwrite the errno variable when logging certain database sendfile
     errors (13263).
+
+    Avoid confusing log message ("Unable to create the volume") when
+    restoring over an existing volume (14208).
+
+    Fix vldb listing of created-but-not-released RO replicas (14154).
+
+    Avoid confusing "half-locked" state for interrupted volume renames (14157).
+
+    Prevent attempts to grow the VLDB past the maximum 2GB size (14180).
+
+    Fix a bug that prevented logging of discarded callbacks (14256).
 
     Code migration to POSIX Threads (pthreads) from LWP.
       * Convert upserver and upclient to pthreads (12754)
@@ -117,15 +144,29 @@ OpenAFS 1.9.0
     Attempt to detect and report some common types of cache corruption
     (13436, 13747, 13969, 14002).
 
+    Log a warning when the cache is "stressed" (almost full) to suggest
+    possible re-tuning (13255).
+
     Require opt-in to use the historical/deprecated single-DES krb5
     encryption types, which are being removed from krb5 distributions (13689).
 
     Fix incorrect informational messages when the AFSCELL environment
     variable is set (13371).
 
+    Assorted cleanup and microoptimizations (12655, 13254, 12656, 13253, 14241,
+    13256, 14254).
+
+    Tidy up the shutdown sequence, closing some memory leaks and not
+    generatin Rx traffic while Rx datastructures are being deconstructed
+    (13718, 13719).
+
     Fix reading entries of historic vldb formats (13465).
 
+    Suppress warning about running unauthenticated for `bos -noauth` (14306).
+
   Linux
+
+    Support upstream kernels through Linux 5.9.
 
     Be more careful about overriding the current credentials for operations
     on cache files, preventing spurious permission errors when systems like
@@ -136,11 +177,15 @@ OpenAFS 1.9.0
 
     Improve ppc64le support (13980, 14046).
 
+    Improve RPM packaging (14114, 14116, 14266)
+
   MacOS
 
     Simplify background-move return-code processing (13280).
 
-    Support macOS Catalina (13935, 13936, 13668..13671, 13928, 14062).
+    Support macOS Catalina (13935, 13936, 13668..13671, 13928, 14062, 14222).
+
+    Add OpenAFS.pkg to the list of files to be codesigned (14221).
 
   Solaris
 
@@ -163,7 +208,8 @@ OpenAFS 1.9.0
     Create destination kernel module directory when installing on
     FreeBSD (13653, 13690)).
 
-    Add param.h files and sysnames for FreeBSD 11.2 (13534) and 11.3 (13792).
+    Add param.h files and sysnames for FreeBSD 11.2 (13534), 11.3 (13792),
+    and 12.1 (13982).
 
     Fix fcntl-style locks by adapting to quirky historical behavior (12579).
 
