@@ -2306,7 +2306,7 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
 	 * VLDB to reflect the change.
 	 */
 	aVLDB_GetEntryByID(cellHandle, pvolid, RWVOL, &entry, &tst);
-	if (tst && tst != VL_NOENT && tst != VL_ENTDELETED) {
+	if (tst != 0 && tst != VL_NOENT) {
 	    goto fail_UV_RestoreVolume;
 	}
 	if (tst == VL_NOENT) {	/* it doesnot exist already */

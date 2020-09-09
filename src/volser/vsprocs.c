@@ -4676,7 +4676,7 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 	 * VLDB to reflect the change.
 	 */
 	vcode = VLDB_GetEntryByID(pvolid, voltype, &entry);
-	if (vcode && vcode != VL_NOENT && vcode != VL_ENTDELETED) {
+	if (vcode != 0 && vcode != VL_NOENT) {
 	    fprintf(STDERR,
 		    "Could not fetch the entry for volume number %lu from VLDB \n",
 		    (unsigned long)pvolid);
