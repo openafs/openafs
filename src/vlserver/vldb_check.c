@@ -915,7 +915,7 @@ CheckIpAddrs(struct vlheader *header)
 		    (VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u (0x%0x) and %u (0x%0x) use same record slot %d\n",
 		     record[rindex].addr, OFFSET(record[rindex].addr), mhinfo[i].addr, OFFSET(mhinfo[i].addr), rindex);
 	    }
-	    if (record[rindex].type & FRC) {
+	    if (record[rindex].type & MHC) {
 	        log_error
 		    (VLDB_CHECK_ERROR,"address %u (offset 0x%0x): MH Blocks Chain %d: Already a MH block\n",
 		     record[rindex].addr, OFFSET(record[rindex].addr), i);
