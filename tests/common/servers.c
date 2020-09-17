@@ -11,10 +11,69 @@
 
 #include <afs/authcon.h>
 #include <afs/cellconfig.h>
+#define UBIK_INTERNALS
+#include <ubik.h>
 
 #include <tests/tap/basic.h>
 
 #include "common.h"
+
+static void
+check_startup(pid_t pid, char *log, int *a_started, int *a_stopped)
+{
+    int status;
+    struct rx_connection *conn;
+    struct ubik_debug udebug;
+    afs_int32 isclone;
+    pid_t exited;
+    int code;
+
+    memset(&udebug, 0, sizeof(udebug));
+
+    opr_Assert(pid > 0);
+
+    exited = waitpid(pid, &status, WNOHANG);
+    if (exited < 0) {
+	opr_Assert(errno == ECHILD);
+    }
+
+    if (exited != 0) {
+	/* pid is no longer running; vlserver must have died during startup */
+	*a_stopped = 1;
+	return;
+    }
+
+    if (!afstest_file_contains(log, "Starting AFS vlserver")) {
+	/* vlserver hasn't logged the "Starting AFS vlserver" line yet, so it's
+	 * presumably still starting up. */
+	return;
+    }
+
+    /*
+     * If we're going to write to the db, we also need to wait until recovery
+     * has the UBIK_RECHAVEDB state bit (without that, we won't be able to
+     * start write transactions). If we're just reading from the db, we
+     * wouldn't need to wait for this, but we don't know whether our caller
+     * will be writing to the db or not. It shouldn't take long for
+     * UBIK_RECHAVEDB to get set anyway, so just always check if it's been set
+     * (via VOTE_XDebug).
+     */
+
+    conn = rx_NewConnection(afstest_MyHostAddr(), htons(7003), VOTE_SERVICE_ID,
+			    rxnull_NewClientSecurityObject(), 0);
+    code = VOTE_XDebug(conn, &udebug, &isclone);
+    rx_DestroyConnection(conn);
+    if (code != 0) {
+	diag("VOTE_XDebug returned %d while waiting for vlserver startup",
+	     code);
+	return;
+    }
+
+    if (udebug.amSyncSite && (udebug.recoveryState & UBIK_RECHAVEDB) != 0) {
+	/* Okay, it's set! We have finished startup. */
+	*a_started = 1;
+    }
+}
 
 /* Start up the VLserver, using the configuration in dirname, and putting our
  * logs there too.
@@ -24,18 +83,30 @@ int
 afstest_StartVLServer(char *dirname, pid_t *serverPid)
 {
     pid_t pid;
-    int status;
+    char *logPath;
+    int started = 0;
+    int stopped = 0;
+    int try;
+    FILE *fh;
+    int code = 0;
+
+    logPath = afstest_asprintf("%s/VLLog", dirname);
+
+    /* Create/truncate the log in advance (since we look at it to detect when
+     * the vlserver has started). */
+    fh = fopen(logPath, "w");
+    opr_Assert(fh != NULL);
+    fclose(fh);
 
     pid = fork();
     if (pid == -1) {
 	exit(1);
 	/* Argggggghhhhh */
     } else if (pid == 0) {
-	char *binPath, *logPath, *dbPath;
+	char *binPath, *dbPath;
 
 	/* Child */
 	binPath = afstest_obj_path("src/tvlserver/vlserver");
-	logPath = afstest_asprintf("%s/VLLog", dirname);
 	dbPath = afstest_asprintf("%s/vldb", dirname);
 
 	execl(binPath, "vlserver",
@@ -44,22 +115,43 @@ afstest_StartVLServer(char *dirname, pid_t *serverPid)
 	exit(1);
     }
 
-    if (waitpid(pid, &status, WNOHANG) != 0) {
-	fprintf(stderr, "Error starting vlserver\n");
-	return -1;
+    /*
+     * Wait for the vlserver to startup. Try to check if the vlserver is ready
+     * by checking the log file and the urecovery_state (check_startup()), but
+     * if it's taking too long, just return success anyway. If the vlserver
+     * isn't ready yet, then the caller's tests may fail, but we can't wait
+     * forever.
+     */
+
+    diag("waiting for vlserver to startup");
+
+    usleep(5000); /* 5ms */
+    check_startup(pid, logPath, &started, &stopped);
+    for (try = 0; !started && !stopped; try++) {
+	if (try > 100 * 5) {
+	    diag("waited too long for vlserver to finish starting up; "
+		 "proceeding anyway");
+	    goto done;
+	}
+
+	usleep(1000 * 10); /* 10ms */
+	check_startup(pid, logPath, &started, &stopped);
     }
 
-    diag("Sleeping for a few seconds to let the vlserver startup");
-    sleep(5);
-
-    if (waitpid(pid, &status, WNOHANG) != 0) {
+    if (stopped) {
 	fprintf(stderr, "vlserver died during startup\n");
-	return -1;
+	code = -1;
+	goto done;
     }
 
+    diag("vlserver started after try %d", try);
+
+ done:
     *serverPid = pid;
 
-    return 0;
+    free(logPath);
+
+    return code;
 }
 
 int

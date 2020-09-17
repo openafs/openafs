@@ -54,6 +54,7 @@ extern char *afstest_mkdtemp(void);
 extern void afstest_rmdtemp(char *path);
 extern char *afstest_src_path(char *path);
 extern char *afstest_obj_path(char *path);
+extern int afstest_file_contains(char *path, char *target);
 
 /* rxkad.c */
 

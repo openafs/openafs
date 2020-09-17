@@ -126,3 +126,42 @@ afstest_obj_path(char *path)
 {
     return path_from_tdir("C_TAP_BUILD", path);
 }
+
+/**
+ * Check if the given file contains a string. To keep things simple, the string
+ * to look for must appear on a single line, and must appear in the first 128
+ * bytes of that line.
+ *
+ * @param[in] path  Path to the file to check.
+ * @param[in] target	The string to look for in 'path'.
+ *
+ * @retval 1 The file contains the given string.
+ * @retval 0 The file does not contain the given string (or we encountered an
+ *           error).
+ */
+int
+afstest_file_contains(char *path, char *target)
+{
+    FILE *fh;
+    char line[128];
+    int found = 0;
+
+    fh = fopen(path, "r");
+    if (fh == NULL) {
+	diag("%s: Failed to open %s", __func__, path);
+	goto done;
+    }
+
+    while (fgets(line, sizeof(line), fh) != NULL) {
+	if (strstr(line, target) != NULL) {
+	    found = 1;
+	    goto done;
+	}
+    }
+
+ done:
+    if (fh != NULL) {
+	fclose(fh);
+    }
+    return found;
+}

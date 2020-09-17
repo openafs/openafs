@@ -10,6 +10,7 @@ LT_objs = config.lo exec.lo files.lo misc.lo network.lo rxkad.lo servers.lo \
 	  ubik.lo
 LT_libs = $(LIB_rfc3961) $(LIB_roken)
 LT_deps = $(top_builddir)/tests/tap/libafstest_tap.la \
+	  $(top_builddir)/src/ubik/liboafs_ubik.la \
 	  $(top_builddir)/src/util/liboafs_util.la
 
 all: libafstest_common.la
