@@ -856,8 +856,6 @@ xstat_fs_Wait(int sleep_secs)
 	}
     } else if (sleep_secs == 0) {
 	/* Sleep forever. */
-	tv.tv_sec = 24 * 60;
-	tv.tv_usec = 0;
 	if (xstat_fs_debug)
 	    fprintf(stderr, "[ %s ] going to sleep ...\n", rn);
 	while (1) {
@@ -865,7 +863,7 @@ xstat_fs_Wait(int sleep_secs)
 			  0,	/*Descriptors ready for reading */
 			  0,	/*Descriptors ready for writing */
 			  0,	/*Descriptors with exceptional conditions */
-			  &tv);	/*Timeout structure */
+			  NULL);	/* NULL timeout means "forever" */
 	    if (code < 0) {
 		fprintf(stderr, "[%s] select() error %d\n", rn, errno);
 		break;

@@ -94,7 +94,8 @@ Cache Manager. The default is 30 seconds.
 =item B<-period> <I<data collection time>>
 
 Sets the number of minutes the program runs; at the end of this period of
-time, the program exits. The default is 10 minutes.
+time, the program exits. The default is 10 minutes.  Period 0 means run
+forever.
 
 =item B<-debug>
 
