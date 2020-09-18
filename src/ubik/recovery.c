@@ -471,6 +471,7 @@ urecovery_Interact(void *dummy)
     char pbuffer[1028];
     int fd = -1;
     afs_int32 pass;
+    int first;
 
     memset(pbuffer, 0, sizeof(pbuffer));
 
@@ -479,15 +480,18 @@ urecovery_Interact(void *dummy)
     /* otherwise, begin interaction */
     urecovery_state = 0;
     lastProbeTime = 0;
-    while (1) {
-	/* Run through this loop every 4 seconds */
-	tv.tv_sec = 4;
-	tv.tv_usec = 0;
+    for (first = 1; ; first = 0) {
+	if (!first) {
+	    /* Run through this loop every 4 seconds (but don't wait 4 seconds
+	     * the first time around). */
+	    tv.tv_sec = 4;
+	    tv.tv_usec = 0;
 #ifdef AFS_PTHREAD_ENV
-	select(0, 0, 0, 0, &tv);
+	    select(0, 0, 0, 0, &tv);
 #else
-	IOMGR_Select(0, 0, 0, 0, &tv);
+	    IOMGR_Select(0, 0, 0, 0, &tv);
 #endif
+	}
 
 	ViceLog(5, ("recovery running in state %x\n", urecovery_state));
 
