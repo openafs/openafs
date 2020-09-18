@@ -14,6 +14,7 @@ opr_rbtree_replace
 opr_stolower
 opr_stoupper
 opr_strcompose
+opr_threadname_set
 opr_ucstring
 opr_softsig_Init
 opr_softsig_Register

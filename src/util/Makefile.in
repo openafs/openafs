@@ -19,7 +19,7 @@ LT_objs =$(LT_rpc_objs) \
 	 hputil.lo kreltime.lo uuid.lo serverLog.lo \
 	 dirpath.lo fileutil.lo flipbase64.lo fstab.lo \
 	 afs_atomlist.lo afs_lhash.lo pthread_glock.lo tabular_output.lo \
-	 pthread_threadname.lo ${REGEX_OBJ}
+	 ${REGEX_OBJ}
 
 LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
 LT_libs = $(LIB_roken) $(MT_LIBS)

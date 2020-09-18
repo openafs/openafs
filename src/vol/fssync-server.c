@@ -258,7 +258,7 @@ FSYNC_sync(void * args)
     /* set our 'thread-id' so that the host hold table works */
     tid = rx_SetThreadNum();
     Log("Set thread id %d for FSYNC_sync\n", tid);
-    afs_pthread_setname_self("FSYNC_sync");
+    opr_threadname_set("FSYNC_sync");
 #endif /* AFS_PTHREAD_ENV */
 
     VOL_LOCK;

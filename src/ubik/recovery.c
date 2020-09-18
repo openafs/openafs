@@ -465,7 +465,7 @@ urecovery_Interact(void *dummy)
     int fd = -1;
     afs_int32 pass;
 
-    afs_pthread_setname_self("recovery");
+    opr_threadname_set("recovery");
 
     /* otherwise, begin interaction */
     urecovery_state = 0;

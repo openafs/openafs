@@ -12,6 +12,7 @@
 
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lwp.h>
@@ -706,7 +707,7 @@ ScanDumps(void *param)
     afs_uint32 taskId;
     afs_int32 code = 0;
 
-    afs_pthread_setname_self("scandump");
+    opr_threadname_set("scandump");
     taskId = ptr->taskId;
     setStatus(taskId, DRIVE_WAIT);
     EnterDeviceQueue(deviceLatch);
