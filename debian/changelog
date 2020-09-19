@@ -1,8 +1,8 @@
-openafs (1.8.6-3) UNRELEASED; urgency=medium
+openafs (1.8.6-3) unstable; urgency=medium
 
   * Pull in upstream patches for linux kernel 5.8 support (Closes: #970258)
 
- -- Benjamin Kaduk <kaduk@mit.edu>  Sat, 19 Sep 2020 15:38:14 -0700
+ -- Benjamin Kaduk <kaduk@mit.edu>  Sat, 19 Sep 2020 15:39:18 -0700
 
 openafs (1.8.6-2) unstable; urgency=medium
 
