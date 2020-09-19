@@ -1,0 +1,45 @@
+From: Cheyenne Wills <cwills@sinenomine.net>
+Date: Thu, 2 Apr 2020 13:27:50 -0600
+Subject: LINUX: Include linux/time.h for linux/errqueue.h
+
+The configuration test for errqueue.h fails with an undefined structure
+error on a Linux 3.17 (or higher) system.  This prevents setting
+HAVE_LINUX_ERRQUEUE_H, which is used to define AFS_RXERRQ_ENV.
+
+Linux commit f24b9be5957b38bb420b838115040dc2031b7d0c (net-timestamp:
+extend SCM_TIMESTAMPING ancillary data struct) - which was picked up in
+linux 3.17 added a structure that uses the timespec structure.  After
+this commit, we need to include linux/time.h to pull in the definition
+of the timespec struct.
+
+Reviewed-on: https://gerrit.openafs.org/13950
+Reviewed-by: Andrew Deason <adeason@sinenomine.net>
+Tested-by: Andrew Deason <adeason@sinenomine.net>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+(cherry picked from commit 086d185872da5f19447cf5ec7846e7ce5104563f)
+
+Change-Id: I67d01b11c5ea95b8b87832fc833f8fc850ade684
+Reviewed-on: https://gerrit.openafs.org/14130
+Tested-by: BuildBot <buildbot@rampaginggeek.com>
+Reviewed-by: Benjamin Kaduk <kaduk@mit.edu>
+Reviewed-by: Andrew Deason <adeason@sinenomine.net>
+Reviewed-by: Stephan Wiesand <stephan.wiesand@desy.de>
+(cherry picked from commit 0f67e733e82a9001f3f9253c5e1880be845d537b)
+---
+ src/cf/headers.m4 | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/cf/headers.m4 b/src/cf/headers.m4
+index 913af44..af4a4dd 100644
+--- a/src/cf/headers.m4
++++ b/src/cf/headers.m4
+@@ -88,7 +88,8 @@ AC_CHECK_HEADERS([security/pam_modules.h],[],[],[AC_INCLUDES_DEFAULT
+ # include <security/pam_appl.h>
+ #endif])
+ 
+-AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
++AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>
++#include <linux/time.h>])
+ 
+ AC_CHECK_TYPES([fsblkcnt_t],,,[
+ #include <sys/types.h>

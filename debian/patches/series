@@ -4,3 +4,7 @@
 0007-Temporarily-disable-flaky-test.patch
 0005-Avoid-duplicate-definitions-of-globals.patch
 0006-afsmonitor-remove-unused-LWP_WaitProcess.patch
+0007-LINUX-Include-linux-time.h-for-linux-errqueue.h.patch
+0008-LINUX-5.8-Replace-kernel_setsockopt-with-new-funcs.patch
+0009-LINUX-5.8-do-not-set-name-field-in-backing_dev_info.patch
+0010-LINUX-5.8-use-lru_cache_add.patch
