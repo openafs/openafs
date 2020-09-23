@@ -27,9 +27,6 @@
 #include "afs/afs_osidnlc.h"
 
 
-extern afs_rwlock_t afs_xvcache;
-
-
 static void
 FetchWholeEnchilada(struct vcache *avc, struct vrequest *areq)
 {

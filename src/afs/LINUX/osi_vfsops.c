@@ -33,7 +33,6 @@ extern struct super_operations afs_sops;
 #if !defined(AFS_NONFSTRANS)
 extern struct export_operations afs_export_ops;
 #endif
-extern afs_rwlock_t afs_xvcache;
 extern struct afs_q VLRU;
 
 extern struct dentry_operations afs_dentry_operations;
