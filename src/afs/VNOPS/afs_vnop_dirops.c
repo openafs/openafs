@@ -29,7 +29,6 @@
 #include "afs/afs_osidnlc.h"
 
 extern afs_rwlock_t afs_xvcache;
-extern afs_rwlock_t afs_xcbhash;
 
 /* don't set CDirty in here because RPC is called synchronously */
 

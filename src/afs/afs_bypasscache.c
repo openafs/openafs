@@ -112,8 +112,6 @@ int cache_bypass_strategy   = 	NEVER_BYPASS_CACHE;
 afs_size_t cache_bypass_threshold  =  	AFS_CACHE_BYPASS_DISABLED; /* file size > threshold triggers bypass */
 int cache_bypass_prefetch = 1;	/* Should we do prefetching ? */
 
-extern afs_rwlock_t afs_xcbhash;
-
 /*
  * This is almost exactly like the PFlush() routine in afs_pioctl.c,
  * but that routine is static.  We are about to change a file from

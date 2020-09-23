@@ -25,8 +25,6 @@
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
 
-extern afs_rwlock_t afs_xcbhash;
-
 /* Note that we don't set CDirty here, this is OK because the rename
  * RPC is called synchronously. */
 

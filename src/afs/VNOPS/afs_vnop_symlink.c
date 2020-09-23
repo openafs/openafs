@@ -30,7 +30,6 @@
 #include "afs/afs_osidnlc.h"
 
 extern afs_rwlock_t afs_xvcache;
-extern afs_rwlock_t afs_xcbhash;
 
 /* Note: There is the bare bones beginning of symlink hints in the now
  * defunct afs/afs_lookup.c file. Since they are not in use, making the call

@@ -33,7 +33,6 @@
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
 
-extern afs_rwlock_t afs_xcbhash;
 struct afs_exporter *afs_nfsexporter;
 extern struct vcache *afs_globalVp;
 #if defined(AFS_HPUX110_ENV)

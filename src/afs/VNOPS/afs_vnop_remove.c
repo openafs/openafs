@@ -28,7 +28,6 @@
 
 
 extern afs_rwlock_t afs_xvcache;
-extern afs_rwlock_t afs_xcbhash;
 
 
 static void
