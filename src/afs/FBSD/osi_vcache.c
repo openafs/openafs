@@ -131,13 +131,14 @@ osi_vnhold(struct vcache *avc)
 {
     struct vnode *vp = AFSTOV(avc);
 
+    vref(vp);
     VI_LOCK(vp);
     if ((vp->v_iflag & VI_DOOMED) != 0) {
 	VI_UNLOCK(vp);
+	vrele(vp);
 	return ENOENT;
     }
 
-    vrefl(AFSTOV(avc));
     VI_UNLOCK(vp);
     return 0;
 }
