@@ -115,7 +115,7 @@ GetPrintStrings(afs_RPCStats_p statp, char *ifName, char *ifRole,
 	*funcListLen = VOTE_NO_OF_STAT_FUNCS;
 	break;
     case VL_STATINDEX:
-	strcpy(ifName, "volserver interface");
+	strcpy(ifName, "vlserver interface");
 	*funcList = VL_function_names;
 	*funcListLen = VL_NO_OF_STAT_FUNCS;
 	break;
