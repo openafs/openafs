@@ -70,7 +70,7 @@ rx_RecordCallStatistics(struct rx_call *call, unsigned int rxInterface,
 
     rxi_IncrementTimeAndCount(call->conn->peer, rxInterface, currentFunc,
 			     totalFunc, &queue, &exec, call->app.bytesSent,
-			     call->app.bytesRcvd, 1);
+			     call->app.bytesRcvd, isServer);
 }
 
 /*
