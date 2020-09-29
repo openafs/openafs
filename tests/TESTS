@@ -20,6 +20,7 @@ ptserver/pt_util
 ptserver/pts-man
 rx/atomic
 rx/event
+rx/opaque
 rx/perf
 rx/simple
 volser/vos-man

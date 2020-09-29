@@ -1,4 +1,5 @@
 /atomic-t
 /event-t
+/opaque-t
 /simple-client
 /simple-server

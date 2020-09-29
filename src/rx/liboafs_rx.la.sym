@@ -127,11 +127,14 @@ rx_identity_new
 rx_identity_populate
 rx_nPackets
 rx_opaque_alloc
+rx_opaque_cmp
 rx_opaque_copy
 rx_opaque_free
 rx_opaque_freeContents
 rx_opaque_new
 rx_opaque_populate
+rx_opaque_stringify
+rx_opaque_zeroFreeContents
 rx_queryPeerRPCStats
 rx_queryProcessRPCStats
 rx_socket
