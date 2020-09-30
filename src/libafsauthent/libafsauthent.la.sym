@@ -102,6 +102,7 @@ pr_GetCPS
 pr_GetHostCPS
 pr_IdToName
 pr_Initialize
+pr_IsAMemberOf
 pr_ListMembers
 pr_NameToId
 pr_SNameToId
