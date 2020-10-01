@@ -226,7 +226,6 @@ struct in_addr_42 {
  * Global configuration variables.
  */
 static int enable_rxbind = 0;
-static int afs_shutdown = 0;
 static int cacheBlocks;		/*Num blocks in the cache */
 static int cacheFiles;		/*Optimal # of files in workstation cache */
 static int rwpct = 0;
@@ -2252,7 +2251,6 @@ CheckOptions(struct cmd_syndesc *as)
 
     if (cmd_OptionPresent(as, OPT_shutdown)) {
 	/* -shutdown */
-	afs_shutdown = 1;
 	/*
 	 * Cold shutdown is the default
 	 */
