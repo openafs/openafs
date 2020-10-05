@@ -93,10 +93,28 @@ xdr_array(XDR * xdrs, caddr_t * addrp, u_int * sizep, u_int maxsize,
 	maxsize = i;
 
     /* like strings, arrays are really counted arrays */
-    if (!xdr_u_int(xdrs, sizep)) {
-	return (FALSE);
+
+    if (xdrs->x_op == XDR_DECODE && target != NULL) {
+	/*
+	 * We've been given a preallocated array to decode into. Before we
+	 * modify *sizep, check that we have enough space to fit the elements
+	 * that follow.
+	 */
+	if (!xdr_u_int(xdrs, &c)) {
+	    return FALSE;
+	}
+	if (c > *sizep) {
+	    return FALSE;
+	}
+	*sizep = c;
+
+    } else {
+	if (!xdr_u_int(xdrs, sizep)) {
+	    return (FALSE);
+	}
+	c = *sizep;
     }
-    c = *sizep;
+
     if ((c > maxsize) && (xdrs->x_op != XDR_FREE)) {
 	return (FALSE);
     }

@@ -404,10 +404,28 @@ xdr_bytes(XDR * xdrs, char **cpp, u_int * sizep,
     /*
      * first deal with the length since xdr bytes are counted
      */
-    if (!xdr_u_int(xdrs, sizep)) {
-	return (FALSE);
+
+    if (xdrs->x_op == XDR_DECODE && sp != NULL) {
+	/*
+	 * We've been given a preallocated array to decode into. Before we
+	 * modify *sizep, check that we have enough space to fit the elements
+	 * that follow.
+	 */
+	if (!xdr_u_int(xdrs, &nodesize)) {
+	   return FALSE;
+	}
+	if (nodesize > *sizep) {
+	   return FALSE;
+	}
+	*sizep = nodesize;
+
+    } else {
+	if (!xdr_u_int(xdrs, sizep)) {
+	    return (FALSE);
+	}
+	nodesize = *sizep;
     }
-    nodesize = *sizep;
+
     if ((nodesize > maxsize) && (xdrs->x_op != XDR_FREE)) {
 	return (FALSE);
     }
@@ -541,8 +559,16 @@ xdr_string(XDR * xdrs, char **cpp, u_int maxsize)
     switch (xdrs->x_op) {
 
     case XDR_DECODE:
-	if (sp == NULL)
-	    *cpp = sp = (char *)osi_alloc(nodesize);
+	if (sp != NULL) {
+	    /*
+	     * Refuse to use preallocated strings, since we cannot verify
+	     * whether enough memory has been allocated to handle the decoded
+	     * string.
+	     */
+	    return FALSE;
+	}
+
+	*cpp = sp = (char *)osi_alloc(nodesize);
 	if (sp == NULL) {
 	    return (FALSE);
 	}
