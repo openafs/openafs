@@ -1072,9 +1072,6 @@ main(int argc, char **argv, char **envp)
     /* rxkad options */
     cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
 
-    if (auditFileName != NULL)
-	osi_audit_file(auditFileName);
-
 #ifndef AFS_NT40_ENV
     if (geteuid() != 0) {
 	printf("bosserver: must be run as root.\n");
@@ -1140,6 +1137,9 @@ main(int argc, char **argv, char **envp)
 	       DoCore ? DoCore : AFSDIR_SERVER_LOGS_DIRPATH, errno);
 	exit(1);
     }
+
+    if (auditFileName != NULL)
+	osi_audit_file(auditFileName);
 
     /* try to read the key from the config file */
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
