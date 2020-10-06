@@ -1295,13 +1295,22 @@ IsDAFS(struct rx_connection *aconn)
 	return 1;
     }
 
-    /* At this point, either we have neither a dafs nor fs bnode running, or
-     * we have an fs bnode running but the dafs bnode is stopped.
-     *
-     * If an fs bnode is running, we are obviously not DAFS. If an fs bnode
-     * is not running and a dafs bnode is not running... it's not certain if
-     * we are DAFS or not DAFS. Just return 0 in that case; it shouldn't much
-     * matter what we return, anyway */
+    /* dafs bnode exists but is not running; keep checking */
+    code = BOZO_GetInstanceInfo(aconn, "fs", &tp, &istatus);
+    if (code) {
+	/* no fs bnode; must be dafs */
+	return 1;
+    }
+    if (istatus.goal) {
+	/* fs bnode is running; we are not dafs at the moment */
+	return 0;
+    }
+
+    /*
+     * At this point, we have both dafs and fs bnodes, but neither is running.
+     * Therefore, it's not possible to say if we are DAFS or not DAFS.  Just
+     * return 0 in that case; it shouldn't much matter what we return, anyway.
+     */
     return 0;
 }
 
