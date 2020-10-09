@@ -56,7 +56,6 @@ FdHandle_t *fdLruHead;
 FdHandle_t *fdLruTail;
 
 int ih_Inited = 0;
-int ih_PkgDefaultsSet = 0;
 
 /* Most of the servers use fopen/fdopen. Since the FILE structure
  * only has eight bits for the file descriptor, the cache size
@@ -80,9 +79,17 @@ static int _ih_release_r(IHandle_t * ihP);
 /* start-time configurable I/O limits */
 ih_init_params vol_io_params;
 
-void ih_PkgDefaults(void)
+void
+ih_PkgDefaults(void)
 {
-    /* once */
+    static int ih_PkgDefaultsSet = 0;
+
+    IH_LOCK;
+    if (ih_PkgDefaultsSet) {
+       IH_UNLOCK;
+       return;
+    }
+
     ih_PkgDefaultsSet = 1;
 
     /* default to well-known values */
@@ -99,6 +106,7 @@ void ih_PkgDefaults(void)
     vol_io_params.fd_max_cachesize = FD_MAX_CACHESIZE;
 
     vol_io_params.sync_behavior = IH_SYNC_ONCLOSE;
+    IH_UNLOCK;
 }
 
 int
@@ -190,11 +198,9 @@ ih_Initialize(void)
 void
 ih_UseLargeCache(void)
 {
-    IH_LOCK;
+    ih_PkgDefaults();
 
-    if (!ih_PkgDefaultsSet) {
-        ih_PkgDefaults();
-    }
+    IH_LOCK;
 
     if (!ih_Inited) {
         ih_Initialize();
@@ -228,9 +234,7 @@ ih_init(int dev, int vid, Inode ino)
     int ihash = IH_HASH(dev, vid, ino);
     IHandle_t *ihP;
 
-    if (!ih_PkgDefaultsSet) {
-        ih_PkgDefaults();
-    }
+    ih_PkgDefaults();
 
     IH_LOCK;
     if (!ih_Inited) {
