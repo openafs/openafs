@@ -10,9 +10,6 @@
 package SAMPLE_
 prefix S
 
-const	UMAXNAMELEN = 	255;
-typedef string sampleName<UMAXNAMELEN>;
-
 #define	SAMPLE_INC_OPCODE		200
 #define	SAMPLE_GET_OPCODE		201
 #define	SAMPLE_TRUN_OPCODE	202
