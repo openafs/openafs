@@ -260,7 +260,7 @@ pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, afs_int32 follow)
 	    errno = EINVAL;
 	    errorcode = -1;
 	} else {
-	    memcpy(data->out, OutData.rmtbulk_val, data->out_size);
+	    memcpy(data->out, OutData.rmtbulk_val, OutData.rmtbulk_len);
 	    outparam_conversion(cmd, data->out, 1);
 	}
     }
