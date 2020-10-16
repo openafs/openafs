@@ -1138,6 +1138,7 @@ LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 					 0, &rxconn);
 		    if (tconn) {
 			RX_AFS_GUNLOCK();
+			xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
 			code =
 			    VL_GetAddrsU(rxconn, &attrs, &uuid, &unique,
 					 &nentries, &addrs);

@@ -734,6 +734,7 @@ CheckEntry(struct cmd_syndesc *as, void *arock)
 
 	lids.idlist_val[0] = aentry.owner;
 	lids.idlist_val[1] = aentry.creator;
+	xdr_free((xdrproc_t) xdr_namelist, &lnames);
 	code = pr_IdToName(&lids, &lnames);
 	if (code) {
 	    rcode = code;

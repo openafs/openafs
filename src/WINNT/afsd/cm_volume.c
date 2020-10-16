@@ -442,6 +442,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                         if (code)
                             continue;
 
+			xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
                         rxconnp = cm_GetRxConn(connp);
                         code = VL_GetAddrsU(rxconnp, &attrs, &uuid, &unique, &nentries, &addrs);
                         rx_PutConnection(rxconnp);

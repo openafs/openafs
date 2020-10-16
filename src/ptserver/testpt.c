@@ -126,6 +126,7 @@ ListUsedIds(struct cmd_syndesc *as, void *arock)
 		startId++;
 	}
 	lids.idlist_len = i;
+	xdr_free((xdrproc_t) xdr_namelist, &lnames);
 	code = pr_IdToName(&lids, &lnames);
 	if (code) {
 	    afs_com_err(whoami, code, "converting id to name");
