@@ -580,7 +580,26 @@ xdr_string(XDR * xdrs, char **cpp, u_int maxsize)
 	    return (FALSE);
 	}
 	sp[size] = 0;
-	/* fall into ... */
+
+	/* Get the actual string. */
+	if (!xdr_opaque(xdrs, sp, size)) {
+	    /* Make sure strlen(sp) == size, so we can calculate the correct
+	     * size for osi_free when freeing the string. */
+	    memset(sp, 'z', size);
+	    return FALSE;
+	}
+
+	/*
+	 * If the string contains a '\0' character, the string is invalid.
+	 * Don't allow this, because this makes it impossible for us to pass
+	 * the correct size to osi_free later on, when freeing the string.
+	 */
+	if (strlen(sp) != size) {
+	    /* Make sure strlen(sp) == size. */
+	    memset(sp, 'z', size);
+	    return FALSE;
+	}
+	return TRUE;
 
     case XDR_ENCODE:
 	return (xdr_opaque(xdrs, sp, size));
