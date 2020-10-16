@@ -30,6 +30,7 @@
 #include <afs/ihandle.h>
 #include <afs/acl.h>
 #include <afs/ptclient.h>
+#include <afs/pterror.h>
 #include <afs/ptuser.h>
 #include <afs/prs_fs.h>
 #include <afs/auth.h>
@@ -403,6 +404,9 @@ hpr_NameToId(namelist *names, idlist *ids)
     for (i = 0; i < names->namelist_len; i++)
         stolower(names->namelist_val[i]);
     code = ubik_PR_NameToID(uclient, 0, names, ids);
+    if (code == 0 && ids->idlist_len != names->namelist_len) {
+	code = PRINTERNAL;
+    }
     return code;
 }
 

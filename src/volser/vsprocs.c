@@ -2865,6 +2865,18 @@ UV_BackupVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
     return error;
 }
 
+static int
+ListOneVolume(struct rx_connection *aconn, afs_int32 apart, afs_uint32 avolid,
+	      volEntries *entries)
+{
+    afs_int32 code;
+    code = AFSVolListOneVolume(aconn, apart, avolid, entries);
+    if (code == 0 && entries->volEntries_len != 1) {
+	code = VOLSERFAILEDOP;
+    }
+    return code;
+}
+
 /* Make a new clone of volume <avolid> on <aserver> and <apart>
  * using volume ID <acloneid>, or a new ID allocated from the VLDB.
  * The new volume is named by <aname>, or by appending ".clone" to
@@ -2892,7 +2904,7 @@ UV_CloneVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid,
     if (!aname) {
 	volumeInfo.volEntries_val = (volintInfo *) 0;
 	volumeInfo.volEntries_len = 0;
-	code = AFSVolListOneVolume(aconn, apart, avolid, &volumeInfo);
+	code = ListOneVolume(aconn, apart, avolid, &volumeInfo);
 	if (code) {
 	    fprintf(stderr, "Could not get info for volume %lu\n",
 		    (unsigned long)avolid);
@@ -3620,9 +3632,8 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 		}
 		volumeInfo.volEntries_val = NULL;
 		volumeInfo.volEntries_len = 0;
-		code = AFSVolListOneVolume(conn, entry.serverPartition[vldbindex],
-		                           entry.volumeId[ROVOL],
-		                           &volumeInfo);
+		code = ListOneVolume(conn, entry.serverPartition[vldbindex],
+				     entry.volumeId[ROVOL], &volumeInfo);
 		if (code) {
 		    fprintf(STDERR, "Could not fetch information about RO vol %lu from server %s\n",
 		                    (unsigned long)entry.volumeId[ROVOL],
@@ -3650,8 +3661,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	    volEntries volumeInfo;
 	    volumeInfo.volEntries_val = NULL;
 	    volumeInfo.volEntries_len = 0;
-	    code = AFSVolListOneVolume(fromconn, afrompart, afromvol,
-	                               &volumeInfo);
+	    code = ListOneVolume(fromconn, afrompart, afromvol, &volumeInfo);
 	    if (code) {
 		fprintf(STDERR, "Could not fetch information about RW vol %lu from server %s\n",
 		                (unsigned long)afromvol,
@@ -3991,6 +4001,10 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 		SimulateForwardMultiple(fromconn, fromtid, fromdate, &tr,
 					0 /*spare */ , &cookie, &results);
 	    nservers = 1;
+	}
+
+	if (code == 0 && results.manyResults_len != tr.manyDests_len) {
+	    code = VOLSERFAILEDOP;
 	}
 
 	if (code) {
@@ -5503,7 +5517,7 @@ UV_ListOneVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 volid,
     volumeInfo.volEntries_len = 0;
 
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
-    code = AFSVolListOneVolume(aconn, apart, volid, &volumeInfo);
+    code = ListOneVolume(aconn, apart, volid, &volumeInfo);
     if (code) {
 	fprintf(STDERR,
 		"Could not fetch the information about volume %lu from the server\n",
@@ -5570,6 +5584,9 @@ UV_XListOneVolume(afs_uint32 a_serverID, afs_int32 a_partID, afs_uint32 a_volID,
      */
     rxConnP = UV_Bind(a_serverID, AFSCONF_VOLUMEPORT);
     code = AFSVolXListOneVolume(rxConnP, a_partID, a_volID, &volumeXInfo);
+    if (code == 0 && volumeXInfo.volXEntries_len != 1) {
+	code = VOLSERFAILEDOP;
+    }
     if (code)
 	fprintf(STDERR,
 		"[UV_XListOneVolume] Couldn't fetch the volume information\n");
@@ -6191,9 +6208,7 @@ UV_SyncVolume(afs_uint32 aserver, afs_int32 apart, char *avolname, int flags)
 	/* If a volume ID were given, search for it on each partition */
 	if ((volumeid = atol(avolname))) {
 	    for (j = 0; j < pcnt; j++) {
-		code =
-		    AFSVolListOneVolume(aconn, PartList.partId[j], volumeid,
-					&volumeInfo);
+		code = ListOneVolume(aconn, PartList.partId[j], volumeid, &volumeInfo);
 		if (code) {
 		    if (code != ENODEV) {
 			fprintf(STDERR, "Could not query server\n");
@@ -6231,9 +6246,8 @@ UV_SyncVolume(afs_uint32 aserver, afs_int32 apart, char *avolname, int flags)
 	    for (k = 0; k < pcnt; k++) {	/* For each partition */
 		volumeInfo.volEntries_val = (volintInfo *) 0;
 		volumeInfo.volEntries_len = 0;
-		code =
-		    AFSVolListOneVolume(aconn, PartList.partId[k],
-					vldbentry.volumeId[j], &volumeInfo);
+		code = ListOneVolume(aconn, PartList.partId[k],
+				     vldbentry.volumeId[j], &volumeInfo);
 		if (code) {
 		    if (code != ENODEV) {
 			fprintf(STDERR, "Could not query server\n");
@@ -6485,7 +6499,7 @@ VolumeExists(afs_uint32 server, afs_int32 partition, afs_uint32 volumeid)
     if (conn) {
 	volumeInfo.volEntries_val = (volintInfo *) 0;
 	volumeInfo.volEntries_len = 0;
-	code = AFSVolListOneVolume(conn, partition, volumeid, &volumeInfo);
+	code = ListOneVolume(conn, partition, volumeid, &volumeInfo);
 	if (volumeInfo.volEntries_val)
 	    free(volumeInfo.volEntries_val);
 	if (code == VOLSERILLEGAL_PARTITION)

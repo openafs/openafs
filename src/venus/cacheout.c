@@ -71,6 +71,10 @@ ListServers(void)
 	return 1;
     }
 
+    if (addrs.bulkaddrs_len < server_count) {
+	server_count = addrs.bulkaddrs_len;
+    }
+
     for (i = 0; i < server_count; ++i) {
 	ip = addrs.bulkaddrs_val[i];
 

@@ -120,6 +120,12 @@ afs_int32 bcdb_listDumps (afs_int32 sflags, afs_int32 groupId,
 	free(dumpsList.budb_dumpsList_val);
     if (flagsList.budb_dumpsList_val)
 	free(flagsList.budb_dumpsList_val);
+
+    if (code == 0 &&
+	dumpsPtr->budb_dumpsList_len != flagsPtr->budb_dumpsList_len) {
+	code = BUDB_INTERNALERROR;
+    }
+
     return (code);
 }
 

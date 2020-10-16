@@ -2322,6 +2322,9 @@ util_CMClientConfig(struct rx_connection *conn, afs_ClientConfig_p config,
     afs_uint32 allocbytes;
     struct cacheConfig tconfig;
 
+    tconfig.cacheConfig_val = NULL;
+    tconfig.cacheConfig_len = 0;
+
     if (conn == NULL) {
 	tst = ADMRXCONNNULL;
 	goto fail_util_CMClientConfig;
@@ -2333,8 +2336,6 @@ util_CMClientConfig(struct rx_connection *conn, afs_ClientConfig_p config,
     }
 
     config->clientVersion = AFS_CLIENT_RETRIEVAL_VERSION;
-    tconfig.cacheConfig_val = NULL;
-    tconfig.cacheConfig_len = 0;
     tst =
 	RXAFSCB_GetCacheConfig(conn, config->clientVersion,
 			       &config->serverVersion, &allocbytes, &tconfig);
@@ -2343,12 +2344,17 @@ util_CMClientConfig(struct rx_connection *conn, afs_ClientConfig_p config,
 	goto fail_util_CMClientConfig;
     }
 
+    if (tconfig.cacheConfig_len != sizeof(cm_initparams_v1)/sizeof(afs_uint32)) {
+	tst = RXGEN_CC_UNMARSHAL;
+	goto fail_util_CMClientConfig;
+    }
+
     UnmarshallCMClientConfig(config->serverVersion, tconfig.cacheConfig_val,
 			     &config->c);
     rc = 1;
-    free(tconfig.cacheConfig_val);
 
   fail_util_CMClientConfig:
+    free(tconfig.cacheConfig_val);
 
     if (st != NULL) {
 	*st = tst;

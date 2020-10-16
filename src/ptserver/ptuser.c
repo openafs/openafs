@@ -521,6 +521,9 @@ pr_NameToId(namelist *names, idlist *ids)
 	stolower(names->namelist_val[i]);
     }
     code = ubik_PR_NameToID(pruclient, 0, names, ids);
+    if (code == 0 && ids->idlist_len != names->namelist_len) {
+	code = PRINTERNAL;
+    }
     return code;
 }
 
@@ -566,6 +569,9 @@ string_PR_IDToName(struct ubik_client *client, afs_int32 flags,
     code = ubik_PR_IDToName(client, flags, ids, names);
     if (code)
 	return code;
+    if (names->namelist_len != ids->idlist_len) {
+	return PRINTERNAL;
+    }
     for (i = 0; i < names->namelist_len; i++) {
 	code = check_length(names->namelist_val[i]);
 	if (code)

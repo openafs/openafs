@@ -260,6 +260,8 @@ cm_GetAddrsU(cm_cell_t *cellp, cm_user_t *userp, cm_req_t *reqp,
 	if (code)
 	    return CM_ERROR_RETRY;
 
+	nentries = min(nentries, addrs.bulkaddrs_len);
+
 	if (nentries == 0) {
 	    xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
 	    code = CM_ERROR_INVAL;
