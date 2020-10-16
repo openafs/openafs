@@ -571,15 +571,12 @@ pr_SNameToId(prname name, afs_int32 *id)
     lids.idlist_val = 0;
     lnames.namelist_len = 1;
     lnames.namelist_val = calloc(1, PR_MAXNAMELEN);
-    stolower(name);
     strncpy(lnames.namelist_val[0], name, PR_MAXNAMELEN);
-    code = ubik_PR_NameToID(pruclient, 0, &lnames, &lids);
-    if (lids.idlist_val) {
-	*id = *lids.idlist_val;
-	xdr_free((xdrproc_t) xdr_idlist, &lids);
-    } else if (code == 0) {
-	code = PRINTERNAL;
+    code = pr_NameToId(&lnames, &lids);
+    if (code == 0) {
+	*id = lids.idlist_val[0];
     }
+    xdr_free((xdrproc_t) xdr_idlist, &lids);
     if (lnames.namelist_val)
 	free(lnames.namelist_val);
     return code;
