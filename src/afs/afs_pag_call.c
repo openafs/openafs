@@ -461,6 +461,8 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 	goto out_idata;
     }
 
+    memset(odata.rmtbulk_val, 0, out_size);
+
     AFS_GUNLOCK();
     code = RMTSYS_Pioctl(rmtsys_conn, &ccred, abspath, com, follow,
 			 &idata, &odata, &err);
