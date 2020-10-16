@@ -4520,6 +4520,7 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 				  &arrayEntries, &nextindex);
 	if (vcode == RXGEN_OPCODE) {
 	    /* Vlserver not running with ListAttributesN2. Fall back */
+	    xdr_free((xdrproc_t) xdr_nbulkentries, &arrayEntries);
 	    vcode =
 		VLDB_ListAttributes(&attributes, &centries, &arrayEntries);
 	    nextindex = -1;

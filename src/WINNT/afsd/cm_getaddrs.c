@@ -234,6 +234,7 @@ cm_GetAddrsU(cm_cell_t *cellp, cm_user_t *userp, cm_req_t *reqp,
 	    code = cm_ConnByMServers(cellp->vlServersp, 0, userp, reqp, &connp);
 	    if (code)
 		continue;
+	    xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
 	    rxconnp = cm_GetRxConn(connp);
 	    code = VL_GetAddrsU(rxconnp, &attrs, &uuid, &unique, &nentries,
 				 &addrs);

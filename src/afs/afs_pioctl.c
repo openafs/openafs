@@ -1596,6 +1596,7 @@ DECL_PIOCTL(PGetAcl)
 	if (tconn) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHACL);
 	    RX_AFS_GUNLOCK();
+	    xdr_free((xdrproc_t) xdr_AFSOpaque, &acl);
 	    code = RXAFS_FetchACL(rxconn, &Fid, &acl, &OutStatus, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
