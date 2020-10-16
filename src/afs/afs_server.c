@@ -603,13 +603,13 @@ CkSrv_GetCaps(int nconns, struct rx_connection **rxconns,
 	    /* we currently handle 32-bits of capabilities */
 	    if (caps[i].Capabilities_len > 0) {
 		ts->capabilities = caps[i].Capabilities_val[0];
-		xdr_free((xdrproc_t)xdr_Capabilities, &caps[i]);
-		caps[i].Capabilities_val = NULL;
-		caps[i].Capabilities_len = 0;
 	    }
     }
     CkSrv_MarkUpDown(conns, rxconns, nconns, results);
 
+    for (i = 0 ; i < nconns ; i++) {
+	xdr_free((xdrproc_t)xdr_Capabilities, &caps[i]);
+    }
     afs_osi_Free(caps, nconns * sizeof(Capabilities));
     afs_osi_Free(results, nconns * sizeof(afs_int32));
 }
@@ -1554,7 +1554,7 @@ afs_GetCapabilities(struct server *ts)
     afs_PutConn(tc, rxconn, SHARED_LOCK);
     if ( code && code != RXGEN_OPCODE ) {
 	afs_warn("RXAFS_GetCapabilities failed with code %d\n", code);
-	/* better not be anything to free. we failed! */
+	xdr_free((xdrproc_t)xdr_Capabilities, &caps);
 	afs_DestroyReq(treq);
 	return;
     }

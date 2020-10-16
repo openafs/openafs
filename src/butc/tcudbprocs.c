@@ -1130,6 +1130,7 @@ KeepAlive(void *unused)
 	    ubik_Call_SingleServer_BUDB_DumpDB(udbHandle.uh_client,
 					       UF_SINGLESERVER, 0, 0, &charList,
 					       &done);
+	xdr_free((xdrproc_t) xdr_charListT, &charList);
 	if (code || done)
 	    break;
     }

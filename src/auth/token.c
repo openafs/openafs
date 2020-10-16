@@ -72,6 +72,10 @@ decodeToken(struct token_opaque *opaque, struct ktc_tokenUnion *token) {
     code = xdr_ktc_tokenUnion(&xdrs, token);
     xdr_destroy(&xdrs);
 
+    if (!code) {
+	token_freeTokenContents(token);
+    }
+
     return code;
 }
 
@@ -495,7 +499,6 @@ token_SetsEquivalent(struct ktc_setTokenData *tokenSetA,
 
 		if (tokenEqual(&tokenA, &tokenB)) {
 		    found = 1;
-		    break;
 		}
 		token_freeTokenContents(&tokenB);
 	    }

@@ -1226,6 +1226,7 @@ LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 		if (code) {
 		    /* Better handing of such failures; for now we'll simply retry this call */
 		    areq->volumeError = VOLMISSING;
+		    xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
 		    return;
 		}
 

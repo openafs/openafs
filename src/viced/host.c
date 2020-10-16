@@ -1378,6 +1378,7 @@ reconcileHosts_r(afs_uint32 addr, afs_uint16 port, struct host *newHost,
     if (code == RXGEN_OPCODE) {
 	code = RXAFSCB_WhoAreYou(cb, &interf);
     }
+    xdr_free((xdrproc_t)xdr_Capabilities, &caps);
     H_LOCK;
 
     if (code == RXGEN_OPCODE ||
@@ -2960,6 +2961,7 @@ h_UserName(struct client *client)
     if (hpr_IdToName(&lids, &lnames)) {
 	/* We need to free id we alloced above! */
 	free(lids.idlist_val);
+	free(lnames.namelist_val);
 	return "*UNKNOWN USER NAME*";
     }
     strncpy(User, lnames.namelist_val[0], PR_MAXNAMELEN);

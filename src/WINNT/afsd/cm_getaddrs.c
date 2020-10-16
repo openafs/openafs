@@ -258,8 +258,10 @@ cm_GetAddrsU(cm_cell_t *cellp, cm_user_t *userp, cm_req_t *reqp,
 			  osi_LogSaveString(afsd_logp, uuidstr.buffer));
 	}
 
-	if (code)
+	if (code != 0) {
+	    xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
 	    return CM_ERROR_RETRY;
+	}
 
 	nentries = min(nentries, addrs.bulkaddrs_len);
 
