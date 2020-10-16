@@ -620,6 +620,10 @@ TestManyMembers(struct cmd_syndesc *as, void *arock)
 		prlist lastGroupList;
 		int i, j, k, l;
 
+		memset(&callerList, 0, sizeof(callerList));
+		memset(&ownerList, 0, sizeof(ownerList));
+		memset(&lastGroupList, 0, sizeof(lastGroupList));
+
 		if (ng != number) {
 		    fprintf(stderr, "User 0 not a member of all groups\n");
 		    exit(26);

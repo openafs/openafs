@@ -115,6 +115,9 @@ main()
     struct acl_accessList *alist;
     char foo[200];
 
+    memset(&ids, 0, sizeof(ids));
+    memset(&cps, 0, sizeof(cps));
+
     code = pr_Initialize(0, "/usr/afs/etc", 0);
     if (code) {
 	fprintf(stderr, "Couldn't initialize wrt to protection server.\n");
@@ -234,6 +237,10 @@ main()
 		printf("acl> ");
 		continue;
 	    }
+
+	    xdr_free((xdrproc_t) xdr_idlist, &ids);
+	    xdr_free((xdrproc_t) xdr_prlist, &cps);
+
 	    names.namelist_len = 1;
 	    names.namelist_val = calloc(1, PR_MAXNAMELEN);
 	    strncpy(names.namelist_val, name, PR_MAXNAMELEN);

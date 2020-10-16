@@ -72,7 +72,6 @@ main(int argc, char **argv)
     char *ptr;
     char *tmp;
     char *cellname;
-    namelist lnames;
     afs_int32 i;
     afs_int32 fail = 0;
 
@@ -156,6 +155,8 @@ main(int argc, char **argv)
 			report_error(code, name, gname);
 		    } else {
 			/* add the members of a group to the group */
+			namelist lnames;
+			memset(&lnames, 0, sizeof(lnames));
 			if (verbose)
 			    printf("Adding %s to %s.\n", name, gname);
 			code = pr_ListMembers(name, &lnames);
@@ -171,9 +172,8 @@ main(int argc, char **argv)
 				    pr_AddToGroup(lnames.namelist_val[i], gname);
 			        report_error(code, lnames.namelist_val[i], gname);
 			    }
-			    if (lnames.namelist_val)
-			        free(lnames.namelist_val);
 			}
+			xdr_free((xdrproc_t) xdr_namelist, &lnames);
 		    }
 		    memset(name, 0, PR_MAXNAMELEN);
 		    skip(&tmp);
@@ -194,6 +194,8 @@ main(int argc, char **argv)
 		    report_error(code, name, gname);
 		} else {
 		    /* add the members of a group to the group */
+		    namelist lnames;
+		    memset(&lnames, 0, sizeof(lnames));
 		    code = pr_ListMembers(name, &lnames);
 		    if (code) {
 			fprintf(stderr,
@@ -209,9 +211,8 @@ main(int argc, char **argv)
 			    code = pr_AddToGroup(lnames.namelist_val[i], gname);
 			    report_error(code, lnames.namelist_val[i], gname);
 		        }
-		        if (lnames.namelist_val)
-			    free(lnames.namelist_val);
 		    }
+		    xdr_free((xdrproc_t) xdr_namelist, &lnames);
 		}
 		memset(name, 0, PR_MAXNAMELEN);
 		skip(&tmp);
