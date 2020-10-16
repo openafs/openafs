@@ -455,6 +455,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                     }
                     osi_Log1(afsd_logp, "CALL VL_GetAddrsU serverNumber %u SUCCESS", i);
 
+		    nentries = min(nentries, addrs.bulkaddrs_len);
+
                     addrp = addrs.bulkaddrs_val;
                     for (k = 0; k < nentries && j < NMAXNSERVERS; j++, k++) {
                         serverFlags[j] = uvldbEntry.serverFlags[i];

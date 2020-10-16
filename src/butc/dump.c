@@ -201,6 +201,18 @@ Bind(afs_uint32 server)
     return (curr_fromconn);
 }
 
+static int
+ListOneVolume(struct rx_connection *aconn, afs_int32 apart, afs_uint32 avolid,
+	      volEntries *entries)
+{
+    afs_int32 code;
+    code = AFSVolListOneVolume(aconn, apart, avolid, entries);
+    if (code == 0 && entries->volEntries_len != 1) {
+	code = VOLSERFAILEDOP;
+    }
+    return code;
+}
+
 /* notes
  * 1) save the chunksize or otherwise ensure tape space remaining is
  *	check frequently enough
@@ -245,8 +257,7 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
     /* Determine when the volume was last cloned and updated */
     volumeInfo.volEntries_val = (volintInfo *) 0;
     volumeInfo.volEntries_len = 0;
-    rc = AFSVolListOneVolume(fromconn, curDump->partition, curDump->vid,
-			     &volumeInfo);
+    rc = ListOneVolume(fromconn, curDump->partition, curDump->vid, &volumeInfo);
     if (rc)
 	ERROR_EXIT(rc);
     updatedate = volumeInfo.volEntries_val[0].updateDate;
@@ -574,8 +585,7 @@ xbsaDumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
     /* Determine when the volume was last cloned and updated */
     volumeInfo.volEntries_val = (volintInfo *) 0;
     volumeInfo.volEntries_len = 0;
-    rc = AFSVolListOneVolume(fromconn, curDump->partition, curDump->vid,
-			     &volumeInfo);
+    rc = ListOneVolume(fromconn, curDump->partition, curDump->vid, &volumeInfo);
     if (rc)
 	ERROR_EXIT(rc);
     updatedate = volumeInfo.volEntries_val[0].updateDate;

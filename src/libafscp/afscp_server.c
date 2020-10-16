@@ -304,6 +304,9 @@ afscp_ServerById(struct afscp_cell *thecell, afsUUID * u)
     if (code != 0) {
 	return NULL;
     }
+    if (addrs.bulkaddrs_len < nentries) {
+	nentries = addrs.bulkaddrs_len;
+    }
     if (nentries > AFS_MAXHOSTS) {
 	nentries = AFS_MAXHOSTS;
 	/* XXX I don't want to do *that* much dynamic allocation */
@@ -403,6 +406,10 @@ afscp_ServerByAddr(struct afscp_cell *thecell, afs_uint32 addr)
 
 	afsUUID_to_string(&uuid, s, 511);
 	afs_dprintf(("GetServerByAddr 0x%x -> uuid %s\n", addr, s));
+
+	if (addrs.bulkaddrs_len < nentries) {
+	    nentries = addrs.bulkaddrs_len;
+	}
 
 	if (nentries > AFS_MAXHOSTS) {
 	    nentries = AFS_MAXHOSTS;

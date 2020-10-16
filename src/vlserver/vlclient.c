@@ -584,6 +584,9 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    printf("VL_ListAttributes returned code = %d\n", code);
 		    continue;
 		}
+		if (entries.bulkentries_len < nentries) {
+		    nentries = entries.bulkentries_len;
+		}
 		entry = (struct vldbentry *)entries.bulkentries_val;
 		for (i = 0; i < nentries; i++, entry++)
 		    display_entry(entry, 0);
@@ -618,6 +621,9 @@ handleit(struct cmd_syndesc *as, void *arock)
 			printf("VL_ListAttributesN2 returned code = %d\n",
 			       code);
 			break;
+		    }
+		    if (entries.nbulkentries_len < nentries) {
+			nentries = entries.nbulkentries_len;
 		    }
 
 		    t += nentries;
@@ -787,6 +793,9 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    printf("VL_GetAddrs returned code = %d\n", code);
 		    continue;
 		}
+		if (addrs.bulkaddrs_len < nentries) {
+		    nentries = addrs.bulkaddrs_len;
+		}
 		addrp = addrs.bulkaddrs_val;
 		for (i = 0; i < nentries; i++, addrp++) {
 		    if ((*addrp & 0xff000000) == 0xff000000)
@@ -812,6 +821,9 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    printf("VL_GetAddrs returned code = %d\n", code);
 		    continue;
 		}
+		if (addrs.bulkaddrs_len < nentries) {
+		    nentries = addrs.bulkaddrs_len;
+		}
 		addrp = addrs.bulkaddrs_val;
 		for (i = 0; i < nentries; i++, addrp++) {
 		    if ((*addrp & 0xff000000) == 0xff000000) {
@@ -836,6 +848,9 @@ handleit(struct cmd_syndesc *as, void *arock)
 			if (code) {
 			    printf("VL_GetAddrsU returned code = %d\n", code);
 			    continue;
+			}
+			if (mhaddrs.bulkaddrs_len < mhnentries) {
+			    mhnentries = mhaddrs.bulkaddrs_len;
 			}
 			printf
 			    ("   [%d]: uuid[%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x]\n   addrunique=%d, ip address(es):\n",
@@ -887,6 +902,9 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    printf("VL_GetAddrs returned code = %d\n", code);
 		    continue;
 		}
+		if (addrs1.bulkaddrs_len < nentries1) {
+		    nentries1 = addrs1.bulkaddrs_len;
+		}
 		addrp1 = addrs1.bulkaddrs_val;
 		for (i = 0; i < nentries1; i++, addrp1++) {
 		    if ((*addrp1 & 0xff000000) != 0xff000000) {
@@ -909,6 +927,9 @@ handleit(struct cmd_syndesc *as, void *arock)
 			if (code) {
 			    printf("VL_GetAddrsU returned code = %d\n", code);
 			    break;
+			}
+			if (addrs2.bulkaddrs_len < nentries2) {
+			    nentries2 = addrs2.bulkaddrs_len;
 			}
 
 			addrp2 = addrs2.bulkaddrs_val;

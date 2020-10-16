@@ -389,6 +389,9 @@ VLDB_IsSameAddrs(afs_uint32 serv1, afs_uint32 serv2, afs_int32 *errorp)
     }
 
     code = 0;
+    if (addrs.bulkaddrs_len < nentries) {
+	nentries = addrs.bulkaddrs_len;
+    }
     if (nentries > GETADDRUCACHESIZE)
 	nentries = GETADDRUCACHESIZE;	/* safety check; should not happen */
     if (++cacheip_index >= GETADDRUCACHESIZE)

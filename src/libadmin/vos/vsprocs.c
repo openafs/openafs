@@ -605,7 +605,7 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
      */
     volumeInfo.volEntries_val = (volintInfo *) 0;	/*this hints the stub to allocate space */
     volumeInfo.volEntries_len = 0;
-    tst = AFSVolListOneVolume(fromconn, afrompart, afromvol, &volumeInfo);
+    tst = ListOneVolume(fromconn, afrompart, afromvol, &volumeInfo);
     if (tst) {
 	goto fail_UV_MoveVolume;
     }
@@ -1168,6 +1168,18 @@ UV_BackupVolume(afs_cell_handle_p cellHandle, afs_int32 aserver,
 }
 
 static int
+ListOneVolume(struct rx_connection *aconn, afs_int32 apart, afs_uint32 avolid,
+	      volEntries *entries)
+{
+    afs_int32 code;
+    code = AFSVolListOneVolume(aconn, apart, avolid, entries);
+    if (code == 0 && entries->volEntries_len != 1) {
+	code = VOLSERFAILEDOP;
+    }
+    return code;
+}
+
+static int
 DelVol(struct rx_connection *conn, afs_uint32 vid, afs_int32 part,
        afs_int32 flags)
 {
@@ -1422,7 +1434,7 @@ VolumeExists(afs_cell_handle_p cellHandle, afs_int32 server,
     if (conn) {
 	volumeInfo.volEntries_val = (volintInfo *) 0;
 	volumeInfo.volEntries_len = 0;
-	tst = AFSVolListOneVolume(conn, partition, volumeid, &volumeInfo);
+	tst = ListOneVolume(conn, partition, volumeid, &volumeInfo);
 	if (volumeInfo.volEntries_val)
 	    free(volumeInfo.volEntries_val);
 	if (tst == VOLSERILLEGAL_PARTITION) {
@@ -2893,7 +2905,9 @@ UV_XListOneVolume(struct rx_connection *server, afs_int32 a_partID,
     volumeXInfo.volXEntries_len = 0;
 
     tst = AFSVolXListOneVolume(server, a_partID, a_volID, &volumeXInfo);
-
+    if (tst == 0 && volumeXInfo.volXEntries_len != 1) {
+	tst = VOLSERFAILEDOP;
+    }
     if (tst) {
 	goto fail_UV_XListOneVolume;
     } else {
@@ -2953,7 +2967,7 @@ int UV_ListOneVolume(struct rx_connection *server, afs_int32 a_partID,
     volumeInfo.volEntries_val = (volintInfo *) 0;
     volumeInfo.volEntries_len = 0;
 
-    tst = AFSVolListOneVolume(server, a_partID, a_volID, &volumeInfo);
+    tst = ListOneVolume(server, a_partID, a_volID, &volumeInfo);
 
     if (tst) {
 	goto fail_UV_ListOneVolume;

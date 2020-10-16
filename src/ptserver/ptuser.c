@@ -496,6 +496,9 @@ pr_NameToId(namelist *names, idlist *ids)
     for (i = 0; i < names->namelist_len; i++)
 	stolower(names->namelist_val[i]);
     code = ubik_PR_NameToID(pruclient, 0, names, ids);
+    if (code == 0 && ids->idlist_len != names->namelist_len) {
+	code = 267281L; /* PRINTERNAL */
+    }
     return code;
 }
 

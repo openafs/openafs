@@ -320,6 +320,9 @@ VLDB_ListAttributesN2(afs_cell_handle_p cellHandle,
 		  nextindexp);
     if (!tst) {
 	rc = 1;
+	if (blkentriesp->nbulkentries_len < *nentriesp) {
+	    *nentriesp = blkentriesp->nbulkentries_len;
+	}
     }
 
     if (st != NULL) {
@@ -360,6 +363,9 @@ VLDB_IsSameAddrs(afs_cell_handle_p cellHandle, afs_int32 serv1,
     if (tst) {
 	*equal = 0;
 	goto fail_VLDB_IsSameAddrs;
+    }
+    if (addrs.bulkaddrs_len < nentries) {
+	nentries = addrs.bulkaddrs_len;
     }
 
     addrp = addrs.bulkaddrs_val;

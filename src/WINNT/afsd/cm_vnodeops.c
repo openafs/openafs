@@ -2398,6 +2398,13 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
 	    }
             rx_PutConnection(rxconnp);
 
+	    if (code == 0) {
+		if (statStruct.AFSBulkStats_len != filesThisCall ||
+		    callbackStruct.AFSCBs_len != filesThisCall) {
+		    code = RXGEN_CC_UNMARSHAL;
+		}
+	    }
+
             /*
              * If InlineBulk RPC was called and it succeeded,
              * then pull out the return code from the status info
