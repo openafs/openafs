@@ -1217,6 +1217,10 @@ GetServerRPC(void *rpc_specific, int slot, int *last_item,
 		goto fail_GetServerRPC;
 	    }
 
+	    if (addr_multi.bulkaddrs_len < total_multi) {
+		total_multi = addr_multi.bulkaddrs_len;
+	    }
+
 	    /*
 	     * Remove any bogus IP addresses which the user may have
 	     * been unable to remove.
@@ -1366,6 +1370,10 @@ vos_FileServerGetBegin(const void *cellHandle, vos_MessageCallBack_t callBack,
 
     if (tst) {
 	goto fail_vos_FileServerGetBegin;
+    }
+
+    if (serv->addresses.bulkaddrs_len < serv->total_addresses) {
+	serv->total_addresses = serv->addresses.bulkaddrs_len;
     }
 
     /*

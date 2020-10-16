@@ -125,6 +125,10 @@ TranslatePTSNames(const afs_cell_handle_p cellHandle, namelist * names,
 	goto fail_TranslatePTSNames;
     }
 
+    if (ids->idlist_len != names->namelist_len) {
+	tst = ADMPTSFAILEDNAMETRANSLATE;
+	goto fail_TranslatePTSNames;
+    }
 
     /*
      * Check to see if the lookup failed

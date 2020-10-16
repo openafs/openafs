@@ -1228,6 +1228,10 @@ LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 		    return;
 		}
 
+		if (addrs.bulkaddrs_len < nentries) {
+		    nentries = addrs.bulkaddrs_len;
+		}
+
 		addrp = addrs.bulkaddrs_val;
 		for (k = 0; k < nentries; k++) {
 		    addrp[k] = htonl(addrp[k]);
