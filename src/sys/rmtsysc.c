@@ -245,7 +245,7 @@ pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, afs_int32 follow)
     inparam_conversion(cmd, InData.rmtbulk_val, 0);
 
     OutData.rmtbulk_len = MAXBUFFERLEN * sizeof(*OutData.rmtbulk_val);
-    OutData.rmtbulk_val = malloc(OutData.rmtbulk_len);
+    OutData.rmtbulk_val = calloc(1, OutData.rmtbulk_len);
     if (!OutData.rmtbulk_val) {
 	free(inbuffer);
 	return -1;

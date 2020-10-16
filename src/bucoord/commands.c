@@ -2754,6 +2754,8 @@ DBLookupByVolume(char *volumeName)
     char vname[BU_MAXNAMELEN];
     char ds[50];
 
+    memset(volumeEntry, 0, sizeof(volumeEntry));
+
     for (pass = 0; pass < 2; pass++) {
 	/*p */
 	/* On second pass, search for backup volume */
