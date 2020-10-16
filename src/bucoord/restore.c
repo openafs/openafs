@@ -191,7 +191,7 @@ bc_Restorer(afs_int32 aindex)
     serverAll = HOSTADDR(&dumpTaskPtr->destServer);
     partitionAll = dumpTaskPtr->destPartition;
 
-    volumeEntries = malloc(MAXTAPESATONCE * sizeof(struct budb_volumeEntry));
+    volumeEntries = calloc(MAXTAPESATONCE, sizeof(struct budb_volumeEntry));
     if (!volumeEntries) {
 	afs_com_err(whoami, BC_NOMEM, NULL);
 	ERROR(BC_NOMEM);

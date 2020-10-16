@@ -524,12 +524,15 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
     oanswer.MaxSeqLen = sizeof(answer);
     oanswer.SeqLen = 0;
     oanswer.SeqBody = (char *)&answer;
+    memset(&answer, 0, sizeof(answer));
+    memset(&answer_old, 0, sizeof(answer_old));
 
     version = 2;
     code =
 	kawrap_ubik_Call(KAA_AuthenticateV2, conn, 0, name, instance,
 			 (void*)(uintptr_t)start, (void*)(uintptr_t)end, &arequest, &oanswer, 0, 0);
     if (code == RXGEN_OPCODE) {
+	oanswer.SeqLen = 0;
 	oanswer.MaxSeqLen = sizeof(answer);
 	oanswer.SeqBody = (char *)&answer;
 	version = 1;
@@ -537,6 +540,7 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 	    ubik_KAA_Authenticate(conn, 0, name, instance, start, end,
 				  &arequest, &oanswer);
 	if (code == RXGEN_OPCODE) {
+	    oanswer.SeqLen = 0;
 	    oanswer.MaxSeqLen = sizeof(answer_old);
 	    oanswer.SeqBody = (char *)&answer_old;
 	    version = 0;
