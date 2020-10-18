@@ -1043,6 +1043,8 @@ main(int argc, char **argv, char **envp)
 #endif
 
     /* general server options */
+    cmd_OptionAsString(opts, OPT_auditlog, &auditFileName);
+
     if (cmd_OptionAsString(opts, OPT_auditinterface, &auditIface) == 0) {
 	if (osi_audit_interface(auditIface)) {
 	    printf("Invalid audit interface '%s'\n", auditIface);
@@ -1052,10 +1054,6 @@ main(int argc, char **argv, char **envp)
 	free(auditIface);
     }
 
-    if (cmd_OptionAsString(opts, OPT_auditlog, &auditFileName)) {
-	osi_audit_file(auditFileName);
-	free(auditFileName);
-    }
     cmd_OptionAsFlag(opts, OPT_transarc_logs, &DoTransarcLogs);
 
 #ifndef AFS_NT40_ENV
@@ -1073,6 +1071,9 @@ main(int argc, char **argv, char **envp)
 
     /* rxkad options */
     cmd_OptionAsFlag(opts, OPT_dotted, &rxkadDisableDotCheck);
+
+    if (auditFileName != NULL)
+	osi_audit_file(auditFileName);
 
 #ifndef AFS_NT40_ENV
     if (geteuid() != 0) {
