@@ -95,12 +95,6 @@ struct tc_tapeLabel {
 	afs_uint32 tapeId;           /* The tapeId (or dumpId of the initial dump) */
 };
 
-/* structure to describe tapes */
-struct tc_TMInfo {
-	afs_int32 capacity;		/* in 1024 byte units */
-	afs_int32 flags;		/* flags, unused at present */
-};
-
 struct tc_tapeSet { /* describes a tape sequence */
     afs_int32  id;				/* unique id of tapeSet, assigned by budb */
     char  tapeServer[TC_MAXHOSTLEN];	/* name of server where this tape is */

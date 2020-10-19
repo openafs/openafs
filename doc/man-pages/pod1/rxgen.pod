@@ -726,8 +726,6 @@ some of the common cases.
         unsigned long Unique;
     };
 
-    typedef long ViceDataType;
-
     /* Note that TEST would be equivalent to "HEADER" only during the 
        processing of the header, *.h, file */
 

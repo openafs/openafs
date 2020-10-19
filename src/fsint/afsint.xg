@@ -18,8 +18,6 @@
 %#define VICETOKENDEAD	1235
 %#define AFS_LOCKWAIT	(5*60)
 
-typedef afs_int32 ViceDataType;
-
 %#define Invalid 0
 %#define File 1
 %#define Directory 2
@@ -77,8 +75,6 @@ struct AFSStoreStatus {
 %#define	AFS_SETMODE		8
 %#define	AFS_SETSEGSIZE	16
 %#define	AFS_FSYNC       1024
-
-typedef afs_int32 ViceVolumeType;
 
 %#define ReadOnly 0
 %#define ReadWrite 1
@@ -241,11 +237,6 @@ typedef AFSFetchStatus AFSBulkStats<AFSCBMAX>;
 %#define LockExtend	2
 %#define LockRelease	3
 
-typedef afs_int32 ViceOfflineType;
-
-%#define NoSalvage 0
-%#define Salvage 1
-
 %#define MAXCMDINT64S   			3
 %#define MAXCMDINT32S   			200
 %#define MAXCMDCHARS    			256
@@ -258,92 +249,6 @@ typedef afs_int32 ViceOfflineType;
 %#define CMD_MIGRATEFILE  		 	7
 %#define CMD_CHECKHSMMETADATA  		 	8
 %#define CMD_FETCHSTATUS  		 	9
-
-%#define VOLATTR_DESIREDRESIDENCYMASK		1
-%#define VOLATTR_UNDESIREDRESIDENCYMASK		2
-%#define VOLATTR_SETSPECIALACCESSFLAG 		4
-struct ExtendedVolAttrInputs {
-    afs_uint32 Mask;
-    afs_uint32 Volume;
-    afs_uint32 DesiredResidencyMask;
-    afs_uint32 Spare1[10];
-    afs_uint32 UnDesiredResidencyMask;
-    afs_uint32 Spare2[9];
-    afs_uint32 SpecialAccessFlag;
-};
-
-struct ExtendedVolAttrOutputs {
-    afs_uint32 DesiredResidencyMask;
-    afs_uint32 Spare1[10];
-    afs_uint32 UnDesiredResidencyMask;
-    afs_uint32 Spare2[9];
-    afs_uint32 SpecialAccessFlag;
-};
-
-struct TagsArray {
-    afs_uint32 TagsArray_len;
-    afs_uint32 TagsArray_val[184];
-};
-
-struct AccessHistory {
-    afs_uint64 Size;
-    afs_uint32 ModTime;
-    afs_uint32 NonSpoolingFetches;
-    afs_uint32 UserSpoolingFetches;
-    afs_uint32 MigratorSpoolingFetches;
-    afs_uint32 LastUserMigrationEvent;
-    afs_uint32 MigrateMe;
-    afs_uint32 Time0;
-    afs_uint32 Type0;
-    afs_uint32 LocalAccess0;
-    afs_uint32 Residency0;
-    afs_uint32 Time1;
-    afs_uint32 Type1;
-    afs_uint32 LocalAccess1;
-    afs_uint32 Residency1;
-    afs_uint32 Time2;
-    afs_uint32 Type2;
-    afs_uint32 LocalAccess2;
-    afs_uint32 Residency2;
-    afs_uint32 Time3;
-    afs_uint32 Type3;
-    afs_uint32 LocalAccess3;
-    afs_uint32 Residency3;
-    afs_uint32 Time4;
-    afs_uint32 Type4;
-    afs_uint32 LocalAccess4;
-    afs_uint32 Residency4;
-};
-
-struct AccessHistoryOld {
-    afs_uint32 Size;
-    afs_uint32 ModTime;
-    afs_uint32 NonSpoolingFetches;
-    afs_uint32 UserSpoolingFetches;
-    afs_uint32 MigratorSpoolingFetches;
-    afs_uint32 LastUserMigrationEvent;
-    afs_uint32 MigrateMe;
-    afs_uint32 Time0;
-    afs_uint32 Type0;
-    afs_uint32 LocalAccess0;
-    afs_uint32 Residency0;
-    afs_uint32 Time1;
-    afs_uint32 Type1;
-    afs_uint32 LocalAccess1;
-    afs_uint32 Residency1;
-    afs_uint32 Time2;
-    afs_uint32 Type2;
-    afs_uint32 LocalAccess2;
-    afs_uint32 Residency2;
-    afs_uint32 Time3;
-    afs_uint32 Type3;
-    afs_uint32 LocalAccess3;
-    afs_uint32 Residency3;
-    afs_uint32 Time4;
-    afs_uint32 Type4;
-    afs_uint32 LocalAccess4;
-    afs_uint32 Residency4;
-};
 
 struct FsCmdInputs {
     afs_int32  command;

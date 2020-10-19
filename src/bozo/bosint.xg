@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-typedef int bstring;	/*force xdr output */
-
 const BOZO_BSSIZE = 256;
 %#undef min
 struct bozo_netKTime {

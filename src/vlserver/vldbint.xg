@@ -67,9 +67,6 @@ const	VLUPDATE_REPS_MODFLAG	=	0x1000;
 
 /*typedef	string volumename<VL_MAXNAMELEN>;*/
 
-const	DEFAULTBULK	=	10000;
-typedef	opaque bulk<DEFAULTBULK>;
-
 /*  Structure used by the VLListAttributes routine */
 struct VldbListByAttributes {
 	afs_uint32	Mask;
@@ -207,7 +204,6 @@ const VLOP_DUMP        = 0x100;
 
 typedef	vldbentry bulkentries<>;
 typedef	nvldbentry nbulkentries<>;
-typedef	uvldbentry ubulkentries<>;
 /*
  * 500 is an arbitrary implementation limit, larger than what we support storing.
  * It lets the XDR decoder detect an attack (excessively large input) and reject

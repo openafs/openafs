@@ -9,12 +9,6 @@
 
 prefix S
 
-struct BDesc {
-    afs_int32 host;
-    short portal;
-    afs_int32 session;
-};
-
 struct ubik_version {
     afs_int32 epoch;
     afs_int32 counter;
