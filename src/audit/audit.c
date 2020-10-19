@@ -461,14 +461,12 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
 
 #ifdef AFS_PTHREAD_ENV
 static pthread_mutex_t audit_lock;
-static volatile afs_int32   audit_lock_initialized = 0;
 static pthread_once_t audit_lock_once = PTHREAD_ONCE_INIT;
 
 static void
 osi_audit_init_lock(void)
 {
     MUTEX_INIT(&audit_lock, "audit", MUTEX_DEFAULT, 0);
-    audit_lock_initialized = 1;
 }
 #endif
 
@@ -476,9 +474,7 @@ void
 osi_audit_init(void)
 {
 #ifdef AFS_PTHREAD_ENV
-    if (!audit_lock_initialized) {
-	pthread_once(&audit_lock_once, osi_audit_init_lock);
-    }
+    pthread_once(&audit_lock_once, osi_audit_init_lock);
 #endif /* AFS_PTHREAD_ENV */
 }
 
@@ -501,9 +497,9 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
 
 #ifdef AFS_PTHREAD_ENV
     /* i'm pretty sure all the server apps now call osi_audit_init(),
-     * but to be extra careful we'll leave this assert in here for a
+     * but to be extra careful we'll leave this in here for a
      * while to make sure */
-    opr_Assert(audit_lock_initialized);
+    pthread_once(&audit_lock_once, osi_audit_init_lock);
 #endif /* AFS_PTHREAD_ENV */
 
     if ((osi_audit_all < 0) || (osi_echo_trail < 0))
