@@ -122,14 +122,15 @@ struct afs_lock {
     unsigned short spare;	/* not used now */
     osi_timeval32_t time_waiting;	/* for statistics gathering */
 #if defined(INSTRUMENT_LOCKS)
-    /* the following are useful for debugging
-     ** the field 'src_indicator' is updated only by ObtainLock() and
-     ** only for writes/shared  locks. Hence, it indictes where in the
-     ** source code the shared/write lock was set.
+    /*
+     * The following are useful for debugging:
+     * The field 'src_indicator' is updated only by ObtainWriteLock(),
+     * ObtainSharedLock(), and UpgradeSToWLock. It indicates where in the
+     * source code the shared/write lock was set.
      */
     afs_lock_tracker_t pid_last_reader;	/* proceess id of last reader */
     afs_lock_tracker_t pid_writer;	/* process id of writer, else 0 */
-    unsigned int src_indicator;	/* third param to ObtainLock() */
+    unsigned int src_indicator;
 #endif				/* INSTRUMENT_LOCKS */
 };
 typedef struct afs_lock afs_lock_t;
@@ -389,9 +390,8 @@ are free to delete the entry, knowing that no one else can attempt to obtain a l
 on the entry while you have the purge lock held on the parent.  Unfortunately, if it *is* locked,
 you can not lock it yourself and wait for the other dude to release it, since the entry's locker
 may need to lock another entry before unlocking the entry you want (which would result in
-deadlock).  Instead, then, you must release the parent lock, and try again "later" (see Lock_Wait
-for assistance in waiting until later). Unfortunately, this is the best locking paradigm I've yet
-come up with.
+deadlock).  Instead, then, you must release the parent lock, and try again "later".
+Unfortunately, this is the best locking paradigm I've yet come up with.
 
 What are the advantages to this scheme?  First, the use of the parent lock ensures that
 two people don't try to add the same entry at the same time or delete an entry while someone

@@ -55,71 +55,6 @@ Lock_Init(struct afs_lock *lock)
 }
 
 void
-ObtainLock(struct afs_lock *lock, int how,
-	   unsigned int src_indicator)
-{
-    switch (how) {
-    case READ_LOCK:
-	if (!((lock)->excl_locked & WRITE_LOCK))
-	    (lock)->readers_reading++;
-	else
-	    Afs_Lock_Obtain(lock, READ_LOCK);
-#if defined(INSTRUMENT_LOCKS)
-	(lock)->pid_last_reader = MyPidxx;
-#endif /* INSTRUMENT_LOCKS */
-	break;
-    case WRITE_LOCK:
-	if (!(lock)->excl_locked && !(lock)->readers_reading)
-	    (lock)->excl_locked = WRITE_LOCK;
-	else
-	    Afs_Lock_Obtain(lock, WRITE_LOCK);
-#if defined(INSTRUMENT_LOCKS)
-	(lock)->pid_writer = MyPidxx;
-	(lock)->src_indicator = src_indicator;
-#endif /* INSTRUMENT_LOCKS */
-	break;
-    case SHARED_LOCK:
-	if (!(lock)->excl_locked)
-	    (lock)->excl_locked = SHARED_LOCK;
-	else
-	    Afs_Lock_Obtain(lock, SHARED_LOCK);
-#if defined(INSTRUMENT_LOCKS)
-	(lock)->pid_writer = MyPidxx;
-	(lock)->src_indicator = src_indicator;
-#endif /* INSTRUMENT_LOCKS */
-	break;
-    }
-}
-
-void
-ReleaseLock(struct afs_lock *lock, int how)
-{
-    if (how == READ_LOCK) {
-	if (!--lock->readers_reading && lock->wait_states) {
-#if defined(INSTRUMENT_LOCKS)
-	    if (lock->pid_last_reader == MyPidxx)
-		lock->pid_last_reader = 0;
-#endif /* INSTRUMENT_LOCKS */
-	    Afs_Lock_ReleaseW(lock);
-	}
-    } else if (how == WRITE_LOCK) {
-	lock->excl_locked &= ~WRITE_LOCK;
-#if defined(INSTRUMENT_LOCKS)
-	lock->pid_writer = 0;
-#endif /* INSTRUMENT_LOCKS */
-	if (lock->wait_states)
-	    Afs_Lock_ReleaseR(lock);
-    } else if (how == SHARED_LOCK) {
-	lock->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);
-#if defined(INSTRUMENT_LOCKS)
-	lock->pid_writer = 0;
-#endif /* INSTRUMENT_LOCKS */
-	if (lock->wait_states)
-	    Afs_Lock_ReleaseR(lock);
-    }
-}
-
-void
 Afs_Lock_Obtain(struct afs_lock *lock, int how)
 {
     osi_timeval32_t tt1, tt2, et;
@@ -217,48 +152,6 @@ Afs_Lock_ReleaseW(struct afs_lock *lock)
     }
 }
 
-/*
-Wait for some change in the lock status.
-void Lock_Wait(struct afs_lock *lock)
-{
-    AFS_STATCNT(Lock_Wait);
-    if (lock->readers_reading || lock->excl_locked) return 1;
-    lock->wait_states |= READ_LOCK;
-    afs_osi_Sleep(&lock->readers_reading);
-    return 0;
-}
-*/
-
-/* These next guys exist to provide an interface to drop a lock atomically with
- * blocking.  They're trivial to do in a non-preemptive LWP environment.
- */
-
-/* release a write lock and sleep on an address, atomically */
-void
-afs_osi_SleepR(char *addr, struct afs_lock *alock)
-{
-    AFS_STATCNT(osi_SleepR);
-    ReleaseReadLock(alock);
-    afs_osi_Sleep(addr);
-}
-
-/* release a write lock and sleep on an address, atomically */
-void
-afs_osi_SleepW(char *addr, struct afs_lock *alock)
-{
-    AFS_STATCNT(osi_SleepW);
-    ReleaseWriteLock(alock);
-    afs_osi_Sleep(addr);
-}
-
-/* release a write lock and sleep on an address, atomically */
-void
-afs_osi_SleepS(char *addr, struct afs_lock *alock)
-{
-    AFS_STATCNT(osi_SleepS);
-    ReleaseSharedLock(alock);
-    afs_osi_Sleep(addr);
-}
 
 /* Not static - used conditionally if lock tracing is enabled */
 int

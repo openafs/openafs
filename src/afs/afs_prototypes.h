@@ -448,22 +448,11 @@ extern int afs_LookupInodeByPath(char *filename, afs_ufs_dcache_id_t *inode,
 
 /* afs_lock.c */
 extern void Lock_Init(struct afs_lock *lock);
-extern void ObtainLock(struct afs_lock *lock, int how,
-		       unsigned int src_indicator);
-extern void ReleaseLock(struct afs_lock *lock, int how);
 extern int Afs_Lock_Trace(int op, struct afs_lock *alock, int type,
 			  char *file, int line);
 extern void Afs_Lock_Obtain(struct afs_lock *lock, int how);
 extern void Afs_Lock_ReleaseR(struct afs_lock *lock);
 extern void Afs_Lock_ReleaseW(struct afs_lock *lock);
-extern void afs_osi_SleepR(char *addr,
-			   struct afs_lock *alock);
-extern void afs_osi_SleepW(char *addr,
-			   struct afs_lock *alock);
-extern void afs_osi_SleepS(char *addr,
-			   struct afs_lock *alock);
-
-
 
 
 /* afs_mariner.c */
