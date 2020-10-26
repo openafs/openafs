@@ -2880,6 +2880,34 @@ afs_MemGetDSlot(afs_int32 aslot, dslot_state type)
 
 }				/*afs_MemGetDSlot */
 
+static void
+LogCacheError(int aslot, int off, int code, int target_size)
+{
+    struct osi_stat tstat;
+    char *procname;
+
+    if (afs_osi_Stat(afs_cacheInodep, &tstat)) {
+	tstat.size = -1;
+    }
+
+    procname = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    if (procname != NULL) {
+	osi_procname(procname, AFS_SMALLOCSIZ);
+	procname[AFS_SMALLOCSIZ-1] = '\0';
+    }
+
+    afs_warn("afs: disk cache read error in CacheItems slot %d "
+	     "off %d/%d code %d/%d pid %d (%s)\n",
+	     aslot, off, (int)tstat.size, code, target_size,
+	     (int)MyPidxx2Pid(MyPidxx),
+	     procname ? procname : "");
+
+    if (procname != NULL) {
+	osi_FreeSmallSpace(procname);
+	procname = NULL;
+    }
+}
+
 unsigned int last_error = 0, lasterrtime = 0;
 
 /*
@@ -2964,15 +2992,8 @@ afs_UFSGetDSlot(afs_int32 aslot, dslot_state type)
 	    /* If we are requesting a non-DSLOT_NEW slot, this is an error.
 	     * non-DSLOT_NEW slots are supposed to already exist, so if we
 	     * failed to read in the slot, something is wrong. */
-	    struct osi_stat tstat;
-	    if (afs_osi_Stat(afs_cacheInodep, &tstat)) {
-		tstat.size = -1;
-	    }
-	    afs_warn("afs: disk cache read error in CacheItems slot %d "
-	             "off %d/%d code %d/%d\n",
-	             (int)aslot,
-	             off, (int)tstat.size,
-	             (int)code, (int)sizeof(struct fcache));
+	    LogCacheError(aslot, off, code, sizeof(struct fcache));
+
 	    /* put tdc back on the free dslot list */
 	    QRemove(&tdc->lruq);
 	    tdc->index = NULLIDX;
