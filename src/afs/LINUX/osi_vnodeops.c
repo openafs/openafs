@@ -63,6 +63,12 @@
 #undef USE_FOP_ITERATE
 #endif
 
+/* Kernels from before 2.6.19 may not be able to return errors from
+ * d_revalidate. */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,19)
+# define ERRORS_FROM_D_REVALIDATE
+#endif
+
 int cachefs_noreadpage = 0;
 
 extern struct backing_dev_info *afs_backing_dev_info;
@@ -1291,6 +1297,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     struct afs_fakestat_state fakestate;
     int force_drop = 0;
     afs_uint32 parent_dv;
+    int code = 0;
 
 #ifdef LOOKUP_RCU
     /* We don't support RCU path walking */
@@ -1321,14 +1328,13 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	if (vcp->mvstat == AFS_MVSTAT_MTPT) {
 	    if (vcp->mvid.target_root && (vcp->f.states & CMValid)) {
 		int tryEvalOnly = 0;
-		int code = 0;
 		struct vrequest *treq = NULL;
 
 		credp = crref();
 
 		code = afs_CreateReq(&treq, credp);
 		if (code) {
-		    goto bad_dentry;
+		    goto error;
 		}
 		if ((strcmp(dp->d_name.name, ".directory") == 0)) {
 		    tryEvalOnly = 1;
@@ -1338,7 +1344,10 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 		else
 		    code = afs_EvalFakeStat(&vcp, &fakestate, treq);
 		afs_DestroyReq(treq);
-		if ((tryEvalOnly && vcp->mvstat == AFS_MVSTAT_MTPT) || code) {
+		if (code != 0) {
+		    goto error;
+		}
+		if (tryEvalOnly && vcp->mvstat == AFS_MVSTAT_MTPT) {
 		    /* a mount point, not yet replaced by its directory */
 		    goto bad_dentry;
 		}
@@ -1358,22 +1367,27 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 
 	if (parent_dv > dp->d_time || !(vcp->f.states & CStatd)) {
 	    struct vattr *vattr = NULL;
-	    int code;
-	    int lookup_good;
 
 	    if (credp == NULL) {
 		credp = crref();
 	    }
 	    code = afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
             code = filter_enoent(code);
+	    if (code == ENOENT) {
+		/* ENOENT is not an error here. */
+		code = 0;
+		osi_Assert(tvc == NULL);
+	    }
 
 	    if (code) {
-		/* We couldn't perform the lookup, so we're not okay. */
-		lookup_good = 0;
+		/* We couldn't perform the lookup, so we don't know if the
+		 * dentry is valid or not. */
+		dput(parent);
+		goto error;
+	    }
 
-	    } else if (tvc == vcp) {
+	    if (tvc == vcp) {
 		/* We got back the same vcache, so we're good. */
-		lookup_good = 1;
 
 	    } else if (tvc == VTOAFS(dp->d_inode)) {
 		/* We got back the same vcache, so we're good. This is
@@ -1384,37 +1398,29 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 		 * versa, so the previous case will not succeed. But this is
 		 * still 'correct', so make sure not to mark the dentry as
 		 * invalid; it still points to the same thing! */
-		lookup_good = 1;
 
 	    } else {
-		/* We got back a different file, so we're definitely not
-		 * okay. */
-		lookup_good = 0;
-	    }
-
-	    if (!lookup_good) {
+		/*
+		 * We got back a different file, so we know this dentry is
+		 * _not_ okay. Force it to be unhashed, since the given name
+		 * doesn't point to this file anymore.
+		 */
 		dput(parent);
-		/* Force unhash; the name doesn't point to this file
-		 * anymore. */
 		force_drop = 1;
-		if (code && code != ENOENT) {
-		    /* ...except if we couldn't perform the actual lookup,
-		     * we don't know if the name points to this file or not. */
-		    force_drop = 0;
-		}
 		goto bad_dentry;
 	    }
 
 	    code = afs_CreateAttr(&vattr);
 	    if (code) {
 		dput(parent);
-		goto bad_dentry;
+		goto error;
 	    }
 
 	    if (afs_getattr(vcp, vattr, credp)) {
 		dput(parent);
 		afs_DestroyAttr(vattr);
-		goto bad_dentry;
+		code = EIO;
+		goto error;
 	    }
 
 	    vattr2inode(AFSTOV(vcp), vattr);
@@ -1446,10 +1452,12 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     }
 
   good_dentry:
+    code = 0;
     valid = 1;
     goto done;
 
   bad_dentry:
+    code = 0;
     valid = 0;
 #ifndef D_INVALIDATE_IS_VOID
     /* When (v3.18) d_invalidate was converted to void, it also started
@@ -1475,6 +1483,18 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     if (credp)
 	crfree(credp);
 
+#ifdef ERRORS_FROM_D_REVALIDATE
+    if (code != 0) {
+	/*
+	 * If code is nonzero, we don't know whether this dentry is valid or
+	 * not; we couldn't successfully perform the relevant lookup in order
+	 * to tell. So we must not return 'valid' (1) or 'not valid' (0); we
+	 * need to return an error (e.g. -EIO).
+	 */
+	return -code;
+    }
+#endif
+
 #ifndef D_INVALIDATE_IS_VOID
     if (!valid) {
 	/*
@@ -1491,6 +1511,17 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 #endif
     return valid;
 
+ error:
+    if (code <= 0) {
+	code = EIO;
+    }
+#ifdef ERRORS_FROM_D_REVALIDATE
+    valid = 0;
+    goto done;
+#else
+    /* We can't return an error, so default to saying the dentry is invalid. */
+    goto bad_dentry;
+#endif
 }
 
 static void
