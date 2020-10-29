@@ -515,9 +515,6 @@ main(int argc, char **argv)
     if (code)
 	return -1;
 
-    osi_audit_open();
-    osi_audit(VS_StartEvent, 0, AUD_END);
-
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
 	printf
@@ -605,6 +602,10 @@ main(int argc, char **argv)
 #else
     SetupLogSignals();
 #endif
+
+    /* Start auditing now */
+    osi_audit_open();
+    osi_audit(VS_StartEvent, 0, AUD_END);
 
     {
 #ifdef AFS_PTHREAD_ENV

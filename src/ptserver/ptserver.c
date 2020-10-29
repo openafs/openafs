@@ -485,9 +485,6 @@ main(int argc, char **argv)
 
     cmd_FreeOptions(&opts);
 
-    osi_audit_open();
-    osi_audit(PTS_StartEvent, 0, AUD_END);
-
     OpenLog(&logopts);
 #ifdef AFS_PTHREAD_ENV
     opr_softsig_Init();
@@ -495,6 +492,9 @@ main(int argc, char **argv)
 #else
     SetupLogSignals();
 #endif
+
+    osi_audit_open();
+    osi_audit(PTS_StartEvent, 0, AUD_END);
 
     prdir = afsconf_Open(configDir);
     if (!prdir) {
