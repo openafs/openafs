@@ -430,9 +430,9 @@ rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 int
 rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
+    int err = 0;
     fd_set *sfds = (fd_set *) 0;
     while (sendmsg(socket, msg_p, flags) == -1) {
-	int err;
 
 #ifdef AFS_NT40_ENV
 	err = WSAGetLastError();
@@ -447,7 +447,8 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	    if (!(sfds = IOMGR_AllocFDSet())) {
 		(osi_Msg "rx failed to alloc fd_set: ");
 		perror("rx_sendmsg");
-		return -1;
+		err = ENOMEM;
+		goto error;
 	    }
 	    FD_SET(socket, sfds);
 	}
@@ -469,9 +470,7 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	{
 	    (osi_Msg "rx failed to send packet: ");
 	    perror("rx_sendmsg");
-            if (err > 0)
-              return -err;
-	    return -1;
+	    goto error;
 	}
 	while ((err = select(
 #ifdef AFS_NT40_ENV
@@ -489,5 +488,12 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
     if (sfds)
 	IOMGR_FreeFDSet(sfds);
     return 0;
+
+ error:
+    if (sfds)
+	IOMGR_FreeFDSet(sfds);
+    if (err > 0)
+	return -err;
+    return -1;
 }
 #endif
