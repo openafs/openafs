@@ -9417,12 +9417,78 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
 }
 #endif
 
+#ifdef AFS_RXERRQ_ENV
+void
+rxi_HandleSocketErrors(osi_socket sock)
+{
+    size_t cmsgbuf_len = 256;
+    void *cmsgbuf;
+# ifndef KERNEL
+    int errno_save = errno;
+# endif
+
+    cmsgbuf = rxi_Alloc(cmsgbuf_len);
+    if (cmsgbuf == NULL) {
+	goto done;
+    }
+
+    while (osi_HandleSocketError(sock, cmsgbuf, cmsgbuf_len))
+	;
+
+    rxi_Free(cmsgbuf, cmsgbuf_len);
+
+ done:
+# ifndef KERNEL
+    errno = errno_save;
+# endif
+    return;
+}
+
+static int
+NetSend_retry(osi_socket sock, void *addr, struct iovec *dvec, int nvecs,
+	      int length, int istack)
+{
+    int code;
+    int safety;
+    /*
+     * If an ICMP error comes in for any peer, sendmsg() can return -1 with an
+     * errno of EHOSTUNREACH, ENETUNREACH, etc. There may be no problem with
+     * sending this packet (an error is returned just to indicate we need to
+     * read in pending errors), but the packet wasn't actually sent.
+     *
+     * It's difficult to determine in general whether sendmsg() is returning an
+     * error due to a received ICMP error, or we're getting an actual error for
+     * this specific sendmsg() call, since there may be other threads running
+     * sendmsg/recvmsg/rxi_HandleSocketErrors at the same time. So, just retry
+     * the sendmsg a few times; make sure not to retry forever, in case we are
+     * getting an actual error from this sendmsg() call.
+     *
+     * Also note that if we accidentally drop a packet here that we didn't need
+     * to, it's not the end of the world. Packets get dropped, and we should be
+     * able to recover.
+     */
+    for (safety = 0; safety < RXI_SENDMSG_RETRY; safety++) {
+	code = osi_NetSend(sock, addr, dvec, nvecs, length, istack);
+	if (code == 0) {
+	    return 0;
+	}
+	rxi_HandleSocketErrors(sock);
+    }
+    return code;
+
+}
+#endif
+
 int
 rxi_NetSend(osi_socket socket, void *addr, struct iovec *dvec,
 	    int nvecs, int length, int istack)
 {
     if (rxi_IsRunning()) {
+#ifdef AFS_RXERRQ_ENV
+	return NetSend_retry(socket, addr, dvec, nvecs, length, istack);
+#else
 	return osi_NetSend(socket, addr, dvec, nvecs, length, istack);
+#endif
     }
 #ifdef AFS_NT40_ENV
     return WSAESHUTDOWN;

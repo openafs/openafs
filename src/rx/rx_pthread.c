@@ -399,12 +399,9 @@ rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
     int ret;
     ret = recvmsg(socket, msg_p, flags);
 
-#ifdef AFS_RXERRQ_ENV
     if (ret < 0) {
-	while (rxi_HandleSocketError(socket) > 0)
-	    ;
+	rxi_HandleSocketErrors(socket);
     }
-#endif
 
     return ret;
 }
@@ -426,10 +423,7 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
     err = errno;
 #endif
 
-#ifdef AFS_RXERRQ_ENV
-    while (rxi_HandleSocketError(socket) > 0)
-	;
-#else
+#ifndef AFS_RXERRQ_ENV
 # ifdef AFS_LINUX22_ENV
     /* linux unfortunately returns ECONNREFUSED if the target port
      * is no longer in use */

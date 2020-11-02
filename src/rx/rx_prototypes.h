@@ -499,7 +499,6 @@ extern afs_kmutex_t rx_if_mutex;
 #endif
 extern osi_socket rxi_GetUDPSocket(u_short port);
 extern void rxi_InitPeerParams(struct rx_peer *pp);
-extern int rxi_HandleSocketError(int socket);
 
 #if defined(AFS_AIX32_ENV) && !defined(KERNEL)
 #ifndef osi_Alloc
