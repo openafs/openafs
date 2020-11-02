@@ -98,8 +98,8 @@ rxk_FreeSocket(struct socket *asocket)
 }
 
 #ifdef AFS_RXERRQ_ENV
-static int
-osi_HandleSocketError(osi_socket so, char *cmsgbuf, size_t cmsgbuf_len)
+int
+osi_HandleSocketError(osi_socket so, void *cmsgbuf, size_t cmsgbuf_len)
 {
     struct msghdr msg;
     struct cmsghdr *cmsg;
@@ -140,26 +140,6 @@ osi_HandleSocketError(osi_socket so, char *cmsgbuf, size_t cmsgbuf_len)
 }
 #endif
 
-static void
-do_handlesocketerror(osi_socket so)
-{
-#ifdef AFS_RXERRQ_ENV
-    char *cmsgbuf;
-    size_t cmsgbuf_len;
-
-    cmsgbuf_len = 256;
-    cmsgbuf = rxi_Alloc(cmsgbuf_len);
-    if (!cmsgbuf) {
-	return;
-    }
-
-    while (osi_HandleSocketError(so, cmsgbuf, cmsgbuf_len))
-	;
-
-    rxi_Free(cmsgbuf, cmsgbuf_len);
-#endif
-}
-
 /* osi_NetSend
  *
  * Return codes:
@@ -181,10 +161,6 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
     msg.msg_flags = 0;
 
     code = kernel_sendmsg(sop, &msg, (struct kvec *) iovec, iovcnt, size);
-
-    if (code < 0) {
-	do_handlesocketerror(sop);
-    }
 
     return (code < 0) ? code : 0;
 }
@@ -250,7 +226,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 	rxk_lastSocketError = code;
 	rxk_nSocketErrors++;
 
-	do_handlesocketerror(so);
+	rxi_HandleSocketErrors(so);
     } else {
 	*lengthp = code;
 	code = 0;
