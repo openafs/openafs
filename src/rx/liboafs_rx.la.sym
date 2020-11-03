@@ -16,7 +16,6 @@ afs_xdr_vector
 afs_xdrmem_create
 hton_syserr_conv
 multi_Finalize
-multi_Finalize_Ignore
 multi_Init
 multi_Select
 osi_AssertFailU

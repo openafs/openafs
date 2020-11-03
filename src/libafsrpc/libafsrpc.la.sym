@@ -35,7 +35,6 @@ initialize_RXK_error_table
 ktohl
 life_to_time
 multi_Finalize
-multi_Finalize_Ignore
 multi_Init
 multi_Select
 opr_AssertionFailed

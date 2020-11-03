@@ -120,10 +120,3 @@ multi_Finalize(struct multi_handle *mh)
     osi_Free(mh->ready, sizeof(short) * nCalls);
     osi_Free(mh, sizeof(struct multi_handle));
 }
-
-/* Deprecated; use multi_Finalize() instead. */
-void
-multi_Finalize_Ignore(struct multi_handle *mh)
-{
-    multi_Finalize(mh);
-}

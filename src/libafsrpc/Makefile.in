@@ -11,7 +11,7 @@ include @TOP_OBJDIR@/src/config/Makefile.libtool
 
 # Increment these according to libtool's versioning rules (look them up!)
 # The library output looks like libafsrpc.so.<current - age>.<revision>
-LT_current = 2
+LT_current = 3
 LT_revision = 0
 LT_age = 0
 

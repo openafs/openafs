@@ -371,7 +371,6 @@ extern int multi_Select(struct multi_handle *mh);
 extern void multi_Ready(struct rx_call *call,
 			void *mh, int index);
 extern void multi_Finalize(struct multi_handle *mh);
-extern void multi_Finalize_Ignore(struct multi_handle *mh);
 
 
 
