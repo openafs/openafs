@@ -2756,11 +2756,6 @@ SalvageIndex(struct SalvInfo *salvinfo, Inode ino, VnodeClass class, int RW,
 		/* ****** Should do a bit more salvage here:  e.g. make sure
 		 * vnode type matches what it should be given the index */
 		while (nInodes && ip->u.vnode.vnodeNumber < vnodeNumber) {
-/*       	    if (vnodeIdToClass(ip->u.vnode.vnodeNumber) == class && RW) {
- *		       Log("Inode %d: says it belongs to non-existing vnode %d\n",
- *			   ip->inodeNumber, ip->u.vnode.vnodeNumber);
- *		    }
- */
 		    ip++;
 		    nInodes--;
 		}
