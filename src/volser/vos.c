@@ -58,8 +58,8 @@
 #endif
 
 /* Local Prototypes */
-int PrintDiagnostics(char *astring, afs_int32 acode);
-int GetVolumeInfo(afs_uint32 volid, afs_uint32 *server, afs_int32 *part,
+static int PrintDiagnostics(char *astring, afs_int32 acode);
+static int GetVolumeInfo(afs_uint32 volid, afs_uint32 *server, afs_int32 *part,
 		  afs_int32 *voltype, struct nvldbentry *rentry);
 
 struct tqElem {
@@ -206,7 +206,7 @@ IsNumeric(char *name)
 /*
  * Parse a server dotted address and return the address in network byte order
  */
-afs_uint32
+static afs_uint32
 GetServerNoresolve(char *aname)
 {
     int b1, b2, b3, b4;
@@ -224,7 +224,7 @@ GetServerNoresolve(char *aname)
 /*
  * Parse a server name/address and return a non-loopback address in network byte order
  */
-afs_uint32
+static afs_uint32
 GetServer(char *aname)
 {
     struct hostent *th;
@@ -280,7 +280,7 @@ GetServer(char *aname)
     return 0;
 }
 
-int
+static int
 IsPartValid(afs_int32 partId, afs_uint32 server, afs_int32 *code)
 {
     struct partList dummyPartList;
@@ -302,7 +302,7 @@ IsPartValid(afs_int32 partId, afs_uint32 server, afs_int32 *code)
 
  /*sends the contents of file associated with <fd> and <blksize>  to Rx Stream
   * associated  with <call> */
-int
+static int
 SendFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 {
     char *buffer = (char *)0;
@@ -348,7 +348,7 @@ SendFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 
 /* function invoked by UV_RestoreVolume, reads the data from rx_trx_stream and
  * writes it out to the volume. */
-afs_int32
+static afs_int32
 WriteData(struct rx_call *call, void *rock)
 {
     char *filename = (char *) rock;
@@ -410,7 +410,7 @@ WriteData(struct rx_call *call, void *rock)
 /* Receive data from <call> stream into file associated
  * with <fd> <blksize>
  */
-int
+static int
 ReceiveFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 {
     char *buffer = NULL;
@@ -452,7 +452,7 @@ ReceiveFile(usd_handle_t ufd, struct rx_call *call, long blksize)
     return (error);
 }
 
-afs_int32
+static afs_int32
 DumpFunction(struct rx_call *call, void *rock)
 {
     char *filename = (char *)rock;
@@ -4220,7 +4220,7 @@ RenameVolume(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-int
+static int
 GetVolumeInfo(afs_uint32 volid, afs_uint32 *server, afs_int32 *part, afs_int32 *voltype,
 	      struct nvldbentry *rentry)
 {
@@ -5818,7 +5818,7 @@ EndTrans(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-int
+static int
 PrintDiagnostics(char *astring, afs_int32 acode)
 {
     switch (acode) {
