@@ -1278,6 +1278,7 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
     afs_int32 roindex = 0;
     afs_uint32 roserver = 0;
     struct rx_connection *aconn;
+    int islocked = 0;
 
     memset(&storeEntry, 0, sizeof(struct nvldbentry));
 
@@ -1291,6 +1292,7 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
 	PrintError("", vcode);
 	return -1;
     }
+    islocked = 1;
 
     /* make sure the VLDB entry hasn't changed since we started */
     memset(&checkEntry, 0, sizeof(checkEntry));
@@ -1402,15 +1404,19 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
 	fprintf(STDERR,
 		"Warning: volume converted, but vldb update failed with code %d!\n",
 		code);
+	goto error_exit;
     }
+    islocked = 0;   /* unlocked by the successful VLDB_ReplaceEntry above */
 
   error_exit:
-    vcode = UV_LockRelease(entry->volumeId[RWVOL]);
-    if (vcode) {
-	fprintf(STDERR,
-		"Unable to unlock volume %lu, code %d\n",
-		(unsigned long)entry->volumeId[RWVOL],vcode);
-	PrintError("", vcode);
+    if (islocked) {
+	vcode = UV_LockRelease(entry->volumeId[RWVOL]);
+	if (vcode) {
+	    fprintf(STDERR,
+		    "Unable to unlock volume %lu, code %d\n",
+		    (unsigned long)entry->volumeId[RWVOL],vcode);
+	    PrintError("", vcode);
+	}
     }
     return code;
 }
@@ -4134,6 +4140,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	VLDB_ReplaceEntry(afromvol, RWVOL, &storeEntry,
 			  LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
     ONERROR(vcode, afromvol, " Could not update VLDB entry for volume %u\n");
+    islocked = 0;	/* lock released by successful VLDB_ReplaceEntry above */
     VDONE;
 
   rfail:
