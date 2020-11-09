@@ -7,6 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#ifndef AFS_AUDIT_AUDIT_H
+#define AFS_AUDIT_AUDIT_H
+
+#include <afs/cmd.h>
+
 #define AUD_END  0		/* End           of variable list */
 #define AUD_STR  1		/* String        in variable list */
 #define AUD_INT  2		/* int           in variable list */
@@ -320,6 +325,7 @@
 /* prototypes for audit functions */
 int osi_audit(char *audEvent, afs_int32 errCode, ...);
 int osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...);
+int osi_audit_cmd_Options(char *default_iface, struct cmd_item *audit_loglist);
 int osi_audit_file(const char *fileplusoptions);
 void osi_audit_init(void);
 int osi_audit_interface(const char *interface);
@@ -327,3 +333,5 @@ void osi_audit_set_user_check(void *rock, int (*islocal)(void *rock, char *name,
 void audit_PrintStats(FILE *out);
 void osi_audit_open(void);
 void osi_audit_close(void);
+
+#endif /* AFS_AUDIT_AUDIT_H */

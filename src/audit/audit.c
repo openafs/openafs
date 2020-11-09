@@ -796,7 +796,45 @@ osi_audit_check(void)
     return 0;
 }
 
-/*
+/*!
+ * Helper for processing cmd line options
+ *
+ * Process the parameters for the -audit-interface and -auditlog command line
+ * options
+ *
+ * @param[in] default_iface
+ * 	String for the default audit interface or NULL
+ * @param[in] audit_loglist
+ * 	Pointer to a cmd_item list of audit logs or NULL
+ *
+ * @return status
+ * @retval	0	- success
+ * @retval	-1	- Error (message printed to stderr)
+ */
+
+int
+osi_audit_cmd_Options(char *default_iface, struct cmd_item *audit_loglist)
+{
+
+    if (default_iface) {
+	if (osi_audit_interface(default_iface)) {
+	    fprintf(stderr, "Invalid auditinterface '%s'\n", default_iface);
+	    return -1;
+	}
+    }
+
+    while (audit_loglist != NULL) {
+	if (osi_audit_file(audit_loglist->data)) {
+	    fprintf(stderr, "Error processing auditlog options '%s'\n",
+		    audit_loglist->data);
+	    return -1;
+	}
+	audit_loglist = audit_loglist->next;
+    }
+    return 0;
+}
+
+ /*
  * Handle parsing a string: [interface_name:]filespec[:options]
  * The string a:b will parse 'a' as the interface name and 'b' as the filespec.
  * Note that the string pointed by optionstr will be modified
