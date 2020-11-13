@@ -317,12 +317,13 @@
 #define TC_RequestAbortEvent    "AFS_TC_RequestAbort"
 #define TC_ScanStatusEvent      "AFS_TC_ScanStatus"
 
-
 /* prototypes for audit functions */
 int osi_audit(char *audEvent, afs_int32 errCode, ...);
 int osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...);
-int osi_audit_file(const char *filename);
+int osi_audit_file(const char *fileplusoptions);
 void osi_audit_init(void);
 int osi_audit_interface(const char *interface);
 void osi_audit_set_user_check(void *rock, int (*islocal)(void *rock, char *name, char *inst, char *cell));
 void audit_PrintStats(FILE *out);
+void osi_audit_open(void);
+void osi_audit_close(void);

@@ -16,28 +16,25 @@
 
 #include "audit-api.h"
 
-static FILE *auditout;
+struct file_context {
+    FILE *auditout;
+};
 
 static void
-send_msg(void)
+send_msg(void *rock, const char *message, int msglen, int truncated)
 {
-    fprintf(auditout, "\n");
-    fflush(auditout);
-}
+    struct file_context *ctx = rock;
 
-static void
-append_msg(const char *format, ...)
-{
-    va_list vaList;
+    fwrite(message, 1, msglen, ctx->auditout);
+    fputc('\n', ctx->auditout);
 
-    va_start(vaList, format);
-    vfprintf(auditout, format, vaList);
-    va_end(vaList);
+    fflush(ctx->auditout);
 }
 
 static int
-open_file(const char *fileName)
+open_file(void *rock, const char *fileName)
 {
+    struct file_context *ctx = rock;
     int tempfd, flags, r;
     char *oldName;
 
@@ -61,9 +58,9 @@ open_file(const char *fileName)
     }
     tempfd = open(fileName, flags, 0666);
     if (tempfd > -1) {
-        auditout = fdopen(tempfd, "a");
-        if (!auditout) {
-            printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	ctx->auditout = fdopen(tempfd, "a");
+	if (!ctx->auditout) {
+	    printf("Warning: fdopen failed for auditlog %s, ignored.\n", fileName);
             return 1;
         }
     } else {
@@ -74,14 +71,41 @@ open_file(const char *fileName)
 }
 
 static void
-print_interface_stats(FILE *out)
+print_interface_stats(void *rock, FILE *out)
 {
     return;
 }
 
+static void *
+create_interface(void)
+{
+    struct file_context *ctx;
+    ctx = calloc(1, sizeof(*ctx));
+    if (!ctx) {
+	printf("error allocating memory\n");
+	return NULL;
+    }
+    return ctx;
+}
+
+static void
+close_interface(void **rock)
+{
+    struct file_context *ctx = *rock;
+    if (!ctx)
+	return;
+
+    if (ctx->auditout)
+	fclose(ctx->auditout);
+    free(ctx);
+    *rock = NULL;
+}
 const struct osi_audit_ops audit_file_ops = {
     &send_msg,
-    &append_msg,
     &open_file,
     &print_interface_stats,
+    &create_interface,
+    &close_interface,
+    NULL,    /* set_option */
+    NULL,    /* open_interface */
 };

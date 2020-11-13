@@ -172,6 +172,7 @@ AC_REPLACE_FUNCS([ \
         strnlen \
         strlcpy \
         strsep \
+        strtok_r \
         tdelete \
         tfind \
         tsearch \

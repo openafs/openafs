@@ -53,19 +53,114 @@ static struct {
     { "sysvmq", &audit_sysvmq_ops },
 #endif
 };
+/* default_interface indexes into the audit_interfaces list. */
+static int default_interface = 0; /* Set default to the file interface */
 
 #define N_INTERFACES (sizeof(audit_interfaces) / sizeof(audit_interfaces[0]))
 
-/* default to `file' audit interface */
-static const struct osi_audit_ops *audit_ops = &audit_file_ops;
+/*
+ * Audit interface calling sequence:
+ * osi_audit_interface - sets the default audit interface
+ * osi_audit_file
+ *    create_instance - Called during command arg processing (-auditlog)
+ *    open_file - Called during command arg processing (-auditlog)
+ * osi_audit_open_interface
+ *    open_interface - Called after thread environment has been established
+ * osi_audit_close_interface
+ *    close_interface - Called during main process shutdown
+ * osi_audit
+ *    send_msg - Called during audit events
+ */
+struct audit_log {
+    struct opr_queue link;
+    const struct osi_audit_ops *audit_ops;
+    int auditout_open;
+    void *context;
+};
+
+struct audit_msg {
+    char buf[OSI_AUDIT_MAXMSG];
+    size_t len; /* length of the string in 'buf' (not including the trailing '\0') */
+    int truncated; /* was this message truncated during formatting? */
+};
+
+#ifdef AFS_PTHREAD_ENV
+static pthread_mutex_t audit_lock;
+static pthread_once_t audit_lock_once = PTHREAD_ONCE_INIT;
+#endif
+
+/* Chain of active interfaces */
+static struct opr_queue audit_logs = {&audit_logs, &audit_logs};
 
 static int osi_audit_all = (-1);	/* Not determined yet */
 static int osi_echo_trail = (-1);
 
-static int auditout_open = 0;
+static int auditout_open = 0;		/* True if any interface is open */
 
 static int osi_audit_check(void);
 
+/*
+ * Send the message to all the interfaces
+ * @pre audit_lock held
+ */
+static void
+multi_send_msg(struct audit_msg *msg)
+{
+    struct opr_queue *cursor;
+
+    if (msg->len < 1) /* Don't send empty strings */
+	return;
+
+    for (opr_queue_Scan(&audit_logs, cursor)) {
+	struct audit_log *alog;
+	alog = opr_queue_Entry(cursor, struct audit_log, link);
+	if (alog->auditout_open) {
+	    alog->audit_ops->send_msg(alog->context, msg->buf, msg->len,
+				      msg->truncated);
+	}
+    }
+}
+static void
+append_msg(struct audit_msg *msg, const char *format, ...)
+{
+    va_list ap;
+    int remaining, printed;
+
+    if (msg->truncated) {
+	return;
+    }
+
+    if (msg->len >= OSI_AUDIT_MAXMSG - 1) {
+	/* Make sure we have at least some space left */
+	msg->truncated = 1;
+	return;
+    }
+
+    remaining = OSI_AUDIT_MAXMSG - msg->len;
+
+    va_start(ap, format);
+
+    printed = vsnprintf(&msg->buf[msg->len], remaining, format, ap);
+
+    if (printed < 0) {
+	/* Error during formatting. */
+	msg->truncated = 1;
+	printed = 0;
+
+    } else if (printed >= remaining) {
+	/* We tried to write more characters than we had space for. */
+	msg->truncated = 1;
+	printed = remaining - 1;
+
+	/* Make sure we're still terminated. */
+	msg->buf[OSI_AUDIT_MAXMSG - 1] = '\0';
+    }
+
+    msg->len += printed;
+    opr_Assert(msg->len < OSI_AUDIT_MAXMSG);
+
+    va_end(ap);
+}
 #ifdef AFS_AIX32_ENV
 static char *bufferPtr;
 static int bufferLen;
@@ -263,23 +358,28 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
     time_t currenttime;
     char tbuffer[26];
     struct tm tm;
+    struct audit_msg *msg = calloc(1, sizeof(*msg));
+
+    if (!msg) {
+	return;
+    }
 
     /* Don't print the timestamp or thread id if we recursed */
     if (rec == 0) {
 	currenttime = time(0);
 	if (strftime(tbuffer, sizeof(tbuffer), "%a %b %d %H:%M:%S %Y ",
 		     localtime_r(&currenttime, &tm)) !=0)
-	    audit_ops->append_msg(tbuffer);
+	    append_msg(msg, tbuffer);
 
 	if (num > -1)
-	    audit_ops->append_msg("[%d] ", num);
+	    append_msg(msg, "[%d] ", num);
     }
 
-    audit_ops->append_msg("EVENT %s CODE %d ", audEvent, errCode);
+    append_msg(msg, "EVENT %s CODE %d ", audEvent, errCode);
 
     if (afsName) {
 	hostAddr.s_addr = hostId;
-	audit_ops->append_msg("NAME %s HOST %s ", afsName, inet_ntoa(hostAddr));
+	append_msg(msg, "NAME %s HOST %s ", afsName, inet_ntoa(hostAddr));
     }
 
     vaEntry = va_arg(vaList, int);
@@ -288,52 +388,52 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
 	case AUD_STR:		/* String */
 	    vaStr = (char *)va_arg(vaList, char *);
 	    if (vaStr)
-		audit_ops->append_msg("STR %s ", vaStr);
+		append_msg(msg, "STR %s ", vaStr);
 	    else
-		audit_ops->append_msg("STR <null>");
+		append_msg(msg, "STR <null>");
 	    break;
 	case AUD_NAME:		/* Name */
 	    vaStr = (char *)va_arg(vaList, char *);
 	    if (vaStr)
-		audit_ops->append_msg("NAME %s ", vaStr);
+		append_msg(msg, "NAME %s ", vaStr);
 	    else
-		audit_ops->append_msg("NAME <null>");
+		append_msg(msg, "NAME <null>");
 	    break;
 	case AUD_ACL:		/* ACL */
 	    vaStr = (char *)va_arg(vaList, char *);
 	    if (vaStr)
-		audit_ops->append_msg("ACL %s ", vaStr);
+		append_msg(msg, "ACL %s ", vaStr);
 	    else
-		audit_ops->append_msg("ACL <null>");
+		append_msg(msg, "ACL <null>");
 	    break;
 	case AUD_INT:		/* Integer */
 	    vaInt = va_arg(vaList, int);
-	    audit_ops->append_msg("INT %d ", vaInt);
+	    append_msg(msg, "INT %d ", vaInt);
 	    break;
 	case AUD_ID:		/* ViceId */
 	    vaInt = va_arg(vaList, int);
-	    audit_ops->append_msg("ID %d ", vaInt);
+	    append_msg(msg, "ID %d ", vaInt);
 	    break;
 	case AUD_DATE:		/* Date    */
 	    vaLong = va_arg(vaList, afs_int32);
-	    audit_ops->append_msg("DATE %u ", vaLong);
+	    append_msg(msg, "DATE %u ", vaLong);
 	    break;
 	case AUD_HOST:		/* Host ID */
 	    vaLong = va_arg(vaList, afs_int32);
             hostAddr.s_addr = vaLong;
-	    audit_ops->append_msg("HOST %s ", inet_ntoa(hostAddr));
+	    append_msg(msg, "HOST %s ", inet_ntoa(hostAddr));
 	    break;
 	case AUD_LONG:		/* afs_int32    */
 	    vaLong = va_arg(vaList, afs_int32);
-	    audit_ops->append_msg("LONG %d ", vaLong);
+	    append_msg(msg, "LONG %d ", vaLong);
 	    break;
 	case AUD_FID:		/* AFSFid - contains 3 entries */
 	    vaFid = va_arg(vaList, struct AFSFid *);
 	    if (vaFid)
-		audit_ops->append_msg("FID %u:%u:%u ", vaFid->Volume, vaFid->Vnode,
-		       vaFid->Unique);
+		append_msg(msg, "FID %u:%u:%u ", vaFid->Volume, vaFid->Vnode,
+			   vaFid->Unique);
 	    else
-		audit_ops->append_msg("FID %u:%u:%u ", 0, 0, 0);
+		append_msg(msg, "FID %u:%u:%u ", 0, 0, 0);
 	    break;
 	case AUD_FIDS:		/* array of Fids */
 	    vaFids = va_arg(vaList, struct AFSCBFids *);
@@ -344,12 +444,12 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
                 vaFid = vaFids->AFSCBFids_val;
 
                 if (vaFid) {
-                    audit_ops->append_msg("FIDS %u ", vaFids->AFSCBFids_len);
+		    append_msg(msg, "FIDS %u ", vaFids->AFSCBFids_len);
                     for ( i = 1; i <= vaFids->AFSCBFids_len; i++, vaFid++ )
-                        audit_ops->append_msg("FID %u:%u:%u ", vaFid->Volume,
-                                vaFid->Vnode, vaFid->Unique);
+			append_msg(msg, "FID %u:%u:%u ", vaFid->Volume,
+				   vaFid->Vnode, vaFid->Unique);
                 } else
-                    audit_ops->append_msg("FIDS 0 FID 0:0:0 ");
+		    append_msg(msg, "FIDS 0 FID 0:0:0 ");
 
             }
 	    break;
@@ -357,20 +457,20 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
 	    vaLabel = va_arg(vaList, struct tc_tapeLabel *);
 
 	    if (vaLabel) {
-		audit_ops->append_msg("TAPELABEL %d:%.*s:%.*s:%u ",
-				      vaLabel->size,
-				      TC_MAXTAPELEN, vaLabel->afsname,
-				      TC_MAXTAPELEN, vaLabel->pname,
-				      vaLabel->tapeId);
+		append_msg(msg, "TAPELABEL %d:%.*s:%.*s:%u ",
+			   vaLabel->size,
+			   TC_MAXTAPELEN, vaLabel->afsname,
+			   TC_MAXTAPELEN, vaLabel->pname,
+			   vaLabel->tapeId);
 	    } else {
-		audit_ops->append_msg("TAPELABEL <null>");
+		append_msg(msg, "TAPELABEL <null>");
 	    }
 	    break;
 	case AUD_TDI:
 	    vaDI = va_arg(vaList, struct tc_dumpInterface *);
 
 	    if (vaDI) {
-		audit_ops->append_msg(
+		append_msg(msg,
     "TCDUMPINTERFACE %.*s:%.*s:%.*s:%d:%d:%d:%d:%.*s:%.*s:%d:%d:%d:%d:%d ",
     TC_MAXDUMPPATH, vaDI->dumpPath, TC_MAXNAMELEN, vaDI->volumeSetName,
     TC_MAXNAMELEN, vaDI->dumpName, vaDI->parentDumpId, vaDI->dumpLevel,
@@ -380,7 +480,7 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
     vaDI->tapeSet.a, vaDI->tapeSet.b, vaDI->tapeSet.expDate,
     vaDI->tapeSet.expType);
 	    } else {
-		audit_ops->append_msg("TCDUMPINTERFACE <null>");
+		append_msg(msg, "TCDUMPINTERFACE <null>");
 	    }
 	    break;
 	case AUD_TDA:
@@ -393,16 +493,16 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
 
 		desc = vaDA->tc_dumpArray_val;
 		if (desc) {
-		    audit_ops->append_msg("DUMPS %d ", vaDA->tc_dumpArray_len);
+		    append_msg(msg, "DUMPS %d ", vaDA->tc_dumpArray_len);
 		    for (i = 0; i < vaDA->tc_dumpArray_len; i++, desc++) {
 			hostAddr.s_addr = desc->hostAddr;
-			audit_ops->append_msg("DUMP %d:%d:%.*s:%d:%d:%d:%s ",
-			    desc->vid, desc->vtype, TC_MAXNAMELEN, desc->name,
-			    desc->partition, desc->date, desc->cloneDate,
-			    inet_ntoa(hostAddr));
+			append_msg(msg, "DUMP %d:%d:%.*s:%d:%d:%d:%s ",
+				   desc->vid, desc->vtype, TC_MAXNAMELEN, desc->name,
+				   desc->partition, desc->date, desc->cloneDate,
+				   inet_ntoa(hostAddr));
 		    }
 		} else {
-		    audit_ops->append_msg("DUMPS 0 DUMP 0:0::0:0:0:0.0.0.0");
+		    append_msg(msg, "DUMPS 0 DUMP 0:0::0:0:0:0.0.0.0");
 		}
 	    }
 	    break;
@@ -416,21 +516,21 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
 
 		desc = vaRA->tc_restoreArray_val;
 		if (desc) {
-		    audit_ops->append_msg("RESTORES %d ",
+		    append_msg(msg, "RESTORES %d ",
 					  vaRA->tc_restoreArray_len);
 		    for(i = 0; i < vaRA->tc_restoreArray_len; i++, desc++) {
 			hostAddr.s_addr = desc->hostAddr;
-			audit_ops->append_msg(
-			    "RESTORE %d:%.*s:%d:%d:%d:%d:%d:%d:%d:%s:%.*s:%.*s ",
-			    desc->flags, TC_MAXTAPELEN, desc->tapeName,
-			    desc->dbDumpId, desc->initialDumpId,
-			    desc->position, desc->origVid, desc->vid,
-			    desc->partition, desc->dumpLevel,
-			    inet_ntoa(hostAddr), TC_MAXNAMELEN,
-			    desc->oldName, TC_MAXNAMELEN, desc->newName);
+			append_msg(msg,
+				   "RESTORE %d:%.*s:%d:%d:%d:%d:%d:%d:%d:%s:%.*s:%.*s ",
+				   desc->flags, TC_MAXTAPELEN, desc->tapeName,
+				   desc->dbDumpId, desc->initialDumpId,
+				   desc->position, desc->origVid, desc->vid,
+				   desc->partition, desc->dumpLevel,
+				   inet_ntoa(hostAddr), TC_MAXNAMELEN,
+				   desc->oldName, TC_MAXNAMELEN, desc->newName);
 		    }
 		} else {
-		    audit_ops->append_msg(
+		    append_msg(msg,
 			"RESTORES 0 RESTORE 0::0:0:0:0:0:0:0:0.0.0.0::: ");
 		}
 	    }
@@ -439,30 +539,31 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
 	    vaTCstatus = va_arg(vaList, struct tciStatusS *);
 
 	    if (vaTCstatus)
-		audit_ops->append_msg("TCSTATUS %.*s:%d:%d:%d:%d:%.*s:%d:%d ",
-				      TC_MAXNAMELEN, vaTCstatus->taskName,
-				      vaTCstatus->taskId, vaTCstatus->flags,
-				      vaTCstatus->dbDumpId, vaTCstatus->nKBytes,
-				      TC_MAXNAMELEN, vaTCstatus->volumeName,
-				      vaTCstatus->volsFailed,
-				      vaTCstatus->lastPolled);
+		append_msg(msg, "TCSTATUS %.*s:%d:%d:%d:%d:%.*s:%d:%d ",
+			   TC_MAXNAMELEN, vaTCstatus->taskName,
+			   vaTCstatus->taskId, vaTCstatus->flags,
+			   vaTCstatus->dbDumpId, vaTCstatus->nKBytes,
+			   TC_MAXNAMELEN, vaTCstatus->volumeName,
+			   vaTCstatus->volsFailed,
+			   vaTCstatus->lastPolled);
 	    else
-		audit_ops->append_msg("TCSTATUS <null>");
+		append_msg(msg, "TCSTATUS <null>");
 	    break;
 	default:
-	    audit_ops->append_msg("--badval-- ");
+	    append_msg(msg, "--badval-- ");
 	    break;
 	}			/* end switch */
 	vaEntry = va_arg(vaList, int);
     }				/* end while */
 
-    audit_ops->send_msg();
+    MUTEX_ENTER(&audit_lock);
+    multi_send_msg(msg);
+    MUTEX_EXIT(&audit_lock);
+
+    free(msg);
 }
 
 #ifdef AFS_PTHREAD_ENV
-static pthread_mutex_t audit_lock;
-static pthread_once_t audit_lock_once = PTHREAD_ONCE_INIT;
-
 static void
 osi_audit_init_lock(void)
 {
@@ -533,8 +634,8 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
     }
 #endif
 
-    MUTEX_ENTER(&audit_lock);
 #ifdef AFS_AIX32_ENV
+    MUTEX_ENTER(&audit_lock);
     bufferPtr = BUFFER;
 
     /* Put the error code into the buffer list */
@@ -542,17 +643,15 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
     bufferPtr += sizeof(errCode);
 
     audmakebuf(audEvent, vaList);
-#endif
 
-#ifdef AFS_AIX32_ENV
     bufferLen = (int)((afs_int32) bufferPtr - (afs_int32) & BUFFER[0]);
     code = auditlog(audEvent, result, BUFFER, bufferLen);
+    MUTEX_EXIT(&audit_lock);
 #else
     if (auditout_open) {
 	printbuf(0, audEvent, afsName, hostId, errCode, vaList);
     }
 #endif
-    MUTEX_EXIT(&audit_lock);
 
     return 0;
 }
@@ -697,28 +796,279 @@ osi_audit_check(void)
     return 0;
 }
 
-int
-osi_audit_file(const char *fileName)
+/*
+ * Handle parsing a string: [interface_name:]filespec[:options]
+ * The string a:b will parse 'a' as the interface name and 'b' as the filespec.
+ * Note that the string pointed by optionstr will be modified
+ * by strtok_r by inserting '\0' between the tokens.
+ * The values returned in interface_name, filespec and options
+ * are pointers to the 'sub-strings' within optionstr.
+ */
+static int
+parse_file_options(char *optionstr,
+		   const char **interface_name,
+		   char **filespec,
+		   char **options)
 {
-    if(!audit_ops->open_file(fileName)) {
-        auditout_open = 1;
-        return 0;
-    }
-    return 1;
-}
+    int code = 0;
+    char *opt_cursor = optionstr;
+    char *tok1 = NULL, *tok2 = NULL, *tok3 = NULL, *tokptrsave = NULL;
 
-int
-osi_audit_interface(const char *interface)
-{
-    int i;
-    for (i = 0; i < N_INTERFACES; ++i) {
-	if (strcmp(interface, audit_interfaces[i].name) == 0) {
-	    audit_ops = audit_interfaces[i].ops;
-	    return 0;
+    /*
+     * Handle the fact that strtok doesn't handle empty fields e.g. a::b
+     * and will return tok1-> a tok2-> b
+     */
+
+    /* 1st field */
+    if (*opt_cursor != ':') {
+	tok1 = strtok_r(opt_cursor, ":", &tokptrsave);
+	opt_cursor = strtok_r(NULL, "", &tokptrsave);
+    } else  {
+	/* Skip the ':' */
+	opt_cursor++;
+    }
+
+    /* 2nd field */
+    if (opt_cursor != NULL) {
+	if (*opt_cursor != ':') {
+	    tok2 = strtok_r(opt_cursor, ":", &tokptrsave);
+	    opt_cursor = strtok_r(NULL, "", &tokptrsave);
+	} else {
+	    /* Skip the ':' */
+	    opt_cursor++;
 	}
     }
 
-    return 1;
+    /* 3rd field is just the remainder if any */
+    tok3 = opt_cursor;
+
+    if (tok1 == NULL || strlen(tok1) == 0) {
+	fprintf(stderr, "Missing -auditlog parameter\n");
+	code = EINVAL;
+	goto done;
+    }
+
+    /* If only one token, then it's the filespec */
+    if (tok2 == NULL && tok3 == NULL) {
+	*filespec = tok1;
+    } else {
+	*interface_name = tok1;
+	*filespec = tok2;
+	*options = tok3;
+    }
+
+ done:
+    return code;
+}
+
+/*
+ * Parse the options looking for comma-seperated values.
+ */
+static int
+parse_option_string(const struct osi_audit_ops *ops, void *rock, char *options)
+{
+    int code = 0;
+    char *tok1, *tokptrsave = NULL;
+
+    tok1 = strtok_r(options, ",", &tokptrsave);
+    while (tok1) {
+	/* Handle opt=val or just opt */
+	char *opt, *val;
+	char *optvalsave;
+
+	opt = strtok_r(tok1, "=", &optvalsave);
+	val = strtok_r(NULL, "", &optvalsave);
+
+	code = ops->set_option(rock, opt, val);
+
+	if (code) {
+	    /* Bad option */
+	    goto done;
+	}
+	tok1 = strtok_r(NULL, ",", &tokptrsave);
+    }
+
+ done:
+    return code;
+}
+
+/*
+ * Process -auditlog
+ *  [interface]:filespec[:options]
+ *      interface - interface name (optional - defaults to default_interface)
+ *      filespec - depends on the interface (required)
+ *      options - optional string passed to interface
+ * Returns 0 - success
+ *        EINVAL - option error
+ *        ENOMEM - error allocating memory
+ */
+
+int
+osi_audit_file(const char *fileplusoptions)
+{
+
+    int idx;
+    int code;
+
+    char *optionstr = NULL;
+
+    const char *interface_name = NULL;
+    char *filespec = NULL;
+    char *options = NULL;
+
+    const struct osi_audit_ops *ops = NULL;
+    struct audit_log *new_alog = NULL;
+
+    /* Use the default unless specified */
+    interface_name = audit_interfaces[default_interface].name;
+
+    /* dup of the input string so the parsing can safely modify it */
+    optionstr = strdup(fileplusoptions);
+    if (!optionstr) {
+	code = ENOMEM;
+	goto done;
+    }
+
+    code = parse_file_options(optionstr, &interface_name, &filespec, &options);
+    if (code)
+	goto done;
+
+    if (interface_name && strlen(interface_name) != 0) {
+	for (idx = 0; idx < N_INTERFACES; idx++) {
+	    if (strcmp(interface_name, audit_interfaces[idx].name) == 0) {
+		ops = audit_interfaces[idx].ops;
+		break;
+	    }
+	}
+	if (ops == NULL) {
+	    /* Couldn't find the interface name */
+	    fprintf(stderr, "Could not find the specified audit interface %s\n", interface_name);
+	    code = EINVAL;
+	    goto done;
+	}
+    } else {
+	fprintf(stderr, "Missing interface name\n");
+	code = EINVAL;
+	goto done;
+    }
+
+    if (filespec == NULL || strlen(filespec) == 0) {
+	fprintf(stderr, "Missing auditlog path for %s interface\n", interface_name);
+	code = EINVAL;
+	goto done;
+    }
+
+    opr_Assert(ops->create_interface != NULL);
+    opr_Assert(ops->close_interface != NULL);
+    opr_Assert(ops->open_file != NULL);
+    opr_Assert(ops->send_msg != NULL);
+    opr_Assert(ops->print_interface_stats != NULL);
+    /* open_interface, set_option and close_interface are optional */
+
+    new_alog = calloc(1, sizeof(*new_alog));
+    if (!new_alog) {
+	code = ENOMEM;
+	goto done;
+    }
+
+    new_alog->audit_ops = ops;
+    new_alog->auditout_open = 0;
+
+    new_alog->context = ops->create_interface();
+    if (new_alog->context == NULL) {
+	    code = ENOMEM;
+	    goto done;
+    }
+
+    if (options != NULL && ops->set_option != NULL) {
+	/* Split the option string at commas */
+	code = parse_option_string(ops, new_alog->context, options);
+	if (code)
+	    goto done;
+    }
+
+    code = ops->open_file(new_alog->context, filespec);
+    if (code) {
+	/* Error opening file */
+	goto done;
+    }
+
+    new_alog->auditout_open = 1;
+    auditout_open = 1;
+
+    /* Add to chain of active interfaces */
+    opr_queue_Append(&audit_logs, &new_alog->link);
+    new_alog = NULL;
+
+    code = 0;
+
+ done:
+     if (code) {
+	 /* Error condition present.. */
+	 if (new_alog) {
+	     ops->close_interface(&new_alog->context);
+	     free(new_alog);
+	 }
+     }
+
+    if (optionstr)
+	free(optionstr);
+    return code;
+}
+
+/*
+ * Set the default interface
+ * return 0 for success
+ *        EINVAL missing or invalid interface name
+ */
+int
+osi_audit_interface(const char *interface)
+{
+    int idx;
+
+    if (interface == NULL || strlen(interface) == 0)
+	return EINVAL;
+
+    for (idx = 0; idx < N_INTERFACES; idx++) {
+	if (strcmp(interface, audit_interfaces[idx].name) == 0) {
+	    default_interface = idx;
+	    return 0;
+	}
+    }
+    return EINVAL;
+}
+
+/*
+ * Let the interfaces finish initialization
+ */
+void
+osi_audit_open(void)
+{
+    struct opr_queue *cursor;
+
+    for (opr_queue_Scan(&audit_logs, cursor)) {
+	struct audit_log *alog;
+	alog = opr_queue_Entry(cursor, struct audit_log, link);
+	if (alog->auditout_open && alog->audit_ops->open_interface != NULL)
+	    alog->audit_ops->open_interface(alog->context);
+    }
+}
+
+/*
+ * Shutdown the interfaces
+ */
+void
+osi_audit_close(void)
+{
+    struct opr_queue *cursor, *cursorsave;
+
+    for (opr_queue_ScanSafe(&audit_logs, cursor, cursorsave)) {
+	struct audit_log *alog;
+	alog = opr_queue_Entry(cursor, struct audit_log, link);
+	alog->audit_ops->close_interface(&alog->context);
+	opr_queue_Remove(&alog->link);
+	free(alog);
+    }
 }
 
 void
@@ -733,5 +1083,12 @@ osi_audit_set_user_check(void *rock,
 void
 audit_PrintStats(FILE *out)
 {
-    audit_ops->print_interface_stats(out);
+    struct opr_queue *cursor;
+
+    for (opr_queue_Scan(&audit_logs, cursor)) {
+	struct audit_log *alog;
+	alog = opr_queue_Entry(cursor, struct audit_log, link);
+	if (alog->auditout_open)
+	    alog->audit_ops->print_interface_stats(alog->context, out);
+    }
 }
