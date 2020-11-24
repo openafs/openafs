@@ -572,8 +572,13 @@ SVL_GetEntryByID(struct rx_call *rxcall,
 		 afs_int32 voltype,
 		 vldbentry *aentry)		/* entry data copied here */
 {
-    return (GetEntryByID(rxcall, volid, voltype, (char *)aentry, 0,
-			 VLGETENTRYBYID));
+    afs_int32 code;
+    code = GetEntryByID(rxcall, volid, voltype, (char *)aentry, 0,
+			VLGETENTRYBYID);
+    osi_auditU(rxcall, VLGetEntryByIDEvent, code, AUD_LONG, volid,
+	       AUD_LONG, aentry->volumeId[RWVOL], AUD_STR, aentry->name,
+	       AUD_END);
+    return code;
 }
 
 afs_int32
@@ -582,8 +587,13 @@ SVL_GetEntryByIDN(struct rx_call *rxcall,
 		  afs_int32 voltype,
 		  nvldbentry *aentry)	/* entry data copied here */
 {
-    return (GetEntryByID(rxcall, volid, voltype, (char *)aentry, 1,
-			 VLGETENTRYBYIDN));
+    afs_int32 code;
+    code = GetEntryByID(rxcall, volid, voltype, (char *)aentry, 1,
+			VLGETENTRYBYIDN);
+    osi_auditU(rxcall, VLGetEntryByIDEvent, code, AUD_LONG, volid,
+	       AUD_LONG, aentry->volumeId[RWVOL], AUD_STR, aentry->name,
+	       AUD_END);
+    return code;
 }
 
 afs_int32
@@ -592,8 +602,13 @@ SVL_GetEntryByIDU(struct rx_call *rxcall,
 		  afs_int32 voltype,
 		  uvldbentry *aentry)	/* entry data copied here */
 {
-    return (GetEntryByID(rxcall, volid, voltype, (char *)aentry, 2,
-			 VLGETENTRYBYIDU));
+    afs_int32 code;
+    code = GetEntryByID(rxcall, volid, voltype, (char *)aentry, 2,
+			VLGETENTRYBYIDU);
+    osi_auditU(rxcall, VLGetEntryByIDEvent, code, AUD_LONG, volid,
+	       AUD_LONG, aentry->volumeId[RWVOL], AUD_STR, aentry->name,
+	       AUD_END);
+    return code;
 }
 
 /* returns true if the id is a decimal integer, in which case we interpret
@@ -669,8 +684,13 @@ SVL_GetEntryByNameO(struct rx_call *rxcall,
 		    char *volname,
 		    struct vldbentry *aentry)	/* entry data copied here */
 {
-    return (GetEntryByName(rxcall, volname, (char *)aentry, 0,
-			   VLGETENTRYBYNAME));
+    afs_int32 code;
+    code = GetEntryByName(rxcall, volname, (char *)aentry, 0,
+			  VLGETENTRYBYNAME);
+    osi_auditU(rxcall, VLGetEntryByNameEvent, code, AUD_STR, volname,
+	       AUD_LONG, aentry->volumeId[RWVOL], AUD_STR, aentry->name,
+	       AUD_END);
+    return code;
 }
 
 afs_int32
@@ -678,8 +698,13 @@ SVL_GetEntryByNameN(struct rx_call *rxcall,
 		    char *volname,
 		    struct nvldbentry *aentry)	/* entry data copied here */
 {
-    return (GetEntryByName(rxcall, volname, (char *)aentry, 1,
-			   VLGETENTRYBYNAMEN));
+    afs_int32 code;
+    code = GetEntryByName(rxcall, volname, (char *)aentry, 1,
+			  VLGETENTRYBYNAMEN);
+    osi_auditU(rxcall, VLGetEntryByNameEvent, code, AUD_STR, volname,
+	       AUD_LONG, aentry->volumeId[RWVOL], AUD_STR, aentry->name,
+	       AUD_END);
+    return code;
 }
 
 afs_int32
@@ -687,8 +712,13 @@ SVL_GetEntryByNameU(struct rx_call *rxcall,
 		    char *volname,
 		    struct uvldbentry *aentry)	/* entry data copied here */
 {
-    return (GetEntryByName(rxcall, volname, (char *)aentry, 2,
-			   VLGETENTRYBYNAMEU));
+    afs_int32 code;
+    code = GetEntryByName(rxcall, volname, (char *)aentry, 2,
+			  VLGETENTRYBYNAMEU);
+    osi_auditU(rxcall, VLGetEntryByNameEvent, code, AUD_STR, volname,
+	       AUD_LONG, aentry->volumeId[RWVOL], AUD_STR, aentry->name,
+	       AUD_END);
+    return code;
 }
 
 /* Get the current value of the maximum volume id and bump the volume id counter by Maxvolidbump. */
@@ -2320,13 +2350,9 @@ SVL_GetStats(struct rx_call *rxcall,
  * easy to do.  In the future, it might require a little bit of grunging
  * through the VLDB, but that's life.
  */
-afs_int32
-SVL_GetAddrs(struct rx_call *rxcall,
-	     afs_int32 Handle,
-	     afs_int32 spare2,
-	     struct VLCallBack *spare3,
-	     afs_int32 *nentries,
-	     bulkaddrs *addrsp)
+static afs_int32
+GetAddrs(struct rx_call *rxcall, afs_int32 Handle, afs_int32 spare2,
+	 struct VLCallBack *spare3, afs_int32 *nentries, bulkaddrs *addrsp)
 {
     int this_op = VLGETADDRS;
     afs_int32 code;
@@ -2368,6 +2394,16 @@ abort:
     return code;
 }
 
+afs_int32
+SVL_GetAddrs(struct rx_call *rxcall, afs_int32 Handle, afs_int32 spare2,
+	     struct VLCallBack *spare3, afs_int32 *nentries, bulkaddrs *addrsp)
+{
+    afs_int32 code;
+    code = GetAddrs(rxcall, Handle, spare2, spare3, nentries, addrsp);
+    osi_auditU(rxcall, VLGetAddrsEvent, code, AUD_BULKADDRS, addrsp, AUD_END);
+    return code;
+}
+
 static_inline void
 append_addr(char *buffer, afs_uint32 addr, size_t buffer_size)
 {
@@ -2379,9 +2415,9 @@ append_addr(char *buffer, afs_uint32 addr, size_t buffer_size)
     }
 }
 
-afs_int32
-SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
-		  bulkaddrs *addrsp)
+static afs_int32
+RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
+	      bulkaddrs *addrsp)
 {
     int this_op = VLREGADDR;
     afs_int32 code;
@@ -2740,12 +2776,20 @@ abort:
 }
 
 afs_int32
-SVL_GetAddrsU(struct rx_call *rxcall,
-	      struct ListAddrByAttributes *attributes,
-	      afsUUID *uuidpo,
-	      afs_int32 *uniquifier,
-	      afs_int32 *nentries,
-	      bulkaddrs *addrsp)
+SVL_RegisterAddrs(struct rx_call *rxcall, afsUUID *uuidp, afs_int32 spare1,
+		  bulkaddrs *addrsp)
+{
+    afs_int32 code;
+    code = RegisterAddrs(rxcall, uuidp, spare1, addrsp);
+    osi_auditU(rxcall, VLRegisterAddrsEvent, code, AUD_AFSUUID, uuidp,
+	       AUD_BULKADDRS, addrsp, AUD_END);
+    return code;
+}
+
+static afs_int32
+GetAddrsU(struct rx_call *rxcall, struct ListAddrByAttributes *attributes,
+	  afsUUID *uuidpo, afs_int32 *uniquifier, afs_int32 *nentries,
+	  bulkaddrs *addrsp)
 {
     int this_op = VLGETADDRSU;
     afs_int32 code, index;
@@ -2863,6 +2907,18 @@ SVL_GetAddrsU(struct rx_call *rxcall,
 abort:
     countAbort(this_op);
     ubik_AbortTrans(ctx.trans);
+    return code;
+}
+
+afs_int32
+SVL_GetAddrsU(struct rx_call *rxcall, struct ListAddrByAttributes *attributes,
+	      afsUUID *uuidpo, afs_int32 *uniquifier, afs_int32 *nentries,
+	      bulkaddrs *addrsp)
+{
+    afs_int32 code;
+    code = GetAddrsU(rxcall, attributes, uuidpo, uniquifier, nentries, addrsp);
+    osi_auditU(rxcall, VLGetAddrsUEvent, code, AUD_LONG, attributes->Mask,
+	       AUD_BULKADDRS, addrsp, AUD_END);
     return code;
 }
 
@@ -3706,5 +3762,6 @@ ChangeIPAddr(struct vl_ctx *ctx, afs_uint32 ipaddr1, afs_uint32 ipaddr2)
 afs_int32
 SVL_ProbeServer(struct rx_call *rxcall)
 {
+    osi_auditU(rxcall, VLProbeEvent, 0, AUD_END);
     return 0;
 }

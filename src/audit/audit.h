@@ -34,6 +34,8 @@
 #define AUD_TDA  32             /* Tape Controller dump array */
 #define AUD_TRA  33             /* Tape Controller restore array */
 #define AUD_TSTT 34             /* Tape Controller status struct */
+#define AUD_AFSUUID 35		/* afsUUID */
+#define AUD_BULKADDRS 36	/* 'bulkaddrs' from the VL_ service */
 
 /*
  * Note: the master definitions of these error codes come from *.et
@@ -255,6 +257,12 @@
 #define VLLinkedListEvent       "AFS_VL_LinkList"
 #define VLLinkedListNEvent      "AFS_VL_LinkListN"
 #define VLGetStatsEvent         "AFS_VL_GetStats"
+#define VLGetEntryByIDEvent	"AFS_VL_GetEntId"
+#define VLGetEntryByNameEvent	"AFS_VL_GetEntNm"
+#define VLGetAddrsEvent		"AFS_VL_GetAdd"
+#define VLGetAddrsUEvent	"AFS_VL_GetAddU"
+#define VLRegisterAddrsEvent	"AFS_VL_RegAdd"
+#define VLProbeEvent		"AFS_VL_Probe"
 
 /* Next 2 block of lines on behalf of MR-AFS */
 #define RSStartEvent            "AFS_RS_StartEnt"

@@ -25,6 +25,7 @@
 #include <afs/opr.h>
 #include "afs/afsint.h"
 #include "afs/butc.h"
+#include "afs/vldbint.h"
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include "audit.h"
@@ -349,6 +350,42 @@ audmakebuf(char *audEvent, va_list vaList)
 		bufferPtr += sizeof(*status);
 		break;
 	    }
+	/* afsUUID */
+	case AUD_AFSUUID:
+	    {
+		afsUUID *uuid;
+		uuid = va_arg(vaList, afsUUID *);
+		if (uuid != NULL) {
+		    memcpy(bufferPtr, uuid, sizeof(*uuid));
+		} else {
+		    memset(bufferPtr, 0, sizeof(*uuid));
+		}
+		bufferPtr += sizeof(*uuid);
+		break;
+	    }
+	/*
+	 * bulkaddrs: An array of IP addresses (type 'bulkaddrs' in VL code).
+	 * Like we do for AUD_FIDS, we only store the first address in the
+	 * array for the AIX audit package.
+	 */
+	case AUD_BULKADDRS:
+	    {
+		bulkaddrs *addrs;
+
+		addrs = va_arg(vaList, bulkaddrs *);
+		if (addrs != NULL && addrs->bulkaddrs_len > 0) {
+		    *((u_int *) bufferPtr) = addrs->bulkaddrs_len;
+		    bufferPtr += sizeof(u_int);
+		    *((afs_uint32 *) bufferPtr) = htonl(addrs->bulkaddrs_val[0]);
+		} else {
+		    *((u_int *) bufferPtr) = 0;
+		    bufferPtr += sizeof(u_int);
+		    *((afs_uint32 *) bufferPtr) = 0;
+		}
+		bufferPtr += sizeof(addrs->bulkaddrs_val[0]);
+
+		break;
+	    }
 	default:
 	    code =
 		auditlog("AFS_Aud_EINVAL", (-1), audEvent,
@@ -572,6 +609,37 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
 			   vaTCstatus->lastPolled);
 	    else
 		append_msg(msg, "TCSTATUS <null>");
+	    break;
+	case AUD_AFSUUID:
+	    {
+		afsUUID *uuid = va_arg(vaList, afsUUID *);
+		if (uuid != NULL) {
+		    struct uuid_fmtbuf ubuf;
+		    append_msg(msg, "UUID %s ",
+			       afsUUID_to_string(uuid, &ubuf));
+		} else {
+		    append_msg(msg, "UUID <null> ");
+		}
+	    }
+	    break;
+	case AUD_BULKADDRS:
+	    {
+		bulkaddrs *addrs;
+		char hoststr[16];
+
+		addrs = va_arg(vaList, bulkaddrs *);
+		if (addrs != NULL) {
+		    u_int i;
+		    append_msg(msg, "ADDRS %u ", addrs->bulkaddrs_len);
+		    for (i = 0; i < addrs->bulkaddrs_len; i++) {
+			append_msg(msg, "HOST %s ",
+				   afs_inet_ntoa_r(htonl(addrs->bulkaddrs_val[i]),
+						   hoststr));
+		    }
+		} else {
+		    append_msg(msg, "ADDRS 0 HOST 0.0.0.0 ");
+		}
+	    }
 	    break;
 	default:
 	    append_msg(msg, "--badval-- ");

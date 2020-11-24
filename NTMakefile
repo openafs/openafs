@@ -271,7 +271,14 @@ bubasics: fsint
 	$(NTMAKE)
 	$(CD) ..\..
 
-audit: bubasics
+vlserver_headers: bubasics
+     @echo ***** $@
+	$(DOCD) $(SRC)\vlserver
+	$(CD) $(SRC)\vlserver
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+audit: vlserver_headers
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -313,14 +320,7 @@ auth_headers: rxgk_headers
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
-vlserver_headers: auth_headers
-     @echo ***** $@
-	$(DOCD) $(SRC)\vlserver
-	$(CD) $(SRC)\vlserver
-	$(NTMAKE_HEADERS)
-	$(CD) ..\..
-
-afsdobjs: vlserver_headers
+afsdobjs: auth_headers
      @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\afsd
 	$(CD) $(SRC)\WINNT\afsd
