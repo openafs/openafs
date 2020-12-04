@@ -14,8 +14,8 @@ ptserver S<<< [B<-database> | B<-db> <I<db path>>] >>>
     S<<< [B<-default_access> <I<user access mask>> <I<group access mask>>] >>>
     [B<-restricted>] [B<-restrict_anonymous>] [B<-enable_peer_stats>]
     [B<-enable_process_stats>] [B<-allow-dotted-principals>]
-    [B<-rxbind>] S<<< [B<-auditlog> <I<file path>>] >>>
-    S<<< [B<-audit-interface> (file | sysvmq)] >>>
+    [B<-rxbind>] S<<< [B<-auditlog> [<I<interface>>:]<I<path>>[:<I<options>>]] >>>
+    S<<< [B<-audit-interface> <I<default interface>>] >>>
     S<<< [B<-syslog>[=<I<FACILITY>>]] >>>
     S<<< [B<-logfile> <I<log file>>] >>>
     [B<-transarc-logs>]
@@ -178,18 +178,20 @@ service. In a typical configuration this will be F</usr/afs/etc> - this
 option allows the use of alternative configuration locations for testing
 purposes.
 
-=item B<-auditlog> <I<log path>>
+=item B<-auditlog> [<I<interface>>:]<I<path>>:<I<options>>]
 
 Turns on audit logging, and sets the path for the audit log.  The audit
 log records information about RPC calls, including the name of the RPC
 call, the host that submitted the call, the authenticated entity (user)
 that issued the call, the parameters for the call, and if the call
-succeeded or failed.
+succeeded or failed.  See L<fileserver(8)> for an explanation of the audit
+facility.
 
-=item B<-audit-interface> (file | sysvmq)
+=item B<-audit-interface> <I<default interface>>
 
-Specifies what audit interface to use. Defaults to C<file>. See
-L<fileserver(8)> for an explanation of each interface.
+Sets the default audit interface used by the B<-auditlog> option.  The
+initial default is the C<file> interface. See L<fileserver(8)> for
+an explanation of each interface.
 
 =item B<-rxmaxmtu> <I<bytes>>
 

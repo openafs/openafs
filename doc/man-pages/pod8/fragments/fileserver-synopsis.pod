@@ -1,6 +1,6 @@
 B<fileserver>
-    S<<< [B<-auditlog> <I<path to log file>>] >>>
-    S<<< [B<-audit-interface> (file | sysvmq)] >>>
+    S<<< [B<-auditlog> [<I<interface>>:]<I<path>>[<I<options>>]] >>>
+    S<<< [B<-audit-interface> <I<default interface>>] >>>
     S<<< [B<-d> <I<debug level>>] >>>
     S<<< [B<-p> <I<number of processes>>] >>>
     S<<< [B<-spare> <I<number of spare blocks>>] >>>

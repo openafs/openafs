@@ -877,7 +877,7 @@ main(int argc, char **argv, char **envp)
     int rxMaxMTU = -1;
     afs_uint32 host = htonl(INADDR_ANY);
     char *auditIface = NULL;
-    char *auditFileName = NULL;
+    struct cmd_item *auditLogList = NULL;
     struct rx_securityClass **securityClasses;
     afs_int32 numClasses;
     int DoPeerRPCStats = 0;
@@ -985,9 +985,9 @@ main(int argc, char **argv, char **envp)
 
     /* general server options */
     cmd_AddParmAtOffset(opts, OPT_auditinterface, "-audit-interface", CMD_SINGLE,
-			CMD_OPTIONAL, "audit interface (file or sysvmq)");
+			CMD_OPTIONAL, "default interface");
     cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_SINGLE,
-			CMD_OPTIONAL, "audit log path");
+			CMD_OPTIONAL, "[interface:]path[:options]");
     cmd_AddParmAtOffset(opts, OPT_transarc_logs, "-transarc-logs", CMD_FLAG,
 			CMD_OPTIONAL, "enable Transarc style logging");
 
@@ -1043,16 +1043,8 @@ main(int argc, char **argv, char **envp)
 #endif
 
     /* general server options */
-    cmd_OptionAsString(opts, OPT_auditlog, &auditFileName);
-
-    if (cmd_OptionAsString(opts, OPT_auditinterface, &auditIface) == 0) {
-	if (osi_audit_interface(auditIface)) {
-	    printf("Invalid audit interface '%s'\n", auditIface);
-	    free(auditIface);
-	    exit(1);
-	}
-	free(auditIface);
-    }
+    cmd_OptionAsString(opts, OPT_auditinterface, &auditIface);
+    cmd_OptionAsList(opts, OPT_auditlog, &auditLogList);
 
     cmd_OptionAsFlag(opts, OPT_transarc_logs, &DoTransarcLogs);
 
@@ -1138,8 +1130,12 @@ main(int argc, char **argv, char **envp)
 	exit(1);
     }
 
-    if (auditFileName != NULL)
-	osi_audit_file(auditFileName);
+    /* Process the audit related options now that the directory checks are
+     * done. */
+    code = osi_audit_cmd_Options(auditIface, auditLogList);
+    free(auditIface);
+    if (code)
+       exit(1);
 
     /* try to read the key from the config file */
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
@@ -1229,6 +1225,9 @@ main(int argc, char **argv, char **envp)
 
     /* initialize audit user check */
     osi_audit_set_user_check(bozo_confdir, bozo_IsLocalRealmMatch);
+
+    /* Finish audit initialization */
+    osi_audit_open();
 
     bozo_CreateRxBindFile(host);	/* for local scripts */
 

@@ -11,8 +11,8 @@ B<bosserver>
     S<<< [B<-noauth>] >>>
     S<<< [B<-log>] >>>
     S<<< [B<-enable_peer_stats>] >>>
-    S<<< [B<-auditlog> <I<log path>>] >>>
-    S<<< [B<-audit-interface> ( file | sysvmq )] >>>
+    S<<< [B<-auditlog> [<I<interface>>:]<I<path>>[:<I<options>>]] >>>
+    S<<< [B<-audit-interface> <I<default interface>>>] >>>
     S<<< [B<-enable_process_stats>] >>>
     S<<< [B<-allow-dotted-principals>] >>>
     S<<< [B<-cores>[=none|<I<path>>]] >>>
@@ -136,18 +136,20 @@ listed in the F</usr/afs/etc/UserList> file).
 The argument none turns off core file generation. Otherwise, the
 argument is a path where core files will be stored.
 
-=item B<-auditlog> <I<log path>>
+=item B<-auditlog> [<I<interface>>:]<I<path>>[:<I<options>>]
 
 Turns on audit logging, and sets the path for the audit log.  The audit
 log records information about RPC calls, including the name of the RPC
 call, the host that submitted the call, the authenticated entity (user)
 that issued the call, the parameters for the call, and if the call
-succeeded or failed.
+succeeded or failed.  See L<fileserver(8)> for an explanation of the audit
+facility.
 
-=item B<-audit-interface> (file | sysvmq)
+=item B<-audit-interface> <I<default interface>>
 
-Specifies what audit interface to use. Defaults to C<file>. See
-L<fileserver(8)> for an explanation of each interface.
+Sets the default audit interface used by the B<-auditlog> option.  The
+initial default is the C<file> interface. See L<fileserver(8)> for
+an explanation of each interface.
 
 =item B<-enable_peer_stats>
 

@@ -163,8 +163,8 @@ initializeArgHandler(void)
     cmd_AddParm(cptr, "-ubikbuffers", CMD_SINGLE, CMD_OPTIONAL,
 		"the number of ubik buffers");
 
-    cmd_AddParm(cptr, "-auditlog", CMD_SINGLE, CMD_OPTIONAL,
-		"audit log path");
+    cmd_AddParm(cptr, "-auditlog", CMD_LIST, CMD_OPTIONAL,
+		"[interface:]path[:options]");
 
     cmd_AddParm(cptr, "-p", CMD_SINGLE, CMD_OPTIONAL,
 		"number of processes");
@@ -173,7 +173,7 @@ initializeArgHandler(void)
 		"bind the Rx socket (primary interface only)");
 
     cmd_AddParm(cptr, "-audit-interface", CMD_SINGLE, CMD_OPTIONAL,
-		"audit interface (file or sysvmq)");
+		"default interface");
 
     cmd_AddParm(cptr, "-transarc-logs", CMD_FLAG, CMD_OPTIONAL,
 		"enable Transarc style logging");
@@ -182,6 +182,8 @@ initializeArgHandler(void)
 int
 argHandler(struct cmd_syndesc *as, void *arock)
 {
+
+    char *auditIface = NULL;
 
     /* globalConfPtr provides the handle for the configuration information */
 
@@ -245,28 +247,21 @@ argHandler(struct cmd_syndesc *as, void *arock)
 	rxBind = 1;
     }
 
-    /* -audit-interface */
-    if (as->parms[10].items != 0) {
-	char *interface = as->parms[10].items->data;
+    /* -audit-interface and -auditlog */
+    if (as->parms[10].items != 0)
+	auditIface = as->parms[10].items->data;
 
-	if (osi_audit_interface(interface)) {
-	    printf("Invalid audit interface '%s'\n", interface);
+    if (as->parms[7].items != 0) {
+	int code;
+	code = osi_audit_cmd_Options(auditIface, as->parms[7].items);
+	if (code)
 	    BUDB_EXIT(-1);
-	}
     }
+
     /* -transarc-logs */
     if (as->parms[11].items != 0) {
 	logopts.lopt_rotateOnOpen = 1;
 	logopts.lopt_rotateStyle = logRotate_old;
-    }
-
-    /* -auditlog */
-    /* needs to be after -audit-interface, so we osi_audit_interface
-     * before we osi_audit_file */
-    if (as->parms[7].items != 0) {
-	char *fileName = as->parms[7].items->data;
-
-        osi_audit_file(fileName);
     }
 
     return 0;
@@ -415,7 +410,6 @@ main(int argc, char **argv)
     logopts.lopt_filename = AFSDIR_SERVER_BUDBLOG_FILEPATH;
 
     osi_audit_init();
-    osi_audit(BUDB_StartEvent, 0, AUD_END);
 
     initialize_BUDB_error_table();
     initializeArgHandler();
@@ -454,6 +448,10 @@ main(int argc, char **argv)
     /* exit if there was a help option */
     if (helpOption)
 	BUDB_EXIT(0);
+
+    /* Start auditing */
+    osi_audit_open();
+    osi_audit(BUDB_StartEvent, 0, AUD_END);
 
     /* open the log file */
     OpenLog(&logopts);

@@ -844,8 +844,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 #endif
     char hoststr[16];
     afs_uint32 host = htonl(INADDR_ANY);
-    char *auditFileName = NULL;
-    char *auditInterface = NULL;
+    char *auditIface = NULL;
 
     debugLevel = 0;
 
@@ -1006,18 +1005,20 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
     /* Start auditing */
     osi_audit_init();
-    if (as->parms[9].items) {
-	auditFileName = as->parms[9].items->data;
-    }
-    if (auditFileName != NULL)
-	osi_audit_file(auditFileName);
-    if (as->parms[10].items) {
-	auditInterface = as->parms[10].items->data;
-	if (osi_audit_interface(auditInterface)) {
-	    TLog(0, "Invalid audit interface '%s'\n", auditInterface);
+    /* Process -audit-interface and -auditlog */
+    if (as->parms[10].items != NULL)
+	auditIface = as->parms[10].items->data;
+
+    if (as->parms[9].items != NULL) {
+	int code;
+	code = osi_audit_cmd_Options(auditIface, as->parms[9].items);
+	if (code) {
+	    TLog(0, "Error processing -audit-interface or -auditlog parameters");
 	    exit(1);
 	}
     }
+
+    osi_audit_open();
     osi_audit(TC_StartEvent, 0, AUD_END);
     osi_audit_set_user_check(butc_confdir, tc_IsLocalRealmMatch);
 
@@ -1258,9 +1259,10 @@ main(int argc, char **argv)
 		"Force multiple XBSA server support");
     cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
 		"bind Rx socket");
-    cmd_AddParm(ts, "-auditlog", CMD_SINGLE, CMD_OPTIONAL, "location of audit log");
+    cmd_AddParm(ts, "-auditlog", CMD_LIST, CMD_OPTIONAL,
+		"[interface:]path[:options]");
     cmd_AddParm(ts, "-audit-interface", CMD_SINGLE, CMD_OPTIONAL,
-		"interface to use for audit logging");
+		"default interface");
     cmd_AddParm(ts, "-allow_unauthenticated", CMD_FLAG, CMD_OPTIONAL,
 		"allow unauthenticated inbound RPCs (requires firewalling)");
 

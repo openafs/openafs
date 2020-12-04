@@ -1,6 +1,6 @@
 =over 4
 
-=item B<-auditlog> <I<log path>>
+=item B<-auditlog> [<I<interface>>:]<I<path>>[:<I<options>>]
 
 Turns on audit logging, and sets the path for the audit log.  The audit
 log records information about RPC calls, including the name of the RPC
@@ -8,16 +8,54 @@ call, the host that submitted the call, the authenticated entity (user)
 that issued the call, the parameters for the call, and if the call
 succeeded or failed.
 
-=item B<-audit-interface> (file | sysvmq)
+The parameter to B<-auditlog> contains three parts separated by a colon
+(see examples below).
 
-Specifies what audit interface to use. The C<file> interface writes audit
-messages to the file passed to B<-auditlog>. The C<sysvmq> interface
-writes audit messages to a SYSV message (see L<msgget(2)> and
-L<msgrcv(2)>). The message queue the C<sysvmq> interface writes to has the
-key C<ftok(path, 1)>, where C<path> is the path specified in the
-B<-auditlog> option.
+The first part is the optional interface name. The default audit
+interface is C<file> and can be changed by the B<-audit-interface> option.
 
-Defaults to C<file>.
+The second part is the path to the log file and is required.  Note the path
+to the file cannot itself contain a colon.
+
+The third part are parameters that will be passed to the audit interface.
+The parameters are optional and the value and format is specific to the
+audit interface.
+
+The audit interfaces are:
+
+=over 4
+
+=item B<file>
+
+The C<file> interface writes audit messages to the specified file.
+There are no optional parameters to the file interface. This is the default
+interface unless changed by the B<-audit-interface> option.
+
+=item B<sysvmq>
+
+The C<sysvmq> interface writes audit messages to a SYSV message (see L<msgget(2)>
+and L<msgrcv(2)>). The C<sysvmq> interface writes to the key C<ftok(msgqpath, 1)>,
+where C<msqpath> is specified by the I<path to log file> parameter. There are no
+optional parameters to the sysvmq interface.
+
+=back
+
+Multiple audit logs can be set up with different interfaces or different
+I<path to log file>.
+
+Examples:
+
+    -auditlog /path/to/file
+    -auditlog file:/path/to/file
+    -auditlog sysvmq:/path/to/sysvmq
+    -auditlog /path/to/file -auditlog /path/to/file2
+
+=item B<-audit-interface> <I<default interface>>
+
+Sets the default audit interface used by the B<-auditlog> option.  The
+initial default is the C<file> interface.
+
+See B<-auditlog> for information on the different audit interfaces.
 
 =item B<-d> <I<debug level>>
 

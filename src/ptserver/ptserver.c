@@ -260,8 +260,8 @@ main(int argc, char **argv)
     struct logOptions logopts;
     char *whoami = "ptserver";
 
-    char *auditFileName = NULL;
-    char *interface = NULL;
+    char *auditIface = NULL;
+    struct cmd_item *auditLogList = NULL;
     char *s2s_crypt_behavior = NULL;
 
 #ifdef	AFS_AIX32_ENV
@@ -280,7 +280,6 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
     osi_audit_init();
-    osi_audit(PTS_StartEvent, 0, AUD_END);
 
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
@@ -332,10 +331,10 @@ main(int argc, char **argv)
 			CMD_FLAG, CMD_OPTIONAL, "enable restricted anonymous mode");
 
     /* general server options */
-    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_SINGLE,
-		 	CMD_OPTIONAL, "location of audit log");
+    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_LIST,
+			CMD_OPTIONAL, "[interface:]path[:options]");
     cmd_AddParmAtOffset(opts, OPT_auditiface, "-audit-interface", CMD_SINGLE,
-		        CMD_OPTIONAL, "interface to use for audit logging");
+			CMD_OPTIONAL, "default interface");
     cmd_AddParmAtOffset(opts, OPT_config, "-config", CMD_SINGLE,
 		        CMD_OPTIONAL, "configuration location");
     cmd_AddParmAtOffset(opts, OPT_debug, "-d", CMD_SINGLE,
@@ -400,15 +399,9 @@ main(int argc, char **argv)
     cmd_OptionAsFlag(opts, OPT_restrict_anonymous, &restrict_anonymous);
 
     /* general server options */
-    cmd_OptionAsString(opts, OPT_auditlog, &auditFileName);
 
-    if (cmd_OptionAsString(opts, OPT_auditiface, &interface) == 0) {
-	if (osi_audit_interface(interface)) {
-	    printf("Invalid audit interface '%s'\n", interface);
-	    PT_EXIT(1);
-	}
-	free(interface);
-    }
+    cmd_OptionAsString(opts, OPT_auditiface, &auditIface);
+    cmd_OptionAsList(opts, OPT_auditlog, &auditLogList);
 
     cmd_OptionAsString(opts, OPT_database, &pr_dbaseName);
 
@@ -481,12 +474,15 @@ main(int argc, char **argv)
 	s2s_crypt_behavior = NULL;
     }
 
+    code = osi_audit_cmd_Options(auditIface, auditLogList);
+    free(auditIface);
+    if (code)
+	PT_EXIT(1);
+
     cmd_FreeOptions(&opts);
 
-    if (auditFileName) {
-	osi_audit_file(auditFileName);
-	osi_audit(PTS_StartEvent, 0, AUD_END);
-    }
+    osi_audit_open();
+    osi_audit(PTS_StartEvent, 0, AUD_END);
 
     OpenLog(&logopts);
 #ifdef AFS_PTHREAD_ENV
@@ -652,5 +648,6 @@ main(int argc, char **argv)
 
     rx_StartServer(1);
     osi_audit(PTS_FinishEvent, -1, AUD_END);
+    osi_audit_close();
     exit(0);
 }

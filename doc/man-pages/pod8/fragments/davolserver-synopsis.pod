@@ -1,6 +1,6 @@
 B<davolserver>
     [B<-log>] S<<< [B<-p> <I<number of processes>>] >>>
-    S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
+    S<<< [B<-auditlog> [<I<interface>>:]<I<path>>[:<I<options>>]] >>> [B<-audit-interface> <I<default interface>>]
     S<<< [B<-udpsize> <I<size of socket buffer in bytes>>] >>>
     S<<< [B<-d> <I<debug level>>] >>>
     [B<-nojumbo>] [B<-jumbo>] 

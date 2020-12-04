@@ -78,7 +78,8 @@ int rxkadDisableDotCheck = 0;
 int DoPreserveVolumeStats = 1;
 int rxJumbograms = 0;	/* default is to not send and receive jumbograms. */
 int rxMaxMTU = -1;
-char *auditFileName = NULL;
+static char *auditIface = NULL;
+static struct cmd_item *auditLogList = NULL;
 static struct logOptions logopts;
 char *configDir = NULL;
 
@@ -259,7 +260,6 @@ static int
 ParseArgs(int argc, char **argv) {
     int code;
     int optval;
-    char *optstring = NULL;
     struct cmd_syndesc *opts;
     char *sleepSpec = NULL;
     char *sync_behavior = NULL;
@@ -277,10 +277,10 @@ ParseArgs(int argc, char **argv) {
 	   "debug level");
     cmd_AddParmAtOffset(opts, OPT_threads, "-p", CMD_SINGLE, CMD_OPTIONAL,
 	   "number of threads");
-    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_SINGLE,
-	   CMD_OPTIONAL, "location of audit log");
+    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_LIST,
+	   CMD_OPTIONAL, "[interface:]path[:options]");
     cmd_AddParmAtOffset(opts, OPT_audit_interface, "-audit-interface",
-	   CMD_SINGLE, CMD_OPTIONAL, "interface to use for audit logging");
+	   CMD_SINGLE, CMD_OPTIONAL, "default interface");
     cmd_AddParmAtOffset(opts, OPT_nojumbo, "-nojumbo", CMD_FLAG, CMD_OPTIONAL,
 	    "disable jumbograms");
     cmd_AddParmAtOffset(opts, OPT_jumbo, "-jumbo", CMD_FLAG, CMD_OPTIONAL,
@@ -376,16 +376,10 @@ ParseArgs(int argc, char **argv) {
 	} else
 	    udpBufSize = optval;
     }
-    cmd_OptionAsString(opts, OPT_auditlog, &auditFileName);
 
-    if (cmd_OptionAsString(opts, OPT_audit_interface, &optstring) == 0) {
-	if (osi_audit_interface(optstring)) {
-	    printf("Invalid audit interface '%s'\n", optstring);
-	    return -1;
-	}
-	free(optstring);
-	optstring = NULL;
-    }
+    cmd_OptionAsString(opts, OPT_audit_interface, &auditIface);
+    cmd_OptionAsList(opts, OPT_auditlog, &auditLogList);
+
     if (cmd_OptionAsInt(opts, OPT_threads, &lwps) == 0) {
 	if (lwps > MAXLWP) {
 	    printf("Warning: '-p %d' is too big; using %d instead\n", lwps, MAXLWP);
@@ -478,13 +472,15 @@ main(int argc, char **argv)
 	exit(1);
     }
 
-    if (auditFileName) {
-	if (osi_audit_file(auditFileName)) {
-	    fprintf(stderr, "error from opening auditlog %s\n", auditFileName);
-	    exit(1);
-	}
-    }
+    code = osi_audit_cmd_Options(auditIface, auditLogList);
+    free(auditIface);
+    auditIface = NULL;
+    if (code)
+	return -1;
+
+    osi_audit_open();
     osi_audit(VS_StartEvent, 0, AUD_END);
+
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
 	printf
@@ -654,6 +650,7 @@ main(int argc, char **argv)
     rx_StartServer(1);		/* Donate this process to the server process pool */
 
     osi_audit(VS_FinishEvent, (-1), AUD_END);
+    osi_audit_close();
     Abort("StartServer returned?");
     AFS_UNREACHED(return 0);
 }

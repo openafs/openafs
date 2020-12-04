@@ -735,6 +735,8 @@ ShutDownAndCore(int dopanic)
     if (!dopanic)
 	PrintCounters();
 
+    /* allow audit interfaces to shutdown */
+    osi_audit_close();
     /* shut down volume package */
     VShutdown();
 
@@ -958,7 +960,8 @@ ParseArgs(int argc, char *argv[])
     struct cmd_syndesc *opts;
 
     int lwps_max;
-    char *auditFileName = NULL;
+    char *auditIface = NULL;
+    struct cmd_item *auditLogList = NULL;
     char *sync_behavior = NULL;
 
 #if defined(AFS_AIX32_ENV)
@@ -1078,10 +1081,10 @@ ParseArgs(int argc, char *argv[])
 			"disable callback breaks on reattach");
 
     /* general options */
-    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_SINGLE,
-		    	CMD_OPTIONAL, "location of audit log");
+    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_LIST,
+			CMD_OPTIONAL, "[interface:]path[:options]");
     cmd_AddParmAtOffset(opts, OPT_auditiface, "-audit-interface", CMD_SINGLE,
-			CMD_OPTIONAL, "interface to use for audit logging");
+			CMD_OPTIONAL, "default interface");
     cmd_AddParmAtOffset(opts, OPT_debug, "-d", CMD_SINGLE, CMD_OPTIONAL,
 			"debug level");
     cmd_AddParmAtOffset(opts, OPT_mrafslogs, "-mrafslogs", CMD_FLAG,
@@ -1315,16 +1318,8 @@ ParseArgs(int argc, char *argv[])
     cmd_OptionAsFlag(opts, OPT_novbc, &novbc);
 
     /* general server options */
-    cmd_OptionAsString(opts, OPT_auditlog, &auditFileName);
-
-    if (cmd_OptionAsString(opts, OPT_auditiface, &optstring) == 0) {
-	if (osi_audit_interface(optstring)) {
-	    printf("Invalid audit interface '%s'\n", optstring);
-	    return -1;
-	}
-	free(optstring);
-	optstring = NULL;
-    }
+    cmd_OptionAsString(opts, OPT_auditiface, &auditIface);
+    cmd_OptionAsList(opts, OPT_auditlog, &auditLogList);
 
     if (cmd_OptionAsInt(opts, OPT_threads, &lwps) == 0) {
 	lwps_max = max_fileserver_thread() - FILESERVER_HELPER_THREADS;
@@ -1433,9 +1428,10 @@ ParseArgs(int argc, char *argv[])
 
     cmd_OptionAsString(opts, OPT_config, &FS_configPath);
 
-
-    if (auditFileName)
-	osi_audit_file(auditFileName);
+    code = osi_audit_cmd_Options(auditIface, auditLogList);
+    free(auditIface);
+    if (code)
+	return -1;
 
     if (lwps > 64) {
 	host_thread_quota = 5;
@@ -1916,6 +1912,9 @@ main(int argc, char *argv[])
 #ifndef AFS_NT40_ENV
     opr_softsig_Register(SIGTERM, CheckDescriptors_Signal);
 #endif
+
+    /* finish audit interface initalization */
+    osi_audit_open();
 
 #if defined(AFS_SGI_ENV)
     /* give this guy a non-degrading priority so help busy servers */

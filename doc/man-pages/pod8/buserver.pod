@@ -8,8 +8,8 @@ buserver - Initializes the Backup Server
 <div class="synopsis">
 
 B<buserver> S<<< [B<-database> <I<database directory>>] >>>
-    S<<< [B<-auditlog> <I<log path>>] >>>
-    S<<< [B<-audit-interface> (file | sysvmq)] >>>
+    S<<< [B<-auditlog> [<I<interface>>:]<I<path>>[:<I<options>>]] >>>
+    S<<< [B<-audit-interface> <I<default interface>>] >>>
     S<<< [B<-cellservdb> <I<cell configuration directory>>] >>> [B<-resetdb>]
     [B<-noauth>] [B<-smallht>]
     S<<< [B<-servers> <I<list of ubik database servers>>+] >>>
@@ -63,18 +63,20 @@ Specifies the pathname of an alternate directory for the Backup Database
 files, ending in a final slash (C</>). If this argument is not provided,
 the default is the F</usr/afs/db> directory.
 
-=item B<-auditlog> <I<log path>>
+=item B<-auditlog> [<I<interface>>:]<I<path>>[:<I<options>>]
 
 Turns on audit logging, and sets the path for the audit log.  The audit
 log records information about RPC calls, including the name of the RPC
 call, the host that submitted the call, the authenticated entity (user)
 that issued the call, the parameters for the call, and if the call
-succeeded or failed.
+succeeded or failed.  See L<fileserver(8)> for an explanation of the audit
+facility.
 
-=item B<-audit-interface> (file | sysvmq)
+=item B<-audit-interface> <I<default interface>>
 
-Specifies what audit interface to use. Defaults to C<file>. See
-L<fileserver(8)> for an explanation of each interface.
+Sets the default audit interface used by the B<-auditlog> option.  The
+initial default is the C<file> interface. See L<fileserver(8)> for
+an explanation of each interface.
 
 =item B<-cellservdb> <I<cell configuration directory>>
 

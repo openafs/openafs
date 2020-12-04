@@ -185,8 +185,8 @@ main(int argc, char **argv)
     char *vl_dbaseName;
     char *configDir;
 
-    char *auditFileName = NULL;
-    char *interface = NULL;
+    struct cmd_item *auditLogList = NULL;
+    char *auditIface = NULL;
     char *optstring = NULL;
     char *s2s_crypt_behavior = NULL;
 
@@ -236,10 +236,10 @@ main(int argc, char **argv)
 		        CMD_OPTIONAL, "optimise for small memory systems");
 
     /* general server options */
-    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_SINGLE,
-		        CMD_OPTIONAL, "location of audit log");
+    cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_LIST,
+			CMD_OPTIONAL, "[interface:]path[:options]");
     cmd_AddParmAtOffset(opts, OPT_auditiface, "-audit-interface", CMD_SINGLE,
-		        CMD_OPTIONAL, "interface to use for audit logging");
+			CMD_OPTIONAL, "default interface");
     cmd_AddParmAtOffset(opts, OPT_config, "-config", CMD_SINGLE,
 		        CMD_OPTIONAL, "configuration location");
     cmd_AddParmAtOffset(opts, OPT_debug, "-d", CMD_SINGLE,
@@ -311,15 +311,8 @@ main(int argc, char **argv)
 
     /* general server options */
 
-    cmd_OptionAsString(opts, OPT_auditlog, &auditFileName);
-
-    if (cmd_OptionAsString(opts, OPT_auditiface, &interface) == 0) {
-	if (osi_audit_interface(interface)) {
-	    printf("Invalid audit interface '%s'\n", interface);
-	    return -1;
-	}
-	free(interface);
-    }
+    cmd_OptionAsString(opts, OPT_auditiface, &auditIface);
+    cmd_OptionAsList(opts, OPT_auditlog, &auditLogList);
 
     cmd_OptionAsString(opts, OPT_database, &vl_dbaseName);
 
@@ -408,9 +401,10 @@ main(int argc, char **argv)
 	s2s_crypt_behavior = NULL;
     }
 
-    if (auditFileName) {
-	osi_audit_file(auditFileName);
-    }
+    code = osi_audit_cmd_Options(auditIface, auditLogList);
+    free(auditIface);
+    if (code)
+	return -1;
 
     OpenLog(&logopts);
 #ifdef AFS_PTHREAD_ENV
@@ -419,6 +413,8 @@ main(int argc, char **argv)
 #else
     SetupLogSignals();
 #endif
+
+    osi_audit_open();
 
     tdir = afsconf_Open(configDir);
     if (!tdir) {

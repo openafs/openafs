@@ -25,18 +25,20 @@ restarted.  This option is provided for compatibility with older versions.
 Sets the number of server lightweight processes (LWPs) to run.  Provide an
 integer between C<4> and C<16>. The default is C<9>.
 
-=item B<-auditlog> <I<log path>>
+=item B<-auditlog> [<I<interface>>:]<I<path>>[:<I<options>>]
 
 Turns on audit logging, and sets the path for the audit log.  The audit
 log records information about RPC calls, including the name of the RPC
 call, the host that submitted the call, the authenticated entity (user)
 that issued the call, the parameters for the call, and if the call
-succeeded or failed.
+succeeded or failed.  See L<fileserver(8)> for an explanation of the audit
+facility.
 
-=item B<-audit-interface> (file | sysvmq)
+=item B<-audit-interface> <I<default interface>>
 
-Specifies what audit interface to use. Defaults to C<file>. See
-L<fileserver(8)> for an explanation of each interface.
+Sets the default audit interface used by the B<-auditlog> option.  The
+initial default is the C<file> interface. See L<fileserver(8)> for
+an explanation of each interface.
 
 =item B<-udpsize> <I<size of socket buffer>>
 

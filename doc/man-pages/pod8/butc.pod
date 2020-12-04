@@ -9,12 +9,13 @@ butc - Initializes the Tape Coordinator process
 
 B<butc> S<<< [B<-port> <I<port offset>>] >>> S<<< [B<-debuglevel> (0 | 1 | 2)] >>>
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noautoquery>] [B<-rxbind>] [B<-localauth>]
-    [B<-auditlog> <I<file | sysvmq>> [B<-audit-interface> <I<interface>>]]
+    [B<-auditlog> [<I<interface>>:]<I<path>>[:<I<options>>]]
+    [B<-audit-interface> <I<default interface>>>
     [B<-allow_unauthenticated>] [B<-help>]
 
 B<butc> S<<< [B<-p> <I<port offset>>] >>> S<<< [B<-d> (0 | 1 | 2)] >>>
     S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-r>] [B<-l>]
-    [B<-auditl> <I<file | sysvmq>> [-B<-audit-i> <I<interface>>]]
+    [B<-auditl> [<I<interface>>:]<I<path>>[:<I<options>>]]
     [B<-al>] [B<-h>]
 
 =for html
@@ -190,18 +191,20 @@ logged on to a server machine as the local superuser C<root>; client
 machines do not have F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt>
 files.
 
-=item B<-auditlog> <I<log path>>
+=item B<-auditlog> [<I<interface>>:]<I<path>>[:<I<options>>]
 
 Turns on audit logging, and sets the path for the audit log.  The audit
 log records information about RPC calls, including the name of the RPC
 call, the host that submitted the call, the authenticated entity (user)
 that issued the call, the parameters for the call, and if the call
-succeeded or failed.
+succeeded or failed.  See L<fileserver(8)> for an explanation of the audit
+facility.
 
-=item B<-audit-interface> <(file | sysvmq)>
+=item B<-audit-interface> <I<default interface>>
 
-Specifies what audit interface to use. Defaults to C<file>. See
-L<fileserver(8)> for an explanation of each interface.
+Sets the default audit interface used by the B<-auditlog> option.  The
+initial default is the C<file> interface. See L<fileserver(8)> for
+an explanation of each interface.
 
 =item B<-allow_unauthenticated>
 
