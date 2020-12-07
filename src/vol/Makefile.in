@@ -38,6 +38,7 @@ all: gi \
 	salvager \
 	volinfo \
 	volscan \
+	vol-bless \
 	fssync-debug \
 	$(XFS_SIZE_CHECK) \
 	${TOP_INCDIR}/afs/nfs.h \
@@ -243,7 +244,7 @@ xfs_size_check: xfs_size_check.o
 #
 clean:
 	$(RM) -f *.o *.a AFS_component_version_number.c
-	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo volscan gi fssync-debug
+	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo volscan vol-bless gi fssync-debug
 
 test:
 	cd test; $(MAKE)
