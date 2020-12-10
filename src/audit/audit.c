@@ -311,6 +311,7 @@ audmakebuf(char *audEvent, va_list vaList)
 		break;
 	    }
 	/* butc tape controller status */
+	case AUD_TSTT:
 	    {
 		struct tciStatusS *status;
 
