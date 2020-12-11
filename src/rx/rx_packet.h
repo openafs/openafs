@@ -23,7 +23,7 @@
  * express them all here:
  * 1.  rx_ReceiveAckPacket assumes that it can get an entire ack
  * contiguous in the first iovec.  As a result, the iovec buffers must
- * be >= sizeof (struct rx_ackpacket)
+ * be >= sizeof (struct rx_ackPacket)
  * 2. All callers of rx_Pullup besides rx_ReceiveAckPacket try to pull
  * up less data than rx_ReceiveAckPacket does.
  * 3. rx_GetInt32 and rx_PutInt32 (and the slow versions of same) assume
