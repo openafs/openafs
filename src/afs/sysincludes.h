@@ -169,9 +169,7 @@ struct xfs_inode_info {
 # else
 #  include <asm/semaphore.h>
 # endif
-# if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-#  include <linux/mutex.h>
-# endif
+# include <linux/mutex.h>
 # include <linux/errno.h>
 # include <linux/completion.h>
 # if defined(HAVE_LINUX_EXPORTFS_H)

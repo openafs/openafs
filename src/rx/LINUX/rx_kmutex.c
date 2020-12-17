@@ -26,24 +26,14 @@
 void
 afs_mutex_init(afs_kmutex_t * l)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
     mutex_init(&l->mutex);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    init_MUTEX(&l->sem);
-#else
-    l->sem = MUTEX;
-#endif
     l->owner = 0;
 }
 
 void
 afs_mutex_enter(afs_kmutex_t * l)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
     mutex_lock(&l->mutex);
-#else
-    down(&l->sem);
-#endif
     if (l->owner)
 	osi_Panic("mutex_enter: 0x%lx held by %d", (unsigned long)l, l->owner);
     l->owner = current->pid;
@@ -52,11 +42,7 @@ afs_mutex_enter(afs_kmutex_t * l)
 int
 afs_mutex_tryenter(afs_kmutex_t * l)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
     if (mutex_trylock(&l->mutex) == 0)
-#else
-    if (down_trylock(&l->sem))
-#endif
 	return 0;
     l->owner = current->pid;
     return 1;
@@ -68,11 +54,7 @@ afs_mutex_exit(afs_kmutex_t * l)
     if (l->owner != current->pid)
 	osi_Panic("mutex_exit: 0x%lx held by %d", (unsigned long)l, l->owner);
     l->owner = 0;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
     mutex_unlock(&l->mutex);
-#else
-    up(&l->sem);
-#endif
 }
 
 /* CV_WAIT and CV_TIMEDWAIT sleep until the specified event occurs, or, in the

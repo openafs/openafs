@@ -1241,11 +1241,7 @@ static inline void dentry_race_unlock(void) {}
 
 #else
 
-# if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
 static DEFINE_MUTEX(dentry_race_sem);
-# else
-static DECLARE_MUTEX(dentry_race_sem);
-# endif
 
 static inline void
 dentry_race_lock(void)

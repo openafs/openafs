@@ -123,28 +123,16 @@
 
 /* Allow the user to specify sys_call_table addresses */
 static unsigned long sys_call_table_addr[4] = { 0,0,0,0 };
-#if defined(module_param_array) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
 module_param_array(sys_call_table_addr, long, NULL, 0);
-#else
-MODULE_PARM(sys_call_table_addr, "1-4l");
-#endif
 MODULE_PARM_DESC(sys_call_table_addr, "Location of system call tables");
 
 /* If this is set, we are more careful about avoiding duplicate matches */
 static int probe_carefully = 1;
-#if defined(module_param) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
 module_param(probe_carefully, int, 0);
-#else
-MODULE_PARM(probe_carefully, "i");
-#endif
 MODULE_PARM_DESC(probe_carefully, "Probe for system call tables carefully");
 
 static int probe_ignore_syscalls[8] = { -1, -1, -1, -1, -1, -1, -1, -1 };
-#if defined(module_param_array) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
 module_param_array(probe_ignore_syscalls, int, NULL, 0);
-#else
-MODULE_PARM(probe_ignore_syscalls, "1-8i");
-#endif
 MODULE_PARM_DESC(probe_ignore_syscalls, "Syscalls to ignore in table checks");
 
 #ifdef OSI_PROBE_DEBUG
@@ -160,35 +148,19 @@ MODULE_PARM_DESC(probe_ignore_syscalls, "Syscalls to ignore in table checks");
  * 0x0080 - detail - check_table_readable
  */
 static int probe_debug = 0x41;
-#if defined(module_param) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
 module_param(probe_debug, int, 0);
-#else
-MODULE_PARM(probe_debug, "i");
-#endif
 MODULE_PARM_DESC(probe_debug, "Debugging level");
 
 static unsigned long probe_debug_addr[4] = { 0,0,0,0 };
-#if defined(module_param_array) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
 module_param_array(probe_debug_addr, long, NULL, 0);
-#else
-MODULE_PARM(probe_debug_addr, "1-4l");
-#endif
 MODULE_PARM_DESC(probe_debug_addr, "Debug range starting locations");
 
 static unsigned long probe_debug_range = 0;
-#if defined(module_param) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
 module_param(probe_debug_range, long, 0);
-#else
-MODULE_PARM(probe_debug_range, "l");
-#endif
 MODULE_PARM_DESC(probe_debug_range, "Debug range length");
 
 static unsigned long probe_debug_tag = 0;
-#if defined(module_param) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
 module_param(probe_debug_tag, long, 0);
-#else
-MODULE_PARM(probe_debug_tag, "l");
-#endif
 MODULE_PARM_DESC(probe_debug_tag, "Debugging output start tag");
 #endif
 

@@ -25,9 +25,7 @@
 #define AFS_USERSPACE_IP_ADDR	1
 #define RXK_LISTENER_ENV	1
 #define AFS_GCPAGS		1	/* Set to Userdisabled, allow sysctl to override */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,4)
-# define AFS_PAG_ONEGROUP_ENV	1
-#endif
+#define AFS_PAG_ONEGROUP_ENV	1
 #define AFS_HAVE_FFS		1	/* Use system's ffs */
 #define AFS_HAVE_STATVFS	0	/* System doesn't support statvfs */
 #define AFS_VM_RDWR_ENV		1	/* read/write implemented via VM */

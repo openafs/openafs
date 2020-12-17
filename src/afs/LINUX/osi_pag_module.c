@@ -31,26 +31,15 @@
 #include <linux/kernel.h>
 
 static unsigned long nfs_server_addr = 0;
-#if defined(module_param) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
 module_param(nfs_server_addr, long, 0);
-#else
-MODULE_PARM(nfs_server_addr,  "l");
-#endif
 MODULE_PARM_DESC(nfs_server_addr,  "IP Address of NFS Server");
 
 static char *this_cell = 0;
-#if defined(module_param_array) && LINUX_VERSION_CODE > KERNEL_VERSION(2,6,9)
 module_param(this_cell, charp, 0);
-#else
-MODULE_PARM(this_cell, "s");
-#endif
 MODULE_PARM_DESC(this_cell, "Local cell name");
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
 DEFINE_MUTEX(afs_global_lock);
-#else
-DECLARE_MUTEX(afs_global_lock);
-#endif
+
 struct proc_dir_entry *openafs_procfs;
 int afs_global_owner = 0;
 

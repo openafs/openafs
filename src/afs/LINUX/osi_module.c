@@ -35,11 +35,7 @@
 
 extern struct file_system_type afs_fs_type;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
 DEFINE_MUTEX(afs_global_lock);
-#else
-DECLARE_MUTEX(afs_global_lock);
-#endif
 int afs_global_owner = 0;
 
 #ifdef HAVE_LINUX_KUID_T

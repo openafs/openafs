@@ -31,16 +31,7 @@ afs_osi_TraverseProcTable(void)
 #if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_STRUCT_HAS_CRED) || defined(HAVE_LINUX_RCU_READ_LOCK))
     struct task_struct *p;
 
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
-    if (&tasklist_lock)
-	read_lock(&tasklist_lock);
-#endif /* EXPORTED_TASKLIST_LOCK */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
-    else
-#endif /* EXPORTED_TASKLIST_LOCK && LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
-	rcu_read_lock();
-#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) */
+    rcu_read_lock();
 
 #if defined(for_each_process)
     for_each_process(p) if (p->pid) {
@@ -65,16 +56,8 @@ afs_osi_TraverseProcTable(void)
 	afs_GCPAGs_perproc_func(p);
     }
 #endif
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
-    if (&tasklist_lock)
-	read_unlock(&tasklist_lock);
-#endif /* EXPORTED_TASKLIST_LOCK */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
-    else
-#endif /* EXPORTED_TASKLIST_LOCK && LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
-	rcu_read_unlock();
-#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) */
+
+    rcu_read_unlock();
 #endif
 }
 

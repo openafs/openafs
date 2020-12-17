@@ -362,13 +362,7 @@ struct uio {
 #include <linux/sched.h>
 #include <linux/wait.h>
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
 extern struct mutex afs_global_lock;
-#else
-extern struct semaphore afs_global_lock;
-# define mutex_lock(lock) down(lock)
-# define mutex_unlock(lock) up(lock)
-#endif
 extern int afs_global_owner;
 
 #define AFS_GLOCK() \

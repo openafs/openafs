@@ -228,11 +228,7 @@ linux_alloc_init(void)
 
 /************** Linux memory allocator interface functions **********/
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
 DEFINE_MUTEX(afs_linux_alloc_sem);
-#else
-DECLARE_MUTEX(afs_linux_alloc_sem);
-#endif
 
 void *
 osi_linux_alloc(unsigned int asize, int drop_glock)
