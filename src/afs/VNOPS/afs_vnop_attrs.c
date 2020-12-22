@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -97,9 +97,9 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
     VATTR_RETURN(attrs, va_fsid, vfs_statfs(vnode_mount(AFSTOV(avc)))->f_fsid.val[0]);
 #elif defined(AFS_DARWIN_ENV)
     attrs->va_fsid = avc->v->v_mount->mnt_stat.f_fsid.val[0];
-#else /* ! AFS_DARWIN_ENV */
+#else
     attrs->va_fsid = 1;
-#endif 
+#endif /* AFS_SUN5_ENV */
     if (avc->mvstat == AFS_MVSTAT_ROOT) {
 	tvp = afs_GetVolume(&avc->f.fid, 0, READ_LOCK);
 	/* The mount point's vnode. */
@@ -114,7 +114,7 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
 	} else
 	    attrs->va_nodeid = 2;
     } else
-	attrs->va_nodeid = 
+	attrs->va_nodeid =
 	      afs_calc_inum(avc->f.fid.Cell,
 			    avc->f.fid.Fid.Volume,
 			    avc->f.fid.Fid.Vnode);
@@ -122,7 +122,7 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
     attrs->va_nlink = fakedir ? 100 : avc->f.m.LinkCount;
     attrs->va_size = fakedir ? 4096 : avc->f.m.Length;
 #if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
-        vnode_pager_setsize(vp, (u_long) attrs->va_size);
+    vnode_pager_setsize(vp, (u_long) attrs->va_size);
 #endif
     attrs->va_atime.tv_sec = attrs->va_mtime.tv_sec = attrs->va_ctime.tv_sec =
 	fakedir ? 0 : (int)avc->f.m.Date;
@@ -134,7 +134,7 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
      * much, and "&" is a lot faster than "%".
      */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-    /* nfs on these systems puts an 0 in nsec and stores the nfs usec (aka 
+    /* nfs on these systems puts an 0 in nsec and stores the nfs usec (aka
      * dataversion) in va_gen */
 
     attrs->va_atime.tv_nsec = attrs->va_mtime.tv_nsec =
@@ -147,7 +147,7 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
 #else
     attrs->va_atime.tv_usec = attrs->va_mtime.tv_usec =
 	attrs->va_ctime.tv_usec = (hgetlo(avc->f.m.DataVersion) & 0x7ffff);
-#endif
+#endif /* AFS_DARWIN_ENV || AFS_FBSD_ENV */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     attrs->va_flags = 0;
 #endif
@@ -164,13 +164,13 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
 
     /*
      * Below return 0 (and not 1) blocks if the file is zero length. This conforms
-     * better with the other filesystems that do return 0.      
+     * better with the other filesystems that do return 0.
      */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     attrs->va_bytes = (attrs->va_size ? (attrs->va_size + 1023) : 1024);
-#ifdef	va_bytes_rsv
+# ifdef va_bytes_rsv
     attrs->va_bytes_rsv = -1;
-#endif
+# endif
 #elif defined(AFS_HPUX_ENV)
     attrs->va_blocks = (attrs->va_size ? ((attrs->va_size + 1023)>>10) : 0);
 #elif defined(AFS_SGI_ENV)
@@ -179,13 +179,13 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
     attrs->va_nblocks = (attrs->va_size ? ((attrs->va_size + 1023)>>10)<<1:0);
 #else /* everything else */
     attrs->va_blocks = (attrs->va_size ? ((attrs->va_size + 1023)>>10)<<1:0);
-#endif
+#endif /* AFS_DARWIN_ENV || AFS_XBSD_ENV */
     return 0;
 }
 
 
 
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 int
 afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, int flags,
 	    afs_ucred_t *acred)
@@ -288,14 +288,14 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 		     *  like in the nfs exporter case, we OR in the user bits
 		     *  into the group and other bits. We need to do this
 		     *  because there is no RFS_ACCESS call and thus nfs
-		     *  clients implement nfs_access by interpreting the 
+		     *  clients implement nfs_access by interpreting the
 		     *  mode bits in the traditional way, which of course
 		     *  loses with afs.
 		     */
 		    ubits = (attrs->va_mode & 0700) >> 6;
 		    attrs->va_mode = attrs->va_mode | ubits | (ubits << 3);
 		    /* If it's the root of AFS, replace the inode number with the
-		     * inode number of the mounted on directory; otherwise this 
+		     * inode number of the mounted on directory; otherwise this
 		     * confuses getwd()... */
 #ifdef AFS_LINUX22_ENV
 		    if (avc == afs_globalVp) {
@@ -304,33 +304,33 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 		    }
 #else
 		    if (
-#if defined(AFS_DARWIN_ENV)
+# if defined(AFS_DARWIN_ENV)
 			vnode_isvroot(AFSTOV(avc))
-#elif defined(AFS_NBSD50_ENV)
+# elif defined(AFS_NBSD50_ENV)
 			AFSTOV(avc)->v_vflag & VV_ROOT
-#else
+# else
 			AFSTOV(avc)->v_flag & VROOT
-#endif
+# endif /* AFS_DARWIN_ENV */
 			) {
 			struct vnode *vp = AFSTOV(avc);
 
-#ifdef AFS_DARWIN80_ENV
+# ifdef AFS_DARWIN80_ENV
 			/* XXX vp = vnode_mount(vp)->mnt_vnodecovered; */
 			vp = 0;
-#else
+# else
 			vp = vp->v_vfsp->vfs_vnodecovered;
 			if (vp) {	/* Ignore weird failures */
-#ifdef AFS_SGI62_ENV
+#  ifdef AFS_SGI62_ENV
 			    attrs->va_nodeid = VnodeToIno(vp);
-#else
+#  else
 			    struct inode *ip;
 
 			    ip = (struct inode *)VTOI(vp);
 			    if (ip)	/* Ignore weird failures */
 				attrs->va_nodeid = ip->i_number;
-#endif
+#  endif /* AFS_SGI62_ENV */
 			}
-#endif
+# endif /* AFS_DARWIN80_ENV */
 		    }
 #endif /* AFS_LINUX22_ENV */
 		}
@@ -359,20 +359,20 @@ afs_VAttrToAS(struct vcache *avc, struct vattr *av,
     mask = 0;
 
     AFS_STATCNT(afs_VAttrToAS);
-#if     defined(AFS_DARWIN80_ENV)
+#if defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_mode)) {
-#elif	defined(AFS_AIX_ENV)
+#elif defined(AFS_AIX_ENV)
 /* Boy, was this machine dependent bogosity hard to swallow????.... */
     if (av->va_mode != -1) {
-#elif	defined(AFS_LINUX22_ENV) || defined(UKERNEL)
+#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_MODE) {
-#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_MODE) {
-#elif	defined(AFS_XBSD_ENV)
+#elif defined(AFS_XBSD_ENV)
     if (av->va_mode != (mode_t)VNOVAL) {
 #else
     if (av->va_mode != ((unsigned short)-1)) {
-#endif
+#endif /* AFS_DARWIN80_ENV */
 	mask |= AFS_SETMODE;
 	as->UnixModeBits = av->va_mode & 0xffff;
 	if (avc->f.states & CForeign) {
@@ -381,65 +381,65 @@ afs_VAttrToAS(struct vcache *avc, struct vattr *av,
 	    ReleaseWriteLock(&avc->lock);
 	}
     }
-#if     defined(AFS_DARWIN80_ENV)
+#if defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_gid)) {
 #elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_GID) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_GID) {
 #elif defined(AFS_HPUX_ENV)
-#if	defined(AFS_HPUX102_ENV)
+# if defined(AFS_HPUX102_ENV)
     if (av->va_gid != GID_NO_CHANGE) {
-#else
+# else
     if (av->va_gid != ((unsigned short)-1)) {
-#endif
-#elif	defined(AFS_XBSD_ENV)
+# endif /* AFS_HPUX102_ENV */
+#elif defined(AFS_XBSD_ENV)
     if (av->va_gid != (gid_t)VNOVAL) {
 #else
     if (av->va_gid != -1) {
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_DARWIN80_ENV */
 	mask |= AFS_SETGROUP;
 	as->Group = av->va_gid;
     }
-#if     defined(AFS_DARWIN80_ENV)
+#if defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_uid)) {
 #elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_UID) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_UID) {
 #elif defined(AFS_HPUX_ENV)
-#if	defined(AFS_HPUX102_ENV)
+# if defined(AFS_HPUX102_ENV)
     if (av->va_uid != UID_NO_CHANGE) {
-#else
+# else
     if (av->va_uid != ((unsigned short)-1)) {
-#endif
-#elif	defined(AFS_XBSD_ENV)
+# endif
+#elif defined(AFS_XBSD_ENV)
     if (av->va_uid != (uid_t)VNOVAL) {
 #else
     if (av->va_uid != -1) {
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_DARWIN80_ENV */
 	mask |= AFS_SETOWNER;
 	as->Owner = av->va_uid;
     }
-#if     defined(AFS_DARWIN80_ENV)
+#if defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_modify_time)) {
-#elif	defined(AFS_LINUX22_ENV) || defined(UKERNEL)
+#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_MTIME) {
-#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_MTIME) {
 #else
     if (av->va_mtime.tv_sec != -1) {
-#endif
+#endif /* AFS_DARWIN80_ENV */
 	mask |= AFS_SETMODTIME;
 #ifndef	AFS_SGI_ENV
-#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_LINUX26_ENV)
+# if defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_LINUX26_ENV)
 	if (av->va_mtime.tv_nsec == -1)
-#else
+# else
 	if (av->va_mtime.tv_usec == -1)
-#endif
+# endif
 	    as->ClientModTime = osi_Time();	/* special Sys V compat hack for Suns */
 	else
-#endif
+#endif /* !AFS_SGI_ENV */
 	    as->ClientModTime = av->va_mtime.tv_sec;
     }
     as->Mask = mask;
@@ -507,19 +507,19 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
      * chmod) give it a shot; if it fails, we'll discard the status
      * info.
      */
-#if	defined(AFS_DARWIN80_ENV)
+#if defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(attrs, va_data_size)) {
-#elif	defined(AFS_LINUX22_ENV) || defined(UKERNEL)
+#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (attrs->va_mask & ATTR_SIZE) {
-#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
-#elif	defined(AFS_XBSD_ENV)
+#elif defined(AFS_XBSD_ENV)
     if (attrs->va_size != VNOVAL) {
-#elif	defined(AFS_AIX41_ENV)
+#elif defined(AFS_AIX41_ENV)
     if (attrs->va_size != -1) {
 #else
     if (attrs->va_size != ~0) {
-#endif
+#endif /* AFS_DARWIN80_ENV */
 	if (!afs_AccessOK(avc, PRSFS_WRITE, treq, DONT_CHECK_MODE_BITS)) {
 	    code = EACCES;
 	    goto done;
@@ -527,13 +527,13 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
     }
 
     if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
-        code = ENETDOWN;
-        goto done;
+	code = ENETDOWN;
+	goto done;
     }
 
     afs_VAttrToAS(avc, attrs, &astat);	/* interpret request */
     code = 0;
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (AFS_NFSXLATORREQ(acred)) {
 	avc->execsOrWriters++;
     }
@@ -542,26 +542,26 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 #if defined(AFS_SGI_ENV)
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
 #endif
-#if	defined(AFS_DARWIN80_ENV)
+#if defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(attrs, va_data_size)) {
-#elif	defined(AFS_LINUX22_ENV) || defined(UKERNEL)
+#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (attrs->va_mask & ATTR_SIZE) {
-#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
-#elif	defined(AFS_XBSD_ENV)
+#elif defined(AFS_XBSD_ENV)
     if (attrs->va_size != VNOVAL) {
-#elif	defined(AFS_AIX41_ENV)
+#elif defined(AFS_AIX41_ENV)
     if (attrs->va_size != -1) {
 #else
     if (attrs->va_size != ~0) {
-#endif
+#endif /* AFS_DARWIN80_ENV */
 	afs_size_t tsize = attrs->va_size;
 	ObtainWriteLock(&avc->lock, 128);
 	avc->f.states |= CDirty;
 
-        if (AFS_IS_DISCONNECTED && tsize >=avc->f.m.Length) {
+	if (AFS_IS_DISCONNECTED && tsize >=avc->f.m.Length) {
 	    /* If we're growing the file, and we're disconnected, we need
- 	     * to make the relevant dcache chunks appear ourselves. */
+	     * to make the relevant dcache chunks appear ourselves. */
 	    code = afs_ExtendSegments(avc, tsize, treq);
 	} else {
 	    code = afs_TruncateAllSegments(avc, tsize, treq, acred);
@@ -572,9 +572,9 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 	 * pdflush */
 	if (code == 0)
 	    i_size_write(AFSTOV(avc), tsize);
-#endif
+#endif /* AFS_LINUX26_ENV */
 #if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
-        vnode_pager_setsize(vp, (u_long) tsize);
+	vnode_pager_setsize(vp, (u_long) tsize);
 #endif
 	/* if date not explicitly set by this call, set it ourselves, since we
 	 * changed the data */
@@ -592,7 +592,7 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 		if (!AFS_IS_DISCONNECTED) {
 			code = afs_StoreAllSegments(avc, treq, AFS_ASYNC);
 			if (!code)
-		    		avc->f.states &= ~CDirty;
+			    avc->f.states &= ~CDirty;
 		}
 	    }
 	} else
@@ -602,17 +602,17 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 	hzero(avc->flushDV);
 	osi_FlushText(avc);	/* do this after releasing all locks */
     }
-    
+
     if (!AFS_IS_DISCONNECTED) {
-        if (code == 0) {
+	if (code == 0) {
 	    ObtainSharedLock(&avc->lock, 16);	/* lock entry */
 	    code = afs_WriteVCache(avc, &astat, treq);	/* send request */
 	    ReleaseSharedLock(&avc->lock);	/* release lock */
-        }
-        if (code) {
+	}
+	if (code) {
 	    /* error?  erase any changes we made to vcache entry */
 	    afs_StaleVCache(avc);
-        }
+	}
     } else {
 	ObtainSharedLock(&avc->lock, 712);
 	/* Write changes locally. */
@@ -620,7 +620,7 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 	ReleaseSharedLock(&avc->lock);
     }		/* if (!AFS_IS_DISCONNECTED) */
 
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (AFS_NFSXLATORREQ(acred)) {
 	avc->execsOrWriters--;
     }
