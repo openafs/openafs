@@ -52,7 +52,7 @@ char PRE_Block;	/* Remnants of preemption support. */
 #define MAXINT     (~(1<<((sizeof(int)*8)-1)))
 #define MINSTACK   44
 
-#if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
+#if defined(__hp9000s800)
 #define MINFRAME 128
 #define STACK_ALIGN 8
 #else
@@ -373,10 +373,6 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 	PRE_Block = 1;
 #endif
 	lwp_cpptr = temp;
-#if defined(AFS_PARISC_LINUX24_ENV)
-	savecontext(Create_Process_Part2, &temp2->context,
-		    stackptr + MINFRAME);
-#else
 #ifdef __hp9000s800
 	savecontext(Create_Process_Part2, &temp2->context,
 		    stackptr + MINFRAME);
@@ -402,7 +398,6 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 #endif /* AFS_S390_LINUX20_ENV */
 #endif /* AFS_SPARC64_LINUX20_ENV || AFS_SPARC_LINUX20_ENV */
 #endif /* AFS_SGI62_ENV */
-#endif
 #endif
 	/* End of gross hack */
 
@@ -519,7 +514,7 @@ LWP_DestroyProcess(PROCESS pid)
 	    pid->status = DESTROYED;
 	    move(pid, &runnable[pid->priority], &blocked);
 	    temp = lwp_cpptr;
-#if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
+#if defined(__hp9000s800)
 	    savecontext(Dispatcher, &(temp->context),
 			&(LWPANCHOR.dsptchstack[MINFRAME]));
 #elif defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -909,7 +904,7 @@ Dispatcher(void)
      * the guard word at the front of the stack being damaged and
      * for the stack pointer being below the front of the stack.
      * WARNING!  This code assumes that stacks grow downward. */
-#if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
+#if defined(__hp9000s800)
     /* Fix this (stackcheck at other end of stack?) */
     if (lwp_cpptr != NULL && lwp_cpptr->stack != NULL
 	&& (lwp_cpptr->stackcheck !=
@@ -1052,7 +1047,7 @@ Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
     temp->index = lwp_nextindex++;
     temp->stack = stack;
     temp->stacksize = stacksize;
-#if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
+#if defined(__hp9000s800)
     if (temp->stack != NULL)
 	temp->stackcheck = *(int *)((temp->stack) + stacksize - 4);
 #else
@@ -1107,7 +1102,7 @@ Initialize_Stack(char *stackptr, int stacksize)
 	for (i = 0; i < stacksize; i++)
 	    stackptr[i] = i & 0xff;
     else
-#if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
+#if defined(__hp9000s800)
 	*(afs_int32 *) (stackptr + stacksize - 4) = STACKMAGIC;
 #else
 	*(afs_int32 *) stackptr = STACKMAGIC;
@@ -1120,7 +1115,7 @@ Stack_Used(char *stackptr, int stacksize)
 {
     int i;
 
-#if defined(__hp9000s800) || defined(AFS_PARISC_LINUX24_ENV)
+#if defined(__hp9000s800)
     if (*(afs_int32 *) (stackptr + stacksize - 4) == STACKMAGIC)
 	return 0;
     else {
