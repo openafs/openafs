@@ -410,11 +410,11 @@ afs_VAttrToAS(struct vcache *avc, struct vattr *av,
 #elif defined(AFS_HPUX_ENV)
 #if	defined(AFS_HPUX102_ENV)
     if (av->va_uid != UID_NO_CHANGE) {
-#elif	defined(AFS_XBSD_ENV)
-    if (av->va_uid != (uid_t)VNOVAL) {
 #else
     if (av->va_uid != ((unsigned short)-1)) {
 #endif
+#elif	defined(AFS_XBSD_ENV)
+    if (av->va_uid != (uid_t)VNOVAL) {
 #else
     if (av->va_uid != -1) {
 #endif /* AFS_LINUX22_ENV */
