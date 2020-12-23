@@ -23,7 +23,7 @@
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "rx/rxstat.h"
 #if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
-#include <linux/cred.h>
+# include <linux/cred.h>
 #endif
 
 #define FSINT_COMMON_XG
@@ -155,7 +155,7 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     afs_vcacheInit(astatSize);
     code = afs_dcacheInit(afiles, ablocks, aDentries, achunk, aflags);
     if (code) {
-        return code;
+	return code;
     }
 #if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
     /*
@@ -168,9 +168,9 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     cache_creds = get_current_cred();
 #endif
 #ifdef AFS_64BIT_CLIENT
-#ifdef AFS_VM_RDWR_ENV
+# ifdef AFS_VM_RDWR_ENV
     afs_vmMappingEnd = AFS_CHUNKBASE(0x7fffffff);
-#endif /* AFS_VM_RDWR_ENV */
+# endif
 #endif /* AFS_64BIT_CLIENT */
 
 #if defined(AFS_AIX_ENV) && !defined(AFS_AIX51_ENV)
@@ -260,22 +260,22 @@ afs_LookupInodeByPath(char *filename, afs_ufs_dcache_id_t *inode,
 	return code;
     osi_get_fh(dp, inode);
     dput(dp);
-#else
+#else /* AFS_LINUX22_ENV */
     struct vnode *filevp;
     code = gop_lookupname(filename, AFS_UIOSYS, 0, &filevp);
     if (code)
 	return code;
-#ifdef AFS_CACHE_VNODE_PATH
+# ifdef AFS_CACHE_VNODE_PATH
     *inode = afs_strdup(filename);
-#else
+# else
     *inode = afs_vnodeToInumber(filevp);
-#endif
+# endif
     if (fvpp)
 	*fvpp = filevp;
     else {
 	AFS_RELE(filevp);
     }
-#endif
+#endif /* AFS_LINUX22_ENV */
 
     return 0;
 }
@@ -330,7 +330,7 @@ afs_InitVolumeInfo(char *afile)
     code = afs_LookupInodeByPath(afile, &volumeInode.ufs, &volumeVnode);
 #else
     code = afs_LookupInodeByPath(afile, &volumeInode.ufs, NULL);
-#endif
+#endif /* AFS_XBSD_ENV */
     if (code)
 	return code;
     tfile = afs_CFileOpen(&volumeInode);
@@ -400,30 +400,30 @@ afs_InitCacheInfo(char *afile)
     if (code || !filevp)
 	return ENOENT;
     {
-#if	defined(AFS_SUN5_ENV)
+# if defined(AFS_SUN5_ENV)
 	struct statvfs64 st;
-#elif	defined(AFS_HPUX102_ENV)
+# elif defined(AFS_HPUX102_ENV)
 	struct k_statvfs st;
-#elif	defined(AFS_SGI_ENV) || defined(AFS_HPUX100_ENV) || defined(AFS_NBSD40_ENV)
+# elif defined(AFS_SGI_ENV) || defined(AFS_HPUX100_ENV) || defined(AFS_NBSD40_ENV)
 	struct statvfs st;
-#elif defined(AFS_DARWIN80_ENV)
+# elif defined(AFS_DARWIN80_ENV)
 	struct vfsstatfs st;
-#else
+# else
 	struct statfs st;
-#endif /* SUN5 */
+# endif /* AFS_SUN5_ENV */
 
-#if	defined(AFS_SGI_ENV)
-#ifdef AFS_SGI65_ENV
+# if defined(AFS_SGI_ENV)
+#  ifdef AFS_SGI65_ENV
 	VFS_STATVFS(filevp->v_vfsp, &st, NULL, code);
 	if (!code)
-#else
+#  else
 	if (!VFS_STATFS(filevp->v_vfsp, &st, NULL))
-#endif /* AFS_SGI65_ENV */
-#elif	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
+#  endif /* AFS_SGI65_ENV */
+# elif defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
 	if (!VFS_STATVFS(filevp->v_vfsp, &st))
-#elif defined(AFS_AIX41_ENV)
+# elif defined(AFS_AIX41_ENV)
 	if (!VFS_STATFS(filevp->v_vfsp, &st, &afs_osi_cred))
-#elif defined(AFS_LINUX20_ENV)
+# elif defined(AFS_LINUX20_ENV)
 	{
 	    KERNEL_SPACE_DECL;
 	    TO_USER_SPACE();
@@ -431,19 +431,19 @@ afs_InitCacheInfo(char *afile)
 	    VFS_STATFS(filevp->v_vfsp, &st);
 	    TO_KERNEL_SPACE();
 	}
-#elif defined(AFS_DARWIN80_ENV)
-        afs_cacheVfsp = vnode_mount(filevp);
+# elif defined(AFS_DARWIN80_ENV)
+	afs_cacheVfsp = vnode_mount(filevp);
 	if (afs_cacheVfsp && ((st = *(vfs_statfs(afs_cacheVfsp))),1))
-#elif defined(AFS_FBSD_ENV)
+# elif defined(AFS_FBSD_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st))
-#elif defined(AFS_NBSD50_ENV)
+# elif defined(AFS_NBSD50_ENV)
 	if (!VFS_STATVFS(filevp->v_vfsp, &st))
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+# elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	if (!VFS_STATFS(filevp->v_mount, &st, osi_curproc()))
-#else
+# else
 	if (!VFS_STATFS(filevp->v_vfsp, &st))
-#endif /* SGI... */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
+# endif /* AFS_SGI_ENV */
+# if defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
 	    if (strcmp("zfs", st.f_basetype) == 0) {
 		/*
 		 * Files in ZFS can take up to around the next
@@ -455,35 +455,35 @@ afs_InitCacheInfo(char *afile)
 	    } else {
 		afs_fsfragsize = st.f_frsize - 1;
 	    }
-#else
+# else
 	    afs_fsfragsize = st.f_bsize - 1;
-#endif
+# endif /* AFS_SUN5_ENV || AFS_HPUX100_ENV */
     }
-#if defined(AFS_LINUX20_ENV)
+# if defined(AFS_LINUX20_ENV)
     cacheInode.ufs = filevp->i_ino;
     afs_cacheSBp = filevp->i_sb;
-#elif defined(AFS_XBSD_ENV)
+# elif defined(AFS_XBSD_ENV)
     cacheInode.ufs = VTOI(filevp)->i_number;
     cacheDev.mp = filevp->v_mount;
     cacheDev.held_vnode = filevp;
     vref(filevp);		/* Make sure mount point stays busy. XXX */
-#if !defined(AFS_OBSD_ENV)
+#  if !defined(AFS_OBSD_ENV)
     afs_cacheVfsp = filevp->v_vfsp;
-#endif
-#else
-#if defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
+#  endif
+# else
+#  if defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
     afs_InitDualFSCacheOps(filevp);
-#endif
-#ifndef AFS_CACHE_VNODE_PATH
-#ifndef AFS_DARWIN80_ENV
+#  endif
+#  ifndef AFS_CACHE_VNODE_PATH
+#   ifndef AFS_DARWIN80_ENV
     afs_cacheVfsp = filevp->v_vfsp;
-#endif
+#   endif
     cacheInode.ufs = afs_vnodeToInumber(filevp);
-#else
+#  else
     afs_LookupInodeByPath(afile, &cacheInode.ufs, NULL);
-#endif
+#  endif /* !AFS_CACHE_VNODE_PATH */
     cacheDev.dev = afs_vnodeToDev(filevp);
-#endif /* AFS_LINUX20_ENV */
+# endif /* AFS_LINUX20_ENV */
     AFS_RELE(filevp);
 #endif /* AFS_LINUX22_ENV */
     if (afs_fsfragsize < AFS_MIN_FRAGSIZE) {
@@ -622,9 +622,9 @@ afs_procsize_init(void)
 {
     afs_proc_t *p0;		/* pointer to process 0 */
     afs_proc_t *pN;		/* pointer to process 0's first child */
-#ifdef AFS_AIX51_ENV
+# ifdef AFS_AIX51_ENV
     struct pvproc *pV;
-#endif
+# endif
     int pN_index;
     ptrdiff_t pN_offset;
     int procsize;
@@ -634,7 +634,7 @@ afs_procsize_init(void)
 	afs_gcpags = AFS_GCPAGS_EPROC0;
 	return;
     }
-#ifdef AFS_AIX51_ENV
+# ifdef AFS_AIX51_ENV
     pN = NULL;
     pV = p0->p_pvprocp;
     if (pV) {
@@ -642,9 +642,9 @@ afs_procsize_init(void)
 	if (pV)
 	    pN = pV->pv_procp;
     }
-#else
+# else
     pN = p0->p_child;
-#endif
+# endif /* AFS_AIX51_ENV */
     if (!pN) {
 	afs_gcpags = AFS_GCPAGS_EPROCN;
 	return;
@@ -681,7 +681,7 @@ afs_procsize_init(void)
 
     afs_gcpags_procsize = procsize;
 }
-#endif
+#endif /* AFS_AIX_ENV && !AFS_AIX51_ENV */
 
 /*
  * shutdown_cache
@@ -719,13 +719,13 @@ shutdown_cache(void)
 	    vrele(cacheDev.held_vnode);
 	    cacheDev.held_vnode = NULL;
 	}
-#endif
+#endif /* AFS_XBSD_ENV */
 #ifdef AFS_CACHE_VNODE_PATH
 	if (cacheDiskType != AFS_FCACHE_TYPE_MEM) {
 	    afs_osi_FreeStr(cacheInode.ufs);
 	    afs_osi_FreeStr(volumeInode.ufs);
 	}
-#endif
+#endif /* AFS_CACHE_VODE_PATH */
 	afs_reset_inode(&cacheInode);
 	afs_reset_inode(&volumeInode);
 	cacheInfoModTime = 0;
@@ -763,16 +763,16 @@ shutdown_server(void)
     for (i = 0; i < NSERVERS; i++) {
 	struct server *ts, *next;
 
-        ts = afs_servers[i];
-        while(ts) {
+	ts = afs_servers[i];
+	while(ts) {
 	    next = ts->next;
 	    for (sa = ts->addr; sa; sa = sa->next_sa) {
 		if (sa->conns) {
-                    /* afs_ReleaseConns has been updated to
-                     * defer rx_DestroyConnection to Rx
-                     * shutdown, as most recently was done
-                     * here */
-                    afs_ReleaseConns(sa->conns);
+		    /* afs_ReleaseConns has been updated to
+		     * defer rx_DestroyConnection to Rx
+		     * shutdown, as most recently was done
+		     * here */
+		    afs_ReleaseConns(sa->conns);
 		}
 	    }
 	    for (tcbrp = ts->cbrs; tcbrp; tcbrp = tbrp) {
@@ -784,18 +784,18 @@ shutdown_server(void)
 	    }
 	    afs_osi_Free(ts, sizeof(struct server));
 	    ts = next;
-        }
+	}
     }
 
     for (i = 0; i < NSERVERS; i++) {
 	struct srvAddr *sa, *next;
 
-        sa = afs_srvAddrs[i];
-        while(sa) {
+	sa = afs_srvAddrs[i];
+	while(sa) {
 	    next = sa->next_bkt;
 	    afs_osi_Free(sa, sizeof(struct srvAddr));
 	    sa = next;
-        }
+	}
     }
 }
 
