@@ -20,12 +20,14 @@ runtests: runtests.o
 runtests.o: $(srcdir)/runtests.c
 	$(AFS_CCRULE) $(srcdir)/runtests.c
 
+RUNTESTS_V0_DEFAULT=-l $(abs_top_srcdir)/tests/TESTS
+RUNTESTS_V1_DEFAULT=-v -l $(abs_top_srcdir)/tests/TESTS
 
 # If $(TESTS) is blank, RUNTESTS_ARGS will expand to RUNTESTS_DEFAULT_, so
 # we'll run our default list of tests. If $(TESTS) is not blank,
 # $(RUNTESTS_DEFAULT_$(TESTS)) will expand into nothing, so RUNTESTS_ARGS will
 # just become effectively $(TESTS).
-RUNTESTS_DEFAULT_=-v -l $(abs_top_srcdir)/tests/TESTS
+RUNTESTS_DEFAULT_=$(RUNTESTS_V$(V)_DEFAULT)
 RUNTESTS_ARGS=$(RUNTESTS_DEFAULT_$(TESTS)) $(TESTS)
 
 # To run specific tests, run e.g. 'make check TESTS="rx/foo opr/foo"'
