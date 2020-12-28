@@ -4,14 +4,15 @@ use strict;
 use warnings;
 use lib $ENV{C_TAP_SOURCE} . "/tests-lib/perl5";
 
-use afstest qw(obj_path);
+use afstest qw(src_path obj_path);
 use File::Basename;
 use File::Temp qw(tempfile);
-use Test::More tests=>2;
+use Test::More tests=>3;
 
 my $pt_util = obj_path("src/ptserver/pt_util");
 
-(undef, my $prdbfile) = tempfile("prdbtest.XXXXXX", TMPDIR => 1, UNLINK => 1);
+(undef, my $prdb_tmp) = tempfile("prdbtest.XXXXXX", TMPDIR => 1, UNLINK => 1);
+my $prdb_test = src_path("tests/ptserver/db.prtiny/prdb.DB0");
 
 my $instructions = <<EOF;
 admin 128/20 1 -204 -204
@@ -31,19 +32,28 @@ system:anyuser 2/0 -101 -204 -204
 EOF
 
 my $fh;
+my $output;
 
-open $fh, '|-', "$pt_util", '-w', '-p', $prdbfile
+open $fh, '|-', "$pt_util", '-w', '-p', $prdb_tmp
    or die "Failed to start pt_util for DB creation\n";
 print $fh $instructions;
 close($fh)
    or die "pt util failed while creating DB\n";
 
-open $fh, '-|', "$pt_util", '-p', $prdbfile,
+open $fh, '-|', "$pt_util", '-p', $prdb_tmp,
 				     '-user', '-group', '-members'
     or die "Failed to start pt_util for DB reading\n";
-
-my $output = join('', readline($fh));
+$output = join('', readline($fh));
 close($fh)
-    or die "pt_util failed while reading from DB\n";
-is($output, $expected, "pt_util produced expected output");
+    or die "pt_util failed while reading from $prdb_tmp\n";
+is($output, $expected, "pt_util produced expected output for generated db");
+
+open $fh, '-|', "$pt_util", '-p', $prdb_test,
+				     '-user', '-group', '-members'
+    or die "Failed to start pt_util for DB reading\n";
+$output = join('', readline($fh));
+close($fh)
+    or die "pt_util failed while reading from $prdb_test\n";
+is($output, $expected, "pt_util produced expected output for test db");
+
 ok(1, "Completed sucessfully");
