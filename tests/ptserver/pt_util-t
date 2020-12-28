@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use File::Basename;
+use File::Temp qw(tempfile);
 use Test::More tests=>2;
 
 my $builddir = $ENV{C_TAP_BUILD};
@@ -13,7 +14,7 @@ if (!$builddir) {
 
 $builddir.="/..";
 
-my $prdbfile = "/tmp/prdbtest.$$";
+(undef, my $prdbfile) = tempfile("prdbtest.XXXXXX", TMPDIR => 1, UNLINK => 1);
 
 my $instructions = <<EOF;
 admin 128/20 1 -204 -204
@@ -49,5 +50,3 @@ close($fh)
     or die "pt_util failed while reading from DB\n";
 is($output, $expected, "pt_util produced expected output");
 ok(1, "Completed sucessfully");
-
-unlink($prdbfile);
