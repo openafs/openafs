@@ -24,6 +24,9 @@
 
 use strict;
 use warnings;
+use lib $ENV{C_TAP_SOURCE} . "/tests-lib/perl5";
+
+use afstest qw(obj_path);
 use Test::More tests => 11;
 use IO::File;
 use POSIX qw(:signal_h);
@@ -33,16 +36,7 @@ use FindBin qw($Bin);
 # Start up our test process, and send it various signals. Check that these
 # signals make it to it correctly, and are reported on the command line.
 
-my $softsig_helper;
-
-# Our softsig helper should be in $TOP_OBJDIR/tests/opr. To calculate that
-# path, use the C_TAP_BUILD env var if the test harness has set it; otherwise,
-# our next best guess is that it's in the same dir as this script.
-if (defined($ENV{C_TAP_BUILD})) {
-    $softsig_helper = $ENV{C_TAP_BUILD} . "/opr/softsig-helper";
-} else {
-    $softsig_helper = $Bin . "/softsig-helper";
-}
+my $softsig_helper = obj_path("tests/opr/softsig-helper");
 
 # This -dummy argument prevents Perl from putting an intermediate sh
 # -c between us and softsig-helper in the case where the build

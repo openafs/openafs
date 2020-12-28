@@ -2,9 +2,11 @@
 
 use strict;
 use warnings;
+use lib $ENV{C_TAP_SOURCE} . "/tests-lib/perl5";
+
+use afstest qw(src_path obj_path);
 use Test::More;
 use File::Temp qw/tempdir/;
-use FindBin qw($Bin);
 use Cwd qw/abs_path/;
 use File::Compare;
 use Sys::Hostname;
@@ -19,20 +21,10 @@ if (!defined(gethostbyname(hostname()))) {
 }
 plan tests => 1;
 
-my $cmd;
-if (defined($ENV{C_TAP_BUILD})) {
-    $cmd = $ENV{C_TAP_BUILD} . "/auth/writekeyfile";
-} else {
-    $cmd = $Bin . "/writekeyfile";
-}
+my $cmd = obj_path("tests/auth/writekeyfile");
 $cmd = abs_path($cmd);
 
-my $keyfile;
-if (defined($ENV{C_TAP_SOURCE})) {
-    $keyfile = $ENV{C_TAP_SOURCE} . "/auth/KeyFile.short";
-} else {
-    $keyfile = $Bin . "/KeyFile.short";
-}
+my $keyfile = src_path("tests/auth/KeyFile.short");
 $keyfile = abs_path($keyfile);
 
 my $dir = tempdir('afs_XXXXXX', CLEANUP => 1);

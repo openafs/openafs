@@ -2,14 +2,14 @@
 
 use strict;
 use warnings;
+use lib $ENV{C_TAP_SOURCE} . "/tests-lib/perl5";
 
+use afstest qw(obj_path);
 use Test::More tests=>4;
 use POSIX qw(:sys_wait_h :signal_h);
 
 my $port = 4000;
-my $build = $ENV{C_TAP_BUILD};
-$build = ".." if (!defined($build));
-my $rxperf = $build."/../src/tools/rxperf/rxperf";
+my $rxperf = obj_path("src/tools/rxperf/rxperf");
 
 # Start up an rxperf server
 

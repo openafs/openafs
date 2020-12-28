@@ -2,17 +2,14 @@
 
 use strict;
 use warnings;
+use lib $ENV{C_TAP_SOURCE} . "/tests-lib/perl5";
 
+use afstest qw(obj_path);
 use File::Basename;
 use File::Temp qw(tempfile);
 use Test::More tests=>2;
 
-my $builddir = $ENV{C_TAP_BUILD};
-if (!$builddir) {
-  $builddir = dirname($0)."/..";
-}
-
-$builddir.="/..";
+my $pt_util = obj_path("src/ptserver/pt_util");
 
 (undef, my $prdbfile) = tempfile("prdbtest.XXXXXX", TMPDIR => 1, UNLINK => 1);
 
@@ -35,13 +32,13 @@ EOF
 
 my $fh;
 
-open $fh, '|-', "$builddir/src/ptserver/pt_util", '-w', '-p', $prdbfile
+open $fh, '|-', "$pt_util", '-w', '-p', $prdbfile
    or die "Failed to start pt_util for DB creation\n";
 print $fh $instructions;
 close($fh)
    or die "pt util failed while creating DB\n";
 
-open $fh, '-|', "$builddir/src/ptserver/pt_util", '-p', $prdbfile,
+open $fh, '-|', "$pt_util", '-p', $prdbfile,
 				     '-user', '-group', '-members'
     or die "Failed to start pt_util for DB reading\n";
 
