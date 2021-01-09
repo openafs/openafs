@@ -1633,14 +1633,3 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call,
 
     return code;
 }
-
-
-int
-SRXAFSCB_GetDE(struct rx_call *a_call, afs_int32 a_index, afs_int32 *addr,
-	       afs_int32 *inode, afs_int32 *flags, afs_int32 *time,
-	       char ** fileName)
-{ /*SRXAFSCB_GetDE*/
-    int code = 0;				/*Return code*/
-    return(code);
-
-} /*SRXAFSCB_GetDE*/
