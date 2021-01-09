@@ -43,6 +43,7 @@ typedef unsigned short gid_t;
  * the realm.
  */
 
+#ifdef PC
 
 #define         KRB_CONF        "krb.con"
 #define         KRB_RLM_TRANS   "krbrealm.con"
