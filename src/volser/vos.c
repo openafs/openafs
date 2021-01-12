@@ -5127,7 +5127,7 @@ PartitionInfo(struct cmd_syndesc *as, void *arock)
     } else {
 	code = UV_ListPartitions(aserver, &dummyPartList, &cnt);
 	if (code) {
-	    PrintDiagnostics("listpart", code);
+	    PrintDiagnostics("partinfo", code);
 	    exit(1);
 	}
     }
