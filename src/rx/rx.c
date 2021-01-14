@@ -6788,14 +6788,12 @@ rxi_CancelGrowMTUEvent(struct rx_call *call)
 }
 
 /*
- * Increment the counter for the next connection ID, handling overflow.
+ * Increment the counter for the next connection ID.
+ * Wrapping on unsigned integer overflow is the intended behavior.
  */
 static void
 update_nextCid(void)
 {
-    /* Overflow is technically undefined behavior; avoid it. */
-    if (rx_nextCid > MAX_AFS_INT32 - (1 << RX_CIDSHIFT))
-	rx_nextCid = 0;
     rx_nextCid += 1 << RX_CIDSHIFT;
 }
 
