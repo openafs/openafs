@@ -6651,9 +6651,8 @@ update_nextCid(void)
 {
     /* Overflow is technically undefined behavior; avoid it. */
     if (rx_nextCid > MAX_AFS_INT32 - (1 << RX_CIDSHIFT))
-	rx_nextCid = -1 * ((MAX_AFS_INT32 / RX_CIDSHIFT) * RX_CIDSHIFT);
-    else
-	rx_nextCid += 1 << RX_CIDSHIFT;
+	rx_nextCid = 0;
+    rx_nextCid += 1 << RX_CIDSHIFT;
 }
 
 static void
