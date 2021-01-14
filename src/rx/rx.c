@@ -621,9 +621,6 @@ rx_InitHost(u_int host, u_int port)
     MUTEX_ENTER(&rx_quota_mutex);
     rxi_dataQuota += rx_extraQuota; /* + extra pkts caller asked to rsrv */
     MUTEX_EXIT(&rx_quota_mutex);
-    /* *Slightly* random start time for the cid.  This is just to help
-     * out with the hashing function at the peer */
-    rx_nextCid = ((tv.tv_sec ^ tv.tv_usec) << RX_CIDSHIFT);
     rx_connHashTable = (struct rx_connection **)htable;
     rx_peerHashTable = (struct rx_peer **)ptable;
 
