@@ -1,5 +1,14 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.7
+
+  All platforms
+
+    * Fix initial Rx Connection ID (CID) generation.
+      Remove stale initialization and overflow detection logic that resulted
+      in connection failures due to all CIDs being set to 0x80000002.
+      (14493, 14494, 14497)
+
 OpenAFS 1.8.6
 
   All platforms
