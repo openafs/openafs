@@ -160,6 +160,12 @@ AC_CHECK_LINUX_FUNC([lru_cache_add_file],
                     [#include <linux/swap.h>],
                     [lru_cache_add_file(NULL);])
 
+dnl Linux 4.6 introduced in_compat_syscall as replacement for is_compat_task
+dnl for certain platforms.
+AC_CHECK_LINUX_FUNC([in_compat_syscall],
+                    [#include <linux/compat.h>],
+                    [in_compat_syscall();])
+
 dnl lru_cache_add exported in Linux 5.8
 dnl    replaces lru_cache_add_file
 AC_CHECK_LINUX_FUNC([lru_cache_add],
