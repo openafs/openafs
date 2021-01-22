@@ -166,7 +166,9 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 static inline int
 afs_in_compat_syscall(void)
 {
-# if defined(AFS_SPARC64_LINUX26_ENV)
+# if defined(HAVE_LINUX_IN_COMPAT_SYSCALL)
+    return in_compat_syscall();
+# elif defined(AFS_SPARC64_LINUX26_ENV)
     return test_thread_flag(TIF_32BIT);
 # elif defined(AFS_SPARC64_LINUX24_ENV)
     return (current->thread.flags & SPARC_FLAG_32BIT) != 0;
