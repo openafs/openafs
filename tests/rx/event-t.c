@@ -166,9 +166,11 @@ main(void)
 		 = rxevent_Post(&eventTime, &now, eventSub, &events[counter],
 				NULL, 0);
 	}
-
-	/* A 25% chance that we will cancel a random event */
-	if (random() % 4 == 0) {
+	/*
+	 * A 25% chance that we will cancel some event.
+	 * Randomly pick any event that was scheduled before the current event.
+	 */
+	if (counter > 0 && (random() % 4 == 0)) {
 	    int victim = random() % counter;
 
 	    if (rxevent_Cancel(&events[victim].event))
