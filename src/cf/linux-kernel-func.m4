@@ -42,8 +42,13 @@ AC_CHECK_LINUX_FUNC([d_make_root],
 AC_CHECK_LINUX_FUNC([do_sync_read],
                     [#include <linux/fs.h>],
                     [do_sync_read(NULL, NULL, 0, NULL);])
+dnl - fatal_signal_pending introduced in 2.6.25
+dnl - moved from linux/sched.h to linux/sched/signal.h in 4.11
 AC_CHECK_LINUX_FUNC([fatal_signal_pending],
-                    [#include <linux/sched.h>],
+                    [#include <linux/sched.h>
+                     #ifdef HAVE_LINUX_SCHED_SIGNAL_H
+                     # include <linux/sched/signal.h>
+                     #endif],
                     [fatal_signal_pending(NULL);])
 AC_CHECK_LINUX_FUNC([file_dentry],
                     [#include <linux/fs.h>],
