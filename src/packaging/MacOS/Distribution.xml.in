@@ -3,7 +3,7 @@
     <options rootVolumeOnly="true" />
     <volume-check>
 	<allowed-os-versions>
-	    <os-version min="10.%%OSX_MAJOR_CUR%%.0" before="10.%%OSX_MAJOR_NEXT%%.0"/>
+	    <os-version min="%%OSVER_CUR%%.%%OSX_MAJOR_CUR%%.0" before="%%OSVER_NEXT%%.%%OSX_MAJOR_NEXT%%.0"/>
 	</allowed-os-versions>
     </volume-check>
     <installation-check>
