@@ -1212,6 +1212,8 @@ filter_enoent(int code)
     if (code == ENOENT && fatal_signal_pending(current)) {
         return EINTR;
     }
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25)
+# error fatal_signal_pending not available, but it should be
 #endif
     return code;
 }
