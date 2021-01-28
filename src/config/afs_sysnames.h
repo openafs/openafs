@@ -94,6 +94,9 @@
 #define SYS_NAME_ID_x86_darwin_190       541
 #define SYS_NAME_ID_amd64_darwin_190     542
 #define SYS_NAME_ID_arm_darwin_190       543
+#define SYS_NAME_ID_x86_darwin_200       544
+#define SYS_NAME_ID_amd64_darwin_200     545
+#define SYS_NAME_ID_arm_darwin_200       546
 
 #define SYS_NAME_ID_next_mach20		 601
 #define SYS_NAME_ID_next_mach30		 602
