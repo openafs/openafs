@@ -43,21 +43,13 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
 {
 
     struct afsprocdata sysargs;
-#ifdef NEED_IOCTL32
-    struct afsprocdata32 sysargs32;
-#endif
 
     if (cmd != VIOC_SYSCALL && cmd != VIOC_SYSCALL32) return -EINVAL;
 
 #ifdef NEED_IOCTL32
-# if defined(AFS_S390X_LINUX26_ENV)
-    if (test_thread_flag(TIF_31BIT))
-# elif defined(AFS_AMD64_LINUX20_ENV)
-    if (test_thread_flag(TIF_IA32))
-# else
-    if (test_thread_flag(TIF_32BIT))
-# endif /* AFS_S390X_LINUX26_ENV */
-    {
+    if (afs_in_compat_syscall()) {
+	struct afsprocdata32 sysargs32;
+
 	if (copy_from_user(&sysargs32, (void *)arg,
 			   sizeof(struct afsprocdata32)))
 	    return -EFAULT;
