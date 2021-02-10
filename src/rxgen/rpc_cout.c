@@ -363,8 +363,8 @@ emit_union(definition * def)
     }
     dflt = def->def.un.default_decl;
     if (dflt != NULL) {
+	f_print(fout, "\tdefault:\n");
 	if (!streq(dflt->type, "void")) {
-	    f_print(fout, "\tdefault:\n");
 	    object =
 		alloc(strlen(def->def_name) + strlen(format) +
 		      strlen(dflt->name) + 1);
@@ -375,8 +375,8 @@ emit_union(definition * def)
 	    print_ifstat(2, dflt->prefix, dflt->type, dflt->rel,
 			 dflt->array_max, object, dflt->name);
 	    free(object);
-	    f_print(fout, "\t\tbreak;\n");
 	}
+	f_print(fout, "\t\tbreak;\n");
     } else {
 	f_print(fout, "\tdefault:\n");
 	f_print(fout, "\t\treturn (FALSE);\n");
