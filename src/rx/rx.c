@@ -3473,7 +3473,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
  * accurate enough until now in the lwp implementation (rx_Listener only gets
  * the time after the packet is read) and (2) from a protocol point of view,
  * this is the first time the packet has been seen */
-    packetType = (np->header.type > 0 && np->header.type < RX_N_PACKET_TYPES)
+    packetType = (np->header.type > 0 && np->header.type <= RX_N_PACKET_TYPES)
 	? rx_packetTypes[np->header.type - 1] : "*UNKNOWN*";
     dpf(("R %d %s: %x.%d.%d.%d.%d.%d.%d flags %d, packet %p\n",
 	 np->header.serial, packetType, ntohl(host), ntohs(port), np->header.serviceId,

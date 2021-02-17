@@ -1170,7 +1170,7 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 
 	    *host = from.sin_addr.s_addr;
 	    *port = from.sin_port;
-	    if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
+	    if (p->header.type > 0 && p->header.type <= RX_N_PACKET_TYPES) {
                 if (rx_stats_active) {
                     rx_atomic_inc(&rx_stats.packetsRead[p->header.type - 1]);
                 }

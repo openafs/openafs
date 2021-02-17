@@ -1520,7 +1520,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	*host = from.sin_addr.s_addr;
 	*port = from.sin_port;
 	if (rx_stats_active
-	    && p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
+	    && p->header.type > 0 && p->header.type <= RX_N_PACKET_TYPES) {
 
 		rx_atomic_inc(&rx_stats.packetsRead[p->header.type - 1]);
 	}
