@@ -1,5 +1,121 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.9.1
+
+  All platforms
+
+    * Fix initial Rx Connection ID (CID) generation.
+      Remove stale initialization and overflow detection logic that resulted
+      in connection failures due to all CIDs being set to 0x80000002.
+      (14491, 14492, 14496)
+
+    * Fix RPC hangs if a server is restarted while a client is sending
+      data (13875 13758 13876).
+
+    * Fix xstat_cm_test/xstat_fs_test -period option bug introduced
+      by pthreaded xstats. (14366)
+
+    * Fix remote_is_server field in Rx RPC statistics. Before this fix, the
+      rxstat_get_process and rxstat_get_peer programs reported all RPC stats
+      as "accessed as a client" (14374).
+
+    * Fix an incorrect server type reported by rxstat_get_process and
+      rxstat_get_peer programs (14375).
+
+    * Fix the clock square calculation for stats reported by xstat_fs_test,
+      xstat_cm_test, rxstat_get_process, and rxstat_get_peer (14376)
+
+    * Avoid packet resend delays when ICMP socket errors are
+      encountered (14424).
+
+    * Report RxRPC packet statistics for version packets, that had previously
+      been ignored (14519).
+
+    * Fix various issues detected by static-analyzer tools (13155, 13156,
+      13163, 13206, 13333, 14501).
+
+  All server platforms
+
+    * Add support for multiple audit log interfaces and options (13774).
+
+    * Fix a directory handle leak in the convertROtoRWvolume procedure
+      when a new transaction cannot be created (14342).
+
+    * Fix out of range memory access when orphaned vnodes are encountered
+      during salvages (14385).
+
+    * Add KeyFileExt and rxkey.keytab access rights checks to the
+      bosserver and log all access check failures instead of stopping
+      on the first failure (14239, 14330).
+
+    * Fix creation of the bosserver audit log file when the bosserver
+      is started with the -auditlog option (14381)
+
+    * Fix 'bos salvage -forceDAFS' when the DAFS fileserver is stopped (14382).
+
+    * Add VL_DBBAD ("Database is inconsistent") error code to indicate vlserver
+      database inconsistencies, and report VL_DBBAD when unable to remove
+      deleted vlentries from the database hash chains (13382, 13383)
+
+    * Fix possible memory leaks when under memory pressure (13156 13313).
+
+    * Fix possible double release of volume locks in vos release
+      and vos convertROtoRW (14426).
+
+    * Fix -partition option requires a -server option checks in vos (14005).
+
+    * Take the target read/write volume offline during the conversion
+      to a read-only volume by vos convertRWtoRO (14340).
+
+    * Check for volume lock inconsistencies in vldb_check (14307).
+
+    * Document vos restore -readonly option (14348).
+
+    * Consolidate implementation of, and more reliably use, logged warnings
+      for single-DES or missing keys (10831).
+
+  All client platforms
+
+    * Avoid panic when failing to allocate a new vnode or
+      failing to write a dcache (13701, 13804).
+
+    * Fix double release of afs_xvcb lock (14411).
+
+    * Log process name and PID on disk cache read errors (14416).
+
+    * Add cache-too-full and wait-for-drain cache manager stats (13168).
+
+    * Add afsio readdir and afsio fidreaddir commands to dump
+      AFS3 directories (12381).
+
+    * Fix diagnostic messages from "vos partinfo" to correctly refer to
+      itself (14489).
+
+  Linux
+
+    * Fix file leak in background thread regression introduced by
+      13284 (LINUX: Turn on AFS_NEW_BKG). (13984)
+
+    * Avoid getcwd() and bind-mount call errors by returning
+      errors from the d_revalidate callback (14417).
+
+    * Fix 64/32bit compatibility mode checks for Linux 5.11
+      support (14499, 14500).
+
+    * Support Linux 5.12-RC2 (14548, 14549).
+
+  Solaris
+
+    * Add the OpenAFS provider for the Solaris kstat framework (13170).
+
+  FreeBSD
+
+    * Import the start of a series of locking and stability fixes developed by
+      Tim Creech and Andrew Deason that will culminate in a client that
+      supports FreeBSD 12.2 (13854, 13856, 13858..13860, 13998..14000, 14162,
+      14373, 14550,
+
+
 OpenAFS 1.9.0
 
   All platforms
