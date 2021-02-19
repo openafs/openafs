@@ -1643,7 +1643,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    hit = 1;
 	    goto done;
 	}
-#else /* non - LINUX */
+#else
 	code = 0;
 	hit = 1;
 	goto done;

@@ -170,26 +170,16 @@ afs_in_compat_syscall(void)
     return in_compat_syscall();
 # elif defined(AFS_SPARC64_LINUX_ENV)
     return test_thread_flag(TIF_32BIT);
-# elif defined(AFS_SPARC64_LINUX_ENV)
-    return (current->thread.flags & SPARC_FLAG_32BIT) != 0;
-# elif defined(AFS_SPARC64_LINUX_ENV)
-    return (current->tss.flags & SPARC_FLAG_32BIT) != 0;
 # elif defined(AFS_AMD64_LINUX_ENV)
     return test_thread_flag(TIF_IA32);
-# elif defined(AFS_AMD64_LINUX_ENV)
-    return (current->thread.flags & THREAD_IA32) != 0;
 # elif defined(AFS_PPC64_LINUX_ENV)
 #  if defined(STRUCT_TASK_STRUCT_HAS_THREAD_INFO)
     return (current->thread_info->flags & _TIF_32BIT) != 0;
 #  else
     return (task_thread_info(current)->flags & _TIF_32BIT) != 0;
 #  endif
-# elif defined(AFS_PPC64_LINUX_ENV)
-   return (current->thread.flags & PPC_FLAG_32BIT) != 0;
 # elif defined(AFS_S390X_LINUX_ENV)
    return test_thread_flag(TIF_31BIT);
-# elif defined(AFS_S390X_LINUX_ENV)
-  return (current->thread.flags & S390_FLAG_31BIT) != 0;
 # elif defined(AFS_ARM64_LINUX_ENV)
   return is_compat_task();
 # else

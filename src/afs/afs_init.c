@@ -423,14 +423,6 @@ afs_InitCacheInfo(char *afile)
 	if (!VFS_STATVFS(filevp->v_vfsp, &st))
 # elif defined(AFS_AIX41_ENV)
 	if (!VFS_STATFS(filevp->v_vfsp, &st, &afs_osi_cred))
-# elif defined(AFS_LINUX_ENV)
-	{
-	    KERNEL_SPACE_DECL;
-	    TO_USER_SPACE();
-
-	    VFS_STATFS(filevp->v_vfsp, &st);
-	    TO_KERNEL_SPACE();
-	}
 # elif defined(AFS_DARWIN80_ENV)
 	afs_cacheVfsp = vnode_mount(filevp);
 	if (afs_cacheVfsp && ((st = *(vfs_statfs(afs_cacheVfsp))),1))
@@ -459,10 +451,7 @@ afs_InitCacheInfo(char *afile)
 	    afs_fsfragsize = st.f_bsize - 1;
 # endif /* AFS_SUN5_ENV || AFS_HPUX100_ENV */
     }
-# if defined(AFS_LINUX_ENV)
-    cacheInode.ufs = filevp->i_ino;
-    afs_cacheSBp = filevp->i_sb;
-# elif defined(AFS_XBSD_ENV)
+# if defined(AFS_XBSD_ENV)
     cacheInode.ufs = VTOI(filevp)->i_number;
     cacheDev.mp = filevp->v_mount;
     cacheDev.held_vnode = filevp;
@@ -483,7 +472,7 @@ afs_InitCacheInfo(char *afile)
     afs_LookupInodeByPath(afile, &cacheInode.ufs, NULL);
 #  endif /* !AFS_CACHE_VNODE_PATH */
     cacheDev.dev = afs_vnodeToDev(filevp);
-# endif /* AFS_LINUX_ENV */
+# endif /* AFS_XBSD_ENV */
     AFS_RELE(filevp);
 #endif /* AFS_LINUX_ENV */
     if (afs_fsfragsize < AFS_MIN_FRAGSIZE) {

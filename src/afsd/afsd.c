@@ -1298,17 +1298,6 @@ CheckCacheBaseDir(char *dir)
 	if (res != 0) {
 	    return "unable to statfs cache base directory";
 	}
-#if !defined(AFS_LINUX_ENV)
-	if (statfsbuf.f_type == 0x52654973) {	/* REISERFS_SUPER_MAGIC */
-	    return "cannot use reiserfs as cache partition";
-	} else if (statfsbuf.f_type == 0x58465342) {	/* XFS_SUPER_MAGIC */
-	    return "cannot use xfs as cache partition";
-	} else if (statfsbuf.f_type == 0x01021994) {    /* TMPFS_SUPER_MAGIC */
-            return "cannot use tmpfs as cache partition";
-        } else if (statfsbuf.f_type != 0xEF53) {
-            return "must use ext2 or ext3 for cache partition";
-	}
-#endif
     }
 #endif
 
