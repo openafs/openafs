@@ -1,5 +1,107 @@
                        User-Visible OpenAFS Changes
 
+
+OpenAFS 1.8.8 (in progress)
+
+  All platforms
+
+    * Improved documentation, diagnostics and error messages (14311 14326
+      14331 14367 14399 14419 14420 14427 14434 14436 14437 14438 14439
+      14440 14502 14516 14518 14546)
+
+    * Build fixes, mostly for recent compilers (14217 14298 14299)
+
+    * Avoid some potential performance losses in the wire protocol (14503
+      14514)
+
+    * Avoid client connections hanging forever when the server is
+      restarted while they're active (14504 14505 14506 14507)
+
+  All server platforms
+
+    * Avoid Rx calls getting stuck on the incoming call queue for busy
+      servers (14394)
+
+    * Avoid a possible salvageserver deadlock (14283)
+
+    * Fixed salvageserver's parsing of the "-parallel all<number>" argument
+      (14285)
+
+    * Avoid potential salvager crashes (14515 14614)
+
+    * Avoid erratic vlserver behaviour due to overflowing the maximum
+      VLDB size of 2 GB. Log a message and return an error instead (14288)
+
+    * Fixed a ptserver issue where 'pts mem -expandgroups' failed when
+      supergroups were enabled (14345)
+
+    * Take read-only volumes offline while being converted to read-write
+      ones with "vos convertROtoRW", preventing them from ending up in an
+      inconsistent state when accessed during the conversion (14433)
+
+    * Avoid inconsistent volume states due to interrupted rename operations
+      and other potential issues (14449 14450)
+
+    * Add new variants to asetkey's "delete" command to allow deleting
+      non-des keys (14293)
+
+    * Improved ubik performance and robustness (14141 14142 14365)
+
+    * Fixed building the vol-bless utility, which is now also built by
+      default but still not installed and distributed (14601)
+
+    * Fixed parsing of "-cores none" when bosserver is started this way
+      (14589)
+
+  All client platforms
+
+    * Avoid crashes or panics when potentially recoverable errors
+      during cache I/O are encountered (14286)
+
+    * Avoid flooding servers with NAT pings, which could happen under
+      certain circumstances (14364)
+
+    * Avoid possible panics during client startup or shutdown (14393 14441)
+
+    * Fixed several potential problems in "aklog -keytab" (14478 14479
+      14480 14481 14482)
+
+    * Performance improvements (14391)
+
+    * Avoid unexpected "cold" shutdowns upon umount /afs on platforms
+      which should perform a "warm" shutdown by default (14610)
+
+    * Avoid memory leaks during shutdown (14615 14616)
+
+    * Fixed building the afscp utility, which is still not built by default
+      though (14627)
+
+  Linux clients
+
+    * Support mainline kernels up to and including 5.12 (14267 14268 14269
+      14315 14563 14564 14565)
+
+    * Avoid failures of cache I/O operations in the context of tasks
+      restricted by security mechanisms like AppArmor (14082 14099)
+
+    * Avoid a crash while loading the kernel module when reading from
+      /proc/fs/openafs/CellServDB before afsd has started (14284)
+
+    * Avoid more possible causes of getcwd() failures (14451)
+
+    * Restore the -setpag functionality in some older utilities like klog
+      (14327 14328)
+
+  macOS
+
+    * Added support for release 11.0 "Big Sur" (14597 14598 14605 14600)
+
+  FreeBSD
+
+    * Support releases 11.2, 12.1, 12.2 (14520 14537 14590)
+
+    * Add a wide range of FBSD specific fixes and improvements (14521..36)
+
 OpenAFS 1.8.7
 
   All platforms
