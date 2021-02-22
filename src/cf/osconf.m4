@@ -25,10 +25,10 @@ PAM_OPTMZ=
 
 dnl standard programs
 AC_PROG_RANLIB
-AC_CHECK_PROGS(AS, as, [false])
+AC_CHECK_TOOL(AS, as, [false])
 AC_CHECK_PROGS(MV, mv, [false])
 AC_CHECK_PROGS(RM, rm, [false])
-AC_CHECK_PROGS(LD, ld, [false])
+AC_CHECK_TOOL(LD, ld, [false])
 AC_CHECK_PROGS(CP, cp, [false])
 AC_CHECK_PROGS(GENCAT, gencat, [false])
 
