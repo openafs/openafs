@@ -64,7 +64,6 @@
 #ifdef AFS_SALSRV_ENV
 #include <pthread.h>
 #include <afs/work_queue.h>
-#include <afs/thread_pool.h>
 #include <vol/vol-salvage.h>
 #endif
 

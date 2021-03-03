@@ -38,8 +38,6 @@ includes = \
 	${TOP_INCDIR}/afs/afs_lhash.h \
 	${TOP_INCDIR}/afs/work_queue.h \
 	${TOP_INCDIR}/afs/work_queue_types.h \
-	${TOP_INCDIR}/afs/thread_pool.h \
-	${TOP_INCDIR}/afs/thread_pool_types.h \
 	${TOP_INCDIR}/afs/tabular_output.h
 
 all: ${includes} \
@@ -106,12 +104,6 @@ ${TOP_INCDIR}/afs/work_queue.h: ${srcdir}/work_queue.h
 ${TOP_INCDIR}/afs/work_queue_types.h: ${srcdir}/work_queue_types.h
 	${INSTALL_DATA} $? $@
 
-${TOP_INCDIR}/afs/thread_pool.h: ${srcdir}/thread_pool.h
-	${INSTALL_DATA} $? $@
-
-${TOP_INCDIR}/afs/thread_pool_types.h: ${srcdir}/thread_pool_types.h
-	${INSTALL_DATA} $? $@
-
 ${TOP_INCDIR}/afs/tabular_output.h: ${srcdir}/tabular_output.h
 	${INSTALL_DATA} $? $@
 
@@ -172,8 +164,6 @@ install: dirpath.h util.a sys
 	${INSTALL_DATA} ${srcdir}/afs_lhash.h ${DESTDIR}${includedir}/afs/afs_lhash.h
 	${INSTALL_DATA} ${srcdir}/work_queue.h ${DESTDIR}${includedir}/afs/work_queue.h
 	${INSTALL_DATA} ${srcdir}/work_queue_types.h ${DESTDIR}${includedir}/afs/work_queue_types.h
-	${INSTALL_DATA} ${srcdir}/thread_pool.h ${DESTDIR}${includedir}/afs/thread_pool.h
-	${INSTALL_DATA} ${srcdir}/thread_pool_types.h ${DESTDIR}${includedir}/afs/thread_pool_types.h
 	${INSTALL_DATA} ${srcdir}/tabular_output.h ${DESTDIR}${includedir}/afs/tabular_output.h
 	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/util.a
 	${INSTALL_DATA} util.a ${DESTDIR}${libdir}/afs/libafsutil.a
@@ -196,8 +186,6 @@ dest: dirpath.h util.a sys
 	${INSTALL_DATA} ${srcdir}/afs_lhash.h ${DEST}/include/afs/afs_lhash.h
 	${INSTALL_DATA} ${srcdir}/work_queue.h ${DEST}/include/afs/work_queue.h
 	${INSTALL_DATA} ${srcdir}/work_queue_types.h ${DEST}/include/afs/work_queue_types.h
-	${INSTALL_DATA} ${srcdir}/thread_pool.h ${DEST}/include/afs/thread_pool.h
-	${INSTALL_DATA} ${srcdir}/thread_pool_types.h ${DEST}/include/afs/thread_pool_types.h
 	${INSTALL_DATA} ${srcdir}/tabular_output.h ${DEST}/include/afs/tabular_output.h
 	${INSTALL_DATA} util.a ${DEST}/lib/afs/util.a
 	${INSTALL_DATA} util.a ${DEST}/lib/afs/libafsutil.a

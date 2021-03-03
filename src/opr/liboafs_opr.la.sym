@@ -12,7 +12,6 @@ opr_rbtree_remove
 opr_rbtree_replace
 opr_rbtree_replace
 opr_stolower
-opr_stoupper
 opr_strcompose
 opr_threadname_set
 opr_ucstring

@@ -64,14 +64,12 @@ extern void opr_AssertionFailed(const char *, int) AFS_NORETURN;
 #define lcstring opr_lcstring
 #define ucstring opr_ucstring
 #define stolower opr_stolower
-#define stoupper opr_stoupper
 /* XXX str* is in the implementation namespace when <string.h> is included */
 #define strcompose opr_strcompose
 
 extern char *opr_lcstring(char *d, const char *s, int n) AFS_NONNULL((1,2));
 extern char *opr_ucstring(char *d, const char *s, int n) AFS_NONNULL((1,2));
 extern void opr_stolower(char *s) AFS_NONNULL((1));
-extern void opr_stoupper(char *s) AFS_NONNULL((1));
 extern char *opr_strcompose(char *buf, size_t len, ...) AFS_NONNULL((1));
 
 /* threadname.c */

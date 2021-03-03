@@ -56,25 +56,6 @@ opr_ffs(int value)
 }
 
 static_inline int
-opr_ffsll(long long value)
-{
-    afs_int32 i;
-    afs_uint64 tmp = value;
-
-    if (tmp == 0)
-	return 0;
-    /* This loop must terminate because tmp is nonzero and thus has at least
-     * one bit set. */
-    for (i = 1;; ++i) {
-	if (tmp & 1ull)
-	    return i;
-	else
-	    tmp >>= 1;
-    }
-    /* NOTREACHED */
-}
-
-static_inline int
 opr_fls(int value)
 {
     afs_int32 i;
@@ -87,26 +68,6 @@ opr_fls(int value)
      * one bit set. */
     for (i = 32;; --i) {
 	if (tmp & 0x80000000u)
-	    return i;
-	else
-	    tmp <<= 1;
-    }
-    /* NOTREACHED */
-}
-
-static_inline int
-opr_flsll(long long value)
-{
-    afs_int32 i;
-    /* tmp must be unsigned to avoid undefined behavior. */
-    afs_uint64 tmp = value;
-
-    if (tmp == 0)
-	return 0;
-    /* This loop must terminate because tmp is nonzero and thus has at least
-     * one bit set. */
-    for (i = 64;; --i) {
-	if (tmp & 0x8000000000000000ull)
 	    return i;
 	else
 	    tmp <<= 1;
