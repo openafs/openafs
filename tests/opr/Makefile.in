@@ -3,12 +3,12 @@ abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-MODULE_CFLAGS = -I$(TOP_OBJDIR)
+MODULE_CFLAGS = -I$(TOP_OBJDIR) -I$(srcdir)/../common/
 
 LIBS=	$(abs_top_builddir)/tests/common/libafstest_common.la \
 	$(abs_top_builddir)/src/opr/liboafs_opr.la
 
-BINS = cache-t dict-t fmt-t jhash-t queues-t rbtree-t softsig-helper time-t \
+BINS = cache-t dict-t fmt-t jhash-t queues-t rbtree-t softsig-helper time64-t \
        uuid-t
 
 all: $(BINS)
@@ -31,8 +31,8 @@ rbtree-t: rbtree-t.o $(LIBS)
 jhash-t: jhash-t.o $(LIBS)
 	$(LT_LDRULE_static) jhash-t.o $(LIBS) $(XLIBS)
 
-time-t: time-t.o $(LIBS)
-	$(LT_LDRULE_static) time-t.o $(LIBS) $(XLIBS)
+time64-t: time64-t.o $(LIBS)
+	$(LT_LDRULE_static) time64-t.o $(LIBS) $(XLIBS)
 
 uuid-t: uuid-t.o $(LIBS)
 	$(LT_LDRULE_static) uuid-t.o $(LIBS) $(XLIBS)

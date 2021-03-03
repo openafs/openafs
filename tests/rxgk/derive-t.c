@@ -31,6 +31,7 @@
 #include <rx/rxgk.h>
 #include <afs/rfc3961.h>
 #include <afs/opr.h>
+#include <opr/time.h>
 
 #include <tests/tap/basic.h>
 #include <assert.h>
@@ -67,7 +68,7 @@ main(void)
 
 	afs_uint32 epoch;
 	afs_uint32 cid;
-	rxgkTime start_time;
+	afs_int64 start_ticks;
 	afs_uint32 key_number;
 
     } *tc, test_cases[] = {
@@ -76,7 +77,7 @@ main(void)
 	    OPAQUE("1234567890123456"),
 	    OPAQUE("\x61\x8b\xbb\xaa\x4c\xb8\xd9\x82\xb3\x09\x7c\x67\x95\x40\x40\x9f"),
 	    ETYPE_AES128_CTS_HMAC_SHA1_96,
-	    /*   epoch	       cid	     start_time	 key_number */
+	    /*   epoch	       cid	    start_ticks	 key_number */
 	    1571007429, 0x760a9c24, 15710085940000001LL, 1
 	},
 	{
@@ -84,7 +85,7 @@ main(void)
 	    OPAQUE("\xde\xad\xbe\xef\xba\xdd\xca\xfe\xd0\xd0\xca\xca\xde\xad\xc0\xde"),
 	    OPAQUE("\x66\x45\x6f\xfc\x5d\x1b\xdd\x9e\x54\x62\x8c\xca\xd9\x8f\x23\x9f"),
 	    ETYPE_AES128_CTS_HMAC_SHA1_96,
-	    /*   epoch	       cid	     start_time	 key_number */
+	    /*   epoch	       cid	    start_ticks	 key_number */
 	    1571007429, 0x760a9c24, 15710085940000001LL, 1
 	},
 	{
@@ -93,7 +94,7 @@ main(void)
 	    OPAQUE("\x0b\xfd\xe1\x78\x01\x8d\x41\x70\xe8\x74\x52\x55\x7a\x7a\x2c\xaa"
 		   "\x3b\x36\xe4\x19\x6b\x3c\x72\x6c\x8c\x2c\x03\xa8\x31\x38\x82\x54"),
 	    ETYPE_AES256_CTS_HMAC_SHA1_96,
-	    /*   epoch	       cid	     start_time	 key_number */
+	    /*   epoch	       cid	    start_ticks	 key_number */
 	    1571007429, 0x760a9c24, 15710085940000001LL, 1
 	},
 	{
@@ -101,7 +102,7 @@ main(void)
 	    OPAQUE("1234567890123456"),
 	    OPAQUE("\x3c\x69\xfc\xe0\xe2\xe1\x1c\xd4\xd0\x3b\xa1\xc2\x05\x35\x18\x71"),
 	    ETYPE_AES128_CTS_HMAC_SHA1_96,
-	    /*   epoch	       cid	     start_time	 key_number */
+	    /*   epoch	       cid	    start_ticks	 key_number */
 	    1571007430, 0x760a9c24, 15710085940000001LL, 1
 	},
 	{
@@ -109,7 +110,7 @@ main(void)
 	    OPAQUE("1234567890123456"),
 	    OPAQUE("\x7c\xda\x40\x6f\xa0\xd6\x35\x86\xc1\xb4\x99\xa2\x41\xa6\xcc\xca"),
 	    ETYPE_AES128_CTS_HMAC_SHA1_96,
-	    /*   epoch	       cid	     start_time	 key_number */
+	    /*   epoch	       cid	    start_ticks	 key_number */
 	    1571007429, 0x760a9c25, 15710085940000001LL, 1
 	},
 	{
@@ -117,7 +118,7 @@ main(void)
 	    OPAQUE("1234567890123456"),
 	    OPAQUE("\x5b\xa5\x6b\xe9\x12\x2f\x74\x69\x1c\x18\x43\x22\x6b\x36\x72\x9d"),
 	    ETYPE_AES128_CTS_HMAC_SHA1_96,
-	    /*   epoch	       cid	     start_time	 key_number */
+	    /*   epoch	       cid	    start_ticks	 key_number */
 	    1571007429, 0x760a9c25, 15710085940000002LL, 1
 	},
 	{
@@ -125,16 +126,16 @@ main(void)
 	    OPAQUE("1234567890123456"),
 	    OPAQUE("\xb9\x3b\x23\x32\x16\x91\x0d\xd3\x7f\x2d\x8d\x67\xae\x07\xa8\x63"),
 	    ETYPE_AES128_CTS_HMAC_SHA1_96,
-	    /*   epoch	       cid	     start_time	 key_number */
+	    /*   epoch	       cid	    start_ticks	 key_number */
 	    1571007429, 0x760a9c24, 15710085940000001LL, 2
 	},
 	{
-	    "start_time 0, key_number 9999",
+	    "start_ticks 0, key_number 9999",
 	    OPAQUE("\xde\xad\xbe\xef\xba\xdd\xca\xfe\xd0\xd0\xca\xca\xde\xad\xc0\xde"),
 	    OPAQUE("\x82\x6a\x16\xd5\x94\xf9\x2f\xca\x7c\x43\x4f\xf1\xe7\x35\xe2\x81"),
 	    ETYPE_AES128_CTS_HMAC_SHA1_96,
-	    /*   epoch	       cid	    start_time	key_number */
-	    1571000000, 0xdeadb33f,		     0, 9999
+	    /*   epoch	       cid	    start_ticks	 key_number */
+	    1571000000, 0xdeadb33f,		      0, 9999
 	},
     };
 
@@ -145,6 +146,7 @@ main(void)
 	rxgk_key k0 = NULL;
 	rxgk_key tk = NULL;
 	struct rx_opaque keydata;
+	struct afs_time64 start_time = opr_time64_fromTicks(tc->start_ticks);
 
 	memset(&keydata, 0, sizeof(keydata));
 
@@ -153,7 +155,7 @@ main(void)
 	is_int(code, 0, "[%s] rxgk_make_key() == 0", tc->descr);
 
 	code = rxgk_derive_tk(&tk, k0, tc->epoch, tc->cid,
-			      tc->start_time, tc->key_number);
+			      start_time, tc->key_number);
 	is_int(code, 0, "[%s] rxgk_derive_tk() == 0", tc->descr);
 
 	key2data(tk, &keydata);

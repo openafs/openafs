@@ -80,10 +80,10 @@ struct rxgk_sconn {
     RXGK_Level level;
     unsigned char auth;
     unsigned char challenge_valid;
-    rxgkTime expiration;
+    struct afs_time64 expiration;
     unsigned char challenge[RXGK_CHALLENGE_NONCE_LEN];
     struct rxgkStats stats;
-    rxgkTime start_time;
+    struct afs_time64 start_time;
     struct rx_identity *client;
     afs_uint32 key_number;
     rxgk_key k0;
@@ -117,7 +117,7 @@ struct rxgk_cprivate {
  * statistics.
  */
 struct rxgk_cconn {
-    rxgkTime start_time;
+    struct afs_time64 start_time;
     afs_uint32 key_number;
     struct rxgkStats stats;
 };
@@ -142,6 +142,6 @@ int rxgk_enc_packet(rxgk_key tk, afs_int32 keyusage,
 		    struct rx_connection *aconn, struct rx_packet *apacket);
 int rxgk_check_packet(int server, struct rx_connection *aconn,
                       struct rx_packet *apacket, RXGK_Level level,
-                      rxgkTime start_time, afs_uint32 *a_kvno, rxgk_key k0);
+		      struct afs_time64 start_time, afs_uint32 *a_kvno, rxgk_key k0);
 
 #endif /* RXGK_PRIVATE_H */

@@ -39,6 +39,7 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#include <opr/time.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <rx/rx_opaque.h>
@@ -453,7 +454,7 @@ rxgk_print_token(struct rx_opaque *out, RXGK_TokenInfo *input_info,
     info.level = input_info->level;
     info.lifetime = DEFAULT_LIFETIME;
     info.bytelife = DEFAULT_BYTELIFE;
-    info.expiration = RXGK_NEVERDATE;
+    info.expiration = opr_time64_fromTicks(RXGK_NEVERDATE);
 
     return make_token(out, &info, k0, NULL, 0, key, kvno, enctype);
 }

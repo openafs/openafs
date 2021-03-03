@@ -40,6 +40,7 @@
 #include <roken.h>
 
 #include <afs/opr.h>
+#include <opr/time.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <rx/rx_packet.h>
@@ -83,7 +84,7 @@ sconn_set_noauth(struct rxgk_sconn *sc)
     rxgk_release_key(&sc->k0);
     if (sc->client != NULL)
         rx_identity_free(&sc->client);
-    sc->start_time = 0;
+    memset(&sc->start_time, 0, sizeof(sc->start_time));
     sc->auth = 0;
 
     /*
@@ -92,7 +93,7 @@ sconn_set_noauth(struct rxgk_sconn *sc)
      * set some nonzero values that are sure to be invalid, just in case they
      * get used.
      */
-    sc->expiration = 1;
+    sc->expiration = opr_time64_fromSecs(1);
     sc->level = RXGK_LEVEL_BOGUS;
 }
 
@@ -121,6 +122,27 @@ rxgk_NewServerConnection(struct rx_securityClass *aobj,
     return RXGK_INCONSISTENCY;
 }
 
+static int
+check_expired(struct rxgk_sconn *sc)
+{
+    struct afs_time64 now;
+
+    if (opr_time64_toTicks(sc->expiration) == RXGK_NEVERDATE) {
+	/* A time of RXGK_NEVERDATE never expires. */
+	return 0;
+    }
+
+    if (opr_time64_now_safe(&now) != 0) {
+	return RXGK_INCONSISTENCY;
+    }
+
+    if (opr_time64_lt(sc->expiration, now)) {
+	/* sc->expiration is in the past; it has expired. */
+	return RXGK_EXPIRED;
+    }
+    return 0;
+}
+
 /*
  * Server-specific packet preparation routine. All the interesting bits are in
  * rxgk_packet.c; all we have to do here is extract data from the security data
@@ -136,12 +158,15 @@ rxgk_ServerPreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
     afs_uint32 lkvno;
     afs_uint16 wkvno, len;
     int ret;
+    int code;
 
     aconn = rx_ConnectionOf(acall);
     sc = rx_GetSecurityData(aconn);
 
-    if (sc->expiration < RXGK_NOW() && sc->expiration != RXGK_NEVERDATE)
-	return RXGK_EXPIRED;
+    code = check_expired(sc);
+    if (code != 0) {
+	return code;
+    }
 
     len = rx_GetDataSize(apacket);
     lkvno = sc->key_number;
@@ -541,8 +566,9 @@ rxgk_CheckResponse(struct rx_securityClass *aobj,
     ret = process_token(&response.token, sp, sc);
     if (ret != 0)
 	goto done;
-    if (sc->expiration < RXGK_NOW() && sc->expiration != RXGK_NEVERDATE) {
-	ret = RXGK_EXPIRED;
+
+    ret = check_expired(sc);
+    if (ret != 0) {
 	goto done;
     }
 
@@ -604,8 +630,11 @@ rxgk_ServerCheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
     len = rx_GetDataSize(apacket);
     sc->stats.precv++;
     sc->stats.brecv += len;
-    if (sc->expiration < RXGK_NOW() && sc->expiration != RXGK_NEVERDATE)
-	return RXGK_EXPIRED;
+
+    ret = check_expired(sc);
+    if (ret != 0) {
+	return ret;
+    }
 
     lkvno = kvno = sc->key_number;
     ret = rxgk_check_packet(1, aconn, apacket, sc->level, sc->start_time,
@@ -662,7 +691,7 @@ rxgk_ServerGetStats(struct rx_securityClass *aobj, struct rx_connection *aconn,
     astats->level = sc->level;
     if (sc->auth)
 	astats->flags |= RXGK_STATS_AUTH;
-    astats->expires = (afs_uint32)rxgkTimeToSeconds(sc->expiration);
+    opr_time64_toUint32_wrap(sc->expiration, &astats->expires);
 
     astats->packetsReceived = stats->precv;
     astats->packetsSent = stats->psent;
@@ -678,7 +707,7 @@ rxgk_ServerGetStats(struct rx_securityClass *aobj, struct rx_connection *aconn,
  */
 afs_int32
 rxgk_GetServerInfo(struct rx_connection *conn, RXGK_Level *level,
-		   rxgkTime *expiry, struct rx_identity **identity)
+		   struct afs_time64 *expiry, struct rx_identity **identity)
 {
     struct rxgk_sconn *sconn;
 

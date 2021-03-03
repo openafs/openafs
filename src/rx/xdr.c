@@ -345,6 +345,15 @@ xdr_enum(XDR * xdrs, enum_t * ep)
 }
 
 /*
+ * XDR 64-bit afs time
+ */
+bool_t
+xdr_afs_time64(XDR *xdrs, struct afs_time64 *objp)
+{
+    return xdr_afs_int64(xdrs, &objp->ticks);
+}
+
+/*
  * XDR opaque data
  * Allows the specification of a fixed size sequence of opaque bytes.
  * cp points to the opaque object and cnt gives the byte length.

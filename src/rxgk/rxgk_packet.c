@@ -360,7 +360,7 @@ rxgk_enc_packet(rxgk_key tk, afs_int32 keyusage, struct rx_connection *aconn,
 int
 rxgk_check_packet(int server, struct rx_connection *aconn,
 		  struct rx_packet *apacket, RXGK_Level level,
-		  rxgkTime start_time, afs_uint32 *a_kvno, rxgk_key k0)
+		  struct afs_time64 start_time, afs_uint32 *a_kvno, rxgk_key k0)
 {
     afs_uint16 wkvno;
     afs_uint32 lkvno;

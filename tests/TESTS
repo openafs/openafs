@@ -14,7 +14,7 @@ opr/jhash
 opr/queues
 opr/rbtree
 opr/softsig
-opr/time
+opr/time64
 opr/uuid
 ptserver/pt_util
 ptserver/pts-man
