@@ -1124,8 +1124,13 @@ vattr2inode(struct inode *ip, struct vattr *vp)
  * Linux version of setattr call. What to change is in the iattr struct.
  * We need to set bits in both the Linux inode as well as the vcache.
  */
+#if defined(IOP_TAKES_USER_NAMESPACE)
+static int
+afs_notify_change(struct user_namespace *mnt_userns, struct dentry *dp, struct iattr *iattrp)
+#else
 static int
 afs_notify_change(struct dentry *dp, struct iattr *iattrp)
+#endif
 {
     struct vattr *vattr = NULL;
     cred_t *credp = crref();
@@ -1153,7 +1158,18 @@ out:
     return afs_convert_code(code);
 }
 
-#if defined(IOP_GETATTR_TAKES_PATH_STRUCT)
+#if defined(IOP_TAKES_USER_NAMESPACE)
+static int
+afs_linux_getattr(struct user_namespace *mnt_userns, const struct path *path, struct kstat *stat,
+		  u32 request_mask, unsigned int sync_mode)
+{
+	int err = afs_linux_revalidate(path->dentry);
+	if (!err) {
+		generic_fillattr(afs_ns, path->dentry->d_inode, stat);
+	}
+	return err;
+}
+#elif defined(IOP_GETATTR_TAKES_PATH_STRUCT)
 static int
 afs_linux_getattr(const struct path *path, struct kstat *stat, u32 request_mask, unsigned int sync_mode)
 {
@@ -1622,17 +1638,25 @@ struct dentry_operations afs_dentry_operations = {
  *
  * name is in kernel space at this point.
  */
+
+#if defined(IOP_TAKES_USER_NAMESPACE)
 static int
-#if defined(IOP_CREATE_TAKES_BOOL)
+afs_linux_create(struct user_namespace *mnt_userns, struct inode *dip,
+		 struct dentry *dp, umode_t mode, bool excl)
+#elif defined(IOP_CREATE_TAKES_BOOL)
+static int
 afs_linux_create(struct inode *dip, struct dentry *dp, umode_t mode,
 		 bool excl)
 #elif defined(IOP_CREATE_TAKES_UMODE_T)
+static int
 afs_linux_create(struct inode *dip, struct dentry *dp, umode_t mode,
 		 struct nameidata *nd)
 #elif defined(IOP_CREATE_TAKES_NAMEIDATA)
+static int
 afs_linux_create(struct inode *dip, struct dentry *dp, int mode,
 		 struct nameidata *nd)
 #else
+static int
 afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 #endif
 {
@@ -1907,8 +1931,14 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
 }
 
 
+#if defined(IOP_TAKES_USER_NAMESPACE)
+static int
+afs_linux_symlink(struct user_namespace *mnt_userns, struct inode *dip,
+		  struct dentry *dp, const char *target)
+#else
 static int
 afs_linux_symlink(struct inode *dip, struct dentry *dp, const char *target)
+#endif
 {
     int code;
     cred_t *credp = crref();
@@ -1936,10 +1966,15 @@ out:
     return afs_convert_code(code);
 }
 
+#if defined(IOP_TAKES_USER_NAMESPACE)
 static int
-#if defined(IOP_MKDIR_TAKES_UMODE_T)
+afs_linux_mkdir(struct user_namespace *mnt_userns, struct inode *dip,
+		struct dentry *dp, umode_t mode)
+#elif defined(IOP_MKDIR_TAKES_UMODE_T)
+static int
 afs_linux_mkdir(struct inode *dip, struct dentry *dp, umode_t mode)
 #else
+static int
 afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 #endif
 {
@@ -2011,13 +2046,22 @@ afs_linux_rmdir(struct inode *dip, struct dentry *dp)
 }
 
 
+#if defined(IOP_TAKES_USER_NAMESPACE)
+static int
+afs_linux_rename(struct user_namespace *mnt_userns,
+		 struct inode *oldip, struct dentry *olddp,
+		 struct inode *newip, struct dentry *newdp,
+		 unsigned int flags)
+#elif defined(HAVE_LINUX_INODE_OPERATIONS_RENAME_TAKES_FLAGS)
 static int
 afs_linux_rename(struct inode *oldip, struct dentry *olddp,
-		 struct inode *newip, struct dentry *newdp
-#ifdef HAVE_LINUX_INODE_OPERATIONS_RENAME_TAKES_FLAGS
-		 , unsigned int flags
+		 struct inode *newip, struct dentry *newdp,
+		 unsigned int flags)
+#else
+static int
+afs_linux_rename(struct inode *oldip, struct dentry *olddp,
+		 struct inode *newip, struct dentry *newdp)
 #endif
-		)
 {
     int code;
     cred_t *credp = crref();
@@ -2025,7 +2069,8 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
     const char *newname = newdp->d_name.name;
     struct dentry *rehash = NULL;
 
-#ifdef HAVE_LINUX_INODE_OPERATIONS_RENAME_TAKES_FLAGS
+#if defined(HAVE_LINUX_INODE_OPERATIONS_RENAME_TAKES_FLAGS) || \
+    defined(IOP_TAKES_USER_NAMESPACE)
     if (flags)
 	return -EINVAL;		/* no support for new flags yet */
 #endif
@@ -3050,12 +3095,18 @@ done:
 /* afs_linux_permission
  * Check access rights - returns error if can't check or permission denied.
  */
+
+#if defined(IOP_TAKES_USER_NAMESPACE)
 static int
-#if defined(IOP_PERMISSION_TAKES_FLAGS)
+afs_linux_permission(struct user_namespace *mnt_userns, struct inode *ip, int mode)
+#elif defined(IOP_PERMISSION_TAKES_FLAGS)
+static int
 afs_linux_permission(struct inode *ip, int mode, unsigned int flags)
 #elif defined(IOP_PERMISSION_TAKES_NAMEIDATA)
+static int
 afs_linux_permission(struct inode *ip, int mode, struct nameidata *nd)
 #else
+static int
 afs_linux_permission(struct inode *ip, int mode)
 #endif
 {
