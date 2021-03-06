@@ -31,7 +31,7 @@ libdir.a: buffer.o dir.o salvage.o AFS_component_version_number.o
 
 .PHONY: test
 test: ${TOP_LIBDIR}/libdir.a
-	cd test && $(MAKE)
+	cd test && $(MAKE) all
 
 buffer.o: buffer.c dir.h
 
