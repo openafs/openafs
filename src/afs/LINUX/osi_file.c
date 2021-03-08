@@ -236,11 +236,7 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     AFS_CURRENT_TIME(&newattrs.ia_ctime);
 
     /* avoid notify_change() since it wants to update dentry->d_parent */
-#ifdef HAVE_LINUX_SETATTR_PREPARE
-    code = setattr_prepare(file_dentry(afile->filp), &newattrs);
-#else
-    code = inode_change_ok(inode, &newattrs);
-#endif
+    code = afs_setattr_prepare(file_dentry(afile->filp), &newattrs);
     if (!code)
 	code = afs_inode_setattr(afile, &newattrs);
     if (!code)
