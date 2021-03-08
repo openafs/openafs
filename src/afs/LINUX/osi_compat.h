@@ -748,4 +748,14 @@ afs_d_path(struct dentry *dp, struct vfsmount *mnt, char *buf, int buflen)
 #endif
 }
 
+static inline int
+afs_setattr_prepare(struct dentry *dp, struct iattr *newattrs)
+{
+#if defined(HAVE_LINUX_SETATTR_PREPARE)
+    return setattr_prepare(dp, newattrs);
+#else
+    return inode_change_ok(dp->d_inode, newattrs);
+#endif
+}
+
 #endif /* AFS_LINUX_OSI_COMPAT_H */
