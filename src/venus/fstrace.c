@@ -69,6 +69,7 @@ struct logInfo {
 } *allInfo = 0;
 
 
+int dumpDebugFlag = 0;
 
 /* given a type and an address, get the size of the thing
  * in words.
@@ -250,6 +251,13 @@ DisplayRecord(FILE *outFilep, afs_int32 *alp, afs_int32 rsize)
     pftix = 0;
     /* init things */
 
+    if (dumpDebugFlag) {
+	fprintf(outFilep, "DEBUG:");
+	for (i = 0; i < rsize; i++) {
+	    fprintf(outFilep, " %08x", alp[i]);
+	}
+	fprintf(outFilep, "\n");
+    }
     for (i = 0; i < 4 * ICL_MAXEXPANSION; i++)
 	printfParms[i] = 0;
     /* decode each parameter, getting addrs for afs_hyper_t and strings */
@@ -1152,6 +1160,10 @@ DoDump(struct cmd_syndesc *as, void *arock)
 	waitTime = strtol(as->parms[3].items->data, NULL, 0);
     }
 
+    if (as->parms[4].items) {
+	dumpDebugFlag = 1;
+    }
+
     if (as->parms[2].items) {
 	/* try to open the specified output file */
 	if ((outfp = fopen(as->parms[2].items->data, "w")) == NULL) {
@@ -1212,6 +1224,8 @@ SetUpDump(void)
 		      "path to trace log file for writing");
     (void)cmd_AddParm(dumpSyntax, "-sleep", CMD_SINGLE, CMD_OPTIONAL,
 		      "interval (secs) for writes when using -follow");
+    (void)cmd_AddParm(dumpSyntax, "-debug", CMD_FLAG, CMD_OPTIONAL,
+		      "dump raw record as well");
 }
 
 

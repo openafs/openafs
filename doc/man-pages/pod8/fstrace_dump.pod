@@ -11,12 +11,14 @@ B<fstrace dump> S<<< [B<-set> <I<set name>>+] >>>
     S<<< [B<-follow> <I<log name>>] >>>
     S<<< [B<-file> <I<output filename>>] >>>
     S<<< [B<-sleep> <I<seconds between reads>>] >>>
+    S<<< [B<-debug>] >>>
     [B<-help>]
 
 B<fstrace d> S<<< [B<-se> <I<set name>>+] >>>
     S<<< [B<-fo> <I<log name>>] >>>
     S<<< [B<-fi> <I<output filename>>] >>>
     S<<< [B<-sl> <I<seconds between reads>>] >>>
+    S<<< [B<-d>] >>>
     [B<-h>]
 
 =for html
@@ -31,7 +33,8 @@ the B<-file> argument.
 To write the log continuously to the standard output stream or to a file,
 use the B<-follow> argument. By default, the log's contents are written
 out every ten seconds and then automatically cleared. To change the
-interval between writes, use the B<-sleep> argument.
+interval between writes, use the B<-sleep> argument.  To display the raw
+format of each trace log entry, use the B<-debug> argument.
 
 =head1 CAUTIONS
 
@@ -84,6 +87,11 @@ omitted, the trace log appears on the standard output stream.
 Sets the number of seconds between writes of the trace log's contents when
 it is dumped continuously. Provide the B<-follow> argument along with this
 one. If this argument is omitted, the default interval is ten seconds.
+
+=item B<-debug>
+
+Specifies that each record in the trace log should be displayed in its raw
+hex format as well as the normal decoded output.
 
 =item B<-help>
 
