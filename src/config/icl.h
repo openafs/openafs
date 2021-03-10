@@ -23,6 +23,12 @@
 typedef struct Lock afs_lock_t;
 #endif
 
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || (defined(AFS_DARWIN_ENV) && defined(__amd64__))
+#define ICL_LONG 2
+#else
+#define ICL_LONG 1
+#endif
+
 #define ICL_LOGSPERSET		8	/* max logs per set */
 #define ICL_DEFAULTEVENTS	1024	/* default events per event set */
 #define ICL_DEFAULT_LOGSIZE	60*1024	/* number of words in default log size */
