@@ -24,16 +24,11 @@
 #include <afs/vice.h>
 #include <afs/sys_prototypes.h>
 
-#if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 /* For SGI 6.2, this is changed to 1 if it's a 32 bit kernel. */
-int afs_icl_sizeofLong = 2;
-#else
-int afs_icl_sizeofLong = 1;
-#endif
+int afs_icl_sizeofLong = ICL_LONG;
 
-#if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if ICL_LONG == 2
 int afs_64bit_kernel = 1;	/* Default for 6.2+, and always for 6.1 */
-extern int afs_icl_sizeofLong;	/* Used in ICL_SIZEHACK() */
 #ifdef AFS_SGI62_ENV
 
 /* If _SC_KERN_POINTERS not in sysconf, then we can assume a 32 bit abi. */
@@ -54,7 +49,7 @@ set_kernel_sizeof_long(void)
 }
 
 #endif /* AFS_SGI62_ENV */
-#endif /* AFS_SGI61_ENV */
+#endif /* ICL_LONG == 2 */
 
 int afs_syscall(long call, long parm0, long parm1, long parm2, long parm3,
 		long parm4, long parm5, long parm6);
@@ -90,7 +85,7 @@ icl_GetSize(afs_int32 type, char *addr)
  * by typesp.  Also watch for prematurely running out of parameters
  * before the string is gone.
  */
-#if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if ICL_LONG == 2
 static int
 CheckTypes(char *bufferp, int *typesp, int typeCount, char *outMsgBuffer)
 {
@@ -165,7 +160,7 @@ CheckTypes(char *bufferp, int *typesp, int typeCount, char *outMsgBuffer)
     }
     /* not reached */
 }
-#else /* AFS_SGI61_ENV */
+#else /* ICL_LONG == 2 */
 static int
 CheckTypes(char *bufferp, int *typesp, int typeCount)
 {
@@ -210,7 +205,7 @@ CheckTypes(char *bufferp, int *typesp, int typeCount)
     }
     /* not reached */
 }
-#endif /* AFS_SGI61_ENV */
+#endif /* ICL_LONG == 2 */
 
 /* display a single record.
  * alp points at the first word in the array to be interpreted
@@ -223,14 +218,14 @@ static void
 DisplayRecord(FILE *outFilep, afs_int32 *alp, afs_int32 rsize)
 {
     char msgBuffer[1024];
-#if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if ICL_LONG == 2
     char outMsgBuffer[1024];
     uint64_t tempParam;
     uint64_t printfParms[ICL_MAXEXPANSION * /* max parms */ 4];
     char *printfStrings[ICL_MAXEXPANSION * /* max parms */ 4];
-#else /* AFS_SGI61_ENV */
+#else
     long printfParms[ICL_MAXEXPANSION * /* max parms */ 4];
-#endif /* AFS_SGI61_ENV */
+#endif
     int printfTypes[ICL_MAXEXPANSION * 4];
     int i;
     afs_int32 done = 0;
@@ -270,14 +265,14 @@ DisplayRecord(FILE *outFilep, afs_int32 *alp, afs_int32 rsize)
 	case ICL_TYPE_LONG:
 	case ICL_TYPE_POINTER:
 	    printfTypes[pftix++] = 0;
-#if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if ICL_LONG == 2
 	    printfParms[pfpix] = alp[pix];
 	    printfParms[pfpix] &= 0xffffffff;
 	    if (afs_64bit_kernel) {
 		printfParms[pfpix] <<= 32;
 		printfParms[pfpix] |= alp[pix + 1];
 	    }
-#else /* !AFS_SGI61_ENV */
+#else
 	    printfParms[pfpix] = alp[pix];
 #endif
 	    pfpix++;
@@ -305,15 +300,11 @@ DisplayRecord(FILE *outFilep, afs_int32 *alp, afs_int32 rsize)
 	    break;
 	case ICL_TYPE_STRING:
 	    printfTypes[pftix++] = 1;
-#ifdef AFS_SGI64_ENV
+#if ICL_LONG == 2
 	    printfStrings[pfpix++] = (char *)&alp[pix];
-#else /* AFS_SGI64_ENV */
-#if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
-	    printfStrings[pfpix++] = (char *)&alp[pix];
-#else /* AFS_SGI61_ENV */
+#else
 	    printfParms[pfpix++] = (long)&alp[pix];
-#endif /* AFS_SGI61_ENV */
-#endif /* AFS_SGI64_ENV */
+#endif
 	    break;
 	case ICL_TYPE_UNIXDATE:
 	    tmv = alp[pix];
@@ -338,7 +329,7 @@ DisplayRecord(FILE *outFilep, afs_int32 *alp, afs_int32 rsize)
      */
     printed = 0;
     if (status == 0) {
-#if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if ICL_LONG == 2
 	if (CheckTypes(msgBuffer, printfTypes, pftix, outMsgBuffer)) {
 	    /* we have a string to use, but it ends "(dfs / zcm)",
 	     * so we remove the extra gunk.
@@ -386,7 +377,7 @@ DisplayRecord(FILE *outFilep, afs_int32 *alp, afs_int32 rsize)
 	    fprintf(outFilep, "\n");
 	    printed = 1;
 	}
-#else /* AFS_SGI61_ENV */
+#else /* ICL_LONG == 2 */
 	if (CheckTypes(msgBuffer, printfTypes, pftix)) {
 	    /* we have a string to use, but it ends "(dfs / zcm)",
 	     * so we remove the extra gunk.
@@ -405,7 +396,7 @@ DisplayRecord(FILE *outFilep, afs_int32 *alp, afs_int32 rsize)
 	    fprintf(outFilep, "\n");
 	    printed = 1;
 	}
-#endif /* AFS_SGI61_ENV */
+#endif /* ICL_LONG == 2 */
 	else {
 	    fprintf(outFilep, "Type mismatch, using raw print.\n");
 	    fprintf(outFilep, "%s", msgBuffer);
@@ -432,24 +423,24 @@ DisplayRecord(FILE *outFilep, afs_int32 *alp, afs_int32 rsize)
 		    fprintf(outFilep, "p%d:%d ", i, alp[pix]);
 		    break;
 		case ICL_TYPE_LONG:
-#ifdef AFS_SGI61_ENV
+#if ICL_LONG == 2
 		    tempParam = alp[pix];
 		    tempParam <<= 32;
 		    tempParam |= alp[pix + 1];
 		    fprintf(outFilep, "p%d:%" AFS_INT64_FMT " ", i, tempParam);
-#else /* AFS_SGI61_ENV */
+#else
 		    fprintf(outFilep, "p%d:%d ", i, alp[pix]);
-#endif /* AFS_SGI61_ENV */
+#endif
 		    break;
 		case ICL_TYPE_POINTER:
-#ifdef AFS_SGI61_ENV
+#if ICL_LONG == 2
 		    tempParam = alp[pix];
 		    tempParam <<= 32;
 		    tempParam |= alp[pix + 1];
 		    fprintf(outFilep, "p%d:0x%llx ", i, tempParam);
-#else /* AFS_SGI61_ENV */
+#else
 		    fprintf(outFilep, "p%d:0x%x ", i, alp[pix]);
-#endif /* AFS_SGI61_ENV */
+#endif
 		    break;
 		case ICL_TYPE_HYPER:
 		case ICL_TYPE_INT64:
