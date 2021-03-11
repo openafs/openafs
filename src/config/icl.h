@@ -66,13 +66,9 @@ struct afs_icl_set {
 #define ICL_DEFAULT_SET_STATES	0	/* was ICL_SETF_ACTIVE */
 #endif /* ICL_DEFAULT_SET_STATES */
 
-/* bytes required by eventFlags array, for x events */
-#define ICL_EVENTBYTES(x)	((((x) - 1) | 7) + 1)
-
 /* functions for finding a particular event */
 #define ICL_EVENTBYTE(x)	(((x) & 0x3ff) >> 3)
 #define ICL_EVENTMASK(x)	(1 << ((x) & 0x7))
-#define ICL_EVENTOK(setp, x)	((x&0x3ff) >= 0 && (x&0x3ff) < (setp)->nevents)
 
 /* define ICL syscalls by name!! */
 #define ICL_OP_COPYOUT		1
@@ -96,9 +92,6 @@ struct afs_icl_set {
 #define ICL_OP_SS_DEACTIVATE	2
 #define ICL_OP_SS_FREE		3
 
-/* define set status flags */
-#define	ICL_FLAG_ACTIVE		1
-#define	ICL_FLAG_FREED		2
 
 /* The format of the circular log is:
  * 1'st word:
@@ -240,27 +233,6 @@ extern struct afs_icl_set *afs_iclLongTermSetp;
 #define ICL_RPC_MAX_SETS (64)
 #define ICL_RPC_MAX_LOGS (64)
 
-typedef struct afs_icl_setinfo {
-    u_char setName[32];
-    afs_uint32 states;
-} afs_icl_setinfo_t;
-
-typedef struct afs_icl_loginfo {
-    u_char logName[32];
-    afs_uint32 logSize;
-    afs_uint32 logElements;
-    afs_uint32 states;
-} afs_icl_loginfo_t;
-
-typedef struct afs_icl_bulkSetinfo {
-    afs_uint32 count;
-    afs_icl_setinfo_t setinfo[1];
-} afs_icl_bulkSetinfo_t;
-
-typedef struct afs_icl_bulkLoginfo {
-    afs_uint32 count;
-    afs_icl_loginfo_t loginfo[1];
-} afs_icl_bulkLoginfo_t;
 
 #endif
 
