@@ -545,18 +545,6 @@ afs_icl_AppendString(struct afs_icl_log *logp, char *astr)
 #define ICL_APPENDLONG(lp, x) ICL_APPENDINT32((lp), (x))
 #endif
 
-/* routine to tell whether we're dealing with the address or the
- * object itself
- */
-int
-afs_icl_UseAddr(int type)
-{
-    if (type == ICL_TYPE_HYPER || type == ICL_TYPE_STRING
-	|| type == ICL_TYPE_FID || type == ICL_TYPE_INT64)
-	return 1;
-    else
-	return 0;
-}
 
 void
 afs_icl_AppendOne(struct afs_icl_log *logp, int type, long parm)
@@ -889,19 +877,6 @@ afs_icl_CopyOut(struct afs_icl_log *logp, afs_int32 * bufferp,
     return code;
 }
 
-/* return basic parameter information about a log */
-int
-afs_icl_GetLogParms(struct afs_icl_log *logp, afs_int32 * maxSizep,
-		    afs_int32 * curSizep)
-{
-    ObtainReadLock(&logp->lock);
-    *maxSizep = logp->logSize;
-    *curSizep = logp->logElements;
-    ReleaseReadLock(&logp->lock);
-    return 0;
-}
-
-
 /* hold and release logs */
 int
 afs_icl_LogHold(struct afs_icl_log *logp)
@@ -909,14 +884,6 @@ afs_icl_LogHold(struct afs_icl_log *logp)
     ObtainWriteLock(&afs_icl_lock, 187);
     logp->refCount++;
     ReleaseWriteLock(&afs_icl_lock);
-    return 0;
-}
-
-/* hold and release logs, called with lock already held */
-int
-afs_icl_LogHoldNL(struct afs_icl_log *logp)
-{
-    logp->refCount++;
     return 0;
 }
 
@@ -1075,32 +1042,6 @@ afs_icl_FindLog(char *name)
     return tp;
 }
 
-int
-afs_icl_EnumerateLogs(int (*aproc)
-		        (char *name, char *arock, struct afs_icl_log * tp),
-		      char *arock)
-{
-    struct afs_icl_log *tp;
-    afs_int32 code;
-
-    code = 0;
-    ObtainWriteLock(&afs_icl_lock, 195);
-    for (tp = afs_icl_allLogs; tp; tp = tp->nextp) {
-	tp->refCount++;		/* hold this guy */
-	ReleaseWriteLock(&afs_icl_lock);
-	ObtainReadLock(&tp->lock);
-	code = (*aproc) (tp->name, arock, tp);
-	ReleaseReadLock(&tp->lock);
-	ObtainWriteLock(&afs_icl_lock, 196);
-	if (--tp->refCount == 0)
-	    afs_icl_ZapLog(tp);
-	if (code)
-	    break;
-    }
-    ReleaseWriteLock(&afs_icl_lock);
-    return code;
-}
-
 struct afs_icl_set *afs_icl_allSets = 0;
 
 int
@@ -1198,46 +1139,6 @@ afs_icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp,
     ReleaseWriteLock(&setp->lock);
 
     *outSetpp = setp;
-    return 0;
-}
-
-/* function to change event enabling information for a particular set */
-int
-afs_icl_SetEnable(struct afs_icl_set *setp, afs_int32 eventID, int setValue)
-{
-    char *tp;
-
-    ObtainWriteLock(&setp->lock, 200);
-    if (!ICL_EVENTOK(setp, eventID)) {
-	ReleaseWriteLock(&setp->lock);
-	return -1;
-    }
-    tp = &setp->eventFlags[ICL_EVENTBYTE(eventID)];
-    if (setValue)
-	*tp |= ICL_EVENTMASK(eventID);
-    else
-	*tp &= ~(ICL_EVENTMASK(eventID));
-    ReleaseWriteLock(&setp->lock);
-    return 0;
-}
-
-/* return indication of whether a particular event ID is enabled
- * for tracing.  If *getValuep is set to 0, the event is disabled,
- * otherwise it is enabled.  All events start out enabled by default.
- */
-int
-afs_icl_GetEnable(struct afs_icl_set *setp, afs_int32 eventID, int *getValuep)
-{
-    ObtainReadLock(&setp->lock);
-    if (!ICL_EVENTOK(setp, eventID)) {
-	ReleaseWriteLock(&setp->lock);
-	return -1;
-    }
-    if (setp->eventFlags[ICL_EVENTBYTE(eventID)] & ICL_EVENTMASK(eventID))
-	*getValuep = 1;
-    else
-	*getValuep = 0;
-    ReleaseReadLock(&setp->lock);
     return 0;
 }
 
@@ -1340,54 +1241,6 @@ afs_icl_ZeroSet(struct afs_icl_set *setp)
 	}
     }
     ReleaseReadLock(&setp->lock);
-    return code;
-}
-
-int
-afs_icl_EnumerateSets(int (*aproc)
-		        (char *name, char *arock, struct afs_icl_log * tp),
-		      char *arock)
-{
-    struct afs_icl_set *tp, *np;
-    afs_int32 code;
-
-    code = 0;
-    ObtainWriteLock(&afs_icl_lock, 205);
-    for (tp = afs_icl_allSets; tp; tp = np) {
-	tp->refCount++;		/* hold this guy */
-	ReleaseWriteLock(&afs_icl_lock);
-	code = (*aproc) (tp->name, arock, (struct afs_icl_log *)tp);
-	ObtainWriteLock(&afs_icl_lock, 206);
-	np = tp->nextp;		/* tp may disappear next, but not np */
-	if (--tp->refCount == 0 && (tp->states & ICL_SETF_DELETED))
-	    afs_icl_ZapSet(tp);
-	if (code)
-	    break;
-    }
-    ReleaseWriteLock(&afs_icl_lock);
-    return code;
-}
-
-int
-afs_icl_AddLogToSet(struct afs_icl_set *setp, struct afs_icl_log *newlogp)
-{
-    int i;
-    int code = -1;
-
-    ObtainWriteLock(&setp->lock, 207);
-    for (i = 0; i < ICL_LOGSPERSET; i++) {
-	if (!setp->logs[i]) {
-	    setp->logs[i] = newlogp;
-	    code = i;
-	    afs_icl_LogHold(newlogp);
-	    if (!(setp->states & ICL_SETF_FREED)) {
-		/* bump up the number of sets using the log */
-		afs_icl_LogUse(newlogp);
-	    }
-	    break;
-	}
-    }
-    ReleaseWriteLock(&setp->lock);
     return code;
 }
 

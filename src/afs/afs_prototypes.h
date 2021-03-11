@@ -359,10 +359,7 @@ extern int afs_icl_CreateLogWithFlags(char *name, afs_int32 logSize,
 extern int afs_icl_CopyOut(struct afs_icl_log *logp,
 			   afs_int32 * bufferp, afs_int32 * bufSizep,
 			   afs_uint32 * cookiep, afs_int32 * flagsp);
-extern int afs_icl_GetLogParms(struct afs_icl_log *logp, afs_int32 * maxSizep,
-			       afs_int32 * curSizep);
 extern int afs_icl_LogHold(struct afs_icl_log *logp);
-extern int afs_icl_LogHoldNL(struct afs_icl_log *logp);
 extern int afs_icl_LogUse(struct afs_icl_log *logp);
 extern int afs_icl_LogFreeUse(struct afs_icl_log *logp);
 extern int afs_icl_LogSetSize(struct afs_icl_log *logp,
@@ -373,11 +370,6 @@ extern int afs_icl_LogReleNL(struct afs_icl_log *logp);
 extern int afs_icl_ZeroLog(struct afs_icl_log *logp);
 extern int afs_icl_LogFree(struct afs_icl_log *logp);
 extern struct afs_icl_log *afs_icl_FindLog(char *name);
-extern int
-  afs_icl_EnumerateLogs(int (*aproc)
-
-			  (char *name, char *arock, struct afs_icl_log * tp),
-			char *arock);
 extern int afs_icl_CreateSet(char *name, struct afs_icl_log *baseLogp,
 			     struct afs_icl_log *fatalLogp,
 			     struct afs_icl_set **outSetpp);
@@ -386,18 +378,7 @@ extern int afs_icl_CreateSetWithFlags(char *name,
 				      struct afs_icl_log *fatalLogp,
 				      afs_uint32 flags,
 				      struct afs_icl_set **outSetpp);
-extern int afs_icl_SetEnable(struct afs_icl_set *setp, afs_int32 eventID,
-			     int setValue);
-extern int afs_icl_GetEnable(struct afs_icl_set *setp, afs_int32 eventID,
-			     int *getValuep);
 extern int afs_icl_ZeroSet(struct afs_icl_set *setp);
-extern int
-  afs_icl_EnumerateSets(int (*aproc)
-
-			  (char *name, char *arock, struct afs_icl_log * tp),
-			char *arock);
-extern int afs_icl_AddLogToSet(struct afs_icl_set *setp,
-			       struct afs_icl_log *newlogp);
 extern int afs_icl_SetSetStat(struct afs_icl_set *setp, int op);
 extern int afs_icl_SetHold(struct afs_icl_set *setp);
 extern int afs_icl_ZapSet(struct afs_icl_set *setp);
