@@ -352,7 +352,7 @@ ReadBozoFile(char *aname)
     FILE *tfile;
     char tbuffer[BOZO_BSSIZE];
     char *tp;
-    char *instp, *typep, *notifier, *notp;
+    char *instp = NULL, *typep = NULL, *notifier = NULL, *notp = NULL;
     afs_int32 code;
     afs_int32 ktmask, ktday, kthour, ktmin, ktsec;
     afs_int32 i, goal;
@@ -398,8 +398,20 @@ ReadBozoFile(char *aname)
     if (!tfile)
 	return 0;		/* -1 */
     instp = malloc(BOZO_BSSIZE);
+    if (!instp) {
+	code = ENOMEM;
+	goto fail;
+    }
     typep = malloc(BOZO_BSSIZE);
+    if (!typep) {
+	code = ENOMEM;
+	goto fail;
+    }
     notp = malloc(BOZO_BSSIZE);
+    if (!notp) {
+	code = ENOMEM;
+	goto fail;
+    }
     while (1) {
 	/* ok, read lines giving parms and such from the file */
 	tp = fgets(tbuffer, sizeof(tbuffer), tfile);
@@ -486,8 +498,13 @@ ReadBozoFile(char *aname)
 		code = -1;
 		goto fail;	/* no "parm " either */
 	    }
-	    if (!parms[i])	/* make sure there's space */
+	    if (!parms[i]) {	/* make sure there's space */
 		parms[i] = malloc(BOZO_BSSIZE);
+		if (parms[i] == NULL) {
+		    code = ENOMEM;
+		    goto fail;
+		}
+	    }
 	    strcpy(parms[i], tbuffer + 5);	/* remember the parameter for later */
 	    thisparms[i] = parms[i];
 	}
@@ -517,6 +534,8 @@ ReadBozoFile(char *aname)
 	free(instp);
     if (typep)
 	free(typep);
+    if (notp)
+	free(notp);
     for (i = 0; i < MAXPARMS; i++)
 	if (parms[i])
 	    free(parms[i]);
