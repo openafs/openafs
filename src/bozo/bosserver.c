@@ -1058,7 +1058,7 @@ main(int argc, char **argv, char **envp)
     cmd_OptionAsFlag(opts, OPT_nofork, &nofork);
 
     if (cmd_OptionAsString(opts, OPT_cores, &DoCore) == 0) {
-	if (strcmp(DoCore, "none")) {
+	if (strcmp(DoCore, "none") == 0) {
 	    free(DoCore);
 	    DoCore = NULL;
 	}
