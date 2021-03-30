@@ -1312,18 +1312,36 @@
 }
 
 // -------------------------------------------------------------------------------
-//  checkAfsStatus:[NSArray arrayWithObjects:@"checkserver", nil];
+//  checkAfsStatus
+//   This is called at least once per 60s, so avoid logging normal case that afs _is_ mounted.
 // -------------------------------------------------------------------------------
 -(BOOL) checkAfsStatus
 {
 	BOOL result = NO;
-	NSString *dfResult = [TaskUtil executeTaskSearchingPath:@"/bin/df" args:[NSArray arrayWithObjects:nil]];
-	result = (dfResult?([dfResult rangeOfString:@AFS_FS_MOUNT].location != NSNotFound):NO);
-	return result;	
+	NSArray *keys = [NSArray arrayWithObjects:NSURLVolumeLocalizedFormatDescriptionKey, nil];
+	NSArray *urls = [[NSFileManager defaultManager] mountedVolumeURLsIncludingResourceValuesForKeys:keys options:0];
+
+	for (NSURL *url in urls) {
+	    NSError *error;
+	    NSString *volumeFormat;
+
+	    // volumeFormat will have value "Unknown (afs)" for a mounted AFS filesystem,
+	    // regardless of the mount directory specified by cacheinfo or the -mountdir option.
+	    [url getResourceValue:&volumeFormat forKey:NSURLVolumeLocalizedFormatDescriptionKey error:&error];
+
+	    if ([volumeFormat containsString:@"(afs)"]) {
+		result = YES;
+		break;
+	    }
+	}
+	if (result == NO) {
+	    NSLog(@"checkAfsStatus: (afs) is not mounted.");
+	}
+	return result;
 }
 
 // -------------------------------------------------------------------------------
-//  checkAfsStatus:[NSArray arrayWithObjects:@"checkserver", nil];
+//  checkAfsStatusForStartup
 // -------------------------------------------------------------------------------
 -(BOOL) checkAfsStatusForStartup {
 	BOOL result = NO;
