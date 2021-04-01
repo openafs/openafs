@@ -67,7 +67,7 @@
 										   encoding: NSUTF8StringEncoding];
 		}
 	} else {
-		NSLog(@"Task failed.");
+	    NSLog(@"Task failed: %@ %@ status:%d.", taskName, [args componentsJoinedByString:@" "], status);
 	}
 	return [result autorelease];
 }
