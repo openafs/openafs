@@ -23,8 +23,13 @@ main(int argc, char **argv)
     char *keyfile = NULL;
     int in, out;
     size_t len;
+    struct afstest_configinfo bct;
 
-    dirname = afstest_BuildTestConfig();
+    memset(&bct, 0, sizeof(bct));
+
+    bct.skipkeys = 1;
+
+    dirname = afstest_BuildTestConfig(&bct);
     if (dirname == NULL) {
 	fprintf(stderr, "Unable to create tmp config dir\n");
 	exit(1);

@@ -96,16 +96,9 @@ main(int argc, char **argv)
 
     code = rx_Init(0);
 
-    dirname = afstest_BuildTestConfig();
+    dirname = afstest_BuildTestConfig(NULL);
 
     dir = afsconf_Open(dirname);
-
-    code = afstest_AddDESKeyFile(dir);
-    if (code) {
-	afs_com_err(argv0, code, "while adding test DES keyfile");
-	ret = 1;
-	goto out;
-    }
 
     code = afstest_StartVLServer(dirname, &serverPid);
     if (code) {

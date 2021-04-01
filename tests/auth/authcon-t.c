@@ -52,13 +52,17 @@ main(int argc, char **argv)
     struct afsconf_typedKey *key;
     int code = 0;
     struct afsconf_bsso_info bsso;
+    struct afstest_configinfo bct;
 
     memset(&bsso, 0, sizeof(bsso));
+    memset(&bct, 0, sizeof(bct));
 
     afstest_SkipTestsIfBadHostname();
 
     plan(8);
-    dirname = afstest_BuildTestConfig();
+
+    bct.skipkeys = 1;
+    dirname = afstest_BuildTestConfig(&bct);
 
     dir = afsconf_Open(dirname);
     if (dir == NULL) {

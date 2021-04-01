@@ -251,7 +251,7 @@ test_edges(void)
     char *dirname;
 
     /* run edge case tests */
-    dirname = afstest_BuildTestConfig();
+    dirname = afstest_BuildTestConfig(NULL);
     dir = afsconf_Open(dirname);
     if (dir == NULL) {
 	fprintf(stderr, "Unable to configure directory.\n");
@@ -268,7 +268,7 @@ test_no_config_files(void)
     char *dirname;
 
     /* run tests without config files */
-    dirname = afstest_BuildTestConfig();
+    dirname = afstest_BuildTestConfig(NULL);
     dir = afsconf_Open(dirname);
     if (dir == NULL) {
 	fprintf(stderr, "Unable to configure directory.\n");
@@ -285,7 +285,7 @@ test_with_config_files(void)
     char *dirname;
 
     /* run tests with config files */
-    dirname = afstest_BuildTestConfig();
+    dirname = afstest_BuildTestConfig(NULL);
     write_krb_conf(dirname, "MY.REALM.ORG MY.OTHER.REALM.ORG");
     write_krb_excl(dirname);
     dir = afsconf_Open(dirname);
@@ -309,7 +309,7 @@ test_set_local_realms(void)
     ok(afsconf_SetLocalRealm("MY.OTHER.REALM.ORG") == 0, "set local realm MY.OTHER.REALM.ORG");
 
     /* run tests without config files */
-    dirname = afstest_BuildTestConfig();
+    dirname = afstest_BuildTestConfig(NULL);
     dir = afsconf_Open(dirname);
     if (dir == NULL) {
 	fprintf(stderr, "Unable to configure directory.\n");
@@ -328,7 +328,7 @@ test_update_config_files(void)
     char *dirname;
     afs_int32 local = -1;
 
-    dirname = afstest_BuildTestConfig();
+    dirname = afstest_BuildTestConfig(NULL);
     write_krb_conf(dirname, "SOME.REALM.ORG");
     dir = afsconf_Open(dirname);
     if (dir == NULL) {

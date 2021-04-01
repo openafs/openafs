@@ -399,7 +399,6 @@ int main(int argc, char **argv)
     struct afsconf_dir *dir;
     char *dirname;
     int serverPid, clientPid, waited, stat;
-    int code;
     int ret = 0;
     sigset_t set;
     char *argv0 = afstest_GetProgname(argv);
@@ -430,18 +429,11 @@ int main(int argc, char **argv)
     sigaddset(&set, SIGUSR1);
     opr_Verify(sigprocmask(SIG_BLOCK, &set, NULL) == 0);
 
-    dirname = afstest_BuildTestConfig();
+    dirname = afstest_BuildTestConfig(NULL);
 
     dir = afsconf_Open(dirname);
     if (dir == NULL) {
 	fprintf(stderr, "Unable to configure directory.\n");
-	ret = 1;
-	goto out;
-    }
-
-    code = afstest_AddDESKeyFile(dir);
-    if (code) {
-	afs_com_err(argv0, code, "while adding new key\n");
 	ret = 1;
 	goto out;
     }

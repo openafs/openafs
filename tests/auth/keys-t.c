@@ -109,6 +109,7 @@ int main(int argc, char **argv)
     struct rx_opaque *keyMaterial;
     struct afsconf_typedKey *typedKey;
     struct afsconf_typedKeyList *typedKeyList;
+    struct afstest_configinfo bct;
     char *dirname;
     char *keyfile;
     char *keyfilesrc;
@@ -116,13 +117,16 @@ int main(int argc, char **argv)
     int code;
     int i;
 
+    memset(&bct, 0, sizeof(bct));
+
     afstest_SkipTestsIfBadHostname();
 
     plan(134);
 
     /* Create a temporary afs configuration directory */
 
-    dirname = afstest_BuildTestConfig();
+    bct.skipkeys = 1;
+    dirname = afstest_BuildTestConfig(&bct);
 
     keyfile = afstest_asprintf("%s/KeyFile", dirname);
 
@@ -566,7 +570,7 @@ int main(int argc, char **argv)
     free(keyfile);
 
     /* Start a new test configuration */
-    dirname = afstest_BuildTestConfig();
+    dirname = afstest_BuildTestConfig(&bct);
     dir = afsconf_Open(dirname);
     ok(dir != NULL, "Sucessfully opened brand new config directory");
     if (dir == NULL)

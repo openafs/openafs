@@ -51,25 +51,35 @@ openConfigFile(char *dirname, char *filename) {
 
 /*!
  * Build a test configuration directory, containing a CellServDB and ThisCell
- * file for the "example.org" cell
+ * file for the "example.org" cell. Also populates the KeyFile unless
+ * info->skipkeys is set.
  *
+ * @param[in] info  Various details for how to create the config dir. If NULL,
+ *		    use a default zeroed struct.
  * @return
  * The path to the configuration directory. This should be freed by the caller
  * using free()
- *
  */
-
 char *
-afstest_BuildTestConfig(void) {
+afstest_BuildTestConfig(struct afstest_configinfo *info)
+{
     char *dir = NULL;
     FILE *file;
+    struct afsconf_dir *confdir = NULL;
+    struct afstest_configinfo info_defaults;
     struct in_addr iaddr;
+    int code;
 
+    memset(&info_defaults, 0, sizeof(info_defaults));
     memset(&iaddr, 0, sizeof(iaddr));
+
+    if (info == NULL) {
+	info = &info_defaults;
+    }
 
     dir = afstest_mkdtemp();
     if (dir == NULL) {
-	goto fail;
+	goto error;
     }
 
     /* Work out which IP address to use in our CellServDB. We figure this out
@@ -87,11 +97,31 @@ afstest_BuildTestConfig(void) {
     fprintf(file, "example.org");
     fclose(file);
 
+    if (!info->skipkeys) {
+	confdir = afsconf_Open(dir);
+	if (confdir == NULL) {
+	    goto error;
+	}
+
+	code = afstest_AddDESKeyFile(confdir);
+	if (code != 0) {
+	    goto error;
+	}
+
+	afsconf_Close(confdir);
+	confdir = NULL;
+    }
+
     return dir;
 
-fail:
-    if (dir)
+ error:
+    if (confdir != NULL) {
+	afsconf_Close(confdir);
+    }
+    if (dir != NULL) {
+	afstest_rmdtemp(dir);
 	free(dir);
+    }
     return NULL;
 }
 
