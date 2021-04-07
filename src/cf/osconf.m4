@@ -32,18 +32,6 @@ AC_CHECK_TOOL(LD, ld, [false])
 AC_CHECK_PROGS(CP, cp, [false])
 AC_CHECK_PROGS(GENCAT, gencat, [false])
 
-dnl if ar is not present, libtool.m4 (provided by libtool) sets AR to false
-dnl if strip is not present, libtool.m4 (provided by libtool) sets STRIP to :
-AS_IF([test "x$AR" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'ar'])])
-AS_IF([test "x$AS" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'as'])])
-AS_IF([test "x$MV" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'mv'])])
-AS_IF([test "x$RM" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'rm'])])
-AS_IF([test "x$LD" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'ld'])])
-AS_IF([test "x$CP" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'cp'])])
-AS_IF([test "x$GENCAT" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'gencat'])])
-
-dnl TODO - need to disable STRIP if we are doing debugging in any user space code
-
 case $AFS_SYSNAME in
 	alpha_linux_22 | alpha_linux_24 | alpha_linux_26)
 		CCOBJ="\$(CC) -fPIC"
@@ -543,6 +531,20 @@ case $AFS_SYSNAME in
 esac
 
 MT_CFLAGS="${MT_CFLAGS} -DAFS_PTHREAD_ENV"
+
+AFS_LT_INIT
+
+dnl if ar is not present, libtool.m4 (provided by libtool) sets AR to false
+dnl if strip is not present, libtool.m4 (provided by libtool) sets STRIP to :
+AS_IF([test "x$AR" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'ar'])])
+AS_IF([test "x$AS" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'as'])])
+AS_IF([test "x$MV" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'mv'])])
+AS_IF([test "x$RM" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'rm'])])
+AS_IF([test "x$LD" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'ld'])])
+AS_IF([test "x$CP" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'cp'])])
+AS_IF([test "x$GENCAT" = "xfalse"], [AC_MSG_ERROR([cannot find required command 'gencat'])])
+
+dnl TODO - need to disable STRIP if we are doing debugging in any user space code
 
 #
 # Defaults for --enable-optimize-kernel

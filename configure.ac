@@ -14,8 +14,6 @@ AS_IF([test -z "$CFLAGS"], [CFLAGS=" "])
 
 AC_USE_SYSTEM_EXTENSIONS
 
-AFS_LT_INIT
-
 AC_PROG_CC
 
 AC_PATH_PROGS([PATH_CPP], [cpp], [${CC-cc} -E], [$PATH:/lib:/usr/ccs/lib])
