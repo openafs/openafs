@@ -124,6 +124,7 @@
 				GCC_PREFIX_HEADER = AklogAuthPlugin_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				PRODUCT_NAME = aklog;
 				WRAPPER_EXTENSION = bundle;
 			};
@@ -143,6 +144,7 @@
 				GCC_PREFIX_HEADER = AklogAuthPlugin_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				PRODUCT_NAME = aklog;
 				WRAPPER_EXTENSION = bundle;
 			};
@@ -159,6 +161,7 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				ONLY_ACTIVE_ARCH = NO;
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
@@ -175,6 +178,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				ONLY_ACTIVE_ARCH = NO;
 				PREBINDING = NO;
 				SDKROOT = macosx10.6;
