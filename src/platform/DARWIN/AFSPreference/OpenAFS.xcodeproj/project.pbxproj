@@ -847,6 +847,7 @@
 				GCC_PREFIX_HEADER = AFSCommander_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/PreferencePanes";
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				PRODUCT_NAME = OpenAFS;
 				WRAPPER_EXTENSION = prefPane;
 				ZERO_LINK = YES;
@@ -865,6 +866,7 @@
 				GCC_PREFIX_HEADER = AFSCommander_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "";
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				PRODUCT_NAME = OpenAFS;
 				WRAPPER_EXTENSION = prefPane;
 			};
@@ -884,6 +886,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INSTALL_PATH = "";
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				ONLY_ACTIVE_ARCH = NO;
 				PREBINDING = NO;
 				SKIP_INSTALL = NO;
@@ -904,6 +907,7 @@
 				GCC_ENABLE_OBJC_GC = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				ONLY_ACTIVE_ARCH = NO;
 				PREBINDING = NO;
 				VALID_ARCHS = "i386 ppc x86_64 armv6 arm64";
@@ -923,6 +927,7 @@
 				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
 				INFOPLIST_FILE = AFSBackgrounder/resource/Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				OTHER_LDFLAGS = (
 					"-framework",
 					Foundation,
@@ -946,6 +951,7 @@
 				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
 				INFOPLIST_FILE = AFSBackgrounder/resource/Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				OTHER_LDFLAGS = (
 					"-framework",
 					Foundation,
@@ -970,6 +976,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
 				INSTALL_PATH = "$(HOME)/bin";
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				OTHER_LDFLAGS = (
 					"-framework",
 					Foundation,
@@ -992,6 +999,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
 				INSTALL_PATH = "$(HOME)/bin";
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				OTHER_LDFLAGS = (
 					"-framework",
 					Foundation,
@@ -1016,6 +1024,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
 				INSTALL_PATH = "$(HOME)/bin";
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				OTHER_LDFLAGS = (
 					"-framework",
 					Foundation,
@@ -1038,6 +1047,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
 				INSTALL_PATH = "$(HOME)/bin";
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				OTHER_LDFLAGS = (
 					"-framework",
 					Foundation,

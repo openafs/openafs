@@ -224,6 +224,7 @@
 				GCC_PREFIX_HEADER = afscell_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				PRODUCT_NAME = afscell;
 				WRAPPER_EXTENSION = bundle;
 				ZERO_LINK = YES;
@@ -241,6 +242,7 @@
 				GCC_PREFIX_HEADER = afscell_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Bundles";
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				PRODUCT_NAME = afscell;
 				WRAPPER_EXTENSION = bundle;
 			};
@@ -251,6 +253,7 @@
 			buildSettings = {
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				PREBINDING = NO;
 			};
 			name = Debug;
@@ -261,6 +264,7 @@
 				GCC_ENABLE_OBJC_GC = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				PREBINDING = NO;
 			};
 			name = Release;
