@@ -38,10 +38,15 @@ void rx_kmutex_setup(void) {
     
     openafs_lck_grp = lck_grp_alloc_init("openafs",  openafs_lck_grp_attr);
     lck_grp_attr_free(openafs_lck_grp_attr);
-    
+#ifdef AFS_SOCKPROXY_ENV
+    rxk_SockProxySetup();
+#endif
 }
  
 void rx_kmutex_finish(void) {
+#ifdef AFS_SOCKPROXY_ENV
+    rxk_SockProxyFinish();
+#endif
     lck_grp_free(openafs_lck_grp);
 }
 

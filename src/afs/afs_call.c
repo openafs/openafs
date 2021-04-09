@@ -609,6 +609,268 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 }
 #endif /* AFS_SUN5_ENV */
 
+#ifdef AFS_SOCKPROXY_ENV
+/**
+ * Deallocate packets.
+ *
+ * @param[inout]  a_pktlist  list of packets to be freed
+ * @param[in]     a_npkts    number of packets
+ */
+static void
+sockproxy_pkts_free(struct afs_pkt_hdr **a_pktlist, size_t a_npkts)
+{
+    int pkt_i;
+    struct afs_pkt_hdr *pktlist = *a_pktlist;
+
+    if (pktlist == NULL) {
+	return;
+    }
+    *a_pktlist = NULL;
+
+    for (pkt_i = 0; pkt_i < a_npkts; pkt_i++) {
+	struct afs_pkt_hdr *pkt = &pktlist[pkt_i];
+	afs_osi_Free(pkt->payload, pkt->size);
+	pkt->payload = NULL;
+    }
+    afs_osi_Free(pktlist, a_npkts * sizeof(pktlist[0]));
+}
+
+/**
+ * Copy packets from user-space.
+ *
+ * @param[in]   a_uaddr    address of list of packets in user-space
+ * @param[out]  a_pktlist  packets copied from user-space
+ * @param[in]   a_npkts    number of packets to be copied
+ *
+ * @return errno error codes.
+ */
+static int
+sockproxy_pkts_copyin(user_addr_t a_uaddr, struct afs_pkt_hdr **a_pktlist,
+		      size_t a_npkts)
+{
+    int code, pkt_i;
+    struct afs_pkt_hdr *pktlist_u;
+    struct afs_pkt_hdr *pktlist_k = NULL;
+
+    *a_pktlist = NULL;
+    if (a_npkts == 0) {
+	return 0;
+    }
+    if (a_npkts > AFS_SOCKPROXY_PKT_MAX) {
+	return E2BIG;
+    }
+
+    pktlist_u = afs_osi_Alloc(a_npkts * sizeof(pktlist_u[0]));
+    if (pktlist_u == NULL) {
+	code = ENOMEM;
+	goto done;
+    }
+
+    pktlist_k = afs_osi_Alloc(a_npkts * sizeof(pktlist_k[0]));
+    if (pktlist_k == NULL) {
+	code = ENOMEM;
+	goto done;
+    }
+    memset(pktlist_k, 0, a_npkts * sizeof(pktlist_k[0]));
+
+    AFS_COPYIN(a_uaddr, pktlist_u, a_npkts * sizeof(pktlist_u[0]), code);
+    if (code != 0) {
+	goto done;
+    }
+
+    for (pkt_i = 0; pkt_i < a_npkts; pkt_i++) {
+	struct afs_pkt_hdr *pkt_k = &pktlist_k[pkt_i];
+	struct afs_pkt_hdr *pkt_u = &pktlist_u[pkt_i];
+
+	if (pkt_u->size > AFS_SOCKPROXY_PAYLOAD_MAX) {
+	    code = E2BIG;
+	    goto done;
+	}
+	/*
+	 * Notice that pkt_u->payload points to a user-space address. When
+	 * copying the data from pkt_u to pkt_k, make sure that pkt_k->payload
+	 * points to a valid address in kernel-space.
+	 */
+	*pkt_k = *pkt_u;
+	pkt_k->payload = afs_osi_Alloc(pkt_k->size);
+	if (pkt_k->payload == NULL) {
+	    code = ENOMEM;
+	    goto done;
+	}
+
+	AFS_COPYIN((user_addr_t)pkt_u->payload, pkt_k->payload, pkt_k->size,
+		   code);
+	if (code != 0) {
+	    goto done;
+	}
+    }
+
+    *a_pktlist = pktlist_k;
+    pktlist_k = NULL;
+    code = 0;
+
+ done:
+    sockproxy_pkts_free(&pktlist_k, a_npkts);
+    afs_osi_Free(pktlist_u, a_npkts * sizeof(pktlist_u[0]));
+
+    return code;
+}
+
+/**
+ * Copy packets to user-space.
+ *
+ * @param[in]  a_uaddr    dst address of list of packets in user-space
+ * @param[in]  a_pktlist  packets to be copied to user-space
+ * @param[in]  a_npkts    number of packets to be copied
+ *
+ * @return 0 on success; non-zero otherwise.
+ */
+static int
+sockproxy_pkts_copyout(user_addr_t a_uaddr, struct afs_pkt_hdr *a_pktlist,
+		       size_t a_npkts)
+{
+    int code, pkt_i;
+    struct afs_pkt_hdr *pktlist_u = NULL;
+    struct afs_pkt_hdr *pktlist_k = a_pktlist;
+
+    if (a_npkts == 0) {
+	return 0;
+    }
+    if (a_npkts > AFS_SOCKPROXY_PKT_MAX) {
+	return E2BIG;
+    }
+    if (a_pktlist == NULL) {
+	return EINVAL;
+    }
+
+    pktlist_u = afs_osi_Alloc(a_npkts * sizeof(pktlist_u[0]));
+    if (pktlist_u == NULL) {
+	code = ENOMEM;
+	goto done;
+    }
+
+    AFS_COPYIN(a_uaddr, pktlist_u, a_npkts * sizeof(pktlist_u[0]), code);
+    if (code != 0) {
+	goto done;
+    }
+
+    for (pkt_i = 0; pkt_i < a_npkts; pkt_i++) {
+	struct afs_pkt_hdr *pkt_k = &pktlist_k[pkt_i];
+	struct afs_pkt_hdr *pkt_u = &pktlist_u[pkt_i];
+	void *payload_uaddr;
+
+	if (pkt_k->size > pkt_u->size) {
+	    code = ENOSPC;
+	    goto done;
+	}
+
+	/* Copy pkt_k -> pkt_u, but preserve pkt_u->payload */
+	payload_uaddr = pkt_u->payload;
+	*pkt_u = *pkt_k;
+	pkt_u->payload = payload_uaddr;
+
+	AFS_COPYOUT(pkt_k->payload, (user_addr_t)pkt_u->payload, pkt_k->size,
+		    code);
+	if (code != 0) {
+	    goto done;
+	}
+    }
+
+    AFS_COPYOUT(pktlist_u, a_uaddr, a_npkts * sizeof(pktlist_u[0]), code);
+    if (code != 0) {
+	goto done;
+    }
+
+ done:
+    afs_osi_Free(pktlist_u, a_npkts * sizeof(pktlist_u[0]));
+    return code;
+}
+
+/**
+ * Receive / send packets from / to user-space.
+ *
+ * @param[in]  a_parm_uspc  afs_uspc_param struct
+ * @param[in]  a_parm_pkts  packets to be received / sent
+ *
+ * @return 0 on success; non-zero otherwise.
+ */
+static int
+sockproxy_handler(user_addr_t a_parm_uspc, user_addr_t a_parm_pkts)
+{
+    int code;
+    size_t orig_npkts, npkts;
+    struct afs_uspc_param uspc;
+
+    struct afs_pkt_hdr *pkts_recv;
+    struct afs_pkt_hdr *pkts_send;
+
+    AFS_GUNLOCK();
+
+    orig_npkts = 0;
+    memset(&uspc, 0, sizeof(uspc));
+
+    pkts_recv = NULL;
+    pkts_send = NULL;
+
+    /* get response from user-space */
+    AFS_COPYIN(a_parm_uspc, &uspc, sizeof(uspc), code);
+    if (code != 0) {
+	afs_warn("afs: AFSOP_SOCKPROXY_HANDLER can't read uspc\n");
+	goto done;
+    }
+
+    npkts = uspc.req.usp.npkts;
+    orig_npkts = npkts;
+
+    if (uspc.reqtype == AFS_USPC_SOCKPROXY_RECV && npkts > 0) {
+	/* copyin packets in from user-space */
+	code = sockproxy_pkts_copyin(a_parm_pkts, &pkts_recv, npkts);
+	if (code) {
+	    afs_warn("afs: AFSOP_SOCKPROXY_HANDLER can't read pkts\n");
+	    goto done;
+	}
+    }
+
+    /*
+     * send response from user-space (if any) to the rx layer and wait for a
+     * new request.
+     */
+    code = rxk_SockProxyReply(&uspc, pkts_recv, &pkts_send);
+    if (code) {
+	afs_warn("afs: AFSOP_SOCKPROXY_HANDLER rxk_SockProxyReply failed\n");
+	goto done;
+    }
+
+    /* send request to user-space process */
+    AFS_COPYOUT(&uspc, a_parm_uspc, sizeof(uspc), code);
+    if (code) {
+	afs_warn("afs: AFSOP_SOCKPROXY_HANDLER can't write uspc\n");
+	goto done;
+    }
+
+    npkts = uspc.req.usp.npkts;
+    if (uspc.reqtype == AFS_USPC_SOCKPROXY_SEND && npkts > 0) {
+	/* check if process allocated enough memory to receive the packets */
+	if (npkts > orig_npkts) {
+	    code = ENOSPC;
+	    goto done;
+	}
+
+	/* copyout packets to user-space */
+	code = sockproxy_pkts_copyout(a_parm_pkts, pkts_send, npkts);
+	if (code != 0) {
+	    afs_warn("afs: AFSOP_SOCKPROXY_HANDLER can't write pkts\n");
+	    goto done;
+	}
+    }
+ done:
+    sockproxy_pkts_free(&pkts_recv, orig_npkts);
+    AFS_GLOCK();
+
+    return code;
+}
+#endif /* AFS_SOCKPROXY_ENV */
+
 #ifdef AFS_DARWIN100_ENV
 # define AFSKPTR(X) k ## X
 int
@@ -1353,6 +1615,10 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    afs_volume_ttl = parm2;
 	    code = 0;
 	}
+#ifdef AFS_SOCKPROXY_ENV
+    } else if (parm == AFSOP_SOCKPROXY_HANDLER) {
+	code = sockproxy_handler(AFSKPTR(parm2), AFSKPTR(parm3));
+#endif
     } else {
 	code = EINVAL;
     }

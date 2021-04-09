@@ -83,8 +83,10 @@
 /* AFSOP_STOP_RXK_LISTENER	217	   defined in osi.h */
 #define AFSOP_STOP_AFSDB	218	/* Stop AFSDB handler */
 #define AFSOP_STOP_NETIF	219	/* Stop Netif poller */
+#define AFSOP_SOCKPROXY_HANDLER	220	/* Userspace socket handler */
+#define AFSOP_STOP_SOCKPROXY    221	/* Stop socket proxy daemon */
 
-#define AFSOP_MAX_OPCODE	AFSOP_STOP_NETIF /* Largest defined opcode. */
+#define AFSOP_MAX_OPCODE	AFSOP_STOP_SOCKPROXY /* Largest defined opcode. */
 
 /*
  * AFS system call types and flags.
@@ -145,11 +147,24 @@ struct afs_umv_param {
     afs_int32 dUnique;
 };
 
+struct afs_usp_param {
+    afs_int32 idx;	/* process index */
+    afs_int32 addr;	/* ipv4 addr (net order) to be bound to the socket */
+    afs_int32 port;	/* port (net order) to be bound to the socket */
+    afs_int32 npkts;	/* number of packets */
+};
+
 #ifdef AFS_DARWIN_ENV
 # define AFS_USPC_UMV 1
 #endif
 #define AFS_USPC_SHUTDOWN 2
 #define AFS_USPC_NOOP 3
+
+#ifdef AFS_SOCKPROXY_ENV
+# define AFS_USPC_SOCKPROXY_START	4
+# define AFS_USPC_SOCKPROXY_SEND	5
+# define AFS_USPC_SOCKPROXY_RECV	6
+#endif
 
 struct afs_uspc_param {
     afs_int32 retval;
@@ -158,6 +173,7 @@ struct afs_uspc_param {
     afs_int32 reqtype;
     union {
 	struct afs_umv_param umv;
+	struct afs_usp_param usp;
     } req;
 };
 
@@ -320,6 +336,19 @@ struct afssysargs32 {
 #define AFS_CACHE_CELLS_INODE -2
 #define AFS_CACHE_ITEMS_INODE -3
 #define AFS_CACHE_VOLUME_INODE -4
+#endif
+
+#ifdef AFS_SOCKPROXY_ENV
+# define AFS_SOCKPROXY_PAYLOAD_MAX	8192	/* max payload supported by libafs */
+# define AFS_SOCKPROXY_PKT_MAX		1024	/* max number of packets supported by libafs */
+# define AFS_SOCKPROXY_NPROCS		4	/* number of processes */
+struct afs_pkt_hdr {
+    afs_uint32 addr;			/* ipv4 address (net order) */
+    afs_uint32 port;			/* port (net order) */
+    afs_uint32 size;			/* size of payload */
+    afs_uint32 pad;			/* spare field, must be 0 */
+    void *payload;			/* data to be sent or received */
+};
 #endif
 
 #endif /* _AFS_ARGS_H_ */
