@@ -304,7 +304,13 @@ extern int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
 		       struct iovec *dvec, int nvecs, afs_int32 asize,
 		       int istack);
 # endif
-# ifdef RXK_UPCALL_ENV
+# ifdef AFS_SOCKPROXY_ENV
+extern void rxk_SockProxySetup(void);
+extern void rxk_SockProxyFinish(void);
+extern int rxk_SockProxyReply(struct afs_uspc_param *uspc,
+			      struct afs_pkt_hdr *pkts_recv,
+			      struct afs_pkt_hdr **pkts_send);
+# elif defined(RXK_UPCALL_ENV)
 extern void rx_upcall(socket_t so, void *arg, __unused int waitflag);
 # else
 extern int osi_NetReceive(osi_socket so, struct sockaddr_in *addr,

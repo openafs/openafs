@@ -102,7 +102,7 @@ rxk_shutdownPorts(void)
     for (i = 0; i < MAXRXPORTS; i++) {
 	if (rxk_ports[i]) {
 	    rxk_ports[i] = 0;
-#if ! defined(AFS_SUN5_ENV) && ! defined(UKERNEL) && ! defined(RXK_LISTENER_ENV)
+#if ! defined(AFS_SUN5_ENV) && ! defined(UKERNEL) && ! defined(RXK_LISTENER_ENV) && ! defined(AFS_SOCKPROXY_ENV)
 	    soclose((struct socket *)rxk_portRocks[i]);
 #endif
 	    rxk_portRocks[i] = NULL;
@@ -809,7 +809,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
  * most of it is simple to follow common code.
  */
 #if !defined(UKERNEL)
-# if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
+# if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SOCKPROXY_ENV)
 /* rxk_NewSocket creates a new socket on the specified port. The port is
  * in network byte order.
  */
@@ -1029,7 +1029,7 @@ rxk_FreeSocket(struct socket *asocket)
 #  endif
     return 0;
 }
-# endif /* !SUN5 && !LINUX20 */
+# endif /* !SUN5 && !LINUX20 && !AFS_SOCKPROXY_ENV */
 
 # if defined(RXK_LISTENER_ENV) || defined(AFS_SUN5_ENV) || defined(RXK_UPCALL_ENV)
 #  ifdef RXK_TIMEDSLEEP_ENV
@@ -1082,6 +1082,8 @@ afs_rxevent_daemon(void)
 	if (afs_termState == AFSOP_STOP_RXEVENT) {
 #  ifdef RXK_LISTENER_ENV
 	    afs_termState = AFSOP_STOP_RXK_LISTENER;
+#  elif defined(AFS_SOCKPROXY_ENV)
+	    afs_termState = AFSOP_STOP_SOCKPROXY;
 #  elif defined(AFS_SUN510_ENV) || defined(RXK_UPCALL_ENV)
 	    afs_termState = AFSOP_STOP_NETIF;
 #  else
