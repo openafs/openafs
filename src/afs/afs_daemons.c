@@ -600,7 +600,6 @@ BInvalidateSegments(struct brequest *ab)
 {
     int code;
     struct vcache *tvc = ab->vc;
-    osi_Assert(WriteLocked(&tvc->lock));
 
     code = afs_InvalidateAllSegments_once(tvc);
 
