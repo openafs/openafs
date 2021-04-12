@@ -496,6 +496,17 @@ afs_StoreAllSegments(struct vcache *avc, struct vrequest *areq,
 
 }				/*afs_StoreAllSegments (new 03/02/94) */
 
+/*!
+ * Attempt to invalidate all chunks for a given file.
+ *
+ * \pre avc->lock is write-locked
+ * \pre afs_xdcache is not held
+ *
+ * \param   avc	vcache to invalidate segments for
+ * \return  errno-style error codes. when an error is returned, the caller must
+ *	    retry the invalidation until successful (see comments in
+ *	    afs_InvalidateAllSegments)
+ */
 int
 afs_InvalidateAllSegments_once(struct vcache *avc)
 {
@@ -508,14 +519,16 @@ afs_InvalidateAllSegments_once(struct vcache *avc)
     AFS_STATCNT(afs_InvalidateAllSegments);
     afs_Trace2(afs_iclSetp, CM_TRACE_INVALL, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length));
+
+    osi_Assert(WriteLocked(&avc->lock));
+
     hash = DVHash(&avc->f.fid);
     avc->f.truncPos = AFS_NOTRUNC;	/* don't truncate later */
     avc->f.states &= ~CExtendedFile;	/* not any more */
     afs_StaleVCacheFlags(avc, 0, CDirty);
     /* Blow away pages; for now, only for Solaris */
 #if	(defined(AFS_SUN5_ENV))
-    if (WriteLocked(&avc->lock))
-	osi_ReleaseVM(avc, (afs_ucred_t *)0);
+    osi_ReleaseVM(avc, (afs_ucred_t *)0);
 #endif
     /*
      * Block out others from screwing with this table; is a read lock
