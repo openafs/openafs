@@ -29,6 +29,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <roken.h>
+#include <tests/tap/basic.h>
 
 #include "common.h"
 
@@ -45,4 +46,25 @@ afstest_GetProgname(char **argv)
         return argv0;
     }
     return argv[0];
+}
+
+char *
+afstest_vasprintf(const char *fmt, va_list ap)
+{
+    char *str;
+    if (vasprintf(&str, fmt, ap) < 0) {
+	sysbail("vasprintf");
+    }
+    return str;
+}
+
+char *
+afstest_asprintf(const char *fmt, ...)
+{
+    char *str;
+    va_list ap;
+    va_start(ap, fmt);
+    str = afstest_vasprintf(fmt, ap);
+    va_end(ap);
+    return str;
 }

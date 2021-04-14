@@ -39,12 +39,10 @@ afstest_StartVLServer(char *dirname, pid_t *serverPid)
 	if (build == NULL)
 	    build = "..";
 
-	if (asprintf(&binPath, "%s/../src/tvlserver/vlserver", build) < 0 ||
-	    asprintf(&logPath, "%s/VLLog", dirname) < 0 ||
-	    asprintf(&dbPath, "%s/vldb", dirname) < 0) {
-	    fprintf(stderr, "Out of memory building vlserver arguments\n");
-	    exit(1);
-	}
+	binPath = afstest_asprintf("%s/../src/tvlserver/vlserver", build);
+	logPath = afstest_asprintf("%s/VLLog", dirname);
+	dbPath = afstest_asprintf("%s/vldb", dirname);
+
 	execl(binPath, "vlserver",
 	      "-logfile", logPath, "-database", dbPath, "-config", dirname, NULL);
 	fprintf(stderr, "Running %s failed\n", binPath);

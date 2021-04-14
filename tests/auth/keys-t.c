@@ -124,8 +124,7 @@ int main(int argc, char **argv)
 
     dirname = afstest_BuildTestConfig();
 
-    if (asprintf(&keyfile, "%s/KeyFile", dirname) == -1)
-	goto out;
+    keyfile = afstest_asprintf("%s/KeyFile", dirname);
 
     /* Work out the path to our KeyFile. If the test harness hasn't set
      * the C_TAP_SOURCE environment variable, then assume it is in our CWD */

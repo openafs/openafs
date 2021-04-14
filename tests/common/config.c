@@ -43,8 +43,7 @@ openConfigFile(char *dirname, char *filename) {
     char *path = NULL;
     FILE *file;
 
-    if (asprintf(&path, "%s/%s", dirname, filename) == -1)
-	return NULL;
+    path = afstest_asprintf("%s/%s", dirname, filename);
 
     file = fopen(path, "w");
     free(path);
@@ -55,10 +54,9 @@ static void
 unlinkConfigFile(char *dirname, char *filename) {
     char *path;
 
-    if (asprintf(&path, "%s/%s", dirname, filename) != -1) {
-	unlink(path);
-        free(path);
-    }
+    path = afstest_asprintf("%s/%s", dirname, filename);
+    unlink(path);
+    free(path);
 }
 
 /*!
@@ -103,8 +101,7 @@ afstest_BuildTestConfig(void) {
     char hostname[255];
     struct in_addr iaddr;
 
-    if (asprintf(&dir, "%s/afs_XXXXXX", gettmpdir()) == -1)
-	goto fail;
+    dir = afstest_asprintf("%s/afs_XXXXXX", gettmpdir());
 
     if (afstest_mkdtemp(dir) == NULL)
 	goto fail;

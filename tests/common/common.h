@@ -60,3 +60,6 @@ extern void afstest_SkipTestsIfServerRunning(char *name);
 
 /* misc.c */
 extern char *afstest_GetProgname(char **argv);
+extern char *afstest_vasprintf(const char *fmt, va_list ap);
+extern char *afstest_asprintf(const char *fmt, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);

@@ -43,7 +43,7 @@ main(int argc, char **argv)
     afsconf_Close(dir);
 
     /* Copy out the resulting keyfile into our homedirectory */
-    opr_Verify(asprintf(&keyfile, "%s/KeyFile", dirname) > 0);
+    keyfile = afstest_asprintf("%s/KeyFile", dirname);
     in = open(keyfile, O_RDONLY);
     out = open("KeyFile", O_WRONLY | O_CREAT, 0644);
 
