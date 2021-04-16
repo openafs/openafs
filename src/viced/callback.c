@@ -3072,7 +3072,7 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 	    multi_Abort;
 	}
     }
-    multi_End_Ignore;
+    multi_End;
     H_LOCK;
     /* Destroy all connections except the one on which we succeeded */
     for (i = 0; i < j; i++)
@@ -3198,7 +3198,7 @@ MultiProbeAlternateAddress_r(struct host *host)
 	FS_STATE_UNLOCK;
 #endif
     }
-    multi_End_Ignore;
+    multi_End;
     H_LOCK;
     /* Destroy all connections except the one on which we succeeded */
     for (i = 0; i < j; i++)

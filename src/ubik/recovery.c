@@ -949,7 +949,7 @@ DoProbe(struct ubik_server *server)
 
 	    multi_Abort;
 	}
-    } multi_End_Ignore;
+    } multi_End;
 
     if (success_i >= 0) {
 	UBIK_ADDR_LOCK;

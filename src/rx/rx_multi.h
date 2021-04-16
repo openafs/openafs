@@ -54,9 +54,7 @@ struct multi_handle {
 	multi_Finalize(multi_h);\
     } while (0)
 
-/* Ignore remaining multi RPC's */
-#define multi_End_Ignore\
-	multi_Finalize_Ignore(multi_h);\
-    } while (0)
+/* Deprecated; use multi_End instead. */
+#define multi_End_Ignore multi_End
 
 #endif /* _RX_MULTI_     End of rx_multi.h */
