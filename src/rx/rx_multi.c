@@ -121,20 +121,9 @@ multi_Finalize(struct multi_handle *mh)
     osi_Free(mh, sizeof(struct multi_handle));
 }
 
-/* ignores all remaining multiRx calls */
+/* Deprecated; use multi_Finalize() instead. */
 void
 multi_Finalize_Ignore(struct multi_handle *mh)
 {
-    int i;
-    int nCalls = mh->nConns;
-    for (i = 0; i < nCalls; i++) {
-	struct rx_call *call = mh->calls[i];
-	if (call)
-	    rx_EndCall(call, 0);
-    }
-    MUTEX_DESTROY(&mh->lock);
-    CV_DESTROY(&mh->cv);
-    osi_Free(mh->calls, sizeof(struct rx_call *) * nCalls);
-    osi_Free(mh->ready, sizeof(short) * nCalls);
-    osi_Free(mh, sizeof(struct multi_handle));
+    multi_Finalize(mh);
 }
