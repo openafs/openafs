@@ -82,6 +82,7 @@ extern int afstest_IsLoopbackNetworkDefault(void);
 extern int afstest_SkipTestsIfLoopbackNetIsDefault(void);
 extern void afstest_SkipTestsIfBadHostname(void);
 extern void afstest_SkipTestsIfServerRunning(char *name);
+extern afs_uint32 afstest_MyHostAddr(void);
 
 /* misc.c */
 extern char *afstest_GetProgname(char **argv);

@@ -9,6 +9,30 @@
 #include <tests/tap/basic.h>
 #include "common.h"
 
+static afs_uint32
+gethostaddr(void)
+{
+    char hostname[256];
+    struct hostent *host;
+    static afs_uint32 addr = 0;
+
+    if (addr != 0) {
+	return addr;
+    }
+
+    memset(hostname, 0, sizeof(hostname));
+
+    gethostname(hostname, sizeof(hostname));
+    host = gethostbyname(hostname);
+    if (host == NULL) {
+	diag("gethostbyname(%s) error: %d", hostname, h_errno);
+	return 0;
+    }
+
+    memcpy(&addr, host->h_addr, sizeof(addr));
+    return addr;
+}
+
 /*!
  * Check if the current machine's hostname resolves to the loopback
  * network.
@@ -16,16 +40,10 @@
 int
 afstest_IsLoopbackNetworkDefault(void)
 {
-    char hostname[MAXHOSTCHARS];
-    afs_uint32 addr;
-    struct hostent *host;
-
-    gethostname(hostname, sizeof(hostname));
-    host = gethostbyname(hostname);
-    if (!host) {
-	skip_all("Can't resolve hostname %s\n", hostname);
+    afs_uint32 addr = gethostaddr();
+    if (addr == 0) {
+	skip_all("Can't resolve hostname");
     }
-    memcpy(&addr, host->h_addr, sizeof(addr));
 
     return(rx_IsLoopbackAddr(ntohl(addr)));
 }
@@ -53,13 +71,8 @@ afstest_SkipTestsIfLoopbackNetIsDefault(void)
 void
 afstest_SkipTestsIfBadHostname(void)
 {
-    char hostname[MAXHOSTCHARS];
-    struct hostent *host;
-
-    gethostname(hostname, sizeof(hostname));
-    host = gethostbyname(hostname);
-    if (!host)
-	skip_all("Can't resolve hostname %s\n", hostname);
+    if (gethostaddr() == 0)
+	skip_all("Can't resolve hostname");
 }
 
 /*!
@@ -101,4 +114,19 @@ afstest_SkipTestsIfServerRunning(char *name)
 	}
     }
     close(sock);
+}
+
+/*!
+ * Get the IP address of the local machine, for use with mock CellServDBs, etc.
+ *
+ * @return ipv4 address in net-byte order
+ */
+afs_uint32
+afstest_MyHostAddr(void)
+{
+    afs_uint32 addr = gethostaddr();
+    if (addr == 0) {
+	bail("cannot resolve hostname");
+    }
+    return addr;
 }
