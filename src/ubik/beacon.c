@@ -253,6 +253,7 @@ ubeacon_NewVOTEConnection(afs_uint32 shost)
 
     vote_conn = rx_NewConnection(shost, ubik_callPortal, VOTE_SERVICE_ID,
 			         addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
+    opr_Assert(vote_conn != NULL);
     rx_SetConnDeadTime(vote_conn, VOTE_RPCTIMEOUT);
     rx_SetConnHardDeadTime(vote_conn, VOTE_RPCTIMEOUT);
     return vote_conn;
@@ -262,26 +263,23 @@ void
 ubeacon_ReinitServer(struct ubik_server *ts)
 {
     if (tokenCheckProc && !(*tokenCheckProc) (securityRock)) {
-	struct rx_connection *disk_rxcid;
-	struct rx_connection *vote_rxcid;
-	struct rx_connection *tmp;
+	afs_uint32 host;
+
 	UBIK_ADDR_LOCK;
 	ubeacon_InitSecurityClass();
-	disk_rxcid =
-	    rx_NewConnection(rx_HostOf(rx_PeerOf(ts->disk_rxcid)),
+
+	host = rx_HostOf(rx_PeerOf(ts->disk_rxcid));
+	rx_PutConnection(ts->disk_rxcid);
+	ts->disk_rxcid =
+	    rx_NewConnection(host,
 			     ubik_callPortal, DISK_SERVICE_ID,
 			     addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
-	if (disk_rxcid) {
-	    tmp = ts->disk_rxcid;
-	    ts->disk_rxcid = disk_rxcid;
-	    rx_PutConnection(tmp);
-	}
-	vote_rxcid = ubeacon_NewVOTEConnection(rx_HostOf(rx_PeerOf(ts->vote_rxcid)));
-	if (vote_rxcid) {
-	    tmp = ts->vote_rxcid;
-	    ts->vote_rxcid = vote_rxcid;
-	    rx_PutConnection(tmp);
-	}
+	opr_Assert(ts->disk_rxcid != NULL);
+
+	host = rx_HostOf(rx_PeerOf(ts->vote_rxcid));
+	rx_PutConnection(ts->vote_rxcid);
+	ts->vote_rxcid = ubeacon_NewVOTEConnection(host);
+
 	UBIK_ADDR_UNLOCK;
     }
 }
