@@ -275,6 +275,7 @@ extern int (*ubik_SyncWriterCacheProc) (void);
 #define RPCTIMEOUT 20
 #define BIGTIME 75
 #define SMALLTIME 60
+#define VOTE_RPCTIMEOUT 12
 /*\}*/
 
 /*!
@@ -491,6 +492,7 @@ extern int ubeacon_InitServerListByInfo(afs_uint32 ame,
 					struct afsconf_cell *info,
 					char clones[]);
 extern int ubeacon_InitServerList(afs_uint32 ame, afs_uint32 aservers[]);
+extern struct rx_connection *ubeacon_NewVOTEConnection(afs_uint32 host);
 extern void *ubeacon_Interact(void *);
 extern int ubeacon_updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR]);
 extern struct beacon_data beacon_globals;

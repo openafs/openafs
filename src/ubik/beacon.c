@@ -233,6 +233,30 @@ ubeacon_InitSecurityClass(void)
     }
 }
 
+/*!
+ * Create a new client connection to the VOTE service on the specified host.
+ * Ensure that the Rx dead time for this connection is compliant with the ubik
+ * invariant:
+ *
+ *    SMALLTIME 60s > (rpc timeout) + max(rpc timeout, POLLTIME 15s)
+ *
+ * Therefore the rx dead time for VOTE connections must be less than 30s.
+ *
+ * \param shost	    IPv4 address of db server, in network order
+ *
+ * \pre UBIK_ADDR_LOCK
+ */
+struct rx_connection *
+ubeacon_NewVOTEConnection(afs_uint32 shost)
+{
+    struct rx_connection *vote_conn;
+
+    vote_conn = rx_NewConnection(shost, ubik_callPortal, VOTE_SERVICE_ID,
+			         addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
+    rx_SetConnDeadTime(vote_conn, VOTE_RPCTIMEOUT);
+    return vote_conn;
+}
+
 void
 ubeacon_ReinitServer(struct ubik_server *ts)
 {
@@ -251,10 +275,7 @@ ubeacon_ReinitServer(struct ubik_server *ts)
 	    ts->disk_rxcid = disk_rxcid;
 	    rx_PutConnection(tmp);
 	}
-	vote_rxcid =
-	    rx_NewConnection(rx_HostOf(rx_PeerOf(ts->vote_rxcid)),
-			     ubik_callPortal, VOTE_SERVICE_ID,
-			     addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
+	vote_rxcid = ubeacon_NewVOTEConnection(rx_HostOf(rx_PeerOf(ts->vote_rxcid)));
 	if (vote_rxcid) {
 	    tmp = ts->vote_rxcid;
 	    ts->vote_rxcid = vote_rxcid;
@@ -340,10 +361,8 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 		++nServers;
 	    }
 	    /* for vote reqs */
-	    ts->vote_rxcid =
-		rx_NewConnection(info->hostAddr[i].sin_addr.s_addr,
-				 ubik_callPortal, VOTE_SERVICE_ID,
-				 addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
+	    ts->vote_rxcid = ubeacon_NewVOTEConnection(info->hostAddr[i].sin_addr.s_addr);
+
 	    /* for disk reqs */
 	    ts->disk_rxcid =
 		rx_NewConnection(info->hostAddr[i].sin_addr.s_addr,
@@ -360,8 +379,7 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	    ts->next = ubik_servers;
 	    ubik_servers = ts;
 	    ts->addr[0] = servAddr;	/* primary address in  net byte order */
-	    ts->vote_rxcid = rx_NewConnection(servAddr, ubik_callPortal, VOTE_SERVICE_ID,
-			addr_globals.ubikSecClass, addr_globals.ubikSecIndex);	/* for vote reqs */
+	    ts->vote_rxcid = ubeacon_NewVOTEConnection(servAddr);	/* for vote reqs */
 	    ts->disk_rxcid = rx_NewConnection(servAddr, ubik_callPortal, DISK_SERVICE_ID,
 			addr_globals.ubikSecClass, addr_globals.ubikSecIndex);	/* for disk reqs */
 	    ts->isClone = 0;	/* don't know about clones */

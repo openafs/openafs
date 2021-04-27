@@ -967,10 +967,7 @@ DoProbe(struct ubik_server *server)
 
 	/* make new connections */
 	server->disk_rxcid = conns[success_i];
-	server->vote_rxcid = rx_NewConnection(addr, ubik_callPortal,
-	                                      VOTE_SERVICE_ID, addr_globals.ubikSecClass,
-	                                      addr_globals.ubikSecIndex);
-
+	server->vote_rxcid = ubeacon_NewVOTEConnection(addr);
 	connSuccess = conns[success_i];
 	strcpy(buffer, afs_inet_ntoa_r(server->addr[0], hoststr));
 
