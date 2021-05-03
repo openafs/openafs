@@ -431,7 +431,7 @@ vlserver_depinstall: config rxgen ubik_depinstall auth_depinstall
 tvlserver_depinstall: config rxgen ubik_depinstall auth_depinstall
 	+${COMPILE_PART1} tvlserver ${COMPILE_DEPINSTALL}
 
-auth_depinstall: config rxgen comerr
+auth_depinstall: config rxgen comerr rxgk_depinstall
 	+${COMPILE_PART1} auth ${COMPILE_DEPINSTALL}
 
 fsint_depinstall: config rxgen
