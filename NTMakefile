@@ -704,13 +704,6 @@ afsrdr: config
         $(NTMAKE)
         $(CD) ..\..\..
 
-rpctestlib: config fsint libafsrpc
-     @echo ***** $@
-	$(DOCD) $(TESTS)\$@
-	$(CD) $(TESTS)\$@
-	$(NTMAKE)
-	$(CD) ..\..
-
 libafscp: libafscp_headers util afs volser vlserver rx auth fsint afsdobjs
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
@@ -743,7 +736,7 @@ finale: netidmgr_plugin
 	$(NTMAKE)
 	$(CD) ..\..
 
-install: finale afsrdr tools rpctestlib extra
+install: finale afsrdr tools extra
 	@echo Build Finished Successfully
 
 

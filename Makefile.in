@@ -562,7 +562,7 @@ afsmonitor: cmd comerr gtx xstat
 		echo Not building afsmonitor, because no curses-headers found. ; \
 	fi
 
-tests: rxtests ubiktests rpctestlib viced
+tests: rxtests ubiktests viced
 
 # pthread based user space RX library
 libafsrpc: comerr fsint hcrypto lwp rx rxkad rxstat sys util rxgk
@@ -648,9 +648,6 @@ finale_nolibafs_notest: project cmd comerr afsd butc tbutc tbudb libuafs audit k
 	libafsauthent libadmin man-pages tools platform kopenafs \
 	authtools $(DIR_roken) rxgk
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
-
-rpctestlib: util fsint rx opr libafsrpc libafsauthent
-	+${TEST_PART1} rpctestlib  ${COMPILE_PART2}
 
 finale: finale_notest test_build
 
@@ -936,7 +933,6 @@ distclean: clean
 	src/volser/Makefile \
 	src/xstat/Makefile  \
 	tests/Makefile \
-	tests/rpctestlib/Makefile \
 	tests/tap/Makefile \
 	tests/auth/Makefile \
 	tests/cmd/Makefile \
