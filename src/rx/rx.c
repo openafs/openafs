@@ -553,7 +553,7 @@ rx_InitHost(u_int host, u_int port)
 #endif /* RX_ENABLE_LOCKS && KERNEL */
 
     rxi_nCalls = 0;
-    rx_connDeadTime = 12;
+    rx_connDeadTime = RX_DEFAULT_DEAD_TIME;
     rx_tranquil = 0;		/* reset flag */
     rxi_ResetStatistics();
     htable = osi_Alloc(rx_hashTableSize * sizeof(struct rx_connection *));
@@ -1122,12 +1122,12 @@ rxi_CheckConnTimeouts(struct rx_connection *conn)
     /* a connection's timeouts must have the relationship
      * deadTime <= idleDeadTime <= hardDeadTime. Otherwise, for example, a
      * total loss of network to a peer may cause an idle timeout instead of a
-     * dead timeout, simply because the idle timeout gets hit first. Also set
-     * a minimum deadTime of 6, just to ensure it doesn't get set too low. */
+     * dead timeout, simply because the idle timeout gets hit first. Also
+     * enforce a minimum deadTime, just to ensure it doesn't get set too low. */
     /* this logic is slightly complicated by the fact that
      * idleDeadTime/hardDeadTime may not be set at all, but it's not too bad.
      */
-    conn->secondsUntilDead = MAX(conn->secondsUntilDead, 6);
+    conn->secondsUntilDead = MAX(conn->secondsUntilDead, RX_MINDEADTIME);
     if (conn->idleDeadTime) {
 	conn->idleDeadTime = MAX(conn->idleDeadTime, conn->secondsUntilDead);
     }
@@ -1147,7 +1147,7 @@ rx_SetConnDeadTime(struct rx_connection *conn, int seconds)
      * keepalives to be dropped without timing out the connection. */
     conn->secondsUntilDead = seconds;
     rxi_CheckConnTimeouts(conn);
-    conn->secondsUntilPing = conn->secondsUntilDead / 6;
+    conn->secondsUntilPing = conn->secondsUntilDead / RX_PINGS_LOST_BEFORE_DEAD;
 }
 
 void
@@ -6765,7 +6765,7 @@ rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
 	when = now;
 	if (!secs) {
 	    if (call->conn->secondsUntilPing)
-		secs = (6*call->conn->secondsUntilPing)-1;
+		secs = (RX_PINGS_LOST_BEFORE_DEAD * call->conn->secondsUntilPing)-1;
 
 	    if (call->conn->secondsUntilDead)
 		secs = MIN(secs, (call->conn->secondsUntilDead-1));

@@ -163,7 +163,19 @@ extern u_short rx_PortOf(struct rx_peer *peer);
 
 /* Configurable parameters */
 #define RX_IDLE_DEAD_TIME	60	/* default idle dead time */
+#define RX_DEFAULT_DEAD_TIME	12	/* Default timeout for an unresponsive connection */
 #define RX_MAX_SERVICES		20	/* Maximum number of services that may be installed */
+/*
+ * The number of consecutive keepalives (ping acks) that must be lost/missing
+ * before declaring an rx_call dead timeout (RX_CALL_DEAD).  This number was
+ * chosen to be relatively small while allowing for "several" pings to be lost
+ * without triggering a timeout. (We are running on UDP after all).  Since the
+ * miniumum non-zero secondsUntilPing is 1 second, this also determines the
+ * minimum rx dead time.
+ */
+#define RX_PINGS_LOST_BEFORE_DEAD 6
+#define RX_MINDEADTIME (RX_PINGS_LOST_BEFORE_DEAD * 1)
+
 #if defined(KERNEL) && defined(AFS_AIX51_ENV) && defined(__64__)
 # define RX_DEFAULT_STACK_SIZE 24000
 #else

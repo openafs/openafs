@@ -65,7 +65,7 @@ EXT int rx_extraPackets GLOBALSINIT(256);
 EXT int rx_stackSize GLOBALSINIT(RX_DEFAULT_STACK_SIZE);
 
 /* Time until an unresponsive connection is declared dead */
-EXT int rx_connDeadTime GLOBALSINIT(12);
+EXT int rx_connDeadTime GLOBALSINIT(RX_DEFAULT_DEAD_TIME);
 
 /* Set rx default connection dead time; set on both services and connections at creation time */
 #ifdef AFS_NT40_ENV
