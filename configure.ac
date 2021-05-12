@@ -101,25 +101,25 @@ AC_SUBST([AKLOG_KRB5_LIBS])
 dnl Checks for summary
 OPENAFS_SUMMARY_CHECK_NAMEI
 
-AS_IF([test -d 'doc/man-pages'],
+AS_IF([test -d "$srcdir/doc/man-pages"],
     [MAN_MAKEFILE="doc/man-pages/Makefile doc/man-pages/install-man"],
     [MAN_MAKEFILE=])
-AS_IF([test -f 'doc/xml/AdminGuide/Makefile.in'],
+AS_IF([test -f "$srcdir/doc/xml/AdminGuide/Makefile.in"],
     [ADMINGUIDE_MAKEFILE="doc/xml/AdminGuide/Makefile"],
     [ADMINGUIDE_MAKEFILE=])
-AS_IF([test -f 'doc/xml/QuickStartUnix/Makefile.in'],
+AS_IF([test -f "$srcdir/doc/xml/QuickStartUnix/Makefile.in"],
     [QSUNIX_MAKEFILE="doc/xml/QuickStartUnix/Makefile"],
     [QSUNIX_MAKEFILE=])
-AS_IF([test -f 'doc/xml/UserGuide/Makefile.in'],
+AS_IF([test -f "$srcdir/doc/xml/UserGuide/Makefile.in"],
     [USERGUIDE_MAKEFILE="doc/xml/UserGuide/Makefile"],
     [USERGUIDE_MAKEFILE=])
-AS_IF([test -f 'doc/xml/AdminRef/Makefile.in'],
+AS_IF([test -f "$srcdir/doc/xml/AdminRef/Makefile.in"],
     [ADMINREF_MAKEFILE="doc/xml/AdminRef/Makefile"],
     [ADMINREF_MAKEFILE=])
-AS_IF([test -f 'doc/xml/mobi-fixup.xsl.in'],
+AS_IF([test -f "$srcdir/doc/xml/mobi-fixup.xsl.in"],
     [MOBI_FIXUP_XSL="doc/xml/mobi-fixup.xsl"],
     [MOBI_FIXUP_XSL=])
-AS_IF([test -f 'doc/doxygen/Doxyfile.in'],
+AS_IF([test -f "$srcdir/doc/doxygen/Doxyfile.in"],
     [DOXYFILE="doc/doxygen/Doxyfile"],
     [DOXYFILE=])
 
