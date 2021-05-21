@@ -2002,14 +2002,14 @@ ListCellsRPC(void *rpc_specific, int slot, int *last_item,
     int rc = 0;
     afs_status_t tst = 0;
     cm_list_cell_get_p t = (cm_list_cell_get_p) rpc_specific;
-    char *name;
+    char *name = NULL;
+    size_t len;
     serverList sl;
     unsigned int n;
 
     /*
      * Get the next entry in the CellServDB.
      */
-    name = t->cell[slot].cellname;
     sl.serverList_len = 0;
     sl.serverList_val = NULL;
     memset(t->cell[slot].serverAddr, 0, sizeof(afs_int32)*UTIL_MAX_CELL_HOSTS);
@@ -2018,7 +2018,11 @@ ListCellsRPC(void *rpc_specific, int slot, int *last_item,
     if (tst) {
 	goto fail_ListCellsRPC;
     }
-    strcpy(t->cell[slot].cellname, name);
+    len = strlcpy(t->cell[slot].cellname, name, sizeof(t->cell[slot].cellname));
+    if (len >= sizeof(t->cell[slot].cellname)) {
+	tst = ADMRPCTOOBIG;
+	goto fail_ListCellsRPC;
+    }
     if (sl.serverList_val) {
         for (n=0; n<sl.serverList_len && n<UTIL_MAX_CELL_HOSTS; n++) {
             t->cell[slot].serverAddr[n] = sl.serverList_val[n];
@@ -2038,6 +2042,7 @@ ListCellsRPC(void *rpc_specific, int slot, int *last_item,
     rc = 1;
 
   fail_ListCellsRPC:
+    xdr_free((xdrproc_t) xdr_string, &name);
 
     if (st != NULL) {
 	*st = tst;
@@ -2235,7 +2240,8 @@ util_CMLocalCell(struct rx_connection *conn, afs_CMCellName_p cellName,
 {
     int rc = 0;
     afs_status_t tst = 0;
-    afs_CMCellName_p name;
+    char *name = NULL;
+    size_t len;
 
     if (conn == NULL) {
 	tst = ADMRXCONNNULL;
@@ -2247,15 +2253,21 @@ util_CMLocalCell(struct rx_connection *conn, afs_CMCellName_p cellName,
 	goto fail_util_CMLocalCell;
     }
 
-    name = cellName;
     tst = RXAFSCB_GetLocalCell(conn, &name);
-
-    if (!tst) {
-	rc = 1;
+    if (tst != 0) {
+	goto fail_util_CMLocalCell;
     }
+
+    len = strlcpy(cellName, name, sizeof(cellName));
+    if (len >= sizeof(cellName)) {
+	tst = ADMRPCTOOBIG;
+	goto fail_util_CMLocalCell;
+    }
+    rc = 1;
 
   fail_util_CMLocalCell:
 
+    xdr_free((xdrproc_t)xdr_string, &name);
     if (st != NULL) {
 	*st = tst;
     }

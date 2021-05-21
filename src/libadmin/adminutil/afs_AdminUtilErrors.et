@@ -22,4 +22,5 @@ error_table AU
     ec ADMRXDEBUGHANDLENULL, "the rxdebug handle parameter cannot be null"
     ec ADMRXDEBUGVERSIONNULL, "the rxdebug version parameter cannot be null"
     ec ADMRXDEBUGSTATSNULL, "the rxdebug stats parameter cannot be null"
+    ec ADMRPCTOOBIG, "the rpc output data exceeds buffer size."
 end
