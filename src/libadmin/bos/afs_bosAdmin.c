@@ -526,6 +526,8 @@ bos_ProcessExecutionStateGet(const void *serverHandle,
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
     afs_int32 state;
+    char *desc = NULL;
+    size_t len;
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessExecutionStateGet;
@@ -547,18 +549,24 @@ bos_ProcessExecutionStateGet(const void *serverHandle,
     }
 
     tst =
-	BOZO_GetStatus(b_handle->server, processName, &state,
-		       &auxiliaryProcessStatus);
-
+	BOZO_GetStatus(b_handle->server, processName, &state, &desc);
     if (tst != 0) {
 	goto fail_bos_ProcessExecutionStateGet;
     }
 
+    /* This function assumes the caller provides a BOS_MAX_NAME_LEN sized buffer. */
+    len = strlcpy(auxiliaryProcessStatus, desc, BOS_MAX_NAME_LEN);
+    if (len >= BOS_MAX_NAME_LEN) {
+	tst = ADMRPCTOOBIG;
+	goto fail_bos_ProcessExecutionStateGet;
+    }
     *processStatusP = (bos_ProcessExecutionState_t) state;
+
     rc = 1;
 
   fail_bos_ProcessExecutionStateGet:
 
+    xdr_free((xdrproc_t)xdr_string, &desc);
     if (st != NULL) {
 	*st = tst;
     }
@@ -707,11 +715,17 @@ GetProcessNameRPC(void *rpc_specific, int slot, int *last_item,
     int rc = 0;
     afs_status_t tst = 0;
     process_name_get_p proc = (process_name_get_p) rpc_specific;
-    char *ptr = (char *)&proc->process[slot];
+    char *name = NULL;
+    size_t len;
 
-    tst = BOZO_EnumerateInstance(proc->server, proc->next++, &ptr);
+    tst = BOZO_EnumerateInstance(proc->server, proc->next++, &name);
 
     if (tst == 0) {
+	len = strlcpy(proc->process[slot], name, sizeof(proc->process[slot]));
+	if (len >= sizeof(proc->process[slot])) {
+	    tst = ADMRPCTOOBIG;
+	    goto fail_GetProcessNameRPC;
+	}
 	rc = 1;
     } else if (tst == BZDOM) {
 	tst = 0;
@@ -720,6 +734,9 @@ GetProcessNameRPC(void *rpc_specific, int slot, int *last_item,
 	*last_item_contains_data = 0;
     }
 
+  fail_GetProcessNameRPC:
+
+    xdr_free((xdrproc_t)xdr_string, &name);
     if (st != NULL) {
 	*st = tst;
     }
@@ -935,8 +952,7 @@ bos_ProcessInfoGet(const void *serverHandle, char *processName,
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
-    char type[BOS_MAX_NAME_LEN];
-    char *ptr = type;
+    char *type = NULL;
     struct bozo_status status;
     int i;
 
@@ -959,12 +975,11 @@ bos_ProcessInfoGet(const void *serverHandle, char *processName,
 	goto fail_bos_ProcessInfoGet;
     }
 
-    tst = BOZO_GetInstanceInfo(b_handle->server, processName, &ptr, &status);
+    tst = BOZO_GetInstanceInfo(b_handle->server, processName, &type, &status);
 
     if (tst != 0) {
 	goto fail_bos_ProcessInfoGet;
     }
-
 
     for (i = 0; (processTypes[i] != NULL); i++) {
 	if (!strcmp(processTypes[i], type)) {
@@ -1000,6 +1015,7 @@ bos_ProcessInfoGet(const void *serverHandle, char *processName,
 
   fail_bos_ProcessInfoGet:
 
+    xdr_free((xdrproc_t)xdr_string, &type);
     if (st != NULL) {
 	*st = tst;
     }
@@ -1024,13 +1040,19 @@ GetParameterRPC(void *rpc_specific, int slot, int *last_item,
     int rc = 0;
     afs_status_t tst = 0;
     param_get_p param = (param_get_p) rpc_specific;
-    char *ptr = (char *)&param->param[slot];
+    char *parm = NULL;
+    size_t len;
 
     tst =
 	BOZO_GetInstanceParm(param->server, param->processName, param->next++,
-			     &ptr);
+			     &parm);
 
     if (tst == 0) {
+	len = strlcpy(param->param[slot], parm, sizeof(param->param[slot]));
+	if (len >= sizeof(param->param[slot])) {
+	    tst = ADMRPCTOOBIG;
+	    goto fail_GetParameterRPC;
+	}
 	rc = 1;
     } else if (tst == BZDOM) {
 	tst = 0;
@@ -1039,6 +1061,9 @@ GetParameterRPC(void *rpc_specific, int slot, int *last_item,
 	*last_item_contains_data = 0;
     }
 
+  fail_GetParameterRPC:
+
+    xdr_free((xdrproc_t)xdr_string, &parm);
     if (st != NULL) {
 	*st = tst;
     }
@@ -1691,23 +1716,32 @@ GetAdminRPC(void *rpc_specific, int slot, int *last_item,
     int rc = 0;
     afs_status_t tst = 0;
     admin_get_p admin = (admin_get_p) rpc_specific;
-    char *ptr = (char *)&admin->admin[slot];
+    char *name = NULL;
+    size_t len;
 
-    tst = BOZO_ListSUsers(admin->server, admin->next++, &ptr);
+    tst = BOZO_ListSUsers(admin->server, admin->next++, &name);
 
     /*
      * There's no way to tell the difference between an rpc failure
      * and the end of the list, so we assume that any error means the
      * end of the list
      */
-
-    if (tst != 0) {
+    if (tst == 0) {
+	len = strlcpy(admin->admin[slot], name, sizeof(admin->admin[slot]));
+	if (len >= sizeof(admin->admin[slot])) {
+	    tst = ADMRPCTOOBIG;
+	    goto fail_GetAdminRPC;
+	}
+    } else {
 	tst = 0;
 	*last_item = 1;
 	*last_item_contains_data = 0;
     }
     rc = 1;
 
+  fail_GetAdminRPC:
+
+    xdr_free((xdrproc_t)xdr_string, &name);
     if (st != NULL) {
 	*st = tst;
     }
@@ -2277,6 +2311,8 @@ bos_CellGet(const void *serverHandle, char *cellName, afs_status_p st)
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
+    char *tcellname = NULL;
+    size_t len;
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_CellGet;
@@ -2287,14 +2323,23 @@ bos_CellGet(const void *serverHandle, char *cellName, afs_status_p st)
 	goto fail_bos_CellGet;
     }
 
-    tst = BOZO_GetCellName(b_handle->server, &cellName);
-
-    if (tst == 0) {
-	rc = 1;
+    tst = BOZO_GetCellName(b_handle->server, &tcellname);
+    if (tst != 0) {
+	goto fail_bos_CellGet;
     }
+
+    /* This function assumes the caller provides a BOS_MAX_NAME_LEN sized buffer. */
+    len = strlcpy(cellName, tcellname, BOS_MAX_NAME_LEN);
+    if (len >= BOS_MAX_NAME_LEN) {
+	tst = ADMRPCTOOBIG;
+	goto fail_bos_CellGet;
+    }
+
+    rc = 1;
 
   fail_bos_CellGet:
 
+    xdr_free((xdrproc_t)xdr_string, &tcellname);
     if (st != NULL) {
 	*st = tst;
     }
@@ -2416,11 +2461,17 @@ GetHostRPC(void *rpc_specific, int slot, int *last_item,
     int rc = 0;
     afs_status_t tst = 0;
     host_get_p host = (host_get_p) rpc_specific;
-    char *ptr = (char *)&host->host[slot];
+    char *name = NULL;
+    size_t len;
 
-    tst = BOZO_GetCellHost(host->server, host->next++, &ptr);
+    tst = BOZO_GetCellHost(host->server, host->next++, &name);
 
     if (tst == 0) {
+	len = strlcpy(host->host[slot], name, sizeof(host->host[slot]));
+	if (len >= sizeof(host->host[slot])) {
+	    tst = ADMRPCTOOBIG;
+	    goto fail_GetHostRPC;
+	}
 	rc = 1;
     } else if (tst == BZDOM) {
 	tst = 0;
@@ -2429,6 +2480,9 @@ GetHostRPC(void *rpc_specific, int slot, int *last_item,
 	*last_item_contains_data = 0;
     }
 
+  fail_GetHostRPC:
+
+    xdr_free((xdrproc_t)xdr_string, &name);
     if (st != NULL) {
 	*st = tst;
     }
