@@ -43,6 +43,58 @@
 #include "afs_utilAdmin.h"
 
 /*
+ * The 'admin_strlcpy' function is copied from heimdal, under the following
+ * license:
+ *
+ * Copyright (c) 1995-2002 Kungliga Tekniska Högskolan
+ * (Royal Institute of Technology, Stockholm, Sweden).
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the Institute nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+static size_t
+admin_strlcpy(char *dst, const char *src, size_t dst_sz)
+{
+    size_t n;
+
+    for (n = 0; n < dst_sz; n++) {
+	if ((*dst++ = *src++) == '\0')
+	    break;
+    }
+
+    if (n < dst_sz)
+	return n;
+    if (n > 0)
+	*(dst - 1) = '\0';
+    return n + strlen (src);
+}
+
+/*
  * AIX 4.2 has PTHREAD_CREATE_UNDETACHED and not PTHREAD_CREATE_JOINABLE
  *
  * This fix should be done more centrally, but there's no time right now.
@@ -2007,14 +2059,14 @@ ListCellsRPC(void *rpc_specific, int slot, int *last_item,
     int rc = 0;
     afs_status_t tst = 0;
     cm_list_cell_get_p t = (cm_list_cell_get_p) rpc_specific;
-    char *name;
+    char *name = NULL;
+    size_t len;
     serverList sl;
     unsigned int n;
 
     /*
      * Get the next entry in the CellServDB.
      */
-    name = t->cell[slot].cellname;
     sl.serverList_len = 0;
     sl.serverList_val = NULL;
     memset(t->cell[slot].serverAddr, 0, sizeof(afs_int32)*UTIL_MAX_CELL_HOSTS);
@@ -2023,7 +2075,11 @@ ListCellsRPC(void *rpc_specific, int slot, int *last_item,
     if (tst) {
 	goto fail_ListCellsRPC;
     }
-    strcpy(t->cell[slot].cellname, name);
+    len = admin_strlcpy(t->cell[slot].cellname, name, sizeof(t->cell[slot].cellname));
+    if (len >= sizeof(t->cell[slot].cellname)) {
+	tst = ADMRPCTOOBIG;
+	goto fail_ListCellsRPC;
+    }
     if (sl.serverList_val) {
         for (n=0; n<sl.serverList_len && n<UTIL_MAX_CELL_HOSTS; n++) {
             t->cell[slot].serverAddr[n] = sl.serverList_val[n];
@@ -2043,6 +2099,7 @@ ListCellsRPC(void *rpc_specific, int slot, int *last_item,
     rc = 1;
 
   fail_ListCellsRPC:
+    xdr_free((xdrproc_t) xdr_string, &name);
 
     if (st != NULL) {
 	*st = tst;
@@ -2240,7 +2297,8 @@ util_CMLocalCell(struct rx_connection *conn, afs_CMCellName_p cellName,
 {
     int rc = 0;
     afs_status_t tst = 0;
-    afs_CMCellName_p name;
+    char *name = NULL;
+    size_t len;
 
     if (conn == NULL) {
 	tst = ADMRXCONNNULL;
@@ -2252,15 +2310,21 @@ util_CMLocalCell(struct rx_connection *conn, afs_CMCellName_p cellName,
 	goto fail_util_CMLocalCell;
     }
 
-    name = cellName;
     tst = RXAFSCB_GetLocalCell(conn, &name);
-
-    if (!tst) {
-	rc = 1;
+    if (tst != 0) {
+	goto fail_util_CMLocalCell;
     }
+
+    len = admin_strlcpy(cellName, name, sizeof(cellName));
+    if (len >= sizeof(cellName)) {
+	tst = ADMRPCTOOBIG;
+	goto fail_util_CMLocalCell;
+    }
+    rc = 1;
 
   fail_util_CMLocalCell:
 
+    xdr_free((xdrproc_t)xdr_string, &name);
     if (st != NULL) {
 	*st = tst;
     }
