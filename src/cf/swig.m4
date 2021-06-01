@@ -18,7 +18,7 @@ LIBUAFS_BUILD_PERL=
 dnl Building with swig requires shared library support.  If --disable-shared
 dnl was specified, turn off auto detection (with a notice).  If --with-swig=yes
 dnl generate an error message
-AS_IF([test "x$enable_shared" != "yes" && test "x$with_swig" != "xno"],
+AS_IF([test "x$enable_shared" != "xyes" && test "x$with_swig" != "xno"],
   [AS_IF([test "x$with_swig" = "xyes"],
      [AC_MSG_ERROR([--with-swig is incompatible with --disable-shared])],
      [with_swig=no
