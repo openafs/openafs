@@ -12,7 +12,7 @@ LT_libs = $(LIB_rfc3961) $(LIB_roken)
 LT_deps = $(top_builddir)/tests/tap/libafstest_tap.la \
 	  $(top_builddir)/src/util/liboafs_util.la
 
-all check test tests: libafstest_common.la
+all: libafstest_common.la
 
 # This library is just used internally for our tests, so use
 # LT_LDLIB_shlib_internal so we don't need to manage a .sym export list.

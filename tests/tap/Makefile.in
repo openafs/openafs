@@ -7,7 +7,7 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 LT_objs = basic.lo
 
-all check test tests: libafstest_tap.la basic.h macros.h libtap.sh
+all: libafstest_tap.la basic.h macros.h libtap.sh
 
 CFLAGS_basic.lo = @CFLAGS_NOERROR@ -I$(tapdir)/../..
 basic.lo: $(tapdir)/basic.c $(tapdir)/basic.h

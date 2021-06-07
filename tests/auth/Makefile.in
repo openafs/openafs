@@ -8,7 +8,7 @@ BINS = authcon-t superuser-t keys-t realms-t writekeyfile
 
 MODULE_CFLAGS=-I$(TOP_OBJDIR) -I$(srcdir)/../common/
 
-all check test tests: $(BINS)
+all: $(BINS)
 
 MODULE_LIBS = 	$(abs_top_builddir)/tests/common/libafstest_common.la \
 		$(abs_top_builddir)/src/auth/liboafs_auth.la \

@@ -14,7 +14,7 @@ LIBS = $(abs_top_builddir)/tests/common/libafstest_common.la \
 
 BINS = command-t
 
-all check test tests: $(BINS)
+all: $(BINS)
 
 command-t: command-t.o $(LIBS)
 	$(LT_LDRULE_static) command-t.o $(LIBS) $(LIB_roken) $(XLIBS)

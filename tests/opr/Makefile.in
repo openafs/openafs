@@ -11,7 +11,7 @@ LIBS=	$(abs_top_builddir)/tests/common/libafstest_common.la \
 BINS = cache-t dict-t fmt-t jhash-t queues-t rbtree-t softsig-helper time-t \
        uuid-t
 
-all check test tests: $(BINS)
+all: $(BINS)
 
 cache-t: cache-t.o $(LIBS)
 	$(LT_LDRULE_static) cache-t.o $(LIBS) $(XLIBS)

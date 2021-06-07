@@ -31,8 +31,7 @@ RUNTESTS_DEFAULT_=$(RUNTESTS_V$(V)_DEFAULT)
 RUNTESTS_ARGS=$(RUNTESTS_DEFAULT_$(TESTS)) $(TESTS)
 
 # To run specific tests, run e.g. 'make check TESTS="rx/foo opr/foo"'
-check test tests: runtests
-	@for A in $(SUBDIRS); do cd $$A && $(MAKE) $@ && cd .. || exit 1; done
+check test tests: all runtests
 	MAKECHECK=1 $(abs_top_srcdir)/tests/libwrap @TOP_OBJDIR@/lib \
 	    ./runtests $(RUNTESTS_ARGS)
 

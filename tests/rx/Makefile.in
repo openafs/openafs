@@ -12,7 +12,7 @@ LIBS = $(abs_top_builddir)/tests/common/libafstest_common.la \
 
 BINS = event-t
 
-all check test tests: $(BINS)
+all: $(BINS)
 
 event-t: event-t.o $(LIBS)
 	$(LT_LDRULE_static) event-t.o $(LIBS) $(LIB_roken) $(XLIBS)

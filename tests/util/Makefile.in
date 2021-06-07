@@ -14,7 +14,7 @@ LIBS = $(abs_top_builddir)/tests/common/libafstest_common.la \
 
 BINS = ktime-t exec-alt-t volutil-t
 
-all check test tests: $(BINS)
+all: $(BINS)
 
 ktime-t: ktime-t.lo $(LIBS)
 	$(LT_LDRULE_static) ktime-t.lo $(LIBS) $(XLIBS)
