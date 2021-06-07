@@ -707,6 +707,11 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
 	if (!ts->cell)		/* not really an active server, anyway, it must */
 	    continue;		/* have just been added by setsprefs */
 
+	if ((sa->sa_flags & SRVADDR_ISDOWN) == 0 && !afs_HaveCallBacksFrom(sa->server)) {
+	    /* Server is up, and we have no active callbacks from it. */
+	    continue;
+	}
+
 	/* get a connection, even if host is down; bumps conn ref count */
 	tu = afs_GetUser(treq->uid, ts->cell->cellNum, SHARED_LOCK);
 	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cellNum, tu,
@@ -716,18 +721,16 @@ afs_LoopServers(int adown, struct cell *acellp, int vlalso,
 	if (!tc)
 	    continue;
 
-	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(sa->server)) {
-	    conns[nconns]=tc;
-	    rxconns[nconns]=rxconn;
-	    if (sa->sa_flags & SRVADDR_ISDOWN) {
-		rx_SetConnDeadTime(rxconn, 3);
-		conntimer[nconns]=1;
-	    } else {
-		conntimer[nconns]=0;
-	    }
-	    nconns++;
-	} else /* not holding, kill ref */
-	    afs_PutConn(tc, rxconn, SHARED_LOCK);
+	conns[nconns]=tc;
+	rxconns[nconns]=rxconn;
+	if (sa->sa_flags & SRVADDR_ISDOWN) {
+	    rx_SetConnDeadTime(rxconn, 3);
+	    conntimer[nconns]=1;
+	} else {
+	    conntimer[nconns]=0;
+	}
+	nconns++;
+
     } /* Outer loop over addrs */
 
     afs_osi_Free(addrs, srvAddrCount * sizeof(*addrs));

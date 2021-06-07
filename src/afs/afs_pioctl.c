@@ -5239,6 +5239,11 @@ DECL_PIOCTL(PCallBackAddr)
 	if (!ts->cell)		/* not really an active server, anyway, it must */
 	    continue;		/* have just been added by setsprefs */
 
+	if ((sa->sa_flags & SRVADDR_ISDOWN) == 0 && !afs_HaveCallBacksFrom(ts)) {
+	    /* Server is up, and we have no active callbacks from it. */
+	    continue;
+	}
+
 	/* get a connection, even if host is down; bumps conn ref count */
 	tu = afs_GetUser(areq->uid, ts->cell->cellNum, SHARED_LOCK);
 	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cellNum, tu,
@@ -5247,18 +5252,17 @@ DECL_PIOCTL(PCallBackAddr)
 	if (!tc)
 	    continue;
 
-	if ((sa->sa_flags & SRVADDR_ISDOWN) || afs_HaveCallBacksFrom(ts)) {
-	    if (sa->sa_flags & SRVADDR_ISDOWN) {
-		rx_SetConnDeadTime(rxconn, 3);
-	    }
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
-	    code = RXAFS_CallBackRxConnAddr(rxconn, &addr);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	if (sa->sa_flags & SRVADDR_ISDOWN) {
+	    rx_SetConnDeadTime(rxconn, 3);
 	}
+#ifdef RX_ENABLE_LOCKS
+	AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
+	code = RXAFS_CallBackRxConnAddr(rxconn, &addr);
+#ifdef RX_ENABLE_LOCKS
+	AFS_GLOCK();
+#endif /* RX_ENABLE_LOCKS */
+
 	afs_PutConn(tc, rxconn, SHARED_LOCK);	/* done with it now */
     }				/* Outer loop over addrs */
     afs_osi_Free(addrs, srvAddrCount * sizeof(*addrs));
