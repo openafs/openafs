@@ -1095,158 +1095,27 @@
     Database and the <emphasis role="bold">KeyFile</emphasis> file on every server machine, so that the TGS and all server processes
     again share the same key.</para>
 
-    <para>Handling key emergencies requires some unusual actions. The reasons for these actions are explained in the following
-    sections; the actual procedures appear in the subsequent instructions.</para>
+    <para>Installing a new server encryption key involves logging in to each
+    server machine as root and confirming that the correct (i.e., new) key
+    are in place in the <emphasis role="bold">KeyFileExt</emphasis> or
+    <emphasis role="bold">rxkad.keytab</emphasis> (for OpenAFS 1.8.x
+    releases).  The same keys must be installed on all servers in the cell,
+    and when Kerberos is used for authentication, must match the key in the
+    Kerberos database.</para>
 
-    <sect2 id="HDRWQ371">
-      <title>Prevent Mutual Authentication</title>
-
-      <para>It is necessary to prevent the server processes from trying to mutually authenticate with you as you deal with a key
-      emergency, because they possibly cannot decrypt your token. When you do not mutually authenticate, the server processes assign
-      you the identity <emphasis role="bold">anonymous</emphasis>. To prevent mutual authentication, use the <emphasis
-      role="bold">unlog</emphasis> command to discard your tokens and include the <emphasis role="bold">-noauth</emphasis> flag on
-      every command where it is available.</para>
-    </sect2>
-
-    <sect2 id="Header_423">
-      <title>Disable Authorization Checking by Hand</title>
-
-      <para>Because the server processes recognize you as the user <emphasis role="bold">anonymous</emphasis> when you do not
-      mutually authenticate, you must turn off authorization checking. Only with authorization checking disabled do the server
-      processes allow the <emphasis role="bold">anonymous</emphasis> user to perform privileged actions such as key creation.</para>
-
-      <para>In an emergency, disable authorization checking by creating the file <emphasis
-      role="bold">/usr/afs/local/NoAuth</emphasis> by hand. In normal circumstances, use the <emphasis role="bold">bos
-      setauth</emphasis> command instead.</para>
-    </sect2>
-
-    <sect2 id="Header_424">
-      <title>Work Quickly on Each Machine</title>
-
-      <para>Disabling authorization checking is a serious security exposure, because server processes on the affected machine
-      perform any action for anyone. Disable authorization checking only for as long as necessary, completing all steps in an
-      uninterrupted session and as quickly as possible.</para>
-    </sect2>
-
-    <sect2 id="Header_425">
-      <title>Work at the Console</title>
-
-      <para>Working at the console of each server machine on which you disable authorization checking ensures that no one else logs
-      onto the console while you are working there. It does not prevent others from connecting to the machine remotely (using the
-      <emphasis role="bold">telnet</emphasis> program, for example), which is why it is important to work quickly. The only way to
-      ensure complete security is to disable network traffic, which is not a viable option in many environments. You can improve
-      security in general by limiting the number of people who can connect remotely to your server machines at any time, as
-      recommended in <link linkend="HDRWQ74">Improving Security in Your Cell</link>.</para>
-    </sect2>
-
-    <sect2 id="HDRWQ372">
-      <title>Change Individual KeyFile Files</title>
-
-      <para>If you use the Update Server to distribute the contents of the <emphasis role="bold">/usr/afs/etc</emphasis> directory,
-      an emergency is the only time when it is appropriate to change the <emphasis role="bold">KeyFile</emphasis> file on individual
-      machines instead. Updating each machine's file is necessary because mismatched keys can prevent the system control machine's
-      <emphasis role="bold">upserver</emphasis> process from mutually authenticating with <emphasis
-      role="bold">upclientetc</emphasis> processes on other server machines, in which case the <emphasis
-      role="bold">upserver</emphasis> process refuses to distribute its <emphasis role="bold">KeyFile</emphasis> file to
-      them.</para>
-
-      <para>Even if it appears that the Update Server is working correctly, the only way to verify that is to change the key on the
-      system control machine and wait the standard delay period to see if the <emphasis role="bold">upclientetc</emphasis> processes
-      retrieve the key. During an emergency, it does not usually make sense to wait the standard delay period. It is more efficient
-      simply to update the file on each server machine separately. Also, even if the Update Server can distribute the file
-      correctly, other processes can have trouble because of mismatched keys. The following instructions add the new key file on the
-      system control machine first. If the Update Server is working, then it is distributing the same change as you are making on
-      each server machine individually.</para>
-
-      <para>If your cell does not use the Update Server or you always change keys on server
-      machines individually. The following instructions are also appropriate for you.</para>
-    </sect2>
-
-    <sect2 id="Header_427">
-      <title>Two Component Procedures</title>
-
-      <para>There are two subprocedures used frequently in the following instructions: disabling authorization checking and
-      reenabling it. For the sake of clarity, the procedures are detailed here; the instructions refer to them as necessary.</para>
-
-      <sect3 id="HDRWQ373">
-        <title>Disabling Authorization Checking in an Emergency</title>
-
-        <orderedlist>
-          <listitem>
-            <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by
-            issuing the <emphasis role="bold">su</emphasis> command. <programlisting>
-   % <emphasis role="bold">su root</emphasis>
-   Password: &lt;<replaceable>root_password</replaceable>&gt;
-</programlisting></para>
-
-            <indexterm>
-              <primary>NoAuth file</primary>
-
-              <secondary>creating in emergencies</secondary>
-            </indexterm>
-          </listitem>
-
-          <listitem id="LIWQ374">
-            <para>Create the file <emphasis role="bold">/usr/afs/local/NoAuth</emphasis> to disable
-            authorization checking. <programlisting>
-   # <emphasis role="bold">touch /usr/afs/local/NoAuth</emphasis>
-</programlisting></para>
-
-            <indexterm>
-              <primary>unlog command</primary>
-
-              <secondary>when handling key emergency</secondary>
-            </indexterm>
-          </listitem>
-
-          <listitem>
-            <para>Discard your tokens, in case they were sealed with an incompatible key, which can prevent some commands from
-            executing. <programlisting>
-   # <emphasis role="bold">unlog</emphasis>
-</programlisting></para>
-          </listitem>
-        </orderedlist>
-      </sect3>
-
-      <sect3 id="HDRWQ375">
-        <title>Reenabling Authorization Checking in an Emergency</title>
-
-        <orderedlist>
-          <listitem>
-            <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by
-            issuing the <emphasis role="bold">su</emphasis> command. <programlisting>
-   % <emphasis role="bold">su root</emphasis>
-   Password: &lt;<replaceable>root_password</replaceable>&gt;
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>Remove the <emphasis role="bold">/usr/afs/local/NoAuth</emphasis> file. <programlisting>
-   # <emphasis role="bold">rm /usr/afs/local/NoAuth</emphasis>
-</programlisting></para>
-
-            <indexterm>
-              <primary>klog command</primary>
-
-              <secondary>when handling key emergency</secondary>
-            </indexterm>
-          </listitem>
-
-          <listitem>
-            <para>Authenticate as an administrative identity that belongs to the <emphasis
-            role="bold">system:administrators</emphasis> group and is listed in the <emphasis
-            role="bold">/usr/afs/etc/UserList</emphasis> file. <programlisting>
-   # <emphasis role="bold">klog</emphasis> &lt;<replaceable>admin_user</replaceable>&gt;
-   Password: &lt;<replaceable>admin_password</replaceable>&gt;
-</programlisting></para>
-          </listitem>
-
-          <listitem>
-            <para>If appropriate, log out from the console (or close the remote connection you are using), after issuing the
-            <emphasis role="bold">unlog</emphasis> command to destroy your tokens.</para>
-          </listitem>
-        </orderedlist>
-      </sect3>
+    <para>While the keys are being installed, remote operations using
+    regular authentication mechanisms, even with administrator credentials,
+    may (continue to) fail.  Similarly, the ubik synchronization protocol
+    among database servers may fail to synchronize due to the servers not
+    being able to authenticate each other, making write operations to the
+    database impossible.  In order to interact with individual server
+    processes, the <emphasis role="bold">-localauth</emphasis> flag is used,
+    allowing commands that are run on a system that has the cell's key (such
+    as the server itself) to successfully authenticate as an administrator.
+    Once the new keys are installed on all database servers and the
+    90-second ubik recovery time has passed, the database servers should have
+    elected a new coordinator, allowing write transactions to proceed
+    again.</para>
     </sect2>
 
     <sect2 id="Header_430">

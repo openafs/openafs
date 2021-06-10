@@ -1123,7 +1123,8 @@
             <listitem>
               <para>This zero-length file instructs all AFS server processes running on the machine not to perform authorization
               checking. Thus, they perform any action for any user, even <emphasis role="bold">anonymous</emphasis>. This very
-              insecure state is useful only in rare instances, mainly during the installation of the machine.</para>
+              insecure state was once a part of the initial installation
+procedure, but is no longer needed.  It should not be used.</para>
 
               <para>The file is created automatically when you start the initial <emphasis role="bold">bosserver</emphasis> process
               with the <emphasis role="bold">-noauth</emphasis> flag, or issue the <emphasis role="bold">bos setauth</emphasis>
@@ -4442,12 +4443,6 @@
       disks to determine if they need to check for authorization. If the file called <emphasis role="bold">NoAuth</emphasis> appears
       in that directory, then the servers do not check for authorization. When it is not present (the usual case), they perform
       authorization checking.</para>
-
-      <para>Control the presence of the <emphasis role="bold">NoAuth</emphasis> file through the BOS Server. When you disable
-      authorization checking with the <emphasis role="bold">bos setauth</emphasis> command (or, during installation, by putting the
-      <emphasis role="bold">-noauth</emphasis> flag on the command that starts up the BOS Server), the BOS Server creates the
-      zero-length <emphasis role="bold">NoAuth</emphasis> file. When you reenable authorization checking, the BOS Server removes the
-      file.</para>
 
       <indexterm>
         <primary>bos commands</primary>
