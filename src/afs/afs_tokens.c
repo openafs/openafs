@@ -455,7 +455,7 @@ extractPioctlToken(struct tokenJar *token,
     xdr_destroy(&xdrs);
 
  out:
-    xdr_free((xdrproc_t) xdr_ktc_tokenUnion, &pioctlToken);
+    xdr_free((xdrproc_t) xdr_ktc_tokenUnion, pioctlToken);
     osi_Free(pioctlToken, sizeof(*pioctlToken));
 
     if (code != 0) {
