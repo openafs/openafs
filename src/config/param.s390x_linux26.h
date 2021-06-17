@@ -13,14 +13,8 @@
 #ifndef UKERNEL
 
 /* This section for kernel libafs compiles only */
-#define AFS_S390_LINUX20_ENV	1
-#define AFS_S390_LINUX22_ENV	1
-#define AFS_S390_LINUX24_ENV	1
-#define AFS_S390_LINUX26_ENV	1
-#define AFS_S390X_LINUX20_ENV	1
-#define AFS_S390X_LINUX22_ENV	1
-#define AFS_S390X_LINUX24_ENV	1
-#define AFS_S390X_LINUX26_ENV	1
+#define AFS_S390_LINUX_ENV	1
+#define AFS_S390X_LINUX_ENV	1
 
 #define AFS_64BITPOINTER_ENV	1
 #define AFS_64BITUSERPOINTER_ENV	1
@@ -30,10 +24,7 @@
 
 /* This section for user space compiles only */
 #define UKERNEL			1	/* user space kernel */
-#define AFS_S390X_LINUX20_ENV	1
-#define AFS_S390X_LINUX22_ENV	1
-#define AFS_S390X_LINUX24_ENV	1
-#define AFS_S390X_LINUX26_ENV	1
+#define AFS_S390X_LINUX_ENV	1
 
 #define AFS_64BITPOINTER_ENV	1
 #define AFS_64BITUSERPOINTER_ENV	1

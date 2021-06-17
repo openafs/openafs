@@ -17,7 +17,7 @@
 
 #include <ctype.h>
 
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX26_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV)
 #include <dlfcn.h>
 #endif
 
@@ -630,9 +630,9 @@ void * dynlib = NULL ;
 #endif
 #if defined(AFS_AIX_ENV)
         dynlib = dlopen("/usr/lib/libApiDS.a(dsmapish.o)", RTLD_NOW | RTLD_LOCAL | RTLD_MEMBER);
-#elif defined (AFS_AMD64_LINUX26_ENV)
+#elif defined (AFS_AMD64_LINUX_ENV)
 	dynlib = dlopen("/usr/lib64/libApiTSM64.so", RTLD_NOW | RTLD_LOCAL);
-#elif defined(AFS_SUN5_ENV) || defined(AFS_LINUX26_ENV)
+#elif defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV)
         dynlib = dlopen("/usr/lib/libApiDS.so", RTLD_NOW | RTLD_LOCAL);
 #else
         dynlib = NULL;
@@ -646,7 +646,7 @@ void * dynlib = NULL ;
 #ifdef DEBUG_BUTC
     	printf("dsm_MountLibrary : SUCCESS to Open the libApiDS shared library. \n");
 #endif
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX26_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV)
 	AFSdsmBeginQuery = (dsInt16_t (*)( dsUint32_t dsmHandle, dsmQueryType queryType, dsmQueryBuff *queryBuffer)) dlsym((void *)dynlib, "dsmBeginQuery");
 	AFSdsmGetNextQObj = (dsInt16_t (*)( dsUint32_t dsmHandle, DataBlk *dataBlkPtr))dlsym((void *)dynlib, "dsmGetNextQObj") ;
 	AFSdsmEndQuery = (dsInt16_t (*)( dsUint32_t dsmHandle))dlsym((void *)dynlib, "dsmEndQuery");

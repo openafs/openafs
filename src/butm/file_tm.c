@@ -676,7 +676,7 @@ incPosition(struct butm_tapeInfo *info, usd_handle_t fid, afs_uint32 dataSize)
 
     if (info->posCount >= 2147467264) {	/* 2GB - 16K */
 	info->posCount = 0;
-#if (defined(AFS_SUN_ENV) || defined(AFS_LINUX24_ENV))
+#if (defined(AFS_SUN_ENV) || defined(AFS_LINUX_ENV))
 	if (!isafile) {
 	    afs_int64 off;
 

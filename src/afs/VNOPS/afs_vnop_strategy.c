@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 
-#if !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN80_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN80_ENV)
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -224,4 +224,4 @@ int afs_ustrategy(struct buf *abp)
     return code;
 }
 
-#endif /* !AFS_HPUX_ENV  && !AFS_SGI_ENV && !AFS_LINUX20_ENV */
+#endif /* !AFS_HPUX_ENV  && !AFS_SGI_ENV && !AFS_LINUX_ENV */

@@ -22,7 +22,7 @@ int
 osi_Active(struct vcache *avc)
 {
     AFS_STATCNT(osi_Active);
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if ((avc->opens > 0) || (avc->f.states & CMAPPED))
 	return 1;		/* XXX: Warning, verify this XXX  */
 #elif defined(AFS_SGI_ENV)

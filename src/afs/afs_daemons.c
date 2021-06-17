@@ -348,7 +348,7 @@ afs_CheckRootVolume(void)
 		 * count to zero and fs checkv is executed when the current
 		 * directory is /afs.
 		 */
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 		osi_ResetRootVCache(volid);
 #else
 # ifdef AFS_DARWIN80_ENV
@@ -382,7 +382,7 @@ BPath(struct brequest *ab)
     struct dcache *tdc = NULL;
     struct vcache *tvc = NULL;
     struct vnode *tvn = NULL;
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
     struct dentry *dp = NULL;
 #endif
     afs_size_t offset, len;
@@ -394,7 +394,7 @@ BPath(struct brequest *ab)
 	return;
     }
     AFS_GUNLOCK();
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
     code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1, &dp);
     if (dp)
 	tvn = (struct vnode *)dp->d_inode;
@@ -411,7 +411,7 @@ BPath(struct brequest *ab)
     if (!tvn || !IsAfsVnode(tvn)) {
 	/* release it and give up */
 	if (tvn) {
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 	    dput(dp);
 #else
 	    AFS_RELE(tvn);
@@ -426,7 +426,7 @@ BPath(struct brequest *ab)
     if (tdc) {
 	afs_PutDCache(tdc);
     }
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
     dput(dp);
 #else
     AFS_RELE(tvn);

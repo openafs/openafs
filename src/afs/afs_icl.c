@@ -15,7 +15,7 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"
 #include "rx/rx_globals.h"
-#if !defined(UKERNEL) && !defined(AFS_LINUX20_ENV)
+#if !defined(UKERNEL) && !defined(AFS_LINUX_ENV)
 #include "net/if.h"
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"

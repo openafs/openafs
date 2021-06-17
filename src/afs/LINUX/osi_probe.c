@@ -74,11 +74,11 @@
 #include <linux/unistd.h>
 #include <linux/mm.h>
 
-#if defined(AFS_PPC64_LINUX26_ENV)
+#if defined(AFS_PPC64_LINUX_ENV)
 # include <asm/abs_addr.h>
 #endif
 
-#ifdef AFS_AMD64_LINUX20_ENV
+#ifdef AFS_AMD64_LINUX_ENV
 # include <asm/ia32_unistd.h>
 #endif
 
@@ -89,9 +89,9 @@
 #endif
 
 /* lower bound of valid kernel text pointers */
-#ifdef AFS_IA64_LINUX20_ENV
+#ifdef AFS_IA64_LINUX_ENV
 #define ktxt_lower_bound (((unsigned long)&kernel_thread )  & 0xfff00000L)
-#elif defined(AFS_PPC64_LINUX20_ENV)
+#elif defined(AFS_PPC64_LINUX_ENV)
 #define ktxt_lower_bound (KERNELBASE)
 #else
 #define ktxt_lower_bound (((unsigned long)&kernel_thread )  & ~0xfffffL)
@@ -100,7 +100,7 @@
 /* On SPARC64 and S390X, sys_call_table contains 32-bit entries
  * even though pointers are 64 bit quantities.
  */
-#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_S390X_LINUX24_ENV)
+#if defined(AFS_SPARC64_LINUX_ENV) || defined(AFS_S390X_LINUX_ENV)
 #define SYSCALLTYPE unsigned int
 #define PROBETYPE int
 #else
@@ -108,7 +108,7 @@
 #define PROBETYPE long
 #endif
 
-#if defined(AFS_S390X_LINUX20_ENV) && !defined(AFS_S390X_LINUX26_ENV) 
+#if defined(AFS_S390X_LINUX_ENV) && !defined(AFS_S390X_LINUX_ENV) 
 #define _SS(x) ((x) << 1)
 #define _SX(x) ((x) &~ 1)
 #else
@@ -299,7 +299,7 @@ typedef struct {
     int debug_ignore_NR[4];         /* syscalls to ignore for debugging */
 } probectl;
 
-#if defined(AFS_I386_LINUX26_ENV) || defined(AFS_AMD64_LINUX26_ENV)
+#if defined(AFS_I386_LINUX_ENV) || defined(AFS_AMD64_LINUX_ENV)
 static int check_access(unsigned long, int);
 static int check_table_readable(probectl *, PROBETYPE *);
 #endif
@@ -310,13 +310,13 @@ static int check_table_readable(probectl *, PROBETYPE *);
 /* syscall pairs/triplets to probe */
 /* On PPC64 and SPARC64, we need to omit the ones that might match both tables */
 static tryctl main_try[] = {
-#if !defined(AFS_PPC64_LINUX20_ENV) && !defined(AFS_SPARC64_LINUX20_ENV)
+#if !defined(AFS_PPC64_LINUX_ENV) && !defined(AFS_SPARC64_LINUX_ENV)
 #if defined(EXPORTED_SYS_CHDIR)
     { "scan: close+chdir+write", __NR_close, &sys_close, __NR_chdir, &sys_chdir, __NR_write, &sys_write },
 #endif
 #endif
     { "scan: close+wait4",       __NR_close, &sys_close, __NR_wait4, &sys_wait4, -1,         0          },
-#if !defined(AFS_PPC64_LINUX20_ENV) && !defined(AFS_SPARC64_LINUX20_ENV)
+#if !defined(AFS_PPC64_LINUX_ENV) && !defined(AFS_SPARC64_LINUX_ENV)
 #if defined(EXPORTED_SYS_CHDIR)
     { "scan: close+chdir",       __NR_close, &sys_close, __NR_chdir, &sys_chdir, -1,         0          },
 #endif
@@ -346,13 +346,13 @@ static int main_zapped_syscalls[] = {
  * other entries, or we might get a sys_ni_syscall into the list and
  * the test would no longer work.
  */
-#if defined(AFS_SPARC64_LINUX20_ENV)
+#if defined(AFS_SPARC64_LINUX_ENV)
     /* mmap2, fstat64, getmsg, putmsg, modify_ldt */
     56, 63, 151, 152, 218,
-#elif defined(AFS_SPARC_LINUX20_ENV)
+#elif defined(AFS_SPARC_LINUX_ENV)
     /* memory_ordering, getmsg, putmsg, unimplemented, modify_ldt */
     52, 151, 152, 164, 218,
-#else /* !AFS_SPARC_LINUX20_ENV */
+#else /* !AFS_SPARC_LINUX_ENV */
 
 /* 
  * These 7 syscalls are present in the syscall table on most "older"
@@ -386,7 +386,7 @@ static int main_zapped_syscalls[] = {
  * corresponding __NR macros are not defined, so the tests above fail.
  * Instead, we just have to know the numbers for these.
  */
-#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+#if defined(AFS_S390_LINUX_ENV) || defined(AFS_S390X_LINUX_ENV)
     /* break, stty, gtty, ftime, prof, lock, mpx */
     17, 31, 32, 35, 44, 53, 56,
 #endif
@@ -422,7 +422,7 @@ static int main_zapped_syscalls[] = {
  * unimplemented, but the __NR macros are not defined.  Again,
  * we simply have to know their numbers.
  */
-#ifdef AFS_IA64_LINUX26_ENV
+#ifdef AFS_IA64_LINUX_ENV
     /* create_module, query_module, get_kernel_sysms */
     1132, 1136, 1135,
 #endif
@@ -456,23 +456,23 @@ static int main_zapped_syscalls[] = {
  * unimplemented calls are very similar.
  * mmap2 and fstat64 are implemented only for 32-bit calls
  */
-#ifdef AFS_PPC64_LINUX20_ENV
+#ifdef AFS_PPC64_LINUX_ENV
     /* _mmap2, _fstat64 */
     192, 197,
-#endif /* AFS_PPC64_LINUX20_ENV */
+#endif /* AFS_PPC64_LINUX_ENV */
 
 /* Similarly for S390X, with lcown16 and fstat64 */
-#ifdef AFS_S390X_LINUX20_ENV
+#ifdef AFS_S390X_LINUX_ENV
     /* lchown16, fstat64 */
     16, 197,
 #endif
-#endif /* !AFS_SPARC_LINUX20_ENV */
+#endif /* !AFS_SPARC_LINUX_ENV */
     0
 };
 
 /* unique syscalls for try_harder */
 static int main_unique_syscalls[] = {
-#if defined(AFS_SPARC64_LINUX24_ENV) || defined(AFS_SPARC_LINUX24_ENV)
+#if defined(AFS_SPARC64_LINUX_ENV) || defined(AFS_SPARC_LINUX_ENV)
     /* 
      * On SPARC, we need some additional unique calls to make sure
      * we don't match the SunOS-compatibility table.
@@ -490,7 +490,7 @@ static probectl main_probe = {
     "system call table",
 
     /* syscall number of first entry in table */
-#ifdef AFS_IA64_LINUX20_ENV
+#ifdef AFS_IA64_LINUX_ENV
     1024,
 #else
     0,
@@ -507,9 +507,9 @@ static probectl main_probe = {
     main_try,                     /* array of combinations to try */
 
     /* symbol in section to try scanning */
-#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+#if defined(AFS_SPARC64_LINUX_ENV) || defined(AFS_S390_LINUX_ENV) || defined(AFS_S390X_LINUX_ENV)
     (unsigned long)&sys_close,
-#elif defined(AFS_AMD64_LINUX26_ENV)
+#elif defined(AFS_AMD64_LINUX_ENV)
     /* On this platform, it's in a different section! */
     (unsigned long)&generic_ro_fops,
 #else
@@ -519,24 +519,24 @@ static probectl main_probe = {
     /* default base address for scan */
     /* base address bits to force to zero */
     /* default length for scan */
-#if   defined(AFS_SPARC64_LINUX20_ENV)
+#if   defined(AFS_SPARC64_LINUX_ENV)
     (unsigned long)(&sys_close),
     0xfffff,
     0x10000,
-#elif   defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+#elif   defined(AFS_S390_LINUX_ENV) || defined(AFS_S390X_LINUX_ENV)
     /* bleah; this is so suboptimal */
     (unsigned long)(&sys_close),
     0xfffff,
     0x20000,
-#elif   defined(AFS_IA64_LINUX20_ENV)
+#elif   defined(AFS_IA64_LINUX_ENV)
     (unsigned long)(&init_mm),
     0x1fffff,
     0x30000,
-#elif defined(AFS_AMD64_LINUX26_ENV)
+#elif defined(AFS_AMD64_LINUX_ENV)
     (unsigned long)(&generic_ro_fops) - 0x30000,
     0,
     0x6000,
-#elif defined(AFS_PPC64_LINUX26_ENV)
+#elif defined(AFS_PPC64_LINUX_ENV)
     (unsigned long)(&do_signal),
     0xfff,
     0x400,
@@ -564,13 +564,13 @@ static probectl main_probe = {
 
     /* syscalls to ignore for debugging */
     {
-#if   defined(AFS_ALPHA_LINUX20_ENV)
+#if   defined(AFS_ALPHA_LINUX_ENV)
 	338,
-#elif defined(AFS_AMD64_LINUX20_ENV)
+#elif defined(AFS_AMD64_LINUX_ENV)
 	183,
-#elif defined(AFS_IA64_LINUX20_ENV)
+#elif defined(AFS_IA64_LINUX_ENV)
 	1141,
-#elif defined(AFS_SPARC_LINUX20_ENV) || defined(AFS_SPARC64_LINUX20_ENV)
+#elif defined(AFS_SPARC_LINUX_ENV) || defined(AFS_SPARC64_LINUX_ENV)
 	227,
 #else
 	137,
@@ -587,7 +587,7 @@ static probectl main_probe = {
 
 
 /********** Probing Configuration: amd64 ia32_sys_call_table **********/
-#if defined(AFS_AMD64_LINUX20_ENV)
+#if defined(AFS_AMD64_LINUX_ENV)
 
 /* syscall pairs/triplets to probe */
 static tryctl ia32_try[] = {
@@ -672,7 +672,7 @@ static probectl *probe_list[] = {
 
 
 /********** Probing Configuration: IA64 **********/
-#elif defined(AFS_IA64_LINUX20_ENV)
+#elif defined(AFS_IA64_LINUX_ENV)
 struct fptr {
     void *ip;
     unsigned long gp;
@@ -685,7 +685,7 @@ static probectl *probe_list[] = {
 
 
 /********** Probing Configuration: ppc64, sparc64 sys_call_table32 **********/
-#elif defined(AFS_PPC64_LINUX20_ENV) || defined(AFS_SPARC64_LINUX20_ENV)
+#elif defined(AFS_PPC64_LINUX_ENV) || defined(AFS_SPARC64_LINUX_ENV)
 struct fptr {
     void *ip;
     unsigned long gp;
@@ -702,12 +702,12 @@ static tryctl sct32_try[] = {
 
 /* zapped syscalls for try_harder */
 static int sct32_zapped_syscalls[] = {
-#ifdef AFS_PPC64_LINUX20_ENV
+#ifdef AFS_PPC64_LINUX_ENV
     /* These should be sufficient */
     __NR_break, __NR_stty, __NR_gtty, __NR_ftime,
     __NR_prof, __NR_lock, __NR_mpx,
 #endif
-#ifdef AFS_SPARC64_LINUX20_ENV
+#ifdef AFS_SPARC64_LINUX_ENV
     /* memory_ordering, getmsg, putmsg, unimplemented, modify_ldt */
     52, 151, 152, 164, 218,
 #endif
@@ -717,11 +717,11 @@ static int sct32_zapped_syscalls[] = {
 /* unique syscalls for try_harder */
 /* mmap2 and fstat64 are implemented only for 32-bit calls */
 static int sct32_unique_syscalls[] = {
-#ifdef AFS_PPC64_LINUX20_ENV
+#ifdef AFS_PPC64_LINUX_ENV
     /* _mmap2, _fstat64 */
     192, 197,
 #endif
-#ifdef AFS_SPARC64_LINUX24_ENV
+#ifdef AFS_SPARC64_LINUX_ENV
     /* 
      * On SPARC, we need some additional unique calls to make sure
      * we don't match the SunOS-compatibility table.
@@ -752,7 +752,7 @@ static probectl sct32_probe = {
     sct32_try,                   /* array of combinations to try */
 
     /* symbol in section to try scanning */
-#if defined(AFS_SPARC64_LINUX20_ENV)
+#if defined(AFS_SPARC64_LINUX_ENV)
     (unsigned long)&sys_close,
 #else
     (unsigned long)&init_mm,
@@ -761,11 +761,11 @@ static probectl sct32_probe = {
     /* default base address for scan */
     /* base address bits to force to zero */
     /* default length for scan */
-#if   defined(AFS_SPARC64_LINUX20_ENV)
+#if   defined(AFS_SPARC64_LINUX_ENV)
     (unsigned long)(&sys_close),
     0xfffff,
     0x10000,
-#elif defined(AFS_PPC64_LINUX26_ENV)
+#elif defined(AFS_PPC64_LINUX_ENV)
     (unsigned long)(&do_signal),
     0xfff,
     0x400,
@@ -793,7 +793,7 @@ static probectl sct32_probe = {
 
     /* syscalls to ignore for debugging */
     {
-#if defined(AFS_SPARC64_LINUX20_ENV)
+#if defined(AFS_SPARC64_LINUX_ENV)
 	227,
 #else
 	137,
@@ -814,7 +814,7 @@ static probectl *probe_list[] = {
  * On earlier versions, the two tables were interleaved and so
  * have related base addresses.
  */
-#elif defined(AFS_S390X_LINUX26_ENV)
+#elif defined(AFS_S390X_LINUX_ENV)
 
 /* syscall pairs/triplets to probe */
 /* nothing worthwhile is exported, so this is empty */
@@ -917,7 +917,7 @@ static int check_table(probectl *P, PROBETYPE *ptr)
     PROBETYPE *x;
     int i, j;
 
-#if defined(AFS_I386_LINUX26_ENV) || defined(AFS_AMD64_LINUX26_ENV)
+#if defined(AFS_I386_LINUX_ENV) || defined(AFS_AMD64_LINUX_ENV)
     i = check_table_readable(P, ptr);
     if (i >= 0) return i;
 #endif
@@ -964,7 +964,7 @@ static void *try(probectl *P, tryctl *T, PROBETYPE *aptr,
     int ret;
     PROBETYPE *ptr;
 
-#if defined(AFS_IA64_LINUX20_ENV) || defined(AFS_PPC64_LINUX20_ENV)
+#if defined(AFS_IA64_LINUX_ENV) || defined(AFS_PPC64_LINUX_ENV)
     ip1 = T->fn1 ? (unsigned long)((struct fptr *)T->fn1)->ip : 0;
     ip2 = T->fn2 ? (unsigned long)((struct fptr *)T->fn2)->ip : 0;
     ip3 = T->fn3 ? (unsigned long)((struct fptr *)T->fn3)->ip : 0;
@@ -984,7 +984,7 @@ static void *try(probectl *P, tryctl *T, PROBETYPE *aptr,
 	return 0;
 
     for (offset = 0; offset < datalen; offset++, aptr++) {
-#if defined(AFS_PPC64_LINUX20_ENV)
+#if defined(AFS_PPC64_LINUX_ENV)
 	ptr = (PROBETYPE*)(*aptr);
 	if ((unsigned long)ptr <= KERNELBASE) {
 		continue;
@@ -993,7 +993,7 @@ static void *try(probectl *P, tryctl *T, PROBETYPE *aptr,
 	ptr = aptr;
 #endif
 	if ((unsigned long)ptr < init_mm.start_code ||
-#if defined(AFS_AMD64_LINUX20_ENV)
+#if defined(AFS_AMD64_LINUX_ENV)
 		(unsigned long)ptr > init_mm.brk)
 #else
 		(unsigned long)ptr > init_mm.end_data)
@@ -1044,7 +1044,7 @@ static int check_harder(probectl *P, PROBETYPE *p)
     unsigned long ip1;
     int i, s;
 
-#if defined(AFS_I386_LINUX26_ENV) || defined(AFS_AMD64_LINUX26_ENV)
+#if defined(AFS_I386_LINUX_ENV) || defined(AFS_AMD64_LINUX_ENV)
     i = check_table_readable(P, p);
     if (i >= 0) return 0;
 #endif
@@ -1074,7 +1074,7 @@ static int check_harder(probectl *P, PROBETYPE *p)
 	}
     }
 
-#if defined(AFS_IA64_LINUX20_ENV) || defined(AFS_PPC64_LINUX20_ENV)
+#if defined(AFS_IA64_LINUX_ENV) || defined(AFS_PPC64_LINUX_ENV)
     ip1 = P->verify_fn ? (unsigned long)((struct fptr *)(P->verify_fn))->ip : 0;
 #else
     ip1 = (unsigned long)(P->verify_fn);
@@ -1113,7 +1113,7 @@ static void *try_harder(probectl *P, PROBETYPE *ptr, unsigned long datalen)
 #endif
     for (offset = 0; offset < datalen; offset++, ptr++) {
 	 if ((unsigned long)ptr < init_mm.start_code ||
-#if defined(AFS_AMD64_LINUX20_ENV)
+#if defined(AFS_AMD64_LINUX_ENV)
 		(unsigned long)ptr > init_mm.brk)
 #else
 		(unsigned long)ptr > init_mm.end_data)
@@ -1190,7 +1190,7 @@ static void *scan_for_syscall_table(probectl *P, PROBETYPE *B, unsigned long L)
 {
     tryctl *T;
     void *answer;
-#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+#if defined(AFS_S390_LINUX_ENV) || defined(AFS_S390X_LINUX_ENV)
     void *answer2;
 #endif
 #ifdef OSI_PROBE_DEBUG
@@ -1210,7 +1210,7 @@ static void *scan_for_syscall_table(probectl *P, PROBETYPE *B, unsigned long L)
 
     for (T = P->trylist; T->name; T++) {
 	answer = try(P, T, B, L);
-#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+#if defined(AFS_S390_LINUX_ENV) || defined(AFS_S390X_LINUX_ENV)
 	answer2 = try(P, T, (PROBETYPE *)(2 + (void *)B), L);
 #ifdef OSI_PROBE_DEBUG
 	if (probe_debug & 0x0003) {
@@ -1230,7 +1230,7 @@ static void *scan_for_syscall_table(probectl *P, PROBETYPE *B, unsigned long L)
     /* XXX more checks here */
 
     answer = try_harder(P, B, L);
-#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+#if defined(AFS_S390_LINUX_ENV) || defined(AFS_S390X_LINUX_ENV)
     answer2 = try_harder(P, (PROBETYPE *)(2 + (void *)B), L);
 #ifdef OSI_PROBE_DEBUG
     if (probe_debug & 0x0005) {
@@ -1335,7 +1335,7 @@ static void *do_find_syscall_table(probectl *P, char **method)
 #endif
 }
 
-#if defined(AFS_I386_LINUX26_ENV) || defined(AFS_AMD64_LINUX26_ENV)
+#if defined(AFS_I386_LINUX_ENV) || defined(AFS_AMD64_LINUX_ENV)
 static int check_access(unsigned long address, int mode) 
 { 
     pgd_t *pgd = pgd_offset_k(address);
@@ -1415,7 +1415,7 @@ void *osi_find_syscall_table(int which)
 	return 0;
     }
     printk("Found %s at 0x%lx (%s)\n", P->desc, (unsigned long)answer, method);
-#if defined(AFS_I386_LINUX26_ENV) || defined(AFS_AMD64_LINUX26_ENV)
+#if defined(AFS_I386_LINUX_ENV) || defined(AFS_AMD64_LINUX_ENV)
     if (!check_access((unsigned long)answer, 1)) {
 	printk("Address 0x%lx is not writable.\n", (unsigned long)answer);
 	printk("System call hooks will not be installed; proceeding anyway\n");

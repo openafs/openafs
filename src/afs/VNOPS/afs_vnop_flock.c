@@ -122,7 +122,7 @@ lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 	flock->l_pid = clid;
     }
 }
-#elif defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
+#elif defined(AFS_LINUX_ENV) || defined(AFS_HPUX_ENV)
 void
 lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 {
@@ -173,7 +173,7 @@ lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
 #if	defined(AFS_SUN5_ENV)
     proc_t *procp = ttoproc(curthread);
 #else
-#if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
+#if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #ifdef AFS_SGI64_ENV
     afs_proc_t *procp = curprocp;
 #elif defined(UKERNEL)
@@ -191,7 +191,7 @@ lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
 	}
 #endif
 	if ((flock1->l_pid == alp->pid) ||
-#if defined(AFS_AIX41_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
+#if defined(AFS_AIX41_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_HPUX_ENV)
 	    (!onlymine && (flock1->l_pid == getppid()))
 #else
 #if defined(AFS_SGI65_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -541,7 +541,7 @@ DoLockWarning(struct vcache *avc, afs_ucred_t * acred)
     lastWarnTime = avc->lastBRLWarnTime = now;
     lastWarnPid = pid;
 
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
     message = "byte-range locks only enforced for processes on this machine";
 #else
     message = "byte-range lock/unlock ignored; make sure no one else is running this program";

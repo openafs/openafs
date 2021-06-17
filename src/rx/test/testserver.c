@@ -53,7 +53,7 @@ quitSignal(int ignore)
 	rx_PrintStats(debugFile);
 }
 
-#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX_ENV)
 int
 test_syscall(a3, a4, a5)
      afs_uint32 a3, a4;
@@ -80,7 +80,7 @@ main(argc, argv)
     int setFD = 0;
     int jumbo = 0;
 
-#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX_ENV)
     setlinebuf(stdout);
     rxi_syscallp = test_syscall;
 #endif

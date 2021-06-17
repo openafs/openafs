@@ -71,19 +71,19 @@ afs_uint32
 genpag(void)
 {
     AFS_STATCNT(genpag);
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
     /* Ensure unique PAG's (mod 200 days) when reloading the client. */
     return (('A' << 24) + ((pag_epoch + pagCounter++) & 0xffffff));
-#else /* AFS_LINUX20_ENV */
+#else /* AFS_LINUX_ENV */
     return (('A' << 24) + (pagCounter++ & 0xffffff));
-#endif /* AFS_LINUX20_ENV */
+#endif /* AFS_LINUX_ENV */
 }
 
 afs_uint32
 getpag(void)
 {
     AFS_STATCNT(getpag);
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
     /* Ensure unique PAG's (mod 200 days) when reloading the client. */
     return (('A' << 24) + ((pag_epoch + pagCounter) & 0xffffff));
 #else
@@ -100,18 +100,18 @@ afs_uint32
 genpag(void)
 {
     AFS_STATCNT(genpag);
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
     return (pag_epoch + pagCounter++);
 #else
     return (pagCounter++);
-#endif /* AFS_LINUX20_ENV */
+#endif /* AFS_LINUX_ENV */
 }
 
 afs_uint32
 getpag(void)
 {
     AFS_STATCNT(getpag);
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
     /* Ensure unique PAG's (mod 200 days) when reloading the client. */
     return (pag_epoch + pagCounter);
 #else
@@ -251,7 +251,7 @@ afs_setpag(void)
 	credp = OSI_GET_CURRENT_CRED();
 	code = AddPag(genpag(), &credp);
     }
-#elif	defined(AFS_LINUX20_ENV)
+#elif	defined(AFS_LINUX_ENV)
     {
 	afs_ucred_t *credp = crref();
 	code = AddPag(genpag(), &credp);
@@ -362,7 +362,7 @@ afs_setpag_val(int pagval)
 	credp = OSI_GET_CURRENT_CRED();
 	code = AddPag(pagval, &credp);
     }
-#elif	defined(AFS_LINUX20_ENV)
+#elif	defined(AFS_LINUX_ENV)
     {
 	afs_ucred_t *credp = crref();
 	code = AddPag(pagval, &credp);
@@ -451,7 +451,7 @@ AddPag(afs_int32 aval, afs_ucred_t **credpp)
 int
 afs_InitReq(struct vrequest *av, afs_ucred_t *acred)
 {
-#if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
+#if defined(AFS_LINUX_ENV) && !defined(AFS_NONFSTRANS)
     int code;
 #endif
 
@@ -460,7 +460,7 @@ afs_InitReq(struct vrequest *av, afs_ucred_t *acred)
     if (afs_shuttingdown == AFS_SHUTDOWN)
 	return EIO;
 
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
 #if !defined(AFS_NONFSTRANS)
     if (osi_linux_nfs_initreq(av, acred, &code))
 	return code;
@@ -599,7 +599,7 @@ afs_get_groups_from_pag(afs_uint32 pag, gid_t *g0p, gid_t *g1p)
 }
 #endif
 
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
 /* osi_get_group_pag is defined in <ARCH>/osi_groups.c */
 #elif defined(AFS_PAG_ONEGROUP_ENV)
 /* osi_get_group_pag is defined in <ARCH>/osi_groups.c */
@@ -639,10 +639,10 @@ osi_get_group_pag(afs_ucred_t *cred)
 # if defined(AFS_AIX_ENV)
     if (cred->cr_ngrps < 2)
 	return NOPAG;
-# elif defined(AFS_LINUX26_ENV)
+# elif defined(AFS_LINUX_ENV)
     if (afs_cr_group_info(cred)->ngroups < AFS_NUMPAGGROUPS)
 	return NOPAG;
-# elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
+# elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_XBSD_ENV)
 #  if defined(AFS_SUN510_ENV)
     if (ngroups < 2) {
 #  else
@@ -678,7 +678,7 @@ PagInCred(afs_ucred_t *cred)
 	return NOPAG;
     }
 #ifndef AFS_DARWIN110_ENV
-#if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
+#if defined(AFS_LINUX_ENV) && defined(LINUX_KEYRING_SUPPORT)
     /*
      * If linux keyrings are in use and we carry the session keyring in our credentials
      * structure, they should be the only criteria for determining

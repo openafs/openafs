@@ -119,7 +119,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #endif
 #endif
 #else /* AFS_VFSINCL_ENV */
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_LINUX_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_DARWIN_ENV)
 #include <sys/inode.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */

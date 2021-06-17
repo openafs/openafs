@@ -18,7 +18,7 @@
 #ifndef _RX_KCOMMON_H_
 #define _RX_KCOMMON_H_
 
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 #ifndef _LINUX_CODA_FS_I
 #define _LINUX_CODA_FS_I 1
 #define _CODA_HEADER_ 1
@@ -29,10 +29,10 @@ struct coda_inode_info {
 
 
 #include "h/types.h"
-#if !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_LINUX_ENV)
 #include "h/param.h"
 #endif
-#ifndef AFS_LINUX22_ENV
+#ifndef AFS_LINUX_ENV
 #include "h/systm.h"
 #endif
 #include "h/time.h"
@@ -43,7 +43,7 @@ struct coda_inode_info {
 #include "h/disp.h"
 #endif
 #include "h/socket.h"
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_OBSD_ENV)
+#if !defined(AFS_LINUX_ENV) && !defined(AFS_OBSD_ENV)
 #include "h/socketvar.h"
 #if !defined(AFS_SUN5_ENV) && !defined(AFS_XBSD_ENV)
 #include "h/domain.h"
@@ -68,7 +68,7 @@ struct coda_inode_info {
 #include "h/mbuf.h"
 #endif
 #endif /* !defined(AFS_SUN5_ENV) && !defined(AFS_XBSD_ENV) */
-#endif /* !defined(AFS_LINUX22_ENV) && !defined(AFS_OBSD_ENV) */
+#endif /* !defined(AFS_LINUX_ENV) && !defined(AFS_OBSD_ENV) */
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"
 #endif
@@ -83,32 +83,32 @@ struct coda_inode_info {
 #include "h/signalvar.h"
 #endif /* AFS_OBSD_ENV */
 #include "netinet/in.h"
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 #include "linux/route.h"
 #else
 #include "net/route.h"
 #endif
-#if defined(HAVE_IN_SYSTM_H) || !defined(AFS_LINUX22_ENV)
+#if defined(HAVE_IN_SYSTM_H) || !defined(AFS_LINUX_ENV)
 #include "netinet/in_systm.h"
 #endif
 #include "netinet/ip.h"
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD_ENV)
 #include "netinet/in_pcb.h"
-#endif /* ! AFS_HPUX110_ENV && ! AFS_LINUX22_ENV */
-#ifndef AFS_LINUX22_ENV
+#endif /* ! AFS_HPUX110_ENV && ! AFS_LINUX_ENV */
+#ifndef AFS_LINUX_ENV
 #if !defined(AFS_DARWIN_ENV)
 #include "netinet/ip_var.h"
 #endif
 #include "netinet/ip_icmp.h"
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_LINUX_ENV */
 #include "netinet/udp.h"
-#if !defined(AFS_SGI62_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_SGI62_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN_ENV)
 #include "netinet/udp_var.h"
 #endif
 #if defined(AFS_HPUX102_ENV) || (defined(AFS_SGI62_ENV) && !defined(AFS_SGI64_ENV))
 #include "h/user.h"
 #endif
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 #include "h/sched.h"
 #include "h/netdevice.h"
 #include "linux/if.h"
@@ -124,9 +124,9 @@ struct coda_inode_info {
 #  include <net/if_var.h>
 # endif
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN_ENV)
 #include "netinet/in_var.h"
-#endif /* ! AFS_HPUX110_ENV && ! AFS_LINUX22_ENV */
+#endif /* ! AFS_HPUX110_ENV && ! AFS_LINUX_ENV */
 #include "afs/afs_osi.h"
 #include "rx_kmutex.h"
 #include "afs/lock.h"

@@ -48,10 +48,10 @@
 #ifndef	NeXT
 
 #if defined(KERNEL) && !defined(UKERNEL)
-#if !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_LINUX_ENV)
 #include <sys/param.h>
 #endif
-#ifndef AFS_LINUX20_ENV
+#ifndef AFS_LINUX_ENV
 #include <sys/systm.h>
 #endif
 #endif
@@ -591,7 +591,7 @@ xdr_free(xdrproc_t proc, void *obj)
     x.x_op = XDR_FREE;
 
     /* See note in xdr.h for the method behind this madness */
-#if defined(AFS_I386_LINUX26_ENV) && defined(KERNEL) && !defined(UKERNEL)
+#if defined(AFS_I386_LINUX_ENV) && defined(KERNEL) && !defined(UKERNEL)
     (*proc)(&x, obj, 0);
 #else
     (*proc)(&x, obj);

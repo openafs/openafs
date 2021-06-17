@@ -60,7 +60,7 @@
 #define uss_VolumeLen		300
 #define uss_DirPoolLen		300
 
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
+#if !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 extern char *sys_errlist[];
 #endif
 

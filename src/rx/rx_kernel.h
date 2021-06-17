@@ -37,7 +37,7 @@ typedef struct socket *osi_socket;
 
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
 
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX_ENV)
 # define osi_Panic(msg...) \
     do { printk(KERN_CRIT "openafs: " msg); BUG(); } while (0)
 # define osi_Assert(expr) \
@@ -58,7 +58,7 @@ extern void osi_Panic(char *fmt, ...)
     (void)((exp) || (osi_AssertFailK( #exp , __FILE__, __LINE__), 0))
 #endif
 
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 # define	osi_Msg printk)(
 #else
 # define	osi_Msg printf)(

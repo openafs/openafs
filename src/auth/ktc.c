@@ -50,7 +50,7 @@
 #include <afs/sys_prototypes.h>
 #endif
 
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX_ENV)
 #include <sys/syscall.h>
 #if defined(SYS_keyctl)
 /* Open code this value to avoid a dependency on keyutils */
@@ -297,7 +297,7 @@ SetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 #endif /* NO_AFS_CLIENT */
     if (code)
 	return KTC_PIOCTLFAIL;
-#if defined(AFS_LINUX26_ENV) && defined(SYS_keyctl)
+#if defined(AFS_LINUX_ENV) && defined(SYS_keyctl)
     else
         /*
          * If we're using keyring based PAGs and the SESSION_TO_PARENT keyctl
@@ -372,7 +372,7 @@ ktc_SetTokenEx(struct ktc_setTokenData *token) {
 
     if (code)
 	return KTC_PIOCTLFAIL;
-#if defined(AFS_LINUX26_ENV) && defined(SYS_keyctl)
+#if defined(AFS_LINUX_ENV) && defined(SYS_keyctl)
     else
 	/*
 	 * If we're using keyring based PAGs and the SESSION_TO_PARENT keyctl

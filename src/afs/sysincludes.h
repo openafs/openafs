@@ -108,7 +108,7 @@
 # include <sys/protosw.h>
 # include <sys/ioctl.h>
 
-#elif defined(AFS_LINUX22_ENV)
+#elif defined(AFS_LINUX_ENV)
 # include <linux/version.h>
 # ifdef HAVE_LINUX_CONFIG_H
 #  include <linux/config.h>
@@ -121,7 +121,7 @@
 # include <linux/net.h>
 # include <linux/kdev_t.h>
 # include <linux/ioctl.h>
-# if defined(AFS_LINUX26_ENV)
+# if defined(AFS_LINUX_ENV)
 #  include <linux/compat.h>
 #  include <linux/backing-dev.h>
 #  include <linux/pagemap.h>
@@ -177,11 +177,11 @@ struct xfs_inode_info {
 # if defined(HAVE_LINUX_EXPORTFS_H)
 #  include <linux/exportfs.h>
 # endif
-# ifdef AFS_LINUX24_ENV
+# ifdef AFS_LINUX_ENV
 #  include <linux/pagemap.h>
 # endif
 
-#else /* AFS_LINUX22_ENV */
+#else /* AFS_LINUX_ENV */
 
 # include "h/errno.h"
 # include "h/types.h"
@@ -449,7 +449,7 @@ MALLOC_DECLARE(M_AFS);
 #  include <sys/debug.h>
 # endif
 
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_LINUX_ENV */
 
 #endif /* __AFS_SYSINCLUDESH__  so idempotent */
 

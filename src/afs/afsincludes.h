@@ -23,7 +23,7 @@
 # elif defined(AFS_HPUX_ENV) || defined(AFS_NBSD_ENV)
 #  include "osi_vfs.h"
 # endif
-# if defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
+# if defined(AFS_SGI_ENV) || defined(AFS_LINUX_ENV)
 #  include "osi_vfs.h"
 # endif
 # include "rx/rx.h"
@@ -31,13 +31,13 @@
 # include "afs/lock.h"
 # include "afs/volerrors.h"
 # include "afs/voldefs.h"
-# ifdef AFS_LINUX20_ENV
+# ifdef AFS_LINUX_ENV
 #  ifdef TRUE
 #   undef TRUE
 #   undef FALSE
 #  endif
 # endif
-# ifdef AFS_LINUX20_ENV
+# ifdef AFS_LINUX_ENV
 #  undef __NFDBITS
 #  undef __FDMASK
 # endif
@@ -54,7 +54,7 @@
 # include "afs/afs_stats.h"
 # include "afs/afs_prototypes.h"
 # include "afs/discon.h"
-# if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+# if defined(AFS_LINUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #  include "osi_machdep.h"
 # endif
 

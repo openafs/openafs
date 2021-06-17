@@ -548,7 +548,7 @@ afs_UFSReadUIO(afs_dcache_id_t *cacheId, struct uio *tuiop)
     AFS_GUNLOCK();
     code = VOP_RDWR(tfile->vnode, tuiop, UIO_READ, 0, afs_osi_credp);
     AFS_GLOCK();
-#elif defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX_ENV)
     AFS_GUNLOCK();
     code = osi_rdwr(tfile, tuiop, UIO_READ);
     AFS_GLOCK();

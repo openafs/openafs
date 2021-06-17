@@ -81,7 +81,7 @@ pam_sm_close_session(pam_handle_t * pamh, int flags, int argc,
 	case -1:		/* error */
 	    return (PAM_SESSION_ERR);
 	case 0:		/* child */
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 	    setpgrp();
 #endif
 	    setsid();

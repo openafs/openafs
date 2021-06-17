@@ -20,7 +20,7 @@
 
 #include <roken.h>
 
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_FBSD_ENV)
 #include <sgtty.h>
 #endif
 

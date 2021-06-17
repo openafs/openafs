@@ -102,7 +102,7 @@ static_inline int close(int d) {return -1;}
 # undef HAVE_ARC4RANDOM
 #endif
 
-#if !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_LINUX_ENV)
 /*
  * gettimeofday is only used in rand-fortuna.c, not built for Linux.
  * Linux 5.6 removes the native struct timeval, so this stub would not build.
@@ -111,7 +111,7 @@ static_inline int gettimeofday(struct timeval *tp, void *tzp)
     {if (tp == NULL) return -1; tp->tv_sec = osi_Time(); tp->tv_usec = 0; return 0;}
 #endif
 
-#if defined(KERNEL) && (defined(AFS_SUN5_ENV) || defined(AFS_ARM64_LINUX26_ENV))
+#if defined(KERNEL) && (defined(AFS_SUN5_ENV) || defined(AFS_ARM64_LINUX_ENV))
 /*
  * Some functions such as RAND_add take a 'double' as an argument, but floating
  * point code generally cannot be used in kernelspace. We never actually use

@@ -451,7 +451,7 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	}
 #ifdef AFS_NT40_ENV
 	if (err)
-#elif defined(AFS_LINUX22_ENV)
+#elif defined(AFS_LINUX_ENV)
 	/* linux unfortunately returns ECONNREFUSED if the target port
 	 * is no longer in use */
 	/* and EAGAIN if a UDP checksum is incorrect */

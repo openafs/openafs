@@ -38,13 +38,13 @@
 #ifdef KERNEL
 #ifndef UKERNEL
 #include "h/types.h"
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_OBSD_ENV)
+#if !defined(AFS_LINUX_ENV) && !defined(AFS_OBSD_ENV)
 #include "netinet/in.h"
 #endif
 #else /* UKERNEL */
 #include "afs/sysincludes.h"
 #endif /* UKERNEL */
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 #include <asm/byteorder.h>
 #endif
 

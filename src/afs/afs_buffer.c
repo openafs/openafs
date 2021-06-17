@@ -14,7 +14,7 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #if !defined(UKERNEL)
-#if !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_LINUX_ENV)
 # include "h/param.h"
 #endif
 #include "h/types.h"
@@ -22,7 +22,7 @@
 #if	defined(AFS_AIX31_ENV)
 #include "h/limits.h"
 #endif
-#if	!defined(AFS_AIX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV)
+#if	!defined(AFS_AIX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX_ENV)
 #include "h/kernel.h"		/* Doesn't needed, so it should go */
 #endif
 #endif /* !defined(UKERNEL) */
@@ -31,7 +31,7 @@
 #include "afsint.h"
 #include "afs/lock.h"
 
-#if !defined(UKERNEL) && !defined(AFS_LINUX20_ENV)
+#if !defined(UKERNEL) && !defined(AFS_LINUX_ENV)
 #include "h/buf.h"
 #endif /* !defined(UKERNEL) */
 

@@ -201,7 +201,7 @@ static struct IoRequest *NewRequest(void)
 
 /* On Linux without __USE_XOPEN, we have __fds_bits. With __USE_XOPEN, or
  * non-Linux, we have fds_bits. */
-#if defined(AFS_LINUX22_ENV) && (__GLIBC_MINOR__ > 0) && !defined(__USE_XOPEN)
+#if defined(AFS_LINUX_ENV) && (__GLIBC_MINOR__ > 0) && !defined(__USE_XOPEN)
 # define FDS_BITS __fds_bits
 #else
 # define FDS_BITS fds_bits
@@ -473,7 +473,7 @@ static void *IOMGR(void *dummy)
 		iomgr_timeout.tv_sec = 100000000;
 		iomgr_timeout.tv_usec = 0;
 	    }
-#if defined(AFS_NT40_ENV) || defined(AFS_LINUX24_ENV)
+#if defined(AFS_NT40_ENV) || defined(AFS_LINUX_ENV)
 	    /* On NT, signals don't interrupt a select call. So this can potentially
 	     * lead to long wait times before a signal is honored. To avoid this we
 	     * dont do select() for longer than IOMGR_MAXWAITTIME (5 secs) */
@@ -565,7 +565,7 @@ static void *IOMGR(void *dummy)
 		/* Real timeout only if signal handler hasn't set
 		   iomgr_timeout to zero. */
 
-#if defined(AFS_NT40_ENV) || defined(AFS_LINUX24_ENV)
+#if defined(AFS_NT40_ENV) || defined(AFS_LINUX_ENV)
 		/* On NT, real timeout only if above and if iomgr_timeout
 		 * interval is equal to timeout interval (i.e., not adjusted
 		 * to check for pseudo-signals).

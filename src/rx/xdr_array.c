@@ -47,16 +47,16 @@
  */
 
 #if defined(KERNEL) && !defined(UKERNEL)
-#if !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_LINUX_ENV)
 #include <sys/param.h>
 #endif
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 #include "h/string.h"
 #else
 #ifndef AFS_DARWIN90_ENV
 #include <sys/systm.h>
 #endif
-#endif /* AFS_LINUX20_ENV */
+#endif /* AFS_LINUX_ENV */
 #endif
 #include "xdr.h"
 

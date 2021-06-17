@@ -12,9 +12,7 @@
 
 #ifndef UKERNEL
 /* This section for kernel libafs compiles only */
-#define AFS_SPARC_LINUX20_ENV	1
-#define AFS_SPARC_LINUX22_ENV	1
-#define AFS_SPARC_LINUX24_ENV	1
+#define AFS_SPARC_LINUX_ENV	1
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
 #if defined(AFS_SMP) && defined(CONFIG_MODVERSIONS)

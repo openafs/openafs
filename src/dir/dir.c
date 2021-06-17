@@ -13,7 +13,7 @@
 #ifdef KERNEL
 # if !defined(UKERNEL)
 #  include "h/types.h"
-#  if !defined(AFS_LINUX26_ENV)
+#  if !defined(AFS_LINUX_ENV)
 #   include "h/param.h"
 #  endif
 #  ifdef	AFS_AUX_ENV
@@ -24,10 +24,10 @@
 #   include "h/errno.h"
 #  endif
 #  include "h/time.h"
-#  if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV)
+#  if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV)
 #   include "h/errno.h"
 #  else
-#   if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
+#   if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX_ENV)
 #    include "h/kernel.h"
 #   endif
 #  endif
@@ -38,10 +38,10 @@
 #   include "h/user.h"
 #  endif /* AFS_SGI64_ENV */
 #  include "h/uio.h"
-#  if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
+#  if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_HPUX110_ENV)
 #   include "h/mbuf.h"
 #  endif
-#  ifndef AFS_LINUX20_ENV
+#  ifndef AFS_LINUX_ENV
 #   include "netinet/in.h"
 #  endif
 # else /* !defined(UKERNEL) */
@@ -60,7 +60,7 @@ extern int DNew(struct dcache *adc, int page, struct DirBuffer *);
 
 # include "afs/dir.h"
 
-# ifdef AFS_LINUX20_ENV
+# ifdef AFS_LINUX_ENV
 #  include "h/string.h"
 # endif
 

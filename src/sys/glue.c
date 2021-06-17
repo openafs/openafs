@@ -20,7 +20,7 @@
 
 #include "afssyscalls.h"
 
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 int proc_afs_syscall(long syscall, long param1, long param2, long param3,
 		     long param4, int *rval) {
   struct afsprocdata syscall_data;

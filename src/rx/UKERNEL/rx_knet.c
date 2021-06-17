@@ -227,7 +227,7 @@ rxk_InitializeSocket(void)
     len = sizeof(struct sockaddr_in);
     rc = getsockname(sock, (struct sockaddr *)&lcladdr, &len);
     usr_assert(rc >= 0);
-#ifdef AFS_USR_LINUX22_ENV
+#ifdef AFS_USR_LINUX_ENV
     optval0 = 131070;
 #else
     optval0 = 131072;
@@ -240,7 +240,7 @@ rxk_InitializeSocket(void)
     rc = getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (void *)&optval, &optlen);
     usr_assert(rc == 0);
     /* usr_assert(optval == optval0); */
-#ifdef AFS_USR_LINUX22_ENV
+#ifdef AFS_USR_LINUX_ENV
     optval0 = 131070;
 #else
     optval0 = 131072;

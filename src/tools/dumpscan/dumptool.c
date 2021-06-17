@@ -88,7 +88,7 @@
 #include <afs/vnode.h>
 #include <afs/volume.h>
 
-#ifdef AFS_LINUX24_ENV
+#ifdef AFS_LINUX_ENV
 #define _LARGEFILE64_SOURCE 1
 #endif
 #ifdef RESIDENCY

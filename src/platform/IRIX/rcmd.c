@@ -87,7 +87,7 @@ rcmd(ahost, rport, locuser, remuser, cmd, fd2p)
 #endif
      char **ahost;
      u_short rport;
-#if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_LINUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
      const char *locuser, *remuser, *cmd;
 #else
      char *locuser, *remuser, *cmd;
@@ -336,7 +336,7 @@ rresvport(alport)
 
 int _check_rhosts_file = 1;
 
-#if defined(AFS_HPUX102_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_HPUX102_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 ruserok(rhost, superuser, ruser, luser)
      const char *rhost;
      int superuser;

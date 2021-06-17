@@ -61,7 +61,7 @@ afs_rwlock_t afs_xvcdirty;	/*Lock: discon vcache dirty list mgmt */
 afs_rwlock_t afs_xvcache;	/*Lock: alloc new stat cache entries */
 afs_rwlock_t afs_xvreclaim;	/*Lock: entries reclaimed, not on free list */
 afs_lock_t afs_xvcb;		/*Lock: fids on which there are callbacks */
-#if !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_LINUX_ENV)
 static struct vcache *freeVCList;	/*Free list for stat cache entries */
 struct vcache *ReclaimedVCList;	/*Reclaimed list for stat entries */
 static struct vcache *Initial_freeVCList;	/*Initial list for above */
@@ -173,7 +173,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	code = EBUSY;
 	goto bad;
     }
-#if !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_LINUX_ENV)
     if (avc->nextfree || !avc->vlruq.prev || !avc->vlruq.next) {	/* qv afs.h */
 	refpanic("LRU vs. Free inconsistency");
     }
@@ -202,7 +202,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     /* remove entry from the volume hash table */
     QRemove(&avc->vhashq);
 
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX_ENV)
     {
 	struct pagewriter *pw, *store;
 	struct list_head tofree;
@@ -273,7 +273,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	afs_evenZaps++;
 
     afs_vcount--;
-#if !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_LINUX_ENV)
     /* put the entry in the free list */
     avc->nextfree = freeVCList;
     freeVCList = avc;
@@ -294,7 +294,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	} else
 	    osi_Panic("flush vc refcnt < 1");
     }
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_LINUX_ENV */
     return 0;
 
   bad:
@@ -684,7 +684,7 @@ afs_RemoveVCB(struct VenusFid *afid)
 void
 afs_FlushReclaimedVcaches(void)
 {
-#if !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_LINUX_ENV)
     struct vcache *tvc;
     int code, fv_slept;
     struct vcache *tmpReclaimedVCList = NULL;
@@ -760,7 +760,7 @@ afs_PostPopulateVCache(struct vcache *avc, struct VenusFid *afid, int seq)
  *
  * Returns 1 if the stat cache looks stressed, and 0 otherwise.
  */
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
 int
 afs_VCacheStressed(void)
 {
@@ -789,7 +789,7 @@ afs_VCacheStressed(void)
 	return 0;
     }
 }
-#else /* AFS_LINUX26_ENV */
+#else /* AFS_LINUX_ENV */
 int
 afs_VCacheStressed(void)
 {
@@ -800,7 +800,7 @@ afs_VCacheStressed(void)
     }
     return 1;
 }
-#endif /* AFS_LINUX26_ENV */
+#endif /* AFS_LINUX_ENV */
 
 int
 afs_ShakeLooseVCaches(afs_int32 anumber)
@@ -1050,7 +1050,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
 
     afs_FlushReclaimedVcaches();
 
-#if defined(AFS_LINUX22_ENV)
+#if defined(AFS_LINUX_ENV)
     if(!afsd_dynamic_vcaches && afs_vcount >= afs_maxvcount) {
 	afs_ShakeLooseVCaches(anumber);
 	if (afs_vcount >= afs_maxvcount) {
@@ -1062,7 +1062,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
     if (tvc == NULL) {
 	return NULL;
     }
-#else /* AFS_LINUX22_ENV */
+#else /* AFS_LINUX_ENV */
     /* pull out a free cache entry */
     if (!freeVCList) {
 	afs_ShakeLooseVCaches(anumber);
@@ -1080,7 +1080,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
 	afs_vcount++; /* balanced by FlushVCache */
     } /* end of if (!freeVCList) */
 
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_LINUX_ENV */
 
 #if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
     if (tvc->v)
@@ -1122,7 +1122,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
      * we have to do this after attaching the vnode, because the reference
      * count may be held in the vnode itself */
 
-#if defined(AFS_LINUX22_ENV)
+#if defined(AFS_LINUX_ENV)
     /* Hold it for the LRU (should make count 2) */
     osi_Assert(osi_vnhold(tvc) == 0);
 #elif !(defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV))
@@ -2916,21 +2916,21 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 void
 afs_vcacheInit(int astatSize)
 {
-#if !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_LINUX_ENV)
     struct vcache *tvp;
 #endif
     int i;
     if (!afs_maxvcount) {
 	afs_maxvcount = astatSize;	/* no particular limit on linux? */
     }
-#if !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_LINUX_ENV)
     freeVCList = NULL;
 #endif
 
     AFS_RWLOCK_INIT(&afs_xvcache, "afs_xvcache");
     LOCK_INIT(&afs_xvcb, "afs_xvcb");
 
-#if !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_LINUX_ENV)
     /* Allocate and thread the struct vcache entries */
     tvp = afs_osi_Alloc(astatSize * sizeof(struct vcache));
     osi_Assert(tvp != NULL);
@@ -3056,7 +3056,7 @@ shutdown_vcache(void)
     }
     afs_cbrSpace = 0;
 
-#if !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_LINUX_ENV)
     afs_osi_Free(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
 
 # ifdef  KERNEL_HAVE_PIN

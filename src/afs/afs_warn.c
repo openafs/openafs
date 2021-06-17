@@ -21,7 +21,7 @@
 
 #if !defined(UKERNEL)
 
-#if !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_LINUX_ENV)
 # include <net/if.h>
 # if defined(AFS_SUN5_ENV)
 #  include <sys/varargs.h>
@@ -36,7 +36,7 @@
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN_ENV)
 #include <netinet/in_var.h>
 #endif /* ! AFS_HPUX110_ENV */
 #endif /* !defined(UKERNEL) */
@@ -55,11 +55,11 @@
 #include <sys/fp_io.h>
 #endif
 
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX_ENV)
 # define afs_vprintf(fmt, ap) vprintk(fmt, ap)
 #elif defined(AFS_SGI_ENV)
 # define afs_vprintf(fmt, ap) icmn_err(CE_WARN, fmt, ap)
-#elif (defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)) || (defined(AFS_LINUX22_ENV))
+#elif (defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)) || (defined(AFS_LINUX_ENV))
 static_inline void
 afs_vprintf(const char *fmt, va_list ap)
 {
@@ -230,14 +230,14 @@ afs_warnall(char *fmt, ...)
 {
     va_list ap;
 
-# ifdef AFS_LINUX20_ENV
+# ifdef AFS_LINUX_ENV
     AFS_STATCNT(afs_warn);
     if ((afs_showflags & GAGCONSOLE) || (afs_showflags & GAGUSER)) {
 	va_start(ap, fmt);
 	afs_vwarn(fmt, ap);
 	va_end(ap);
     }
-# else /* AFS_LINUX20_ENV */
+# else /* AFS_LINUX_ENV */
     AFS_STATCNT(afs_warn);
     if (afs_showflags & GAGCONSOLE) {
 	va_start(ap, fmt);
@@ -251,7 +251,7 @@ afs_warnall(char *fmt, ...)
 	afs_vwarnuser(fmt, ap);
 	va_end(ap);
     }
-# endif /* AFS_LINUX20_ENV */
+# endif /* AFS_LINUX_ENV */
 }
 #endif /* AFS_AIX_ENV */
 

@@ -16,7 +16,7 @@
 
 #if !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 /* Here be hacks. */
-#ifdef AFS_LINUX24_ENV
+#ifdef AFS_LINUX_ENV
 #define __KERNEL__
 #include <linux/string.h>
 #define _STRING_H 1
@@ -25,7 +25,7 @@
 #undef USE_UCONTEXT
 #endif
 
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
 /* For some reason, this doesn't get defined in linux/types.h
    if __KERNEL_STRICT_NAMES is defined. But the definition of
    struct inode uses it.
@@ -106,7 +106,7 @@ struct ncp_sb_info {
 #define _KERNEL 1
 #endif
 
-#ifndef AFS_LINUX20_ENV
+#ifndef AFS_LINUX_ENV
 #include <nlist.h>
 #endif
 
@@ -142,7 +142,7 @@ struct vnode foo;
 #include <sys/user.h>
 #endif
 
-#ifndef AFS_LINUX26_ENV
+#ifndef AFS_LINUX_ENV
 #include <sys/file.h>
 #endif
 
@@ -177,7 +177,7 @@ struct vnode foo;
 #include <ufs/ffs/fs.h>
 #else
 #include "sys/vfs.h"
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 #ifndef UIO_MAXIOV
 #define UIO_MAXIOV 1		/* don't care */
 #endif
@@ -192,30 +192,30 @@ struct vnode foo;
 #undef LONG_MAX
 #undef ULONG_MAX
 #define _LINUX_TIME_H
-#ifndef AFS_LINUX26_ENV
+#ifndef AFS_LINUX_ENV
 #define _LINUX_FCNTL_H
 #endif
-#ifdef AFS_IA64_LINUX24_ENV
+#ifdef AFS_IA64_LINUX_ENV
 #define flock64  flock
-#endif /* AFS_IA64_LINUX24_ENV */
-#ifdef AFS_S390_LINUX20_ENV
+#endif /* AFS_IA64_LINUX_ENV */
+#ifdef AFS_S390_LINUX_ENV
 #define _S390_STATFS_H
 #else
-#ifdef AFS_SPARC64_LINUX20_ENV
+#ifdef AFS_SPARC64_LINUX_ENV
 #define _SPARC64_STATFS_H
 #define _SPARC_STATFS_H
 #else
-#ifdef AFS_SPARC_LINUX20_ENV
+#ifdef AFS_SPARC_LINUX_ENV
 #define _SPARC_STATFS_H
 #else
-#ifdef AFS_ALPHA_LINUX20_ENV
+#ifdef AFS_ALPHA_LINUX_ENV
 #define _ALPHA_STATFS_H
 #else
 #define _I386_STATFS_H
-#endif /* AFS_ALPHA_LINUX20_ENV */
-#endif /* AFS_SPARC_LINUX20_ENV */
-#endif /* AFS_SPARC64_LINUX20_ENV */
-#endif /* AFS_S390_LINUX20_ENV */
+#endif /* AFS_ALPHA_LINUX_ENV */
+#endif /* AFS_SPARC_LINUX_ENV */
+#endif /* AFS_SPARC64_LINUX_ENV */
+#endif /* AFS_S390_LINUX_ENV */
 struct timezone {
     int a, b;
 };
@@ -229,7 +229,7 @@ struct timezone {
 #define timer_t ktimer_t
 #define timer_t_redefined
 #endif
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
 /* For some reason, this doesn't get defined in linux/types.h
    if __KERNEL_STRICT_NAMES is defined. But the definition of
    struct inode uses it.
@@ -238,7 +238,7 @@ struct timezone {
 /* got it from linux/types.h */
 typedef unsigned long sector_t;
 #endif /* HAVE_SECTOR_T */
-#endif /* AFS_LINUX26_ENV */
+#endif /* AFS_LINUX_ENV */
 #include <linux/version.h>
 #include <linux/fs.h>
 #include <osi_vfs.h>
@@ -246,7 +246,7 @@ typedef unsigned long sector_t;
 #undef timer_t
 #undef timer_t_redefined
 #endif
-#else /* AFS_LINUX20_ENV */
+#else /* AFS_LINUX_ENV */
 #ifdef AFS_HPUX110_ENV
 #define  KERNEL
 #define  _KERNEL 1
@@ -267,7 +267,7 @@ typedef enum _spustate {	/* FROM /etc/conf/h/_types.h */
 #else /* AFS_HPUX110_ENV */
 #include "sys/vnode.h"
 #endif /* else AFS_HPUX110_ENV */
-#endif /* else AFS_LINUX20_ENV */
+#endif /* else AFS_LINUX_ENV */
 #ifdef	AFS_HPUX_ENV
 #include "sys/inode.h"
 #else
@@ -275,7 +275,7 @@ typedef enum _spustate {	/* FROM /etc/conf/h/_types.h */
 #ifdef	AFS_SUN5_ENV
 #include "sys/fs/ufs_inode.h"
 #else
-#ifndef AFS_LINUX20_ENV
+#ifndef AFS_LINUX_ENV
 #include "ufs/inode.h"
 #endif
 #endif
@@ -338,7 +338,7 @@ typedef struct {
 } afs_kcondvar_t;
 #endif /* AFS_SGI65_ENV */
 
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 #include <asm/atomic.h>
 #include <asm/semaphore.h>
 #define RX_ENABLE_LOCKS 1
@@ -347,7 +347,7 @@ typedef struct {
     int opaque2;
 } afs_kmutex_t;
 typedef void *afs_kcondvar_t;
-#endif /* AFS_LINUX20_ENV */
+#endif /* AFS_LINUX_ENV */
 
 #include <afs/exporter.h>
 /*#include "afs/osi.h"*/
@@ -358,7 +358,7 @@ typedef struct {
 } osi_timeval32_t;		/* Needed here since KERNEL defined. */
 
 /*#include "afs/volerrors.h"*/
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 #define _SYS_TIME_H
 #endif
 
@@ -483,14 +483,14 @@ int opencore();
 #define AFSNLIST(N, C) nlist64((N), (C))
 #endif /* AFS_32BIT_KERNEL_ENV */
 #else /* AFS_SGI61_ENV */
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 struct afs_nlist {
     char *n_name;
     unsigned long n_value;
 };
-#else /* AFS_LINUX20_ENV */
+#else /* AFS_LINUX_ENV */
 #define afs_nlist nlist
-#endif /* AFS_LINUX20_ENV */
+#endif /* AFS_LINUX_ENV */
 #define AFSNLIST(N, C) nlist((N), (C))
 #endif /* AFS_SGI61_ENV */
 #endif /* defined(AFS_HPUX_ENV) && defined(__LP64__) */
@@ -548,10 +548,10 @@ PrintIPAddr(int addr)
     return (char *)str;
 }
 
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 /* Find symbols in a live kernel. */
 
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
 #define KSYMS "/proc/kallsyms"
 #else
 #define KSYMS "/proc/ksyms"
@@ -626,7 +626,7 @@ read_ksyms(void)
 	ksyms[nksyms].s_value = (int)strtoul(line, &p, 16);
 #endif /* AFS_LINUX_64BIT_KERNEL */
 	p++;
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
 	/* Linux 2.6 /proc/kallsyms has a one-char symbol type
 	   between address and name, so step over it and the following
 	   blank.
@@ -1779,7 +1779,7 @@ typedef struct event {
 #endif
 
 
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 /* This is replicated from LINUX/osi_alloc.c */
 #define MEM_SPACE sizeof(int)
 
@@ -2100,7 +2100,7 @@ print_allocs(int pnt)
     printf
 	("\n\nNOTE:\n\tAll [...]* entries above aren't counted towards the total mem since they're redundant\n");
 
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
     if (pnt)
 	print_alloced_memlist();
 #endif
@@ -2577,13 +2577,13 @@ print_vnode(int kmem, struct vnode *vep, struct vnode *ptr, int pnt)
 #endif
     printf(", v_mregb=0x%lx\n", vep->v_mregb);
 #endif
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
     /* Print out the stat cache and other inode info. */
     printf
 	("\ti_ino=%d, i_mode=%x, i_nlink=%d, i_uid=%d, i_gid=%d, i_size=%d\n",
 	 vep->i_ino, vep->i_mode, vep->i_nlink, vep->i_uid, vep->i_gid,
 	 vep->i_size);
-#ifdef AFS_LINUX24_ENV
+#ifdef AFS_LINUX_ENV
     printf
 	("\ti_atime=%u, i_mtime=%u, i_ctime=%u, i_version=%u, i_nrpages=%u\n",
 	 vep->i_atime, vep->i_mtime, vep->i_ctime, vep->i_version,
@@ -2594,30 +2594,31 @@ print_vnode(int kmem, struct vnode *vep, struct vnode *ptr, int pnt)
 	 vep->i_atime, vep->i_mtime, vep->i_ctime, vep->i_version,
 	 vep->i_nrpages);
 #endif
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
     printf("\ti_op=0x%x, i_rdev=0x%x, i_sb=0x%x\n", vep->i_op,
 	   vep->i_rdev, vep->i_sb);
-#else /* AFS_LINUX26_ENV */
+#else /* AFS_LINUX_ENV */
     printf("\ti_op=0x%x, i_dev=0x%x, i_rdev=0x%x, i_sb=0x%x\n", vep->i_op,
 	   vep->i_dev, vep->i_rdev, vep->i_sb);
-#endif /* AFS_LINUX26_ENV */
-#ifdef AFS_LINUX24_ENV
+#endif /* AFS_LINUX_ENV */
+
+#ifdef AFS_LINUX_ENV
     printf("\ti_sem: count=%d, sleepers=%d, wait=0x%x\n", vep->i_sem.count,
 	   vep->i_sem.sleepers, vep->i_sem.wait);
 #else
     printf("\ti_sem: count=%d, waking=%d, wait=0x%x\n", vep->i_sem.count,
 	   vep->i_sem.waking, vep->i_sem.wait);
 #endif
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
     printf("\ti_hash=0x%x:0x%x, i_list=0x%x:0x%x, i_dentry=0x%x:0x%x\n",
 	   vep->i_hash.pprev, vep->i_hash.next, vep->i_list.prev,
 	   vep->i_list.next, vep->i_dentry.prev, vep->i_dentry.next);
-#else /* AFS_LINUX26_ENV */
+#else /* AFS_LINUX_ENV */
     printf("\ti_hash=0x%x:0x%x, i_list=0x%x:0x%x, i_dentry=0x%x:0x%x\n",
 	   vep->i_hash.prev, vep->i_hash.next, vep->i_list.prev,
 	   vep->i_list.next, vep->i_dentry.prev, vep->i_dentry.next);
-#endif /* AFS_LINUX26_ENV */
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_LINUX_ENV */
+#endif /* AFS_LINUX_ENV */
 }
 
 void
@@ -2751,7 +2752,7 @@ print_vcache(int kmem, struct vcache *vep, struct vcache *ptr, int pnt)
 	    }
 	}
     }
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
     printf("\tmapcnt=%d\n", vep->mapcnt);
 #endif
 }

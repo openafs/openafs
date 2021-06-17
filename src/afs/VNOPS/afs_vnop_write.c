@@ -145,7 +145,7 @@ afs_UFSWriteUIO(struct vcache *avc, afs_dcache_id_t *inode, struct uio *tuiop)
 	code = VOP_RDWR(tfile->vnode, tuiop, UIO_WRITE, 0, afs_osi_credp);
 	AFS_GLOCK();
     }
-#elif defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX_ENV)
     AFS_GUNLOCK();
     code = osi_rdwr(tfile, tuiop, UIO_WRITE);
     AFS_GLOCK();
