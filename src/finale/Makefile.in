@@ -43,10 +43,12 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libafsrfc3961.a \
 	${XLIBS}
 
+OBJS=${TOP_SRCDIR}/afs/unified_afs.o
+
 all: translate_et
 
-translate_et: translate_et.o ${INCLS}
-	$(AFS_LDRULE) translate_et.o ${LIBS} $(LIB_roken)
+translate_et: translate_et.o ${OBJS} ${INCLS}
+	$(AFS_LDRULE) translate_et.o ${OBJS} ${LIBS} $(LIB_roken)
 
 translate_et.o: AFS_component_version_number.c
 

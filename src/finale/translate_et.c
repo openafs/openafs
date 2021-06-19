@@ -22,7 +22,9 @@
 #include <afs/bnode.h>
 #include <afs/afsint.h>
 #include <afs/volser.h>
+#include <afs/unified_afs.h>
 #include <ubik.h>
+
 
 #define ERRCODE_RANGE 8		/* from error_table.h */
 
@@ -60,6 +62,7 @@ main(int argc, char *argv[])
     initialize_BZ_error_table();
     initialize_U_error_table();
     initialize_VOLS_error_table();
+    initialize_uae_error_table();
 
     if (argc < 2) {
 	fprintf(stderr, "Usage is: %s [<code>]+\n", argv[0]);
