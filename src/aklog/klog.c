@@ -258,89 +258,6 @@ k5_to_k4_name(krb5_context k5context,
 	}
 }
 
-#if defined(USING_HEIMDAL) || defined(HAVE_KRB5_PROMPT_TYPE)
-static int
-klog_is_pass_prompt(int index, krb5_context context, krb5_prompt prompts[])
-{
-    switch (prompts[index].type) {
-    case KRB5_PROMPT_TYPE_PASSWORD:
-    case KRB5_PROMPT_TYPE_NEW_PASSWORD_AGAIN:
-	return 1;
-    default:
-	return 0;
-    }
-}
-#elif defined(HAVE_KRB5_GET_PROMPT_TYPES)
-static int
-klog_is_pass_prompt(int index, krb5_context context, krb5_prompt prompts[])
-{
-    /* this isn't thread-safe or anything obviously; it just should be good
-     * enough to work with klog */
-    static krb5_prompt_type *types = NULL;
-    if (index == 0) {
-	types = NULL;
-    }
-    if (!types) {
-	types = krb5_get_prompt_types(context);
-    }
-    if (!types) {
-	return 0;
-    }
-    switch (types[index]) {
-    case KRB5_PROMPT_TYPE_PASSWORD:
-    case KRB5_PROMPT_TYPE_NEW_PASSWORD_AGAIN:
-	return 1;
-    default:
-	return 0;
-    }
-}
-#else
-static int
-klog_is_pass_prompt(int index, krb5_context context, krb5_prompt prompts[])
-{
-    /* AIX 5.3 doesn't have krb5_get_prompt_types. Neither does HP-UX, which
-     * also doesn't even define KRB5_PROMPT_TYPE_PASSWORD &co. We have no way
-     * of determining the the prompt type, so just assume it's a password */
-    return 1;
-}
-#endif
-
-/* save and reuse password.  This is necessary to make
- *  "direct to service" authentication work with most
- *  flavors of kerberos, when the afs principal has no instance.
- */
-struct kp_arg {
-    char **pp, *pstore;
-    size_t allocated;
-};
-krb5_error_code
-klog_prompter(krb5_context context,
-    void *a,
-    const char *name,
-    const char *banner,
-    int num_prompts,
-    krb5_prompt prompts[])
-{
-    krb5_error_code code;
-    int i;
-    struct kp_arg *kparg = (struct kp_arg *) a;
-    size_t length;
-
-    code = krb5_prompter_posix(context, a, name, banner, num_prompts, prompts);
-    if (code) return code;
-    for (i = 0; i < num_prompts; ++i) {
-	if (klog_is_pass_prompt(i, context, prompts)) {
-	    length = prompts[i].reply->length;
-	    if (length > kparg->allocated - 1)
-		length = kparg->allocated - 1;
-	    memcpy(kparg->pstore, prompts[i].reply->data, length);
-	    kparg->pstore[length] = 0;
-	    *kparg->pp = kparg->pstore;
-	}
-    }
-    return 0;
-}
-
 static int
 CommandProc(struct cmd_syndesc *as, void *arock)
 {
@@ -362,10 +279,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     int authtype;
 #endif
     krb5_data enc_part[1];
-    krb5_prompter_fct pf = NULL;
     char *pass = 0;
-    void *pa = 0;
-    struct kp_arg klog_arg[1];
 
     char passwd[BUFSIZ];
     struct afsconf_cell cellconfig[1];
@@ -382,7 +296,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     for (i = 1; i < zero_argc; i++)
 	memset(zero_argv[i], 0, strlen(zero_argv[i]));
     zero_argc = 0;
-    memset(klog_arg, 0, sizeof *klog_arg);
 
     /* first determine quiet flag based on -silent switch */
     Silent = (as->parms[aSILENT].items ? 1 : 0);
@@ -513,15 +426,10 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	pass = passwd;
     }
 
-    /* Get the password if it wasn't provided. */
-    if (!pass) {
-	if (Pipe) {
-	    strncpy(passwd, getpipepass(), sizeof(passwd));
-	    pass = passwd;
-	} else {
-	    pf = klog_prompter;
-	    pa = klog_arg;
-	}
+    /* Get the password from stdin if it wasn't provided. */
+    if (!pass && Pipe) {
+	strncpy(passwd, getpipepass(), sizeof(passwd));
+	pass = passwd;
     }
 
     service = 0;
@@ -533,9 +441,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 #endif
     snprintf (service_temp, sizeof service_temp, "afs/%s", cellconfig->name);
 
-    klog_arg->pp = &pass;
-    klog_arg->pstore = passwd;
-    klog_arg->allocated = sizeof(passwd);
     /* XXX should allow k5 to prompt in most cases -- what about expired pw?*/
 #ifdef HAVE_KRB5_GET_INIT_CREDS_OPT_ALLOC
     code = krb5_get_init_creds_opt_alloc(k5context, &gic_opts);
@@ -552,10 +457,10 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    incred,
 	    princ,
 	    pass,
-	    pf,	/* prompter */
-	    pa,	/* data */
-	    0,	/* start_time */
-	    0,	/* in_tkt_service */
+	    krb5_prompter_posix,	/* prompter */
+	    NULL,			/* data */
+	    0,				/* start_time */
+	    0,				/* in_tkt_service */
 	    gic_opts);
 	if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN)
             break;
