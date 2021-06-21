@@ -41,7 +41,7 @@ afszcm.cat: afs_trace.msf
 			${GENCAT} afszcm.cat afs_trace.msf ;; \
 	esac
 
-depinstall: afszcm.cat AFS_component_version_number.c \
+depinstall: afszcm.cat unified_afs.c unified_afs.h AFS_component_version_number.c \
 	${TOP_INCDIR}/afs/afs_consts.h \
 	${TOP_INCDIR}/afs/afs.h \
 	${TOP_INCDIR}/afs/osi_inode.h \

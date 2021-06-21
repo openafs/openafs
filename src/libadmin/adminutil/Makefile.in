@@ -11,6 +11,7 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 
 RXKAD = ../../rxkad
+AFS = ../../afs
 AUTH = ../../auth
 BOZO = ../../bozo
 CMD = ../../cmd
@@ -140,6 +141,7 @@ ERROROBJS = \
 	cmd_errors.o \
 	pterror.o \
 	uerrors.o \
+	unified_afs.o \
 	vl_errors.o \
 	acfg_errors.o \
 	volerr.o
@@ -210,6 +212,9 @@ vl_errors.o: ${VLSERVER}/vl_errors.c
 
 volerr.o: ${VOLSER}/volerr.c
 	$(AFS_CCRULE) $(VOLSER)/volerr.c
+
+unified_afs.o: ${AFS}/unified_afs.c
+	$(AFS_CCRULE) $(AFS)/unified_afs.c
 
 ${LIBOBJS}: ${INCLS}
 

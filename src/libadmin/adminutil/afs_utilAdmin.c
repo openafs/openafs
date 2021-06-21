@@ -32,6 +32,7 @@
 #include <afs/bnode.h>
 #include <afs/afscbint.h>
 #include <afs/volser.h>
+#include <afs/unified_afs.h>
 
 #include "afs_AdminInternal.h"
 #include "afs_utilAdmin.h"
@@ -74,6 +75,7 @@ init_once(void)
     initialize_AU_error_table();
     initialize_AV_error_table();
     initialize_VOLS_error_table();
+    initialize_uae_error_table();
 #ifdef AFS_KRB5_ERROR_ENV
     initialize_krb5();
 #endif

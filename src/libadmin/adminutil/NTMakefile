@@ -12,6 +12,7 @@ RELDIR=libadmin\adminutil
 !include ..\..\config\NTMakefile.version
 
 RXKAD = ..\..\rxkad
+AFS = ..\..\afs
 AUTH = ..\..\auth
 BOZO = ..\..\bozo
 CMD = ..\..\cmd
@@ -114,6 +115,9 @@ VLSERVEROBJS=\
 ADMINOBJS = \
 	$(OUT)\afs_utilAdmin.obj
 
+AFSOBJS=\
+	$(OUT)\unified_afs.obj
+
 DLLOBJS =\
 	$(ADMINOBJS) \
 	$(ERRORSOBJS) \
@@ -126,6 +130,7 @@ DLLOBJS =\
 	$(VOLSEROBJS) \
 	$(UBIKOBJS) \
 	$(RXKADOBJS) \
+	$(AFSOBJS) \
 	$(OUT)\afsadminutil.res
 
 LIBINCLUDES = \
@@ -173,6 +178,9 @@ install: $(INCFILES) afs_AdminCommonErrors.c \
 $(OUT)\afsadminutil.res: AFS_component_version_number.h
 
 $(AUTHOBJS): $(AUTH)\$$(@B).c
+	$(C2OBJ) -I$*(*D) $**
+
+$(AFSOBJS): $(AFS)\$$(@B).c
 	$(C2OBJ) -I$*(*D) $**
 
 $(BOZOOBJS): $(BOZO)\$$(@B).c
