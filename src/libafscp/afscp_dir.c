@@ -289,13 +289,14 @@ afscp_DirLookup(struct afscp_dirstream *d, const char *name)
 {
     int code;
     int hval, entry;
-    struct DirHeader *h = (struct DirHeader *)d->dirbuffer;
+    struct DirHeader *h;
     struct DirEntry *info;
 
     code = _DirUpdate(d);
     if (code != 0) {
 	return NULL;
     }
+    h = (struct DirHeader *)d->dirbuffer;
     hval = namehash(name);
     entry = ntohs(h->hashTable[hval]);
 
