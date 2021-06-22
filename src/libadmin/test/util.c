@@ -90,7 +90,7 @@ SetupUtilAdminCmd(void)
     ts = cmd_CreateSyntax("UtilErrorTranslate", DoUtilErrorTranslate, NULL, 0,
 			  "translate an error code");
     cmd_AddParm(ts, "-error", CMD_SINGLE, CMD_REQUIRED, "error code");
-    SetupCommonCmdArgs(ts);
+    /* don't add common args, they are not needed for this function */
 
     ts = cmd_CreateSyntax("UtilDatabaseServerList", DoUtilDatabaseServerList,
 			  NULL, 0, "list the database servers in a cell");
@@ -100,5 +100,5 @@ SetupUtilAdminCmd(void)
     ts = cmd_CreateSyntax("UtilNameToAddress", DoUtilNameToAddress, NULL, 0,
 			  "translate a host name to an address");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host name");
-    SetupCommonCmdArgs(ts);
+    /* don't add common args, they are not needed for this function */
 }
