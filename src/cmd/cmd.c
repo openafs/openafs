@@ -1107,10 +1107,9 @@ cmd_Dispatch(int argc, char **argv)
 
     /*
      * Before calling the beforeProc and afterProc and all the implications
-     * from those calls, check if the help procedure was called and call it
-     * now.
+     * from those calls, handle any built-in commands.
      */
-    if ((ts->proc == HelpProc) || (ts->proc == AproposProc)) {
+    if ((ts->proc == HelpProc) || (ts->proc == AproposProc) || (ts->proc == VersionProc)) {
 	code = (*ts->proc) (ts, ts->rock);
 	goto out;
     }
