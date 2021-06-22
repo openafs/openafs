@@ -58,6 +58,9 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     char auth_cell[MAXCELLCHARS];
     char exec_cell[MAXCELLCHARS];
 
+    if (as->nParms < USER_PARAM)
+	return 0;	/* no authentication parms defined for this subcommand */
+
     /*
      * Check what kind of authentication is necessary based upon
      * the arguments passed
