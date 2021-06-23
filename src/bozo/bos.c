@@ -66,14 +66,17 @@ em(afs_int32 acode)
 static char *
 DateOf(time_t atime)
 {
+    static char *bad_time = "BAD TIME";
     static char tbuffer[30];
     char *tp;
     tp = ctime(&atime);
-    if (tp) {
-	strlcpy(tbuffer, tp, sizeof(tbuffer));
-	tbuffer[24] = 0;	/* get rid of new line */
-    } else
-	strcpy(tbuffer, "BAD TIME");
+    if (tp == NULL)
+	return bad_time;
+    if (strlcpy(tbuffer, tp, sizeof(tbuffer)) >= sizeof(tbuffer))
+	return bad_time;
+    tp = strchr(tbuffer, '\n');
+    if (tp != NULL)
+	*tp = '\0';    /* Trim new line. */
     return tbuffer;
 }
 
@@ -179,22 +182,31 @@ SetAuth(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-/* take a name (e.g. foo/bar, and a dir e.g. /usr/afs/bin, and construct
- * /usr/afs/bin/bar */
+/**
+ * Construct a destination path.
+ *
+ * Take a name (e.g., foo/bar) and a directory (e.g., /usr/afs/bin), and
+ * construct a destination path (e.g., /usr/afs/bin/bar).
+ *
+ * @param[in]  anam   filename
+ * @param[in]  adir   directory path
+ * @param[out] apath  constructed filepath output. The caller is resposible
+ *                    for freeing 'apath'.
+ */
 static int
-ComputeDestDir(char *aname, char *adir, char *aresult, afs_int32 alen)
+ComputeDestDir(const char *aname, const char *adir, char **apath)
 {
     char *tp;
 
-    strcpy(aresult, adir);
     tp = strrchr(aname, '/');
-    if (!tp) {
+    if (tp == NULL) {
 	/* no '/' in name */
-	strcat(aresult, "/");
-	strcat(aresult, aname);
+	if (asprintf(apath, "%s/%s", adir, aname) < 0)
+	    return ENOMEM;
     } else {
 	/* tp points at the / character */
-	strcat(aresult, tp);
+	if (asprintf(apath, "%s/%s", adir, tp + 1) < 0)
+	    return ENOMEM;
     }
     return 0;
 }
@@ -259,8 +271,7 @@ static int
 GetDate(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
-    char tbuffer[256];
-    char destDir[256];
+    const char *destDir;
     afs_int32 time, bakTime, oldTime;
     struct rx_connection *tconn;
     struct cmd_item *ti;
@@ -273,20 +284,28 @@ GetDate(struct cmd_syndesc *as, void *arock)
 
     /* compute dest dir or file; default MUST be canonical form of dir path */
     if (as->parms[2].items)
-	strcpy(destDir, as->parms[2].items->data);
+	destDir = as->parms[2].items->data;
     else
-	strcpy(destDir, AFSDIR_CANONICAL_SERVER_BIN_DIRPATH);
+	destDir = AFSDIR_CANONICAL_SERVER_BIN_DIRPATH;
 
     for (ti = as->parms[1].items; ti; ti = ti->next) {
-	/* check date for each file */
-	ComputeDestDir(ti->data, destDir, tbuffer, sizeof(tbuffer));
-	code = BOZO_GetDates(tconn, tbuffer, &time, &bakTime, &oldTime);
+	char *path = NULL;
+
+	/* Check date for each file. */
+	code = ComputeDestDir(ti->data, destDir, &path);
+	if (code != 0) {
+	    fprintf(stderr, "bos: failed to format destination path for file %s (%s)\n",
+		    ti->data, em(code));
+	    return 1;
+	}
+	code = BOZO_GetDates(tconn, path, &time, &bakTime, &oldTime);
 	if (code) {
 	    fprintf(stderr, "bos: failed to check date on %s (%s)\n", ti->data,
 		   em(code));
+	    free(path);
 	    return 1;
 	} else {
-	    printf("File %s ", tbuffer);
+	    printf("File %s ", path);
 	    if (time == 0)
 		printf("does not exist, ");
 	    else
@@ -301,6 +320,7 @@ GetDate(struct cmd_syndesc *as, void *arock)
 		printf(".OLD file dated %s.", DateOf(oldTime));
 	    printf("\n");
 	}
+	free(path);
     }
     return 0;
 }
@@ -309,8 +329,7 @@ static int
 UnInstall(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
-    char tbuffer[256];
-    char destDir[256];
+    const char *destDir;
     struct cmd_item *ti;
     struct rx_connection *tconn;
 
@@ -322,19 +341,29 @@ UnInstall(struct cmd_syndesc *as, void *arock)
 
     /* compute dest dir or file; default MUST be canonical form of dir path */
     if (as->parms[2].items)
-	strcpy(destDir, as->parms[2].items->data);
+	destDir = as->parms[2].items->data;
     else
-	strcpy(destDir, AFSDIR_CANONICAL_SERVER_BIN_DIRPATH);
+	destDir = AFSDIR_CANONICAL_SERVER_BIN_DIRPATH;
 
     for (ti = as->parms[1].items; ti; ti = ti->next) {
-	/* uninstall each file */
-	ComputeDestDir(ti->data, destDir, tbuffer, sizeof(tbuffer));
-	code = BOZO_UnInstall(tconn, tbuffer);
+	char *path = NULL;
+
+	/* Uninstall each file. */
+	code = ComputeDestDir(ti->data, destDir, &path);
+	if (code) {
+	    fprintf(stderr, "bos: failed to format destination path for file %s (%s)\n",
+		    ti->data, em(code));
+	    return 1;
+	}
+	code = BOZO_UnInstall(tconn, path);
 	if (code) {
 	    fprintf(stderr, "bos: failed to uninstall %s (%s)\n", ti->data, em(code));
+	    free(path);
 	    return 1;
-	} else
+	} else {
 	    printf("bos: uninstalled file %s\n", ti->data);
+	}
+	free(path);
     }
     return 0;
 }
@@ -367,10 +396,9 @@ Install(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     struct cmd_item *ti;
     struct stat tstat;
-    char tbuffer[256];
     int fd;
     struct rx_call *tcall;
-    char destDir[256];
+    const char *destDir;
 
     tconn = GetConn(as, 1);
     if (!as->parms[1].items) {
@@ -380,12 +408,14 @@ Install(struct cmd_syndesc *as, void *arock)
 
     /* compute dest dir or file; default MUST be canonical form of dir path */
     if (as->parms[2].items)
-	strcpy(destDir, as->parms[2].items->data);
+	destDir = as->parms[2].items->data;
     else
-	strcpy(destDir, AFSDIR_CANONICAL_SERVER_BIN_DIRPATH);
+	destDir = AFSDIR_CANONICAL_SERVER_BIN_DIRPATH;
 
     for (ti = as->parms[1].items; ti; ti = ti->next) {
-	/* install each file */
+	char *path = NULL;
+
+	/* Install each file. */
 	fd = open(ti->data, O_RDONLY);
 	if (fd < 0) {
 	    /* better to quit on error than continue for install command */
@@ -400,16 +430,23 @@ Install(struct cmd_syndesc *as, void *arock)
 	    return 1;
 	}
 	/* compute destination dir */
-	ComputeDestDir(ti->data, destDir, tbuffer, sizeof(tbuffer));
+	code = ComputeDestDir(ti->data, destDir, &path);
+	if (code != 0) {
+	    fprintf(stderr, "bos: failed to format destination path for file %s (%s)\n",
+		    ti->data, em(code));
+	    close(fd);
+	    return 1;
+	}
 	tcall = rx_NewCall(tconn);
 	code =
-	    StartBOZO_Install(tcall, tbuffer, tstat.st_size,
+	    StartBOZO_Install(tcall, path, tstat.st_size,
 			      (afs_int32) tstat.st_mode, tstat.st_mtime);
 	if (code == 0) {
 	    code = CopyBytes(fd, tcall);
 	}
 	code = rx_EndCall(tcall, code);
 	close(fd);
+	free(path);
 	if (code) {
 	    fprintf(stderr, "bos: failed to install %s (%s)\n", ti->data, em(code));
 	    return 1;
@@ -618,19 +655,18 @@ AddHost(struct cmd_syndesc *as, void *arock)
     struct rx_connection *tconn;
     afs_int32 code;
     struct cmd_item *ti;
-    char name[MAXHOSTCHARS];
+    char *name;
 
     tconn = GetConn(as, 1);
     for (ti = as->parms[1].items; ti; ti = ti->next) {
 	if (as->parms[2].items) {
-	    if (strlen(ti->data) > MAXHOSTCHARS - 3) {
-		fprintf(stderr, "bos: host name too long\n");
-		return E2BIG;
+	    code = asprintf(&name, "[%s]", ti->data);
+	    if (code < 0) {
+		code = ENOMEM;
+	    } else {
+		code = BOZO_AddCellHost(tconn, name);
+		free(name);
 	    }
-	    name[0] = '[';
-	    strcpy(&name[1], ti->data);
-	    strcat((char *)&name, "]");
-	    code = BOZO_AddCellHost(tconn, name);
 	} else
 	    code = BOZO_AddCellHost(tconn, ti->data);
 	if (code)
@@ -728,10 +764,11 @@ AddKey(struct cmd_syndesc *as, void *arock)
     temp = atoi(as->parms[2].items->data);
     if (temp == 999) {
 	/* bcrypt key */
-/*
-	strcpy((char *)&tkey, as->parms[1].items->data);
-*/
-	strcpy((char *)&tkey, buf);
+	if (strlen(buf) > sizeof(tkey)) {
+	    fprintf(stderr, "Key data too long for bcrypt key.\n");
+	    exit(1);
+	}
+	strncpy((char *)&tkey, buf, sizeof(tkey));
     } else {			/* kerberos key */
 	char *tcell;
 	if (as->parms[ADDPARMOFFSET].items) {
@@ -1076,7 +1113,10 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 	    fprintf(stderr, "bos: internal error parsing partition ID '%s'\n", aparm1);
 	    return EINVAL;
 	}
-	strcpy(partName, tp);
+	if (strlcpy(partName, tp, sizeof(partName)) >= sizeof(partName)) {
+	    fprintf(stderr, "bos: partName buffer too small for partition ID '%s'\n", aparm1);
+	    return EINVAL;
+	}
     } else
 	partName[0] = 0;
 
@@ -1335,7 +1375,7 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
     struct rx_connection *tconn;
     afs_int32 code, rc;
     char *outName;
-    char tname[BOZO_BSSIZE];
+    char *volume_name = NULL;
     afs_int32 newID;
     extern struct ubik_client *cstruct;
     afs_int32 curGoal, showlog = 0, dafs = 0;
@@ -1515,12 +1555,20 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 		       as->parms[2].items->data);
 		return -1;
 	    }
-	    sprintf(tname, "%u", newID);
+	    if (asprintf(&volume_name, "%u", newID) < 0) {
+		fprintf(stderr, "bos: out of memory\n");
+		return -1;
+	    }
 	} else {
 	    fprintf
 		(stderr, "bos: can't initialize volume system client (code %d), trying anyway.\n",
 		 code);
-	    strncpy(tname, as->parms[2].items->data, sizeof(tname));
+	    volume_name = strdup(as->parms[2].items->data);
+	    if (volume_name == NULL) {
+		fprintf(stderr, "bos: out of memory\n");
+		return -1;
+	    }
+
 	}
 	if (volutil_GetPartitionID(as->parms[1].items->data) < 0) {
 	    /* can't parse volume ID, so complain before shutting down
@@ -1528,11 +1576,13 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 	     */
 	    fprintf(stderr, "bos: can't interpret %s as partition ID.\n",
 		   as->parms[1].items->data);
+	    free(volume_name);
 	    return -1;
 	}
 	printf("Starting salvage.\n");
-	rc = DoSalvage(tconn, as->parms[1].items->data, tname, outName,
+	rc = DoSalvage(tconn, as->parms[1].items->data, volume_name, outName,
 		       showlog, parallel, tmpDir, orphans, dafs, 0);
+	free(volume_name);
 	if (rc)
 	    return rc;
     }
