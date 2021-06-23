@@ -694,72 +694,41 @@ bproc(void *unused)
 }
 
 static afs_int32
-SendNotifierData(int fd, struct bnode_proc *tp)
+SendNotifierData(FILE *fp, struct bnode_proc *tp)
 {
     struct bnode *tb = tp->bnode;
-    char buffer[1000], *bufp = buffer, *buf1;
-    int len;
 
     /*
      * First sent out the bnode_proc struct
      */
-    (void)sprintf(bufp, "BEGIN bnode_proc\n");
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "comLine: %s\n", tp->comLine);
-    bufp += strlen(bufp);
-    if (!(buf1 = tp->coreName))
-	buf1 = "(null)";
-    (void)sprintf(bufp, "coreName: %s\n", buf1);
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "pid: %ld\n", afs_printable_int32_ld(tp->pid));
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "lastExit: %ld\n", afs_printable_int32_ld(tp->lastExit));
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "flags: %ld\n", afs_printable_int32_ld(tp->flags));
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "END bnode_proc\n");
-    bufp += strlen(bufp);
-    len = (int)(bufp - buffer);
-    if (write(fd, buffer, len) < 0) {
+    fprintf(fp, "BEGIN bnode_proc\n");
+    fprintf(fp, "comLine: %s\n", tp->comLine);
+    fprintf(fp, "coreName: %s\n", (tp->coreName == NULL ? "(null)" : tp->coreName));
+    fprintf(fp, "pid: %ld\n", afs_printable_int32_ld(tp->pid));
+    fprintf(fp, "lastExit: %ld\n", afs_printable_int32_ld(tp->lastExit));
+    fprintf(fp, "flags: %ld\n", afs_printable_int32_ld(tp->flags));
+    fprintf(fp, "END bnode_proc\n");
+    if (ferror(fp) != 0)
 	return -1;
-    }
 
     /*
      * Now sent out the bnode struct
      */
-    bufp = buffer;
-    (void)sprintf(bufp, "BEGIN bnode\n");
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "name: %s\n", tb->name);
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "rsTime: %ld\n", afs_printable_int32_ld(tb->rsTime));
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "rsCount: %ld\n", afs_printable_int32_ld(tb->rsCount));
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "procStartTime: %ld\n", afs_printable_int32_ld(tb->procStartTime));
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "procStarts: %ld\n", afs_printable_int32_ld(tb->procStarts));
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "lastAnyExit: %ld\n", afs_printable_int32_ld(tb->lastAnyExit));
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "lastErrorExit: %ld\n", afs_printable_int32_ld(tb->lastErrorExit));
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "errorCode: %ld\n", afs_printable_int32_ld(tb->errorCode));
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "errorSignal: %ld\n", afs_printable_int32_ld(tb->errorSignal));
-    bufp += strlen(bufp);
-/*
-    (void) sprintf(bufp, "lastErrorName: %s\n", tb->lastErrorName);
-    bufp += strlen(bufp);
-*/
-    (void)sprintf(bufp, "goal: %d\n", tb->goal);
-    bufp += strlen(bufp);
-    (void)sprintf(bufp, "END bnode\n");
-    bufp += strlen(bufp);
-    len = (int)(bufp - buffer);
-    if (write(fd, buffer, len) < 0) {
+    fprintf(fp, "BEGIN bnode\n");
+    fprintf(fp, "name: %s\n", tb->name);
+    fprintf(fp, "rsTime: %ld\n", afs_printable_int32_ld(tb->rsTime));
+    fprintf(fp, "rsCount: %ld\n", afs_printable_int32_ld(tb->rsCount));
+    fprintf(fp, "procStartTime: %ld\n", afs_printable_int32_ld(tb->procStartTime));
+    fprintf(fp, "procStarts: %ld\n", afs_printable_int32_ld(tb->procStarts));
+    fprintf(fp, "lastAnyExit: %ld\n", afs_printable_int32_ld(tb->lastAnyExit));
+    fprintf(fp, "lastErrorExit: %ld\n", afs_printable_int32_ld(tb->lastErrorExit));
+    fprintf(fp, "errorCode: %ld\n", afs_printable_int32_ld(tb->errorCode));
+    fprintf(fp, "errorSignal: %ld\n", afs_printable_int32_ld(tb->errorSignal));
+    fprintf(fp, "goal: %d\n", tb->goal);
+    fprintf(fp, "END bnode\n");
+    if (ferror(fp) != 0)
 	return -1;
-    }
+
     return 0;
 }
 
@@ -795,8 +764,12 @@ hdl_notifier(struct bnode_proc *tp)
 	    perror(tb->notifier);
 	    exit(1);
 	}
-	SendNotifierData(fileno(fout), tp);
-	pclose(fout);
+	if (SendNotifierData(fout, tp) != 0)
+	    bozo_Log("BNODE: Failed to send notifier data to '%s'\n",
+		     tb->notifier);
+	if (pclose(fout) < 0)
+	    bozo_Log("BNODE: Failed to close notifier pipe to '%s', %d\n",
+		     tb->notifier, errno);
 	exit(0);
     } else if (pid < 0) {
 	bozo_Log("Failed to fork creating process to handle notifier '%s'\n",
