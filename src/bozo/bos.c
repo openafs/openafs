@@ -342,13 +342,12 @@ UnInstall(struct cmd_syndesc *as, void *arock)
 static afs_int32
 GetServerGoal(struct rx_connection *aconn, char *aname)
 {
-    char buffer[500];
-    char *tp;
+    char *itype = NULL;
     afs_int32 code;
     struct bozo_status istatus;
 
-    tp = buffer;
-    code = BOZO_GetInstanceInfo(aconn, aname, &tp, &istatus);
+    code = BOZO_GetInstanceInfo(aconn, aname, &itype, &istatus);
+    xdr_free((xdrproc_t)xdr_string, &itype);
     if (code) {
 	fprintf(stderr, "bos: failed to get instance info for '%s' (%s)\n", aname,
 	       em(code));
@@ -660,28 +659,31 @@ ListHosts(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *tconn;
     afs_int32 code;
-    char tbuffer[256];
-    char *tp;
+    char *cellname = NULL;
+    char *hostname = NULL;
     afs_int32 i;
 
-    tp = tbuffer;
     tconn = GetConn(as, 0);
-    code = BOZO_GetCellName(tconn, &tp);
+    code = BOZO_GetCellName(tconn, &cellname);
     if (code) {
 	fprintf(stderr, "bos: failed to get cell name (%s)\n", em(code));
 	exit(1);
     }
-    printf("Cell name is %s\n", tbuffer);
+    printf("Cell name is %s\n", cellname);
     for (i = 0;; i++) {
-	code = BOZO_GetCellHost(tconn, i, &tp);
+	xdr_free((xdrproc_t)xdr_string, &hostname);
+	code = BOZO_GetCellHost(tconn, i, &hostname);
 	if (code == BZDOM)
 	    break;
 	if (code != 0) {
 	    fprintf(stderr, "bos: failed to get cell host %d (%s)\n", i, em(code));
 	    exit(1);
 	}
-	printf("    Host %d is %s\n", i + 1, tbuffer);
+	printf("    Host %d is %s\n", i + 1, hostname);
     }
+
+    xdr_free((xdrproc_t)xdr_string, &cellname);
+    xdr_free((xdrproc_t)xdr_string, &hostname);
     return 0;
 }
 
@@ -873,23 +875,22 @@ ListSUsers(struct cmd_syndesc *as, void *arock)
     struct rx_connection *tconn;
     int i;
     afs_int32 code;
-    char tbuffer[256];
-    char *tp;
+    char *name = NULL;
     int lastNL, printGreeting;
 
     tconn = GetConn(as, 0);
     lastNL = 0;
     printGreeting = 1;
     for (i = 0;; i++) {
-	tp = tbuffer;
-	code = BOZO_ListSUsers(tconn, i, &tp);
+	xdr_free((xdrproc_t)xdr_string, &name);
+	code = BOZO_ListSUsers(tconn, i, &name);
 	if (code)
 	    break;
 	if (printGreeting) {
 	    printGreeting = 0;	/* delay until after first call succeeds */
 	    printf("SUsers are: ");
 	}
-	printf("%s ", tbuffer);
+	printf("%s ", name);
 	if ((i % NPERLINE) == NPERLINE - 1) {
 	    printf("\n");
 	    lastNL = 1;
@@ -899,11 +900,15 @@ ListSUsers(struct cmd_syndesc *as, void *arock)
     if (code != 1) {
 	/* a real error code, instead of scanned past end */
 	fprintf(stderr, "bos: failed to retrieve super-user list (%s)\n", em(code));
-	return code;
+	goto done;
     }
     if (lastNL == 0)
 	printf("\n");
-    return 0;
+    code = 0;
+
+  done:
+    xdr_free((xdrproc_t)xdr_string, &name);
+    return code;
 }
 
 static int
@@ -912,8 +917,7 @@ StatServer(struct cmd_syndesc *as, void *arock)
     struct rx_connection *tconn;
     afs_int32 code;
     int i;
-    char ibuffer[BOZO_BSSIZE];
-    char *tp;
+    char *iname = NULL;
     int int32p;
 
     /* int32p==1 is obsolete, smaller, printout */
@@ -926,8 +930,8 @@ StatServer(struct cmd_syndesc *as, void *arock)
     tconn = GetConn(as, 0);
     for (i = 0;; i++) {
 	/* for each instance */
-	tp = ibuffer;
-	code = BOZO_EnumerateInstance(tconn, i, &tp);
+	xdr_free((xdrproc_t)xdr_string, &iname);
+	code = BOZO_EnumerateInstance(tconn, i, &iname);
 	if (code == BZDOM)
 	    break;
 	if (code) {
@@ -935,8 +939,10 @@ StatServer(struct cmd_syndesc *as, void *arock)
 		   em(code));
 	    break;
 	}
-	DoStat(ibuffer, tconn, int32p, (i == 0));	/* print status line */
+	DoStat(iname, tconn, int32p, (i == 0));	/* print status line */
     }
+
+    xdr_free((xdrproc_t)xdr_string, &iname);
     return 0;
 }
 
@@ -1192,9 +1198,10 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
     /* now wait for bnode to disappear */
     count = 0;
     while (1) {
+	char *itype = NULL;
 	IOMGR_Sleep(1);
-	tp = tbuffer;
-	code = BOZO_GetInstanceInfo(aconn, "salvage-tmp", &tp, &istatus);
+	code = BOZO_GetInstanceInfo(aconn, "salvage-tmp", &itype, &istatus);
+	xdr_free((xdrproc_t)xdr_string, &itype);
 	if (code)
 	    break;
 	if ((++count % 5) == 0)
@@ -1278,14 +1285,12 @@ GetLogCmd(struct cmd_syndesc *as, void *arock)
 static int
 IsDAFS(struct rx_connection *aconn)
 {
-    char buffer[BOZO_BSSIZE];
-    char *tp;
+    char *itype = NULL;
     struct bozo_status istatus;
     afs_int32 code;
 
-    tp = &buffer[0];
-
-    code = BOZO_GetInstanceInfo(aconn, "dafs", &tp, &istatus);
+    code = BOZO_GetInstanceInfo(aconn, "dafs", &itype, &istatus);
+    xdr_free((xdrproc_t)xdr_string, &itype);
     if (code) {
 	/* no dafs bnode; cannot be dafs */
 	return 0;
@@ -1296,7 +1301,8 @@ IsDAFS(struct rx_connection *aconn)
     }
 
     /* dafs bnode exists but is not running; keep checking */
-    code = BOZO_GetInstanceInfo(aconn, "fs", &tp, &istatus);
+    code = BOZO_GetInstanceInfo(aconn, "fs", &itype, &istatus);
+    xdr_free((xdrproc_t)xdr_string, &itype);
     if (code) {
 	/* no fs bnode; must be dafs */
 	return 1;
@@ -1546,26 +1552,30 @@ DoStat(IN char *aname,
        IN int firstTime) 	/* true iff first instance in cmd */
 {
     afs_int32 temp;
-    char buffer[500];
     afs_int32 code;
     afs_int32 i;
     struct bozo_status istatus;
-    char *tp;
-    char *is1, *is2, *is3, *is4;	/* instance strings */
+    char *itype = NULL;
+    char *is1 = NULL;
+    char *is2 = NULL;
+    char *is3 = NULL;
+    char *is4 = NULL;
+    char *desc = NULL;
+    char *parm = NULL;
+    char *notifier_parm = NULL;
 
-    tp = buffer;
-    code = BOZO_GetInstanceInfo(aconn, aname, &tp, &istatus);
+    code = BOZO_GetInstanceInfo(aconn, aname, &itype, &istatus);
     if (code) {
 	fprintf(stderr, "bos: failed to get instance info for '%s' (%s)\n", aname,
 	       em(code));
-	return -1;
+	goto done;
     }
     if (firstTime && aint32p && (istatus.flags & BOZO_BADDIRACCESS))
 	printf
 	    ("Bosserver reports inappropriate access on server directories\n");
     printf("Instance %s, ", aname);
     if (aint32p)
-	printf("(type is %s) ", buffer);
+	printf("(type is %s) ", itype);
     if (istatus.fileGoal == istatus.goal) {
 	if (!istatus.goal)
 	    printf("disabled, ");
@@ -1581,8 +1591,7 @@ DoStat(IN char *aname,
     if (istatus.flags & BOZO_HASCORE)
 	printf("has core file, ");
 
-    tp = buffer;
-    code = BOZO_GetStatus(aconn, aname, &temp, &tp);
+    code = BOZO_GetStatus(aconn, aname, &temp, &desc);
     if (code)
 	fprintf(stderr, "bos: failed to get status for instance '%s' (%s)\n", aname,
 	       em(code));
@@ -1596,14 +1605,16 @@ DoStat(IN char *aname,
 	    printf("starting up.\n");
 	else if (temp == BSTAT_SHUTTINGDOWN)
 	    printf("shutting down.\n");
-	if (buffer[0] != 0) {
-	    printf("    Auxiliary status is: %s.\n", buffer);
+	if (desc[0] != '\0') {
+	    printf("    Auxiliary status is: %s.\n", desc);
 	}
     }
 
     /* are we done yet? */
-    if (!aint32p)
-	return 0;
+    if (!aint32p) {
+	code = 0;
+	goto done;
+    }
 
     if (istatus.procStartTime)
 	printf("    Process last started at %s (%d proc starts)\n",
@@ -1612,7 +1623,6 @@ DoStat(IN char *aname,
 	printf("    Last exit at %s\n", DateOf(istatus.lastAnyExit));
     }
     if (istatus.lastErrorExit) {
-	is1 = is2 = is3 = is4 = NULL;
 	printf("    Last error exit at %s, ", DateOf(istatus.lastErrorExit));
 	code = BOZO_GetInstanceStrings(aconn, aname, &is1, &is2, &is3, &is4);
 	/* don't complain about failing call, since could simply mean
@@ -1623,10 +1633,6 @@ DoStat(IN char *aname,
 		/* non-null instance string */
 		printf("by %s, ", is1);
 	    }
-	    free(is1);
-	    free(is2);
-	    free(is3);
-	    free(is4);
 	}
 	if (istatus.errorSignal) {
 	    if (istatus.errorSignal == SIGTERM)
@@ -1640,21 +1646,31 @@ DoStat(IN char *aname,
     if (aint32p > 1) {
 	/* try to display all the parms */
 	for (i = 0;; i++) {
-	    tp = buffer;
-	    code = BOZO_GetInstanceParm(aconn, aname, i, &tp);
+	    xdr_free((xdrproc_t)xdr_string, &parm);
+	    code = BOZO_GetInstanceParm(aconn, aname, i, &parm);
 	    if (code)
 		break;
-	    printf("    Command %d is '%s'\n", i + 1, buffer);
+	    printf("    Command %d is '%s'\n", i + 1, parm);
 	}
-	tp = buffer;
-	code = BOZO_GetInstanceParm(aconn, aname, 999, &tp);
+	code = BOZO_GetInstanceParm(aconn, aname, 999, &notifier_parm);
 	if (!code) {
 	    /* Any type of failure is treated as not having a notifier program */
-	    printf("    Notifier  is '%s'\n", buffer);
+	    printf("    Notifier  is '%s'\n", notifier_parm);
 	}
 	printf("\n");
     }
-    return 0;
+    code = 0;
+
+  done:
+    xdr_free((xdrproc_t)xdr_string, &itype);
+    xdr_free((xdrproc_t)xdr_string, &is1);
+    xdr_free((xdrproc_t)xdr_string, &is2);
+    xdr_free((xdrproc_t)xdr_string, &is3);
+    xdr_free((xdrproc_t)xdr_string, &is4);
+    xdr_free((xdrproc_t)xdr_string, &desc);
+    xdr_free((xdrproc_t)xdr_string, &parm);
+    xdr_free((xdrproc_t)xdr_string, &notifier_parm);
+    return code;
 }
 
 static int
