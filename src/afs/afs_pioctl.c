@@ -315,6 +315,7 @@ DECL_PIOCTL(PGetPAG);
 #if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX_ENV)
 DECL_PIOCTL(PSetCachingThreshold);
 #endif
+DECL_PIOCTL(PGetLiteralFID);
 
 /*
  * A macro that says whether we're going to need HandleClientContext().
@@ -431,6 +432,7 @@ static pioctlFunction CpioctlSw[] = {
     PPrecache,                  /* 12 */
     PGetPAG,                    /* 13 */
     PFlushAllVolumeData,        /* 14 */
+    PGetLiteralFID,		/* 15 -- get FID from parent directory */
 };
 
 static pioctlFunction OpioctlSw[]  = {
@@ -5647,4 +5649,51 @@ DECL_PIOCTL(PNFSNukeCreds)
     }
     ReleaseWriteLock(&afs_xuser);
     return 0;
+}
+
+/*!
+ * VIOC_GETLITERALFID (15) - Get FID from parent directory.
+ *
+ * Same as VIOCGETFID, but instead of getting the FID directly from the vcache,
+ * get this information by looking up the last component in the parent
+ * directory.
+ *
+ * \ingroup pioctl
+ *
+ * \param[in]  ain	last component in a path
+ * \param[out] aout	'struct VenusFid' for the FID associated with 'ain'
+ *
+ * \return 0 on success; errno otherwise.
+ */
+DECL_PIOCTL(PGetLiteralFID)
+{
+    int code;
+    char *name;
+    struct VenusFid tfid;
+    struct sysname_info sysState;
+
+    AFS_STATCNT(PGetLiteralFID);
+
+    memset(&tfid, 0, sizeof(tfid));
+    memset(&sysState, 0, sizeof(sysState));
+
+    if (!avc || (afs_pd_getStringPtr(ain, &name) != 0)) {
+	code = EINVAL;
+	goto out;
+    }
+
+    /* get fid associated with name */
+    code = afs_LookupName(avc, areq, name, &sysState, &tfid);
+    if (code) {
+	goto out;
+    }
+
+    tfid.Cell = avc->f.fid.Cell;
+    tfid.Fid.Volume = avc->f.fid.Fid.Volume;
+    code = afs_pd_putBytes(aout, &tfid, sizeof(tfid));
+ out:
+    if (sysState.allocked) {
+	osi_FreeLargeSpace(sysState.name);
+    }
+    return code;
 }

@@ -32,8 +32,8 @@ The path of the file (or directory).
 
 =item B<-literal>
 
-Windows only: for a symlink or mount point, evaluates the specified object
-rather than the object it refers to.
+For a symlink or mount point, evaluates the specified object rather than
+the object it refers to.
 
 =item B<-help>
 
