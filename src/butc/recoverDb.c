@@ -163,7 +163,7 @@ scanVolData(afs_int32 taskId, struct butm_tapeInfo *curTapePtr,
     char *buffer[2];
     int hasdata[2], curr, prev;
     afs_uint32 chunkSize = 0;
-    afs_int32 nbytes;
+    afs_int32 nbytes = 0;
     afs_int32 code = 0;
     afs_int32 rcode, tcode;
 

@@ -9,6 +9,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/opr.h>
 
 #include <roken.h>
 
@@ -61,6 +62,7 @@ CreateNode(struct dumpNode **newNode)
 {
     /* get space */
     *newNode = calloc(1, sizeof(struct dumpNode));
+    opr_Assert(*newNode != NULL);
 
     (*newNode)->next = dumpQHeader->next;
     dumpQHeader->next = *newNode;
