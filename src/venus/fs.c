@@ -1724,7 +1724,7 @@ QuotaCmd(struct cmd_syndesc *as, void *arock)
 
 static int
 GetLastComponent(const char *data, char **outdir, char **outbase,
-		 int *thru_symlink)
+		 int *thru_symlink, int literal)
 {
     char orig_name[MAXPATHLEN];	/*Original name, may be modified */
     char true_name[MAXPATHLEN];	/*``True'' dirname (e.g., symlink target) */
@@ -1752,10 +1752,10 @@ GetLastComponent(const char *data, char **outdir, char **outbase,
     }
 
     /*
-     * The lstat succeeded.  If the given file is a symlink, substitute
-     * the file name with the link name.
+     * The lstat succeeded.  If the -literal flag wasn't specified and the given
+     * file is a symlink, substitute the file name with the link name.
      */
-    if ((statbuff.st_mode & S_IFMT) == S_IFLNK) {
+    if (!literal && (statbuff.st_mode & S_IFMT) == S_IFLNK) {
 	if (thru_symlink)
 	     *thru_symlink = 1;
 
@@ -1850,7 +1850,7 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 
     for (ti = as->parms[0].items; ti; ti = ti->next) {
 	if (GetLastComponent(ti->data, &parent_dir,
-			     &last_component, &thru_symlink) != 0) {
+			     &last_component, &thru_symlink, 0) != 0) {
 	    error = 1;
 	    continue;
 	}
@@ -3946,6 +3946,8 @@ defect 3069
     ts = cmd_CreateSyntax("getfid", GetFidCmd, NULL, 0,
 			  "get fid for file(s)");
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+    cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL,
+		"literal evaluation of mountpoints and symlinks");
 
     ts = cmd_CreateSyntax("discon", DisconCmd, NULL, 0,
 			  "disconnection mode");
@@ -4148,7 +4150,7 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 
     for (ti = as->parms[0].items; ti; ti = ti->next) {
 	if (GetLastComponent(ti->data, &parent_dir,
-			     &last_component, NULL) != 0) {
+			     &last_component, NULL, 0) != 0) {
 	    error = 1;
 	    continue;
 	}
@@ -4249,10 +4251,14 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
 
     afs_int32 code;
-    int error = 0;
+    int error = 0, literal = 0;
     char cell[MAXCELLCHARS];
 
     SetDotDefault(&as->parms[0].items);
+    if (as->parms[1].items) {
+	/* -literal */
+	literal = 1;
+    }
     for (ti = as->parms[0].items; ti; ti = ti->next) {
         struct VenusFid vfid;
 
@@ -4260,7 +4266,25 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
         blob.out = (char *) &vfid;
         blob.in_size = 0;
 
-        code = pioctl(ti->data, VIOCGETFID, &blob, 1);
+	if (literal) {
+	    char *parent_dir = NULL;
+	    char *last_component = NULL;
+
+	    if (GetLastComponent(ti->data, &parent_dir,
+				 &last_component, NULL, literal) != 0) {
+		error = 1;
+		continue;
+	    }
+
+	    blob.in = last_component;
+	    blob.in_size = strlen(last_component) + 1;
+	    code = pioctl(parent_dir, VIOC_GETLITERALFID, &blob, 1);
+
+	    free(parent_dir);
+	    free(last_component);
+	} else {
+	    code = pioctl(ti->data, VIOCGETFID, &blob, 1);
+	}
         if (code) {
             Die(errno,ti->data);
             error = 1;

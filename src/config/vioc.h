@@ -105,6 +105,7 @@
 #define VIOCPRECACHE            _CVICEIOCTL(12) /* precache size */
 #define VIOC_GETPAG             _CVICEIOCTL(13) /* get pag value */
 #define VIOC_FLUSHALL           _CVICEIOCTL(14) /* flush all volume data */
+#define VIOC_GETLITERALFID      _CVICEIOCTL(15) /* get fid from parent directory */
 
 /* OpenAFS-specific 'O' pioctl's */
 #define VIOC_NFS_NUKE_CREDS	_OVICEIOCTL(1)	/* nuke creds for all PAG's */
