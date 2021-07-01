@@ -82,12 +82,13 @@ keymap_BindToString(struct keymap_map *amap, char *astring,
 		tmap = keymap_Create();
 		code =
 		    BindIt(amap, tc, KEYMAP_SUBMAP, tmap, NULL, NULL);
+		if (code) {
+		    free(tmap);
+		    return code;
+		}
 	    } else {
 		tmap = amap->entries[tc].u.submap;
-		code = 0;
 	    }
-	    if (code)
-		return code;
 	    amap = tmap;	/* continue processing this map */
 	}
     }				/* while loop */
