@@ -173,9 +173,13 @@ ht_AllocTable(struct ubik_trans *ut, struct memoryHashTable *mht)
 
     mht->size = nb * sizeof(struct memoryHTBlock *);
     b = mht->blocks = calloc(1, mht->size);
+    if (b == NULL)
+	return ENOMEM;
 
     for (i = 0; i < nb; i++) {
 	b[i] = malloc(sizeof(struct memoryHTBlock));
+	if (b[i] == NULL)
+	    return ENOMEM;
 	code = AllocBlock(ut, (struct block *)&b[i]->b, &b[i]->a);
 	if (code)
 	    return code;

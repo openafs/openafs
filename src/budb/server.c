@@ -275,7 +275,7 @@ int
 parseServerList(struct cmd_item *itemPtr)
 {
     struct cmd_item *save;
-    char **serverArgs;
+    char **serverArgs = NULL;
     char **ptr;
     afs_int32 nservers = 0;
     afs_int32 code = 0;
@@ -309,13 +309,9 @@ parseServerList(struct cmd_item *itemPtr)
     code =
 	ubik_ParseServerList(nservers + 2, serverArgs, &globalConfPtr->myHost,
 			     globalConfPtr->serverList);
-    if (code)
-	ERROR(code);
-
-    /* free space for the server args */
-    free(serverArgs);
 
   error_exit:
+    free(serverArgs);
     return (code);
 }
 

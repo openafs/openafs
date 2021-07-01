@@ -3457,8 +3457,10 @@ T_DumpDatabase(struct rx_call *call, char *filename)
 	return (BUDB_BADARGUMENT);
 
     eval = InitRPC(&ut, LOCKWRITE, 1);
-    if (eval)
+    if (eval) {
+	fclose(dumpfid);
 	return (eval);
+    }
 
     /* dump all items in the database */
     for (type = 1; type <= HT_MAX_FUNCTION; type++) {	/*ft */
