@@ -44,9 +44,18 @@ opr_dict_Init(unsigned int size)
 	return NULL;
 
     dict = calloc(1, sizeof(struct opr_dict));
+    if (dict == NULL) {
+	return NULL;
+    }
+
     dict->size = size;
 
     dict->table = malloc(dict->size * sizeof(struct opr_queue));
+    if (dict->table == NULL) {
+	free(dict);
+	return NULL;
+    }
+
     for (i = 0; i < dict->size; i++) {
 	opr_queue_Init(&dict->table[i]);
     }
