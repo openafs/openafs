@@ -2027,7 +2027,6 @@ ListCellsRPC(void *rpc_specific, int slot, int *last_item,
         for (n=0; n<sl.serverList_len && n<UTIL_MAX_CELL_HOSTS; n++) {
             t->cell[slot].serverAddr[n] = sl.serverList_val[n];
         }
-        xdr_free((xdrproc_t) xdr_serverList, &sl);
     }
 
     /*
@@ -2042,6 +2041,7 @@ ListCellsRPC(void *rpc_specific, int slot, int *last_item,
     rc = 1;
 
   fail_ListCellsRPC:
+    xdr_free((xdrproc_t) xdr_serverList, &sl);
     xdr_free((xdrproc_t) xdr_string, &name);
 
     if (st != NULL) {
