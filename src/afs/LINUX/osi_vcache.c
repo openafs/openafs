@@ -251,3 +251,32 @@ osi_vnhold(struct vcache *avc)
     VN_HOLD(AFSTOV(avc));
     return 0;
 }
+
+/**
+ * Should we defer calling afs_remunlink(avc) to a background daemon, or can we
+ * call it in the current process?
+ *
+ * @param[in] avc   The vcache we're going to call afs_remunlink on
+ *
+ * @retval 0	call afs_remunlink in the current task
+ * @retval 1	call afs_remunlink in the background
+ */
+int
+osi_ShouldDeferRemunlink(struct vcache *avc)
+{
+    if (cacheDiskType == AFS_FCACHE_TYPE_UFS && current->fs == NULL) {
+	/*
+	 * If current->fs is NULL (which can happen when the current process is
+	 * in the middle of exiting), then calling dentry_open can result in a
+	 * kernel panic with certain LSMs (e.g. Crowdstrike Falcon).
+	 *
+	 * If we have a disk cache, calling afs_remunlink generally involves
+	 * calling dentry_open, since we need to interact with the disk cache,
+	 * and so calling afs_remunlink can cause a panic. So, make sure we
+	 * defer afs_remunlink to a background daemon, where current->fs is not
+	 * NULL, and so it won't panic the machine.
+	 */
+	return 1;
+    }
+    return 0;
+}

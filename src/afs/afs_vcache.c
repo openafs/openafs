@@ -323,7 +323,8 @@ afs_InactiveVCache(struct vcache *avc, afs_ucred_t *acred)
     avc->f.states &= ~CMAPPED;
     avc->f.states &= ~CDirty;	/* Turn it off */
     if (avc->f.states & CUnlinked) {
-	if (CheckLock(&afs_xvcache) || CheckLock(&afs_xdcache)) {
+	if (CheckLock(&afs_xvcache) || CheckLock(&afs_xdcache) ||
+	    osi_ShouldDeferRemunlink(avc)) {
 	    avc->f.states |= CUnlinkedDel;
 	    ReleaseWriteLock(&avc->lock);
 	    return;

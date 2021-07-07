@@ -445,4 +445,10 @@ extern afs_ucred_t afs_osi_cred, *afs_osi_credp;
 #define AFS_NUMPAGGROUPS 2
 #endif
 
+#ifdef AFS_LINUX_ENV
+extern int osi_ShouldDeferRemunlink(struct vcache *avc);
+#else
+# define osi_ShouldDeferRemunlink(avc) 0
+#endif
+
 #endif /* _AFS_OSI_ */
