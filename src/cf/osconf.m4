@@ -111,7 +111,6 @@ case $AFS_SYSNAME in
 		XCFLAGS0="-ldld -lc -Wp,-H200000 -Wl,-a,archive -DAUTH_DBM_LOG +z -Wl,+k -D_LARGEFILE64_SOURCE"
 		XCFLAGS64="${XCFLAGS0} +DA2.0W"
 		XCFLAGS="${XCFLAGS0} +DA1.0"
-		XLIBELFA="-lelf"
 		YACC="/opt/langtools/bin/yacc"
 		SHLIB_LINKER="ld -b"
 		;;
@@ -137,7 +136,6 @@ case $AFS_SYSNAME in
 		XCFLAGS0="-ldld -lc -Wp,-H200000 -Wl,-a,archive_shared -DAUTH_DBM_LOG +z -Wl,+k -D_LARGEFILE64_SOURCE"
 		XCFLAGS64="${XCFLAGS0} +DD64"
 		XCFLAGS="${XCFLAGS0}"
-		XLIBELFA="-lelf"
 		YACC="/opt/langtools/bin/yacc"
 		SHLIB_LINKER="ld -b"
 		;;
@@ -513,8 +511,6 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-G -Bsymbolic"
 		XCFLAGS64='${XCFLAGS} -m64'
 		XCFLAGS="-dy -Bdynamic"
-		XLIBELFA="-lelf"
-		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
@@ -556,8 +552,6 @@ case $AFS_SYSNAME in
 		XLDFLAGS64="-m64"
 		XLDFLAGS="${XARCHFLAGS}"
 		ASFLAGS="${XARCHFLAGS}"
-		XLIBELFA="-lelf"
-		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} ${XARCHFLAGS} -G -dy -Bsymbolic -z text"
 		;;
@@ -754,8 +748,6 @@ AC_SUBST(CFLAGS_WERROR)
 AC_SUBST(XCFLAGS64)
 AC_SUBST(XLDFLAGS)
 AC_SUBST(XLDFLAGS64)
-AC_SUBST(XLIBELFA)
-AC_SUBST(XLIBKVM)
 AC_SUBST(XLIBS)
 AC_SUBST(YACC)
 AC_SUBST(KROOT)

@@ -490,14 +490,12 @@ dest_COPYFILES:
 	${INSTALL} -m 644 sgi_master ${DEST}/root.client/bin/afs
 
 # Create symlinks to clients we don't need to build.
-# If this changes, also change the kdump symlinks.
 install_LINKFILES:
 <sgi_65>
 	echo "Now we support also IP22_4K, IP22_5K, IP32_5K, IP32_10K cpu boards."
 <all>
 
 # Create symlinks to clients we don't need to build.
-# If this changes, also change the kdump symlinks.
 dest_LINKFILES:
 <sgi_65>
 	ln -fs  libafs.IP20.a       ${DEST}/root.client/bin/libafs.IP22.a

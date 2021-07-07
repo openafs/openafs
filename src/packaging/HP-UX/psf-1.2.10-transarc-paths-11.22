@@ -314,9 +314,6 @@
       file_permissions -u 222 -o root -g sys
         file    kadb_check
         file    kdb
-        file    kdump
-        file    kdump32
-        file    kdump64
         file    kseal
         file    rmtsysd
         file    vsys

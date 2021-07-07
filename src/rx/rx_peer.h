@@ -13,13 +13,8 @@
 /* A peer refers to a peer process, specified by a (host,port) pair.  There may
  * be more than one peer on a given host. */
 
-#ifdef KDUMP_RX_LOCK
-struct rx_peer_rx_lock {
-    struct rx_peer_rx_lock *next;	/* Next in hash conflict or free list */
-#else
 struct rx_peer {
     struct rx_peer *next;	/* Next in hash conflict or free list */
-#endif
 #ifdef RX_ENABLE_LOCKS
     afs_kmutex_t peer_lock;	/* Lock peer */
 #endif				/* RX_ENABLE_LOCKS */

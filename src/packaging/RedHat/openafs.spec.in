@@ -725,7 +725,6 @@ rm -f $RPM_BUILD_ROOT%{_bindir}/knfs
 rm -f $RPM_BUILD_ROOT%{_bindir}/livesys
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/kdb
 rm -f $RPM_BUILD_ROOT%{_sbindir}/rmtsysd
-rm -rf $RPM_BUILD_ROOT%{_sbindir}/kdump*
 %if !%{build_authlibs}
 rm -f $RPM_BUILD_ROOT%{_libdir}/libafsauthent.so*
 rm -f $RPM_BUILD_ROOT%{_libdir}/libafsrpc.so*

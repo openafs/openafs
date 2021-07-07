@@ -37,9 +37,9 @@
 
 #define AFS_PRIVATE_OSI_ALLOCSPACES	1
 
-#if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
+#if defined(__KERNEL__)
 #define AFS_GLOBAL_SUNLOCK
-#endif /* __KERNEL__	&& !DUMP_KERNEL */
+#endif /* __KERNEL__ */
 
 #ifdef KERNEL
 #ifndef MIN

@@ -13,15 +13,9 @@
 /* A connection is an authenticated communication path, allowing limited
  * multiple asynchronous conversations. */
 
-#ifdef KDUMP_RX_LOCK
-struct rx_connection_rx_lock {
-    struct rx_connection_rx_lock *next;	/*  on hash chain _or_ free list */
-    struct rx_peer_rx_lock *peer;
-#else
 struct rx_connection {
     struct rx_connection *next;	/*  on hash chain _or_ free list */
     struct rx_peer *peer;
-#endif
 #ifdef	RX_ENABLE_LOCKS
     afs_kmutex_t conn_call_lock;	/* locks conn_call_cv */
     afs_kcondvar_t conn_call_cv;
@@ -30,11 +24,7 @@ struct rx_connection {
     afs_uint32 epoch;		/* Process start time of client side of connection */
     afs_uint32 cid;		/* Connection id (call channel is bottom bits) */
     afs_int32 error;		/* If this connection is in error, this is it */
-#ifdef KDUMP_RX_LOCK
-    struct rx_call_rx_lock *call[RX_MAXCALLS];
-#else
     struct rx_call *call[RX_MAXCALLS];
-#endif
     afs_uint32 callNumber[RX_MAXCALLS];	/* Current call numbers */
     afs_uint32 rwind[RX_MAXCALLS];
     u_short twind[RX_MAXCALLS];

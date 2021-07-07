@@ -12,13 +12,8 @@
 /*
  * AFS system call opcodes
  */
-#ifdef KDUMP_KERNEL
-#include <afs/afs_args.h>
-#include <afs/afs_consts.h>
-#else
 #include "afs/afs_args.h"
 #include "afs/afs_consts.h"
-#endif
 
 /*
  * afs_fsfragsize cannot be less than 1023, or some cache-tracking

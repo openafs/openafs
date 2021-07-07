@@ -39,11 +39,7 @@ struct rx_call_appl {
  * well as state shared with other calls associated with this
  * connection) is maintained in the connection structure. */
 
-#ifdef KDUMP_RX_LOCK
-struct rx_call_rx_lock {
-#else
 struct rx_call {
-#endif
     struct opr_queue entry;	/* Call can be on various queues (one-at-a-time) */
     struct opr_queue tq;	/* Transmit packet queue */
     struct opr_queue rq;	/* Receive packet queue */
@@ -58,11 +54,7 @@ struct rx_call {
     afs_kcondvar_t cv_rq;
     afs_kcondvar_t cv_tq;
 #endif
-#ifdef KDUMP_RX_LOCK
-    struct rx_connection_rx_lock *conn;	/* Parent connection for call */
-#else
     struct rx_connection *conn;	/* Parent connection for this call */
-#endif
     afs_uint32 *callNumber;	/* Pointer to call number field within connection */
     afs_uint32 flags;		/* Some random flags */
     u_char localStatus;		/* Local user status sent out of band */
@@ -151,21 +143,13 @@ struct rx_call {
     u_short rqc;                /* packet count in rq */
     u_short iovqc;              /* packet count in iovq */
 
-#ifdef KDUMP_RX_LOCK
-    struct rx_call_rx_lock *allNextp;
-#else
     struct rx_call *allNextp;
-#endif
     afs_uint32 call_id;
 #endif
 #ifdef AFS_RXERRQ_ENV
     int neterr_gen;
 #endif
 };
-
-/* Only include this once, even when re-loading for kdump. */
-#ifndef _CALL_REF_DEFINED_
-#define _CALL_REF_DEFINED_
 
 #ifdef RX_ENABLE_LOCKS
 
@@ -180,12 +164,12 @@ struct rx_call {
 				MUTEX_EXIT(&rx_refcnt_mutex); \
 			      } while(0)
 
-#ifdef RX_REFCOUNT_CHECK
+# ifdef RX_REFCOUNT_CHECK
 /* RX_REFCOUNT_CHECK is used to test for call refcount leaks by event
  * type.
  */
 extern int rx_callHoldType;
-#define CALL_HOLD_R(call, type) do { \
+#  define CALL_HOLD_R(call, type) do { \
 				 call->refCount++; \
 				 call->refCDebug[type]++; \
 				 if (call->refCDebug[type] > 50)  {\
@@ -193,7 +177,7 @@ extern int rx_callHoldType;
 				     osi_Panic("Huge call refCount"); \
 							       } \
 			     } while (0)
-#define CALL_RELE_R(call, type) do { \
+#  define CALL_RELE_R(call, type) do { \
 				 call->refCount--; \
 				 call->refCDebug[type]--; \
 				 if (call->refCDebug[type] > 50) {\
@@ -201,17 +185,15 @@ extern int rx_callHoldType;
 				     osi_Panic("Negative call refCount"); \
 							      } \
 			     } while (0)
-#else /* RX_REFCOUNT_CHECK */
-#define CALL_HOLD_R(call, type) 	 call->refCount++
-#define CALL_RELE_R(call, type)	 call->refCount--
-#endif /* RX_REFCOUNT_CHECK */
+# else /* RX_REFCOUNT_CHECK */
+#  define CALL_HOLD_R(call, type) 	 call->refCount++
+#  define CALL_RELE_R(call, type)	 call->refCount--
+# endif /* RX_REFCOUNT_CHECK */
 
 #else /* RX_ENABLE_LOCKS */
-#define CALL_HOLD(call, type)
-#define CALL_RELE(call, type)
-#define CALL_RELE_R(call, type)
+# define CALL_HOLD(call, type)
+# define CALL_RELE(call, type)
+# define CALL_RELE_R(call, type)
 #endif /* RX_ENABLE_LOCKS */
-
-#endif /* _CALL_REF_DEFINED_ */
 
 #endif

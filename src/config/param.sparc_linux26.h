@@ -14,14 +14,14 @@
 /* This section for kernel libafs compiles only */
 #define AFS_SPARC_LINUX_ENV	1
 
-#if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
+#if defined(__KERNEL__)
 #if defined(AFS_SMP) && defined(CONFIG_MODVERSIONS)
 /* hack, I don't know what else with theese symbols */
 #define _do_spin_lock _do_spin_lock_R__ver__do_spin_lock
 #define _do_spin_unlock _do_spin_unlock_R__ver__do_spin_unlock
 #define kernel_flag kernel_flag_R__ver_kernel_flag
 #endif
-#endif /* __KERNEL__  && !DUMP_KERNEL */
+#endif /* __KERNEL__ */
 
 /*
  * on sparclinux is O_LARGEFILE defined but there is not off64_t,

@@ -213,7 +213,7 @@ afs_LookupAFSDB(char *acellName)
  * afs_cellname_write: write in-kernel list of cells to disk
  */
 
-struct cell_name *afs_cellname_head;	/* Export for kdump */
+static struct cell_name *afs_cellname_head;
 static afs_dcache_id_t afs_cellname_inode;
 static int afs_cellname_inode_set;
 static int afs_cellname_dirty;
@@ -446,7 +446,7 @@ afs_cellname_write(void)
  * afs_NewCellAlias: create new cell alias entry
  */
 
-struct cell_alias *afs_cellalias_head;	/* Export for kdump */
+static struct cell_alias *afs_cellalias_head;
 static afs_int32 afs_cellalias_index;
 static int afs_CellOrAliasExists_nl(char *aname);	/* Forward declaration */
 
@@ -553,9 +553,10 @@ afs_NewCellAlias(char *alias, char *cell)
  * afs_NewCell: create or update a cell entry
  */
 
-struct afs_q CellLRU;		/* Export for kdump */
+struct afs_q CellLRU;
+
 static char *afs_thiscell = NULL;
-afs_int32 afs_cellindex;	/* Export for kdump */
+afs_int32 afs_cellindex;
 
 /*!
  * Bump given cell up to the front of the LRU queue.
