@@ -7,9 +7,6 @@
 /cmdebug
 /fs
 /fstrace
-/kdump-*
 /up
-/kdump
-/kdump64
 /livesys
 /twiddle

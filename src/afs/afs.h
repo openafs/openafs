@@ -12,13 +12,8 @@
 /*
  * AFS system call opcodes
  */
-#ifdef KDUMP_KERNEL
-#include <afs/afs_args.h>
-#include <afs/afs_consts.h>
-#else
 #include "afs/afs_args.h"
 #include "afs/afs_consts.h"
-#endif
 
 /* jhash.h is a standalone header and is fine to pull into kernel code. */
 #include <opr/jhash.h>

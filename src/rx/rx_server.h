@@ -13,17 +13,9 @@
  * in GetCall.
  */
 
-#ifdef KDUMP_RX_LOCK
-struct rx_serverQueueEntry_rx_lock {
-#else
 struct rx_serverQueueEntry {
-#endif
     struct opr_queue entry;
-#ifdef KDUMP_RX_LOCK
-    struct rx_call_rx_lock *newcall;
-#else
     struct rx_call *newcall;
-#endif
 #ifdef	RX_ENABLE_LOCKS
     afs_kmutex_t lock;
     afs_kcondvar_t cv;

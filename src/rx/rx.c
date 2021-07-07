@@ -2633,11 +2633,7 @@ rxi_FindService(osi_socket socket, u_short serviceId)
 }
 
 #ifdef RXDEBUG_PACKET
-#ifdef KDUMP_RX_LOCK
-static struct rx_call_rx_lock *rx_allCallsp = 0;
-#else
 static struct rx_call *rx_allCallsp = 0;
-#endif
 #endif /* RXDEBUG_PACKET */
 
 /* Allocate a call structure, for the indicated channel of the
@@ -9440,11 +9436,7 @@ DllMain(HINSTANCE dllInstHandle,	/* instance handle for this DLL module */
 int rx_DumpCalls(FILE *outputFile, char *cookie)
 {
 #ifdef RXDEBUG_PACKET
-#ifdef KDUMP_RX_LOCK
-    struct rx_call_rx_lock *c;
-#else
     struct rx_call *c;
-#endif
 #ifdef AFS_NT40_ENV
     int zilch;
     char output[2048];

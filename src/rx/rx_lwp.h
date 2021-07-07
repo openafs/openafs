@@ -14,9 +14,6 @@
 #ifndef _RX_LWP_H_
 #define _RX_LWP_H_
 
-/* KDUMP_KERNEL is defined when kdump includes this header. */
-#ifndef KDUMP_KERNEL
-
 typedef int afs_kmutex_t;
 typedef int afs_kcondvar_t;
 
@@ -37,7 +34,5 @@ typedef int afs_kcondvar_t;
 #define CV_SIGNAL(cv)
 #define CV_BROADCAST(cv)
 #define CV_TIMEDWAIT(cv, l, t)
-
-#endif /* KERNEL */
 
 #endif /* _RX_LWP_H_ */

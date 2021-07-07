@@ -10,7 +10,7 @@
 #ifndef __AFSLOCK_INCLUDE__
 #define	__AFSLOCK_INCLUDE__	    1
 
-#if !defined(KERNEL) && !defined(KDUMP_KERNEL)
+#if !defined(KERNEL)
 #error Do not include afs/lock.h except for kernel code.
 #endif
 
