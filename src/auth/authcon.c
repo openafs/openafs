@@ -18,6 +18,7 @@
 
 #include <rx/rxkad.h>
 #include <rx/rx.h>
+#include <rx/rx_identity.h>
 
 #include <afs/pthread_glock.h>
 
@@ -93,6 +94,7 @@ afsconf_ServerAuth(void *arock,
 
 static afs_int32
 GenericAuth(struct afsconf_dir *adir,
+	    struct rx_identity *auser,
 	    struct rx_securityClass **astr,
 	    afs_int32 *aindex,
 	    rxkad_level enclevel)
@@ -108,6 +110,8 @@ GenericAuth(struct afsconf_dir *adir,
     struct afsconf_typedKey *kobj;
     struct rx_opaque *keymat;
     int *et;
+    char *name, *inst;
+    char *name_free = NULL;
 
     /* first, find the right key and kvno to use */
 
@@ -129,7 +133,7 @@ GenericAuth(struct afsconf_dir *adir,
     if (use_krb5 == 0) {
 	code = afsconf_GetLatestKey(adir, &kvno, &key);
 	if (code) {
-	    return QuickAuth(astr, aindex);
+	    goto done;
 	}
 	/* next create random session key, using key for seed to good random */
 	DES_init_random_number_generator((DES_cblock *) &key);
@@ -138,7 +142,31 @@ GenericAuth(struct afsconf_dir *adir,
     if (code) {
 	if (use_krb5)
 	    afsconf_typedKey_put(&kobj);
-	return QuickAuth(astr, aindex);
+	goto done;
+    }
+
+    if (auser == NULL || auser->kind == RX_ID_SUPERUSER) {
+	name = AUTH_SUPERUSER;
+	inst = "";
+    } else if (auser->kind == RX_ID_KRB4) {
+	name = name_free = calloc(auser->exportedName.len + 1, 1);
+	if (name == NULL) {
+	    code = ENOMEM;
+	    goto done;
+	}
+	memcpy(name, auser->exportedName.val, auser->exportedName.len);
+	/* separate primary name from instance */
+	inst = strchr(name, '.');
+	if (inst != NULL) {
+	    *inst = '\0';
+	    inst = inst + 1;
+	} else {
+	    inst = "";
+	}
+    } else {
+	/* not supported */
+	code = AFSCONF_NO_SECURITY_CLASS;
+	goto done;
     }
 
     if (use_krb5) {
@@ -146,7 +174,7 @@ GenericAuth(struct afsconf_dir *adir,
 	memset(tbuffer, '\0', sizeof(tbuffer));
 	code =
 	    tkt_MakeTicket5(tbuffer, &ticketLen, *et, &kvno, keymat->val,
-			    keymat->len, AUTH_SUPERUSER, "", "", 0, 0x7fffffff,
+			    keymat->len, name, inst, "", 0, 0x7fffffff,
 			    &session, "afs", "");
 	afsconf_typedKey_put(&kobj);
     } else {
@@ -154,14 +182,14 @@ GenericAuth(struct afsconf_dir *adir,
 	ticketLen = sizeof(tbuffer);
 	memset(tbuffer, '\0', sizeof(tbuffer));
 	code =
-	    tkt_MakeTicket(tbuffer, &ticketLen, &key, AUTH_SUPERUSER, "", "", 0,
+	    tkt_MakeTicket(tbuffer, &ticketLen, &key, name, inst, "", 0,
 			   0xffffffff, &session, 0, "afs", "");
 	/* parms were buffer, ticketlen, key to seal ticket with, principal
 	 * name, instance and cell, start time, end time, session key to seal
 	 * in ticket, inet host, server name and server instance */
     }
     if (code) {
-	return QuickAuth(astr, aindex);
+	goto done;
     }
 
     /* Next, we have ticket, kvno and session key, authenticate the connection.*/
@@ -170,7 +198,13 @@ GenericAuth(struct afsconf_dir *adir,
 				      tbuffer);
     *astr = tclass;
     *aindex = RX_SECIDX_KAD;
-    return 0;
+ done:
+    if (code != 0) {
+	code = QuickAuth(astr, aindex);
+    }
+    free(name_free);
+
+    return code;
 }
 
 /* build a fake ticket for 'afs' using keys from adir, returning an
@@ -184,7 +218,7 @@ afsconf_ClientAuth(void *arock, struct rx_securityClass ** astr,
     afs_int32 rc;
 
     LOCK_GLOBAL_MUTEX;
-    rc = GenericAuth(adir, astr, aindex, rxkad_clear);
+    rc = GenericAuth(adir, NULL, astr, aindex, rxkad_clear);
     UNLOCK_GLOBAL_MUTEX;
     return rc;
 }
@@ -202,7 +236,7 @@ afsconf_ClientAuthSecure(void *arock,
     afs_int32 rc;
 
     LOCK_GLOBAL_MUTEX;
-    rc = GenericAuth(adir, astr, aindex, rxkad_crypt);
+    rc = GenericAuth(adir, NULL, astr, aindex, rxkad_crypt);
     UNLOCK_GLOBAL_MUTEX;
     return rc;
 }
