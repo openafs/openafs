@@ -35,6 +35,7 @@ B<afsd> [B<-afsdb>] [B<-backuptree>]
      S<<< [B<-volumes> <I<number of volume entries>>] >>>
      [B<-waitclose>] [B<-rxmaxfrags> <I<max # of fragments>>]
      S<<< [B<-volume-ttl> <I<vldb cache timeout>>] >>>
+     S<<< [B<-atsys> <I<atsys behavior>>] >>>
 
 =for html
 </div>
@@ -778,6 +779,45 @@ the VL Servers for contacted cells.
 A typical value is 7200 seconds (2 hours), which is the same as the default
 callback duration for read-only volumes. The minimum valid value is 600 seconds
 (10 minutes).
+
+=item B<-atsys> <I<atsys behavior>>
+
+Specifies the specific behavior of how I<@sys> is expanded in path names (see
+L<fs_sysname(1)>). The possible values are:
+
+=over 4
+
+=item internal
+
+I<@sys> is expanded in paths internally in the OpenAFS client. This generally
+means that paths containing I<@sys> tend to keep the I<@sys> string in the path
+name (visible via e.g. L<getcwd(3)>), but the exact behavior depends on access
+patterns and platform-specific quirks.
+
+This is the default behavior.
+
+Example behavior:
+
+    $ cd /afs/cell/@sys
+    $ /bin/pwd -P
+    /afs/cell/@sys
+    $ ls -1di . /afs/cell/sunx86_511
+         81263 .
+         81263 /afs/cell/sunx86_511
+
+=item none
+
+I<@sys> is not expanded in paths at all. This normally should not be used, but
+may be useful in rare situations with strange path names or for testing.
+
+Example behavior:
+
+    $ ls -1d /afs/cell/@sys /afs/cell/*
+    /afs/cell/@sys: No such file or directory
+    /afs/cell/amd64_linux26
+    /afs/cell/sunx86_511
+
+=back
 
 =back
 

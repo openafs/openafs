@@ -1632,6 +1632,19 @@ afs_syscall_call(long parm, long parm2, long parm3,
     } else if (parm == AFSOP_SOCKPROXY_HANDLER) {
 	code = sockproxy_handler(AFSKPTR(parm2), AFSKPTR(parm3));
 #endif
+    } else if (parm == AFSOP_SETINT) {
+	afs_uint32 key = parm2;
+	afs_uint32 val = parm3;
+
+	switch (key) {
+	case AFS_SETINT_ATSYS:
+	    code = afs_AtSys_SetType(val);
+	    break;
+	default:
+	    afs_warn("afs: unknown AFSOP_SETINT key %d\n", key);
+	    code = EINVAL;
+	}
+
     } else {
 	code = EINVAL;
     }

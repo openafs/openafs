@@ -1215,6 +1215,7 @@ extern int afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
 #endif
 
 /* VNOPS/afs_vnop_lookup.c */
+extern int afs_atsys_type;
 extern int EvalMountPoint(struct vcache *avc, struct vcache *advc,
 			  struct volume **avolpp,
 			  struct vrequest *areq);
@@ -1233,6 +1234,7 @@ extern int Next_AtSys(struct vcache *avc, struct vrequest *areq,
 		      struct sysname_info *state);
 extern int afs_DoBulkStat(struct vcache *adp, long dirCookie,
 			  struct vrequest *areqp);
+extern int afs_AtSys_SetType(afs_uint32 type);
 
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 extern int afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp,

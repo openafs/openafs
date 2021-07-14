@@ -285,6 +285,7 @@ static int afsd_CloseSynch = 0;	/*Are closes synchronous or not? */
 static int rxmaxmtu = 0;       /* Are we forcing a limit on the mtu? */
 static int rxmaxfrags = 0;      /* Are we forcing a limit on frags? */
 static int volume_ttl = 0;      /* enable vldb cache timeout support */
+static int atsys_type;		/* @sys expansion type */
 
 #ifdef AFS_SGI_ENV
 #define AFSD_INO_T ino64_t
@@ -364,6 +365,7 @@ enum optionsList {
     OPT_rxmaxfrags,
     OPT_inumcalc,
     OPT_volume_ttl,
+    OPT_atsys,
 };
 
 #ifdef MACOS_EVENT_HANDLING
@@ -2154,6 +2156,7 @@ static int
 CheckOptions(struct cmd_syndesc *as)
 {
     afs_int32 code;		/*Result of fork() */
+    char *atsys_str = NULL;
 #ifdef	AFS_SUN5_ENV
     struct stat st;
 #endif
@@ -2362,10 +2365,24 @@ CheckOptions(struct cmd_syndesc *as)
     }
     cmd_OptionAsInt(as, OPT_volume_ttl, &volume_ttl);
 
+    cmd_OptionAsString(as, OPT_atsys, &atsys_str);
+    if (atsys_str != NULL) {
+	if (strcmp(atsys_str, "internal") == 0) {
+	    atsys_type = AFS_ATSYS_INTERNAL;
+	} else if (strcmp(atsys_str, "none") == 0) {
+	    atsys_type = AFS_ATSYS_NONE;
+	} else {
+	    fprintf(stderr, "Unknown value for -atsys: %s\n", atsys_str);
+	    return -1;
+	}
+    }
+
     /* parse cacheinfo file if this is a diskcache */
     if (ParseCacheInfoFile()) {
 	exit(1);
     }
+
+    free(atsys_str);
 
     return 0;
 }
@@ -2897,6 +2914,17 @@ afsd_run(void)
 	}
     }
 
+    if (atsys_type != 0) {
+	if (afsd_verbose)
+	    printf("%s: Calling AFSOP_SETINT(AFS_SETINT_ATSYS) with '%d'", rn,
+		   atsys_type);
+	code = afsd_syscall(AFSOP_SETINT, AFS_SETINT_ATSYS, atsys_type);
+	if (code != 0) {
+	    printf("%s: Failed to set @sys type to %d: code %d\n", rn,
+		   atsys_type, code);
+	}
+    }
+
     /*
      * Pass the kernel the name of the workstation cache file holding the
      * volume information.
@@ -3099,6 +3127,8 @@ afsd_init(void)
     cmd_AddParmAtOffset(ts, OPT_volume_ttl, "-volume-ttl", CMD_SINGLE,
 			CMD_OPTIONAL,
 			"Set the vldb cache timeout value in seconds.");
+    cmd_AddParmAtOffset(ts, OPT_atsys, "-atsys", CMD_SINGLE, CMD_OPTIONAL,
+			"internal | none");
 }
 
 /**
@@ -3239,6 +3269,10 @@ afsd_syscall_populate(struct afsd_syscall_args *args, int syscall, va_list ap)
 	break;
     case AFSOP_SEED_ENTROPY:
 	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
+	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, afs_uint32)));
+	break;
+    case AFSOP_SETINT:
+	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, afs_uint32)));
 	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, afs_uint32)));
 	break;
     default:

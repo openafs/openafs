@@ -351,4 +351,11 @@ struct afs_pkt_hdr {
 };
 #endif
 
+/* Key constants for AFSOP_SETINT */
+#define AFS_SETINT_ATSYS    0x1
+
+/* Value constants for AFS_SETINT_ATSYS */
+#define AFS_ATSYS_INTERNAL  0x1
+#define AFS_ATSYS_NONE	    0x2
+
 #endif /* _AFS_ARGS_H_ */

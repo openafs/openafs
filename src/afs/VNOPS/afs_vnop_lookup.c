@@ -33,6 +33,8 @@ afs_int32 afs_bulkStatsDone;
 static int bulkStatCounter = 0;	/* counter for bulk stat seq. numbers */
 int afs_fakestat_enable = 0;	/* 1: fakestat-all, 2: fakestat-crosscell */
 
+/* Dictates behavior of @sys path expansion. */
+int afs_atsys_type = AFS_ATSYS_INTERNAL;
 
 /* this would be faster if it did comparison as int32word, but would be 
  * dependant on byte-order and alignment, and I haven't figured out
@@ -633,6 +635,56 @@ afs_getsysname(struct vrequest *areq, struct vcache *adp,
     return code;
 }
 
+/**
+ * Set the @sys behavior mode.
+ *
+ * @param[in] type  One of the AFS_ATSYS_* constants
+ *
+ * @return errno errors
+ *
+ * @pre AFS_GLOCK held
+ */
+int
+afs_AtSys_SetType(afs_uint32 type)
+{
+    int pid;
+    char procname[256];
+
+    switch (type) {
+    case AFS_ATSYS_INTERNAL:
+    case AFS_ATSYS_NONE:
+	break;
+    default:
+	pid = MyPidxx2Pid(MyPidxx);
+	osi_procname(procname, sizeof(procname));
+	afs_warn("afs: pid %d (%s) tried to set invalid atsys type %d\n", pid,
+		 procname, type);
+	return EINVAL;
+    }
+
+    if (afs_globalVFS != NULL) {
+	pid = MyPidxx2Pid(MyPidxx);
+	osi_procname(procname, sizeof(procname));
+	afs_warn("afs: pid %d (%s) tried to set atsys type to %d after AFS is "
+		 "mounted\n", pid, procname, type);
+	return EBUSY;
+    }
+
+    afs_atsys_type = type;
+    return 0;
+}
+
+static void
+Check_AtSysDisabled(const char *aname, struct sysname_info *state)
+{
+    /* Don't do any @sys expansion here, and also make it so Next_AtSys
+     * doesn't do anything. */
+    state->offset = -1;
+    state->name_size = 0;
+    state->index = -1;
+    state->name = (char *)aname;
+}
+
 void
 Check_AtSys(struct vcache *avc, const char *aname,
 	    struct sysname_info *state, struct vrequest *areq)
@@ -640,7 +692,10 @@ Check_AtSys(struct vcache *avc, const char *aname,
     int num = 0;
     char **sysnamelist[MAXNUMSYSNAMES];
 
-    if (AFS_EQ_ATSYS(aname)) {
+    if (afs_atsys_type == AFS_ATSYS_NONE) {
+	Check_AtSysDisabled(aname, state);
+
+    } else if (AFS_EQ_ATSYS(aname)) {
 	state->offset = 0;
 	state->name_size = MAXSYSNAME;
 	state->name = osi_AllocLargeSpace(state->name_size);
