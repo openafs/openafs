@@ -393,7 +393,7 @@ pdeclaration(char *name, declaration * dec, int tab)
 static int
 undefined2(char *type, char *stop)
 {
-    list *l;
+    rxgen_list *l;
     definition *def;
 
     for (l = defined; l != NULL; l = l->next) {

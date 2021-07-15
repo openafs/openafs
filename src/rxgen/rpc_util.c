@@ -54,7 +54,7 @@ int nfiles;
 FILE *fout;			/* file pointer of current output */
 FILE *fin;			/* file pointer of current input */
 
-list *defined;			/* list of defined things */
+rxgen_list *defined;		/* list of defined things */
 
 /* static prototypes */
 static int findit(definition * def, char *type);
@@ -99,7 +99,7 @@ streq(char *a, char *b)
  * find a value in a list
  */
 char *
-findval(list * lst, char *val, int (*cmp) (definition * def, char *type))
+findval(rxgen_list * lst, char *val, int (*cmp) (definition * def, char *type))
 {
     for (; lst != NULL; lst = lst->next) {
 	if ((*cmp) ((definition *) lst->val, val)) {
@@ -113,13 +113,13 @@ findval(list * lst, char *val, int (*cmp) (definition * def, char *type))
  * store a value in a list
  */
 void
-storeval(list ** lstp, char *val)
+storeval(rxgen_list ** lstp, char *val)
 {
-    list **l;
-    list *lst;
+    rxgen_list **l;
+    rxgen_list *lst;
 
-    for (l = lstp; *l != NULL; l = (list **) & (*l)->next);
-    lst = ALLOC(list);
+    for (l = lstp; *l != NULL; l = (rxgen_list **) & (*l)->next);
+    lst = ALLOC(rxgen_list);
     lst->val = val;
     lst->next = NULL;
     *l = lst;

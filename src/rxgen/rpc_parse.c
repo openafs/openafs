@@ -43,7 +43,7 @@
 #include "rpc_parse.h"
 #include "rpc_util.h"
 
-list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined,
+rxgen_list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined,
     *uniondef_defined, *complex_defined;
 char *SplitStart = NULL;
 char *SplitEnd = NULL;
@@ -812,7 +812,7 @@ InvalidConstant(char *name)
 static int
 opcodenum_is_defined(int opcode_num)
 {
-    list *listp;
+    rxgen_list *listp;
     definition *defp;
 
     for (listp = proc_defined[PackageIndex]; listp != NULL;
@@ -1323,7 +1323,7 @@ static void
 ss_ProcParams_setup(definition * defp)
 {
     proc1_list *plist, *plist1;
-    list *listp;
+    rxgen_list *listp;
     definition *defp1;
 
     for (plist = defp->pc.plists; plist; plist = plist->next) {
@@ -1395,7 +1395,7 @@ ss_ProcSpecial_setup(definition * defp)
 {
     proc1_list *plist;
     definition *defp1;
-    list *listp;
+    rxgen_list *listp;
 
     for (listp = special_defined; listp != NULL; listp = listp->next) {
 	defp1 = (definition *) listp->val;
@@ -1573,7 +1573,7 @@ ss_ProcTail_setup(definition * defp)
 {
     proc1_list *plist;
     definition *defp1;
-    list *listp;
+    rxgen_list *listp;
     int somefrees = 0;
 
     if (defp->can_fail) {
@@ -1882,7 +1882,7 @@ er_Proc_CodeGeneration(void)
 static void
 er_ProcDeclExterns_setup(void)
 {
-    list *listp;
+    rxgen_list *listp;
     definition *defp;
 
     if ( !Sflag )
@@ -1902,7 +1902,7 @@ er_ProcDeclExterns_setup(void)
 static void
 er_ProcProcsArray_setup(void)
 {
-    list *listp;
+    rxgen_list *listp;
     definition *defp;
 
     if ((listp = proc_defined[PackageIndex])) {
@@ -2013,7 +2013,7 @@ er_HeadofOldStyleProc_setup(void)
 static void
 er_BodyofOldStyleProc_setup(void)
 {
-    list *listp;
+    rxgen_list *listp;
 
     if (combinepackages) {
 	int temp = PackageIndex;
@@ -2066,7 +2066,7 @@ proc_op_case(definition * defp)
 static void
 er_BodyofOldStyleProc_setup2(void)
 {
-    list *listp;
+    rxgen_list *listp;
 
     if (!cflag)
 	return;
@@ -2154,9 +2154,9 @@ proc_h_case(definition * defp)
 
 void
 h_opcode_stats_pkg(char *pprefix, int lowest, int highest, int nops,
-		  int statfuncs, char *ptype, list *proclist)
+		  int statfuncs, char *ptype, rxgen_list *proclist)
 {
-    list *listp;
+    rxgen_list *listp;
 
     if (!pprefix)
 	return;

@@ -40,11 +40,11 @@
 #define s_print	(void) sprintf
 #define	f_print	if (scan_print) (void) fprintf
 
-struct list {
+struct rxgen_list {
     char *val;
-    struct list *next;
+    struct rxgen_list *next;
 };
-typedef struct list list;
+typedef struct rxgen_list rxgen_list;
 
 #define MAXLINESIZE 1024
 
@@ -74,13 +74,13 @@ extern char *outfiles[];
 extern int nfiles;
 extern FILE *fout;
 extern FILE *fin;
-extern list *defined;
+extern rxgen_list *defined;
 
 extern void reinitialize(void);
 extern int streq(char *a, char *b);
-extern char *findval(list * lst, char *val,
+extern char *findval(rxgen_list * lst, char *val,
 		     int (*cmp) (definition * def, char *type));
-extern void storeval(list ** lstp, char *val);
+extern void storeval(rxgen_list ** lstp, char *val);
 extern char *fixtype(char *type);
 extern char *stringfix(char *type);
 extern void ptype(char *prefix, char *type, int follow);
@@ -111,7 +111,7 @@ extern void print_datadef(definition * def);
 extern void pdefine(char *name, char *num);
 
 /* rpc_parse.c */
-extern list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined,
+extern rxgen_list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined,
     *uniondef_defined;
 extern char *SplitStart;
 extern char *SplitEnd;
