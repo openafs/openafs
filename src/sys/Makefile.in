@@ -212,7 +212,7 @@ xfsinode: xfsinode.c  AFS_component_version_number.c
 
 afs.exp: ${srcdir}/afs4.exp ${srcdir}/afs5.exp
 	@set -x; case ${SYS_NAME} in \
-		rs_aix[56]* ) \
+		rs_aix[567]* ) \
 			cp -p ${srcdir}/afs5.exp afs.exp ;; \
 		rs_aix* ) \
 			cp -p ${srcdir}/afs4.exp afs.exp ;; \
@@ -222,7 +222,7 @@ afs.exp: ${srcdir}/afs4.exp ${srcdir}/afs5.exp
 
 afsl.exp: ${srcdir}/afsl4.exp ${srcdir}/afsl5.exp
 	@set -x; case ${SYS_NAME} in \
-		rs_aix[56]* ) \
+		rs_aix[567]* ) \
 			cp -p ${srcdir}/afsl5.exp afsl.exp ;; \
 		rs_aix* ) \
 			cp -p ${srcdir}/afsl4.exp afsl.exp ;; \
