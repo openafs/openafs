@@ -9,7 +9,7 @@ OpenAFS 1.8.8 (in progress)
       14331 14367 14399 14419 14420 14427 14434 14436 14437 14438 14439
       14440 14502 14516 14518 14546)
 
-    * Build fixes, mostly for recent compilers (14217 14298 14299)
+    * Build fixes, mostly for recent compilers (14217 14298 14299 14668)
 
     * Avoid some potential performance losses in the wire protocol (14503
       14514)
@@ -29,11 +29,14 @@ OpenAFS 1.8.8 (in progress)
 
     * Avoid potential salvager crashes (14515 14614)
 
+    * Fix "bos salvage -forceDAFS" when the BosConfig also contains a legacy
+      'fs' bnode in addition to the 'dafs' bnode (14665)
+
     * Avoid erratic vlserver behaviour due to overflowing the maximum
       VLDB size of 2 GB. Log a message and return an error instead (14288)
 
     * Fixed a ptserver issue where 'pts mem -expandgroups' failed when
-      supergroups were enabled (14345)
+      supergroups were enabled (14345) (RT #135147)
 
     * Take read-only volumes offline while being converted to read-write
       ones with "vos convertROtoRW", preventing them from ending up in an
@@ -63,6 +66,12 @@ OpenAFS 1.8.8 (in progress)
 
     * Avoid possible panics during client startup or shutdown (14393 14441)
 
+    * Avoid potential buffer overflows by one character in the "bos" client
+      program and in libadmin client programs (14664 14666 14698)
+
+    * Fixed a slow kernel memory leak triggered by retrieving tokens for
+      userspace commands as an authenticated user (14667 14663) (RT #135238)
+
     * Fixed several potential problems in "aklog -keytab" (14478 14479
       14480 14481 14482)
 
@@ -78,8 +87,11 @@ OpenAFS 1.8.8 (in progress)
 
   Linux clients
 
-    * Support mainline kernels up to and including 5.12 (14267 14268 14269
-      14315 14563 14564 14565)
+    * Support mainline kernels up to and including 5.13 (14267 14268 14269
+      14315 14563 14564 14565) (RT #135242)
+
+      Note that as of mainline kernel 5.13, OpenAFS currently won't build
+      on PowerPC due to a new ABI restriction.
 
     * Avoid failures of cache I/O operations in the context of tasks
       restricted by security mechanisms like AppArmor (14082 14099)
