@@ -1,7 +1,11 @@
 AFSVolConvertROtoRWvolume
 AFSVolEndTrans
 AFSVolListOneVolume
+AFSVolListPartitions
+AFSVolPartitionInfo
+AFSVolPartitionInfo64
 AFSVolTransCreate
+AFSVolXListPartitions
 EnumerateEntry
 Lp_GetRwIndex
 Lp_ROMatch
