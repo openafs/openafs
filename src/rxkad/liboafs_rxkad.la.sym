@@ -4,6 +4,7 @@ rxkad_GetServerInfo
 rxkad_NewClientSecurityObject
 rxkad_NewKrb5ServerSecurityObject
 rxkad_NewServerSecurityObject
+rxkad_StringToLevel
 time_to_life
 tkt_CheckTimes
 tkt_DeriveDesKey

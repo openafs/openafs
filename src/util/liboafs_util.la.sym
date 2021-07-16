@@ -2,7 +2,13 @@ Add_RelDate_to_Time
 BufioClose
 BufioGets
 BufioOpen
+CloseLog
+ConstructLocalPath
+FilepathNormalize
 FSLog
+GetLogDest
+GetLogFilename
+GetLogLevel
 Int32To_ktimeRelDate
 LogCommandLine
 LogLevel

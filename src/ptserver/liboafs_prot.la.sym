@@ -1,3 +1,4 @@
+PR_function_names
 initialize_PT_error_table
 pr_AddToGroup
 pr_ChangeEntry
@@ -11,6 +12,7 @@ pr_IDListExpandedMembers
 pr_IDListMembers
 pr_IdToName
 pr_Initialize
+pr_Initialize2
 pr_IsAMemberOf
 pr_ListEntries
 pr_ListEntry

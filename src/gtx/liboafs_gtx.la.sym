@@ -88,6 +88,7 @@ gtxframe_RecursiveErrCmd
 gtxframe_RemoveFromList
 gtxframe_SelfInsertCmd
 gtxframe_SetFrame
+gtxframe_exitValue
 gtx_Init
 gtx_InputServer
 gw_init

@@ -1,3 +1,4 @@
+DISK_function_names
 EndDISK_GetFile
 StartDISK_GetFile
 VOTE_Debug
@@ -6,12 +7,14 @@ VOTE_SDebug
 VOTE_SDebugOld
 VOTE_XDebug
 VOTE_XSDebug
+VOTE_function_names
 initialize_U_error_table
 ubik_AbortTrans
 ubik_BeginTrans
 ubik_BeginTransReadAny
 ubik_BeginTransReadAnyWrite
 ubik_CallIter
+ubik_CallRock
 ubik_CheckCache
 ubik_ClientDestroy
 ubik_ClientInit

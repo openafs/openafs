@@ -1,7 +1,10 @@
 audit_PrintStats
 osi_audit
 osi_auditU
+osi_audit_close
+osi_audit_cmd_Options
 osi_audit_file
 osi_audit_init
 osi_audit_interface
+osi_audit_open
 osi_audit_set_user_check

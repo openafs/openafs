@@ -2,4 +2,5 @@ xstat_fs_Cleanup
 xstat_fs_DecodeFullPerfStats
 xstat_fs_ForceProbeNow
 xstat_fs_Init
+xstat_fs_Results
 xstat_fs_Wait

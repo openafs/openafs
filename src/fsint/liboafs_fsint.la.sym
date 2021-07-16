@@ -12,6 +12,8 @@ RXAFSCB_WhoAreYou
 RXAFS_CreateFile
 RXAFS_FetchStatus
 RXAFS_GetTime
+RXAFS_GetStatistics
+RXAFS_GetStatistics64
 RXAFS_GiveUpCallBacks
 RXAFS_MakeDir
 RXAFS_ReleaseLock
