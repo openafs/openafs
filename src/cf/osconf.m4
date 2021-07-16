@@ -360,6 +360,8 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32="yes"
 		AIX64="no"
+		TSM_IMPORTS="-bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp"
+		TSM_LIBS="-lsys -lcsys -lc"
 		;;
 
 	rs_aix51 | rs_aix52 | rs_aix53)	
@@ -373,6 +375,8 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32="yes"
 		AIX64="yes"
+		TSM_IMPORTS="-bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp"
+		TSM_LIBS="-lsys -lcsys -lc"
 		;;
 
 	rs_aix61)	
@@ -386,6 +390,13 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32="no"
 		AIX64="yes"
+		TSM_IMPORTS="-bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp"
+		TSM_LIBS="-lsys -lcsys -lc"
+		;;
+
+	rs_aix72)
+		TSM_IMPORTS="-bI:/lib/aio.exp"
+		TSM_LIBS="-lsys -lc"
 		;;
 
 	s390_linux26)
@@ -714,6 +725,8 @@ AC_SUBST(RXDEBUG)
 AC_SUBST(SHLIB_CFLAGS)
 AC_SUBST(SHLIB_LINKER)
 AC_SUBST(SHLIB_SUFFIX)
+AC_SUBST(TSM_IMPORTS)
+AC_SUBST(TSM_LIBS)
 AC_SUBST(VFSCK_CFLAGS)
 AC_SUBST(XCFLAGS)
 AC_SUBST(CFLAGS_NOERROR)
