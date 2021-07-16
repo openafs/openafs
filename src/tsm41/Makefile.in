@@ -63,9 +63,9 @@ AUTH_KRB_OBJS = \
 AUTHLIBS= \
 		afs_dynamic_auth afs_dynamic_kerbauth @MAKE_KRB5@ aklog_dynamic_auth
 
-IMPORTS = -bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp
-LDFLAGS = -eafs_initialize ${IMPORTS} -lsys -lcsys -lc
-AKLDFLAGS = -eaklog_initialize ${IMPORTS} -lsys -lcsys -lc
+IMPORTS = @TSM_IMPORTS@
+LDFLAGS = -eafs_initialize ${IMPORTS} @TSM_LIBS@
+AKLDFLAGS = -eaklog_initialize ${IMPORTS} @TSM_LIBS@
 
 all: $(AUTHLIBS)
 
@@ -103,9 +103,7 @@ aix_auth.o:
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	rs_aix4*) \
 		${CC} ${AFS_CFLAGS} -c ${srcdir}/aix41_auth.c -o $@ ;; \
-	rs_aix5*) \
-		${CC} ${AFS_CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
-	rs_aix6*) \
+	rs_aix[567]*) \
 		${CC} ${AFS_CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
 	*) \
 		echo "not building aix lam binary for ${SYS_NAME}" ;; \
