@@ -60,6 +60,9 @@ softsigSignalSet(sigset_t *set)
     sigdelset(set, SIGPIPE);
     sigdelset(set, SIGSEGV);
     sigdelset(set, SIGTRAP);
+#ifdef AFS_AIX_ENV
+    sigdelset(set, SIGWAITING);
+#endif
 }
 
 static void *
