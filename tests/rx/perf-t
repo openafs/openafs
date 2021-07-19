@@ -37,10 +37,11 @@ is (0,
 
 kill("TERM", $pid);
 waitpid($pid, 0);
-if (WIFSIGNALED($?) && WTERMSIG($?) != SIGTERM) {
-    fail("Server died with signal ".WTERMSIG($?));
-} elsif (WIFEXITED($?) && WEXITSTATUS($?) != 0) {
-    fail("Server exited with code". WEXITSTATUS($?));
+my $ecode = ${^CHILD_ERROR_NATIVE};
+if (WIFSIGNALED($ecode) && WTERMSIG($ecode) != SIGTERM) {
+    fail("Server died with signal ".WTERMSIG($ecode));
+} elsif (WIFEXITED($ecode) && WEXITSTATUS($ecode) != 0) {
+    fail("Server exited with code". WEXITSTATUS($ecode));
 } else {
     pass("Server exited succesfully");
 }
