@@ -72,6 +72,7 @@ checkList(struct cmd_item *list, ...)
        list = list->next;
        el = va_arg(ap, char *);
     }
+    va_end(ap);
 
     if (el == NULL && list == NULL) {
 	ok(1, "List has correct number of elements");
