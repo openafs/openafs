@@ -45,11 +45,9 @@ Lock_Init(struct afs_lock *lock)
     lock->excl_locked = 0;
     lock->wait_states = 0;
     lock->num_waiting = 0;
-#if defined(INSTRUMENT_LOCKS)
     lock->pid_last_reader = 0;
     lock->pid_writer = 0;
     lock->src_indicator = 0;
-#endif /* INSTRUMENT_LOCKS */
     lock->time_waiting.tv_sec = 0;
     lock->time_waiting.tv_usec = 0;
 }

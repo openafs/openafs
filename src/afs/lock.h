@@ -19,7 +19,6 @@
  * LICENSED MATERIALS - PROPERTY OF IBM
  */
 
-#define INSTRUMENT_LOCKS
 /* This is the max lock number in use. Please update it if you add any new
  * lock numbers.
  */
@@ -121,7 +120,6 @@ struct afs_lock {
     unsigned short num_waiting;	/* probably need this soon */
     unsigned short spare;	/* not used now */
     osi_timeval32_t time_waiting;	/* for statistics gathering */
-#if defined(INSTRUMENT_LOCKS)
     /*
      * The following are useful for debugging:
      * The field 'src_indicator' is updated only by ObtainWriteLock(),
@@ -131,7 +129,6 @@ struct afs_lock {
     afs_lock_tracker_t pid_last_reader;	/* proceess id of last reader */
     afs_lock_tracker_t pid_writer;	/* process id of writer, else 0 */
     unsigned int src_indicator;
-#endif				/* INSTRUMENT_LOCKS */
 };
 typedef struct afs_lock afs_lock_t;
 typedef struct afs_lock afs_rwlock_t;
@@ -157,8 +154,6 @@ extern int afs_trclock;
 #else
 #define AFS_LOCK_TRACE(op, lock, type)
 #endif
-
-#if defined(INSTRUMENT_LOCKS)
 
 #define ObtainReadLock(lock)\
   BEGINMAC  \
@@ -265,99 +260,6 @@ extern int afs_trclock;
 	    (lock)->pid_writer = MyPid_NULL; \
         ENDMAC
 
-#else /* INSTRUMENT_LOCKS */
-
-#define ObtainReadLock(lock)\
-  BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, READ_LOCK);\
-	if (!((lock)->excl_locked & WRITE_LOCK)) \
-            ((lock)->readers_reading)++; \
-	else \
-	    Afs_Lock_Obtain(lock, READ_LOCK); \
-   ENDMAC
-
-#define NBObtainReadLock(lock) \
-	(((lock)->excl_locked & WRITE_LOCK) ? EWOULDBLOCK : (((lock)->readers_reading++), 0))
-
-#define ObtainWriteLock(lock, src)\
-  BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, WRITE_LOCK);\
-	if (!(lock)->excl_locked && !(lock)->readers_reading)\
-	    (lock) -> excl_locked = WRITE_LOCK;\
-	else\
-	    Afs_Lock_Obtain(lock, WRITE_LOCK); \
-   ENDMAC
-
-#define NBObtainWriteLock(lock, src) (((lock)->excl_locked || (lock)->readers_reading) ? EWOULDBLOCK : (((lock) -> excl_locked = WRITE_LOCK),  0))
-
-#define ObtainSharedLock(lock, src)\
-  BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, SHARED_LOCK);\
-	if (!(lock)->excl_locked)\
-	    (lock) -> excl_locked = SHARED_LOCK;\
-	else\
-	    Afs_Lock_Obtain(lock, SHARED_LOCK); \
-   ENDMAC
-
-#define NBObtainSharedLock(lock, src) (((lock)->excl_locked) ? EWOULDBLOCK : (((lock) -> excl_locked = SHARED_LOCK), 0))
-
-#define UpgradeSToWLock(lock, src)\
-  BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, BOOSTED_LOCK);\
-	if (!(lock)->readers_reading)\
-	    (lock)->excl_locked = WRITE_LOCK;\
-	else\
-	    Afs_Lock_Obtain(lock, BOOSTED_LOCK); \
-   ENDMAC
-
-/* this must only be called with a WRITE or boosted SHARED lock! */
-#define ConvertWToSLock(lock)\
-	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, SHARED_LOCK);\
-	    (lock)->excl_locked = SHARED_LOCK; \
-	    if((lock)->wait_states) \
-		Afs_Lock_ReleaseR(lock); \
-	ENDMAC
-
-#define ConvertWToRLock(lock) \
-	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);\
-	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
-	    ((lock)->readers_reading)++;\
-	    Afs_Lock_ReleaseR(lock);\
-	ENDMAC
-
-#define ConvertSToRLock(lock) \
-	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);\
-	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
-	    ((lock)->readers_reading)++;\
-	    Afs_Lock_ReleaseR(lock);\
-	ENDMAC
-
-#define ReleaseReadLock(lock)\
-	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, READ_LOCK);\
-	    if (!(--((lock)->readers_reading)) && (lock)->wait_states)\
-		Afs_Lock_ReleaseW(lock) ; \
-	ENDMAC
-
-#define ReleaseWriteLock(lock)\
-        BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, WRITE_LOCK);\
-	    (lock)->excl_locked &= ~WRITE_LOCK;\
-	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
-        ENDMAC
-
-/* can be used on shared or boosted (write) locks */
-#define ReleaseSharedLock(lock)\
-        BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, SHARED_LOCK);\
-	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
-	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
-        ENDMAC
-
-#endif /* INSTRUMENT_LOCKS */
 
 /* I added this next macro to make sure it is safe to nuke a lock -- Mike K. */
 #define LockWaiters(lock)\

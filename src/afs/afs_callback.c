@@ -136,16 +136,9 @@ SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index,
     a_result->lock.exclLocked = tvc->lock.excl_locked;
     a_result->lock.readersReading = tvc->lock.readers_reading;
     a_result->lock.numWaiting = tvc->lock.num_waiting;
-#if defined(INSTRUMENT_LOCKS)
     a_result->lock.pid_last_reader = MyPidxx2Pid(tvc->lock.pid_last_reader);
     a_result->lock.pid_writer = MyPidxx2Pid(tvc->lock.pid_writer);
     a_result->lock.src_indicator = tvc->lock.src_indicator;
-#else
-    /* On osf20 , the vcache does not maintain these three fields */
-    a_result->lock.pid_last_reader = 0;
-    a_result->lock.pid_writer = 0;
-    a_result->lock.src_indicator = 0;
-#endif /* INSTRUMENT_LOCKS */
 #ifdef AFS_64BIT_CLIENT
     a_result->Length = (afs_int32) tvc->f.m.Length & 0xffffffff;
 #else /* AFS_64BIT_CLIENT */
@@ -222,16 +215,9 @@ SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
     a_result->lock.exclLocked = tvc->lock.excl_locked;
     a_result->lock.readersReading = tvc->lock.readers_reading;
     a_result->lock.numWaiting = tvc->lock.num_waiting;
-#if defined(INSTRUMENT_LOCKS)
     a_result->lock.pid_last_reader = MyPidxx2Pid(tvc->lock.pid_last_reader);
     a_result->lock.pid_writer = MyPidxx2Pid(tvc->lock.pid_writer);
     a_result->lock.src_indicator = tvc->lock.src_indicator;
-#else
-    /* On osf20 , the vcache does not maintain these three fields */
-    a_result->lock.pid_last_reader = 0;
-    a_result->lock.pid_writer = 0;
-    a_result->lock.src_indicator = 0;
-#endif /* INSTRUMENT_LOCKS */
     a_result->Length = tvc->f.m.Length;
     a_result->DataVersion = hgetlo(tvc->f.m.DataVersion);
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
@@ -320,18 +306,12 @@ SRXAFSCB_GetLock(struct rx_call *a_call, afs_int32 a_index,
 	    ((struct afs_lock *)&(tc->lock))->readers_reading;
 	a_result->lock.numWaiting =
 	    ((struct afs_lock *)&(tc->lock))->num_waiting;
-#ifdef INSTRUMENT_LOCKS
 	a_result->lock.pid_last_reader =
 	    MyPidxx2Pid(((struct afs_lock *)&(tc->lock))->pid_last_reader);
 	a_result->lock.pid_writer =
 	    MyPidxx2Pid(((struct afs_lock *)&(tc->lock))->pid_writer);
 	a_result->lock.src_indicator =
 	    ((struct afs_lock *)&(tc->lock))->src_indicator;
-#else
-	a_result->lock.pid_last_reader = 0;
-	a_result->lock.pid_writer = 0;
-	a_result->lock.src_indicator = 0;
-#endif
 	code = 0;
     } else {
 	/*
@@ -347,18 +327,12 @@ SRXAFSCB_GetLock(struct rx_call *a_call, afs_int32 a_index,
 	    ((struct afs_lock *)(tl->addr))->readers_reading;
 	a_result->lock.numWaiting =
 	    ((struct afs_lock *)(tl->addr))->num_waiting;
-#ifdef INSTRUMENT_LOCKS
 	a_result->lock.pid_last_reader =
 	    MyPidxx2Pid(((struct afs_lock *)(tl->addr))->pid_last_reader);
 	a_result->lock.pid_writer =
 	    MyPidxx2Pid(((struct afs_lock *)(tl->addr))->pid_writer);
 	a_result->lock.src_indicator =
 	    ((struct afs_lock *)(tl->addr))->src_indicator;
-#else
-	a_result->lock.pid_last_reader = 0;
-	a_result->lock.pid_writer = 0;
-	a_result->lock.src_indicator = 0;
-#endif
 	code = 0;
     }
 
