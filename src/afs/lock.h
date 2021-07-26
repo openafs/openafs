@@ -226,6 +226,8 @@ static_inline void
 UpgradeSToWLock(struct afs_lock *lock, unsigned int src)
 {
     AFS_ASSERT_GLOCK();
+    osi_Assert(lock->excl_locked == SHARED_LOCK);
+    osi_Assert(lock->pid_writer == MyPidxx);
     AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, BOOSTED_LOCK);
     if (!(lock->readers_reading)) {
 	lock->excl_locked = WRITE_LOCK;
@@ -241,6 +243,8 @@ static_inline void
 ConvertWToSLock(struct afs_lock *lock)
 {
     AFS_ASSERT_GLOCK();
+    osi_Assert(lock->excl_locked == WRITE_LOCK);
+    osi_Assert(lock->pid_writer == MyPidxx);
     AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, SHARED_LOCK);
     lock->excl_locked = SHARED_LOCK;
     if (lock->wait_states) {
@@ -252,6 +256,8 @@ static_inline void
 ConvertWToRLock(struct afs_lock *lock)
 {
     AFS_ASSERT_GLOCK();
+    osi_Assert(lock->excl_locked == WRITE_LOCK);
+    osi_Assert(lock->pid_writer == MyPidxx);
     AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);
     lock->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);
     lock->readers_reading++;
@@ -264,6 +270,8 @@ static_inline void
 ConvertSToRLock(struct afs_lock *lock)
 {
     AFS_ASSERT_GLOCK();
+    osi_Assert(lock->excl_locked == SHARED_LOCK);
+    osi_Assert(lock->pid_writer == MyPidxx);
     AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);
     lock->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);
     lock->readers_reading++;
@@ -276,6 +284,7 @@ static_inline void
 ReleaseReadLock(struct afs_lock *lock)
 {
     AFS_ASSERT_GLOCK();
+    osi_Assert(lock->readers_reading != 0);
     AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, READ_LOCK);
     if (!(--(lock->readers_reading)) && lock->wait_states) {
 	Afs_Lock_ReleaseW(lock);
@@ -289,6 +298,8 @@ static_inline void
 ReleaseWriteLock(struct afs_lock *lock)
 {
     AFS_ASSERT_GLOCK();
+    osi_Assert(lock->excl_locked == WRITE_LOCK);
+    osi_Assert(lock->pid_writer == MyPidxx);
     AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, WRITE_LOCK);
     lock->excl_locked &= ~WRITE_LOCK;
     if (lock->wait_states) {
@@ -302,6 +313,9 @@ static_inline void
 ReleaseSharedLock(struct afs_lock *lock)
 {
     AFS_ASSERT_GLOCK();
+    osi_Assert((lock->excl_locked == SHARED_LOCK) ||
+		(lock->excl_locked == WRITE_LOCK));
+    osi_Assert(lock->pid_writer == MyPidxx);
     AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, SHARED_LOCK);
     lock->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);
     if (lock->wait_states) {

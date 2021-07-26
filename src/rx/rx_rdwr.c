@@ -45,6 +45,7 @@
 # include "afs/afs_osi.h"
 # include "rx_kmutex.h"
 # include "rx/rx_kernel.h"
+# include "rx.h"
 # include "afs/lock.h"
 #else /* KERNEL */
 # include <roken.h>
