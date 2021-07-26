@@ -143,6 +143,7 @@ extern void Afs_Lock_ReleaseW(struct afs_lock *lock);
 static_inline void
 ObtainReadLock(struct afs_lock *lock)
 {
+    AFS_ASSERT_GLOCK();
     AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, READ_LOCK);
     if (!(lock->excl_locked & WRITE_LOCK)) {
         lock->readers_reading++;
@@ -155,6 +156,7 @@ ObtainReadLock(struct afs_lock *lock)
 static_inline int
 NBObtainReadLock(struct afs_lock *lock)
 {
+    AFS_ASSERT_GLOCK();
     if (lock->excl_locked & WRITE_LOCK) {
 	return EWOULDBLOCK;
     } else {
@@ -167,6 +169,7 @@ NBObtainReadLock(struct afs_lock *lock)
 static_inline void
 ObtainWriteLock(struct afs_lock *lock, unsigned int src)
 {
+    AFS_ASSERT_GLOCK();
     AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, WRITE_LOCK);
     if (!lock->excl_locked && !(lock->readers_reading)) {
 	lock-> excl_locked = WRITE_LOCK;
@@ -180,6 +183,7 @@ ObtainWriteLock(struct afs_lock *lock, unsigned int src)
 static_inline int
 NBObtainWriteLock(struct afs_lock *lock, unsigned int src)
 {
+    AFS_ASSERT_GLOCK();
     if (lock->excl_locked || lock->readers_reading) {
 	return EWOULDBLOCK;
     } else {
@@ -193,6 +197,7 @@ NBObtainWriteLock(struct afs_lock *lock, unsigned int src)
 static_inline void
 ObtainSharedLock(struct afs_lock *lock, unsigned int src)
 {
+    AFS_ASSERT_GLOCK();
     AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, SHARED_LOCK);
     if (!(lock->excl_locked)) {
 	lock->excl_locked = SHARED_LOCK;
@@ -206,6 +211,7 @@ ObtainSharedLock(struct afs_lock *lock, unsigned int src)
 static_inline int
 NBObtainSharedLock(struct afs_lock *lock, unsigned int src)
 {
+    AFS_ASSERT_GLOCK();
     if (lock->excl_locked) {
 	return EWOULDBLOCK;
     } else {
@@ -219,6 +225,7 @@ NBObtainSharedLock(struct afs_lock *lock, unsigned int src)
 static_inline void
 UpgradeSToWLock(struct afs_lock *lock, unsigned int src)
 {
+    AFS_ASSERT_GLOCK();
     AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, BOOSTED_LOCK);
     if (!(lock->readers_reading)) {
 	lock->excl_locked = WRITE_LOCK;
@@ -233,6 +240,7 @@ UpgradeSToWLock(struct afs_lock *lock, unsigned int src)
 static_inline void
 ConvertWToSLock(struct afs_lock *lock)
 {
+    AFS_ASSERT_GLOCK();
     AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, SHARED_LOCK);
     lock->excl_locked = SHARED_LOCK;
     if (lock->wait_states) {
@@ -243,6 +251,7 @@ ConvertWToSLock(struct afs_lock *lock)
 static_inline void
 ConvertWToRLock(struct afs_lock *lock)
 {
+    AFS_ASSERT_GLOCK();
     AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);
     lock->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);
     lock->readers_reading++;
@@ -254,6 +263,7 @@ ConvertWToRLock(struct afs_lock *lock)
 static_inline void
 ConvertSToRLock(struct afs_lock *lock)
 {
+    AFS_ASSERT_GLOCK();
     AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);
     lock->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);
     lock->readers_reading++;
@@ -265,6 +275,7 @@ ConvertSToRLock(struct afs_lock *lock)
 static_inline void
 ReleaseReadLock(struct afs_lock *lock)
 {
+    AFS_ASSERT_GLOCK();
     AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, READ_LOCK);
     if (!(--(lock->readers_reading)) && lock->wait_states) {
 	Afs_Lock_ReleaseW(lock);
@@ -277,6 +288,7 @@ ReleaseReadLock(struct afs_lock *lock)
 static_inline void
 ReleaseWriteLock(struct afs_lock *lock)
 {
+    AFS_ASSERT_GLOCK();
     AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, WRITE_LOCK);
     lock->excl_locked &= ~WRITE_LOCK;
     if (lock->wait_states) {
@@ -289,6 +301,7 @@ ReleaseWriteLock(struct afs_lock *lock)
 static_inline void
 ReleaseSharedLock(struct afs_lock *lock)
 {
+    AFS_ASSERT_GLOCK();
     AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, SHARED_LOCK);
     lock->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);
     if (lock->wait_states) {
@@ -300,12 +313,14 @@ ReleaseSharedLock(struct afs_lock *lock)
 static_inline int
 LockWaiters(struct afs_lock *lock)
 {
+    AFS_ASSERT_GLOCK();
     return (lock->num_waiting);
 }
 
 static_inline int
 CheckLock(struct afs_lock *lock)
 {
+    AFS_ASSERT_GLOCK();
     if (lock->excl_locked) {
 	return -1;
     } else {
@@ -316,6 +331,7 @@ CheckLock(struct afs_lock *lock)
 static_inline int
 WriteLocked(struct afs_lock *lock)
 {
+    AFS_ASSERT_GLOCK();
     return (lock->excl_locked & WRITE_LOCK);
 }
 

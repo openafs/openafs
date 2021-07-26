@@ -60,7 +60,6 @@ Afs_Lock_Obtain(struct afs_lock *lock, int how)
 
     AFS_STATCNT(Lock_Obtain);
 
-    AFS_ASSERT_GLOCK();
     osi_GetTime(&tt1);
 
     switch (how) {
@@ -125,7 +124,6 @@ void
 Afs_Lock_ReleaseR(struct afs_lock *lock)
 {
     AFS_STATCNT(Lock_ReleaseR);
-    AFS_ASSERT_GLOCK();
     if (lock->wait_states & READ_LOCK) {
 	lock->wait_states &= ~READ_LOCK;
 	afs_osi_Wakeup(&lock->readers_reading);
@@ -140,7 +138,6 @@ void
 Afs_Lock_ReleaseW(struct afs_lock *lock)
 {
     AFS_STATCNT(Lock_ReleaseW);
-    AFS_ASSERT_GLOCK();
     if (lock->wait_states & EXCL_LOCKS) {
 	lock->wait_states &= ~EXCL_LOCKS;
 	afs_osi_Wakeup(&lock->excl_locked);
@@ -149,7 +146,6 @@ Afs_Lock_ReleaseW(struct afs_lock *lock)
 	afs_osi_Wakeup(&lock->readers_reading);
     }
 }
-
 
 /* Not static - used conditionally if lock tracing is enabled */
 int
