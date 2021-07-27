@@ -130,6 +130,12 @@ PTS_EXELIBS =\
 	$(DESTDIR)\lib\afsroken.lib \
 	$(DESTDIR)\lib\afsrfc3961.lib
 
+PT_UTIL_EXELIBS = $(PTS_EXELIBS)
+
+!IF (("$(SYS_NAME)"!="i386_win95" ) && ("$(SYS_NAME)"!="I386_WIN95" ))
+PT_UTIL_EXELIBS =$(PT_UTIL_EXELIBS) $(DESTDIR)\lib\afs\afsprocmgmt.lib
+!ENDIF
+
 $(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
@@ -144,7 +150,7 @@ $(PTCLIENT): $(PTCLIENT_EXEOBJS) $(PTS_EXELIBS)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
-$(PT_UTIL): $(PT_UTIL_EXEOBJS) $(PTS_EXELIBS)
+$(PT_UTIL): $(PT_UTIL_EXEOBJS) $(PT_UTIL_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)

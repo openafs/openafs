@@ -31,6 +31,7 @@
 #include <rx/xdr.h>
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>
+#include <afs/afsutil.h>
 
 #include "ptserver.h"
 #include "pterror.h"
@@ -1229,7 +1230,7 @@ AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_in
 #endif /* SUPERGROUPS */
 
 afs_int32
-AddToPRList(prlist *alist, int *sizeP, afs_int32 id)
+AddToPRList(afs_int32 log_id, prlist *alist, int *sizeP, afs_int32 id)
 {
     afs_int32 *tmp;
     int count;
@@ -1245,6 +1246,19 @@ AddToPRList(prlist *alist, int *sizeP, afs_int32 id)
 	    return (PRNOMEM);
 	alist->prlist_val = tmp;
 	*sizeP = count;
+    }
+    if (alist->prlist_len >= OPENAFS_MAXPRLIST) {
+	/* We can't represent this many items in a single prlist. */
+	static int logged;
+	if (!logged) {
+	    logged = 1;
+	    ViceLog(0, ("Error: prlist for id %d is too long (over %d entries); "
+			"this is probably a user that is in an excessive number\n",
+			log_id, OPENAFS_MAXPRLIST));
+	    ViceLog(0, ("Error: of groups. Please either file a bug, or reduce "
+			"group membership. (This message is only logged once)\n"));
+	}
+	return PRTOOMANY;
     }
     alist->prlist_val[alist->prlist_len++] = id;
     return 0;
@@ -1269,7 +1283,7 @@ GetList(struct ubik_trans *at, struct prentry *tentry, prlist *alist, afs_int32 
 	    continue;
 	if (tentry->entries[i] == 0)
 	    break;
-	code = AddToPRList(alist, &size, tentry->entries[i]);
+	code = AddToPRList(tentry->id, alist, &size, tentry->entries[i]);
 	if (code)
 	    return code;
 #if defined(SUPERGROUPS)
@@ -1291,7 +1305,7 @@ GetList(struct ubik_trans *at, struct prentry *tentry, prlist *alist, afs_int32 
 		continue;
 	    if (centry.entries[i] == 0)
 		break;
-	    code = AddToPRList(alist, &size, centry.entries[i]);
+	    code = AddToPRList(tentry->id, alist, &size, centry.entries[i]);
 	    if (code)
 		return code;
 #if defined(SUPERGROUPS)
@@ -1312,13 +1326,13 @@ GetList(struct ubik_trans *at, struct prentry *tentry, prlist *alist, afs_int32 
 
     if (add) {			/* this is for a CPS, so tack on appropriate stuff */
 	if (tentry->id != ANONYMOUSID && tentry->id != ANYUSERID) {
-	    if ((code = AddToPRList(alist, &size, ANYUSERID))
+	    if ((code = AddToPRList(tentry->id, alist, &size, ANYUSERID))
 		|| (code = AddAuthGroup(tentry, alist, &size))
-		|| (code = AddToPRList(alist, &size, tentry->id)))
+		|| (code = AddToPRList(tentry->id, alist, &size, tentry->id)))
 		return code;
 	} else {
-	    if ((code = AddToPRList(alist, &size, ANYUSERID))
-		|| (code = AddToPRList(alist, &size, tentry->id)))
+	    if ((code = AddToPRList(tentry->id, alist, &size, ANYUSERID))
+		|| (code = AddToPRList(tentry->id, alist, &size, tentry->id)))
 		return code;
 	}
     }
@@ -1349,7 +1363,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 	    continue;
 	if (tentry->entries[i] == 0)
 	    break;
-	code = AddToPRList(alist, &size, tentry->entries[i]);
+	code = AddToPRList(tentry->id, alist, &size, tentry->entries[i]);
 	if (code)
 	    return code;
 #if defined(SUPERGROUPS)
@@ -1372,7 +1386,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 		continue;
 	    if (centry.entries[i] == 0)
 		break;
-	    code = AddToPRList(alist, &size, centry.entries[i]);
+	    code = AddToPRList(tentry->id, alist, &size, centry.entries[i]);
 	    if (code)
 		return code;
 #if defined(SUPERGROUPS)
@@ -1397,7 +1411,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 	    continue;
 	if (tentry2->entries[i] == 0)
 	    break;
-	code = AddToPRList(alist, &size, tentry2->entries[i]);
+	code = AddToPRList(tentry->id, alist, &size, tentry2->entries[i]);
 	if (code)
 	    return code;
     }
@@ -1413,7 +1427,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 		continue;
 	    if (centry.entries[i] == 0)
 		break;
-	    code = AddToPRList(alist, &size, centry.entries[i]);
+	    code = AddToPRList(tentry->id, alist, &size, centry.entries[i]);
 	    if (code)
 		return code;
 	}
@@ -1427,13 +1441,13 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
     }
     if (add) {			/* this is for a CPS, so tack on appropriate stuff */
 	if (tentry->id != ANONYMOUSID && tentry->id != ANYUSERID) {
-	    if ((code = AddToPRList(alist, &size, ANYUSERID))
-		|| (code = AddToPRList(alist, &size, AUTHUSERID))
-		|| (code = AddToPRList(alist, &size, tentry->id)))
+	    if ((code = AddToPRList(tentry->id, alist, &size, ANYUSERID))
+		|| (code = AddToPRList(tentry->id, alist, &size, AUTHUSERID))
+		|| (code = AddToPRList(tentry->id, alist, &size, tentry->id)))
 		return code;
 	} else {
-	    if ((code = AddToPRList(alist, &size, ANYUSERID))
-		|| (code = AddToPRList(alist, &size, tentry->id)))
+	    if ((code = AddToPRList(tentry->id, alist, &size, ANYUSERID))
+		|| (code = AddToPRList(tentry->id, alist, &size, tentry->id)))
 		return code;
 	}
     }
@@ -1512,7 +1526,7 @@ GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP
 	fprintf(stderr, "via gid=%d, added %d\n", gid,
 		e.tentryg.supergroup[i]);
 #endif
-	code = AddToPRList(alist, sizeP, tentryg->supergroup[i]);
+	code = AddToPRList(gid, alist, sizeP, tentryg->supergroup[i]);
 	if (code)
 	    return code;
 	code =
@@ -1537,7 +1551,7 @@ GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP
 	    fprintf(stderr, "via gid=%d, added %d\n", gid,
 		    e.centry.entries[i]);
 #endif
-	    code = AddToPRList(alist, sizeP, centry.entries[i]);
+	    code = AddToPRList(gid, alist, sizeP, centry.entries[i]);
 	    if (code)
 		return code;
 	    code = GetListSG2(at, centry.entries[i], alist, sizeP, depth - 1);
@@ -1588,7 +1602,7 @@ GetSGList(struct ubik_trans *at, struct prentry *tentry, prlist *alist)
 	    continue;
 	if (tentryg->supergroup[i] == 0)
 	    break;
-	code = AddToPRList(alist, &size, tentryg->supergroup[i]);
+	code = AddToPRList(tentryg->id, alist, &size, tentryg->supergroup[i]);
 	if (code)
 	    return code;
     }
@@ -1604,7 +1618,7 @@ GetSGList(struct ubik_trans *at, struct prentry *tentry, prlist *alist)
 		continue;
 	    if (centry.entries[i] == 0)
 		break;
-	    code = AddToPRList(alist, &size, centry.entries[i]);
+	    code = AddToPRList(tentry->id, alist, &size, centry.entries[i]);
 	    if (code)
 		return code;
 	}
@@ -1628,7 +1642,8 @@ GetSGList(struct ubik_trans *at, struct prentry *tentry, prlist *alist)
 #endif /* SUPERGROUPS */
 
 afs_int32
-GetOwnedChain(struct ubik_trans *ut, afs_int32 *next, prlist *alist)
+GetOwnedChain(struct ubik_trans *ut, afs_int32 log_id, afs_int32 *next,
+	      prlist *alist)
 {
     afs_int32 code;
     struct prentry tentry;
@@ -1643,7 +1658,7 @@ GetOwnedChain(struct ubik_trans *ut, afs_int32 *next, prlist *alist)
 	code = pr_Read(ut, 0, *next, &tentry, sizeof(tentry));
 	if (code)
 	    return code;
-	code = AddToPRList(alist, &size, ntohl(tentry.id));
+	code = AddToPRList(log_id, alist, &size, ntohl(tentry.id));
 	if (alist->prlist_len >= PR_MAXGROUPS) {
 	    return PRTOOMANY;
 	}
@@ -2230,7 +2245,7 @@ static int
 AddAuthGroup(struct prentry *tentry, prlist *alist, afs_int32 *size)
 {
     if (!(strchr(tentry->name, '@')))
-	return (AddToPRList(alist, size, AUTHUSERID));
+	return (AddToPRList(tentry->id, alist, size, AUTHUSERID));
     else
 	return PRSUCCESS;
 }

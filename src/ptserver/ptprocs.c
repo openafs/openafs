@@ -1911,7 +1911,7 @@ listOwned(struct rx_call *call, afs_int32 aid, prlist *alist, afs_int32 *lastP,
 	}
     }
 
-    code = GetOwnedChain(tt, &head, alist);
+    code = GetOwnedChain(tt, aid, &head, alist);
     if (code) {
 	if (code == PRTOOMANY)
 	    *lastP = head;
@@ -2018,7 +2018,8 @@ addWildCards(struct ubik_trans *tt, prlist *alist, afs_uint32 host)
 	added += wlist.prlist_len;
 	for (i = 0; i < wlist.prlist_len; i++) {
 	    if (!inCPS(*alist, wlist.prlist_val[i]))
-		if ((code = AddToPRList(alist, &size, wlist.prlist_val[i]))) {
+		if ((code = AddToPRList(tentry.id, alist, &size,
+					wlist.prlist_val[i]))) {
 		    free(wlist.prlist_val);
 		    return (code);
 		}

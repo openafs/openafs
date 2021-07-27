@@ -89,9 +89,10 @@ extern afs_int32 SetMax(struct ubik_trans *at, afs_int32 id, afs_int32 flag);
 extern afs_int32 ChangeEntry(struct ubik_trans *at, afs_int32 aid,
 			     afs_int32 cid, char *name, afs_int32 oid,
 			     afs_int32 newid);
-extern afs_int32 GetOwnedChain(struct ubik_trans *ut, afs_int32 *next,
-			       prlist *alist);
-extern afs_int32 AddToPRList(prlist *alist, int *sizeP, afs_int32 id);
+extern afs_int32 GetOwnedChain(struct ubik_trans *ut, afs_int32 log_id,
+			       afs_int32 *next, prlist *alist);
+extern afs_int32 AddToPRList(afs_int32 log_id, prlist *alist, int *sizeP,
+			     afs_int32 id);
 extern afs_int32 read_DbHeader(struct ubik_trans *tt);
 extern afs_int32 Initdb(void);
 
