@@ -12,8 +12,8 @@
 #define	BOP_SETSTAT(bnode, a)	((*(bnode)->ops->setstat)((bnode),(a)))
 #define	BOP_DELETE(bnode)	((*(bnode)->ops->delete)((bnode)))
 #define	BOP_PROCEXIT(bnode, a)	((*(bnode)->ops->procexit)((bnode),(a)))
-#define	BOP_GETSTRING(bnode, a, b)	((*(bnode)->ops->getstring)((bnode),(a), (b)))
-#define	BOP_GETPARM(bnode, n, b, l)	((*(bnode)->ops->getparm)((bnode),(n),(b),(l)))
+#define	BOP_GETSTRING(bnode, a)	((*(bnode)->ops->getstring)((bnode),(a)))
+#define	BOP_GETPARM(bnode, n, b)	((*(bnode)->ops->getparm)((bnode),(n),(b)))
 #define	BOP_RESTARTP(bnode)	((*(bnode)->ops->restartp)((bnode)))
 #define BOP_HASCORE(bnode)	((*(bnode)->ops->hascore)((bnode)))
 #define BOP_PROCSTARTED(bnode,p)	((*(bnode)->ops->procstarted)((bnode),(p)))
@@ -27,9 +27,8 @@ struct bnode_ops {
     int (*setstat) ( struct bnode *, afs_int32 );
     int (*delete) ( struct bnode * );
     int (*procexit) ( struct bnode *, struct bnode_proc * );
-    int (*getstring) ( struct bnode *, char *abuffer, afs_int32 alen );
-    int (*getparm) ( struct bnode *, afs_int32 aindex, char *abuffer,
-		     afs_int32 alen);
+    int (*getstring) ( struct bnode *, char **adesc );
+    int (*getparm) ( struct bnode *, afs_int32 aindex, char **aparm);
     int (*restartp) ( struct bnode *);
     int (*hascore) ( struct bnode *);
     int (*procstarted) ( struct bnode *, struct bnode_proc * );

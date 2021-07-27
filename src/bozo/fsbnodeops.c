@@ -100,11 +100,9 @@ static int fs_getstat(struct bnode *abnode, afs_int32 * astatus);
 static int fs_setstat(struct bnode *abnode, afs_int32 astatus);
 static int fs_procstarted(struct bnode *abnode, struct bnode_proc *aproc);
 static int fs_procexit(struct bnode *abnode, struct bnode_proc *aproc);
-static int fs_getstring(struct bnode *abnode, char *abuffer, afs_int32 alen);
-static int fs_getparm(struct bnode *abnode, afs_int32 aindex,
-		      char *abuffer, afs_int32 alen);
-static int dafs_getparm(struct bnode *abnode, afs_int32 aindex,
-			char *abuffer, afs_int32 alen);
+static int fs_getstring(struct bnode *abnode, char **adesc);
+static int fs_getparm(struct bnode *abnode, afs_int32 aindex, char **aparm);
+static int dafs_getparm(struct bnode *abnode, afs_int32 aindex, char **aparm);
 
 static int SetSalFlag(struct fsbnode *abnode, int aflag);
 static int RestoreSalFlag(struct fsbnode *abnode);
@@ -1064,85 +1062,89 @@ NudgeProcs(struct fsbnode *abnode)
 }
 
 static int
-fs_getstring(struct bnode *bn, char *abuffer, afs_int32 alen)
+fs_getstring(struct bnode *bn, char **adesc)
 {
     struct fsbnode *abnode = (struct fsbnode *)bn;
+    const char *desc;
 
-    if (alen < 40)
-	return -1;
     if (abnode->b.goal == 1) {
 	if (abnode->fileRunning) {
 	    if (abnode->fileSDW)
-		strcpy(abuffer, "file server shutting down");
+		desc = "file server shutting down";
 	    else if (abnode->scancmd) {
 		if (!abnode->volRunning && !abnode->scanRunning)
-		    strcpy(abuffer,
-			   "file server up; volser and scanner down");
+		    desc = "file server up; volser and scanner down";
 		else if (abnode->volRunning && !abnode->scanRunning)
-		    strcpy(abuffer,
-			   "file server up; volser up; scanner down");
+		    desc = "file server up; volser up; scanner down";
 		else if (!abnode->volRunning && abnode->scanRunning)
-		    strcpy(abuffer,
-			   "file server up; volser down; scanner up");
-
+		    desc = "file server up; volser down; scanner up";
 		else
-		    strcpy(abuffer, "file server running");
+		    desc = "file server running";
 	    } else if (!abnode->volRunning)
-		strcpy(abuffer, "file server up; volser down");
+		desc = "file server up; volser down";
 	    else
-		strcpy(abuffer, "file server running");
+		desc = "file server running";
 	} else if (abnode->salRunning) {
-	    strcpy(abuffer, "salvaging file system");
+	    desc = "salvaging file system";
 	} else
-	    strcpy(abuffer, "starting file server");
+	    desc = "starting file server";
     } else {
 	/* shutting down */
 	if (abnode->fileRunning || abnode->volRunning || abnode->scanRunning) {
-	    strcpy(abuffer, "file server shutting down");
+	    desc = "file server shutting down";
 	} else if (abnode->salRunning)
-	    strcpy(abuffer, "salvager shutting down");
+	    desc = "salvager shutting down";
 	else
-	    strcpy(abuffer, "file server shut down");
+	    desc = "file server shut down";
     }
+    *adesc = strdup(desc);
+    if (*adesc == NULL)
+	return BZIO;
     return 0;
 }
 
 static int
-fs_getparm(struct bnode *bn, afs_int32 aindex, char *abuffer,
-	   afs_int32 alen)
+fs_getparm(struct bnode *bn, afs_int32 aindex, char **aparm)
 {
     struct fsbnode *abnode = (struct fsbnode *)bn;
+    char *parm;
 
     if (aindex == 0)
-	strcpy(abuffer, abnode->filecmd);
+	parm = abnode->filecmd;
     else if (aindex == 1)
-	strcpy(abuffer, abnode->volcmd);
+	parm = abnode->volcmd;
     else if (aindex == 2)
-	strcpy(abuffer, abnode->salcmd);
+	parm = abnode->salcmd;
     else if (aindex == 3 && abnode->scancmd)
-	strcpy(abuffer, abnode->scancmd);
+	parm = abnode->scancmd;
     else
 	return BZDOM;
+    *aparm = strdup(parm);
+    if (*aparm == NULL)
+	return BZIO;
     return 0;
 }
 
 static int
-dafs_getparm(struct bnode *bn, afs_int32 aindex, char *abuffer,
-	     afs_int32 alen)
+dafs_getparm(struct bnode *bn, afs_int32 aindex, char **aparm)
 {
     struct fsbnode *abnode = (struct fsbnode *)bn;
+    char *parm;
 
     if (aindex == 0)
-	strcpy(abuffer, abnode->filecmd);
+	parm = abnode->filecmd;
     else if (aindex == 1)
-	strcpy(abuffer, abnode->volcmd);
+	parm = abnode->volcmd;
     else if (aindex == 2)
-	strcpy(abuffer, abnode->salsrvcmd);
+	parm = abnode->salsrvcmd;
     else if (aindex == 3)
-	strcpy(abuffer, abnode->salcmd);
+	parm = abnode->salcmd;
     else if (aindex == 4 && abnode->scancmd)
-	strcpy(abuffer, abnode->scancmd);
+	parm = abnode->scancmd;
     else
 	return BZDOM;
+    *aparm = strdup(parm);
+    if (*aparm == NULL)
+	return BZIO;
     return 0;
 }

@@ -33,8 +33,8 @@ static int cron_getstat(struct bnode *bnode, afs_int32 *status);
 static int cron_setstat(struct bnode *bnode, afs_int32 status);
 static int cron_procstarted(struct bnode *bnode, struct bnode_proc *proc);
 static int cron_procexit(struct bnode *bnode, struct bnode_proc *proc);
-static int cron_getstring(struct bnode *bnode, char *abuffer, afs_int32 alen);
-static int cron_getparm(struct bnode *bnode, afs_int32, char *, afs_int32);
+static int cron_getstring(struct bnode *bnode, char **adesc);
+static int cron_getparm(struct bnode *bnode, afs_int32 aindex, char **aparm);
 
 #define	SDTIME		60	/* time in seconds given to a process to evaporate */
 
@@ -302,28 +302,38 @@ cron_procexit(struct bnode *bn, struct bnode_proc *aproc)
 }
 
 static int
-cron_getstring(struct bnode *bn, char *abuffer, afs_int32 alen)
+cron_getstring(struct bnode *bn, char **adesc)
 {
+    int code;
+    char *desc = NULL;
     struct cronbnode *abnode = (struct cronbnode *)bn;
+
     if (abnode->running)
-	strcpy(abuffer, "running now");
+	code = asprintf(&desc, "running now");
     else if (abnode->when == 0)
-	strcpy(abuffer, "waiting to run once");
+	code = asprintf(&desc, "waiting to run once");
     else
-	sprintf(abuffer, "run next at %s", ktime_DateOf(abnode->when));
+	code = asprintf(&desc, "run next at %s", ktime_DateOf(abnode->when));
+    if (code < 0)
+	return BZIO;
+    *adesc = desc;
     return 0;
 }
 
 static int
-cron_getparm(struct bnode *bn, afs_int32 aindex, char *abuffer,
-	     afs_int32 alen)
+cron_getparm(struct bnode *bn, afs_int32 aindex, char **aparm)
 {
     struct cronbnode *abnode = (struct cronbnode *)bn;
+    char *parm;
+
     if (aindex == 0)
-	strcpy(abuffer, abnode->command);
-    else if (aindex == 1) {
-	strcpy(abuffer, abnode->whenString);
-    } else
+	parm = abnode->command;
+    else if (aindex == 1)
+	parm = abnode->whenString;
+    else
 	return BZDOM;
+    *aparm = strdup(parm);
+    if (*aparm == NULL)
+	return BZIO;
     return 0;
 }

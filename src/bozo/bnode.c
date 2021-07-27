@@ -158,17 +158,15 @@ SaveCore(struct bnode *abnode, struct bnode_proc
 }
 
 int
-bnode_GetString(struct bnode *abnode, char *abuffer,
-		afs_int32 alen)
+bnode_GetString(struct bnode *abnode, char **adesc)
 {
-    return BOP_GETSTRING(abnode, abuffer, alen);
+    return BOP_GETSTRING(abnode, adesc);
 }
 
 int
-bnode_GetParm(struct bnode *abnode, afs_int32 aindex,
-	      char *abuffer, afs_int32 alen)
+bnode_GetParm(struct bnode *abnode, afs_int32 aindex, char **aparm)
 {
-    return BOP_GETPARM(abnode, aindex, abuffer, alen);
+    return BOP_GETPARM(abnode, aindex, aparm);
 }
 
 int

@@ -33,8 +33,8 @@ static int ez_timeout(struct bnode *bnode);
 static int ez_getstat(struct bnode *bnode, afs_int32 *status);
 static int ez_setstat(struct bnode *bnode, afs_int32 status);
 static int ez_procexit(struct bnode *bnode, struct bnode_proc *proc);
-static int ez_getstring(struct bnode *bnode, char *abuffer, afs_int32 alen);
-static int ez_getparm(struct bnode *bnode, afs_int32, char *, afs_int32);
+static int ez_getstring(struct bnode *bnode, char **adesc);
+static int ez_getparm(struct bnode *bnode, afs_int32 aindex, char **parm);
 static int ez_procstarted(struct bnode *bnode, struct bnode_proc *proc);
 
 #define	SDTIME		60	/* time in seconds given to a process to evaporate */
@@ -233,20 +233,25 @@ ez_procexit(struct bnode *bn, struct bnode_proc *aproc)
 }
 
 static int
-ez_getstring(struct bnode *abnode, char *abuffer, afs_int32 alen)
+ez_getstring(struct bnode *abnode, char **adesc)
 {
-    return -1;			/* don't have much to add */
+    *adesc = strdup("");  /* Don't have much to add. */
+    if (*adesc == NULL)
+	return BZIO;
+    return 0;
 }
 
 static int
-ez_getparm(struct bnode *bn, afs_int32 aindex, char *abuffer,
-	   afs_int32 alen)
+ez_getparm(struct bnode *bn, afs_int32 aindex, char **aparm)
 {
     struct ezbnode *abnode = (struct ezbnode *) bn;
 
     if (aindex != 0)
 	return BZDOM;
 
-    strcpy(abuffer, abnode->command);
+    *aparm = strdup(abnode->command);
+    if (*aparm == NULL)
+	return BZIO;
+
     return 0;
 }

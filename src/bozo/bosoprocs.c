@@ -1128,28 +1128,15 @@ SBOZO_GetStatus(struct rx_call *acall, char *ainstance, afs_int32 *astat,
     afs_int32 code;
 
     tb = bnode_FindInstance(ainstance);
-    if (!tb) {
-	code = BZNOENT;
-	goto fail;
-    }
+    if (!tb)
+	return BZNOENT;
 
     bnode_Hold(tb);
     code = bnode_GetStat(tb, astat);
-    if (code) {
-	bnode_Release(tb);
-	goto fail;
-    }
-
-    *astatDescr = malloc(BOZO_BSSIZE);
-    code = bnode_GetString(tb, *astatDescr, BOZO_BSSIZE);
+    if (code == 0)
+	code = bnode_GetString(tb, astatDescr);
     bnode_Release(tb);
-    if (code)
-	(*astatDescr)[0] = 0;	/* null string means no further info */
-    return 0;
 
-  fail:
-    *astatDescr = malloc(1);
-    **astatDescr = 0;
     return code;
 }
 
@@ -1421,24 +1408,26 @@ SBOZO_GetInstanceParm(struct rx_call *acall,
 		      char **aparm)
 {
     struct bnode *tb;
-    char *tp;
     afs_int32 code;
 
-    tp = malloc(BOZO_BSSIZE);
-    *aparm = tp;
-    *tp = 0;			/* null-terminate string in error case */
     tb = bnode_FindInstance(ainstance);
     if (!tb)
 	return BZNOENT;
+
     bnode_Hold(tb);
     if (anum == 999) {
-	if (tb->notifier) {
-	    memcpy(tp, tb->notifier, strlen(tb->notifier) + 1);
-	    code = 0;
-	} else
-	    code = BZNOENT;	/* XXXXX */
-    } else
-	code = bnode_GetParm(tb, anum, tp, BOZO_BSSIZE);
+	if (tb->notifier == NULL) {
+	    code = BZNOENT;
+	} else {
+	    *aparm = strdup(tb->notifier);
+	    if (*aparm == NULL)
+		code = BZIO;
+	    else
+		code = 0;
+	}
+    } else {
+	code = bnode_GetParm(tb, anum, aparm);
+    }
     bnode_Release(tb);
 
     /* Not Currently Audited */
