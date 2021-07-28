@@ -1023,6 +1023,7 @@ AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int3
     afs_int32 first = 0;
     afs_int32 cloc = 0;
     afs_int32 slot = -1;
+    afs_uint32 n_entries = 0;
 
     if (entry->id == aid)
 	return PRINCONSISTENT;
@@ -1039,6 +1040,8 @@ AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int3
 		slot = i;
 	    }
 	    break;
+	} else {
+	    n_entries++;
 	}
     }
     last = 0;
@@ -1064,9 +1067,32 @@ AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int3
 		    cloc = nptr;
 		}
 		break;
+	    } else {
+		n_entries++;
 	    }
 	}
 	nptr = nentry.next;
+    }
+    if (n_entries + 1 >= OPENAFS_MAXPRLIST && (entry->flags & PRGRP) == 0) {
+	/*
+	 * If this is a non-group entry that has at least OPENAFS_MAXPRLIST
+	 * entries (after we add 'aid'), we won't be able to respond to a
+	 * GetCPS request for this user, since a GetCPS response will at least
+	 * contain all of the entries, plus the id for the user itself. Don't
+	 * let someone create an entry this big, because it will not be usable
+	 * in actual access lists.
+	 */
+	static int logged;
+	if (!logged) {
+	    logged = 1;
+	    ViceLog(0, ("Error: Cannot add new entry to id %d; entry is too big "
+			"(over %d entries). This is probably a user that is in\n",
+			entry->id, OPENAFS_MAXPRLIST - 1));
+	    ViceLog(0, ("Error: an excessive number of groups. Please either "
+			"file a bug, or reduce group membership. (This message\n"));
+	    ViceLog(0, ("Error: is only logged once)\n"));
+	}
+	return PRTOOMANY;
     }
     if (slot != -1) {		/* we found a place */
 	entry->count++;
