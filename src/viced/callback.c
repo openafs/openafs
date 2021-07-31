@@ -451,33 +451,15 @@ InitCallBack(int nblks)
     while (cbstuff.nCBs)
 	FreeCB(&CB[cbstuff.nCBs]);	/* This is correct */
 
-    if (nblks > 64000) {
-	/*
-	 * We may have a large number of callbacks to keep track of (more than
-	 * 64000, the default with the '-L' fileserver switch). Figure out a
-	 * hashtable size so our hash chains are around FE_CHAIN_TARGET long.
-	 * Start at the old historical hashtable size (FEHASH_SIZE_OLD), and
-	 * count up until we get a reasonable number.
-	 */
-	workingHashSize = FEHASH_SIZE_OLD;
-	while (nblks / workingHashSize > FE_CHAIN_TARGET) {
-	    opr_Assert(workingHashSize < MAX_AFS_INT32 / 2);
-	    workingHashSize *= 2;
-	}
-
-    } else {
-	/*
-	 * It looks like we're using one of the historical default values for
-	 * our callback limit (64000 is the amount given by '-L' in the
-	 * fileserver; all other defaults are smaller).
-	 *
-	 * In this case, we're not using a huge number of callbacks, so the
-	 * size of the hashtable is not a big concern. Use the old hard-coded
-	 * hashtable size of 512 (FEHASH_SIZE_OLD), so any fsstate.dat file we
-	 * may save to disk is understandable by old fileservers and other
-	 * tools.
-	 */
-	workingHashSize = FEHASH_SIZE_OLD;
+    /*
+     * Figure out a hashtable size so our hash chains are around
+     * FE_CHAIN_TARGET long. Start at the old historical hashtable size
+     * (FEHASH_SIZE_OLD), and count up until we get a reasonable number.
+     */
+    workingHashSize = FEHASH_SIZE_OLD;
+    while (nblks / workingHashSize > FE_CHAIN_TARGET) {
+	opr_Assert(workingHashSize < MAX_AFS_INT32 / 2);
+	workingHashSize *= 2;
     }
 
     /* hashtable size must be a power of 2 */
@@ -2287,57 +2269,28 @@ static int
 cb_stateSaveFEHash(struct fs_dump_state * state)
 {
     int ret = 0;
-    struct iovec iov[2];
 
     AssignInt64(state->eof_offset, &state->cb_hdr->fehash_offset);
 
+    /*
+     * The fsstate.dat file format contains a structure for the head of the FE
+     * hash table. We don't really use this currently (we just dynamically hash
+     * the loaded FEs during startup), but write out a blank header to adhere
+     * to the format.
+     *
+     * Note that older (ca. OpenAFS 1.8.13) fileservers and fsstate.dat-reading
+     * tools will not be able to process our fsstate.dat, since they require
+     * the on-disk hash table and do not dynamically hash FEs.
+     */
     state->cb_fehash_hdr->magic = CALLBACK_STATE_FEHASH_MAGIC;
+    state->cb_fehash_hdr->records = 0;
+    state->cb_fehash_hdr->len = sizeof(struct callback_state_fehash_header);
 
-    if (FEhashsize != FEHASH_SIZE_OLD) {
-	/*
-	 * If our hashtable size is not the historical FEHASH_SIZE_OLD, don't
-	 * write out the hashtable at all. The hashtable data on disk is not
-	 * very useful; we only write it out because older fileservers or other
-	 * utilities may need it for interpreting fsstate.dat. But if our
-	 * hashtable size is not FEHASH_SIZE_OLD, then they won't be able to
-	 * read it anwyay, since the hashtable size has changed. So just don't
-	 * write out the data; just write the header that says we have 0
-	 * hashtable buckets.
-	 */
-	state->cb_fehash_hdr->records = 0;
-	state->cb_fehash_hdr->len = sizeof(struct callback_state_fehash_header);
-
-	if (fs_stateWriteHeader(state, &state->cb_hdr->fehash_offset,
-				state->cb_fehash_hdr,
-				sizeof(*state->cb_fehash_hdr))) {
-	    ret = 1;
-	    goto done;
-	}
-
-    } else {
-	/*
-	 * Write out our HashTable data. This information is not terribly
-	 * useful, but older fileservers and other utilities may need it.
-	 * Someday this can probably be removed.
-	 */
-	state->cb_fehash_hdr->records = FEhashsize;
-	state->cb_fehash_hdr->len = sizeof(struct callback_state_fehash_header) +
-	    (state->cb_fehash_hdr->records * sizeof(afs_uint32));
-
-	iov[0].iov_base = (char *)state->cb_fehash_hdr;
-	iov[0].iov_len = sizeof(struct callback_state_fehash_header);
-	iov[1].iov_base = (char *)HashTable;
-	iov[1].iov_len = sizeof(HashTable[0]) * FEhashsize;
-
-	if (fs_stateSeek(state, &state->cb_hdr->fehash_offset)) {
-	    ret = 1;
-	    goto done;
-	}
-
-	if (fs_stateWriteV(state, iov, 2)) {
-	    ret = 1;
-	    goto done;
-	}
+    if (fs_stateWriteHeader(state, &state->cb_hdr->fehash_offset,
+			    state->cb_fehash_hdr,
+			    sizeof(*state->cb_fehash_hdr))) {
+	ret = 1;
+	goto done;
     }
 
     fs_stateIncEOF(state, state->cb_fehash_hdr->len);
