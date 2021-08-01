@@ -223,11 +223,16 @@ fs_stateRestore(void)
 {
     int ret = 0;
     struct fs_dump_state state;
+    struct timeval now;
+    afs_int64 start_ms, end_ms, diff_ms;
 
     /* save and restore need to be atomic wrt other host package operations */
     H_LOCK;
 
     ViceLog(0, ("fs_stateRestore: commencing fileserver state restore\n"));
+
+    opr_Verify(gettimeofday(&now, NULL) == 0);
+    start_ms = now.tv_sec * 1000 + now.tv_usec / 1000;
 
     if (fs_stateAlloc(&state)) {
 	ViceLog(0, ("fs_stateRestore: memory allocation failed\n"));
@@ -294,7 +299,13 @@ fs_stateRestore(void)
 	ViceLog(0, ("fs_stateRestore: fileserver state verification complete\n"));
     }
 
-    ViceLog(0, ("fs_stateRestore: restore was successful\n"));
+    opr_Verify(gettimeofday(&now, NULL) == 0);
+    end_ms = now.tv_sec * 1000 + now.tv_usec / 1000;
+    diff_ms = end_ms - start_ms;
+
+    ViceLog(0, ("fs_stateRestore: restore was successful in %lld ms "
+	    "(%d FEs, %d CBs)\n",
+	    diff_ms, state.cb_hdr->nFEs, state.cb_hdr->nCBs));
 
  done:
     if (state.fd >= 0) {
