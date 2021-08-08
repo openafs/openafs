@@ -16,13 +16,10 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <signal.h>
-#include "xdr.h"
-#include "rx.h"
-#include "rx_globals.h"
-#include "rx_null.h"
-#if RX_VAB_EXISTS
-#include "rx_vab.h"
-#endif
+#include "rx/xdr.h"
+#include "rx/rx.h"
+#include "rx/rx_globals.h"
+#include "rx/rx_null.h"
 
 static long host;
 static short port;
@@ -30,23 +27,7 @@ static short count;
 static short secLevel = 0;
 static short stats = 0;
 
-#if RX_VAB_EXISTS
-static
-MakeVTest(akey, aticket, asession)
-     struct rxvab_EncryptionKey *akey, *asession;
-     struct rxvab_Ticket *aticket;
-{
-    aticket->ViceId = htonl(71);
-    memcpy(&aticket->HandShakeKey, "testkeyx", 8);
-    memcpy(asession, "testkeyx", 8);
-    bcrypt_encrypt(aticket, aticket, sizeof(struct rxvab_Ticket), akey);
-    return 0;
-}
-#else
-#define MakeVTest(a,b,c) (printf ("rx_vab support removed\n"), exit (-1))
-#endif
-
-void
+static void
 SigInt(int ignore)
 {
     if (rx_debugFile) {
@@ -59,10 +40,8 @@ SigInt(int ignore)
     exit(1);
 }
 
-static
-ParseCmd(argc, argv)
-     int argc;
-     char **argv;
+static int
+ParseCmd(int argc, char **argv)
 {
     int i;
     struct hostent *th;
@@ -100,7 +79,8 @@ ParseCmd(argc, argv)
     return 0;
 }
 
-nowms()
+static long
+nowms(void)
 {
     struct timeval tv;
     long temp;
@@ -110,9 +90,8 @@ nowms()
     return temp;
 }
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     struct rx_securityClass *so;
     struct rx_connection *tconn;
@@ -120,10 +99,6 @@ main(argc, argv)
     XDR xdr;
     int i, startms, endms;
     long temp;
-#if RX_VAB_EXISTS
-    struct rxvab_Ticket ticket;
-    struct rxvab_EncryptionKey session;
-#endif
 
     host = htonl(0x7f000001);
     port = htons(10000);
@@ -133,20 +108,8 @@ main(argc, argv)
 	exit(1);
     }
     rx_Init(0);
-    if (secLevel == 0)
+    if (secLevel == 0) {
 	so = rxnull_NewClientSecurityObject();
-    else if (secLevel == 1) {
-	MakeVTest((struct rxvab_EncryptionKey *)"applexxx", &ticket,
-		  &session);
-#if RX_VAB_EXISTS
-	so = rxvab_NewClientSecurityObject(&session, &ticket, 0);
-#endif
-    } else if (secLevel == 2) {
-	MakeVTest((struct rxvab_EncryptionKey *)"applexxx", &ticket,
-		  &session);
-#if RX_VAB_EXISTS
-	so = rxvab_NewClientSecurityObject(&session, &ticket, 1);
-#endif
     } else {
 	printf("bad security index\n");
 	exit(1);
@@ -156,7 +119,7 @@ main(argc, argv)
 	exit(1);
     }
     tconn = rx_NewConnection(host, port, 1, so, secLevel);
-    printf("conn is %x\n", tconn);
+    printf("conn is %p\n", tconn);
 
     startms = nowms();
     for (i = 0; i < count; i++) {
@@ -168,7 +131,7 @@ main(argc, argv)
 	xdr.x_op = XDR_DECODE;
 	xdr_long(&xdr, &temp);
 	if (temp != 1989)
-	    printf("wrong value returned (%d)\n", temp);
+	    printf("wrong value returned (%ld)\n", temp);
 	rx_EndCall(tcall, 0);
     }
     endms = nowms();
@@ -179,4 +142,5 @@ main(argc, argv)
 	rx_PrintStats(stdout);
 #endif
     SigInt(0);
+    return 1;
 }

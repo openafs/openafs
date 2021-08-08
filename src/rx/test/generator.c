@@ -262,14 +262,14 @@ WriteXG(rpcArgs * argsP, FILE * xg_h, char *serverName, int sign_no)
 
     /* declare each arg */
     for (i = 0; i < argsP->argCount; i++) {
-	WriteXGDecl(&argsP->argDescr[i], xg_h, i, FALSE,
+	WriteXGDecl(&argsP->argDescr[i], xg_h, i, 0,
 		    (i == argsP->argCount - 1));
     }
 
     /* Now pass the paramaters inside a structure */
     fprintf(xg_h, "\nstruct %s_t {\n", name);
     for (i = 0; i < argsP->argCount; i++) {
-	WriteXGDecl(&argsP->argDescr[i], xg_h, i, TRUE,
+	WriteXGDecl(&argsP->argDescr[i], xg_h, i, 1,
 		    (i == argsP->argCount - 1));
     }
     fprintf(xg_h, "} ;\n");
@@ -285,7 +285,7 @@ WriteXG(rpcArgs * argsP, FILE * xg_h, char *serverName, int sign_no)
 PRIVATE void
 GetRandStr(int strLen, char **ret, int *rP)
 {
-    int i, randI;
+    int i, randI = 0;
     char buf[5];
 
     strcpy(*ret, "\"");
@@ -537,7 +537,7 @@ WriteServC(rpcArgs * argsP, FILE * srv_h, char *serverName, int sign_no)
 			argsP->argDescr[i].outValue[0]);
 	    } else if (strstr(typ, "String")) {
 		fprintf(srv_h, "\n\t*a%d = (drpc_%s_t)rpc_ss_allocate(%d);",
-			i, typ, strlen(argsP->argDescr[i].outValue[0]) - 1);
+			i, typ, (int)strlen(argsP->argDescr[i].outValue[0]) - 1);
 		fprintf(srv_h, "\n\tstrcpy((char *)*a%d, %s);", i,
 			argsP->argDescr[i].outValue[0]);
 	    } else {
@@ -609,7 +609,7 @@ WriteServC(rpcArgs * argsP, FILE * srv_h, char *serverName, int sign_no)
 			argsP->argDescr[i].outValue[0]);
 	    } else if (strstr(typ, "String")) {
 		fprintf(srv_h, "\n\ts->a%d = rpc_ss_allocate(%d);", i,
-			strlen(argsP->argDescr[i].outValue[0]) - 1);
+			(int)strlen(argsP->argDescr[i].outValue[0]) - 1);
 		fprintf(srv_h, "\n\tstrcpy((char *)s->a%d, %s);", i,
 			argsP->argDescr[i].outValue[0]);
 	    } else {
@@ -1004,7 +1004,7 @@ WriteClt(rpcArgs * argsP, char *serverName, int sign_no, FILE * itl_h)
 
     /* initialize IN/INOUT args */
     for (i = 0; i < argsP->argCount; i++) {
-	WriteCltInit(&argsP->argDescr[i], itl_h, i, FALSE);
+	WriteCltInit(&argsP->argDescr[i], itl_h, i, 0);
     }
 
     /* call the server */
@@ -1075,7 +1075,7 @@ WriteClt(rpcArgs * argsP, char *serverName, int sign_no, FILE * itl_h)
 
     /* initialize IN/INOUT args */
     for (i = 0; i < argsP->argCount; i++) {
-	WriteCltInit(&argsP->argDescr[i], itl_h, i, TRUE);
+	WriteCltInit(&argsP->argDescr[i], itl_h, i, 1);
     }
 
     /* call the server */
@@ -1274,7 +1274,7 @@ ProcessCmdLine(int argc, char **argv, char **serverName, char **ipFileName,
 }
 
 
-void
+int
 main(int argc, char **argv)
 {
     FILE *table_h, *srv_h, *xg_h, *clt_h, *mak_h;
@@ -1431,5 +1431,5 @@ main(int argc, char **argv)
 	fprintf(mak_h, "\t%s %s%d.mak clean\n", platform[0], serverName, i);
     fclose(mak_h);
 
-    exit(0);
+    return 0;
 }

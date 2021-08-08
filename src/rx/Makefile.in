@@ -182,6 +182,7 @@ dest: librx.a
 # Misc. targets
 #
 clean:
+	cd test && $(MAKE) clean
 	$(LT_CLEAN)
 	$(RM) -f *.o *.a core *_component_version_number.c
 

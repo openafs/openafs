@@ -190,6 +190,9 @@ rxgen: $(DIR_roken) config
 rx: config lwp rxgen rx_depinstall util rxgk_depinstall
 	+${COMPILE_PART1} rx ${COMPILE_PART2}
 
+rx_test: rx libafsrpc
+	+${COMPILE_PART1} rx/test ${COMPILE_PART2}
+
 rxstat: rx rxstat_depinstall
 	+${COMPILE_PART1} rxstat ${COMPILE_PART2}
 
@@ -635,7 +638,7 @@ finale_notest: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ \
 	bozo @VFSCK@ volser tvolser tsalvaged dviced dvolser libafscp \
 	venus venustests update xstat afsmonitor rxdebug libafsrpc rfc3961 \
 	hcrypto libafsauthent libadmin man-pages tools platform kopenafs \
-	authtools $(DIR_roken) rxgk
+	authtools $(DIR_roken) rxgk rx_test
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs_notest: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth \
@@ -643,7 +646,7 @@ finale_nolibafs_notest: project cmd comerr afsd butc tbutc tbudb libuafs audit k
 	volser tvolser tsalvaged dviced dvolser libafscp venus venustests \
 	update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
 	libafsauthent libadmin man-pages tools platform kopenafs \
-	authtools $(DIR_roken) rxgk
+	authtools $(DIR_roken) rxgk rx_test
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale: finale_notest test_build

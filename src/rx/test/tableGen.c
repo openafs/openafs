@@ -66,20 +66,10 @@
 \n"); \
     MACRO_END
 
-/* macro which sets if attributes for var/conf found */
-#define SET_ATTR_FLAGS( x ) \
-    MACRO_BEGIN	\
-    	if (!strcmp(attrib[x], "size")) SIZE = TRUE;\
-    	else if (!strcmp(attrib[x], "max")) MAX = TRUE; \
-    	else if (!strcmp(attrib[x], "length")) LENGTH = TRUE;\
-    	else if (!strcmp(attrib[x], "last")) LAST = TRUE;\
-    MACRO_END
-
 static char **dir;
 static char **typ;
 static int dir_size;
 static int typ_size;
-static int attr_size;
 
 PRIVATE char *init_dir[] = { "IN", "OUT", "INOUT" };
 
@@ -92,25 +82,6 @@ PRIVATE char *init_typ[] = {
     "ar_short",
     "ar_int32",
 };
-PRIVATE char *attrib[] = {
-    "1 max",
-    "1 size",
-    "1 first",
-    "1 last",
-    "1 length",
-    "2 max first",
-    "2 max last",
-    "2 max length",
-    "2 size first",
-    "2 size last",
-    "2 size length",
-    "2 first last",
-    "2 first length",
-    "3 max first last",
-    "3 max first length",
-    "3 size first last",
-    "3 size first length"
-};
 
 /*
  * 31 bit random number generator, we don't really care how random
@@ -120,7 +91,7 @@ PRIVATE char *attrib[] = {
 static unsigned long randVal = 0x330E16;
 
 PRIVATE double
-drand32()
+drand32(void)
 {
     randVal = ((randVal * 0xEECE66D) + 0xB) & 0xFFFFFFFF;
     return ((double)(randVal) / 4294967296.0);
@@ -158,9 +129,7 @@ BunchArg(FILE * O_FP)
  * SingleArg -- prints signature for single argument of given type
  */
 PRIVATE void
-SingleArg(O_FP, typ_index)
-     FILE *O_FP;
-     IN int typ_index;
+SingleArg(FILE *O_FP, int typ_index)
 {
     int dir_index;
 
@@ -180,10 +149,7 @@ SingleArg(O_FP, typ_index)
  * DoubleArg -- prints signature for two arguments of given types
  */
 PRIVATE void
-DoubleArg(O_FP, typ_index1, typ_index2)
-     FILE *O_FP;
-     IN int typ_index1;
-     IN int typ_index2;
+DoubleArg(FILE *O_FP, int typ_index1, int typ_index2)
 {
     int dir_index1;
     int dir_index2;
@@ -209,11 +175,7 @@ DoubleArg(O_FP, typ_index1, typ_index2)
  * ProcessCmdLine -- processes the command line args 
  */
 PRIVATE void
-ProcessCmdLine(argc, argv, apFileNamePP, outputFileP)
-     int argc;
-     char **argv;
-     char **apFileNamePP;
-     char **outputFileP;
+ProcessCmdLine(int argc, char **argv, char **apFileNamePP, char **outputFileP)
 {
     int i, n;
     char **p;
@@ -299,14 +261,10 @@ ProcessCmdLine(argc, argv, apFileNamePP, outputFileP)
 	typ_size = sizeof(init_typ) / sizeof(init_typ[0]);
 	typ = &init_typ[0];
     }
-
-    attr_size = sizeof(attrib) / sizeof(attrib[0]);
 }
 
-void
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     int i, j;
     char *apFileName = NULL;
@@ -340,5 +298,5 @@ main(argc, argv)
     }
 
     fclose(O_FP);
-    exit(0);
+    return 0;
 }

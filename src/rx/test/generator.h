@@ -14,7 +14,7 @@
 #define MACRO_END       } while (0)
 
 
-typedef enum { FALSE, TRUE } boolean_t;
+typedef int boolean_t;
 
 /* no. tests per file */
 #define TESTS_PER_FILE		50

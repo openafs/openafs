@@ -82,7 +82,6 @@ main(int argc, char **argv)
     int logstdout = 0;
     struct rx_connection *conn;
     struct rx_call *call;
-    struct rx_peer *peer;
     int err = 0;
     int nCalls = 1, nBytes = 1;
     int bufferSize = 4000000;

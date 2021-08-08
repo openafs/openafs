@@ -55,9 +55,7 @@ quitSignal(int ignore)
 
 #if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX_ENV)
 int
-test_syscall(a3, a4, a5)
-     afs_uint32 a3, a4;
-     void *a5;
+test_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
     afs_uint32 rcode;
     void (*old) (int);
@@ -71,8 +69,8 @@ test_syscall(a3, a4, a5)
 }
 #endif
 
-main(argc, argv)
-     char **argv;
+int
+main(int argc, char **argv)
 {
     struct rx_service *service;
     struct rx_securityClass *(secobjs[1]);
@@ -94,8 +92,10 @@ main(argc, argv)
 	else if (strcmp(*argv, "-rxlog") == 0)
 	    rxlog = 1;
 #if defined(RXDEBUG) && !defined(AFS_NT40_ENV)
-	else if (strcmp(*argv, "-trace") == 0)
+	else if (strcmp(*argv, "-trace") == 0) {
+	    extern char rxi_tracename[80];
 	    strcpy(rxi_tracename, *(++argv)), argc--;
+	}
 #endif
 	else if (strcmp(*argv, "-logstdout") == 0)
 	    logstdout = 1;
@@ -193,6 +193,7 @@ main(argc, argv)
 
     printf("Using %d packet buffers\n", rx_nPackets);
     rx_StartServer(1);
+    return -1;
 }
 
 static char buf[2000000];
@@ -278,7 +279,7 @@ FileRequest(struct rx_call *call)
 
     rx_SetLocalStatus(call, 79);	/* Emulation of file server's old "RCallBackReceivedStore" */
 
-    while (nbytes = rx_Read(call, buffer, blockSize)) {
+    while ((nbytes = rx_Read(call, buffer, blockSize)) != 0) {
 	if (write(fd, buffer, nbytes) != nbytes) {
 	    perror("writev");
 	    Abort("Write Failed.\n");

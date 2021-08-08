@@ -16,10 +16,10 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <signal.h>
-#include "xdr.h"
-#include "rx.h"
-#include "rx_globals.h"
-#include "rx_null.h"
+#include "rx/xdr.h"
+#include "rx/rx.h"
+#include "rx/rx_globals.h"
+#include "rx/rx_null.h"
 
 static int port;
 static short stats = 0;
@@ -37,10 +37,8 @@ SigInt(int ignore)
 }
 
 
-static
-ParseCmd(argc, argv)
-     int argc;
-     char **argv;
+static int
+ParseCmd(int argc, char **argv)
 {
     int i;
     for (i = 1; i < argc; i++) {
@@ -64,9 +62,8 @@ ParseCmd(argc, argv)
 }
 
 /* er loop */
-static
-rxk_erproc(acall)
-     struct rx_call *acall;
+static int
+rxk_erproc(struct rx_call *acall)
 {
     XDR xdr;
     long temp;
@@ -79,11 +76,10 @@ rxk_erproc(acall)
     return 0;
 }
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
-    long code;
+    int code;
     static struct rx_securityClass *sc[3];	/* so other kernel procs can reference it */
     struct rx_service *tservice;
 
@@ -103,10 +99,11 @@ main(argc, argv)
     sc[1] = sc[2] = 0;
     printf("new secobj created\n");
     tservice = rx_NewService(0, 1, "test", sc, 1 /* 3 */ , rxk_erproc);
-    printf("service is %x\n", tservice);
+    printf("service is %p\n", tservice);
     if (!tservice) {
 	printf("failed to create service\n");
 	exit(1);
     }
     rx_StartServer(1);		/* donate self */
+    return -1;
 }

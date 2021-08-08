@@ -12,7 +12,8 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 LDIRS= -L.. -L${TOP_LIBDIR}
 LIBS= ${TOP_LIBDIR}/libcmd.a  ../librx.a ${TOP_LIBDIR}/liblwp.a \
-	 ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libsys.a ${XLIBS}
+	 ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libopr.a \
+	 ${LIB_hcrypto} ${LIB_roken} ${XLIBS}
 
 MODULE_CFLAGS=-DRXDEBUG
 
@@ -26,12 +27,14 @@ MT_LINK = $(CC) $(MT_CFLAGS) $(COMMON_CFLAGS) $(AFS_LDFLAGS) -o $@ \
 	  $(LIB_hcrypto) $(LIB_roken) \
 	  $(MT_LIBS)
 
-TESTS = testclient testserver kstest kctest testqueue tableGen generator
+TESTS = testclient testserver kstest kctest tableGen generator
 
 TH_TESTS = th_testserver th_testclient
 
 
-all: test
+all: test th_test
+
+install dest:
 
 test tests: ${TESTS}
 
@@ -49,7 +52,10 @@ kstest: ../librx.a kstest.o
 kctest: ../librx.a kctest.o
 	${LINK}
 
-rxperf: rxperf.o ../librx.a
+tableGen: ../librx.a tableGen.o
+	${LINK}
+
+generator: ../librx.a generator.o
 	${LINK}
 
 # th_ versions only have link lines for Solaris now.
@@ -66,16 +72,6 @@ th_testserver: th_testserver.o $(TOP_LIBDIR)/libafsrpc.a
 th_testserver.o: testserver.c
 	$(MT_CC) $(COMMON_CFLAGS) $(MT_CFLAGS) -c -o th_testserver.o \
 		${srcdir}/testserver.c
-
-th_rxperf: th_rxperf.o ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/libopr.a
-	$(MT_LINK)
-
-th_rxperf.o: rxperf.c
-	$(MT_CC) $(COMMON_CFLAGS) $(MT_CFLAGS) -c $(srcdir)/rxperf.c \
-		-o th_rxperf.o
-
-testqueue: ../librx.a testqueue.o
-	${LINK}
 
 ${RXTESTOBJS}: ${BASICINCLS} ../rx.h
 
