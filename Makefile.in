@@ -232,6 +232,9 @@ rxgk: cmd comerr hcrypto rfc3961 rx rxgk_depinstall
 rxkad: cmd comerr hcrypto rfc3961 rx rxkad_depinstall
 	+${COMPILE_PART1} rxkad ${COMPILE_PART2}
 
+rxkad_test: rxkad auth libafsauthent libafsrpc
+	+${COMPILE_PART1} rxkad/test ${COMPILE_PART2}
+
 auth: cmd comerr hcrypto lwp rx rxkad audit sys auth_depinstall rxgk
 	+${COMPILE_PART1} auth ${COMPILE_PART2}
 
@@ -622,7 +625,7 @@ finale_notest: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ \
 	bozo @VFSCK@ volser tvolser tsalvaged dviced dvolser libafscp \
 	venus venustests update xstat afsmonitor rxdebug libafsrpc rfc3961 \
 	hcrypto libafsauthent libadmin man-pages tools platform kopenafs \
-	authtools $(DIR_roken) rxgk rx_test
+	authtools $(DIR_roken) rxgk rx_test rxkad_test
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs_notest: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth \
@@ -630,7 +633,7 @@ finale_nolibafs_notest: project cmd comerr afsd butc tbutc tbudb libuafs audit k
 	volser tvolser tsalvaged dviced dvolser libafscp venus venustests \
 	update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
 	libafsauthent libadmin man-pages tools platform kopenafs \
-	authtools $(DIR_roken) rxgk rx_test
+	authtools $(DIR_roken) rxgk rx_test rxkad_test
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale: finale_notest test_build

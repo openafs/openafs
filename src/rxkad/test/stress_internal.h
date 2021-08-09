@@ -21,8 +21,6 @@ extern long serviceKeyVersion;
 #define RXKST_CLIENT_INST ""
 #define RXKST_CLIENT_CELL "rxtest.openafs.org"
 
-extern int errno;
-
 struct serverParms {
     char *whoami;
     u_int threads;

@@ -14,13 +14,19 @@
 
 #include <roken.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wdeprecated-declarations"
+#endif
+
 #include <afs/stds.h>
 
 #include <afs/com_err.h>
 #include <afs/afsutil.h>
 #include <rx/rxkad.h>
+#include <rx/rxkad_convert.h>
+#include <rx/rx_packet.h>
 #include <afs/auth.h>
-#include <des_prototypes.h>
+#include <hcrypto/des.h>
 #include "stress.h"
 #include "stress_internal.h"
 #ifdef AFS_PTHREAD_ENV
@@ -76,8 +82,8 @@ GetTicket(long *versionP, struct ktc_encryptionKey *session,
     long code;
 
     /* create random session key, using key for seed to good random */
-    des_init_random_number_generator(ktc_to_cblock(&serviceKey));
-    code = des_random_key(ktc_to_cblock(session));
+    DES_init_random_number_generator(ktc_to_cblock(&serviceKey));
+    code = DES_new_random_key(ktc_to_cblock(session));
     if (code)
 	return code;
 
@@ -430,7 +436,7 @@ RunLoadTest(struct clientParms *parms, struct rx_connection *conn)
 static long
 RepeatLoadTest(struct clientParms *parms, struct rx_connection *conn)
 {
-    long code;
+    long code = 0;
     long count;
 
     if (parms->repeatInterval == 0) {
@@ -477,8 +483,6 @@ RepeatLoadTest(struct clientParms *parms, struct rx_connection *conn)
 
 /* For backward compatibility, don't try to use the CallNumber stuff unless
  * we're compiling against the new Rx. */
-
-#ifdef rx_GetPacketCksum
 
 struct multiChannel {
     struct rx_connection *conn;
@@ -582,7 +586,7 @@ CheckCallFailure(struct rx_connection *conn, long codes[], long code,
 	for (i = 0; i < RX_MAXCALLS; i++)
 	    if (!((codes[i] == 0) || (codes[i] == code) || (codes[i] == -3)))
 		okay = 0;
-	if (conn->error)
+	if (rx_ConnError(conn))
 	    okay = 0;
 	if (!okay) {
 	    fprintf(stderr, "%s produced these errors:\n", msg);
@@ -606,23 +610,11 @@ CheckCallFailure(struct rx_connection *conn, long codes[], long code,
     return 0;
 }
 
-#endif /* rx_GetPacketCksum */
-
 static long
 RunCallTest(struct clientParms *parms, long host,
 	    struct rx_securityClass *sc, long si)
 {
     long code;
-
-#ifndef rx_GetPacketCksum
-
-    code = RXKST_BADARGS;
-    afs_com_err(whoami, code,
-	    "Older versions of Rx don't support Get/Set callNumber Vector procedures: can't run this CallTest");
-    return code;
-
-#else
-
     int i, ch;
     struct rx_connection *conn;
     long firstCall;
@@ -801,12 +793,7 @@ RunCallTest(struct clientParms *parms, long host,
 
     rx_DestroyConnection(conn);
     return retCode;
-
-#endif /* rx_GetPacketCksum */
-
 }
-
-#ifdef rx_GetPacketCksum
 
 static struct {
     int op;
@@ -975,22 +962,10 @@ SlowCall(void * rock)
     return (void *)(intptr_t)temp_rc;
 }
 
-#endif /* rx_GetPacketCksum */
-
 static long
 RunHijackTest(struct clientParms *parms, long host,
 	      struct rx_securityClass *sc, long si)
 {
-
-#ifndef rx_GetPacketCksum
-
-    code = RXKST_BADARGS;
-    afs_com_err(whoami, code,
-	    "Older versions of Rx don't export packet tracing routines: can't run this HijackTest");
-    return code;
-
-#else
-
     long code;
     struct rx_connection *conn = 0;
     struct rx_connection *otherConn = 0;
@@ -1017,8 +992,8 @@ RunHijackTest(struct clientParms *parms, long host,
 				RXKST_SERVICEID, sc, si); \
 	if (!(conn)) return RXKST_NEWCONNFAILED; \
 	outgoingOps.client = 1; \
-	outgoingOps.epoch = (conn)->epoch; \
-	outgoingOps.cid = (conn)->cid; }
+	outgoingOps.epoch = rx_GetConnectionEpoch(conn); \
+	outgoingOps.cid = rx_GetConnectionId(conn); }
 
     HIJACK_CONN(conn);
 
@@ -1047,7 +1022,7 @@ RunHijackTest(struct clientParms *parms, long host,
     if (code != RXKADSEALEDINCON) {
 	afs_com_err(whoami, code, "doing FastCall with ZEROCKSUM");
 	return code;
-    } else if (!conn->error) {
+    } else if (!rx_ConnError(conn)) {
 	code = RXKST_NOCONNERROR;
 	afs_com_err(whoami, code, "doing FastCall with ZEROCKSUM");
 	return code;
@@ -1065,7 +1040,7 @@ RunHijackTest(struct clientParms *parms, long host,
     if (code != RXKADSEALEDINCON) {
 	afs_com_err(whoami, code, "doing FastCall with ZEROCKSUM");
 	return code;
-    } else if (!conn->error) {
+    } else if (!rx_ConnError(conn)) {
 	code = RXKST_NOCONNERROR;
 	afs_com_err(whoami, code, "doing FastCall with ZEROCKSUM");
 	return code;
@@ -1082,14 +1057,14 @@ RunHijackTest(struct clientParms *parms, long host,
      * case, which the server will discard. */
 
 #define RedirectChallenge(conn,otherConn)	\
-    (incomingOps.epoch = (conn)->epoch,		\
-     incomingOps.cid = (conn)->cid,		\
+    (incomingOps.epoch = rx_GetConnectionEpoch(conn),\
+     incomingOps.cid = rx_GetConnectionId(conn),\
      incomingOps.client = 1,			\
-     incomingOps.newEpoch = (otherConn)->epoch,	\
-     incomingOps.newCid = (otherConn)->cid,	\
+     incomingOps.newEpoch = rx_GetConnectionEpoch(otherConn),\
+     incomingOps.newCid = rx_GetConnectionId(otherConn),\
      incomingOps.op = IO_REDIRECTCHALLENGE,	\
-     outgoingOps.epoch = (otherConn)->epoch,	\
-     outgoingOps.cid = (otherConn)->cid,	\
+     outgoingOps.epoch = rx_GetConnectionEpoch(otherConn),\
+     outgoingOps.cid = rx_GetConnectionId(otherConn),\
      outgoingOps.client = 1,			\
      outgoingOps.op = OO_COUNT,			\
      outgoingOps.counts[RX_PACKET_TYPE_RESPONSE] = 0)
@@ -1198,9 +1173,6 @@ RunHijackTest(struct clientParms *parms, long host,
     rx_DestroyConnection(otherConn);
     rx_DestroyConnection(conn);
     return code;
-
-#endif /* rx_GetPacketCksum */
-
 }
 
 long

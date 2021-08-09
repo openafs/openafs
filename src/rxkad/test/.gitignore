@@ -2,5 +2,9 @@
 #     git ls-files -i --exclude-standard
 # to check that you haven't inadvertently ignored any tracked files.
 
-/rxkad.h
-/rxkad_errs.c
+/fc_test
+/stress
+/stress.h
+/stress_errs.c
+/stress_errs.h
+/th_stress

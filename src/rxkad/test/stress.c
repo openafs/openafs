@@ -29,6 +29,7 @@
 #include <afs/auth.h>
 #include <afs/com_err.h>
 #include <afs/cmd.h>
+#include <afs/opr.h>
 
 #include <rx/rxkad.h>
 #include "stress.h"
@@ -137,8 +138,8 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
     if (as->parms[aMELT1b].items)
 	meltdown_1pkt = 0;
-    if (as->parms[aRECLAIM].items)
-	rxi_doreclaim = 0;
+    /* Ignore aRECLAIM/-noreclaim; the relevant option (rxi_doreclaim) doesn't
+     * exist anymore. */
     if (as->parms[a2DCHOICE].items)
 	rxi_2dchoice = 0;
 
@@ -346,9 +347,9 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-trace", CMD_SINGLE, CMD_OPTIONAL,
 		"file for per-call trace info");
     cmd_AddParm(ts, "-nomd1pkt", CMD_FLAG, CMD_OPTIONAL,
-		"dont prefer one-packet calls");
-    cmd_AddParm(ts, "-noreclaim", CMD_FLAG, CMD_OPTIONAL,
-		"dont aggressively reclaim packets");
+		"don't prefer one-packet calls");
+    cmd_AddParm(ts, "-noreclaim", CMD_FLAG, CMD_OPTIONAL | CMD_HIDDEN,
+		"don't aggressively reclaim packets [ignored]");
     cmd_AddParm(ts, "-no2dchoice", CMD_FLAG, CMD_OPTIONAL,
 		"disable rx_getcall 2d choice code");
     cmd_AddParm(ts, "-maxskew", CMD_SINGLE, CMD_OPTIONAL,

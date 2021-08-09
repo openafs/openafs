@@ -36,8 +36,9 @@
 
 #include <roken.h>
 
-#include "rxkad.h"
+#include <rx/rxkad.h>
 #include <rx/rx.h>
+#include <rx/rx_packet.h>
 #include "private_data.h"
 
 #define ROUNDS 16
@@ -47,7 +48,7 @@
 typedef afs_int32 int32;
 typedef afs_uint32 u_int32;
 
-const char the_quick[] = "The quick brown fox jumps over the lazy dogs.\0\0";
+static char the_quick[] = "The quick brown fox jumps over the lazy dogs.\0\0";
 
 const unsigned char key1[8] =
     { 0xf0, 0xe1, 0xd2, 0xc3, 0xb4, 0xa5, 0x96, 0x87 };
@@ -82,15 +83,27 @@ main(void)
     char ciph[100], clear[100];
     u_int32 data[2];
     u_int32 iv[2];
-    struct rx_connection conn;
+    struct rx_connection *conn;
     struct rx_securityClass obj;
+    struct rx_securityOps ops;
     struct rxkad_cprivate cpriv;
     struct rx_packet packet;
     int fail = 0;
 
-    conn.securityObject = &obj;
-    obj.privateData = (void *)&cpriv;
+    memset(&cpriv, 0, sizeof(cpriv));
+    memset(&obj, 0, sizeof(obj));
+    memset(&ops, 0, sizeof(ops));
+
+    if (rx_Init(0) != 0) {
+	fprintf(stderr, "error: rx_Init failed\n");
+	exit(1);
+    }
+
     cpriv.type = 0;
+    obj.privateData = &cpriv;
+    obj.ops = &ops;
+
+    conn = rx_NewConnection(0, 0, 0, &obj, RX_SECIDX_KAD);
 
     if (sizeof(int32) != 4) {
 	fprintf(stderr, "error: sizeof(int32) != 4\n");
@@ -145,8 +158,8 @@ main(void)
     packet.wirevec[2].iov_len = 0;
 
     /* For unknown reasons bytes 4-7 are zeroed in rxkad_EncryptPacket */
-    rxkad_EncryptPacket(&conn, sched, iv, sizeof(the_quick), &packet);
-    rxkad_DecryptPacket(&conn, sched, iv, sizeof(the_quick), &packet);
+    rxkad_EncryptPacket(conn, (const fc_KeySchedule *)sched, (const fc_InitializationVector *)iv, sizeof(the_quick), &packet);
+    rxkad_DecryptPacket(conn, (const fc_KeySchedule *)sched, (const fc_InitializationVector *)iv, sizeof(the_quick), &packet);
     clear[4] ^= 'q';
     clear[5] ^= 'u';
     clear[6] ^= 'i';

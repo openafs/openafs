@@ -24,30 +24,40 @@ LIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/libafscom_err.a \
-	${TOP_LIBDIR}/util.a
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libopr.a \
+	${TOP_LIBDIR}/libafsrfc3961.a \
+	${LIB_hcrypto} \
+	${LIB_roken}
 
-THLIBS= $(top_builddir)/src/cmd/liboafs_cmd.la  \
+THLIBS= ${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a \
-	${MT_LIBS} ${ULIBS} ${LIBRPC} -lpthread
+	${LIB_hcrypto} \
+	${LIB_roken} \
+	${MT_LIBS} -lpthread
 
 THRULE = ${MT_CC} $(COMMON_CFLAGS) $(MT_CFLAGS)
 
-noversion all test system: stress
+fc_test_OBJS=fc_test.o
+
+noversion all test system: stress th_stress fc_test
+
+dest install:
 
 clean:
 	$(LT_CLEAN)
 	$(RM) -f *.o stress.cs.c stress.ss.c stress.xdr.c stress.h \
-		stress_errs.c stress_errs.h stress th_*
+		stress_errs.c stress_errs.h stress th_* fc_test
 
-stress.ss.o: stress.ss.c
-stress.cs.o: stress.cs.c
+stress.ss.o: stress.ss.c stress.h
+stress.cs.o: stress.cs.c stress.h
 stress.xdr.o: stress.xdr.c stress.h
 
-th_stress.ss.o: stress.ss.c
+th_stress.ss.o: stress.ss.c stress.h
 	${THRULE} -c stress.ss.c -o th_stress.ss.o
 
-th_stress.cs.o: stress.cs.c
+th_stress.cs.o: stress.cs.c stress.h
 	${THRULE} -c stress.cs.c -o th_stress.cs.o
 
 th_stress.xdr.o: stress.xdr.c stress.h
@@ -83,6 +93,8 @@ stress_s.o: stress_errs.h
 stress.o: ${HEADERS}
 stress_c.o: ${HEADERS}
 stress_s.o: ${HEADERS}
+fc_test.o: ${HEADERS}
+CFLAGS_fc_test.o = -I$(TOP_SRCDIR)/rxkad -I$(TOP_OBJDIR)/src/rxkad
 
 th_stress.o: stress.c ${HEADERS}
 	${THRULE} -c $(srcdir)/stress.c -o th_stress.o
@@ -100,9 +112,10 @@ stress: stress.o stress.xdr.o stress_c.o stress_s.o stress.cs.o \
 		${LIBS} ${XLIBS}
 
 th_stress: th_stress.o th_stress.xdr.o th_stress_c.o th_stress_s.o \
-		th_stress.cs.o th_stress.ss.o stress_errs.o \
-		${LIBRPC}
+		th_stress.cs.o th_stress.ss.o stress_errs.o
 	$(LT_LDRULE_static) th_stress.o th_stress.xdr.o th_stress_c.o \
 		th_stress_s.o th_stress.cs.o th_stress.ss.o stress_errs.o \
 		${THLIBS}
 
+fc_test: ${fc_test_OBJS}
+	$(AFS_LDRULE) ${fc_test_OBJS} ${LIBS} ${XLIBS}

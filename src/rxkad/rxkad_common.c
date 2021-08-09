@@ -64,7 +64,21 @@ struct rxkad_global_stats rxkad_global_stats;
 pthread_mutex_t rxkad_global_stats_lock;
 pthread_key_t rxkad_stats_key;
 #else /* AFS_PTHREAD_ENV && !KERNEL */
+/*
+ * On DARWIN, if rxkad_stats is in the 'common' section, the linker can
+ * complain that rxkad_stats is undefined. It's not clear why this happens, but
+ * we can avoid it if we give rxkad_stats an initializer, preventing it from
+ * going in the 'common' section.
+ *
+ * On some other platforms (FBSD), the initializer causes warnings/errors
+ * because of the arrays/structs inside rxkad_stats. So only do this for
+ * DARWIN.
+ */
+# ifdef AFS_DARWIN_ENV
+struct rxkad_stats rxkad_stats = { 0 };
+# else
 struct rxkad_stats rxkad_stats;
+# endif
 #endif /* AFS_PTHREAD_ENV && !KERNEL */
 
 #if defined(AFS_PTHREAD_ENV) && !defined(KERNEL)

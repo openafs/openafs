@@ -28,18 +28,7 @@ LT_deps=$(top_builddir)/src/comerr/liboafs_comerr.la \
 
 LT_libs=$(LDFLAGS_hcrypto) $(LIB_hcrypto)
 
-fc_test_OBJS=fc_test.o
-
-fc_test_LIBS=\
-	${TOP_LIBDIR}/librxkad.a \
-	${TOP_LIBDIR}/libafshcrypto_lwp.a \
-	${TOP_LIBDIR}/librx.a \
-	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/libafsutil.a
-
 all: ${TOP_LIBDIR}/librxkad.a liboafs_rxkad.la librxkad_pic.la depinstall
-
-test: fc_test
 
 generated: \
 	rxkad_errs.c rxkad.h
@@ -101,7 +90,6 @@ bg-fcrypt.o bg-fcrypt.lo: rxkad.h
 crc.o crc.lo: rxkad.h
 crypt_conn.o crypt_conn.lo: rxkad.h
 fcrypt.o fcrypt.lo: rxkad.h
-fc_test.o fc_test.lo: rxkad.h
 rxkad_client.o rxkad_client.lo: rxkad.h
 rxkad_common.o rxkad_common.lo: rxkad.h
 rxkad_server.o rxkad_server.lo: rxkad.h
@@ -112,11 +100,6 @@ tcrypt.o: tcrypt.c AFS_component_version_number.o
 
 tcrypt: tcrypt.o librxkad.a
 	$(AFS_LDRULE) tcrypt.o librxkad.a
-
-fc_test: ${fc_test_OBJS} ${fc_test_LIBS}
-	$(AFS_LDRULE) ${fc_test_OBJS} ${fc_test_LIBS} ${XLIBS}
-
-fc_test.o: ${INCLS}
 
 #
 # Install targets
@@ -143,11 +126,9 @@ dest: librxkad.a fcrypt.h rxkad.h rxkad_prototypes.h
 # Misc. targets
 #
 clean:
+	cd test && $(MAKE) clean
 	$(LT_CLEAN)
 	$(RM) -f *.o *.a tcrypt core rxkad_errs.c rxkad.h \
-		AFS_component_version_number.c fc_test
-
-test:
-	cd test; $(MAKE)
+		AFS_component_version_number.c
 
 include ../config/Makefile.version
