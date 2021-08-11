@@ -13,6 +13,7 @@
 #include <afs/param.h>
 
 
+#include <roken.h>
 #include <afs/stds.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -145,8 +146,12 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
     if (startServer) {
 	if (as->parms[aTRACE].items) {
-	    extern char rxi_tracename[];
-	    strcpy(rxi_tracename, as->parms[aTRACE].items->data);
+	    extern char rxi_tracename[80];
+	    if (strlcpy(rxi_tracename, as->parms[aTRACE].items->data,
+			sizeof(rxi_tracename)) >= sizeof(rxi_tracename)) {
+		afs_com_err(whoami, 0, "-trace argument too long");
+		return ENAMETOOLONG;
+	    }
 	}
 
 	/* These options not compatible with -server */

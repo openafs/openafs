@@ -307,7 +307,11 @@ main(int argc, char **argv)
     cmd_OptionAsFlag(opts, OPT_smallmem, &smallMem);
     if (cmd_OptionAsString(opts, OPT_trace, &optstring) == 0) {
 	extern char rxi_tracename[80];
-	strcpy(rxi_tracename, optstring);
+	if (strlcpy(rxi_tracename, optstring,
+		    sizeof(rxi_tracename)) >= sizeof(rxi_tracename)) {
+	    fprintf(stderr, "-trace argument too long\n");
+	    return -1;
+	}
 	free(optstring);
 	optstring = NULL;
     }

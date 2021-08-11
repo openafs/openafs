@@ -94,7 +94,12 @@ main(int argc, char **argv)
 #if defined(RXDEBUG) && !defined(AFS_NT40_ENV)
 	else if (strcmp(*argv, "-trace") == 0) {
 	    extern char rxi_tracename[80];
-	    strcpy(rxi_tracename, *(++argv)), argc--;
+	    argv++;
+	    argc--;
+	    if (strlcpy(rxi_tracename, *argv,
+			sizeof(rxi_tracename)) >= sizeof(rxi_tracename)) {
+		Quit("-trace argument too long");
+	    }
 	}
 #endif
 	else if (strcmp(*argv, "-logstdout") == 0)
