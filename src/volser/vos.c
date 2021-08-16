@@ -302,14 +302,29 @@ IsPartValid(afs_int32 partId, afs_uint32 server, afs_int32 *code)
     return success;
 }
 
- /*sends the contents of file associated with <fd> and <blksize>  to Rx Stream
-  * associated  with <call> */
+/**
+ * Send the contents of a dump file to the volume server.
+ *
+ * @param[in] ufd   usd file handle opened for read
+ * @param[in] call  rx call object
+ *
+ * @returns status
+ *   @retval 0 success
+ *   @retval -1 error
+ */
 static int
-SendFile(usd_handle_t ufd, struct rx_call *call, long blksize)
+SendFile(usd_handle_t ufd, struct rx_call *call)
 {
-    char *buffer = (char *)0;
-    afs_int32 error = 0;
+    char *buffer = NULL;
+    afs_int32 error;
     afs_uint32 nbytes;
+    long blksize = 0;
+
+    error = USD_IOCTL(ufd, USD_IOCTL_GETBLKSIZE, &blksize);
+    if (error != 0) {
+	fprintf(STDERR, "Failed to get block size; error=%d\n", error);
+	return -1;
+    }
 
     buffer = malloc(blksize);
     if (!buffer) {
@@ -355,7 +370,6 @@ WriteData(struct rx_call *call, void *rock)
 {
     char *filename = (char *) rock;
     usd_handle_t ufd = NULL;
-    long blksize;
     afs_int32 error = 0;
     afs_int32 code;
     afs_int64 currOffset;
@@ -364,12 +378,8 @@ WriteData(struct rx_call *call, void *rock)
 
     if (!filename || !*filename) {
 	usd_StandardInput(&ufd);
-	blksize = 4096;
     } else {
 	code = usd_Open(filename, USD_OPEN_RDONLY, 0, &ufd);
-	if (code == 0) {
-	    code = USD_IOCTL(ufd, USD_IOCTL_GETBLKSIZE, &blksize);
-	}
 	if (code) {
 	    fprintf(STDERR, "Could not access file '%s': %s\n", filename,
 		    afs_error_message(code));
@@ -387,7 +397,7 @@ WriteData(struct rx_call *call, void *rock)
 	}
 	USD_SEEK(ufd, 0, SEEK_SET, &currOffset);
     }
-    code = SendFile(ufd, call, blksize);
+    code = SendFile(ufd, call);
     if (code) {
 	error = code;
 	goto wfail;
@@ -404,16 +414,31 @@ WriteData(struct rx_call *call, void *rock)
     return error;
 }
 
-/* Receive data from <call> stream into file associated
- * with <fd> <blksize>
+/**
+ * Receive the contents of a dump from volume server and write
+ * to a file handle.
+ *
+ * @param[in] ufd   usd file handle opened for write
+ * @param[in] call  rx call object
+ *
+ * @returns status
+ *   @retval 0 success
+ *   @retval -1 error
  */
 static int
-ReceiveFile(usd_handle_t ufd, struct rx_call *call, long blksize)
+ReceiveFile(usd_handle_t ufd, struct rx_call *call)
 {
     char *buffer = NULL;
     afs_int32 bytesread;
     afs_uint32 bytesleft, w;
-    afs_int32 error = 0;
+    afs_int32 error;
+    long blksize = 0;
+
+    error = USD_IOCTL(ufd, USD_IOCTL_GETBLKSIZE, &blksize);
+    if (error != 0) {
+	fprintf(STDERR, "Failed to get block size; error=%d\n", error);
+	ERROR_EXIT(-1);
+    }
 
     buffer = malloc(blksize);
     if (!buffer) {
@@ -457,21 +482,16 @@ DumpFunction(struct rx_call *call, void *rock)
     afs_int32 error = 0;
     afs_int32 code;
     afs_int64 size;
-    long blksize;
 
     /* Open the output file */
     if (!filename || !*filename) {
 	usd_StandardOutput(&ufd);
-	blksize = 4096;
     } else {
 	code =
 	    usd_Open(filename, USD_OPEN_CREATE | USD_OPEN_RDWR, 0666, &ufd);
 	if (code == 0) {
 	    size = 0;
 	    code = USD_IOCTL(ufd, USD_IOCTL_SETSIZE, &size);
-	}
-	if (code == 0) {
-	    code = USD_IOCTL(ufd, USD_IOCTL_GETBLKSIZE, &blksize);
 	}
 	if (code) {
 	    fprintf(STDERR, "Could not create file '%s': %s\n", filename,
@@ -480,7 +500,7 @@ DumpFunction(struct rx_call *call, void *rock)
 	}
     }
 
-    code = ReceiveFile(ufd, call, blksize);
+    code = ReceiveFile(ufd, call);
     if (code)
 	ERROR_EXIT(code);
 
