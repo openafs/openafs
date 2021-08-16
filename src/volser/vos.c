@@ -354,24 +354,20 @@ static afs_int32
 WriteData(struct rx_call *call, void *rock)
 {
     char *filename = (char *) rock;
-    usd_handle_t ufd;
+    usd_handle_t ufd = NULL;
     long blksize;
-    afs_int32 error, code;
-    int ufdIsOpen = 0;
+    afs_int32 error = 0;
+    afs_int32 code;
     afs_int64 currOffset;
     afs_uint32 buffer;
     afs_uint32 got;
 
-    error = 0;
-
     if (!filename || !*filename) {
 	usd_StandardInput(&ufd);
 	blksize = 4096;
-	ufdIsOpen = 1;
     } else {
 	code = usd_Open(filename, USD_OPEN_RDONLY, 0, &ufd);
 	if (code == 0) {
-	    ufdIsOpen = 1;
 	    code = USD_IOCTL(ufd, USD_IOCTL_GETBLKSIZE, &blksize);
 	}
 	if (code) {
@@ -397,11 +393,10 @@ WriteData(struct rx_call *call, void *rock)
 	goto wfail;
     }
   wfail:
-    if (ufdIsOpen) {
+    if (ufd != NULL) {
 	code = USD_CLOSE(ufd);
 	if (code) {
-	    fprintf(STDERR, "Could not close dump file %s\n",
-		    (filename && *filename) ? filename : "STDOUT");
+	    fprintf(STDERR, "Could not close dump file handle; code=%d\n", code);
 	    if (!error)
 		error = code;
 	}
@@ -458,22 +453,20 @@ static afs_int32
 DumpFunction(struct rx_call *call, void *rock)
 {
     char *filename = (char *)rock;
-    usd_handle_t ufd;		/* default is to stdout */
-    afs_int32 error = 0, code;
+    usd_handle_t ufd = NULL;
+    afs_int32 error = 0;
+    afs_int32 code;
     afs_int64 size;
     long blksize;
-    int ufdIsOpen = 0;
 
     /* Open the output file */
     if (!filename || !*filename) {
 	usd_StandardOutput(&ufd);
 	blksize = 4096;
-	ufdIsOpen = 1;
     } else {
 	code =
 	    usd_Open(filename, USD_OPEN_CREATE | USD_OPEN_RDWR, 0666, &ufd);
 	if (code == 0) {
-	    ufdIsOpen = 1;
 	    size = 0;
 	    code = USD_IOCTL(ufd, USD_IOCTL_SETSIZE, &size);
 	}
@@ -492,12 +485,10 @@ DumpFunction(struct rx_call *call, void *rock)
 	ERROR_EXIT(code);
 
   error_exit:
-    /* Close the output file */
-    if (ufdIsOpen) {
+    if (ufd != NULL) {
 	code = USD_CLOSE(ufd);
 	if (code) {
-	    fprintf(STDERR, "Could not close dump file %s\n",
-		    (filename && *filename) ? filename : "STDIN");
+	    fprintf(STDERR, "Could not close dump file handle; code=%d\n", code);
 	    if (!error)
 		error = code;
 	}
