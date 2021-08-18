@@ -372,9 +372,7 @@ WriteData(struct rx_call *call, void *rock)
     usd_handle_t ufd = NULL;
     afs_int32 error = 0;
     afs_int32 code;
-    afs_int64 currOffset;
-    afs_uint32 buffer;
-    afs_uint32 got;
+    int is_seekable = 0;
 
     if (!filename || !*filename) {
 	usd_StandardInput(&ufd);
@@ -386,16 +384,55 @@ WriteData(struct rx_call *call, void *rock)
 	    error = VOLSERBADOP;
 	    goto wfail;
 	}
-	/* test if we have a valid dump */
-	USD_SEEK(ufd, 0, SEEK_END, &currOffset);
-	USD_SEEK(ufd, currOffset - sizeof(afs_uint32), SEEK_SET, &currOffset);
-	USD_READ(ufd, (char *)&buffer, sizeof(afs_uint32), &got);
-	if ((got != sizeof(afs_uint32)) || (ntohl(buffer) != DUMPENDMAGIC)) {
-	    fprintf(STDERR, "Signature missing from end of file '%s'\n", filename);
+    }
+
+    /* Test if we have a valid dump. */
+    code = USD_IOCTL(ufd, USD_IOCTL_ISSEEKABLE, &is_seekable);
+    if (code != 0) {
+	fprintf(STDERR, "Failed to determine if '%s' is seekable; code=%d\n",
+		ufd->fullPathName, code);
+	error = code;
+	goto wfail;
+    }
+    if (is_seekable) {
+	afs_int64 offset = 0;
+	afs_uint32 magic = 0;
+	afs_uint32 got = 0;
+
+	code = USD_SEEK(ufd, 0, SEEK_END, &offset);
+	if (code != 0) {
+	    fprintf(STDERR, "Failed seek to end of '%s'; code=%d\n",
+		    ufd->fullPathName, code);
+	    error = code;
+	    goto wfail;
+	}
+	if (offset < sizeof(magic)) {
+	    fprintf(STDERR, "End of dump signature not found in '%s'.\n",
+		    ufd->fullPathName);
 	    error = VOLSERBADOP;
 	    goto wfail;
 	}
-	USD_SEEK(ufd, 0, SEEK_SET, &currOffset);
+	code = USD_SEEK(ufd, offset - sizeof(magic), SEEK_SET, &offset);
+	if (code != 0) {
+	    fprintf(STDERR, "Failed seek to dump end signature in '%s'; code=%d\n",
+		    ufd->fullPathName, code);
+	    error = code;
+	    goto wfail;
+	}
+	code = USD_READ(ufd, (char *)&magic, sizeof(magic), &got);
+	if (code != 0 || got != sizeof(magic) || ntohl(magic) != DUMPENDMAGIC) {
+	    fprintf(STDERR, "End of dump signature not found in '%s'.\n",
+		    ufd->fullPathName);
+	    error = VOLSERBADOP;
+	    goto wfail;
+	}
+	code = USD_SEEK(ufd, 0, SEEK_SET, &offset);
+	if (code != 0) {
+	    fprintf(STDERR, "Failed seek to start of '%s'; code=%d\n",
+		    ufd->fullPathName, code);
+	    error = code;
+	    goto wfail;
+	}
     }
     code = SendFile(ufd, call);
     if (code) {
