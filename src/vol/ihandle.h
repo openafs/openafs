@@ -58,8 +58,6 @@
  * IH_INC/IH_DEC - increment/decrement the link count.
  *
  * Replacements for C runtime file operations
- * FDH_READ/FDH_WRITE - read/write using the file descriptor.
- * FDH_SEEK - set file handle's read/write position
  * FDH_CLOSE - return a file descriptor to the cache
  * FDH_REALLYCLOSE - Close a file descriptor, do not return to the cache
  * FDH_SYNC - Unconditionally sync an open file.
@@ -357,8 +355,6 @@ extern int fd_blocksize(FdHandle_t *fdP, afs_sfsize_t *a_size,
 
 #define IH_COPY(D, S) ((D) = ih_copy(S))
 
-#define IH_NLINK(H) ih_nlink(H)
-
 #define IH_OPEN(H) ih_open(H)
 
 #define FDH_CLOSE(H) (fd_close(H), (H)=NULL)
@@ -366,8 +362,6 @@ extern int fd_blocksize(FdHandle_t *fdP, afs_sfsize_t *a_size,
 #define FDH_REALLYCLOSE(H) (fd_reallyclose(H), (H)=NULL)
 
 #define FDH_FDOPEN(H, A) stream_fdopen((H)->fd_fd)
-
-#define STREAM_FDOPEN(A, B) stream_fdopen(A)
 
 #define STREAM_OPEN(A, B) stream_open(A, B)
 
@@ -579,9 +573,6 @@ extern afs_sfsize_t ih_size(FD_t);
 
 #define FDH_PREAD(H, B, S, O) OS_PREAD((H)->fd_fd, B, S, O)
 #define FDH_PWRITE(H, B, S, O) OS_PWRITE((H)->fd_fd, B, S, O)
-#define FDH_READ(H, B, S) OS_READ((H)->fd_fd, B, S)
-#define FDH_WRITE(H, B, S) OS_WRITE((H)->fd_fd, B, S)
-#define FDH_SEEK(H, O, F) OS_SEEK((H)->fd_fd, O, F)
 
 #define FDH_SYNC(H) ih_fdsync(H)
 #define FDH_TRUNC(H, L) OS_TRUNC((H)->fd_fd, L)
