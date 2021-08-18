@@ -3164,6 +3164,10 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 	    exit(1);
 	}
     } else {
+	if (isatty(STDIN_FILENO)) {
+	    fprintf(STDERR, "Can't read dump from tty.\n");
+	    exit(1);
+	}
 	strcpy(afilename, "");
     }
 
@@ -3225,7 +3229,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 	    vol_elsewhere = 1;
 
 	if (aoverwrite == OVERWRITE_ASK) {
-	    if (strcmp(afilename, "") == 0) {	/* The file is from standard in */
+	    if (!isatty(STDIN_FILENO)) {
 		fprintf(STDERR,
 			"Volume exists and no -overwrite option specified; Aborting restore command\n");
 		exit(1);
