@@ -3027,10 +3027,10 @@ retry_dump:
     return 0;
 }
 
-#define ASK   0
-#define ABORT 1
-#define FULL  2
-#define INC   3
+#define OVERWRITE_ASK   0
+#define OVERWRITE_ABORT 1
+#define OVERWRITE_FULL  2
+#define OVERWRITE_INC   3
 
 #define TS_DUMP	1
 #define TS_KEEP	2
@@ -3042,7 +3042,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
     afs_uint32 avolid, aparentid;
     afs_uint32 aserver;
     afs_int32 apart, code, vcode, err;
-    afs_int32 aoverwrite = ASK;
+    afs_int32 aoverwrite = OVERWRITE_ASK;
     afs_int32 acreation = 0, alastupdate = 0;
     int restoreflags = 0;
     int readonly = 0, offline = 0, voltype = RWVOL;
@@ -3067,15 +3067,15 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
     if (as->parms[5].items) {
 	if ((strcmp(as->parms[5].items->data, "a") == 0)
 	    || (strcmp(as->parms[5].items->data, "abort") == 0)) {
-	    aoverwrite = ABORT;
+	    aoverwrite = OVERWRITE_ABORT;
 	} else if ((strcmp(as->parms[5].items->data, "f") == 0)
 		   || (strcmp(as->parms[5].items->data, "full") == 0)) {
-	    aoverwrite = FULL;
+	    aoverwrite = OVERWRITE_FULL;
 	} else if ((strcmp(as->parms[5].items->data, "i") == 0)
 		   || (strcmp(as->parms[5].items->data, "inc") == 0)
 		   || (strcmp(as->parms[5].items->data, "increment") == 0)
 		   || (strcmp(as->parms[5].items->data, "incremental") == 0)) {
-	    aoverwrite = INC;
+	    aoverwrite = OVERWRITE_INC;
 	} else {
 	    fprintf(STDERR, "vos: %s is not a valid argument to -overwrite\n",
 		    as->parms[5].items->data);
@@ -3173,7 +3173,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
     vcode = VLDB_GetEntryByName(volname, &entry);
     if (vcode) {		/* no volume - do a full restore */
 	restoreflags = RV_FULLRST;
-	if ((aoverwrite == INC) || (aoverwrite == ABORT))
+	if ((aoverwrite == OVERWRITE_INC) || (aoverwrite == OVERWRITE_ABORT))
 	    fprintf(STDERR,
 		    "Volume does not exist; Will perform a full restore\n");
     }
@@ -3181,7 +3181,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
     else if ((!readonly && Lp_GetRwIndex(&entry) == -1)	/* RW volume does not exist - do a full */
 	     ||(readonly && !Lp_ROMatch(0, 0, &entry))) {	/* RO volume does not exist - do a full */
 	restoreflags = RV_FULLRST;
-	if ((aoverwrite == INC) || (aoverwrite == ABORT))
+	if ((aoverwrite == OVERWRITE_INC) || (aoverwrite == OVERWRITE_ABORT))
 	    fprintf(STDERR,
 		    "%s Volume does not exist; Will perform a full restore\n",
 		    readonly ? "RO" : "RW");
@@ -3224,7 +3224,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 	if (!vcode || (Opart != apart))
 	    vol_elsewhere = 1;
 
-	if (aoverwrite == ASK) {
+	if (aoverwrite == OVERWRITE_ASK) {
 	    if (strcmp(afilename, "") == 0) {	/* The file is from standard in */
 		fprintf(STDERR,
 			"Volume exists and no -overwrite option specified; Aborting restore command\n");
@@ -3249,21 +3249,21 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 	    while (!(dc == EOF || dc == '\n'))
 		dc = getchar();	/* goto end of line */
 	    if ((c == 'f') || (c == 'F'))
-		aoverwrite = FULL;
+		aoverwrite = OVERWRITE_FULL;
 	    else if ((c == 'i') || (c == 'I'))
-		aoverwrite = INC;
+		aoverwrite = OVERWRITE_INC;
 	    else
-		aoverwrite = ABORT;
+		aoverwrite = OVERWRITE_ABORT;
 	}
 
-	if (aoverwrite == ABORT) {
+	if (aoverwrite == OVERWRITE_ABORT) {
 	    fprintf(STDERR, "Volume exists; Aborting restore command\n");
 	    exit(1);
-	} else if (aoverwrite == FULL) {
+	} else if (aoverwrite == OVERWRITE_FULL) {
 	    restoreflags = RV_FULLRST;
 	    fprintf(STDERR,
 		    "Volume exists; Will delete and perform full restore\n");
-	} else if (aoverwrite == INC) {
+	} else if (aoverwrite == OVERWRITE_INC) {
 	    restoreflags = 0;
 	    if (vol_elsewhere) {
 		fprintf(STDERR,
@@ -3289,7 +3289,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 	    restoreflags |= RV_CRNEW;
 	    break;
 	default:
-	    if (aoverwrite == FULL)
+	    if (aoverwrite == OVERWRITE_FULL)
 		restoreflags |= RV_CRNEW;
 	    else
 		restoreflags |= RV_CRKEEP;
