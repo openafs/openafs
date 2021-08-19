@@ -696,15 +696,25 @@ FindByName(struct vl_ctx *ctx, char *volname, struct nvlentry *tentry,
     hashindex = strlen(volname);	/* really string length */
     if (hashindex >= 8 && strcmp(volname + hashindex - 7, ".backup") == 0) {
 	/* this is a backup volume */
-	strcpy(tname, volname);
+	if (strlcpy(tname, volname, sizeof(tname)) >= sizeof(tname)) {
+	    *error = VL_BADNAME;
+	    return 0;
+	}
 	tname[hashindex - 7] = 0;	/* zap extension */
     } else if (hashindex >= 10
 	       && strcmp(volname + hashindex - 9, ".readonly") == 0) {
 	/* this is a readonly volume */
-	strcpy(tname, volname);
+	if (strlcpy(tname, volname, sizeof(tname)) >= sizeof(tname)) {
+	    *error = VL_BADNAME;
+	    return 0;
+	}
 	tname[hashindex - 9] = 0;	/* zap extension */
-    } else
-	strcpy(tname, volname);
+    } else {
+	if (strlcpy(tname, volname, sizeof(tname)) >= sizeof(tname)) {
+	    *error = VL_BADNAME;
+	    return 0;
+	}
+    }
 
     *error = 0;
     hashindex = NameHash(tname);
