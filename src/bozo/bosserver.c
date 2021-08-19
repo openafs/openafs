@@ -1202,6 +1202,15 @@ main(int argc, char **argv, char **envp)
 	exit(code);
     }
 
+    if (bozo_isrestricted) {
+	bozo_Log("NOTICE: bosserver is running in restricted mode.\n");
+    } else {
+	bozo_Log("WARNING: bosserver is not running in restricted mode.\n");
+	bozo_Log("WARNING: Superusers have unrestricted access to this host via bos.\n");
+	bozo_Log("WARNING: Use 'bos setrestricted' or restart with the -restricted option\n");
+	bozo_Log("WARNING: to enable restricted mode.\n");
+    }
+
     if (rxBind) {
 	host = GetRxBindAddress();
     }
