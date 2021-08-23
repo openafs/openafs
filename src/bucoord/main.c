@@ -343,7 +343,7 @@ struct Lock dispatchLock;	/* lock on the Dispatch call */
 
 afs_int32
 doDispatch(afs_int32 targc,
-	   char *targv[MAXV],
+	   char *targv[],
 	   afs_int32 dispatchCount) /* to prevent infinite recursion */
 {
     char *sargv[MAXV];
