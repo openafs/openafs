@@ -626,6 +626,7 @@ CheckEntry(struct cmd_syndesc *as, void *arock)
     idlist ids;
     idlist lids;
     struct prcheckentry aentry;
+    prname admins = "system:administrators";
 
     if (GetNameOrId(as, &ids, &names))
 	return PRBADARG;
@@ -691,7 +692,7 @@ CheckEntry(struct cmd_syndesc *as, void *arock)
 	}
 	if (aentry.id == SYSADMINID)
 	    admin = 1;
-	else if (!pr_IsAMemberOf(aentry.name, "system:administrators", &flag)) {
+	else if (!pr_IsAMemberOf(aentry.name, admins, &flag)) {
 	    if (flag)
 		admin = 1;
 	}
@@ -754,11 +755,12 @@ ChownGroup(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     char *name;
+    prname newname = "";
     char *owner;
 
     name = as->parms[0].items->data;
     owner = as->parms[1].items->data;
-    code = pr_ChangeEntry(name, "", 0, owner);
+    code = pr_ChangeEntry(name, newname, 0, owner);
     if (code)
 	afs_com_err(whoami, code, "; unable to change owner of %s to %s", name,
 		owner);
@@ -771,10 +773,11 @@ ChangeName(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     char *oldname;
     char *newname;
+    prname owner = "";
 
     oldname = as->parms[0].items->data;
     newname = as->parms[1].items->data;
-    code = pr_ChangeEntry(oldname, newname, 0, "");
+    code = pr_ChangeEntry(oldname, newname, 0, owner);
     if (code)
 	afs_com_err(whoami, code, "; unable to change name of %s to %s", oldname,
 		newname);

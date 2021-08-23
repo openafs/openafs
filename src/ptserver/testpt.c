@@ -217,7 +217,7 @@ void
 CreateUser(int u)
 {
     afs_int32 code;
-    char name[16];
+    prname name;
     afs_int32 id;
 
     sprintf(name, "%s%d", createPrefix, u);
