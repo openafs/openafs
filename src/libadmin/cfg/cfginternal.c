@@ -348,7 +348,7 @@ cfgutil_HostNameGetCellServDbAlias(const char *fsDbHost, const char *hostName,
 		short dbhostFound = 0;
 
 		while (!dbhostDone) {
-		    short isAlias;
+		    short isAlias = 0;
 
 		    if (!bos_HostGetNext(dbIter, hostNameAlias, &tst2)) {
 			/* no more entries (or failure) */
@@ -357,15 +357,15 @@ cfgutil_HostNameGetCellServDbAlias(const char *fsDbHost, const char *hostName,
 			}
 			dbhostDone = 1;
 
-		    } else
-			if (!cfgutil_HostNameIsAlias
-			    (hostName, hostNameAlias, &isAlias, &tst2)) {
-			tst = tst2;
-			dbhostDone = 1;
-
-		    } else if (isAlias) {
-			dbhostFound = 1;
-			dbhostDone = 1;
+		    } else {
+			if (!cfgutil_HostNameIsAlias(hostName, hostNameAlias,
+						     &isAlias, &tst2)) {
+			    tst = tst2;
+			    dbhostDone = 1;
+			} else if (isAlias) {
+			    dbhostFound = 1;
+			    dbhostDone = 1;
+			}
 		    }
 		}
 
