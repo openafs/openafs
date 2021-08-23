@@ -281,23 +281,16 @@ inode_write(afs_int32 dev, Inode inode, afs_int32 inode_p1,
 }
 
 
-/* PrintInode
+/**
+ * Format a string to print either 32 or 64 bit inode numbers.
  *
- * returns a static string used to print either 32 or 64 bit inode numbers.
+ * @param[out]  s    string buffer
+ * @param[in]   ino  inode number
+ * @returns pointer to formatted inode number string
  */
-#ifdef AFS_64BIT_IOPS_ENV
-char *
-PrintInode(char *s, Inode ino)
-#else
 char *
 PrintInode(afs_ino_str_t s, Inode ino)
-#endif
 {
-    static afs_ino_str_t result;
-
-    if (!s)
-	s = result;
-
 #ifdef AFS_64BIT_IOPS_ENV
     (void)sprintf((char *)s, "%llu", ino);
 #else
