@@ -88,14 +88,9 @@ extern int afs_init_kernel_config(int flag);
 #define AFS_INO_STR_LENGTH 32
 typedef char afs_ino_str_t[AFS_INO_STR_LENGTH];
 
-/* Print either 32 or 64 bit inode numbers. char * may be NULL. In which case
- * a local statis is returned.
+/* Format either 32 or 64 bit inode numbers.
  */
-#ifdef AFS_64BIT_IOPS_ENV
-extern char *PrintInode(afs_ino_str_t, Inode);
-#else
-extern char *PrintInode();
-#endif
+extern char *PrintInode(afs_ino_str_t s, Inode ino) AFS_NONNULL((1));
 
 /* Some places in the code assume icreate can return 0 when there's
  * an error.

@@ -331,6 +331,7 @@ ReadHdr1(struct VolInfoOpt *opt, IHandle_t * ih, char *to, afs_sfsize_t size,
     struct versionStamp *vsn;
     int bad = 0;
     int code;
+    afs_ino_str_t inode_str;
 
     vsn = (struct versionStamp *)to;
 
@@ -341,7 +342,7 @@ ReadHdr1(struct VolInfoOpt *opt, IHandle_t * ih, char *to, afs_sfsize_t size,
     if (vsn->magic != magic) {
 	bad++;
 	fprintf(stderr, "%s: Inode %s: Bad magic %x (%x): IGNORED\n",
-		progname, PrintInode(NULL, ih->ih_ino), vsn->magic, magic);
+		progname, PrintInode(inode_str, ih->ih_ino), vsn->magic, magic);
     }
 
     /* Check is conditional, in case caller wants to inspect version himself */
@@ -349,23 +350,23 @@ ReadHdr1(struct VolInfoOpt *opt, IHandle_t * ih, char *to, afs_sfsize_t size,
 	bad++;
 	fprintf(stderr, "%s: Inode %s: Bad version %x (%x): IGNORED\n",
 		progname,
-		PrintInode(NULL, ih->ih_ino), vsn->version, version);
+		PrintInode(inode_str, ih->ih_ino), vsn->version, version);
     }
     if (bad && opt->fixHeader) {
 	vsn->magic = magic;
 	vsn->version = version;
 	printf("Special index inode %s has a bad header. Reconstructing...\n",
-	       PrintInode(NULL, ih->ih_ino));
+	       PrintInode(inode_str, ih->ih_ino));
 	code = IH_IWRITE(ih, 0, to, size);
 	if (code != size) {
 	    fprintf(stderr,
 		    "%s: Write failed for inode %s; header left in damaged state\n",
-		    progname, PrintInode(NULL, ih->ih_ino));
+		    progname, PrintInode(inode_str, ih->ih_ino));
 	}
     }
     if (!bad && opt->dumpInfo) {
 	printf("Inode %s: Good magic %x and version %x\n",
-	       PrintInode(NULL, ih->ih_ino), magic, version);
+	       PrintInode(inode_str, ih->ih_ino), magic, version);
     }
     return 0;
 }
@@ -887,6 +888,7 @@ HandleSpecialFile(struct VolInfoOpt *opt, const char *name, struct DiskPartition
     afs_sfsize_t size = -1;
     IHandle_t *ih = NULL;
     FdHandle_t *fdP = NULL;
+    afs_ino_str_t inode_str;
 #ifdef AFS_NAMEI_ENV
     namei_t filename;
 #endif /* AFS_NAMEI_ENV */
@@ -912,7 +914,7 @@ HandleSpecialFile(struct VolInfoOpt *opt, const char *name, struct DiskPartition
 
   error:
     if (opt->dumpInfo) {
-	printf("\t%s inode\t= %s (size = ", name, PrintInode(NULL, inode));
+	printf("\t%s inode\t= %s (size = ", name, PrintInode(inode_str, inode));
 	if (size != -1) {
 	    printf("%lld)\n", size);
 	} else {
@@ -1241,6 +1243,7 @@ volinfo_SaveInode(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
     afs_foff_t total;
     ssize_t len;
     Inode ino = VNDISK_GET_INO(vdp->vnode);
+    afs_ino_str_t inode_str;
 
     if (!VALID_INO(ino)) {
 	return;
@@ -1251,10 +1254,10 @@ volinfo_SaveInode(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
     if (fdP == NULL) {
 	fprintf(stderr,
 		"%s: Can't open inode %s error %d (ignored)\n",
-		progname, PrintInode(NULL, ino), errno);
+		progname, PrintInode(inode_str, ino), errno);
 	return;
     }
-    snprintf(nfile, sizeof nfile, "TmpInode.%s", PrintInode(NULL, ino));
+    snprintf(nfile, sizeof nfile, "TmpInode.%s", PrintInode(inode_str, ino));
     ofd = afs_open(nfile, O_CREAT | O_RDWR | O_TRUNC, 0600);
     if (ofd < 0) {
 	fprintf(stderr,
@@ -1276,7 +1279,7 @@ volinfo_SaveInode(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
 	    unlink(nfile);
 	    fprintf(stderr,
 		    "%s: Error while reading from inode %s (%d)\n",
-		    progname, PrintInode(NULL, ino), errno);
+		    progname, PrintInode(inode_str, ino), errno);
 	    return;
 	}
 	if (len == 0)
@@ -1299,7 +1302,7 @@ volinfo_SaveInode(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
     IH_RELEASE(ih);
     close(ofd);
     printf("... Copied inode %s to file %s (%lu bytes)\n",
-	   PrintInode(NULL, ino), nfile, (unsigned long)total);
+	   PrintInode(inode_str, ino), nfile, (unsigned long)total);
 }
 
 /**
@@ -1812,6 +1815,7 @@ volinfo_PrintVnode(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
     VnodeDiskObject *vnode = vdp->vnode;
     afs_fsize_t fileLength;
     Inode ino;
+    afs_ino_str_t inode_str;
 
     ino = VNDISK_GET_INO(vnode);
     VNDISK_GET_LEN(fileLength, vnode);
@@ -1828,7 +1832,7 @@ volinfo_PrintVnode(struct VolInfoOpt *opt, struct VnodeDetails *vdp)
 	 vnode->dataVersion, vnode->cloned, (afs_uintmax_t) fileLength,
 	 vnode->linkCount, vnode->parent);
     if (opt->dumpInodeNumber)
-	printf(" inode: %s", PrintInode(NULL, ino));
+	printf(" inode: %s", PrintInode(inode_str, ino));
     if (opt->dumpDate)
 	printf(" ServerModTime: %s", date(vnode->serverModifyTime));
 #if defined(AFS_NAMEI_ENV)

@@ -3271,19 +3271,17 @@ namei_ConvertROtoRWvolume(char *pname, VolumeId volumeId)
     return code;
 }
 
-/* PrintInode
+/**
+ * Format a string to print inode numbers.
  *
- * returns a static string used to print either 32 or 64 bit inode numbers.
+ * @param[out]  s    string buffer
+ * @param[in]   ino  inode number
+ * @returns pointer to formatted inode number string
  */
 char *
-PrintInode(char *s, Inode ino)
+PrintInode(afs_ino_str_t s, Inode ino)
 {
-    static afs_ino_str_t result;
-    if (!s)
-	s = result;
-
     snprintf(s, sizeof(afs_ino_str_t), "%llu", (afs_uintmax_t) ino);
-
     return s;
 }
 

@@ -37,6 +37,7 @@ main(argc, argv)
     int fd, n;
     struct stat status;
     Inode ino;
+    afs_ino_str_t inode_str;
 
     if (argc != 3)
 	Usage();
@@ -54,7 +55,7 @@ main(argc, argv)
     }
     printf("ino=%" AFS_INT64_FMT "\n", ino);
     printf("About to iopen(dev=(%d,%d), inode=%s, mode=%d\n",
-	   major(status.st_dev), minor(status.st_dev), PrintInode(NULL, ino),
+	   major(status.st_dev), minor(status.st_dev), PrintInode(inode_str, ino),
 	   O_RDONLY);
     fflush(stdout);
     fd = IOPEN(status.st_dev, ino, O_RDONLY);
