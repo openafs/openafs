@@ -76,7 +76,7 @@ extern afs_int32 AddToEntry(struct ubik_trans *tt, struct prentry *entry,
 			    afs_int32 loc, afs_int32 aid);
 extern int AccessOK(struct ubik_trans *ut, afs_int32 cid,
 		    struct prentry *tentry, int mem, int any);
-extern afs_int32 CreateEntry(struct ubik_trans *at, char aname[],
+extern afs_int32 CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN],
 			     afs_int32 *aid, afs_int32 idflag,
 			     afs_int32 flag, afs_int32 oid, afs_int32 creator);
 extern afs_int32 RemoveFromEntry(struct ubik_trans *at, afs_int32 aid,
