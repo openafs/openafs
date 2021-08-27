@@ -198,7 +198,6 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
 	     afs_ucred_t *acred, int noLock)
 {
     afs_size_t totalLength;
-    afs_size_t transferLength;
     afs_size_t filePos;
     afs_size_t offset, len;
     afs_int32 tlen;
@@ -232,7 +231,6 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
     totalLength = AFS_UIO_RESID(auio);
     filePos = AFS_UIO_OFFSET(auio);
     error = 0;
-    transferLength = 0;
     afs_Trace4(afs_iclSetp, CM_TRACE_WRITE, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos), ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(totalLength), ICL_TYPE_OFFSET,
@@ -358,7 +356,6 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
 		tdc->validPos = filePos + len;
 	}
 	totalLength -= len;
-	transferLength += len;
 	filePos += len;
 #if defined(AFS_SGI_ENV)
 	/* afs_xwrite handles setting m.Length */

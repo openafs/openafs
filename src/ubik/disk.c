@@ -680,11 +680,10 @@ udisk_read(struct ubik_trans *atrans, afs_int32 afile, void *abuffer,
 	   afs_int32 apos, afs_int32 alen)
 {
     char *bp;
-    afs_int32 offset, len, totalLen;
+    afs_int32 offset, len;
 
     if (atrans->flags & TRDONE)
 	return UDONE;
-    totalLen = 0;
     while (alen > 0) {
 	bp = DRead(atrans, afile, apos >> UBIK_LOGPAGESIZE);
 	if (!bp)
@@ -698,7 +697,6 @@ udisk_read(struct ubik_trans *atrans, afs_int32 afile, void *abuffer,
 	abuffer = (char *)abuffer + len;
 	apos += len;
 	alen -= len;
-	totalLen += len;
 	DRelease(bp, 0);
     }
     return 0;
@@ -746,7 +744,7 @@ udisk_write(struct ubik_trans *atrans, afs_int32 afile, void *abuffer,
 	    afs_int32 apos, afs_int32 alen)
 {
     char *bp;
-    afs_int32 offset, len, totalLen;
+    afs_int32 offset, len;
     struct ubik_trunc *tt;
     afs_int32 code;
 
@@ -769,7 +767,6 @@ udisk_write(struct ubik_trans *atrans, afs_int32 afile, void *abuffer,
     }
 
     /* now update vm */
-    totalLen = 0;
     while (alen > 0) {
 	bp = DRead(atrans, afile, apos >> UBIK_LOGPAGESIZE);
 	if (!bp) {
@@ -786,7 +783,6 @@ udisk_write(struct ubik_trans *atrans, afs_int32 afile, void *abuffer,
 	abuffer = (char *)abuffer + len;
 	apos += len;
 	alen -= len;
-	totalLen += len;
 	DRelease(bp, 1);	/* buffer modified */
     }
     return 0;

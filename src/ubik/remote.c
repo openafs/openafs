@@ -472,7 +472,6 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     afs_int32 code;
     struct ubik_dbase *dbase = NULL;
     char tbuffer[1024];
-    afs_int32 offset;
     struct ubik_version tversion;
     int tlen;
     struct rx_peer *tpeer;
@@ -526,7 +525,6 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     ViceLog(0, ("Ubik: Synchronize database: receive (via SendFile) from server %s begin\n",
 	       afs_inet_ntoa_r(otherHost, hoststr)));
 
-    offset = 0;
     UBIK_VERSION_LOCK;
     epoch = tversion.epoch = 0;		/* start off by labelling in-transit db as invalid */
     (*dbase->setlabel) (dbase, file, &tversion);	/* setlabel does sync */
@@ -570,7 +568,6 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 	    close(fd);
 	    goto failed;
 	}
-	offset += tlen;
 	length -= tlen;
     }
     code = close(fd);
