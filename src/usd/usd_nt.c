@@ -154,12 +154,13 @@ usd_DeviceIoctl(usd_handle_t usd, int req, void *arg)
     DWORD result;
     DWORD hiPart;
     int code = 0;
+    int mode = 0;
+    int seekable = 0;
 
     switch (req) {
     case USD_IOCTL_GETTYPE:
+    case USD_IOCTL_ISSEEKABLE:
 	{
-	    int mode;
-
 	    BY_HANDLE_FILE_INFORMATION info;
 	    DISK_GEOMETRY geom;
 	    DWORD nbytes;
@@ -174,7 +175,6 @@ usd_DeviceIoctl(usd_handle_t usd, int req, void *arg)
 		 sizeof(geom), &nbytes, NULL))
 		diskError = GetLastError();
 
-	    mode = 0;
 	    if ((fileError == ERROR_INVALID_PARAMETER
 		 || fileError == ERROR_INVALID_FUNCTION)
 		&& diskError == 0) {
@@ -199,9 +199,10 @@ usd_DeviceIoctl(usd_handle_t usd, int req, void *arg)
 			k = (afs_uint32) size;
 		    usd->privateData = (void *)k;
 		}
-	    } else if (diskError == ERROR_INVALID_PARAMETER && fileError == 0)
+	    } else if (diskError == ERROR_INVALID_PARAMETER && fileError == 0) {
 		mode = S_IFREG;	/* a regular file */
-	    else {
+		seekable = 1;
+	    } else {
 		/* check to see if device is a tape drive */
 		result = GetTapeStatus(fd);
 
@@ -214,9 +215,14 @@ usd_DeviceIoctl(usd_handle_t usd, int req, void *arg)
 
 	    if (!mode)
 		return EINVAL;
-	    *(int *)arg = mode;
-	    return 0;
 	}
+	break;
+    }
+
+    switch (req) {
+    case USD_IOCTL_GETTYPE:
+	*(int *)arg = mode;
+	break;
 
     case USD_IOCTL_GETDEV:
 	return EINVAL;
@@ -371,6 +377,10 @@ usd_DeviceIoctl(usd_handle_t usd, int req, void *arg)
     case USD_IOCTL_GETBLKSIZE:
 	*((long *)arg) = (long)4096;
 	return 0;
+
+    case USD_IOCTL_ISSEEKABLE:
+	*(int *)arg = seekable;
+	break;
 
     default:
 	return EINVAL;

@@ -137,6 +137,7 @@ usd_FileIoctl(usd_handle_t usd, int req, void *arg)
     case USD_IOCTL_GETTYPE:
     case USD_IOCTL_GETDEV:
     case USD_IOCTL_GETSIZE:
+    case USD_IOCTL_ISSEEKABLE:
 #ifdef O_LARGEFILE
 	code = fstat64(fd, &info);
 #else /* O_LARGEFILE */
@@ -255,6 +256,11 @@ usd_FileIoctl(usd_handle_t usd, int req, void *arg)
 #else /* AFS_AIX_ENV */
 	*((long *)arg) = (long)info.st_blksize;
 #endif /* AFS_AIX_ENV */
+	break;
+
+    case USD_IOCTL_ISSEEKABLE:
+	*(int *)arg = !S_ISFIFO(info.st_mode) && !S_ISSOCK(info.st_mode)
+		      && !S_ISCHR(info.st_mode);
 	break;
 
     default:

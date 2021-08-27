@@ -139,6 +139,11 @@ extern int usd_StandardOutput(usd_handle_t * usdP);
 
 #define USD_IOCTL_GETBLKSIZE	9
 
+/*
+ * IsSeekable(int *arg) -- returns non-zero if USD_SEEK() can be used.
+ */
+#define USD_IOCTL_ISSEEKABLE   10
+
 typedef struct {
     int tp_op;			/* tape operation */
     int tp_count;		/* tape operation count argument */
