@@ -3490,7 +3490,7 @@ UV_SyncServer(afs_cell_handle_p cellHandle, struct rx_connection *server,
     int rc = 0;
     afs_status_t tst = 0;
     int noError;
-    afs_int32 nentries, tentries = 0;
+    afs_int32 nentries;
     struct VldbListByAttributes attributes;
     nbulkentries arrayEntries;
     int totalF;
@@ -3519,7 +3519,6 @@ UV_SyncServer(afs_cell_handle_p cellHandle, struct rx_connection *server,
 	    goto fail_UV_SyncServer;
 	}
 	nsi = -1;
-	tentries += nentries;
 	totalF = 0;
 	for (j = 0; j < nentries; j++) {	/* process each entry */
 	    vllist = &arrayEntries.nbulkentries_val[j];

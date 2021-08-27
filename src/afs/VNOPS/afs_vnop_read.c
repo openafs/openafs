@@ -46,7 +46,6 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
 	 int noLock)
 {
     afs_size_t totalLength;
-    afs_size_t transferLength;
     afs_size_t filePos;
     afs_size_t offset, tlen;
     afs_size_t len = 0;
@@ -96,7 +95,6 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
 	       totalLength, ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(avc->f.m.Length));
     error = 0;
-    transferLength = 0;
     if (!noLock)
 	ObtainReadLock(&avc->lock);
 #if	defined(AFS_TEXT_ENV) && !defined(AFS_VM_RDWR_ENV)
@@ -352,7 +350,6 @@ afs_read(struct vcache *avc, struct uio *auio, afs_ucred_t *acred,
 	trimlen = len;
 	afsio_skip(auio, trimlen);	/* update input uio structure */
 	totalLength -= len;
-	transferLength += len;
 	filePos += len;
 
 	if (len <= 0)
