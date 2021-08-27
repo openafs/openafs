@@ -2996,6 +2996,11 @@ DumpVolumeCmd(struct cmd_syndesc *as, void *arock)
     if (as->parms[2].items) {
 	filename = as->parms[2].items->data;
     } else {
+	if (isatty(STDOUT_FILENO)) {
+	    fprintf(STDERR, "Refusing to dump volume to a tty. Either redirect "
+			    "stdout, or specify a path with -file.\n");
+	    exit(1);
+	}
 	filename = "";
     }
 
