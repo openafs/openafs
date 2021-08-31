@@ -168,13 +168,14 @@ MakeDirParents(const char *adir, int areqPerm)
 
     tdir = strdup(adir);
     if (!tdir) {
-	return ENOMEM;
+	error = ENOMEM;
+	goto done;
     }
 
     /* strip trailing slashes */
     len = strlen(tdir);
     if (!len) {
-	return 0;
+	goto done;
     }
     p = tdir + len - 1;
     while (p != tdir && *p == PATH_DELIM) {

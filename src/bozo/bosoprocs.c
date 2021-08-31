@@ -430,12 +430,10 @@ SBOZO_GetCellName(struct rx_call *acall, char **aname)
     char tname[MAXCELLCHARS];
 
     code = afsconf_GetLocalCell(bozo_confdir, tname, sizeof(tname));
-    if (code) {
-	/* must set output parameters even if aborting */
-	*aname = malloc(1);
-	**aname = 0;
-    } else {
+    if (code == 0) {
 	*aname = strdup(tname);
+	if (*aname == NULL)
+	    code = ENOMEM;
     }
 
     return code;
