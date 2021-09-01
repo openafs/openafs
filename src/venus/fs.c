@@ -1733,6 +1733,7 @@ GetLastComponent(const char *data, char **outdir, char **outbase,
     int link_chars_read;	/*Num chars read in readlink() */
     char *dirname = NULL;
     char *basename = NULL;
+    size_t len;
 
     *outbase = NULL;
     *outdir = NULL;
@@ -1784,6 +1785,13 @@ GetLastComponent(const char *data, char **outdir, char **outbase,
      } else {
 	strcpy(true_name, orig_name);
      }
+
+    /* Trim trailing slashes, if any. */
+    len = strlen(true_name);
+    while (len > 1 && true_name[len - 1] == '/') {
+	true_name[len - 1 ] = '\0';
+	len--;
+    }
 
     /* Find rightmost slash, if any. */
     lastSlash = strrchr(true_name, '/');
