@@ -1847,8 +1847,15 @@ Initdb(void)
 #define InitialGroup(id,name) do {    \
     afs_int32 temp = (id);		      \
     afs_int32 flag = (id) < 0 ? PRGRP : 0; \
+    char tname[PR_MAXNAMELEN]; \
+    if (strlcpy(tname, (name), sizeof(tname)) >= sizeof(tname)) { \
+	code = PRBADNAM; \
+	afs_com_err (whoami, code, "name too long %s", (name)); \
+	ubik_AbortTrans(tt);	      \
+	return code;		      \
+    } \
     code = CreateEntry		      \
-	(tt, (name), &temp, /*idflag*/1, flag, SYSADMINID, SYSADMINID); \
+	(tt, tname, &temp, /*idflag*/1, flag, SYSADMINID, SYSADMINID); \
     if (code) {			      \
 	afs_com_err (whoami, code, "couldn't create %s with id %di.", 	\
 		 (name), (id));	      \
