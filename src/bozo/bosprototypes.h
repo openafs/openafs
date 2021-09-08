@@ -17,6 +17,7 @@ int bnode_CoreName(struct bnode *abnode, char *acoreName, char *abuffer);
 int bnode_GetString(struct bnode *abnode, char **adesc);
 int bnode_GetParm(struct bnode *abnode, afs_int32 aindex, char **aparm);
 int bnode_GetStat(struct bnode *abnode, afs_int32 * astatus);
+int bnode_GetNotifier(struct bnode *abnode, char **anotifier);
 int bnode_RestartP(struct bnode *abnode);
 int bnode_HasCore(struct bnode *abnode);
 int bnode_WaitAll(void);

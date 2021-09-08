@@ -1416,15 +1416,7 @@ SBOZO_GetInstanceParm(struct rx_call *acall,
 
     bnode_Hold(tb);
     if (anum == 999) {
-	if (tb->notifier == NULL) {
-	    code = BZNOENT;
-	} else {
-	    *aparm = strdup(tb->notifier);
-	    if (*aparm == NULL)
-		code = BZIO;
-	    else
-		code = 0;
-	}
+	code = bnode_GetNotifier(tb, aparm);
     } else {
 	code = bnode_GetParm(tb, anum, aparm);
     }

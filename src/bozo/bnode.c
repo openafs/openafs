@@ -176,6 +176,17 @@ bnode_GetStat(struct bnode *abnode, afs_int32 * astatus)
 }
 
 int
+bnode_GetNotifier(struct bnode *abnode, char **anotifier)
+{
+    if (abnode->notifier == NULL)
+	return BZNOENT;
+    *anotifier = strdup(abnode->notifier);
+    if (*anotifier == NULL)
+	return BZIO;
+    return 0;
+}
+
+int
 bnode_RestartP(struct bnode *abnode)
 {
     return BOP_RESTARTP(abnode);
