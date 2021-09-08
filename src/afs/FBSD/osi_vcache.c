@@ -13,6 +13,12 @@
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
 
+#if __FreeBSD_version >= 1100095
+# define HAVE_VREFL 1
+#else
+# define HAVE_VREFL 0
+#endif
+
 int
 osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
 {
@@ -126,6 +132,24 @@ osi_PostPopulateVCache(struct vcache *avc)
     vSetType(avc, VREG);
 }
 
+#if HAVE_VREFL
+int
+osi_vnhold(struct vcache *avc)
+{
+    struct vnode *vp = AFSTOV(avc);
+
+    VI_LOCK(vp);
+    if ((vp->v_iflag & VI_DOOMED) != 0) {
+	VI_UNLOCK(vp);
+	return ENOENT;
+    }
+
+    vrefl(vp);
+
+    VI_UNLOCK(vp);
+    return 0;
+}
+#else
 int
 osi_vnhold(struct vcache *avc)
 {
@@ -142,3 +166,4 @@ osi_vnhold(struct vcache *avc)
     VI_UNLOCK(vp);
     return 0;
 }
+#endif /* HAVE_VREFL */
