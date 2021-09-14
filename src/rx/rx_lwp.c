@@ -385,12 +385,12 @@ rxi_Listen(osi_socket sock)
      */
     if (fcntl(sock, F_SETFL, FNDELAY) == -1) {
 	perror("fcntl");
-	(osi_Msg "rxi_Listen: unable to set non-blocking mode on socket\n");
+	osi_Msg("rxi_Listen: unable to set non-blocking mode on socket\n");
 	return -1;
     }
 
     if (sock > FD_SETSIZE - 1) {
-	(osi_Msg "rxi_Listen: socket descriptor > (FD_SETSIZE-1) = %d\n",
+	osi_Msg("rxi_Listen: socket descriptor > (FD_SETSIZE-1) = %d\n",
 	 FD_SETSIZE - 1);
 	return -1;
     }
@@ -442,7 +442,7 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 
 	if (!sfds) {
 	    if (!(sfds = IOMGR_AllocFDSet())) {
-		(osi_Msg "rx failed to alloc fd_set: ");
+		osi_Msg("rx failed to alloc fd_set: ");
 		perror("rx_sendmsg");
 		err = ENOMEM;
 		goto error;
@@ -461,7 +461,7 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	if (err != EWOULDBLOCK && err != ENOBUFS)
 #endif
 	{
-	    (osi_Msg "rx failed to send packet: ");
+	    osi_Msg("rx failed to send packet: ");
 	    perror("rx_sendmsg");
 	    goto error;
 	}

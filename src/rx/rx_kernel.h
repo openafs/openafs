@@ -58,13 +58,6 @@ extern void osi_Panic(char *fmt, ...)
     (void)((exp) || (osi_AssertFailK( #exp , __FILE__, __LINE__), 0))
 #endif
 
-#ifdef AFS_LINUX_ENV
-# define	osi_Msg printk)(
-#else
-# define	osi_Msg printf)(
-#endif
-#define osi_VMsg vprintf)(
-
 #define	osi_YieldIfPossible()
 #define	osi_WakeupAndYieldIfPossible(x)	    rx_Wakeup(x)
 
