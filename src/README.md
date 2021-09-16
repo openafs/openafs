@@ -166,7 +166,6 @@ longer actively maintained.
 
 | directory | description |
 | --------- | ----------- |
-| afsinstall | Installation scripts and notes from IBM AFS |
 | afsweb    | Authenticated AFS access for older versions of Apache |
 | JAVA      | Java API library for OpenAFS development |
 | kauth     | Obsolete Kerberos-4 server (`kaserver`) and related programs |
