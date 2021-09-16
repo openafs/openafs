@@ -43,34 +43,15 @@ afs_int32 afs_gcpags_procsize = 0;
 
 afs_int32 afs_CheckServerDaemonStarted = 0;
 #ifndef DEFAULT_PROBE_INTERVAL
-#define DEFAULT_PROBE_INTERVAL 30	/* default to 3 min */
+#define DEFAULT_PROBE_INTERVAL 30
 #endif
 afs_int32 afs_probe_interval = DEFAULT_PROBE_INTERVAL;
 afs_int32 afs_probe_all_interval = 600;
-afs_int32 afs_nat_probe_interval = 60;
 afs_int32 afs_preCache = 0;
 
 #define PROBE_WAIT() (1000 * (afs_probe_interval - ((afs_random() & 0x7fffffff) \
 		      % (afs_probe_interval/2))))
 
-void
-afs_SetCheckServerNATmode(int isnat)
-{
-    static afs_int32 old_intvl, old_all_intvl;
-    static int wasnat;
-
-    if (isnat && !wasnat) {
-	old_intvl = afs_probe_interval;
-	old_all_intvl = afs_probe_all_interval;
-	afs_probe_interval = afs_nat_probe_interval;
-	afs_probe_all_interval = afs_nat_probe_interval;
-	afs_osi_CancelWait(&AFS_CSWaitHandler);
-    } else if (!isnat && wasnat) {
-	afs_probe_interval = old_intvl;
-	afs_probe_all_interval = old_all_intvl;
-    }
-    wasnat = isnat;
-}
 
 void
 afs_CheckServerDaemon(void)

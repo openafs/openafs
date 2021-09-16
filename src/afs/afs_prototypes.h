@@ -221,7 +221,6 @@ extern struct brequest *afs_BQueue(short aopcode,
 				   afs_size_t asparm0, afs_size_t asparm1,
 				   void *apparm0, void *apparm1,
 				   void *apparm2);
-extern void afs_SetCheckServerNATmode(int isnat);
 extern void afs_CheckServerDaemon(void);
 extern int afs_CheckRootVolume(void);
 extern void afs_BRelease(struct brequest *ab);
