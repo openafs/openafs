@@ -48,7 +48,7 @@ ubik_magic is a global constant, 0x00354545.
 padding is an unused field and should always be zeros.
 
 header_size is the length of the reserved space for the ubik header,
-and will always be 0x64.
+and will always be 0x40.
 
 epoch is the ubik epoch.
 
