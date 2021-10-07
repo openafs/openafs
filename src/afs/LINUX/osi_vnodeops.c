@@ -26,6 +26,7 @@
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
 #include <linux/mm.h>
+#include <linux/buffer_head.h>
 #ifdef HAVE_MM_INLINE_H
 #include <linux/mm_inline.h>
 #endif
@@ -3287,6 +3288,7 @@ static struct address_space_operations afs_file_aops = {
   .readpage =		afs_linux_readpage,
   .readpages = 		afs_linux_readpages,
   .writepage =		afs_linux_writepage,
+  .set_page_dirty =	__set_page_dirty_buffers,
 #if defined (STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_WRITE_BEGIN)
   .write_begin =        afs_linux_write_begin,
   .write_end =          afs_linux_write_end,
