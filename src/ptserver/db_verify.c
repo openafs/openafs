@@ -1454,7 +1454,7 @@ main(int argc, char *argv[])
     cmd_AddParm(ts, "-uheader", CMD_FLAG, CMD_OPTIONAL,
 		"Display UBIK header");
     cmd_AddParm(ts, "-pheader", CMD_FLAG, CMD_OPTIONAL,
-		"Display KADB header");
+		"Display PRDB header");
     cmd_AddParm(ts, "-entries", CMD_FLAG, CMD_OPTIONAL, "Display entries");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose");
     cmd_AddParm(ts, "-rebuild", CMD_SINGLE, CMD_OPTIONAL | CMD_HIDE,
