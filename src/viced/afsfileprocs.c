@@ -2310,6 +2310,12 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
 	     Fid->Volume, Fid->Vnode, Fid->Unique, inet_ntoa(logHostAddr),
 	     ntohs(rxr_PortOf(tcon)), t_client->z.ViceId));
 
+    /* Avoid signed integer complications later. */
+    if (Pos < 0 || Len < 0 || Len >= MAX_AFS_INT64 - Pos) {
+	errorCode = EFBIG;
+	goto Bad_FetchData;
+    }
+
     queue_NodeInit(&tcbv);
     tcbv.call = acall;
     cbv = &tcbv;
