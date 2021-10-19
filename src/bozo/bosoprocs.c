@@ -1152,7 +1152,7 @@ eifunc(struct bnode *abnode, void *param)
 
     if (arock->counter-- == 0) {
 	/* done */
-	strcpy(arock->iname, abnode->name);
+	arock->iname = strdup(abnode->name);
 	return 1;
     } else {
 	/* not there yet */
@@ -1234,15 +1234,16 @@ SBOZO_EnumerateInstance(struct rx_call *acall, afs_int32 anum,
     if (anum < 0)
 	return BZDOM;
 
-    *ainstance = malloc(BOZO_BSSIZE);
-    **ainstance = 0;
     tdata.counter = anum;
-    tdata.iname = *ainstance;
+    tdata.iname = NULL;
     bnode_ApplyInstance(eifunc, &tdata);
     if (tdata.counter >= 0)
 	return BZDOM;		/* anum > # of actual instances */
-    else
-	return 0;
+    if (tdata.iname == NULL)
+	return BZIO;
+
+    *ainstance = tdata.iname;
+    return 0;
 }
 
 struct bozo_bosEntryStats bozo_bosEntryStats[] = {
@@ -1375,14 +1376,15 @@ SBOZO_GetInstanceInfo(IN struct rx_call *acall,
     struct bnode *tb;
 
     tb = bnode_FindInstance(ainstance);
-    *atype = malloc(BOZO_BSSIZE);
-    **atype = 0;
     if (!tb)
 	return BZNOENT;
     if (tb->type)
-	strcpy(*atype, tb->type->name);
+	*atype = strdup(tb->type->name);
     else
-	(*atype)[0] = 0;	/* null string */
+	*atype = strdup("");
+    if (*atype == NULL)
+	return BZIO;
+
     memset(astatus, 0, sizeof(struct bozo_status));	/* good defaults */
     astatus->goal = tb->goal;
     astatus->fileGoal = tb->fileGoal;
