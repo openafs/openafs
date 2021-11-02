@@ -63,5 +63,13 @@ AC_DEFUN([OPENAFS_AUTOHEADER_BOTTOM],[
 #if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
 # include "redhat-fix.h"
 #endif
+
+/*
+ * AC_HEADER_TIME, which set TIME_WITH_SYS_TIME, has been marked as obsolete
+ * prior to autoconf 2.64 and autoconf 2.70 flags its use with a warning.
+ * However the external roken code still relies on the definition.
+ */
+#define TIME_WITH_SYS_TIME 1
+
 #endif /* __AFSCONFIG_H */])
 ])
