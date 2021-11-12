@@ -75,3 +75,6 @@ extern int rxi_SendIovecs(struct rx_connection *conn, struct iovec *iov,
 			  int iovcnt, size_t length, int istack);
 extern void rxi_SendRaw(struct rx_call *call, struct rx_connection *conn,
 			int type, char *data, int bytes, int istack);
+
+/* rx_kcommon.c / rx_user.c */
+extern void osi_Msg(const char *fmt, ...) AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);

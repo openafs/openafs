@@ -65,7 +65,4 @@ typedef afs_int32 osi_socket;
 
 #define osi_Assert(e) opr_Assert(e)
 
-#define	osi_Msg			    fprintf)(stderr,
-#define osi_VMsg		    vfprintf)(stderr,
-
 #endif /* RX_USER_INCLUDE */

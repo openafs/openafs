@@ -104,11 +104,11 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 
 #if !defined(AFS_NT40_ENV)
     if (ntohs(port) >= IPPORT_RESERVED && ntohs(port) < IPPORT_USERRESERVED) {
-/*	(osi_Msg "%s*WARNING* port number %d is not a reserved port number.  Use port numbers above %d\n", name, port, IPPORT_USERRESERVED);
+/*	osi_Msg("%s*WARNING* port number %d is not a reserved port number.  Use port numbers above %d\n", name, port, IPPORT_USERRESERVED);
 */ ;
     }
     if (ntohs(port) > 0 && ntohs(port) < IPPORT_RESERVED && geteuid() != 0) {
-	(osi_Msg
+	osi_Msg(
 	 "%sport number %d is a reserved port number which may only be used by root.  Use port numbers above %d\n",
 	 name, ntohs(port), IPPORT_USERRESERVED);
 	goto error;
@@ -144,7 +144,7 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
         break;
     }
     if (code) {
-	(osi_Msg "%sbind failed\n", name);
+	osi_Msg("%sbind failed\n", name);
 	goto error;
     }
 #if !defined(AFS_NT40_ENV)
@@ -191,7 +191,7 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	     (socketFd, SOL_SOCKET, SO_RCVBUF, (char *)&len2,
 	      sizeof(len2)) >= 0);
 	if (!greedy)
-	    (osi_Msg "%s*WARNING* Unable to increase buffering on socket\n",
+	    osi_Msg("%s*WARNING* Unable to increase buffering on socket\n",
 	     name);
         if (rx_stats_active)
             rx_atomic_set(&rx_stats.socketGreedy, greedy);
@@ -231,12 +231,21 @@ rxi_GetUDPSocket(u_short port)
 }
 
 void
+osi_Msg(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+}
+
+void
 osi_Panic(char *msg, ...)
 {
     va_list ap;
     va_start(ap, msg);
-    (osi_Msg "Fatal Rx error: ");
-    (osi_VMsg msg, ap);
+    fprintf(stderr, "Fatal Rx error: ");
+    vfprintf(stderr, msg, ap);
     va_end(ap);
     fflush(stderr);
     fflush(stdout);

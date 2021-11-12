@@ -1745,14 +1745,14 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
     clock_NewTime();
 
     if (serviceId == 0) {
-	(osi_Msg
+	osi_Msg(
 	 "rx_NewService:  service id for service %s is not non-zero.\n",
 	 serviceName);
 	return 0;
     }
     if (port == 0) {
 	if (rx_port == 0) {
-	    (osi_Msg
+	    osi_Msg(
 	     "rx_NewService: A non-zero port must be specified on this call if a non-zero port was not provided at Rx initialization (service %s).\n",
 	     serviceName);
 	    return 0;
@@ -1775,7 +1775,7 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 		     * installed; if the caller was intending to
 		     * change the security classes used by this
 		     * service, he/she loses. */
-		    (osi_Msg
+		    osi_Msg(
 		     "rx_NewService: tried to install service %s with service id %d, which is already in use for service %s\n",
 		     serviceName, serviceId, service->serviceName);
 		    USERPRI;
@@ -1820,7 +1820,7 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
     }
     USERPRI;
     rxi_FreeService(tservice);
-    (osi_Msg "rx_NewService: cannot support > %d services\n",
+    osi_Msg("rx_NewService: cannot support > %d services\n",
      RX_MAX_SERVICES);
     return 0;
 }
