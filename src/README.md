@@ -167,7 +167,6 @@ longer actively maintained.
 | directory | description |
 | --------- | ----------- |
 | afsweb    | Authenticated AFS access for older versions of Apache |
-| JAVA      | Java API library for OpenAFS development |
 | kauth     | Obsolete Kerberos-4 server (`kaserver`) and related programs |
 | log       | Obsolete programs to show and forget Kerberos-4 tokens |
 | lwp       | Lightweight user-level non-preemptive cooperative threading library |

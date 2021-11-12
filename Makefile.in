@@ -617,20 +617,6 @@ libadmin: libafsauthent bozo bubasics
 		echo Not building MT libadmin for ${SYS_NAME} ;; \
 	esac
 
-libjafs: libadmin
-	+case ${SYS_NAME} in \
-	sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
-	${COMPILE_PART1} JAVA/libjafs  ${COMPILE_PART2} ;; \
-	*) \
-		echo Not building MT libjafs for ${SYS_NAME} ;; \
-	esac
-
-libjafsadm: libjafs
-
-jafs: libjafs
-
-jafsadm: libjafsadm
-
 build_tools: config comerr rxgen
 	+${COMPILE_PART1} util ${COMPILE_PART2A} buildtools_clean
 
@@ -761,7 +747,6 @@ clean2:
 	-${COMPILE_PART1} libadmin/cfg ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/test ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/samples ${COMPILE_CLEAN}
-	-${COMPILE_PART1} JAVA/libjafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} finale ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
@@ -845,7 +830,6 @@ distclean: clean
 	src/fsint/Makefile \
 	src/fsprobe/Makefile \
 	src/gtx/Makefile \
-	src/JAVA/libjafs/Makefile \
 	src/kauth/Makefile \
 	src/kauth/test/Makefile \
 	src/kopenafs/Makefile \

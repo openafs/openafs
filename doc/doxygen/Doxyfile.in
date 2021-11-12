@@ -41,7 +41,6 @@ EXCLUDE                = \
     src/dvolser \
     src/external \
     src/finale \
-    src/JAVA \
     src/kauth \
     src/libafs \
     src/NTObjdir \

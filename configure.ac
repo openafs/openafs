@@ -99,7 +99,6 @@ AC_CONFIG_FILES([
     src/fsint/Makefile
     src/fsprobe/Makefile
     src/gtx/Makefile
-    src/JAVA/libjafs/Makefile
     src/kauth/Makefile
     src/kauth/test/Makefile
     src/kopenafs/Makefile
