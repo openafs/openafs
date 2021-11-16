@@ -970,7 +970,7 @@ vn_prolog(struct cmd_syndesc * as, struct fssync_state * state)
 	state->vop->unique = 0;
     }
 
-    if ((ti = as->parms[COMMON_VOLOP_PARMS_OFFSET+3].items)) {	/* -partition */
+    if ((ti = as->parms[CUSTOM_PARMS_OFFSET+3].items)) {	/* -partition */
 	strlcpy(state->vop->partName, ti->data, sizeof(state->vop->partName));
     } else {
 	memset(state->vop->partName, 0, sizeof(state->vop->partName));
