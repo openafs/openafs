@@ -61,9 +61,6 @@ extern afs_int32 afs_allZaps;
 extern afs_int32 afs_oddZaps;
 extern afs_int32 afs_evenZaps;
 extern afs_int32 afs_connectBacks;
-extern unsigned long lastCallBack_vnode;
-extern unsigned int lastCallBack_dv;
-extern osi_timeval32_t lastCallBack_time;
 extern struct interfaceAddr afs_cb_interface;
 
 extern int afs_RXCallBackServer(void);

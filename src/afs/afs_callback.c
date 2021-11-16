@@ -66,9 +66,6 @@ static struct ltable {
     { "afs_dynrootDirLock", (char *)&afs_dynrootDirLock},
     { "afs_dynSymlinkLock", (char *)&afs_dynSymlinkLock},
 };
-unsigned long lastCallBack_vnode;
-unsigned int lastCallBack_dv;
-osi_timeval32_t lastCallBack_time;
 
 /* these are for storing alternate interface addresses */
 struct interfaceAddr afs_cb_interface;
@@ -543,11 +540,6 @@ loop2:
 		    afs_Trace3(afs_iclSetp, CM_TRACE_CALLBACK,
 			       ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32,
 			       tvc->f.states, ICL_TYPE_LONG, 0);
-#ifdef CBDEBUG
-		    lastCallBack_vnode = afid->Vnode;
-		    lastCallBack_dv = tvc->mstat.DataVersion.low;
-		    osi_GetTime(&lastCallBack_time);
-#endif /* CBDEBUG */
 #ifdef AFS_DARWIN80_ENV
 		    vnode_put(AFSTOV(tvc));
 #endif
