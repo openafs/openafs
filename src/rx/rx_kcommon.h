@@ -146,7 +146,11 @@ typedef unsigned short etap_event_t;
 # if defined(AFS_FBSD_ENV)
 #  include "machine/stdarg.h"
 # else
-#  include "stdarg.h"
+#  if defined(HAVE_LINUX_STDARG_H)
+#   include "linux/stdarg.h"
+#  else
+#   include "stdarg.h"
+#  endif
 # endif
 #endif
 #ifdef KERNEL
