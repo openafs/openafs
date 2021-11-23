@@ -204,7 +204,7 @@ startClient(char *configPath)
     /* Start a connection to our test service with it */
     he = gethostbyname("localhost");
     if (!he) {
-        printf("Couldn't look up server hostname");
+	fprintf(stderr, "Couldn't look up server hostname");
         exit(1);
     }
 
@@ -417,7 +417,7 @@ int main(int argc, char **argv)
             startClient(argv[2]);
             exit(0);
         } else {
-            printf("Bad option %s\n", argv[1]);
+	    fprintf(stderr, "Bad option %s\n", argv[1]);
             exit(1);
         }
     }
@@ -438,7 +438,7 @@ int main(int argc, char **argv)
 	goto out;
     }
 
-    printf("Config directory is %s\n", dirname);
+    diag("Config directory is %s\n", dirname);
     serverPid = fork();
     if (serverPid == -1) {
 	sysbail("fork");
