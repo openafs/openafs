@@ -41,8 +41,16 @@ char *
 afstest_mkdtemp(void)
 {
     char *template;
+    char *tmp;
 
-    template = afstest_asprintf("%s/afs_XXXXXX", gettmpdir());
+    tmp = afstest_obj_path("tests/tmp");
+
+    /* Try to make sure 'tmp' exists. */
+    (void)mkdir(tmp, 0700);
+
+    template = afstest_asprintf("%s/afs_XXXXXX", tmp);
+
+    free(tmp);
 
 #if defined(HAVE_MKDTEMP)
     return mkdtemp(template);
@@ -93,6 +101,8 @@ static char *
 path_from_tdir(char *env_var, char *filename)
 {
     char *tdir;
+    char *path;
+    char *top_rel, *top_abs;
 
     /* C_TAP_SOURCE/C_TAP_BUILD in the env points to 'tests/' in the
      * srcdir/objdir. */
@@ -107,12 +117,25 @@ path_from_tdir(char *env_var, char *filename)
 	tdir = "..";
     }
 
+    /* 'tdir' points to the 'tests' dir, so go up one level to get to the top
+     * srcdir/objdir. */
+    top_rel = afstest_asprintf("%s/..", tdir);
+    top_abs = realpath(top_rel, NULL);
+    free(top_rel);
+    if (top_abs == NULL) {
+	sysbail("realpath");
+    }
+
     /*
-     * The given 'filename' is specified relative to the top srcdir/objdir.
-     * Since 'tdir' points to 'tests/', go up one level before following
-     * 'filename'.
+     * The given 'filename' is relative to the top srcdir/objdir, so to get the
+     * full path, append 'filename' to the top srcdir/objdir. Note that the
+     * given path may not exist yet, so we cannot run the full path through
+     * realpath().
      */
-    return afstest_asprintf("%s/../%s", tdir, filename);
+    path = afstest_asprintf("%s/%s", top_abs, filename);
+    free(top_abs);
+
+    return path;
 }
 
 char *
