@@ -161,7 +161,9 @@ afstest_StopServer(pid_t serverPid)
 
     kill(serverPid, SIGTERM);
 
-    waitpid(serverPid, &status, 0);
+    if (waitpid(serverPid, &status, 0) < 0) {
+	sysbail("waitpid");
+    }
 
     if (WIFSIGNALED(status) && WTERMSIG(status) != SIGTERM) {
 	fprintf(stderr, "Server died exited on signal %d\n", WTERMSIG(status));

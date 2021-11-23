@@ -441,7 +441,8 @@ int main(int argc, char **argv)
     printf("Config directory is %s\n", dirname);
     serverPid = fork();
     if (serverPid == -1) {
-        /* Bang */
+	sysbail("fork");
+
     } else if (serverPid == 0) {
         execl(argv[0], argv[0], "-server", dirname, NULL);
 	ret = 1;
