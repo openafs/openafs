@@ -506,9 +506,6 @@ libuafs: libuafs_setup vlserver_depinstall tvlserver_depinstall rx_depinstall \
 		${COMPILE_PART1} libuafs ${COMPILE_PART2} ;; \
 	esac
 
-afsweb: kauth
-	+${COMPILE_PART1} afsweb ${COMPILE_PART2}
-
 update: cmd comerr auth sys
 	+${COMPILE_PART1} update ${COMPILE_PART2}
 
@@ -717,7 +714,6 @@ clean2:
 	-${COMPILE_PART1} tsm41 ${COMPILE_CLEAN}
 	-${COMPILE_PART1} aklog ${COMPILE_CLEAN}
 	-${COMPILE_PART1} pam ${COMPILE_CLEAN}
-	-${COMPILE_PART1} afsweb ${COMPILE_CLEAN}
 	-${COMPILE_PART1} update ${COMPILE_CLEAN}
 	-${COMPILE_PART1} log ${COMPILE_CLEAN}
 	-${COMPILE_PART1} bu_utils ${COMPILE_CLEAN}
@@ -790,7 +786,6 @@ distclean: clean
 	src/afs/Makefile \
 	src/afsd/Makefile \
 	src/afsmonitor/Makefile \
-	src/afsweb/Makefile \
 	src/aklog/Makefile \
 	src/audit/Makefile \
 	src/auth/Makefile \

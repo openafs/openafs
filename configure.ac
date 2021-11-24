@@ -59,7 +59,6 @@ AC_CONFIG_FILES([
     src/afs/Makefile
     src/afsd/Makefile
     src/afsmonitor/Makefile
-    src/afsweb/Makefile
     src/aklog/Makefile
     src/audit/Makefile
     src/auth/Makefile
