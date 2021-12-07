@@ -2113,6 +2113,8 @@ h_ProcMainBody_setup(void)
 {
     f_print(fout,"\nextern int %s%sExecuteRequest(struct rx_call *);\n",
 	    prefix, PackagePrefix[PackageIndex]);
+    f_print(fout,"extern char * %s%sTranslateOpCode(int op);\n", prefix,
+	    PackagePrefix[PackageIndex]);
 }
 
 static void
@@ -2124,6 +2126,8 @@ h_HeadofOldStyleProc_setup(void)
     f_print(fout,"\nextern int %s%sExecuteRequest(struct rx_call *);\n",
 	    prefix, pprefix);
     f_print(fout,"\nextern int %sOpCodeIndex(int op);\n", PackagePrefix[PackageIndex]);
+    f_print(fout, "extern char * %s%sTranslateOpCode(int op);\n",
+	    prefix, pprefix);
 }
 
 void
