@@ -1,5 +1,21 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.8.1
+
+  Linux clients
+
+    * Support mainline kernels 5.14, 5.15 and likely 5.16 (currently
+      at rc6) (14830 14831 14851)
+
+  FreeBSD
+
+    * Add support for building on FreeBSD 12, and running at least in
+      readonly mode on this platform. Note this release removes support
+      for the obsolete FreeBSD 8 and 9. (14773 14780..88 14792..95)
+
+  Solaris
+
+    * Support building with Studio 12.6 (14841)
 
 OpenAFS 1.8.8
 
