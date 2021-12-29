@@ -124,7 +124,8 @@ AC_CHECK_LINUX_FUNC([proc_create],
                     [proc_create(NULL, 0, NULL, NULL);])
 AC_CHECK_LINUX_FUNC([rcu_read_lock],
                     [#include <linux/rcupdate.h>],
-                    [rcu_read_lock();])
+		    [rcu_read_lock();
+		     rcu_read_unlock();])
 AC_CHECK_LINUX_FUNC([set_nlink],
                     [#include <linux/fs.h>],
                     [set_nlink(NULL, 1);])
