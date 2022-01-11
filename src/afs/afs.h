@@ -15,9 +15,6 @@
 #include "afs/afs_args.h"
 #include "afs/afs_consts.h"
 
-/* jhash.h is a standalone header and is fine to pull into kernel code. */
-#include <opr/jhash.h>
-
 /*
  * afs_fsfragsize cannot be less than 1023, or some cache-tracking
  * calculations will be incorrect (since we track cache usage in kb).
@@ -100,7 +97,6 @@ extern enum afs_shutdown_state afs_shuttingdown;
 #define	NVOLS		64	/* hash table size for volume table */
 #define	NFENTRIES	256	/* hash table size for disk volume table */
 #define VCSIZEBITS	16	/* log of stat cache hash table size */
-#define	VCSIZE		(opr_jhash_size(VCSIZEBITS))
 #define CBRSIZE		512	/* call back returns hash table size */
 #define	PIGGYSIZE	1350	/* max piggyback size */
 #define	MAXVOLS		128	/* max vols we can store */
@@ -138,8 +134,15 @@ struct sysname_info {
 /* flags to use with AFSOP_CACHEINIT */
 #define AFSCALL_INIT_MEMCACHE        0x1	/* use a memory-based cache */
 
+struct dcache;
+
 /* below here used only for kernel procedures */
 #ifdef KERNEL
+
+#include <opr/jhash.h>
+
+#define	VCSIZE		(opr_jhash_size(VCSIZEBITS))
+
 /* Store synchrony flags - SYNC means that data should be forced to server's
  * disk immediately upon completion. */
 #define AFS_ASYNC 	0
@@ -1388,6 +1391,78 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #define AFS_VOLCHECK_MTPTS	0x4	/* mount point invalidation also */
 #define AFS_VOLCHECK_FORCE	0x8	/* do all forcibly */
 
+/*
+ * Wrappers for access to credentials structure members
+ * Linux uses the kernel cred structure if available, with the
+ * wrappers defined in LINUX/osi_machdep.h
+ */
+#if defined(AFS_NBSD40_ENV)
+/* in osi_machdep.h as expected */
+#elif defined (AFS_DARWIN110_ENV)
+#define afs_cr_uid(cred) kauth_cred_getuid((kauth_cred_t)(cred))
+#define afs_cr_gid(cred) kauth_cred_getgid((kauth_cred_t)(cred))
+#elif !(defined(AFS_LINUX_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
+#define afs_cr_uid(cred) ((cred)->cr_uid)
+#define afs_cr_gid(cred) ((cred)->cr_gid)
+#if !defined(AFS_OBSD_ENV)
+#define afs_cr_ruid(cred) ((cred)->cr_ruid)
+#define afs_cr_rgid(cred) ((cred)->cr_rgid)
+#endif
+
+#if !defined(AFS_DARWIN110_ENV)
+static_inline void
+afs_set_cr_uid(afs_ucred_t *cred, uid_t uid) {
+    cred->cr_uid = uid;
+}
+static_inline void
+afs_set_cr_gid(afs_ucred_t *cred, gid_t gid) {
+    cred->cr_gid = gid;
+}
+#if !defined(AFS_OBSD_ENV)
+static_inline void
+afs_set_cr_ruid(afs_ucred_t *cred, uid_t uid) {
+    cred->cr_ruid = uid;
+}
+static_inline void
+afs_set_cr_rgid(afs_ucred_t *cred, gid_t gid) {
+    cred->cr_rgid = gid;
+}
+#endif /* ! AFS_OBSD_ENV */
+#endif /* ! AFS_DARWIN110_ENV */
+#endif
+
+/*
+ * Various definitions for osi_sleep and its event hash table
+ * DFBSD has no osi_sleep, and HPUX has its own hack for this stuff
+ */
+#define AFS_EVHASHSIZE	128	/* size of afs_evhasht, must be power of 2 */
+
+typedef struct afs_event {
+    struct afs_event *next;	/* next in hash chain */
+    char *event;		/* lwp event: an address */
+    int refcount;		/* Is it in use? */
+    int seq;			/* Sequence number: this is incremented
+				 * by wakeup calls; wait will not return until
+				 * it changes */
+#if defined(AFS_AIX_ENV)
+    tid_t cond;
+#elif defined(AFS_DARWIN_ENV)
+# ifdef AFS_DARWIN80_ENV
+    lck_mtx_t *lck;
+    thread_t owner;
+# endif
+    /* no cond member */
+#elif defined(AFS_FBSD_ENV) || defined(AFS_OBSD_ENV)
+    int cond;			/* "all this gluck should probably be replaced by CVs" */
+#elif defined(AFS_LINUX_ENV)
+    wait_queue_head_t cond;
+#elif defined(AFS_NBSD_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+    kcondvar_t cond;		/* Currently associated condition variable */
+#endif
+} afs_event_t;
+
+extern afs_event_t *afs_evhasht[AFS_EVHASHSIZE];	/* Hash table for events */
+
 #endif /* KERNEL */
 
 #define	AFS_FSPORT	    ((unsigned short) htons(7000))
@@ -1470,6 +1545,8 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
    except with libuafs, in which case it is actually defined */
 
 struct buf;
+struct osi_file;
+struct afs_FetchOutput;
 
 struct rxfs_storeVariables {
     struct rx_call *call;
@@ -1519,46 +1596,6 @@ extern int afs_fakestat_enable;
 extern int afs_rmtsys_enable;
 extern int afsd_dynamic_vcaches;
 
-/*
- * Wrappers for access to credentials structure members
- * Linux uses the kernel cred structure if available, with the
- * wrappers defined in LINUX/osi_machdep.h
- */
-#if defined(AFS_NBSD40_ENV)
-/* in osi_machdep.h as expected */
-#elif defined (AFS_DARWIN110_ENV)
-#define afs_cr_uid(cred) kauth_cred_getuid((kauth_cred_t)(cred))
-#define afs_cr_gid(cred) kauth_cred_getgid((kauth_cred_t)(cred))
-#elif !(defined(AFS_LINUX_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
-#define afs_cr_uid(cred) ((cred)->cr_uid)
-#define afs_cr_gid(cred) ((cred)->cr_gid)
-#if !defined(AFS_OBSD_ENV)
-#define afs_cr_ruid(cred) ((cred)->cr_ruid)
-#define afs_cr_rgid(cred) ((cred)->cr_rgid)
-#endif
-
-#if !defined(AFS_DARWIN110_ENV)
-static_inline void
-afs_set_cr_uid(afs_ucred_t *cred, uid_t uid) {
-    cred->cr_uid = uid;
-}
-static_inline void
-afs_set_cr_gid(afs_ucred_t *cred, gid_t gid) {
-    cred->cr_gid = gid;
-}
-#if !defined(AFS_OBSD_ENV)
-static_inline void
-afs_set_cr_ruid(afs_ucred_t *cred, uid_t uid) {
-    cred->cr_ruid = uid;
-}
-static_inline void
-afs_set_cr_rgid(afs_ucred_t *cred, gid_t gid) {
-    cred->cr_rgid = gid;
-}
-#endif /* ! AFS_OBSD_ENV */
-#endif /* ! AFS_DARWIN110_ENV */
-#endif
-
 #ifdef AFS_SUN5_ENV
 
 /** The 32 bit OS expects the members of this structure to be 32 bit
@@ -1577,37 +1614,5 @@ struct afssysa {
 };
 extern int Afs_syscall(struct afssysa *uap, rval_t *rvp);
 #endif /* AFS_SUN5_ENV */
-
-/*
- * Various definitions for osi_sleep and its event hash table
- * DFBSD has no osi_sleep, and HPUX has its own hack for this stuff
- */
-#define AFS_EVHASHSIZE	128	/* size of afs_evhasht, must be power of 2 */
-
-typedef struct afs_event {
-    struct afs_event *next;	/* next in hash chain */
-    char *event;		/* lwp event: an address */
-    int refcount;		/* Is it in use? */
-    int seq;			/* Sequence number: this is incremented
-				 * by wakeup calls; wait will not return until
-				 * it changes */
-#if defined(AFS_AIX_ENV)
-    tid_t cond;
-#elif defined(AFS_DARWIN_ENV)
-# ifdef AFS_DARWIN80_ENV
-    lck_mtx_t *lck;
-    thread_t owner;
-# endif
-    /* no cond member */
-#elif defined(AFS_FBSD_ENV) || defined(AFS_OBSD_ENV)
-    int cond;			/* "all this gluck should probably be replaced by CVs" */
-#elif defined(AFS_LINUX_ENV)
-    wait_queue_head_t cond;
-#elif defined(AFS_NBSD_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-    kcondvar_t cond;		/* Currently associated condition variable */
-#endif
-} afs_event_t;
-
-extern afs_event_t *afs_evhasht[AFS_EVHASHSIZE];	/* Hash table for events */
 
 #endif /* _AFS_H_ */
