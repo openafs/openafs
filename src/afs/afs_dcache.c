@@ -3393,8 +3393,11 @@ afs_InitCacheFile(char *afile, ino_t ainode)
 
     AFS_STATCNT(afs_InitCacheFile);
     index = afs_stats_cmperf.cacheNumEntries;
-    if (index >= afs_cacheFiles)
+    if (index >= afs_cacheFiles) {
+	afs_warn("afs: afs_InitCacheFile: exceeded configured number of "
+		 "cached files (%d >= %d).\n", index, afs_cacheFiles);
 	return EINVAL;
+    }
 
     ObtainWriteLock(&afs_xdcache, 282);
     tdc = afs_GetNewDSlot(index);
@@ -3413,6 +3416,8 @@ afs_InitCacheFile(char *afile, ino_t ainode)
 		ReleaseWriteLock(&afs_xdcache);
 		ReleaseWriteLock(&tdc->lock);
 		afs_PutDCache(tdc);
+		afs_warn("afs: afs_InitCacheFile: error (%d) adding %s to cache\n",
+			 code, afile);
 		return code;
 	    }
 	} else {
