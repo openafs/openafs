@@ -650,8 +650,6 @@ extern int uiomove(char *dp, int length, uio_flag_t rw, struct uio *uiop);
 extern void osi_linux_free_inode_pages(void);
 extern void osi_linux_mask(void);
 extern void osi_linux_unmaskrxk(void);
-extern int setpag(cred_t ** cr, afs_uint32 pagvalue, afs_uint32 * newpag,
-		  int change_parent);
 #endif
 
 
@@ -722,22 +720,18 @@ extern void shutdown_osifile(void);
 #if defined(UKERNEL)
 extern int usr_setpag(afs_ucred_t **cred, afs_uint32 pagvalue,
 		      afs_uint32 * newpag, int change_parent);
-#else
-# if defined AFS_XBSD_ENV
-#  if !defined(AFS_DFBSD_ENV)
-#   if defined(AFS_FBSD_ENV)
+#elif defined(AFS_LINUX_ENV)
+extern int setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
+		  int change_parent);
+#elif defined(AFS_FBSD_ENV)
 extern int setpag(struct thread *td, struct ucred **cred, afs_uint32 pagvalue,
 		  afs_uint32 * newpag, int change_parent);
-
-#   elif defined(AFS_NBSD_ENV)
+#elif defined(AFS_NBSD_ENV)
 extern int setpag(afs_proc_t *proc, afs_ucred_t **cred, afs_uint32 pagvalue,
 		  afs_uint32 * newpag, int change_parent);
-#   else
+#elif defined(AFS_OBSD_ENV)
 extern int setpag(afs_proc_t *proc, struct ucred **cred, afs_uint32 pagvalue,
 		  afs_uint32 * newpag, int change_parent);
-#   endif /* AFS_FBSD_ENV */
-#  endif /* ! AFS_DFBSD_ENV */
-# endif /* AFS_XBSD_ENV */
 #endif /* UKERNEL */
 
 #if defined(AFS_LINUX_ENV) || defined(AFS_PAG_ONEGROUP_ENV)
