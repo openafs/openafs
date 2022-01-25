@@ -1679,7 +1679,8 @@ afs_CheckInit(void)
     else if (afs_initState == 101) {	/* init done, wait for afs_daemon */
 	while (afs_initState < 200)
 	    afs_osi_Sleep(&afs_initState);
-    } else if (afs_initState == 200)
+    }
+    if (afs_initState == 200)
 	code = ETIMEDOUT;	/* didn't find root volume */
     return code;
 }

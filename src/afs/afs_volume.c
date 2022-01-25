@@ -682,7 +682,7 @@ afs_GetVolume(struct VenusFid *afid, struct vrequest *areq,
 	/* Do a dynroot check and add dynroot volume if found. */
 	if (afs_IsDynrootAnyFid(afid)) {
 	    tv = afs_NewDynrootVolume(afid);
-	} else {
+	} else if (afid->Fid.Volume != 0) {
 	    bp = afs_cv2string(&tbuf[CVBS], afid->Fid.Volume);
 	    tv = afs_NewVolumeByName(bp, afid->Cell, 0, areq, locktype);
 	}
