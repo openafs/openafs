@@ -138,6 +138,7 @@ afs_mount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp, CTX
 	    struct cell *localcell = afs_GetPrimaryCell(READ_LOCK);
 	    if (localcell == NULL) {
 		AFS_GUNLOCK();
+		afs_warn("afs: Error getting root volume: cannot get primary cell\n");
 		return ENODEV;
 	    }
 
@@ -158,6 +159,8 @@ afs_mount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp, CTX
 		rootFid->Fid.Unique = 1;
 	    } else {
 		AFS_GUNLOCK();
+		afs_warn("afs: Error getting root volume: cannot find volume %s\n",
+			 volName);
 		return ENODEV;
 	    }
 
@@ -289,6 +292,11 @@ again:
 		    needref=1;
 		}
 	    } else {
+		afs_warn("afs: Failed to get root vcache %u:%u.%u.%u\n",
+			 afs_rootFid.Cell,
+			 afs_rootFid.Fid.Volume,
+			 afs_rootFid.Fid.Vnode,
+			 afs_rootFid.Fid.Unique);
 		error = EIO;
 	    }
 	}

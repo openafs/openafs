@@ -358,8 +358,14 @@ afs_root(struct mount *mp, struct vnode **vpp)
 	    AFSTOV(tvp)->v_flag |= VROOT;
 	    afs_globalVFS = mp;
 	    *vpp = AFSTOV(tvp);
-	} else
+	} else {
+	    printf("afs: Failed to get root vcache %u:%u.%u.%u\n",
+		   afs_rootFid.Cell,
+		   afs_rootFid.Fid.Volume,
+		   afs_rootFid.Fid.Vnode,
+		   afs_rootFid.Fid.Unique);
 	    code = EIO;
+	}
     }
     AFS_GUNLOCK();
 

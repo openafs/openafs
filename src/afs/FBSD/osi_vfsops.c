@@ -241,8 +241,14 @@ tryagain:
 			goto tryagain;
 		    }
 		}
-	    } else
+	    } else {
+		printf("afs: Failed to get root vcache %u:%u.%u.%u\n",
+		       afs_rootFid.Cell,
+		       afs_rootFid.Fid.Volume,
+		       afs_rootFid.Fid.Vnode,
+		       afs_rootFid.Fid.Unique);
 		error = EIO;
+	    }
 	}
     }
     if (tvp) {

@@ -80,8 +80,14 @@ afs_root(OSI_VFS_DECL(afsp), struct vnode **avpp)
 	    /* we really want this to stay around */
 	    if (tvp) {
 		afs_globalVp = tvp;
-	    } else
+	    } else {
+		afs_warn("afs: Failed to get root vcache %u:%u.%u.%u\n",
+			 afs_rootFid.Cell,
+			 afs_rootFid.Fid.Volume,
+			 afs_rootFid.Fid.Vnode,
+			 afs_rootFid.Fid.Unique);
 		code = EIO;
+	    }
 	}
     }
     if (tvp) {

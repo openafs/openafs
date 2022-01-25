@@ -311,8 +311,12 @@ afs_CheckRootVolume(void)
     } else {
 	struct cell *lc = afs_GetPrimaryCell(READ_LOCK);
 
-	if (!lc)
+	if (!lc) {
+	    if (afs_initState < 200) {
+		afs_warn("afs: Error getting root volume: cannot get primary cell\n");
+	    }
 	    return ENOENT;
+	}
 	localcell = lc->cellNum;
 	afs_PutCell(lc, READ_LOCK);
 	tvp = afs_GetVolumeByName(rootVolName, localcell, 1, NULL, READ_LOCK);
@@ -358,6 +362,14 @@ afs_CheckRootVolume(void)
 	    afs_rootFid.Fid.Volume = volid;
 	    afs_rootFid.Fid.Vnode = 1;
 	    afs_rootFid.Fid.Unique = 1;
+
+	} else if (afs_initState < 200) {
+	    /*
+	     * Only log this during startup (afs_initState < 200). This is less
+	     * important after startup, and would just be noise.
+	     */
+	    afs_warn("afs: Error getting root volume: cannot find volume %s\n",
+		     rootVolName);
 	}
     }
     if (tvp) {

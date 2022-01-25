@@ -68,7 +68,9 @@ afs_root(struct super_block *afsp)
 		struct vattr *vattr = NULL;
 
 		code = afs_CreateAttr(&vattr);
-		if (!code) {
+		if (code != 0) {
+		    printf("afs_root: afs_CreateAttr failed with code %d\n", code);
+		} else {
 		    afs_getattr(tvp, vattr, credp);
 		    afs_fill_inode(ip, vattr);
 
@@ -84,8 +86,14 @@ afs_root(struct super_block *afsp)
 #endif
 		    afs_DestroyAttr(vattr);
 		}
-	    } else
+	    } else {
+		printf("afs: Failed to get root vcache %u:%u.%u.%u\n",
+		       afs_rootFid.Cell,
+		       afs_rootFid.Fid.Volume,
+		       afs_rootFid.Fid.Vnode,
+		       afs_rootFid.Fid.Unique);
 		code = EIO;
+	    }
 	}
 	crfree(credp);
 	afs_DestroyReq(treq);
@@ -141,8 +149,10 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
 #endif
 #if defined(HAVE_LINUX_SUPER_SETUP_BDI)
     code = super_setup_bdi(sb);
-    if (code)
+    if (code) {
+	printf("afs: super_setup_bdi failed with code %d\n", code);
         goto out;
+    }
 # if defined(STRUCT_BACKING_DEV_INFO_HAS_NAME)
     sb->s_bdi->name = "openafs";
 # endif
@@ -152,8 +162,10 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
     afs_backing_dev_info = kzalloc(sizeof(struct backing_dev_info), GFP_NOFS);
 #if defined(HAVE_LINUX_BDI_INIT)
     code = bdi_init(afs_backing_dev_info);
-    if (code)
+    if (code) {
+	printf("afs: bdi_init failed with code %d\n", code);
 	goto out;
+    }
     bdi_init_done = 1;
 #endif
 #if defined(STRUCT_BACKING_DEV_INFO_HAS_NAME)
@@ -184,6 +196,9 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
 #endif
 #endif
     code = afs_root(sb);
+    if (code != 0) {
+	printf("afs: afs_root failed with code %d\n", code);
+    }
 
 #if defined(HAVE_LINUX_SUPER_SETUP_BDI) || defined(HAVE_LINUX_BDI_INIT)
  out:

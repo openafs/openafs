@@ -933,6 +933,10 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 			 SHARED_LOCK, tcell));
 
     if (code) {
+	if (afs_initState < 200) {
+	    afs_warn("afs: Failed to lookup volume %s (code %d)\n", aname, code);
+	}
+
 	afs_CopyError(treq, areq);
 	osi_FreeLargeSpace(tbuffer);
 	afs_PutCell(tcell, READ_LOCK);

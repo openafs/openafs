@@ -1954,6 +1954,14 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq)
     }
 
     if (code) {
+	if (afs_initState < 200) {
+	    afs_warn("afs: Failed to fetch status for vcache %u:%u.%u.%u (code %d)\n",
+		     tvc->f.fid.Cell,
+		     tvc->f.fid.Fid.Volume,
+		     tvc->f.fid.Fid.Vnode,
+		     tvc->f.fid.Fid.Unique,
+		     code);
+	}
 	ReleaseWriteLock(&tvc->lock);
 
 	afs_PutVCache(tvc);

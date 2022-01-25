@@ -1682,6 +1682,10 @@ afs_CheckInit(void)
     }
     if (afs_initState == 200)
 	code = ETIMEDOUT;	/* didn't find root volume */
+    if (code != 0) {
+	afs_warn("afs: afs_CheckInit failed with code %d (afs_initState %d)\n",
+		 code, afs_initState);
+    }
     return code;
 }
 
