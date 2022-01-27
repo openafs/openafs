@@ -179,7 +179,6 @@ typedef unsigned int fsblkcnt_t;
 
 #ifdef UKERNEL
 
-#undef socket
 #undef flock
 
 #if defined(AFS_USR_DARWIN_ENV) || defined(AFS_USR_FBSD_ENV)
@@ -208,8 +207,6 @@ typedef unsigned int fsblkcnt_t;
 #define ifaddr                  usr_ifaddr
 #define ifnet                   usr_ifnet
 #define in_ifaddr		usr_in_ifaddr
-#undef socket
-#define socket			usr_socket
 #define crget			usr_crget
 #define crcopy			usr_crcopy
 #define crhold			usr_crhold
@@ -1097,11 +1094,6 @@ struct usr_buf {
     long b_blkno;
     unsigned int b_resid;
     struct usr_vnode *b_vp;
-};
-
-struct usr_socket {
-    int sock;
-    short port;
 };
 
 #define NDIRSIZ_LEN(len) \

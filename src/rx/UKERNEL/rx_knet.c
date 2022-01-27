@@ -19,6 +19,11 @@
 #define NANO_SECONDS_TO_SLEEP	100000000	/* 100 milliseconds */
 #define LOOPS_PER_WAITCHECK	10	/* once per second */
 
+struct usr_socket {
+    int sock;
+    short port;
+};
+
 unsigned short usr_rx_port = 0;
 
 struct usr_ifnet *usr_ifnet = NULL;
@@ -214,7 +219,6 @@ rxk_InitializeSocket(void)
     usr_assert(rx_socket != NULL);
     usockp = (struct usr_socket *)rx_socket;
 
-#undef socket
     sock = socket(PF_INET, SOCK_DGRAM, 0);
     usr_assert(sock >= 0);
 
@@ -341,9 +345,10 @@ rx_Finalize(void)
 int
 rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
+    struct usr_socket *usock = (struct usr_socket *)socket;
     int ret;
     do {
-	ret = recvmsg(socket->sock, msg_p, flags);
+	ret = recvmsg(usock->sock, msg_p, flags);
     } while (ret == -1 && errno == EAGAIN);
     return ret;
 }
