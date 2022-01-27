@@ -110,7 +110,6 @@ rxi_getaddr(void)
 
 #ifdef UKERNEL
 #undef ioctl
-#undef socket
 #endif /* UKERNEL */
 
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
