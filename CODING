@@ -306,7 +306,13 @@ the fix is to mark that warning as ignored, but only for clang. For example:
   # endif
   #endif
 
-If a pragma isn't available for your particular warning, you will need to
+If the source cannot be changed to add a pragma, you might be abe to use the
+autoconf function AX_APPEND_COMPILE_FLAGS to create a new macro that disables
+the warning and then use macro for the build options for that file. For an
+example, see how the autoconf macro CFLAGS_NOIMPLICIT_FALLTHROUGH is defined and
+used.
+
+Finally if there isn't a way to disable the specific warning, you will need to
 disable all warnings for the file in question. You can do this by supplying
 the autoconf macro @CFLAGS_NOERROR@ in the build options for the file. For
 example:
@@ -332,6 +338,10 @@ bucoord/commands.c   : all	     : Ubik_Call
 				     : signed vs unsigned for dates
 butc/tcudbprocs.c    : all	     : ubik_Call
 external/heimdal/hcrypto/validate.c: all: statement with empty body
+external/heimdal/hcrypto/evp.c:      cast-function-type
+             : Linux kernel build uses -Wcast-function-type
+external/heimdal/hcrypto/evp-algs.c: cast-function-type
+             : Linux kernel build uses -Wcast-function-type
 kauth/admin_tools.c  : strict-proto  : ubik_Call
 kauth/authclient.c   : strict-proto  : ubik_Call nonsense
 libadmin/kas/afs_kasAdmin.c: strict-proto : ubik_Call nonsense
