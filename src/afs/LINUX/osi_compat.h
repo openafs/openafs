@@ -27,6 +27,10 @@
 # endif
 #endif
 
+#if !defined(HAVE_LINUX_KTHREAD_COMPLETE_AND_EXIT)
+# define kthread_complete_and_exit complete_and_exit
+#endif
+
 #if defined(STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT) && !defined(DCACHE_NEED_AUTOMOUNT)
 # define DCACHE_NEED_AUTOMOUNT DMANAGED_AUTOMOUNT
 #endif

@@ -19,7 +19,9 @@
 #include "afs/afs_stats.h"
 #include "rx/rx_globals.h"
 #if !defined(UKERNEL)
-# if !defined(AFS_LINUX_ENV)
+# if defined(AFS_LINUX_ENV)
+#  include "osi_compat.h"
+# else
 #  include "net/if.h"
 #  ifdef AFS_SGI62_ENV
 #   include "h/hashing.h"
@@ -328,7 +330,7 @@ afsd_thread(void *rock)
 	sprintf(current->comm, "afs_callback");
 	afs_RXCallBackServer();
 	AFS_GUNLOCK();
-	complete_and_exit(0, 0);
+	kthread_complete_and_exit(0, 0);
 	break;
     case AFSOP_START_AFS:
 	sprintf(current->comm, "afs_afsstart");
@@ -342,7 +344,7 @@ afsd_thread(void *rock)
 	sprintf(current->comm, "afsd");
 	afs_Daemon();
 	AFS_GUNLOCK();
-	complete_and_exit(0, 0);
+	kthread_complete_and_exit(0, 0);
 	break;
     case AFSOP_START_BKG:
 #ifdef AFS_NEW_BKG
@@ -361,7 +363,7 @@ afsd_thread(void *rock)
 	afs_BackgroundDaemon();
 	AFS_GUNLOCK();
 #endif
-	complete_and_exit(0, 0);
+	kthread_complete_and_exit(0, 0);
 	break;
     case AFSOP_START_TRUNCDAEMON:
 	sprintf(current->comm, "afs_trimstart");
@@ -372,7 +374,7 @@ afsd_thread(void *rock)
 	sprintf(current->comm, "afs_cachetrim");
 	afs_CacheTruncateDaemon();
 	AFS_GUNLOCK();
-	complete_and_exit(0, 0);
+	kthread_complete_and_exit(0, 0);
 	break;
     case AFSOP_START_CS:
 	sprintf(current->comm, "afs_checkserver");
@@ -380,7 +382,7 @@ afsd_thread(void *rock)
 	complete(arg->complete);
 	afs_CheckServerDaemon();
 	AFS_GUNLOCK();
-	complete_and_exit(0, 0);
+	kthread_complete_and_exit(0, 0);
 	break;
     case AFSOP_RXEVENT_DAEMON:
 	sprintf(current->comm, "afs_evtstart");
@@ -398,7 +400,7 @@ afsd_thread(void *rock)
 	sprintf(current->comm, "afs_rxevent");
 	afs_rxevent_daemon();
 	AFS_GUNLOCK();
-	complete_and_exit(0, 0);
+	kthread_complete_and_exit(0, 0);
 	break;
 #ifdef RXK_LISTENER_ENV
     case AFSOP_RXLISTENER_DAEMON:
@@ -420,7 +422,7 @@ afsd_thread(void *rock)
 	sprintf(current->comm, "afs_rxlistener");
 	rxk_Listener();
 	AFS_GUNLOCK();
-	complete_and_exit(0, 0);
+	kthread_complete_and_exit(0, 0);
 	break;
 #endif
     default:

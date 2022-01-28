@@ -178,6 +178,12 @@ AC_CHECK_LINUX_FUNC([ip_sock_set],
                     [#include <net/ip.h>],
                     [ip_sock_set_mtu_discover(NULL, 0);])
 
+dnl Linux 5.17 renamed complete_and_exit to kthread_complete_and_exit
+AC_CHECK_LINUX_FUNC([kthread_complete_and_exit],
+                    [#include <linux/kernel.h>
+                     #include <linux/kthread.h>],
+                    [kthread_complete_and_exit(0, 0);])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
