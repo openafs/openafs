@@ -79,8 +79,9 @@ CFLAGS_rxkad_common.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
 CFLAGS_opr_rbtree.o = -I${TOP_SRCDIR}/opr
 
 CFLAGS_evp.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto \
-	       -DHAVE_CONFIG_H
-CFLAGS_evp-algs.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
+	       -DHAVE_CONFIG_H @CFLAGS_NOCAST_FUNCTION_TYPE@
+CFLAGS_evp-algs.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto \
+	       @CFLAGS_NOCAST_FUNCTION_TYPE@
 CFLAGS_evp-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 CFLAGS_rand-timer-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 CFLAGS_rand-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
