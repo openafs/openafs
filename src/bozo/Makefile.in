@@ -118,7 +118,7 @@ fsbnodeops.o: fsbnodeops.c ${INCLS}
 
 libbos.a: bosint.xdr.o bosint.cs.o boserr.o AFS_component_version_number.o
 	-$(RM) -f $@
-	$(AR) crv $@ bosint.xdr.o bosint.cs.o boserr.o AFS_component_version_number.o
+	$(AR) $(ARFLAGS) $@ bosint.xdr.o bosint.cs.o boserr.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 bosserver: $(OBJS) $(LIBS)

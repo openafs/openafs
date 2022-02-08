@@ -59,7 +59,7 @@ libafsrpc.a: $(LT_objs)
 	$(LT_LDLIB_static) $(LT_objs)
 	@set -e; set -x; case "${SYS_NAME}" in \
 	    rs_aix*) \
-		$(AR) crv $@ ../sys/afsl.exp;; \
+		$(AR) $(ARFLAGS) $@ ../sys/afsl.exp;; \
 	esac
 
 ${TOP_LIBDIR}/libafsrpc.a: libafsrpc.a

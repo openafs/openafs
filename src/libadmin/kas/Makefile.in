@@ -43,7 +43,7 @@ dest: afs_kasAdmin.h libkasadmin.a
 
 libkasadmin.a: ${LIBOBJS}
 	-$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS}
+	$(AR) $(ARFLAGS) $@ ${LIBOBJS}
 	${RANLIB} $@
 
 afs_kasAdmin.o: afs_kasAdmin.c afs_kasAdmin.h

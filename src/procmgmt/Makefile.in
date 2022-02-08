@@ -29,7 +29,7 @@ ${TOP_INCDIR}/afs/procmgmt_softsig.h: ${srcdir}/procmgmt_softsig.h
 #
 libprocmgmt.a: procmgmt_unix.o AFS_component_version_number.o
 	$(RM) -f $@
-	$(AR) crv $@ procmgmt_unix.o AFS_component_version_number.o
+	$(AR) $(ARFLAGS) $@ procmgmt_unix.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 procmgmt_unix.o: ${srcdir}/procmgmt_unix.c ${srcdir}/procmgmt.h

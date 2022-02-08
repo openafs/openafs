@@ -73,7 +73,7 @@ butc: ${BUTCOBJS} ${BUTCLIBS}
 
 libbutm.a: ${BUTMOBJS} AFS_component_version_number.o
 	-$(RM) -f libbutm.a
-	$(AR) crv libbutm.a $(BUTMOBJS) AFS_component_version_number.o
+	$(AR) $(ARFLAGS) libbutm.a $(BUTMOBJS) AFS_component_version_number.o
 	${RANLIB} libbutm.a
 
 afsxbsa.o: ${BUTC}/afsxbsa.c ${BUTC}/afsxbsa.h ${BUTCINCLS}

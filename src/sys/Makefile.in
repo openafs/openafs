@@ -108,7 +108,7 @@ liboafs_sys.la: liboafs_sys.la.sym $(LT_objs) $(LT_deps) afsl.exp
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	rs_aix*) \
 	    $(LT_LDLIB_shlib) -Wl,-bI:afsl.exp $(LT_objs) $(LT_deps) ;\
-	    $(AR) crv .libs/liboafs_sys.a ../sys/afsl.exp ;; \
+	    $(AR) $(ARFLAGS) .libs/liboafs_sys.a ../sys/afsl.exp ;; \
 	*) \
 	    $(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) ;; \
 	esac

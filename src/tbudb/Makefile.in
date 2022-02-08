@@ -125,7 +125,7 @@ budb.ss.c: budb.h
 
 libbudb.a: budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_number.o
 	-$(RM) -f $@
-	$(AR) crv $@ budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_number.o
+	$(AR) $(ARFLAGS) $@ budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 #

@@ -40,7 +40,7 @@ dest: libbosadmin.a afs_bosAdmin.h
 
 libbosadmin.a: ${LIBOBJS}
 	-$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS}
+	$(AR) $(ARFLAGS) $@ ${LIBOBJS}
 	${RANLIB} $@
 
 afs_bosAdmin.o: afs_bosAdmin.c afs_bosAdmin.h

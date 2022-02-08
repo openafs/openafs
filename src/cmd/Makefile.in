@@ -57,7 +57,7 @@ cmd64.o: cmd.c cmd.h
 
 libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o
 	-$(RM) -f $@
-	$(AR) crv $@ ${LIB64OBJS} AFS_component_version_number64.o
+	$(AR) $(ARFLAGS) $@ ${LIB64OBJS} AFS_component_version_number64.o
 	$(RANLIB) $@
 
 libcmd.a: $(LT_objs)

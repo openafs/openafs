@@ -30,7 +30,7 @@ ${TOP_LIBDIR}/libafscp.a: libafscp.a
 
 libafscp.a: ${LIBOBJS} AFS_component_version_number.o
 	$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS} AFS_component_version_number.o
+	$(AR) $(ARFLAGS) $@ ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
 depinstall: \

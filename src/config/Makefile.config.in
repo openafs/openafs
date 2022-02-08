@@ -32,6 +32,7 @@ top_builddir=@top_builddir@
 # Programs and other defines
 #
 AR = @AR@
+ARFLAGS = @ARFLAGS@
 AS = @AS@
 ASFLAGS = @ASFLAGS@
 AFSD_LIBS = @AFSD_LIBS@
@@ -288,13 +289,13 @@ LTLWP_CCRULE=$(RUN_CC) $(LWPTOOL) --mode compile \
 
 LT_LDLIB_lwp=$(RUN_LD) $(LWPTOOL) --mode link \
 	         --ranlib "$(RANLIB)" \
-		 --linker "$(AR) crv" \
+		 --linker "$(AR) $(ARFLAGS)" \
 		 -o $@ \
 		 --
 
 LT_LDLIB_lwp_NOQ=$(RUN_LD_NOQ) $(LWPTOOL) --mode link \
 	         --ranlib "$(RANLIB)" \
-		 --linker "$(AR) crv" \
+		 --linker "$(AR) $(ARFLAGS)" \
 		 -o $@ \
 		 --
 

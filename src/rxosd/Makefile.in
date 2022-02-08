@@ -162,7 +162,7 @@ readabyte: readabyte.o
 
 librxosd.a: rxosd.xdr.o rxosd.cs.o
 	${RM} -f $@
-	${AR} crv $@ rxosd.xdr.o rxosd.cs.o
+	${AR} $(ARFLAGS) $@ rxosd.xdr.o rxosd.cs.o
 	${RANLIB} $@
 
 ${TOP_LIBDIR}/librxosd.a: librxosd.a

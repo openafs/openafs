@@ -58,7 +58,7 @@ dest: afs_vosAdmin.h libvosadmin.a
 
 libvosadmin.a: ${LIBOBJS}
 	-$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS}
+	$(AR) $(ARFLAGS) $@ ${LIBOBJS}
 	${RANLIB} $@
 
 afs_vosAdmin.o: afs_vosAdmin.h

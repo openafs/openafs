@@ -43,7 +43,7 @@ dest: afs_ptsAdmin.h libptsadmin.a
 
 libptsadmin.a: ${LIBOBJS}
 	-$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS}
+	$(AR) $(ARFLAGS) $@ ${LIBOBJS}
 	${RANLIB} $@
 
 afs_ptsAdmin.o: afs_ptsAdmin.h

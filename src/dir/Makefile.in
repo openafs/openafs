@@ -26,7 +26,7 @@ ${TOP_LIBDIR}/libdir.a: libdir.a
 
 libdir.a: buffer.o dir.o salvage.o AFS_component_version_number.o
 	$(RM) -f $@
-	$(AR) crv $@ buffer.o dir.o salvage.o  AFS_component_version_number.o
+	$(AR) $(ARFLAGS) $@ buffer.o dir.o salvage.o  AFS_component_version_number.o
 	$(RANLIB) $@
 
 .PHONY: test

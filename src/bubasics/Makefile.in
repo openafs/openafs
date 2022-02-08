@@ -45,7 +45,7 @@ ${TOP_INCDIR}/afs/butx.h: butx.h
 
 libbubasics.a: $(OBJS) AFS_component_version_number.o
 	-$(RM) -f libbubasics.a
-	$(AR) crv libbubasics.a ${OBJS} AFS_component_version_number.o
+	$(AR) $(ARFLAGS) libbubasics.a ${OBJS} AFS_component_version_number.o
 	${RANLIB} libbubasics.a
 
 butc.xdr.c: butc.xg

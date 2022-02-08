@@ -47,7 +47,7 @@ dest: libcfgadmin.a afs_cfgAdmin.h
 
 libcfgadmin.a: ${LIBOBJS}
 	-$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS}
+	$(AR) $(ARFLAGS) $@ ${LIBOBJS}
 	${RANLIB} $@
 
 UBIKDIR=../../ubik

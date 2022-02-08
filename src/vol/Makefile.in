@@ -181,7 +181,7 @@ vol-salvage.o: salvsync.h daemon_com.h
 
 vlib.a:	${VLIBOBJS} AFS_component_version_number.o
 	$(RM) -f $@
-	$(AR) crv $@ ${VLIBOBJS} AFS_component_version_number.o
+	$(AR) $(ARFLAGS) $@ ${VLIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
 # new salvager:  remove references to /vice by linking with novice.o

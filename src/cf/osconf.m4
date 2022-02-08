@@ -9,6 +9,7 @@ MT_CC="\$(CC)"
 XLIBS="${LIB_AFSDB} ${LIB_libintl}"
 MT_LIBS='-lpthread ${XLIBS}'
 XCFLAGS=
+ARFLAGS="crv"
 
 dnl debugging and optimization flag defaults
 dnl Note, these are all the defaults for if debug/optimize turned on, and
@@ -665,6 +666,7 @@ AC_SUBST(AFSD_LDFLAGS)
 AC_SUBST(AIX32)
 AC_SUBST(AIX64)
 AC_SUBST(AR)
+AC_SUBST(ARFLAGS)
 AC_SUBST(AS)
 AC_SUBST(ASFLAGS)
 AC_SUBST(CP)

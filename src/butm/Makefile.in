@@ -33,7 +33,7 @@ ${TOP_INCDIR}/afs/butm_prototypes.h: butm_prototypes.h
 
 libbutm.a: file_tm.o AFS_component_version_number.o
 	-$(RM) -f $@
-	$(AR) crv $@ file_tm.o AFS_component_version_number.o
+	$(AR) $(ARFLAGS) $@ file_tm.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 file_tm.o: file_tm.c ${INCLS} AFS_component_version_number.c

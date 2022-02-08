@@ -36,7 +36,7 @@ dest: afs_clientAdmin.h libclientadmin.a
 
 libclientadmin.a: ${LIBOBJS}
 	-$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS}
+	$(AR) $(ARFLAGS) $@ ${LIBOBJS}
 	${RANLIB} $@
 
 afs_clientAdmin.o: afs_clientAdmin.h

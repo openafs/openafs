@@ -174,7 +174,7 @@ dest: libafsadminutil.a afs_utilAdmin.h
 
 libafsadminutil.a: ${LIBOBJS}
 	-$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS}
+	$(AR) $(ARFLAGS) $@ ${LIBOBJS}
 	${RANLIB} $@
 
 afs_utilAdmin.o: afs_utilAdmin.h ${TOP_INCDIR}/afs/afs_AdminBosErrors.h ${TOP_INCDIR}/afs/afs_AdminUtilErrors.h \

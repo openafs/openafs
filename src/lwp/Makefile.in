@@ -44,7 +44,7 @@ ${TOP_INCDIR}/timer.h: timer.h
 #
 liblwp.a: ${LIBOBJS} $(LT_objs)
 	-$(RM) -f $@
-	$(AR) crv $@ ${LIBOBJS} .lwp/waitkey.o .lwp/fasttime.o .lwp/lock.o
+	$(AR) $(ARFLAGS) $@ ${LIBOBJS} .lwp/waitkey.o .lwp/fasttime.o .lwp/lock.o
 	$(RANLIB) $@
 
 liboafs_lwpcompat.la: liboafs_lwpcompat.la.sym $(LT_objs) $(LT_deps)
