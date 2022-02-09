@@ -19,7 +19,11 @@ AC_DEFUN([OPENAFS_CURSES_LIB],
     AC_CHECK_LIB([ncurses], [initscr],
 		 [AC_CHECK_LIB([ncurses], [LINES], [openafs_cv_curses_lib=-lncurses],
 			       [AC_CHECK_LIB([tinfo], [LINES],
-					     [openafs_cv_curses_lib="-lncurses -ltinfo"])])])
+					     [openafs_cv_curses_lib="-lncurses -ltinfo"],
+					     [AC_CHECK_LIB([ncurses], [_nc_LINES],
+							   [openafs_cv_curses_lib=-lncurses],
+							   [AC_CHECK_LIB([tinfo], [_nc_LINES],
+									 [openafs_cv_curses_lib="-lncurses -ltinfo"])])])])])
     AS_IF([test "x$openafs_cv_curses_lib" = x],
 	  [AC_CHECK_LIB([Hcurses], [initscr], [openafs_cv_curses_lib=-lHcurses])])
     AS_IF([test "x$openafs_cv_curses_lib" = x],
