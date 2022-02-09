@@ -95,6 +95,14 @@
 #endif
 #define	ROOTINO			UFSROOTINO
 
+/*
+ * 64-bit SPARC LWP is implemented via USE_UCONTEXT.
+ * 32-bit SPARC LWP is implemented via process.default.s.
+ */
+#if defined(_LP64)
+# define USE_UCONTEXT
+#endif
+
 #endif /* AFS_PARAM_H */
 
 #else /* !defined(UKERNEL) */
@@ -159,6 +167,10 @@
 #define CMSERVERPREF
 #endif
 #define	ROOTINO			UFSROOTINO
+
+#if defined(_LP64)
+# define USE_UCONTEXT
+#endif
 
 #endif /* AFS_PARAM_H */
 

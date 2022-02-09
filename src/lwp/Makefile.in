@@ -63,6 +63,14 @@ process.default.s:
 CFLAGS_process.o = @CFLAGS_NODANGLING_POINTER@
 process.o	: process.default.s process.i386.s process.amd64.s process.c lwp.o
 	@set -x; case "$(SYS_NAME)" in \
+	sun4x_510 | sun4x_511 ) \
+		if [ "${ARCHFLAGS}" = "-m64" ] ; then \
+			$(AFS_CCRULE_NOQ) -c ${srcdir}/process.c ; \
+		else \
+			$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.default.s > process.s; \
+			${AS} process.s -o process.o; \
+			$(RM) process.s ; \
+		fi;; \
 	sun4x_5* | arm_linux* ) \
 		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.default.s > process.s; \
 		${AS} process.s -o process.o; \

@@ -470,15 +470,38 @@ case $AFS_SYSNAME in
 		;;
 
 	sun4x_5*)
+		case $AFS_SYSNAME in
+			sun4x_58|sun4x_59)
+				XARCHFLAGS=""
+				;;
+			*)
+				if test "x`echo "${ARCHFLAGS}" | grep m32`" != "x" ; then
+					CURRENTBUILDARCH=sparc
+				fi
+				if test "x`echo "${ARCHFLAGS}" | grep m64`" != "x" ; then
+					CURRENTBUILDARCH=sparcv9
+				fi
+				if test "x${CURRENTBUILDARCH}" = "x" ; then
+					CURRENTBUILDARCH=sparc
+				fi
+				if test "${CURRENTBUILDARCH}" = "sparcv9" ; then
+					XARCHFLAGS="-m64"
+				fi
+				;;
+		esac
+
 		LD="/usr/ccs/bin/ld"
 		MT_CFLAGS='-mt'
 		PAM_CFLAGS="-KPIC"
 		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
 		SHLIB_CFLAGS="-KPIC"
-		XCFLAGS64='${XCFLAGS} -m64'
-		XCFLAGS="-dy -Bdynamic"
+		XCFLAGS0="-dy -Bdynamic"
+		XCFLAGS64="${XCFLAGS0} -m64"
+		XCFLAGS="${XCFLAGS0} ${XARCHFLAGS}"
+		XLDFLAGS64="-m64"
+		XLDFLAGS="${XARCHFLAGS}"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
-		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
+		SHLIB_LINKER="${CC} ${XARCHFLAGS} -G -dy -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
 		;;
 
