@@ -125,7 +125,7 @@ A  Configuring
     afsconfdir    /usr/afs/etc               $(sysconfdir)/openafs/server
     afslocaldir   /usr/afs/local             $(localstatedir)/openafs
     afsdbdir      /usr/afs/db                $(localstatedir)/openafs/db
-    afslogdir     /usr/afs/logs              $(localstatedir)/openafs/logs
+    afslogsdir    /usr/afs/logs              $(localstatedir)/openafs/logs
     afsbosconfig  $(afslocaldir)/BosConfig   $(afsconfdir)/BosConfig
     afsbosserver  $(afsbindir)/bosserver     $(sbindir)/bosserver
 
@@ -133,7 +133,9 @@ A  Configuring
    do not start with "afs" by passing the flags with the same name to
    configure.  For example, if you want to install the server binaries in
    /usr/local/lib/openafs instead of /usr/local/libexec/openafs, pass the
-   --libexecdir=/usr/local/lib flag to configure.
+   --libexecdir=/usr/local/lib flag to configure.  The individual directories
+   can also be overriden by using environment variables.  For example,
+   'afslogsdir=/var/log/openafs ./configure ...'
 
    For additional options, see section I below.
 
