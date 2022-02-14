@@ -375,4 +375,10 @@ case $AFS_SYSNAME in
     *_linux_26) AFS_PARAM_COMMON=param.linux26.h ;;
     *_fbsd_*)   AFS_PARAM_COMMON=param.generic_fbsd.h ;;
 esac
+
+case $AFS_SYSNAME in
+        *)
+                AFS_PARAM=param.${AFS_SYSNAME}.h
+                ;;
+esac
 ])
