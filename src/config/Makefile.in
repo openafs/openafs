@@ -58,11 +58,11 @@ config.o: config.c AFS_component_version_number.c
 # Include installation targets
 #
 
-param.h.new: ${srcdir}/param.${SYS_NAME}.h ${AFS_PARAM_COMMON}
+param.h.new: ${srcdir}/${AFS_PARAM} ${AFS_PARAM_COMMON}
 	if [ "X${AFS_PARAM_COMMON}" != "X" ] ; then \
-		cat ${srcdir}/${AFS_PARAM_COMMON} ${srcdir}/param.${SYS_NAME}.h > param.h.new ; \
+		cat ${srcdir}/${AFS_PARAM_COMMON} ${srcdir}/${AFS_PARAM} > param.h.new ; \
 	else \
-		cat ${srcdir}/param.${SYS_NAME}.h > param.h.new ; \
+		cat ${srcdir}/${AFS_PARAM} > param.h.new ; \
 	fi
 
 ${DEST}/include/afs/param.h ${DESTDIR}${includedir}/afs/param.h ${TOP_INCDIR}/afs/param.h: param.h.new
