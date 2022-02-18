@@ -138,7 +138,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     }
 
     afile->offset = 0;
-    afile->proc = (int (*)())0;
+    afile->proc = NULL;
     return (void *)afile;
 }
 
