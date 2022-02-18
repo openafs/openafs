@@ -178,7 +178,10 @@ AC_DEFUN([AC_CHECK_LINUX_OPERATION],
   AC_CACHE_CHECK([operation $2 in $1], [ac_linux_operation],
     [save_CPPFLAGS="$CPPFLAGS"
      CPPFLAGS="$CPPFLAGS -Werror"
-     AC_TRY_KBUILD([$4], [struct $1 ops; $5 op($6) { return ($5)0; }; ops.$2 = op;],
+     AC_TRY_KBUILD(
+      [$4
+       $5 op($6) { return ($5)0; };],
+      [struct $1 ops;  ops.$2 = op;],
 		   AS_VAR_SET([ac_linux_operation], [yes]),
 		   AS_VAR_SET([ac_linux_operation], [no]))
      CPPFLAGS="$save_CPPFLAGS"

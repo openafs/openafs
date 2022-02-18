@@ -488,8 +488,9 @@ AC_DEFUN([LINUX_KMEM_CACHE_CREATE_TAKES_DTOR], [
 AC_DEFUN([LINUX_KMEM_CACHE_CREATE_CTOR_TAKES_VOID],[
   AC_CHECK_LINUX_BUILD([whether kmem_cache_create constructor takes a void pointer],
 			[ac_cv_linux_kmem_cache_create_ctor_takes_void],
-			[#include <linux/slab.h>],
-			[void _ctor(void *v) { }; kmem_cache_create(NULL, 0, 0, 0, _ctor);],
+			[#include <linux/slab.h>
+			 void _ctor(void *v) { };],
+			[kmem_cache_create(NULL, 0, 0, 0, _ctor);],
 			[KMEM_CACHE_CTOR_TAKES_VOID],
 			[define if kmem_cache_create constructor takes a single void ptr],
 			[-Werror])
