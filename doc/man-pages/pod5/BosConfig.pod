@@ -9,8 +9,7 @@ Server monitors on its server machine, and thus defines which AFS server
 processes run on the machine. It specifies how the BOS Server reacts when
 a process fails, and also defines the times at which the BOS Server
 automatically restarts processes as part of performance maintenance.  The
-file must reside in the F</usr/afs/local> directory on each AFS server
-machine.
+F</usr/afs/local/BosConfig> file must be present on each AFS server machine.
 
 A server process entry in the F<BosConfig> file records the following
 information:
