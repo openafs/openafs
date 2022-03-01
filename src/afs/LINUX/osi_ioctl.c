@@ -81,6 +81,7 @@ static struct proc_ops afs_syscall_ops = {
 # ifdef STRUCT_PROC_OPS_HAS_PROC_COMPAT_IOCTL
     .proc_compat_ioctl = afs_unlocked_ioctl,
 # endif
+    .proc_lseek = default_llseek,
 };
 #else
 static struct file_operations afs_syscall_ops = {
