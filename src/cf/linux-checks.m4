@@ -16,7 +16,7 @@ if test "x$enable_debug_kernel" = "xno"; then
 fi
 AX_APPEND_COMPILE_FLAGS([-fno-strict-aliasing -fno-strength-reduce \
                          -fno-common -pipe],
-                        [LINUX_GCC_KOPTS])
+                        [LINUX_GCC_KOPTS],[-Werror])
 AC_SUBST(LINUX_GCC_KOPTS)
 
 dnl Setup the kernel build environment

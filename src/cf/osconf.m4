@@ -681,9 +681,9 @@ if test "x$GCC" = "xyes"; then
       CFLAGS_NOUNUSED="-Wno-unused"
       CFLAGS_NOOLDSTYLE="-Wno-old-style-definition"
       AX_APPEND_COMPILE_FLAGS([-Wno-implicit-fallthrough],
-                               [CFLAGS_NOIMPLICIT_FALLTHROUGH])
+			      [CFLAGS_NOIMPLICIT_FALLTHROUGH], [-Werror])
       AX_APPEND_COMPILE_FLAGS([-Wno-cast-function-type],
-                              [CFLAGS_NOCAST_FUNCTION_TYPE])
+			      [CFLAGS_NOCAST_FUNCTION_TYPE], [-Werror])
       AC_DEFINE(IGNORE_SOME_GCC_WARNINGS, 1, [define to disable some gcc warnings in warnings-as-errors mode])
     else
       CFLAGS_NOSTRICT=
@@ -709,7 +709,7 @@ fi
 
 dnl add additional checks if compilers support the flags
 AS_IF([test "x$enable_checking" != "xno"],
-      [AX_APPEND_COMPILE_FLAGS([-Wimplicit-fallthrough], [XCFLAGS])
+      [AX_APPEND_COMPILE_FLAGS([-Wimplicit-fallthrough], [XCFLAGS], [-Werror])
 ])
 
 dnl horribly cheating, assuming double / is ok.
