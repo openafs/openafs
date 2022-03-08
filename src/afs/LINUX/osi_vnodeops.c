@@ -3434,9 +3434,11 @@ afs_linux_prepare_write(struct file *file, struct page *page, unsigned from,
 			unsigned to)
 {
 
-    /* http://kerneltrap.org/node/4941 details the expected behaviour of
-     * prepare_write. Essentially, if the page exists within the file,
-     * and is not being fully written, then we should populate it.
+    /*
+     * Linux's Documentation/filesystems/vfs.txt (.rst) details the expected
+     * behaviour of prepare_write (prior to 2.6.28) and write_begin (2.6.28).
+     * Essentially, if the page exists within the file, and is not being fully
+     * written, then we should populate it.
      */
 
     if (!PageUptodate(page)) {
@@ -3453,7 +3455,7 @@ afs_linux_prepare_write(struct file *file, struct page *page, unsigned from,
 	    SetPageChecked(page);
 	/* Is the page readable, if it's wronly, we don't care, because we're
 	 * not actually going to read from it ... */
-	} else if ((file->f_flags && O_ACCMODE) != O_WRONLY) {
+	} else if ((file->f_flags & O_ACCMODE) != O_WRONLY) {
 	    /* We don't care if fillpage fails, because if it does the page
 	     * won't be marked as up to date
 	     */
