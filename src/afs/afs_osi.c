@@ -101,17 +101,20 @@ osi_Init(void)
 	  crdup(osi_curcred());
 #elif defined(AFS_SUN5_ENV)
 	afs_osi_credp = kcred;
+#elif defined(AFS_DARWIN_ENV)
+	afs_osi_credp = afs_osi_Alloc(sizeof(*afs_osi_credp));
+	osi_Assert(afs_osi_credp != NULL);
+	memset(afs_osi_credp, 0, sizeof(*afs_osi_credp));
+# if defined(AFS_DARWIN80_ENV)
+	afs_osi_credp->cr_ref = 1; /* kauth_cred_get_ref needs 1 existing ref */
+# endif
 #else
 	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
 #if defined(AFS_LINUX_ENV)
         afs_set_cr_group_info(&afs_osi_cred, groups_alloc(0));
 #endif
-#if defined(AFS_DARWIN80_ENV)
-        afs_osi_cred.cr_ref = 1; /* kauth_cred_get_ref needs 1 existing ref */
-#else
-# if !(defined(AFS_LINUX_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
+#if !(defined(AFS_LINUX_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
 	crhold(&afs_osi_cred);  /* don't let it evaporate */
-# endif
 #endif
 
 	afs_osi_credp = &afs_osi_cred;

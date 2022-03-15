@@ -529,7 +529,7 @@ afs_vop_close(ap)
     if (vop_cred)
 	code = afs_close(avc, ap->a_fflag, vop_cred);
     else
-	code = afs_close(avc, ap->a_fflag, &afs_osi_cred);
+	code = afs_close(avc, ap->a_fflag, afs_osi_credp);
     osi_FlushPages(avc, vop_cred);	/* hold GLOCK, but not basic vnode lock */
     /* This is legit; it just forces the fstrace event to happen */
     code = afs_CheckCode(code, NULL, 60);
@@ -1213,7 +1213,7 @@ afs_vop_fsync(ap)
     if (vop_cred)
 	error = afs_fsync(VTOAFS(vp), vop_cred);
     else
-	error = afs_fsync(VTOAFS(vp), &afs_osi_cred);
+	error = afs_fsync(VTOAFS(vp), afs_osi_credp);
     if (!haveGlock) AFS_GUNLOCK();
     return error;
 }

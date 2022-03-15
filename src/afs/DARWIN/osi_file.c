@@ -18,7 +18,6 @@
 
 
 int afs_osicred_initialized = 0;
-afs_ucred_t afs_osi_cred;
 extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;
 int afs_CacheFSType = -1;
@@ -85,7 +84,7 @@ VnodeToIno(vnode_t avp)
 	ret = va.va_fileid;
 #elif !defined(VTOH)
 	struct vattr va;
-	if (VOP_GETATTR(avp, &va, &afs_osi_cred, current_proc()))
+	if (VOP_GETATTR(avp, &va, afs_osi_credp, current_proc()))
 	    osi_Panic("VOP_GETATTR failed in VnodeToIno\n");
 	ret = va.va_fileid;
 #else
@@ -120,7 +119,7 @@ VnodeToDev(vnode_t avp)
 	return va.va_fsid;	/* XXX they say it's the dev.... */
 #elif !defined(VTOH)
 	struct vattr va;
-	if (VOP_GETATTR(avp, &va, &afs_osi_cred, current_proc()))
+	if (VOP_GETATTR(avp, &va, afs_osi_credp, current_proc()))
 	    osi_Panic("VOP_GETATTR failed in VnodeToDev\n");
 	return va.va_fsid;	/* XXX they say it's the dev.... */
 #else
@@ -150,10 +149,12 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	osi_Panic("UFSOpen called for non-UFS cache\n");
     }
     if (!afs_osicred_initialized) {
-	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
-	afs_osi_cred.cr_ref++;
+	afs_osi_credp = afs_osi_Alloc(sizeof(*afs_osi_credp));
+	osi_Assert(afs_osi_credp != NULL);
+	memset(afs_osi_credp, 0, sizeof(*afs_osi_credp));
+	afs_osi_credp->cr_ref++;
 #ifndef AFS_DARWIN110_ENV
-	afs_osi_cred.cr_ngroups = 1;
+	afs_osi_credp->cr_ngroups = 1;
 #endif
 	afs_osicred_initialized = 1;
     }
@@ -213,7 +214,7 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
     if (code == 0 && !VATTR_ALL_SUPPORTED(&tvattr))
        code = EINVAL;
 #else
-    code = VOP_GETATTR(afile->vnode, &tvattr, &afs_osi_cred, current_proc());
+    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, current_proc());
 #endif
     AFS_GLOCK();
     if (code == 0) {
@@ -264,7 +265,7 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
 #else
     VATTR_NULL(&tvattr);
     tvattr.va_size = asize;
-    code = VOP_SETATTR(afile->vnode, &tvattr, &afs_osi_cred, current_proc());
+    code = VOP_SETATTR(afile->vnode, &tvattr, afs_osi_credp, current_proc());
 #endif
     AFS_GLOCK();
     return code;
@@ -334,7 +335,7 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 #else
     code =
 	gop_rdwr(UIO_READ, afile->vnode, (caddr_t) aptr, asize, afile->offset,
-		 AFS_UIOSYS, IO_UNIT, &afs_osi_cred, &resid);
+		 AFS_UIOSYS, IO_UNIT, afs_osi_credp, &resid);
 #endif
     AFS_GLOCK();
     if (code == 0) {
@@ -378,7 +379,7 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 #else
 	code =
 	    gop_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize,
-		     afile->offset, AFS_UIOSYS, IO_UNIT, &afs_osi_cred,
+		     afile->offset, AFS_UIOSYS, IO_UNIT, afs_osi_credp,
 		     &resid);
 #endif
 	AFS_GLOCK();
@@ -406,6 +407,10 @@ shutdown_osifile(void)
 {
     AFS_STATCNT(shutdown_osifile);
     if (afs_cold_shutdown) {
+	if (afs_osi_credp != NULL) {
+	    afs_osi_Free(afs_osi_credp, sizeof(*afs_osi_credp));
+	    afs_osi_credp = NULL;
+	}
 	afs_osicred_initialized = 0;
     }
 }

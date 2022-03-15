@@ -209,7 +209,7 @@ extern int igetinode(mount_t vfsp, dev_t dev , ino_t inode, vnode_t *vpp,
 #define osi_curproc() current_proc()
 
 /* FIXME */
-#define osi_curcred() &afs_osi_cred
+#define osi_curcred() afs_osi_credp
 
 #ifdef AFS_DARWIN80_ENV
 # define afsio_free(X) uio_free(X)
