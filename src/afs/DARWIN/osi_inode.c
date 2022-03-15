@@ -23,7 +23,7 @@
 #ifndef AFS_DARWIN80_ENV
 #include <ufs/ufs/ufsmount.h>
 #endif
-extern struct ucred afs_osi_cred;
+extern struct ucred *afs_osi_credp;
 extern int afs_CacheFSType;
 
 #ifdef AFS_DARWIN80_ENV
@@ -187,7 +187,7 @@ igetinode(vfsp, dev, inode, vpp, va, perror)
 	iforget(vp);
 	return (ENOENT);
     }
-    VOP_GETATTR(vp, va, &afs_osi_cred, current_proc());
+    VOP_GETATTR(vp, va, afs_osi_credp, current_proc());
     if (va->va_mode == 0) {
 	/* Not an allocated inode */
 	iforget(vp);
