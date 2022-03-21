@@ -314,6 +314,7 @@ shutdown_osisleep(void) {
 	    EVTLOCK_LOCK(evp);
 	    nevp = evp->next;
 	    if (evp->refcount == 0) {
+		EVTLOCK_UNLOCK(evp);
 		EVTLOCK_DESTROY(evp);
 		*pevpp = evp->next;
 		osi_FreeSmallSpace(evp);
