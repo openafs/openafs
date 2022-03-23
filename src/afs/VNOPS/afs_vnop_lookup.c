@@ -522,13 +522,13 @@ Check_AtSys(struct vcache *avc, const char *aname,
 
     if (AFS_EQ_ATSYS(aname)) {
 	state->offset = 0;
-	state->name = osi_AllocLargeSpace(MAXSYSNAME);
-	state->allocked = 1;
+	state->name_size = MAXSYSNAME;
+	state->name = osi_AllocLargeSpace(state->name_size);
 	state->index =
 	    afs_getsysname(areq, avc, state->name, &num, sysnamelist);
     } else {
 	state->offset = -1;
-	state->allocked = 0;
+	state->name_size = 0;
 	state->index = 0;
 	state->name = (char *)aname;
     }
@@ -545,7 +545,7 @@ Next_AtSys(struct vcache *avc, struct vrequest *areq,
 	return 0;		/* No list */
 
     /* Check for the initial state of aname != "@sys" in Check_AtSys */
-    if (state->offset == -1 && state->allocked == 0) {
+    if (state->offset == -1 && state->name_size == 0) {
 	char *tname;
 
 	/* Check for .*@sys */
@@ -557,7 +557,7 @@ Next_AtSys(struct vcache *avc, struct vrequest *areq,
 	    tname = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	    strncpy(tname, state->name, state->offset);
 	    state->name = tname;
-	    state->allocked = 1;
+	    state->name_size = AFS_LRALLOCSIZ;
 	    num = 0;
 	    state->index =
 		afs_getsysname(areq, avc, state->name + state->offset, &num,

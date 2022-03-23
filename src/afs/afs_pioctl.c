@@ -2194,7 +2194,7 @@ DECL_PIOCTL(PFlush)
  *
  * \return 0 on success; non-zero otherwise.
  *
- * \notes  The caller must free asys->name (checking if asys->allocked == 1).
+ * \notes  The caller must free asys->name if asys->name_size != 0.
  */
 static int
 afs_LookupName(struct vcache *avc, struct vrequest *areq, char *aname,
@@ -2324,7 +2324,7 @@ DECL_PIOCTL(PNewStatMount)
     ReleaseWriteLock(&tvc->lock);
     afs_PutVCache(tvc);
   out:
-    if (sysState.allocked)
+    if (sysState.name_size != 0)
 	osi_FreeLargeSpace(sysState.name);
     return code;
 }
@@ -3428,7 +3428,7 @@ DECL_PIOCTL(PRemoveMount)
     ReleaseWriteLock(&avc->lock);
     code = 0;
   out:
-    if (sysState.allocked)
+    if (sysState.name_size != 0)
 	osi_FreeLargeSpace(bufp);
     return code;
 }
@@ -4917,7 +4917,7 @@ DECL_PIOCTL(PFlushMount)
     ReleaseWriteLock(&tvc->lock);
     afs_PutVCache(tvc);
   out:
-    if (sysState.allocked)
+    if (sysState.name_size != 0)
 	osi_FreeLargeSpace(sysState.name);
     return code;
 }
@@ -5688,7 +5688,7 @@ DECL_PIOCTL(PGetLiteralFID)
     tfid.Fid.Volume = avc->f.fid.Fid.Volume;
     code = afs_pd_putBytes(aout, &tfid, sizeof(tfid));
  out:
-    if (sysState.allocked) {
+    if (sysState.name_size != 0) {
 	osi_FreeLargeSpace(sysState.name);
     }
     return code;

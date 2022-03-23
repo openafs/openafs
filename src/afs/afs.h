@@ -127,8 +127,13 @@ extern afs_int32 afs_rx_idledead_rep;
 
 struct sysname_info {
     char *name;
+    /*
+     * 'name_size' represents the number of bytes allocated in 'name'. If 0,
+     * 'name' points to existing memory, and shouldn't be freed.
+     */
+    size_t name_size;
     short offset;
-    signed char index, allocked;
+    signed char index;
 };
 
 /* flags to use with AFSOP_CACHEINIT */
