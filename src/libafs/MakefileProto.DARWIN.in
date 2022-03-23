@@ -65,9 +65,9 @@ MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib $(ARCHFLAGS)
 
 <all>
 
-CFLAGS_ppc=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_ppc) $(KOPTS_DBUG)
-CFLAGS_x86=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_x86) $(KOPTS_DBUG)
-CFLAGS_amd64=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_amd64) $(KOPTS_DBUG)
+CFLAGS_ppc=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_ppc) $(KOPTS_DBUG)
+CFLAGS_x86=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_x86) $(KOPTS_DBUG)
+CFLAGS_amd64=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_amd64) $(KOPTS_DBUG)
 
 <all>
 # Name of directory to hold object files and libraries.
@@ -81,31 +81,32 @@ DESTDIRS = single_destdir
 include Makefile.common
 
 <all -ppc_darwin_70>
+ALL_COMMON_INCLUDES=$(KINCLUDES) $(COMMON_INCLUDE)
 # override suffix rule; unfortunately, this causes a warning message
 .c.o:
 	if [ "$(ARCH_ppc)" = "yes" ]; then \
-	    $(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS_ppc) $(CFLAGS-$@) -o $(patsubst %.o,%.o.ppc,$@) -c $< || exit(1) \
+	    $(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_ppc) $(CFLAGS-$@) -o $(patsubst %.o,%.o.ppc,$@) -c $< || exit(1) \
 	fi \
 	if [ "$(ARCH_x86)" = "yes" ]; then \
-	    $(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS_x86) $(CFLAGS-$@) -o $(patsubst %.o,%.o.x86,$@) -c $< || exit(1) \
+	    $(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_x86) $(CFLAGS-$@) -o $(patsubst %.o,%.o.x86,$@) -c $< || exit(1) \
 	fi
 	if [ "$(ARCH_amd64)" = "yes" ]; then \
-	    $(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS_amd64) $(CFLAGS-$@) -o $(patsubst %.o,%.o.amd64,$@) -c $< || exit(1) \
+	    $(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_amd64) $(CFLAGS-$@) -o $(patsubst %.o,%.o.amd64,$@) -c $< || exit(1) \
 	fi \
 	lipo -create ${OBJ_ppc} ${OBJ_x86} ${OBJ_amd64} -output $@;
 
-CRULE_NOOPT_ppc=$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS_ppc) $(CFLAGS-$@) -o $(patsubst %.o,%.o.ppc,$@) -c $?
-CRULE_NOOPT_x86=$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS_x86) $(CFLAGS-$@) -o $(patsubst %.o,%.o.x86,$@) -c $?
-CRULE_NOOPT_amd64=$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS_amd64) $(CFLAGS-$@) -o $(patsubst %.o,%.o.amd64,$@) -c $?
+CRULE_NOOPT_ppc=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_ppc) $(CFLAGS-$@) -o $(patsubst %.o,%.o.ppc,$@) -c $?
+CRULE_NOOPT_x86=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_x86) $(CFLAGS-$@) -o $(patsubst %.o,%.o.x86,$@) -c $?
+CRULE_NOOPT_amd64=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_amd64) $(CFLAGS-$@) -o $(patsubst %.o,%.o.amd64,$@) -c $?
 CRULE_NOOPT=$(shell echo "${ARCH_ppc}" | grep -q -w yes && echo "${CRULE_NOOPT_ppc} && "; echo "${ARCH_x86}" | grep -q -w yes && echo "${CRULE_NOOPT_x86} && "; echo "${ARCH_amd64}" | grep -q -w yes && echo "${CRULE_NOOPT_amd64} && "; echo " lipo -create ${OBJ_ppc} ${OBJ_x86} ${OBJ_amd64} -output $@ && true")
 
-CRULE_OPT_ppc=$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS_ppc) $(CFLAGS-$@) -o $(patsubst %.o,%.o.ppc,$@) -c $? 
-CRULE_OPT_x86=$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS_x86) $(CFLAGS-$@) -o $(patsubst %.o,%.o.x86,$@) -c $? 
-CRULE_OPT_amd64=$(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS_amd64) $(CFLAGS-$@) -o $(patsubst %.o,%.o.amd64,$@) -c $? 
+CRULE_OPT_ppc=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS_ppc) $(CFLAGS-$@) -o $(patsubst %.o,%.o.ppc,$@) -c $? 
+CRULE_OPT_x86=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS_x86) $(CFLAGS-$@) -o $(patsubst %.o,%.o.x86,$@) -c $? 
+CRULE_OPT_amd64=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS_amd64) $(CFLAGS-$@) -o $(patsubst %.o,%.o.amd64,$@) -c $? 
 CRULE_OPT=$(shell echo "${ARCH_ppc}" | grep -q -w yes && echo "${CRULE_OPT_ppc} && "; echo "${ARCH_x86}" | grep -q -w yes && echo "${CRULE_OPT_x86} && "; echo "${ARCH_amd64}" | grep -q -w yes && echo "${CRULE_OPT_amd64} && ";echo "lipo -create ${OBJ_ppc} ${OBJ_x86} ${OBJ_amd64} -output $@ && true")
 
 <ppc_darwin_70>
-CFLAGS=${KINCLUDES} -I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS)
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS)
 KOPTS=-static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
 
 <all>

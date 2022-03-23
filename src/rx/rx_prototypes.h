@@ -316,8 +316,10 @@ extern int osi_NetReceive(osi_socket so, struct sockaddr_in *addr,
 # if defined(AFS_SUN510_ENV)
 extern void osi_StartNetIfPoller(void);
 extern void osi_NetIfPoller(void);
-extern void osi_StopNetIfPoller(void);
 extern struct afs_ifinfo afsifinfo[ADDRSPERSITE];
+# endif
+# if defined(AFS_SUN510_ENV) || defined(RXK_UPCALL_ENV)
+extern void osi_StopNetIfPoller(void);
 # endif
 extern void osi_StopListener(void);
 extern int rxi_FindIfMTU(afs_uint32 addr);

@@ -24,7 +24,8 @@
 #endif
 
 #if defined(UKERNEL)
-#include "afsincludes.h"
+# include "afsincludes.h"
+# include <afs_usrops.h>
 #endif
 
 #ifdef	AFS_AIX_ENV
@@ -119,7 +120,7 @@ static void ktc_LocalCell(void);
 #endif /* AFS_KERBEROS_ENV */
 
 #if defined(UKERNEL)
-#define PIOCTL(A,B,C,D) (errno = (call_syscall(AFSCALL_PIOCTL,A,B,C,D)), errno?-1:0)
+#define PIOCTL(A,B,C,D) (errno = (call_syscall(AFSCALL_PIOCTL,A,B,(long)C,D,0)), errno?-1:0)
 #else
 #define PIOCTL pioctl
 #endif

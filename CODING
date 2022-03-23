@@ -331,7 +331,6 @@ afs/afs_syscall.c    : old-style
 		     : strict-proto
 		     : all (ukernel) : syscall pointer issues
 afsd/afsd_kernel.c   : deprecated    : daemon() marked as deprecated on Darwin
-auth/ktc.c           : all (ukernel) : call_syscall doesn't have a prototype
 bozo/bosserver.c     : deprecated    : daemon() marked as deprecated on Darwin
 bucoord/ubik_db_if.c : strict-proto  : ubik_Call_SingleServer
 bucoord/commands.c   : all	     : signed vs unsigned for dates

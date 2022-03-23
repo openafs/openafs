@@ -23,7 +23,6 @@
 #include "afs/afs_args.h"
 #include "afsd/afsd.h"
 
-extern int call_syscall(long, long, long, long, long, long);
 
 void
 afsd_mount_afs(const char *rn, const char *mountdir)
