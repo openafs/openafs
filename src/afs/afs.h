@@ -68,15 +68,15 @@ extern enum afs_shutdown_state afs_shuttingdown;
 #define AFS_VFS_FAKEFREE (2147483647)
 
 /* Moved from VNOPS/afs_vnop_flocks so can be used in prototypes */
-#if     defined(AFS_HPUX102_ENV)
-#define AFS_FLOCK       k_flock
+#if defined(UKERNEL)
+# define AFS_FLOCK usr_flock
+#elif defined(AFS_HPUX102_ENV)
+# define AFS_FLOCK k_flock
+#elif defined(AFS_SUN5_ENV) || (defined(AFS_LINUX_ENV) && !defined(AFS_LINUX_64BIT_KERNEL))
+# define AFS_FLOCK flock64
 #else
-#if     defined(AFS_SUN5_ENV) || (defined(AFS_LINUX_ENV) && !defined(AFS_LINUX_64BIT_KERNEL))
-#define AFS_FLOCK       flock64
-#else
-#define AFS_FLOCK       flock
-#endif /* AFS_SUN65_ENV */
-#endif /* AFS_HPUX102_ENV */
+# define AFS_FLOCK flock
+#endif /* UKERNEL */
 
 /* The following are various levels of afs debugging */
 #define	AFSDEB_GENERAL		1	/* Standard debugging */

@@ -182,17 +182,6 @@ afs_suser(void *credp)
  */
 
 /*
- * xflock should never fall through, the only files we know
- * about are AFS files
- */
-int
-usr_flock(void)
-{
-    usr_assert(0);
-    return 0;
-}
-
-/*
  * ioctl should never fall through, the only files we know
  * about are AFS files
  */

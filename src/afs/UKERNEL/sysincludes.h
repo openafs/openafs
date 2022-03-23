@@ -201,7 +201,6 @@ typedef unsigned int fsblkcnt_t;
 #define statfs			usr_statfs
 #define file			usr_file
 #define dirent			usr_dirent
-#define flock			usr_flock
 #define fid			usr_fid
 #define sysent			usr_sysent
 #define ifaddr                  usr_ifaddr
@@ -1101,7 +1100,6 @@ struct usr_buf {
 
 struct vcache;
 #define afs_ucred_t struct usr_ucred
-#define AFS_FLOCK       flock
 
 
 struct usr_vnodeops {
@@ -1136,7 +1134,7 @@ struct usr_vnodeops {
     int (*vn_strategy) (void);
     int (*vn_bread) (void);
     int (*vn_brelse) (void);
-    int (*vn_lockctl) (struct vcache *, struct AFS_FLOCK *, int,
+    int (*vn_lockctl) (struct vcache *, struct usr_flock *, int,
 		       afs_ucred_t *);
     int (*vn_fid) (struct vcache *avc, struct fid **);
 };
