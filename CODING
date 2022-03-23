@@ -333,10 +333,8 @@ afs/afs_syscall.c    : old-style
 afsd/afsd_kernel.c   : deprecated    : daemon() marked as deprecated on Darwin
 auth/ktc.c           : all (ukernel) : call_syscall doesn't have a prototype
 bozo/bosserver.c     : deprecated    : daemon() marked as deprecated on Darwin
-bucoord/ubik_db_if.c : strict-proto  : Ubik_Call
-bucoord/commands.c   : all	     : Ubik_Call
-				     : signed vs unsigned for dates
-butc/tcudbprocs.c    : all	     : ubik_Call
+bucoord/ubik_db_if.c : strict-proto  : ubik_Call_SingleServer
+bucoord/commands.c   : all	     : signed vs unsigned for dates
 external/heimdal/hcrypto/validate.c: all: statement with empty body
 external/heimdal/hcrypto/evp.c:      cast-function-type
              : Linux kernel build uses -Wcast-function-type

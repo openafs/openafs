@@ -2111,10 +2111,12 @@ DeleteDump(void *param)
 
     /* Query the backup database for list of volumes to delete */
     for (index = next = 0; index != -1; index = next) {
-	rc = ubik_Call_SingleServer(BUDB_GetVolumes, udbHandle.uh_client,
-				    UF_SINGLESERVER, BUDB_MAJORVERSION,
-				    BUDB_OP_DUMPID, tapeName, dumpid, 0,
-				    index, &next, &dbTime, &vl);
+	rc = ubik_Call_SingleServer_BUDB_GetVolumes(udbHandle.uh_client,
+						    UF_SINGLESERVER,
+						    BUDB_MAJORVERSION,
+						    BUDB_OP_DUMPID,
+						    tapeName, dumpid, 0, index,
+						    &next, &dbTime, &vl);
 	if (rc) {
 	    if (rc == BUDB_ENDOFLIST)
 		break;
