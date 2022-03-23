@@ -994,12 +994,12 @@ static struct ubikCallState uServer;
  * 	in the future, we should also put in a protocol to find the sync site
  */
 
-afs_int32
+static afs_int32
 ubik_Call_SingleServer(int (*aproc) (), struct ubik_client *aclient,
-		       afs_int32 aflags, char *p1, char *p2, char *p3,
-		       char *p4, char *p5, char *p6, char *p7, char *p8,
-		       char *p9, char *p10, char *p11, char *p12, char *p13,
-		       char *p14, char *p15, char *p16)
+		       afs_int32 aflags, long p1, long p2, long p3,
+		       long p4, long p5, long p6, long p7, long p8,
+		       long p9, long p10, long p11, long p12, long p13,
+		       long p14, long p15, long p16)
 {
     afs_int32 code;
     afs_int32 someCode, newHost, thisHost;
@@ -1126,6 +1126,33 @@ ubik_Call_SingleServer(int (*aproc) (), struct ubik_client *aclient,
     return someCode;
 }
 
+int
+ubik_Call_SingleServer_BUDB_GetVolumes(struct ubik_client *aclient,
+				       afs_int32 aflags, afs_int32 majorVersion,
+				       afs_int32 flags, const char *name,
+				       afs_int32 start, afs_int32 end,
+				       afs_int32 index, afs_int32 *nextIndex,
+				       afs_int32 *dbUpdate,
+				       budb_volumeList *volumes)
+{
+    return ubik_Call_SingleServer(BUDB_GetVolumes, aclient, aflags,
+				  (long)majorVersion, (long)flags, (long)name,
+				  (long)start, (long)end, (long)index,
+				  (long)nextIndex, (long)dbUpdate,
+				  (long)volumes, 0, 0, 0, 0, 0, 0, 0);
+}
+
+int
+ubik_Call_SingleServer_BUDB_DumpDB(struct ubik_client *aclient,
+				   afs_int32 aflags, int firstcall,
+				   afs_int32 maxLength, charListT *charListPtr,
+				   afs_int32 *flags)
+{
+    return ubik_Call_SingleServer(BUDB_DumpDB, aclient, aflags, (long)firstcall,
+				  (long)maxLength, (long)charListPtr,
+				  (long)flags, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+				  0);
+}
 
 /* -------------------------------------
  * debug and test routines

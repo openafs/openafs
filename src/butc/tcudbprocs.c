@@ -13,10 +13,6 @@
 #include <afs/procmgmt.h>
 #include <roken.h>
 
-#ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wimplicit-function-declaration"
-#endif
-
 #include <afs/opr.h>
 #include <rx/rx.h>
 #include <afs/afsint.h>
@@ -456,9 +452,10 @@ writeDbDump(struct butm_tapeInfo *tapeInfoPtr, afs_uint32 taskId,
 
 	    /* get the data */
 	    code =
-		ubik_Call_SingleServer(BUDB_DumpDB, udbHandle.uh_client,
-				       UF_SINGLESERVER, firstcall,
-				       maxReadSize, &charList, &done);
+		ubik_Call_SingleServer_BUDB_DumpDB(udbHandle.uh_client,
+						   UF_SINGLESERVER, firstcall,
+						   maxReadSize, &charList,
+						   &done);
 	    if (code) {
 		ErrorLog(0, taskId, code, 0, "Can't read database\n");
 		ERROR_EXIT(code);
@@ -611,8 +608,8 @@ writeDbDump(struct butm_tapeInfo *tapeInfoPtr, afs_uint32 taskId,
   error_exit:
     /* Let the KeepAlive process stop on its own */
     code =
-	ubik_Call_SingleServer(BUDB_DumpDB, udbHandle.uh_client,
-			       UF_END_SINGLESERVER, 0);
+	ubik_Call_SingleServer_BUDB_DumpDB(udbHandle.uh_client,
+					   UF_END_SINGLESERVER, 0, 0, 0, 0);
 
     if (writeBlock)
 	free(writeBlock);
@@ -1130,8 +1127,9 @@ KeepAlive(void *unused)
 	charList.charListT_val = 0;
 	charList.charListT_len = 0;
 	code =
-	    ubik_Call_SingleServer(BUDB_DumpDB, udbHandle.uh_client,
-				   UF_SINGLESERVER, 0, 0, &charList, &done);
+	    ubik_Call_SingleServer_BUDB_DumpDB(udbHandle.uh_client,
+					       UF_SINGLESERVER, 0, 0, &charList,
+					       &done);
 	if (code || done)
 	    break;
     }

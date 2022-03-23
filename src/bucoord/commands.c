@@ -2937,13 +2937,18 @@ dumpInfo(afs_int32 dumpid, afs_int32 detailFlag)
 	    last = next;
 
 	    /* now get all the volumes in this dump. */
-	    code = ubik_Call_SingleServer(BUDB_GetVolumes, udbHandle.uh_client, UF_SINGLESERVER, BUDB_MAJORVERSION, BUDB_OP_DUMPID | BUDB_OP_TAPENAME, tapeLinkPtr->tapeEntry.name,	/* tape name */
-					  dumpid,	/* dumpid (not initial dumpid) */
-					  0,	/* end */
-					  last,	/* last */
-					  &next,	/* nextindex */
-					  &dbTime,	/* update time */
-					  &vl);
+	    code =
+		ubik_Call_SingleServer_BUDB_GetVolumes(udbHandle.uh_client,
+						       UF_SINGLESERVER,
+						       BUDB_MAJORVERSION,
+						       BUDB_OP_DUMPID | BUDB_OP_TAPENAME,
+						       tapeLinkPtr->tapeEntry.name,	/* tape name */
+						       dumpid,	/* dumpid (not initial dumpid) */
+						       0,	/* end */
+						       last,	/* last */
+						       &next,	/* nextindex */
+						       &dbTime,	/* update time */
+						       &vl);
 
 	    if (code) {
 		if (code == BUDB_ENDOFLIST) {	/* 0 volumes on tape */
