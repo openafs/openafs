@@ -37,6 +37,10 @@
 #endif
 #include <hcrypto/rand.h>
 
+#if defined(AFS_DARWIN80_ENV)
+# include <mach/thread_act.h>
+#endif
+
 #if defined(AFS_SUN5_ENV) || defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV)
 #define	AFS_MINBUFFERS	100
 #else

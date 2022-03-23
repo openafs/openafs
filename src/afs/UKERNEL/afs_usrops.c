@@ -98,7 +98,6 @@ afs_lock_t osi_fsplock;
 pthread_mutex_t usr_sleep_mutex;
 pthread_cond_t usr_sleep_cond;
 
-int call_syscall(long, long, long, long, long, long);
 int fork_syscall(long, long, long, long, long, long);
 
 

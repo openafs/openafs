@@ -437,7 +437,7 @@ afs_syscall.lo: $(TOP_SRC_AFS)/afs_syscall.c
 osi_vfsops.lo: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 	$(LT_CCRULE) $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c -DAFS_NONFSTRANS
 ktc.lo: 	$(TOP_SRCDIR)/auth/ktc.c
-	$(LT_CCRULE) $(TOP_SRCDIR)/auth/ktc.c @CFLAGS_NOERROR@
+	$(LT_CCRULE) $(TOP_SRCDIR)/auth/ktc.c
 cellconfig.lo: $(TOP_SRCDIR)/auth/cellconfig.c
 	$(LT_CCRULE) $(TOP_SRCDIR)/auth/cellconfig.c
 keys.lo: $(TOP_SRCDIR)/auth/keys.c

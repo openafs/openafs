@@ -16,6 +16,7 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
+#include "rx_kmutex.h"
 
 #ifndef AFS_DARWIN80_ENV
 /*

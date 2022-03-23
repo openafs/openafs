@@ -108,6 +108,8 @@ typedef struct {
 typedef int afs_kcondvar_t;
 
 extern lck_grp_t * openafs_lck_grp;
+extern void rx_kmutex_setup(void);
+extern void rx_kmutex_finish(void);
 
 #define MUTEX_SETUP() rx_kmutex_setup()
 #define MUTEX_FINISH() rx_kmutex_finish()
