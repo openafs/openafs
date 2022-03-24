@@ -71,7 +71,7 @@ extern enum afs_shutdown_state afs_shuttingdown;
 #if     defined(AFS_HPUX102_ENV)
 #define AFS_FLOCK       k_flock
 #else
-#if     defined(AFS_SUN5_ENV) || (defined(AFS_LINUX_ENV) && !(defined(AFS_LINUX_ENV) && defined(AFS_LINUX_64BIT_KERNEL)))
+#if     defined(AFS_SUN5_ENV) || (defined(AFS_LINUX_ENV) && !defined(AFS_LINUX_64BIT_KERNEL))
 #define AFS_FLOCK       flock64
 #else
 #define AFS_FLOCK       flock
