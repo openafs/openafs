@@ -3297,7 +3297,11 @@ static struct address_space_operations afs_file_aops = {
   .readpage =		afs_linux_readpage,
   .readpages = 		afs_linux_readpages,
   .writepage =		afs_linux_writepage,
+#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_DIRTY_FOLIO)
+  .dirty_folio =	block_dirty_folio,
+#else
   .set_page_dirty =	__set_page_dirty_buffers,
+#endif
 #if defined (STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_WRITE_BEGIN)
   .write_begin =        afs_linux_write_begin,
   .write_end =          afs_linux_write_end,

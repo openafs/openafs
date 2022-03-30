@@ -3,6 +3,8 @@ dnl Check for structure elements
 AC_CHECK_LINUX_STRUCT([address_space], [backing_dev_info], [fs.h])
 AC_CHECK_LINUX_STRUCT([address_space_operations],
                       [write_begin], [fs.h])
+dnl linux 5.18 replaced set_page_dirty with dirty_folio
+AC_CHECK_LINUX_STRUCT([address_space_operations], [dirty_folio], [fs.h])
 AC_CHECK_LINUX_STRUCT([backing_dev_info], [name],
                       [backing-dev.h])
 AC_CHECK_LINUX_STRUCT([cred], [session_keyring], [cred.h])
