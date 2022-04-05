@@ -216,10 +216,15 @@ afs_dynroot_computeDirEnt(char *name, int *curPageP, int *curChunkP)
  * Add directory entry by given name to a directory.  Assumes the
  * caller has allocated the directory to be large enough to hold
  * the necessary entry.
+ *
+ * In order to make sure that memory isn't being accidentally stomped, receive
+ * the size of the directory as an argument (dirSize) and use this info to
+ * calculate the maximum number of bytes that can be occupied by the name
+ * mentioned above.
  */
 static void
 afs_dynroot_addDirEnt(struct DirHeader *dirHeader, int *curPageP,
-		      int *curChunkP, char *name, int vnode)
+		      int *curChunkP, char *name, int vnode, size_t dirSize)
 {
     char *dirBase = (char *)dirHeader;
     struct PageHeader *pageHeader;
@@ -228,6 +233,7 @@ afs_dynroot_addDirEnt(struct DirHeader *dirHeader, int *curPageP,
     int curPage = *curPageP;
     int curChunk = *curChunkP;
     int didNewPage = 0;
+    size_t offset, limit;
 
     /*
      * Check if we need to flip pages..  If so, init the new page.
@@ -257,7 +263,16 @@ afs_dynroot_addDirEnt(struct DirHeader *dirHeader, int *curPageP,
     dirEntry->next = 0;
     dirEntry->fid.vnode = htonl(vnode);
     dirEntry->fid.vunique = htonl(1);
-    strcpy(dirEntry->name, name);
+
+    osi_Assert(dirEntry->name > dirBase);
+    offset = dirEntry->name - dirBase;
+    osi_Assert(dirSize > offset);
+    limit = dirSize - offset;
+    /*
+     * The caller must have ensured that the directory is large enough, so
+     * strlcpy() should never truncate the string.
+     */
+    strlcpy(dirEntry->name, name, limit);
 
     for (i = curChunk; i < curChunk + sizeOfEntry; i++) {
 	t1 = i / 8;
@@ -418,10 +433,11 @@ afs_RebuildDynroot(void)
     memset(dirHeader->hashTable, 0, NHASHENT * sizeof(dirHeader->hashTable[0]));
 
     /* Install ".", "..", and the dynamic mount directory */
-    afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, ".", 1);
-    afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, "..", 1);
+    afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, ".", 1, dirSize);
+    afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, "..", 1, dirSize);
     afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
-			  AFS_DYNROOT_MOUNTNAME, AFS_DYNROOT_MOUNT_VNODE);
+			  AFS_DYNROOT_MOUNTNAME, AFS_DYNROOT_MOUNT_VNODE,
+			  dirSize);
     linkCount += 3;
 
     for (cellidx = 0; cellidx < maxcellidx; cellidx++) {
@@ -438,9 +454,9 @@ afs_RebuildDynroot(void)
 	osi_Assert(dotCell != NULL);
 	osi_Assert(snprintf(dotCell, dotLen, ".%s", c->cellName) < dotLen);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, c->cellName,
-			      VNUM_FROM_CIDX_RW(cellidx, 0));
+			      VNUM_FROM_CIDX_RW(cellidx, 0), dirSize);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, dotCell,
-			      VNUM_FROM_CIDX_RW(cellidx, 1));
+			      VNUM_FROM_CIDX_RW(cellidx, 1), dirSize);
 	afs_osi_Free(dotCell, dotLen);
 
 	linkCount += 2;
@@ -457,9 +473,9 @@ afs_RebuildDynroot(void)
 	osi_Assert(dotCell != NULL);
 	osi_Assert(snprintf(dotCell, dotLen, ".%s", ca->alias) < dotLen);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, ca->alias,
-			      VNUM_FROM_CAIDX_RW(aliasidx, 0));
+			      VNUM_FROM_CAIDX_RW(aliasidx, 0), dirSize);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, dotCell,
-			      VNUM_FROM_CAIDX_RW(aliasidx, 1));
+			      VNUM_FROM_CAIDX_RW(aliasidx, 1), dirSize);
 	afs_osi_Free(dotCell, dotLen);
 	afs_PutCellAlias(ca);
     }
@@ -467,7 +483,8 @@ afs_RebuildDynroot(void)
     ts = afs_dynSymlinkBase;
     while (ts) {
 	int vnum = VNUM_FROM_TYPEID(VN_TYPE_SYMLINK, ts->index);
-	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, ts->name, vnum);
+	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, ts->name, vnum,
+			      dirSize);
 	ts = ts->next;
     }
 
@@ -490,8 +507,9 @@ afs_RebuildDynrootMount(void)
     int curChunk, curPage;
     char *newDir;
     struct DirHeader *dirHeader;
+    size_t dirSize = AFS_PAGESIZE;
 
-    newDir = afs_osi_Alloc(AFS_PAGESIZE);
+    newDir = afs_osi_Alloc(dirSize);
     osi_Assert(newDir != NULL);
 
     /*
@@ -515,14 +533,14 @@ afs_RebuildDynrootMount(void)
     memset(dirHeader->hashTable, 0, NHASHENT * sizeof(dirHeader->hashTable[0]));
 
     /* Install "." and ".." */
-    afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, ".", 1);
-    afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, "..", 1);
+    afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, ".", 1, dirSize);
+    afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, "..", 1, dirSize);
 
     ObtainWriteLock(&afs_dynrootDirLock, 549);
     if (afs_dynrootMountDir)
 	afs_osi_Free(afs_dynrootMountDir, afs_dynrootMountDirLen);
     afs_dynrootMountDir = newDir;
-    afs_dynrootMountDirLen = AFS_PAGESIZE;
+    afs_dynrootMountDirLen = dirSize;
     ReleaseWriteLock(&afs_dynrootDirLock);
 }
 
