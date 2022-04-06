@@ -3844,6 +3844,7 @@ DECL_PIOCTL(PSetSysName)
     int t, count, num = 0, allpags = 0;
     char **sysnamelist;
     struct afs_pdata validate;
+    size_t len;
 
     AFS_STATCNT(PSetSysName);
     if (!afs_globalVFS) {
@@ -3910,7 +3911,11 @@ DECL_PIOCTL(PSetSysName)
 	    }
 	} else {
 	    foundname = num;
-	    strcpy(outname, sysnamelist[0]);
+	    len = sizeof(outname);
+	    if (strlcpy(outname, sysnamelist[0], len) >= len) {
+		afs_PutUser(au, READ_LOCK);
+		return E2BIG;
+	    }
 	}
 	afs_PutUser(au, READ_LOCK);
 	if (setsysname)
@@ -3920,7 +3925,9 @@ DECL_PIOCTL(PSetSysName)
 	if (!afs_sysname)
 	    osi_Panic("PSetSysName: !afs_sysname\n");
 	if (!setsysname) {	/* user just wants the info */
-	    strcpy(outname, afs_sysname);
+	    len = sizeof(outname);
+	    if (strlcpy(outname, afs_sysname, len) >= len)
+		return E2BIG;
 	    foundname = afs_sysnamecount;
 	    sysnamelist = afs_sysnamelist;
 	} else {		/* Local guy; only root can change sysname */
@@ -3937,7 +3944,8 @@ DECL_PIOCTL(PSetSysName)
 
 	    if (strlen(inname) >= MAXSYSNAME-1)
 		return EINVAL;
-	    strcpy(afs_sysname, inname);
+	    if (strlcpy(afs_sysname, inname, MAXSYSNAME) >= MAXSYSNAME)
+		return E2BIG;
 
 	    if (setsysname > 1) {	/* ... or list */
 		for (count = 1; count < setsysname; ++count) {
@@ -5137,7 +5145,7 @@ DECL_PIOCTL(PFsCmd)
 	if (vType(tvc) == VLNK) {
 	    ObtainWriteLock(&tvc->lock, 555);
 	    if (afs_HandleLink(tvc, areq) == 0)
-		strncpy((char *)&Outputs->chars, tvc->linkData, MAXCMDCHARS);
+		strlcpy((char *)&Outputs->chars, tvc->linkData, MAXCMDCHARS);
 	    ReleaseWriteLock(&tvc->lock);
 	}
     }

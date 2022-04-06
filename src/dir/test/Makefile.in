@@ -23,5 +23,5 @@ clean:
 	$(RM) -f *.o *.a test dtest core
 
 dtest:		dtest.o
-	$(AFS_LDRULE) dtest.o $(LIBS)
+	$(AFS_LDRULE) dtest.o $(LIBS) $(LIB_roken) $(XLIBS)
 

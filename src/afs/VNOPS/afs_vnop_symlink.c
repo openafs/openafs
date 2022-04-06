@@ -285,7 +285,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     if (!tvc->linkData) {
 	tvc->linkData = afs_osi_Alloc(alen);
 	osi_Assert(tvc->linkData != NULL);
-	strncpy(tvc->linkData, atargetName, alen - 1);
+	memcpy(tvc->linkData, atargetName, alen - 1);
 	tvc->linkData[alen - 1] = 0;
     }
     ReleaseWriteLock(&tvc->lock);

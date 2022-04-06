@@ -143,7 +143,7 @@ afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
     }
 
     /* Return the lookup request to userspace */
-    strncpy(acellName, afsdb_req.cellname, acellNameLen);
+    strlcpy(acellName, afsdb_req.cellname, acellNameLen);
     ReleaseReadLock(&afsdb_req_lock);
     return 0;
 }

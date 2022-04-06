@@ -21,9 +21,6 @@
 #include "afsincludes.h"	/*AFS-based standard headers */
 #include "afs/afs_stats.h"	/*Cache Manager stats */
 #include "afs/afs_args.h"
-#if defined(UKERNEL)
-# include "roken.h"
-#endif
 
 afs_int32 afs_allCBs = 0;	/*Break callbacks on all objects */
 afs_int32 afs_oddCBs = 0;	/*Break callbacks on dirs */

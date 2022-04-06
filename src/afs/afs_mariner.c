@@ -48,8 +48,7 @@ afs_AddMarinerName(char *aname, struct vcache *avc)
 	marinerPtr = 1;
     }
     tp = marinerNames[i];
-    strncpy(tp, aname, SMAR);
-    tp[SMAR - 1] = 0;
+    strlcpy(tp, aname, SMAR);
     marinerVCs[i] = avc;
     return 0;
 }
@@ -78,7 +77,8 @@ void
 afs_MarinerLog(char *astring, struct vcache *avc)
 {
     struct sockaddr_in taddr;
-    char *tp, *tp1, *buf;
+    char *buf;
+    size_t bufsize, buflen;
     struct iovec dvec;
 
     AFS_STATCNT(afs_MarinerLog);
@@ -88,24 +88,32 @@ afs_MarinerLog(char *astring, struct vcache *avc)
 #ifdef  STRUCT_SOCKADDR_HAS_SA_LEN
     taddr.sin_len = sizeof(taddr);
 #endif
-    tp = buf = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+    bufsize = AFS_SMALLOCSIZ;
+    buf = osi_AllocSmallSpace(bufsize);
 
-    strcpy(tp, astring);
-    tp += strlen(astring);
+    if (strlcpy(buf, astring, bufsize) >= bufsize)
+	goto done;
+
     if (avc) {
-	*tp++ = ' ';
-	tp1 = afs_GetMariner(avc);
-	strcpy(tp, tp1);
-	tp += strlen(tp1);
+	char *tp1 = afs_GetMariner(avc);
+
+	if (strlcat(buf, " ", bufsize) >= bufsize)
+	    goto done;
+	if (strlcat(buf, tp1, bufsize) >= bufsize)
+	    goto done;
     }
-    *tp++ = '\n';
+    if (strlcat(buf, "\n", bufsize) >= bufsize)
+	goto done;
+
     /* note, console doesn't want a terminating null */
     /* I don't care if mariner packets fail to be sent */
+    buflen = strlen(buf);
     dvec.iov_base = buf;
-    dvec.iov_len = tp - buf;
+    dvec.iov_len = buflen;
     AFS_GUNLOCK();
-    (void)rxi_NetSend(afs_server->socket, &taddr, &dvec, 1, tp - buf, 0);
+    (void)rxi_NetSend(afs_server->socket, &taddr, &dvec, 1, buflen, 0);
     AFS_GLOCK();
+ done:
     osi_FreeSmallSpace(buf);
 }				/*afs_MarinerLog */
 

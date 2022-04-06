@@ -2100,7 +2100,7 @@ rxi_ReceiveVersionPacket(struct rx_packet *ap, osi_socket asocket,
 	ap->header.flags = ap->header.flags & ~RX_CLIENT_INITIATED;
 	rxi_EncodePacketHeader(ap);
 	memset(buf, 0, sizeof(buf));
-	strncpy(buf, cml_version_number + 4, sizeof(buf) - 1);
+	strlcpy(buf, cml_version_number + 4, sizeof(buf));
 	rx_packetwrite(ap, 0, 65, buf);
 	tl = ap->length;
 	ap->length = 65;

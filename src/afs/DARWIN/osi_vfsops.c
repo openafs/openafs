@@ -113,7 +113,10 @@ afs_mount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp, CTX
     memset(mnt_stat->f_mntfromname, 0, MNAMELEN);
 
     if (data == 0) {
-	strcpy(mnt_stat->f_mntfromname, "AFS");
+	if (strlcpy(mnt_stat->f_mntfromname, "AFS", MNAMELEN) >= MNAMELEN) {
+	    AFS_GUNLOCK();
+	    return ENAMETOOLONG;
+	}
 	/* null terminated string "AFS" will fit, just leave it be. */
 	vfs_setfsprivate(mp, NULL);
     } else {
@@ -125,7 +128,10 @@ afs_mount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp, CTX
 	memset(volName + size, 0, MNAMELEN - size);
 
 	if (volName[0] == 0) {
-	    strcpy(mnt_stat->f_mntfromname, "AFS");
+	    if (strlcpy(mnt_stat->f_mntfromname, "AFS", MNAMELEN) >= MNAMELEN) {
+		AFS_GUNLOCK();
+		return ENAMETOOLONG;
+	    }
 	    vfs_setfsprivate(mp, &afs_rootFid);
 	} else {
 	    struct cell *localcell = afs_GetPrimaryCell(READ_LOCK);
