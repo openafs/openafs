@@ -265,7 +265,7 @@ AFSPAGOBJS = \
 	rx_pag_packet.o	\
 	rx_multi.o	\
 	rx_stats.o	\
-	strcasecmp_pag.o	\
+	afs_util.o	\
 	opr_rbtree.o	\
 	xdr_rx.o	\
 	xdr_mem.o	\
@@ -552,8 +552,6 @@ rx_pag_packet.o: $(TOP_SRC_RX)/rx_packet.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_packet.c
 rx_pag_knet.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
-strcasecmp_pag.o: $(TOP_SRCDIR)/crypto/hcrypto/kernel/strcasecmp.c
-	$(CRULE_NOOPT) $(TOP_SRCDIR)/crypto/hcrypto/kernel/strcasecmp.c
 
 # Crypto
 md5.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/md5.c

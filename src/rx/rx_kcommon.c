@@ -234,7 +234,7 @@ osi_AssertFailK(const char *expr, const char *file, int line)
 
 # define ADDBUF(BUF, STR)					\
 	if (strlen(BUF) + strlen((char *)(STR)) + 1 <= sizeof BUF) {	\
-		strcat(BUF, (char *)(STR));				\
+		strlcat(BUF, (char *)(STR), sizeof(BUF));		\
 	}
 
     buf[0] = '\0';

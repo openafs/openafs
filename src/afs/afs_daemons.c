@@ -290,12 +290,17 @@ afs_CheckRootVolume(void)
     struct volume *tvp = NULL;
     int usingDynroot = afs_GetDynrootEnable();
     int localcell;
+    size_t bufsize, len;
 
     AFS_STATCNT(afs_CheckRootVolume);
+    bufsize = sizeof(rootVolName);
     if (*afs_rootVolumeName == 0) {
-	strcpy(rootVolName, "root.afs");
+	len = strlcpy(rootVolName, "root.afs", bufsize);
     } else {
-	strcpy(rootVolName, afs_rootVolumeName);
+	len = strlcpy(rootVolName, afs_rootVolumeName, bufsize);
+    }
+    if (len >= bufsize) {
+	return ENAMETOOLONG;
     }
 
     if (usingDynroot) {
@@ -311,11 +316,13 @@ afs_CheckRootVolume(void)
 	tvp = afs_GetVolumeByName(rootVolName, localcell, 1, NULL, READ_LOCK);
 	if (!tvp) {
 	    char buf[128];
-	    int len = strlen(rootVolName);
 
 	    if ((len < 9) || strcmp(&rootVolName[len - 9], ".readonly")) {
-		strcpy(buf, rootVolName);
-		afs_strcat(buf, ".readonly");
+		bufsize = sizeof(buf);
+		len = snprintf(buf, bufsize, "%s.readonly", rootVolName);
+		if (len >= bufsize) {
+		    return ENAMETOOLONG;
+		}
 		tvp = afs_GetVolumeByName(buf, localcell, 1, NULL, READ_LOCK);
 	    }
 	}

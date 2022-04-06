@@ -111,7 +111,7 @@ afspag_Init(afs_int32 nfs_server_addr)
         osi_Assert(afs_sysnamelist[i] != NULL);
     }
     afs_sysname = afs_sysnamelist[0];
-    strcpy(afs_sysname, SYS_NAME);
+    osi_Assert(strlcpy(afs_sysname, SYS_NAME, MAXSYSNAME) < MAXSYSNAME);
     afs_sysnamecount = 1;
     afs_sysnamegen++;
 

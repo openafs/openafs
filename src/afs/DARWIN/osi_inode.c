@@ -38,10 +38,14 @@ getinode(fs, dev, inode, vpp, perror)
     int code;
     vfs_context_t ctx;
     char volfspath[64];
+    size_t len = sizeof(volfspath);
     
     *vpp = 0;
     *perror = 0;
-    sprintf(volfspath, "/.vol/%d/%d", dev, inode);
+    if (snprintf(volfspath, len, "/.vol/%d/%d", dev, inode) >= len) {
+	*perror = BAD_IGET;
+	return ENAMETOOLONG;
+    }
     code = vnode_open(volfspath, O_RDWR, 0, 0, &vp, afs_osi_ctxtp);
     if (code) {
 	*perror = BAD_IGET;

@@ -10,5 +10,4 @@ evp-algs.c
 rand.c
 rand-timer.c
 evp-hcrypto.h
-strcasecmp.c
 heim_threads.h

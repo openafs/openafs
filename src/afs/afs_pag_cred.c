@@ -48,13 +48,12 @@ afspag_GetCell(char *acell)
 	tcell = afs_osi_Alloc(sizeof(struct afspag_cell));
 	if (!tcell)
 	    goto out;
-	tcell->cellname = afs_osi_Alloc(strlen(acell) + 1);
+	tcell->cellname = afs_strdup(acell);
 	if (!tcell->cellname) {
 	    afs_osi_Free(tcell, sizeof(struct afspag_cell));
 	    tcell = 0;
 	    goto out;
 	}
-	strcpy(tcell->cellname, acell);
 	tcell->cellnum = ++lastcell;
 	tcell->next = cells;
 	cells = tcell;
@@ -388,11 +387,9 @@ SPAGCB_GetSysName(struct rx_call *a_call, afs_int32 a_uid,
 	goto out;
 
     for (i = 0; i < afs_sysnamecount; i++) {
-	a_sysnames->SysNameList_val[i].sysname =
-	    afs_osi_Alloc(strlen(afs_sysnamelist[i]) + 1);
+	a_sysnames->SysNameList_val[i].sysname = afs_strdup(afs_sysnamelist[i]);
 	if (!a_sysnames->SysNameList_val[i].sysname)
 	    goto out;
-	strcpy(a_sysnames->SysNameList_val[i].sysname, afs_sysnamelist[i]);
     }
 
     ReleaseReadLock(&afs_xpagsys);
