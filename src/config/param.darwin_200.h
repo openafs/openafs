@@ -173,6 +173,17 @@
 #  define SYS_NAME_ID                 SYS_NAME_ID_amd64_darwin_200
 #  define AFSLITTLE_ENDIAN            1
 
+# elif defined(__arm64__)
+
+#  define AFS_ARM_ENV                 1
+#  define AFS_ARM64_DARWIN_ENV        1
+
+#  define sys_arm_darwin_200          1
+
+#  define SYS_NAME                    "arm_darwin_200"
+#  define SYS_NAME_ID                 SYS_NAME_ID_arm_darwin_200
+#  define AFSLITTLE_ENDIAN            1
+
 # else
 # error Unsupported architecture
 # endif /* __amd64__ */

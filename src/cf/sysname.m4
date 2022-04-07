@@ -194,6 +194,10 @@ else
 			AFS_SYSNAME="x86_darwin_200"
 			OSXSDK="macosx11.0"
 			;;
+		arm-apple-darwin20.*)
+			AFS_SYSNAME="arm_darwin_200"
+			OSXSDK="macosx11.0"
+			;;
                 sparc-sun-solaris2.8)
                         AFS_SYSNAME="sun4x_58"
                         ;;

@@ -85,7 +85,8 @@ process.o	: process.default.s process.i386.s process.amd64.s process.c lwp.o
 		amd64=`echo $${CURRENTBUILDARCH} | grep -q x86_64 && echo process.amd64.o` ; \
 		armv6=`echo $${CURRENTBUILDARCH} | grep -q armv6 && echo process.armv6.o` ; \
 		armv7=`echo $${CURRENTBUILDARCH} | grep -q armv7 && echo process.armv7.o` ; \
-		if [ -z "$${ppc}" -a -z "$${i386}" -a -z "$${amd64}" -a -z "$${armv6}" -a -z "$${armv7}" ] ; then \
+		arm64=`echo $${CURRENTBUILDARCH} | grep -q arm64 && echo process.arm64.o` ; \
+		if [ -z "$${ppc}" -a -z "$${i386}" -a -z "$${amd64}" -a -z "$${armv6}" -a -z "$${armv7}" -a -z "$${arm64}" ] ; then \
 			if [ `arch` = ppc ] ; then \
 				ppc=yes ; \
 			else \
@@ -94,36 +95,42 @@ process.o	: process.default.s process.i386.s process.amd64.s process.c lwp.o
 		fi ; \
 		if [ -n "$${armv6}" ] ; then \
 			$(CC) -x assembler-with-cpp -c -arch armv6 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.default.s -o "$${armv6}" ; \
-			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${ppc}" -a -z "$${armv7}" ] ; then \
+			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${ppc}" -a -z "$${armv7}" -a -z "$${arm64}" ] ; then \
 				${MV} "$${armv6}" process.o ; \
 			fi ; \
 		fi ; \
 		if [ -n "$${armv7}" ] ; then \
 			$(CC) -x assembler-with-cpp -c -arch armv7 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.default.s -o "$${armv7}" ; \
-			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${ppc}" -a -z "$${armv6}" ] ; then \
+			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${ppc}" -a -z "$${armv6}" -a -z "$${arm64}" ] ; then \
 				${MV} "$${armv7}" process.o ; \
 			fi ; \
 		fi ; \
 		if [ -n "$${ppc}" ] ; then \
 			$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -arch ppc -I${TOP_INCDIR} ${srcdir}/process.default.s -o "$${ppc}" ; \
-			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${armv6}" -a -z "$${armv7}" ] ; then \
+			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${armv6}" -a -z "$${armv7}" -a -z "$${arm64}" ] ; then \
 				${MV} "$${ppc}" process.o ; \
 			fi ; \
 		fi ; \
 		if [ -n "$${i386}" ] ; then \
 			$(CC) -x assembler-with-cpp -c -arch i386 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s -o "$${i386}" ; \
-			if [ -z "$${ppc}" -a -z "$${amd64}" -a -z "$${armv6}" -a -z "$${armv7}" ] ; then \
+			if [ -z "$${ppc}" -a -z "$${amd64}" -a -z "$${armv6}" -a -z "$${armv7}" -a -z "$${arm64}" ] ; then \
 				${MV} "$${i386}" process.o ; \
 			fi ; \
 		fi ; \
 		if [ -n "$${amd64}" ] ; then \
 			$(CC) -x assembler-with-cpp -c -arch x86_64 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.amd64.s -o "$${amd64}" ; \
-			if [ -z "$${ppc}" -a -z "$${i386}" -a -z "$${armv6}" -a -z "$${armv7}" ] ; then \
+			if [ -z "$${ppc}" -a -z "$${i386}" -a -z "$${armv6}" -a -z "$${armv7}" -a -z "$${arm64}" ] ; then \
 				${MV} "$${amd64}" process.o ; \
 			fi ; \
 		fi ; \
+		if [ -n "$${arm64}" ] ; then \
+			$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -arch arm64 -I${TOP_INCDIR} -I${srcdir} -I. -I${TOP_OBJDIR}/src/config ${srcdir}/process.c -o "$${arm64}" ; \
+			if [ -z "$${ppc}" -a -z "$${i386}" -a -z "$${armv6}" -a -z "$${armv7}" -a -z "$${amd64}" ] ; then \
+				${MV} "$${arm64}" process.o ; \
+			fi ; \
+		fi ; \
 		if [ ! -f process.o ] ; then \
-			lipo -create $${amd64} $${i386} $${ppc} $${armv6} $${armv7} -output process.o ;\
+			lipo -create $${amd64} $${i386} $${ppc} $${armv6} $${armv7} $${arm64} -output process.o ;\
 		fi ;; \
 	i386_*bsd*) \
 		cp ${srcdir}/process.i386.s process.S ; \
