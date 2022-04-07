@@ -377,6 +377,9 @@ case $AFS_SYSNAME in
 esac
 
 case $AFS_SYSNAME in
+        *_darwin_200)
+                AFS_PARAM=param.darwin_200.h
+                ;;
         *)
                 AFS_PARAM=param.${AFS_SYSNAME}.h
                 ;;
