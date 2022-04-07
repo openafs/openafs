@@ -349,7 +349,7 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} -framework CoreFoundation"
 		;;
 
-	*_darwin_190 | *_darwin_200)
+	*_darwin_190 | *_darwin_200 | *_darwin_210)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS="-D_REENTRANT"
 		MT_LIBS='${XLIBS}'
