@@ -8,7 +8,17 @@ if [ $majorvers -ge 19 ]; then
   # Root mount point is read-only. To workaround this restriction, add a
   # synthetic entity for afs into /etc/synthetic.conf. For more information,
   # please read man synthetic.conf(5).
-  grep -qs '^afs$' /etc/synthetic.conf || echo 'afs' >> /etc/synthetic.conf
+  if [ $majorvers -ge 21 ]; then
+    # On macOS 12, SIP is not allowing our LaunchDaemon to unmount /afs on
+    # restart/shutdown. If /afs is mounted on the user's directory, this problem
+    # doesn't happen.
+    sed -i "" "/OpenAFS\/afs/d" /etc/synthetic.conf &> /dev/null
+    sed -i "" "/^afs$/d" /etc/synthetic.conf &> /dev/null
+    echo "afs\tUsers/$USER/OpenAFS/afs" >> /etc/synthetic.conf
+    mkdir -p /Users/$USER/OpenAFS/afs
+  else
+    grep -qs '^afs$' /etc/synthetic.conf || echo 'afs' >> /etc/synthetic.conf
+  fi
 elif [ $majorvers -ge 7 ]; then
   # /Network is now readonly, so put AFS in /afs; make sure /afs is a directory
   if [ -e /afs ]; then
@@ -35,6 +45,10 @@ fi
 if [ `grep /Network/afs cacheinfo` ]; then
     cat cacheinfo |sed s#/Network/afs#/afs# > cacheinfo.new
     mv cacheinfo.new cacheinfo
+fi
+
+if [ $majorvers -ge 21 ]; then
+    sed -i "" "s/\/afs:/\/Users\/$USER\/OpenAFS\/afs:/" cacheinfo
 fi
 
 # if the installer plugin generated ThisCell and/or CellAlias
