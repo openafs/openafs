@@ -198,6 +198,14 @@ else
 			AFS_SYSNAME="arm_darwin_200"
 			OSXSDK="macosx11.0"
 			;;
+		x86_64-apple-darwin21.*)
+			AFS_SYSNAME="x86_darwin_210"
+			OSXSDK="macosx12.0"
+			;;
+		arm-apple-darwin21.*)
+			AFS_SYSNAME="arm_darwin_210"
+			OSXSDK="macosx12.0"
+			;;
                 sparc-sun-solaris2.8)
                         AFS_SYSNAME="sun4x_58"
                         ;;
@@ -383,6 +391,9 @@ esac
 case $AFS_SYSNAME in
         *_darwin_200)
                 AFS_PARAM=param.darwin_200.h
+                ;;
+        *_darwin_210)
+                AFS_PARAM=param.darwin_210.h
                 ;;
         *)
                 AFS_PARAM=param.${AFS_SYSNAME}.h
