@@ -163,8 +163,8 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 static int event_pid;
-#ifndef AFS_ARM_DARWIN_ENV
-#define MACOS_EVENT_HANDLING 1
+#if !defined(AFS_ARM_DARWIN_ENV) && !defined(AFS_ARM64_DARWIN_ENV)
+# define MACOS_EVENT_HANDLING 1
 #endif
 #endif /* AFS_DARWIN_ENV */
 
