@@ -6659,7 +6659,10 @@ rx_SetConnSecondsUntilNatPing(struct rx_connection *conn, afs_int32 seconds)
 {
     MUTEX_ENTER(&conn->conn_data_lock);
     conn->secondsUntilNatPing = seconds;
-    if (seconds != 0) {
+    if (seconds == 0) {
+	if (rxevent_Cancel(&conn->natKeepAliveEvent))
+	    putConnection(conn);
+    } else {
 	if (!(conn->flags & RX_CONN_ATTACHWAIT))
 	    rxi_ScheduleNatKeepAliveEvent(conn);
 	else
