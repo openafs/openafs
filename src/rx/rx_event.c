@@ -55,7 +55,6 @@
 
 #include "rx.h"
 #include "rx_atomic.h"
-#include "rx_call.h"
 #include "rx_globals.h"
 
 struct rxevent {
