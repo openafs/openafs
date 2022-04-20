@@ -275,7 +275,7 @@ PrintCacheEntries32(struct rx_connection *aconn, int aint32)
 	    continue;
 
 	/* otherwise print this entry */
-	printf("** Cache entry @ 0x%08x for %d.%d.%d.%d", centry.addr,
+	printf("** Cache entry @ 0x%08x for %d.%u.%u.%u", centry.addr,
 	       centry.cell, centry.netFid.Volume, centry.netFid.Vnode,
 	       centry.netFid.Unique);
 
@@ -371,7 +371,7 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
 	    continue;
 
 	/* otherwise print this entry */
-	printf("** Cache entry @ 0x%08x for %d.%d.%d.%d", centry.addr,
+	printf("** Cache entry @ 0x%08x for %d.%u.%u.%u", centry.addr,
 	       centry.cell, centry.netFid.Volume, centry.netFid.Vnode,
 	       centry.netFid.Unique);
 
