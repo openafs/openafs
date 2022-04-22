@@ -549,12 +549,12 @@ afs_ResourceInit(int preallocs)
     }
 
     secobj = rxnull_NewServerSecurityObject();
+    AFS_GUNLOCK();
     afs_server =
 	rx_NewService(0, 1, "afs", &secobj, 1, RXAFSCB_ExecuteRequest);
     afs_server =
 	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", &secobj, 1,
 		      RXSTATS_ExecuteRequest);
-    AFS_GUNLOCK();
     rx_StartServer(0);
     AFS_GLOCK();
     afs_osi_Wakeup(&afs_server);	/* wakeup anyone waiting for it */

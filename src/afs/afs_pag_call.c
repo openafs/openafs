@@ -116,11 +116,11 @@ afspag_Init(afs_int32 nfs_server_addr)
     afs_sysnamegen++;
 
     srv_secobj = rxnull_NewServerSecurityObject();
+    AFS_GUNLOCK();
     stats_svc = rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", &srv_secobj,
 			      1, RXSTATS_ExecuteRequest);
     pagcb_svc = rx_NewService(0, PAGCB_SERVICEID, "pagcb", &srv_secobj,
 			      1, PAGCB_ExecuteRequest);
-    AFS_GUNLOCK();
     rx_StartServer(0);
     AFS_GLOCK();
 

@@ -530,6 +530,8 @@ osi_StopNetIfPoller(void)
  * @param[in]  ahost  ip address
  * @param[in]  aport  port number
  *
+ * @pre AFS_GLOCK is _NOT_ held
+ *
  * @return non-NULL on success; NULL otherwise.
  */
 osi_socket *
@@ -540,26 +542,24 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 
     AFS_STATCNT(osi_NewSocket);
 
+    AFS_GLOCK();
     if (SockProxySocket != NULL) {
 	/* Just make sure we don't init twice. */
+	AFS_GUNLOCK();
 	return SockProxySocket;
     }
+    AFS_GUNLOCK();
 
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = aport;
     addr.sin_addr.s_addr = ahost;
 
-    AFS_GUNLOCK();
-
     code = SockProxyRequest(AFS_USPC_SOCKPROXY_START, &addr, NULL, 0);
     if (code != 0) {
 	afs_warn("rxk_NewSocketHost: Couldn't initialize socket (%d).\n", code);
-	AFS_GLOCK();
 	return NULL;
     }
-
-    AFS_GLOCK();
 
     /*
      * success. notice that the rxk_NewSocketHost interface forces us to return
@@ -567,6 +567,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
      * defined, the socket returned by this function is not used. since the
      * caller is expecting an osi_socket, return one to represent success.
      */
+    AFS_GLOCK();
     if (SockProxySocket == NULL) {
 	SockProxySocket = rxi_Alloc(sizeof(*SockProxySocket));
     } else {
@@ -574,6 +575,8 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 	afs_warn("rxk_NewSocketHost: SockProxySocket already initialized "
 		 "(this should not happen, but continuing regardless).\n");
     }
+    AFS_GUNLOCK();
+
     return SockProxySocket;
 }
 
