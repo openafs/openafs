@@ -92,7 +92,7 @@ extern enum afs_shutdown_state afs_shuttingdown;
 /* The basic defines for the Andrew file system
     better keep things powers of two so "& (foo-1)" hack works for masking bits */
 #define	NBRS		15	/* max number of queued daemon requests */
-#define	NUSERS		16	/* hash table size for unixuser table */
+#define	NUSERS		2048	/* hash table size for unixuser table */
 #define	NSERVERS	16	/* hash table size for server table */
 #define	NVOLS		64	/* hash table size for volume table */
 #define	NFENTRIES	256	/* hash table size for disk volume table */
