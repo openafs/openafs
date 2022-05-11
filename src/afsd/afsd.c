@@ -563,7 +563,7 @@ ParseCacheInfoFile(void)
     FILE *cachefd;		/*Descriptor for cache info file */
     int parseResult;		/*Result of our fscanf() */
     int tCacheBlocks;
-    char tCacheBaseDir[1024], *tbd, tCacheMountDir[1024], *tmd;
+    char tCacheBaseDir[1025], *tbd, tCacheMountDir[1025], *tmd;
 
     if (afsd_debug)
 	printf("%s: Opening cache info file '%s'...\n", rn, fullpn_CacheInfo);
