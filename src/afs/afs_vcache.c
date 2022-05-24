@@ -69,7 +69,7 @@ static struct vcache *Initial_freeVCList;	/*Initial list for above */
 struct afs_q VLRU;		/*vcache LRU */
 afs_int32 vcachegen = 0;
 unsigned int afs_paniconwarn = 0;
-struct vcache *afs_vhashT[VCSIZE];
+struct afs_q afs_vhashT[VCSIZE];
 struct afs_q afs_vhashTV[VCSIZE];
 static struct afs_cbr *afs_cbrHashT[CBRSIZE];
 afs_int32 afs_bulkStatsLost;
@@ -140,7 +140,7 @@ afs_InsertHashCBR(struct afs_cbr *cbr)
  * Environment:
  *	afs_xvcache lock must be held for writing upon entry to
  *	prevent people from changing the vrefCount field, and to
- *      protect the lruq and hnext fields.
+ *      protect the lruq and hashq fields.
  * LOCK: afs_FlushVCache afs_xvcache W
  * REFCNT: vcache ref count must be zero on entry except for osf1
  * RACE: lock is dropped and reobtained, permitting race in caller
@@ -153,8 +153,7 @@ int
 afs_FlushVCache(struct vcache *avc, int *slept)
 {				/*afs_FlushVCache */
 
-    afs_int32 i, code;
-    struct vcache **uvc, *wvc;
+    afs_int32 code;
 
     /* NOTE: We must have nothing drop afs_xvcache until we have removed all
      * possible references to this vcache. This means all hash tables, queues,
@@ -189,16 +188,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	afs_bulkStatsLost++;
     vcachegen++;
     /* remove entry from the hash chain */
-    i = VCHash(&avc->f.fid);
-    uvc = &afs_vhashT[i];
-    for (wvc = *uvc; wvc; uvc = &wvc->hnext, wvc = *uvc) {
-	if (avc == wvc) {
-	    *uvc = avc->hnext;
-	    avc->hnext = NULL;
-	    break;
-	}
-    }
-
+    QRemove(&avc->hashq);
     /* remove entry from the volume hash table */
     QRemove(&avc->vhashq);
 
@@ -1004,16 +994,19 @@ void
 afs_FlushAllVCaches(void)
 {
     int i;
-    struct vcache *tvc, *nvc;
+    struct vcache *tvc;
+    struct afs_q *tq, *uq;
 
     ObtainWriteLock(&afs_xvcache, 867);
 
  retry:
     for (i = 0; i < VCSIZE; i++) {
-	for (tvc = afs_vhashT[i]; tvc; tvc = nvc) {
+	for (tq = afs_vhashT[i].next; tq != &afs_vhashT[i]; tq = uq) {
 	    int slept;
 
-	    nvc = tvc->hnext;
+	    tvc = QTOVC(tq);
+	    uq = QNext(tq);
+
 	    if (afs_FlushVCache(tvc, &slept)) {
 		afs_warn("Failed to flush vcache 0x%lx\n", (unsigned long)(uintptrsz)tvc);
 	    }
@@ -1096,8 +1089,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
     i = VCHash(afid);
     j = VCHashV(afid);
 
-    tvc->hnext = afs_vhashT[i];
-    afs_vhashT[i] = tvc;
+    QAdd(&afs_vhashT[i], &tvc->hashq);
     QAdd(&afs_vhashTV[j], &tvc->vhashq);
 
     if ((VLRU.next->prev != &VLRU) || (VLRU.prev->next != &VLRU)) {
@@ -1170,6 +1162,7 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
     struct AFSVolSync tsync;
     int didCore;
     XSTATS_DECLS;
+    struct afs_q *tq, *uq;
     AFS_STATCNT(afs_FlushActiveVcaches);
 
     code = afs_CreateReq(&treq, afs_osi_credp);
@@ -1180,7 +1173,10 @@ afs_FlushActiveVcaches(afs_int32 doflocks)
 
     ObtainReadLock(&afs_xvcache);
     for (i = 0; i < VCSIZE; i++) {
-	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+	for (tq = afs_vhashT[i].next; tq != &afs_vhashT[i]; tq = uq) {
+	    tvc = QTOVC(tq);
+	    uq = QNext(tq);
+
             if (tvc->f.states & CVInit) continue;
 #ifdef AFS_DARWIN80_ENV
             if (tvc->f.states & CDeadVnode &&
@@ -2124,6 +2120,7 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 #ifdef AFS_DARWIN80_ENV
     vnode_t tvp;
 #endif
+    struct afs_q *tq, *uq;
 
     start = osi_Time();
 
@@ -2154,8 +2151,12 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 
  rootvc_loop:
     ObtainSharedLock(&afs_xvcache, 7);
+    tvc = NULL;
     i = VCHash(afid);
-    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+    for (tq = afs_vhashT[i].next; tq != &afs_vhashT[i]; tq = uq) {
+	tvc = QTOVC(tq);
+	uq = QNext(tq);
+
 	if (!FidCmp(&(tvc->f.fid), afid)) {
             if (tvc->f.states & CVInit) {
 		ReleaseSharedLock(&afs_xvcache);
@@ -2185,6 +2186,11 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 #endif
 	    break;
 	}
+    }
+
+    if (tq == &afs_vhashT[i]) {
+	/* vcache not found */
+	tvc = NULL;
     }
 
     if (!haveStatus && (!tvc || !(tvc->f.states & CStatd))) {
@@ -2637,12 +2643,17 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 flag)
     struct vcache *deadvc = NULL, *livevc = NULL;
     vnode_t tvp;
 #endif
+    struct afs_q *tq, *uq;
 
     AFS_STATCNT(afs_FindVCache);
 
  findloop:
+    tvc = NULL;
     i = VCHash(afid);
-    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+    for (tq = afs_vhashT[i].next; tq != &afs_vhashT[i]; tq = uq) {
+	tvc = QTOVC(tq);
+	uq = QNext(tq);
+
 	if (FidMatches(afid, tvc)) {
             if (tvc->f.states & CVInit) {
 		findvc_sleep(tvc, flag);
@@ -2656,6 +2667,11 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 flag)
 #endif
 	    break;
 	}
+    }
+
+    if (tq == &afs_vhashT[i]) {
+	/* vcache not found */
+	tvc = NULL;
     }
 
     /* should I have a read lock on the vnode here? */
@@ -2762,15 +2778,19 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 #ifdef AFS_DARWIN80_ENV
     vnode_t tvp;
 #endif
+    struct afs_q *tq, *uq;
 
     AFS_STATCNT(afs_FindVCache);
 
   loop:
 
     ObtainSharedLock(&afs_xvcache, 331);
-
+    tvc = NULL;
     i = VCHash(afid);
-    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+    for (tq = afs_vhashT[i].next; tq != &afs_vhashT[i]; tq = uq) {
+	tvc = QTOVC(tq);
+	uq = QNext(tq);
+
 	/* Match only on what we have.... */
 	if (((tvc->f.fid.Fid.Vnode & 0xffff) == afid->Fid.Vnode)
 	    && (tvc->f.fid.Fid.Volume == afid->Fid.Volume)
@@ -2926,8 +2946,10 @@ afs_vcacheInit(int astatSize)
     }
 #endif
     QInit(&VLRU);
-    for(i = 0; i < VCSIZE; ++i)
+    for (i = 0; i < VCSIZE; i++) {
+	QInit(&afs_vhashT[i]);
 	QInit(&afs_vhashTV[i]);
+    }
 }
 
 /*!
@@ -2970,7 +2992,10 @@ shutdown_vcache(void)
 	 * Also free the remaining ones in the Cache
 	 */
 	for (i = 0; i < VCSIZE; i++) {
-	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+	    for (tq = afs_vhashT[i].next; tq != &afs_vhashT[i]; tq = uq) {
+		tvc = QTOVC(tq);
+		uq = QNext(tq);
+
 		if (tvc->mvid.target_root) {
 		    osi_FreeSmallSpace(tvc->mvid.target_root);
 		    tvc->mvid.target_root = NULL;
@@ -3007,7 +3032,6 @@ shutdown_vcache(void)
 		if (tvc->Access)
 		    afs_FreeAllAxs(&(tvc->Access));
 	    }
-	    afs_vhashT[i] = 0;
 	}
     }
 
@@ -3047,8 +3071,10 @@ shutdown_vcache(void)
     AFS_RWLOCK_INIT(&afs_xvcache, "afs_xvcache");
     LOCK_INIT(&afs_xvcb, "afs_xvcb");
     QInit(&VLRU);
-    for(i = 0; i < VCSIZE; ++i)
+    for (i = 0; i < VCSIZE; i++) {
+	QInit(&afs_vhashT[i]);
 	QInit(&afs_vhashTV[i]);
+    }
 }
 
 void
@@ -3056,14 +3082,19 @@ afs_DisconGiveUpCallbacks(void)
 {
     int i;
     struct vcache *tvc;
+    struct afs_q *tq, *uq;
 
     ObtainWriteLock(&afs_xvcache, 1002); /* XXX - should be a unique number */
 
  retry:
     /* Somehow, walk the set of vcaches, with each one coming out as tvc */
     for (i = 0; i < VCSIZE; i++) {
-        for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+        for (tq = afs_vhashT[i].next; tq != &afs_vhashT[i]; tq = uq) {
 	    int slept = 0;
+
+	    tvc = QTOVC(tq);
+	    uq = QNext(tq);
+
             if (afs_QueueVCB(tvc, &slept)) {
                 tvc->callback = NULL;
             }
@@ -3091,11 +3122,15 @@ afs_ClearAllStatdFlag(void)
 {
     int i;
     struct vcache *tvc;
+    struct afs_q *tq, *uq;
 
     ObtainWriteLock(&afs_xvcache, 715);
 
     for (i = 0; i < VCSIZE; i++) {
-	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+	for (tq = afs_vhashT[i].next; tq != &afs_vhashT[i]; tq = uq) {
+	    tvc = QTOVC(tq);
+	    uq = QNext(tq);
+
 	    afs_StaleVCacheFlags(tvc, AFS_STALEVC_NODNLC | AFS_STALEVC_NOCB,
 				 CUnique);
 	}

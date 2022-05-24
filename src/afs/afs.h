@@ -258,6 +258,7 @@ struct afs_q {
 
 #define QTOV(e)	    QEntry(e, struct vcache, vlruq)
 #define QTOC(e)	    QEntry(e, struct cell, lruq)
+#define QTOVC(e)    QEntry(e, struct vcache, hashq)
 #define QTOVH(e)    QEntry(e, struct vcache, vhashq)
 
 /*!
@@ -873,7 +874,7 @@ struct vcache {
 #if !defined(AFS_LINUX_ENV)
     struct vcache *nextfree;	/* next on free list (if free) */
 #endif
-    struct vcache *hnext;	/* Hash next */
+    struct afs_q hashq;		/* Hashed per-{volume,vnode} list */
     struct afs_q vhashq;	/* Hashed per-volume list */
     /*! Queue of dirty vcaches. Lock with afs_disconDirtyLock */
     struct afs_q dirtyq;
@@ -1333,7 +1334,7 @@ extern afs_int32 afs_cacheStats;	/*Stat entries in cache */
 extern afs_int32 afs_freeDCCount;	/*Count of elts in freeDCList */
 extern afs_uint32 afs_CacheTooFullCount;
 extern afs_uint32 afs_WaitForCacheDrainCount;
-extern struct vcache *afs_vhashT[VCSIZE];	/*Stat cache hash table */
+extern struct afs_q afs_vhashT[VCSIZE];	/*Stat cache hash table */
 extern struct afs_q afs_vhashTV[VCSIZE]; /* cache hash table on volume */
 extern afs_int32 afs_initState;	/*Initialization state */
 extern afs_int32 afs_termState;	/* Termination state */

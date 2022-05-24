@@ -661,7 +661,7 @@ afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
     struct VenusFid pdir_fid, newFid;
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
-    struct vcache *tdp = NULL, *tvc = NULL;
+    struct vcache *tdp = NULL;
     struct dcache *tdc = NULL;
     struct afs_conn *tc;
     struct rx_connection *rxconn;
@@ -830,32 +830,12 @@ afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
     /* The vcache goes first. */
     ObtainWriteLock(&afs_xvcache, 735);
 
-    /* Old fid hash. */
-    hash = VCHash(&avc->f.fid);
-    /* New fid hash. */
-    new_hash = VCHash(&newFid);
-
     /* Remove hash from old position. */
-    /* XXX: not checking array element contents. It shouldn't be empty.
-     * If it oopses, then something else might be wrong.
-     */
-    if (afs_vhashT[hash] == avc) {
-        /* First in hash chain (might be the only one). */
-	afs_vhashT[hash] = avc->hnext;
-    } else {
-        /* More elements in hash chain. */
- 	for (tvc = afs_vhashT[hash]; tvc; tvc = tvc->hnext) {
-	    if (tvc->hnext == avc) {
-		tvc->hnext = avc->hnext;
-		break;
-	    }
-        }
-    }                           /* if (!afs_vhashT[i]->hnext) */
+    QRemove(&avc->hashq);
     QRemove(&avc->vhashq);
 
     /* Insert hash in new position. */
-    avc->hnext = afs_vhashT[new_hash];
-    afs_vhashT[new_hash] = avc;
+    QAdd(&afs_vhashT[VCHash(&newFid)], &avc->hashq);
     QAdd(&afs_vhashTV[VCHashV(&newFid)], &avc->vhashq);
 
     ReleaseWriteLock(&afs_xvcache);
@@ -1396,6 +1376,7 @@ afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype, int lock)
 {
     struct vcache *tvc;
     afs_uint32 max_unique = 0, i;
+    struct afs_q *tq, *uq;
 
     switch (avtype) {
     case VDIR:
@@ -1410,7 +1391,10 @@ afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype, int lock)
     if (lock)
 	ObtainWriteLock(&afs_xvcache, 736);
     i = VCHash(afid);
-    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+    for (tq = afs_vhashT[i].next; tq != &afs_vhashT[i]; tq = uq) {
+	tvc = QTOVC(tq);
+	uq = QNext(tq);
+
         if (tvc->f.fid.Fid.Unique > max_unique)
 	    max_unique = tvc->f.fid.Fid.Unique;
     }

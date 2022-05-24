@@ -457,6 +457,7 @@ afs_CheckVolumeNames(int flags)
 #ifdef AFS_DARWIN80_ENV
     vnode_t tvp;
 #endif
+    struct afs_q *tq, *uq;
     AFS_STATCNT(afs_CheckVolumeNames);
 
     nvols = 0;
@@ -506,7 +507,9 @@ afs_CheckVolumeNames(int flags)
 loop:
 	ObtainReadLock(&afs_xvcache);
 	for (i = 0; i < VCSIZE; i++) {
-	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+	    for (tq = afs_vhashT[i].next; tq != &afs_vhashT[i]; tq = uq) {
+		tvc = QTOVC(tq);
+		uq = QNext(tq);
 
 		/* if the volume of "mvid.target_root" of the vcache entry is
 		 * among the ones we found earlier, then we re-evaluate it.
