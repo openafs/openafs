@@ -2024,13 +2024,17 @@ _namei_examine_special(char * path1,
 	 * this like a normal file, we won't try to INC or DEC it. */
 	info.linkCount = 0;
     } else {
-	char path2[512];
+	char *path2;
 	/* Open this handle */
-	snprintf(path2, sizeof(path2),
-		 "%s" OS_DIRSEP "%s", path1, dname);
+	if (asprintf(&path2, "%s" OS_DIRSEP "%s", path1, dname) < 0) {
+	    Log("_namei_examine_special: memory allocation failure\n");
+	    ret = -1;
+	    goto error;
+	}
 	linkHandle->fd_fd = OS_OPEN(path2, Testing ? O_RDONLY : O_RDWR, 0666);
 	info.linkCount =
 	    namei_GetLinkCount(linkHandle, (Inode) 0, 1, 1, Testing);
+	free(path2);
     }
 
     if (!judgeFun ||
