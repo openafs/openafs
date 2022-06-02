@@ -442,7 +442,7 @@ xyzprintf(struct state *state, const char *char_format, va_list ap)
 		}
 	    case '\0':
 		--format;
-		/* FALLTHROUGH */
+		AFS_FALLTHROUGH;
 	    case '%':
 		if ((*state->append_char) (state, c))
 		    return -1;

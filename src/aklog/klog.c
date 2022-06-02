@@ -246,12 +246,12 @@ k5_to_k4_name(krb5_context k5context,
 	    i = get_princ_len(k5context, k5princ, 1);
 	    if (i > MAXKTCNAMELEN-1) i = MAXKTCNAMELEN-1;
 	    memcpy(ktcprinc->instance, get_princ_str(k5context, k5princ, 1), i);
-	    /* fall through */
+	    AFS_FALLTHROUGH;
 	case 1:
 	    i = get_princ_len(k5context, k5princ, 0);
 	    if (i > MAXKTCNAMELEN-1) i = MAXKTCNAMELEN-1;
 	    memcpy(ktcprinc->name, get_princ_str(k5context, k5princ, 0), i);
-	    /* fall through */
+	    AFS_FALLTHROUGH;
 	case 0:
 	    break;
 	}

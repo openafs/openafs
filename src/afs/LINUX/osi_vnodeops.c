@@ -2699,7 +2699,7 @@ afs_linux_can_bypass(struct inode *ip) {
 	case LARGE_FILES_BYPASS_CACHE:
 	    if (i_size_read(ip) > cache_bypass_threshold)
 		return 1;
-	    /* fall through */
+	    AFS_FALLTHROUGH;
 	default:
 	    return 0;
      }

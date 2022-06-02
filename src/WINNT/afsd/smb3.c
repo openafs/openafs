@@ -5392,12 +5392,12 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
                    shortName);
             fp->u.FfileBothDirectoryInfo.shortNameLength = cm_ClientStrLen(shortName);
 #endif
-    }
-        /* Fallthrough */
+        }
+        AFS_FALLTHROUGH;
 
     case SMB_FIND_FILE_FULL_DIRECTORY_INFO:
         fp->u.FfileFullDirectoryInfo.eaSize = 0;
-        /* Fallthrough */
+        AFS_FALLTHROUGH;
 
     case SMB_FIND_FILE_DIRECTORY_INFO:
         fp->u.FfileDirectoryInfo.nextEntryOffset = 0;
@@ -6108,11 +6108,11 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                     fp->u.FfileBothDirectoryInfo.shortNameLength = cm_ClientStrLen(shortName);
 #endif
                 }
-                /* Fallthrough */
+                AFS_FALLTHROUGH;
 
             case SMB_FIND_FILE_FULL_DIRECTORY_INFO:
                 fp->u.FfileFullDirectoryInfo.eaSize = 0;
-                /* Fallthrough */
+                AFS_FALLTHROUGH;
 
             case SMB_FIND_FILE_DIRECTORY_INFO:
                 fp->u.FfileDirectoryInfo.nextEntryOffset = orbytes + align;

@@ -1995,7 +1995,7 @@ MultiInputDialogProc( HWND hDialog, UINT message, WPARAM wParam, LPARAM lParam)
                 if ( !GetDlgItemText(hDialog, ID_MID_TEXT+i, mid_tb[i].buf, mid_tb[i].len) )
                     *mid_tb[i].buf = '\0';
             }
-            /* fallthrough */
+            AFS_FALLTHROUGH;
         case IDCANCEL:
             EndDialog(hDialog, LOWORD(wParam));
             return TRUE;

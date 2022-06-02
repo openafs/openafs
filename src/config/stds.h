@@ -299,6 +299,14 @@ hdr_static_inline(unsigned long long) afs_printable_uint64_lu(afs_uint64 d) { re
 # define AFS_NONNULL(x)
 #endif
 
+#if defined(AFS_LINUX26_ENV) && defined(fallthrough)
+# define AFS_FALLTHROUGH fallthrough
+#elif defined(HAVE_FUNC_ATTRIBUTE_FALLTHROUGH)
+# define AFS_FALLTHROUGH __attribute__((fallthrough))
+#else
+# define AFS_FALLTHROUGH do {} while(0)
+#endif
+
 /*
  * Conditionally remove unreached statements under Solaris Studio.
  */

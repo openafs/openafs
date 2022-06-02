@@ -424,7 +424,7 @@ xdr_bytes(XDR * xdrs, char **cpp, u_int * sizep,
 	if (sp == NULL) {
 	    return (FALSE);
 	}
-	/* fall through */
+	AFS_FALLTHROUGH;
 
     case XDR_ENCODE:
 	return (xdr_opaque(xdrs, sp, nodesize));
@@ -519,7 +519,7 @@ xdr_string(XDR * xdrs, char **cpp, u_int maxsize)
 	if (sp == NULL) {
 	    return (TRUE);	/* already free */
 	}
-	/* Fall through */
+	AFS_FALLTHROUGH;
     case XDR_ENCODE:
 	size = strlen(sp);
 	break;
@@ -547,7 +547,7 @@ xdr_string(XDR * xdrs, char **cpp, u_int maxsize)
 	    return (FALSE);
 	}
 	sp[size] = 0;
-	/* fall through */
+	AFS_FALLTHROUGH;
 
     case XDR_ENCODE:
 	return (xdr_opaque(xdrs, sp, size));

@@ -94,7 +94,7 @@ BOOL WINAPI Server_Install_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                {
                case IDOK:
                   Server_Install_OnOK (hDlg);
-                  // fall through
+                  AFS_FALLTHROUGH;
 
                case IDCANCEL:
                   DestroyWindow (hDlg);

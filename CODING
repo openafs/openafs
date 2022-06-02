@@ -115,6 +115,47 @@ Instead of:
 	    do_something();
 	}
 
+In switch statements, to fall through from one case statement to another, use
+AFS_FALLTHROUGH to mark the intentional fall through.  Do not use fall through
+comments (e.g. /* fallthrough */), as some compilers do not recognize them and
+will flag the case statement with an implied fallthrough warning.
+
+Use:
+
+    switch (x) {
+    case 1:
+        do_something();
+        AFS_FALLTHROUGH;
+    case 2:
+        do_something_else();
+        AFS_FALLTHROUGH;
+    default:
+        do_some_action();
+    }
+
+Instead of using fallthrough comments:
+
+    switch (x) {
+    case 1:
+        do_something();
+        /* fallthrough */
+    case 2:
+        do_something_else();
+        /* fallthrough */
+    default:
+        do_some_action();
+    }
+
+Or not marking the fall through:
+
+   switch (x) {
+    case 1:
+        do_something();
+    case 2:
+        do_something_else();
+    default:
+        do_some_action();
+    }
 
 Dependencies required to build OpenAFS from source
 --------------------------------------------------

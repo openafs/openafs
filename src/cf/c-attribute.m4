@@ -9,6 +9,7 @@ dnl roken.  The HAVE___ATTRIBUTE__ symbol is not used in the OpenAFS code.
 dnl
 AC_DEFUN([OPENAFS_C_ATTRIBUTE], [
   AX_GCC_FUNC_ATTRIBUTE([always_inline])
+  AX_GCC_FUNC_ATTRIBUTE([fallthrough])
   AX_GCC_FUNC_ATTRIBUTE([format])
   AX_GCC_FUNC_ATTRIBUTE([nonnull])
   AX_GCC_FUNC_ATTRIBUTE([noreturn])

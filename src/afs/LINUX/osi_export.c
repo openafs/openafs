@@ -93,7 +93,7 @@ static int afs_encode_fh(struct dentry *de, __u32 *fh, int *max_len,
 		if (*max_len < 5) {
 		    return 255;
 		}
-		/* fall through */
+		AFS_FALLTHROUGH;
 
 	    case VN_TYPE_CELL:
 	    case VN_TYPE_ALIAS:

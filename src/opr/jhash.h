@@ -79,13 +79,10 @@ opr_jhash(const afs_uint32 *k, size_t length, afs_uint32 initval)
 
     /* All the case statements fall through */
     switch(length) {
-      case 3 : c+=k[2];
-	/* fall through */
-      case 2 : b+=k[1];
-	/* fall through */
+      case 3 : c+=k[2];			AFS_FALLTHROUGH;
+      case 2 : b+=k[1];			AFS_FALLTHROUGH;
       case 1 : a+=k[0];
-	opr_jhash_final(a, b, c);
-	/* fall through */
+	opr_jhash_final(a, b, c);	AFS_FALLTHROUGH;
       case 0:     /* case 0: nothing left to add */
 	break;
     }
@@ -150,19 +147,19 @@ opr_jhash_opaque(const void *val, size_t length, afs_uint32 initval)
 
     /* All the case statements fall through */
     switch(length) {
-      case 12 : c += (afs_uint32) str[11]<<24; 	/* fall through */
-      case 11 : c += (afs_uint32) str[10]<<16; 	/* fall through */
-      case 10 : c += (afs_uint32) str[9]<<8; 	/* fall through */
-      case 9  : c += (afs_uint32) str[8]; 	/* fall through */
-      case 8  : b += (afs_uint32) str[7]<<24; 	/* fall through */
-      case 7  : b += (afs_uint32) str[6]<<16;	/* fall through */
-      case 6  : b += (afs_uint32) str[5]<<8;	/* fall through */
-      case 5  : b += (afs_uint32) str[4];	/* fall through */
-      case 4  : a += (afs_uint32) str[3]<<24;	/* fall through */
-      case 3  : a += (afs_uint32) str[2]<<16;	/* fall through */
-      case 2  : a += (afs_uint32) str[1]<<8;	/* fall through */
+      case 12 : c += (afs_uint32) str[11]<<24;	AFS_FALLTHROUGH;
+      case 11 : c += (afs_uint32) str[10]<<16;	AFS_FALLTHROUGH;
+      case 10 : c += (afs_uint32) str[9]<<8;	AFS_FALLTHROUGH;
+      case 9  : c += (afs_uint32) str[8];	AFS_FALLTHROUGH;
+      case 8  : b += (afs_uint32) str[7]<<24;	AFS_FALLTHROUGH;
+      case 7  : b += (afs_uint32) str[6]<<16;	AFS_FALLTHROUGH;
+      case 6  : b += (afs_uint32) str[5]<<8;	AFS_FALLTHROUGH;
+      case 5  : b += (afs_uint32) str[4];	AFS_FALLTHROUGH;
+      case 4  : a += (afs_uint32) str[3]<<24;	AFS_FALLTHROUGH;
+      case 3  : a += (afs_uint32) str[2]<<16;	AFS_FALLTHROUGH;
+      case 2  : a += (afs_uint32) str[1]<<8;	AFS_FALLTHROUGH;
       case 1  : a += (afs_uint32) str[0];
-	opr_jhash_final(a, b, c);       	/* fall through */
+	opr_jhash_final(a, b, c);		AFS_FALLTHROUGH;
       case 0:     /* case 0: nothing left to add */
 	break;
     }

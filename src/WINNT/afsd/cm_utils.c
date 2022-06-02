@@ -768,7 +768,7 @@ int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags)
             break;
         case '.':
             dot++;
-            /* fallthrough */
+            AFS_FALLTHROUGH;
         default:
             if ( star ) {
                 newmask[j++] = '*';

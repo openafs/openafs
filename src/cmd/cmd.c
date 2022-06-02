@@ -678,7 +678,7 @@ ResetSyntax(struct cmd_syndesc *as)
 	case CMD_SINGLE_OR_FLAG:
 	    if (tp->items == &dummy)
 		break;
-	    /* fall through */
+	    AFS_FALLTHROUGH;
 	case CMD_SINGLE:
 	case CMD_LIST:
 	    /* free whole list in both cases, just for fun */

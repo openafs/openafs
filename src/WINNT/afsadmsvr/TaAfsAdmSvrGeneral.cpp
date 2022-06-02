@@ -653,7 +653,7 @@ void AfsAdmSvr_Action_StartRefresh (ASID idScope)
       {
       case itCELL:
          AfsAdmSvr_MarkRefreshThread (idScope);
-         // fall through
+         AFS_FALLTHROUGH;
 
       case itSERVER:
          ASACTION Action;

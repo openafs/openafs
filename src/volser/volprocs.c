@@ -2316,6 +2316,7 @@ GetVolInfo(afs_uint32 partId,
 	case VOL_INFO_LIST_SINGLE:
 	    Log("1 Volser: GetVolInfo: Volume %" AFS_VOLID_FMT " (%s:%s) will be destroyed on next salvage\n",
 		afs_printable_VolumeId_lu(volumeId), pname, volname);
+	    goto drop;
 
 	default:
 	    goto drop;

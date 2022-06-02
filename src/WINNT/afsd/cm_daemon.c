@@ -252,7 +252,8 @@ void * cm_BkgDaemon(void * vparm)
                 cm_daemons[daemonID].retryCount++;
                 osi_QAddT((osi_queue_t **) &cm_daemons[daemonID].head, (osi_queue_t **)&cm_daemons[daemonID].tail, &rp->q);
                 break;
-            } /* otherwise fall through */
+            }
+            AFS_FALLTHROUGH;
         case 0:  /* success */
         default: /* other error */
             if (code == 0) {
