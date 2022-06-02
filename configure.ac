@@ -4,7 +4,7 @@ AC_CONFIG_AUX_DIR([build-tools])
 AC_CONFIG_MACRO_DIR([src/cf])
 AC_CONFIG_SRCDIR([src/config/stds.h])
 
-AC_CONFIG_HEADER([src/config/afsconfig.h])
+AC_CONFIG_HEADERS([src/config/afsconfig.h])
 MACOS_VERSION=1.8.9d1
 
 AC_SUBST([MACOS_VERSION])

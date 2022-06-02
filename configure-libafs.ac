@@ -3,7 +3,7 @@ AC_INIT([OpenAFS],[m4_esyscmd(build-tools/git-version .)],[openafs-bugs@openafs.
 AC_CONFIG_AUX_DIR([build-tools])
 AC_CONFIG_SRCDIR([src/libafs/Makefile.common.in])
 
-AC_CONFIG_HEADER([src/config/afsconfig.h])
+AC_CONFIG_HEADERS([src/config/afsconfig.h])
 MACOS_VERSION=1.8.9d1
 
 AC_SUBST([MACOS_VERSION])
