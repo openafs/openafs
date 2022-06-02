@@ -700,6 +700,11 @@ else
   esac
 fi
 
+dnl add additional checks if compilers support the flags
+AS_IF([test "x$enable_checking" != "xno"],
+      [AX_APPEND_COMPILE_FLAGS([-Wimplicit-fallthrough], [XCFLAGS])
+])
+
 dnl horribly cheating, assuming double / is ok.
 case $INSTALL in
   ./* ) 

@@ -1300,6 +1300,7 @@ DirectoryList(int argc, char **argv, struct vnodeData *vdata,
 	    break;
 	case 'R':
 	    Rflag++;
+	    break;
 	case 's':
 	    sflag++;
 	    break;

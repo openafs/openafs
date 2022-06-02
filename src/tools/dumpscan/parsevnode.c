@@ -480,7 +480,7 @@ parse_vdata(XFILE * X, unsigned char *tag, tagged_field * field,
 		    return r;
 		break;
 	    }
-
+	    /* fall through */
 	default:
 	    if ((r = xfskip(X, v->size)))
 		return r;

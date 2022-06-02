@@ -62,7 +62,7 @@ static path_hashinfo phi;
 static dump_parser dp;
 
 /* Print a usage message and exit */
-static void
+static void AFS_NORETURN
 usage(int status, char *msg)
 {
     if (msg)

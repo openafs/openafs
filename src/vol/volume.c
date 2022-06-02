@@ -1796,15 +1796,18 @@ ShutdownVolumeWalk_r(struct DiskPartition64 * dp, int pass,
 		(V_attachState(vp) != VOL_STATE_PREATTACHED)) {
 		break;
 	    }
+	    /* fall through */
 	case 1:
 	    if ((V_attachState(vp) == VOL_STATE_ATTACHED) &&
 		(vp->header == NULL)) {
 		break;
 	    }
+	    /* fall through */
 	case 2:
 	    if (VIsExclusiveState(V_attachState(vp))) {
 		break;
 	    }
+	    /* fall through */
 	case 3:
 	    *idx = nqp;
 	    DeleteVolumeFromVByPList_r(vp);

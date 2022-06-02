@@ -478,6 +478,7 @@ SalvageClient(VolumeId vid, char * pname)
 	switch (sres.state) {
 	case SALVSYNC_STATE_ERROR:
 	    printf("salvageserver reports salvage ended in an error; check log files for more details\n");
+	    /* fall through */
 	case SALVSYNC_STATE_DONE:
 	case SALVSYNC_STATE_UNKNOWN:
 	    done = 1;
