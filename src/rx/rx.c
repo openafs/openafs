@@ -8728,6 +8728,30 @@ rxi_AddRpcStat(struct opr_queue *stats, afs_uint32 rxInterface,
 	goto fail;
     }
 
+    if (totalFunc != rpc_stat->stats[0].func_total) {
+	/*
+	 * The struct we found matches the rxInterface and isServer of the
+	 * caller, but the total number of functions doesn't match. That must
+	 * be a mistake; the interface that the caller is talking about doesn't
+	 * seem to match the interface in our struct. Don't count the stats for
+	 * this; the caller is almost certainly talking about a different
+	 * function, and so including it in the stats will make the stats
+	 * wrong/meaningless.
+	 */
+	rc = -1;
+	goto fail;
+    }
+
+    if (currentFunc >= rpc_stat->stats[0].func_total) {
+	/*
+	 * rpc_stat->stats doesn't have enough space allocated to store stats
+	 * for this function. This should never happen, but if it somehow does,
+	 * make sure we don't corrupt memory.
+	 */
+	rc = -1;
+	goto fail;
+    }
+
     /*
      * Increment the stats for this function
      */
