@@ -252,8 +252,6 @@ shutdown_osisleep(void)
 		osi_FreeSmallSpace(tmp);
 #elif defined(AFS_LINUX_ENV)
 		kfree(tmp);
-#elif defined(AFS_LINUX_ENV)
-		osi_linux_free(tmp);
 #endif
 	    }
 	}

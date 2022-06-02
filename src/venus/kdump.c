@@ -551,11 +551,7 @@ PrintIPAddr(int addr)
 #ifdef AFS_LINUX_ENV
 /* Find symbols in a live kernel. */
 
-#ifdef AFS_LINUX_ENV
 #define KSYMS "/proc/kallsyms"
-#else
-#define KSYMS "/proc/ksyms"
-#endif
 
 /* symlist_t contains all the kernel symbols. Forcing a 64 byte array is
  * a bit wasteful, but simple.
@@ -626,13 +622,11 @@ read_ksyms(void)
 	ksyms[nksyms].s_value = (int)strtoul(line, &p, 16);
 #endif /* AFS_LINUX_64BIT_KERNEL */
 	p++;
-#ifdef AFS_LINUX_ENV
 	/* Linux 2.6 /proc/kallsyms has a one-char symbol type
 	   between address and name, so step over it and the following
 	   blank.
 	*/
 	p += 2;
-#endif
 	q = strchr(p, '\t');
 	if (q)
 	    *q = '\0';
@@ -682,7 +676,7 @@ nlist(void *notused, struct afs_nlist *nlp)
     return 0;
 }
 
-#endif
+#endif /* AFS_LINUX_ENV */
 
 #if	defined(AFS_SUN5_ENV)
 #ifdef	_LP64
@@ -1829,7 +1823,7 @@ print_alloced_memlist(void)
     printf("Found %d elements in allocated memory list, expected %d\n", n,
 	   count);
 }
-#endif
+#endif /* AFS_LINUX_ENV */
 
 void
 print_allocs(int pnt)
@@ -2583,41 +2577,17 @@ print_vnode(int kmem, struct vnode *vep, struct vnode *ptr, int pnt)
 	("\ti_ino=%d, i_mode=%x, i_nlink=%d, i_uid=%d, i_gid=%d, i_size=%d\n",
 	 vep->i_ino, vep->i_mode, vep->i_nlink, vep->i_uid, vep->i_gid,
 	 vep->i_size);
-#ifdef AFS_LINUX_ENV
     printf
 	("\ti_atime=%u, i_mtime=%u, i_ctime=%u, i_version=%u, i_nrpages=%u\n",
 	 vep->i_atime, vep->i_mtime, vep->i_ctime, vep->i_version,
 	 vep->i_data.nrpages);
-#else
-    printf
-	("\ti_atime=%u, i_mtime=%u, i_ctime=%u, i_version=%u, i_nrpages=%u\n",
-	 vep->i_atime, vep->i_mtime, vep->i_ctime, vep->i_version,
-	 vep->i_nrpages);
-#endif
-#ifdef AFS_LINUX_ENV
     printf("\ti_op=0x%x, i_rdev=0x%x, i_sb=0x%x\n", vep->i_op,
 	   vep->i_rdev, vep->i_sb);
-#else /* AFS_LINUX_ENV */
-    printf("\ti_op=0x%x, i_dev=0x%x, i_rdev=0x%x, i_sb=0x%x\n", vep->i_op,
-	   vep->i_dev, vep->i_rdev, vep->i_sb);
-#endif /* AFS_LINUX_ENV */
-
-#ifdef AFS_LINUX_ENV
     printf("\ti_sem: count=%d, sleepers=%d, wait=0x%x\n", vep->i_sem.count,
 	   vep->i_sem.sleepers, vep->i_sem.wait);
-#else
-    printf("\ti_sem: count=%d, waking=%d, wait=0x%x\n", vep->i_sem.count,
-	   vep->i_sem.waking, vep->i_sem.wait);
-#endif
-#ifdef AFS_LINUX_ENV
     printf("\ti_hash=0x%x:0x%x, i_list=0x%x:0x%x, i_dentry=0x%x:0x%x\n",
 	   vep->i_hash.pprev, vep->i_hash.next, vep->i_list.prev,
 	   vep->i_list.next, vep->i_dentry.prev, vep->i_dentry.next);
-#else /* AFS_LINUX_ENV */
-    printf("\ti_hash=0x%x:0x%x, i_list=0x%x:0x%x, i_dentry=0x%x:0x%x\n",
-	   vep->i_hash.prev, vep->i_hash.next, vep->i_list.prev,
-	   vep->i_list.next, vep->i_dentry.prev, vep->i_dentry.next);
-#endif /* AFS_LINUX_ENV */
 #endif /* AFS_LINUX_ENV */
 }
 

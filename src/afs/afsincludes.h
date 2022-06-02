@@ -36,8 +36,6 @@
 #   undef TRUE
 #   undef FALSE
 #  endif
-# endif
-# ifdef AFS_LINUX_ENV
 #  undef __NFDBITS
 #  undef __FDMASK
 # endif

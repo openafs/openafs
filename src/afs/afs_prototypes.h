@@ -638,7 +638,6 @@ extern int osi_readRandom(void *, afs_size_t);
 
 /* LINUX/osi_misc.c */
 #ifdef AFS_LINUX_ENV
-#ifdef AFS_LINUX_ENV
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 			  struct dentry **dpp);
 extern int osi_InitCacheInfo(char *aname);
@@ -648,7 +647,6 @@ extern void setup_uio(struct uio *uiop, struct iovec *iovecp, const char *buf,
 		      uio_seg_t seg);
 extern int uiomove(char *dp, int length, uio_flag_t rw, struct uio *uiop);
 extern void osi_linux_free_inode_pages(void);
-#endif
 extern void osi_linux_mask(void);
 extern void osi_linux_unmaskrxk(void);
 extern int setpag(cred_t ** cr, afs_uint32 pagvalue, afs_uint32 * newpag,
