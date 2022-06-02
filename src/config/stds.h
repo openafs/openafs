@@ -250,7 +250,8 @@ typedef struct afsUUID afsUUID;
 #elif defined(AFS_SGI_ENV) || defined(AFS_USR_SGI_ENV)
 #define static_inline static
 #define hdr_static_inline(x) x
-#elif defined(AFS_NBSD_ENV) && !defined(AFS_NBSD50_ENV)
+#elif defined(AFS_NBSD_ENV) && !defined(AFS_NBSD50_ENV) \
+      && defined(HAVE_FUNC_ATTRIBUTE_ALWAYS_INLINE)
 #define static_inline static __inline __attribute__((always_inline))
 #define hdr_static_inline(x) static __inline __attribute__((always_inline)) x
 #else
@@ -274,21 +275,28 @@ hdr_static_inline(unsigned long long) afs_printable_uint64_lu(afs_uint64 d) { re
 #define afs_int_to_pointer(i)      ((void *)  (i))
 #endif
 
-#if defined(__GNUC__) && __GNUC__ > 2
-#define AFS_UNUSED __attribute__((unused))
-#define AFS_ATTRIBUTE_FORMAT(style,x,y) __attribute__((format(style, x, y)))
-#define AFS_NORETURN __attribute__((__noreturn__))
-#define AFS_NONNULL(x) __attribute__((__nonnull__ x))
-#elif defined (__clang__)
-#define AFS_UNUSED __attribute__((unused))
-#define AFS_ATTRIBUTE_FORMAT(style,x,y) __attribute__((format(style, x, y)))
-#define AFS_NORETURN __attribute__((__noreturn__))
-#define AFS_NONNULL(x) __attribute__((__nonnull__ x))
+#ifdef HAVE_FUNC_ATTRIBUTE_UNUSED
+# define AFS_UNUSED __attribute__((unused))
 #else
-#define AFS_UNUSED
-#define AFS_ATTRIBUTE_FORMAT(style,x,y)
-#define AFS_NORETURN
-#define AFS_NONNULL(x)
+# define AFS_UNUSED
+#endif
+
+#ifdef HAVE_FUNC_ATTRIBUTE_FORMAT
+# define AFS_ATTRIBUTE_FORMAT(style,x,y) __attribute__((format(style, x, y)))
+#else
+# define AFS_ATTRIBUTE_FORMAT(style,x,y)
+#endif
+
+#ifdef HAVE_FUNC_ATTRIBUTE_NORETURN
+# define AFS_NORETURN __attribute__((__noreturn__))
+#else
+# define AFS_NORETURN
+#endif
+
+#ifdef HAVE_FUNC_ATTRIBUTE_NONNULL
+# define AFS_NONNULL(x) __attribute__((__nonnull__ x))
+#else
+# define AFS_NONNULL(x)
 #endif
 
 /*
