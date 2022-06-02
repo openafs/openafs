@@ -2602,13 +2602,8 @@ print_vnode(int kmem, struct vnode *vep, struct vnode *ptr, int pnt)
 	   vep->i_dev, vep->i_rdev, vep->i_sb);
 #endif /* AFS_LINUX26_ENV */
 #ifdef AFS_LINUX24_ENV
-#ifdef AFS_PARISC_LINUX24_ENV
-    printf("\ti_sem: count=%d, wait=0x%x\n", vep->i_sem.count,
-	   vep->i_sem.wait);
-#else
     printf("\ti_sem: count=%d, sleepers=%d, wait=0x%x\n", vep->i_sem.count,
 	   vep->i_sem.sleepers, vep->i_sem.wait);
-#endif
 #else
     printf("\ti_sem: count=%d, waking=%d, wait=0x%x\n", vep->i_sem.count,
 	   vep->i_sem.waking, vep->i_sem.wait);
