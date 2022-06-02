@@ -18,7 +18,7 @@
 
 #include "lwp.h"
 
-#if defined(AFS_S390_LINUX20_ENV)
+#if defined(AFS_S390_LINUX_ENV)
 extern int PRE_Block;		/* used in lwp.c and process.s */
 #else
 extern char PRE_Block;		/* used in lwp.c and process.s */
@@ -26,7 +26,7 @@ extern char PRE_Block;		/* used in lwp.c and process.s */
 
 #if defined(USE_UCONTEXT) && defined(HAVE_UCONTEXT_H)
 
-# if defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
+# if defined(AFS_LINUX_ENV) || defined(AFS_XBSD_ENV)
 #  define AFS_UCONTEXT_NOSTACK
 # endif
 
@@ -90,21 +90,21 @@ returnto(struct lwp_context *savearea)
 # endif
 #elif	defined(AFS_HPUX_ENV)
 #define	LWP_SP	1
-#elif	defined(AFS_LINUX20_ENV)
-#if defined(AFS_PPC_LINUX20_ENV) || defined(AFS_PPC64_LINUX20_ENV)
+#elif	defined(AFS_LINUX_ENV)
+#if defined(AFS_PPC_LINUX_ENV) || defined(AFS_PPC64_LINUX_ENV)
 #define LWP_SP 0
-#elif   defined(AFS_I386_LINUX20_ENV)
+#elif   defined(AFS_I386_LINUX_ENV)
 #define LWP_SP 4
-#elif   defined(AFS_S390_LINUX20_ENV)
+#elif   defined(AFS_S390_LINUX_ENV)
 #define LWP_SP 9
 #define LWP_FP 5
-#elif   defined(AFS_SPARC_LINUX20_ENV)
+#elif   defined(AFS_SPARC_LINUX_ENV)
 #define LWP_SP 0
 #define LWP_FP 1
-#elif   defined(AFS_SPARC64_LINUX20_ENV) && defined(AFS_32BIT_USR_ENV)
+#elif   defined(AFS_SPARC64_LINUX_ENV) && defined(AFS_32BIT_USR_ENV)
 #define LWP_SP 0
 #define LWP_FP 1
-#elif defined(AFS_ALPHA_LINUX20_ENV)
+#elif defined(AFS_ALPHA_LINUX_ENV)
 #define LWP_SP 8
 #define LWP_FP 7
 #else
@@ -127,11 +127,11 @@ Need offset to SP in jmp_buf for this platform.
 typedef __uint64_t jmp_buf_type;
 #endif
 #else
-#if defined(AFS_ALPHA_LINUX20_ENV) || defined(AFS_PPC64_LINUX20_ENV)
+#if defined(AFS_ALPHA_LINUX_ENV) || defined(AFS_PPC64_LINUX_ENV)
 typedef long jmp_buf_type;
 #else
 typedef int jmp_buf_type;
-#endif /*AFS_ALPHA_LINUX20_ENV */
+#endif /*AFS_ALPHA_LINUX_ENV */
 #endif /*SGI*/
 
     static jmp_buf jmp_tmp;
@@ -143,12 +143,12 @@ static jmp_buf_type *jmpBuffer;
   * On Sparc ucontext functions are not implemented.
   */
 #define ptr_mangle(x) (x)
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 
 #ifdef __GLIBC__
 #if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 3)
 
-#if defined(AFS_SPARC64_LINUX24_ENV) || defined(AFS_SPARC_LINUX24_ENV)
+#if defined(AFS_SPARC64_LINUX_ENV) || defined(AFS_SPARC_LINUX_ENV)
 /* technically we should use POINTER_GUARD
  * ( == offsetof (tcbhead_t, pointer_guard) )
  * instead of 0x18
@@ -202,7 +202,7 @@ savecontext(void (*ep)(void), struct lwp_context *savearea, char *sp)
 	    case 0:
 		jmpBuffer = (jmp_buf_type *) jmp_tmp;
 		jmpBuffer[LWP_SP] = ptr_mangle((jmp_buf_type) sp);
-#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV) || (defined(AFS_SPARC64_LINUX20_ENV) && defined(AFS_32BIT_USR_ENV))
+#if defined(AFS_S390_LINUX_ENV) || defined(AFS_SPARC_LINUX_ENV) || (defined(AFS_SPARC64_LINUX_ENV) && defined(AFS_32BIT_USR_ENV))
 		jmpBuffer[LWP_FP] = ptr_mangle((jmp_buf_type) sp);
 #endif
 		longjmp(jmp_tmp, 1);

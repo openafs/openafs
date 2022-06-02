@@ -52,7 +52,7 @@
 #  include <rpc.h>
 # else
 #  include <net/if.h>
-#  if !defined(AFS_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)
+#  if !defined(AFS_LINUX_ENV) && !defined(AFS_ARM_DARWIN_ENV)
 #   include <netinet/if_ether.h>
 #  endif
 # endif

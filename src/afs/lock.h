@@ -80,7 +80,7 @@ typedef unsigned int afs_lock_tracker_t;
 #  define MyPidxx current_pid()
 #  define MyPidxx2Pid(x) (x)
 # endif
-#elif defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX_ENV)
 typedef struct task_struct * afs_lock_tracker_t;
 # define MyPidxx (current)
 # define MyPidxx2Pid(x) (x? (x)->pid : 0)

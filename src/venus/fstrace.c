@@ -1089,10 +1089,10 @@ afs_syscall(long call, long parm0, long parm1, long parm2, long parm3,
 	    long parm4, long parm5, long parm6)
 {
     int code;
-#if defined(AFS_DARWIN80_ENV) || defined(AFS_LINUX20_ENV)
+#if defined(AFS_DARWIN80_ENV) || defined(AFS_LINUX_ENV)
     int rval;
 #endif
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 #if defined AFS_LINUX_64BIT_KERNEL
     long long eparm[4];
     /* don't want to sign extend it to 64bit, so using ulong */
@@ -1127,7 +1127,7 @@ afs_syscall(long call, long parm0, long parm1, long parm2, long parm3,
 #endif
 	}
     }
-#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV)
+#if defined(AFS_SPARC64_LINUX_ENV) || defined(AFS_SPARC_LINUX_ENV)
     /* on sparc this function returns none value, so do it myself */
     __asm__ __volatile__("mov	%o0, %i0; ret; restore");
 #endif
@@ -1150,7 +1150,7 @@ afs_syscall(long call, long parm0, long parm1, long parm2, long parm3,
 #endif
 #endif
 #endif
-#endif /* AFS_LINUX20_ENV */
+#endif /* AFS_LINUX_ENV */
     return code;
 }
 #endif

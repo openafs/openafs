@@ -30,7 +30,7 @@ typedef struct {
 #define	LOG_TGTREQUEST		8
 
 #ifdef AUTH_DBM_LOG
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 #include <gdbm.h>
 #define dbm_store	gdbm_store
 #define dbm_firstkey	gdbm_firstkey
@@ -41,7 +41,7 @@ typedef struct {
 #define DBM GDBM_FILE
 #define DBM_REPLACE GDBM_REPLACE
 
-#else /* AFS_LINUX20_ENV */
+#else /* AFS_LINUX_ENV */
 #include <ndbm.h>
 #define afs_dbm_nextkey(d, k) dbm_nextkey(d)
 #endif

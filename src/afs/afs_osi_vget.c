@@ -21,7 +21,7 @@
 
 
 
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN80_ENV)
+#if !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN80_ENV)
 /* This is the common part of the vget VFS call. */
 int
 afs_osi_vget(struct vcache **avcpp, struct fid *afidp, struct vrequest *areqp)
@@ -72,4 +72,4 @@ afs_osi_vget(struct vcache **avcpp, struct fid *afidp, struct vrequest *areqp)
 
     return code;
 }
-#endif /* AFS_LINUX20_ENV */
+#endif /* AFS_LINUX_ENV */

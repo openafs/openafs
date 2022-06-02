@@ -6,7 +6,7 @@
  */
 
 #ifdef AFS_RXERRQ_ENV
-# if defined(AFS_LINUX26_ENV) || defined(AFS_USR_LINUX26_ENV)
+# if defined(AFS_LINUX_ENV) || defined(AFS_USR_LINUX_ENV)
 #  include <linux/types.h>
 #  include <linux/errqueue.h>
 #  include <linux/icmp.h>

@@ -178,7 +178,7 @@ afs_DequeueCallback(struct vcache *avc)
  */
 
 /* Sanity check on the callback queue. Allow for slop in the computation. */
-#if defined(AFS_LINUX22_ENV)
+#if defined(AFS_LINUX_ENV)
 #define CBQ_LIMIT (afs_maxvcount + 10)
 #else
 #define CBQ_LIMIT (afs_cacheStats + afs_stats_cmperf.vcacheXAllocs + 10)

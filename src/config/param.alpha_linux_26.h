@@ -13,10 +13,7 @@
 #ifndef UKERNEL
 
 /* This section for kernel libafs compiles only */
-#define AFS_ALPHA_LINUX20_ENV	1
-#define AFS_ALPHA_LINUX22_ENV	1
-#define AFS_ALPHA_LINUX24_ENV	1
-#define AFS_ALPHA_LINUX26_ENV	1
+#define AFS_ALPHA_LINUX_ENV	1
 #define __alpha			1
 #define AFS_LINUX_64BIT_KERNEL	1
 #define AFS_64BITPOINTER_ENV	1	/* pointers are 64 bits */

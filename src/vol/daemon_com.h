@@ -87,7 +87,7 @@ enum SYNCReasonCode {
     afs_int64 _##buf##_l[SYNC_PROTO_MAX_LEN/sizeof(afs_int64)]; \
     char * buf = (char *)(_##buf##_l)
 
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
 /* Some Linux kernels have a bug where we are not woken up immediately from a
  * select() when data is available. Work around this by having a low select()
  * timeout, so we don't hang in those situations. */

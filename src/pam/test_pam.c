@@ -28,7 +28,7 @@ static const char *service = "afstest";
 static const char *new_envstring = "GOTHEREVIATESTPAM=1";
 static const char *new_homestring = "HOME=/tmp";
 
-#if defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_LINUX_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV) || defined(AFS_DARWIN_ENV)
 #define getpassphrase getpass
 #endif
 

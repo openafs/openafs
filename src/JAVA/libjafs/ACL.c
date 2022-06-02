@@ -86,11 +86,11 @@ char* getACL(char *path)
     params.out = buffer;
     params.out_size = ACL_LEN; 
 
-#if defined(AFS_PPC64_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+#if defined(AFS_PPC64_LINUX_ENV) || defined(AFS_S390X_LINUX_ENV)
     if(pioctl(path, VIOCGETAL, &params, 1)) {
-#else /* AFS_PPC_LINUX20_ENV */
+#else /* AFS_PPC_LINUX_ENV */
     if(syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, VIOCGETAL, &params, 1)) {
-#endif /* AFS_PPC_LINUX20_ENV */
+#endif /* AFS_PPC_LINUX_ENV */
       fprintf(stderr, "ERROR: ACL::getACL -> VIOCGETAL failed: %d, path: %s\n", errno, path);
       free(buffer);
       return NULL;
@@ -117,11 +117,11 @@ jboolean setACL(char *path, char *aclString)
     params.out = NULL;
     params.out_size = 0;
 
-#if defined(AFS_PPC64_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+#if defined(AFS_PPC64_LINUX_ENV) || defined(AFS_S390X_LINUX_ENV)
     if(pioctl(path, VIOCSETAL, &params, 1)) {
-#else /* AFS_PPC_LINUX20_ENV */
+#else /* AFS_PPC_LINUX_ENV */
     if(syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, VIOCSETAL, &params, 1)) {
-#endif /* AFS_PPC_LINUX20_ENV */
+#endif /* AFS_PPC_LINUX_ENV */
       fprintf(stderr, "ERROR: ACL::setACL -> VIOCSETAL failed: %d, path: %s\n", errno, path);
       return JNI_FALSE;
     }

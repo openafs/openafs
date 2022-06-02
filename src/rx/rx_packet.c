@@ -20,7 +20,7 @@
 #   include "rx_kcommon.h"
 #  endif
 #  include "h/types.h"
-#  ifndef AFS_LINUX20_ENV
+#  ifndef AFS_LINUX_ENV
 #   include "h/systm.h"
 #  endif
 #  if defined(AFS_SGI_ENV) || defined(AFS_HPUX110_ENV) || defined(AFS_NBSD50_ENV)
@@ -30,7 +30,7 @@
 #   include "h/proc.h"
 #  endif
 #  include "h/socket.h"
-#  if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
+#  if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX_ENV) && !defined(AFS_HPUX110_ENV)
 #   if	!defined(AFS_AIX41_ENV)
 #    include "sys/mount.h"		/* it gets pulled in by something later anyway */
 #   endif
@@ -1691,7 +1691,7 @@ cpytoiovec(mblk_t * mp, int off, int len, struct iovec *iovs,
 #define m_cpytoc(a, b, c, d)  cpytoc(a, b, c, d)
 #define m_cpytoiovec(a, b, c, d, e) cpytoiovec(a, b, c, d, e)
 #else
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN80_ENV)
+#if !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN80_ENV)
 static int
 m_cpytoiovec(struct mbuf *m, int off, int len, struct iovec iovs[], int niovs)
 {
@@ -1744,10 +1744,10 @@ m_cpytoiovec(struct mbuf *m, int off, int len, struct iovec iovs[], int niovs)
 
     return len;
 }
-#endif /* LINUX */
+#endif /* !AFS_LINUX_ENV && !AFS_DARWIN80_ENV */
 #endif /* AFS_SUN5_ENV */
 
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN80_ENV)
+#if !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN80_ENV)
 #if defined(AFS_NBSD_ENV)
 int
 rx_mb_to_packet(struct mbuf *amb, void (*free) (struct mbuf *), int hdr_len, int data_len, struct rx_packet *phandle)
@@ -2192,7 +2192,7 @@ rxi_NetSendError(struct rx_call *call, int code)
     if (code == -WSAEHOSTUNREACH) {
 	down = 1;
     }
-#elif defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX_ENV)
     if (code == -ENETUNREACH) {
 	down = 1;
     }

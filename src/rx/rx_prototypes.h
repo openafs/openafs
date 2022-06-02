@@ -271,7 +271,7 @@ extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host,
 # ifdef UKERNEL
 extern void *rx_ServerProc(void *);
 # endif
-# ifndef AFS_LINUX26_ENV
+# ifndef AFS_LINUX_ENV
 extern void osi_AssertFailK(const char *expr, const char *file, int line) AFS_NORETURN;
 # endif
 extern void rxk_ListenerProc(void);
@@ -283,7 +283,7 @@ extern rx_ifnet_t rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp);
 extern void osi_StopListener(void);
 
 /* ARCH/rx_kmutex.c */
-# if defined(AFS_LINUX20_ENV)
+# if defined(AFS_LINUX_ENV)
 extern void afs_mutex_init(afs_kmutex_t * l);
 extern void afs_mutex_enter(afs_kmutex_t * l);
 extern int afs_mutex_tryenter(afs_kmutex_t * l);

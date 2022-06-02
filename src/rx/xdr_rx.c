@@ -19,10 +19,10 @@
 # ifndef UKERNEL
 #  include "h/types.h"
 #  include "h/uio.h"
-#  ifdef AFS_LINUX20_ENV
+#  ifdef AFS_LINUX_ENV
 #   include "h/socket.h"
 #  endif
-#  ifdef AFS_LINUX22_ENV
+#  ifdef AFS_LINUX_ENV
 #   ifndef quad_t
 #    define quad_t __quad_t
 #    define u_quad_t __u_quad_t

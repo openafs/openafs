@@ -103,13 +103,13 @@ osi_Init(void)
 	afs_osi_credp = kcred;
 #else
 	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX_ENV)
         afs_set_cr_group_info(&afs_osi_cred, groups_alloc(0));
 #endif
 #if defined(AFS_DARWIN80_ENV)
         afs_osi_cred.cr_ref = 1; /* kauth_cred_get_ref needs 1 existing ref */
 #else
-# if !(defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
+# if !(defined(AFS_LINUX_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
 	crhold(&afs_osi_cred);  /* don't let it evaporate */
 # endif
 #endif
@@ -129,7 +129,7 @@ osi_Init(void)
 void
 afs_osi_MaskSignals(void)
 {
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
     osi_linux_mask();
 #endif
 }
@@ -138,7 +138,7 @@ afs_osi_MaskSignals(void)
 void
 afs_osi_UnmaskRxkSignals(void)
 {
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
     osi_linux_unmaskrxk();
 #endif
 }
@@ -173,7 +173,7 @@ afs_osi_RxkRegister(void)
 void
 afs_osi_Invisible(void)
 {
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
     afs_osi_MaskSignals();
 #elif defined(AFS_SUN5_ENV)
     curproc->p_flag |= SSYS;
@@ -221,7 +221,7 @@ shutdown_osi(void)
        afs_osi_ctxtp_initialized = 0;
     }
 #endif
-#if !defined(AFS_HPUX_ENV) && !defined(UKERNEL) && !defined(AFS_DFBSD_ENV) && !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(UKERNEL) && !defined(AFS_DFBSD_ENV) && !defined(AFS_LINUX_ENV)
     /* LINUX calls this from afs_cleanup() which hooks into module_exit */
     shutdown_osisleep();
 #endif
@@ -250,9 +250,9 @@ shutdown_osisleep(void)
 		afs_osi_Free(tmp, sizeof(*tmp));
 #elif defined(AFS_SGI_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_SUN5_ENV)
 		osi_FreeSmallSpace(tmp);
-#elif defined(AFS_LINUX26_ENV)
+#elif defined(AFS_LINUX_ENV)
 		kfree(tmp);
-#elif defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX_ENV)
 		osi_linux_free(tmp);
 #endif
 	    }

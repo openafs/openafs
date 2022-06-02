@@ -521,7 +521,7 @@ extern Inode ih_icreate(IHandle_t * ih, int dev, char *part, Inode nI, int p1,
 # define IH_CREATE(H, D, P, N, P1, P2, P3, P4) \
         ih_icreate(H, D, P, N, P1, P2, P3, P4)
 
-# ifdef AFS_LINUX22_ENV
+# ifdef AFS_LINUX_ENV
 #  define OS_IOPEN(H) -1
 # else
 #  ifdef O_LARGEFILE
@@ -545,7 +545,7 @@ extern Inode ih_icreate(IHandle_t * ih, int dev, char *part, Inode nI, int p1,
 
 # define OS_SYNC(FD) fsync(FD)
 
-# ifdef AFS_LINUX22_ENV
+# ifdef AFS_LINUX_ENV
 #  define IH_INC(H, I, P) -1
 #  define IH_DEC(H, I, P) -1
 #  define IH_IREAD(H, O, B, S) -1
@@ -557,7 +557,7 @@ extern Inode ih_icreate(IHandle_t * ih, int dev, char *part, Inode nI, int p1,
                                           O, B, S)
 #  define IH_IWRITE(H, O, B, S) \
           inode_write((H)->ih_dev, (H)->ih_ino, (H)->ih_vid, O, B, S)
-# endif /* AFS_LINUX22_ENV */
+# endif /* AFS_LINUX_ENV */
 
 #endif /* AFS_NAMEI_ENV */
 

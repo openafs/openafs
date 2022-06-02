@@ -26,7 +26,7 @@
 #include <ctype.h>
 
 #ifndef AFS_NAMEI_ENV
-#if defined(AFS_LINUX20_ENV)
+#if defined(AFS_LINUX_ENV)
 /* ListViceInodes
  *
  * Return codes:
@@ -1210,7 +1210,7 @@ bread(FD_t fd, char *buf, daddr_t blk, afs_int32 size)
     return 0;
 }
 
-#endif /* AFS_LINUX20_ENV */
+#endif /* AFS_LINUX_ENV */
 static afs_int32
 convertVolumeInfo(FdHandle_t *fdhr, FdHandle_t *fdhw, VolumeId vid)
 {

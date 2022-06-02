@@ -42,12 +42,12 @@
 #else /* AFS_NT40_ENV */
 # if !defined(AFS_DARWIN_ENV) && !defined(AFS_USR_DARWIN_ENV)   \
     && !defined(AFS_XBSD_ENV) && !defined(AFS_USR_FBSD_ENV)     \
-    && !defined(AFS_USR_DFBSD_ENV) && !defined(AFS_LINUX20_ENV)
+    && !defined(AFS_USR_DFBSD_ENV) && !defined(AFS_LINUX_ENV)
 #  include <sys/sysmacros.h>	/* MIN, MAX on most commercial UNIX */
 # endif
 /* Linux 3.7 doesn't have sys/param.h in kernel space, and afs/param.h ensures
  * that MIN and MAX are available for kernel builds. */
-# if !(defined(AFS_LINUX26_ENV) && defined(KERNEL))
+# if !(defined(AFS_LINUX_ENV) && defined(KERNEL))
 #  include <sys/param.h>	/* MIN, MAX elsewhere */
 # endif
 #endif /* !AFS_NT40_ENV */

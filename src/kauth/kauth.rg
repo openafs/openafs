@@ -71,7 +71,7 @@ const KAMINORVERSION = 2;
  * On Linux, dbm is not part of the standard installation, and we can't
  * statically link it in. So, ignore it for now.
  */
-%#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
+%#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX_ENV)
 %#define AUTH_DBM_LOG
 %#endif
 

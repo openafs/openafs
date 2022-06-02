@@ -16,7 +16,7 @@
 #include "afs/afs_stats.h"
 #include "rx/rx_globals.h"
 #include "rx/rxstat.h"
-#if !defined(UKERNEL) && !defined(AFS_LINUX20_ENV)
+#if !defined(UKERNEL) && !defined(AFS_LINUX_ENV)
 #include "net/if.h"
 #include "netinet/in_var.h"
 #endif /* !defined(UKERNEL) */

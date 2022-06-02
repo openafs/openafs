@@ -53,7 +53,7 @@ extern enum afs_shutdown_state afs_shuttingdown;
 # else
 #  define AFS_VFSFSID		99
 # endif
-#elif defined(AFS_SUN5_ENV) || defined(AFS_HPUX90_ENV) || defined(AFS_LINUX20_ENV)
+#elif defined(AFS_SUN5_ENV) || defined(AFS_HPUX90_ENV) || defined(AFS_LINUX_ENV)
 # define AFS_VFSFSID		99
 #elif defined(AFS_SGI_ENV)
 # define AFS_VFSFSID		afs_fstype
@@ -71,7 +71,7 @@ extern enum afs_shutdown_state afs_shuttingdown;
 #if     defined(AFS_HPUX102_ENV)
 #define AFS_FLOCK       k_flock
 #else
-#if     defined(AFS_SUN5_ENV) || (defined(AFS_LINUX24_ENV) && !(defined(AFS_LINUX26_ENV) && defined(AFS_LINUX_64BIT_KERNEL)))
+#if     defined(AFS_SUN5_ENV) || (defined(AFS_LINUX_ENV) && !(defined(AFS_LINUX_ENV) && defined(AFS_LINUX_64BIT_KERNEL)))
 #define AFS_FLOCK       flock64
 #else
 #define AFS_FLOCK       flock
@@ -284,7 +284,7 @@ struct afs_cbr {
     struct AFSFid fid;
 };
 
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 /* On Linux, we have to be able to allocate the storage for this using
  * kmalloc, as otherwise we may deadlock. So, it needs to be able to fit
  * in a single page
@@ -738,7 +738,7 @@ struct SimpleLocks {
 #elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
 #define VREFCOUNT(v)          ((v)->vrefCount)
 #define VREFCOUNT_GT(v, y)    (AFSTOV(v)->v_usecount > (y))
-#elif defined(AFS_LINUX24_ENV)
+#elif defined(AFS_LINUX_ENV)
 #define VREFCOUNT(v)		atomic_read(&(AFSTOV(v)->v_count))
 #define VREFCOUNT_GT(v, y)      (VREFCOUNT(v)>y)
 #define VREFCOUNT_SET(v, c)	atomic_set(&(AFSTOV(v)->v_count), c)
@@ -773,7 +773,7 @@ struct nbvdata {
 };
 #define VTOAFS(v) ((((struct nbvdata *)((v)->v_data)))->afsvc)
 #define AFSTOV(vc) ((vc)->v)
-#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_SUN511_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
+#elif defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_SUN511_ENV) || (defined(AFS_LINUX_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
 #define AFSTOV(vc) ((vc)->v)
 #else
@@ -847,13 +847,13 @@ struct multiPage_range {
  * !(avc->nextfree) && !avc->vlruq.next => (FreeVCList == avc->nextfree)
  */
 struct vcache {
-#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_SUN511_ENV) || (defined(AFS_LINUX22_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
+#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_SUN511_ENV) || (defined(AFS_LINUX_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
     struct vnode *v;
 #else
     struct vnode v;		/* Has reference count in v.v_count */
 #endif
     struct afs_q vlruq;		/* lru q next and prev */
-#if !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_LINUX_ENV)
     struct vcache *nextfree;	/* next on free list (if free) */
 #endif
     struct vcache *hnext;	/* Hash next */
@@ -931,7 +931,7 @@ struct vcache {
     char cachingStates;			/* Caching policies for this file */
     afs_uint32 cachingTransitions;		/* # of times file has flopped between caching and not */
 
-#if defined(AFS_LINUX24_ENV)
+#if defined(AFS_LINUX_ENV)
     off_t next_seq_offset;	/* Next sequential offset (used by prefetch/readahead) */
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI65_ENV)
     off_t next_seq_blk_offset; /* accounted in blocks for Solaris & IRIX */
@@ -958,10 +958,10 @@ struct vcache {
     struct bhv_desc vc_bhv_desc;	/* vnode's behavior data. */
 #endif
 #endif				/* AFS_SGI_ENV */
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX_ENV)
     cred_t *cred;		/* last writer's cred */
 #endif
-#ifdef AFS_LINUX24_ENV
+#ifdef AFS_LINUX_ENV
     struct dentry *target_link; /* dentry we prefer, when we are redirecting
                                  * all requests due to duplicate dentry aliases.
                                  * See LINUX/osi_vnodeops.c. Note that this is
@@ -980,13 +980,13 @@ struct vcache {
     void *vpacRock;		/* used to read or write in visible partitions */
 #endif
     afs_uint32 lastBRLWarnTime; /* last time we warned about byte-range locks */
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
     spinlock_t pagewriter_lock;
     struct list_head pagewriters;	/* threads that are writing vm pages */
 #endif
 };
 
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
 struct pagewriter {
     struct list_head link;
     pid_t writer;
@@ -1191,7 +1191,7 @@ typedef char *afs_ufs_dcache_id_t;
  * the size correctly.
  */
 typedef ino64_t afs_ufs_dcache_id_t;
-#elif defined(AFS_LINUX26_ENV)
+#elif defined(AFS_LINUX_ENV)
 #define MAX_FH_LEN 10
 typedef union {
 #if defined(NEW_EXPORT_OPS)
@@ -1201,7 +1201,7 @@ typedef union {
 } afs_ufs_dcache_id_t;
 extern int cache_fh_type;
 extern int cache_fh_len;
-#elif defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_S390X_LINUX24_ENV)
+#elif defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_S390X_LINUX_ENV)
 typedef long afs_ufs_dcache_id_t;
 #elif defined(AFS_AIX51_ENV) || defined(AFS_HPUX1123_ENV)
 typedef ino_t afs_ufs_dcache_id_t;
@@ -1552,7 +1552,7 @@ extern int afsd_dynamic_vcaches;
 #elif defined (AFS_DARWIN110_ENV)
 #define afs_cr_uid(cred) kauth_cred_getuid((kauth_cred_t)(cred))
 #define afs_cr_gid(cred) kauth_cred_getgid((kauth_cred_t)(cred))
-#elif !(defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
+#elif !(defined(AFS_LINUX_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED))
 #define afs_cr_uid(cred) ((cred)->cr_uid)
 #define afs_cr_gid(cred) ((cred)->cr_gid)
 #if !defined(AFS_OBSD_ENV)
@@ -1624,7 +1624,7 @@ typedef struct afs_event {
     /* no cond member */
 #elif defined(AFS_FBSD_ENV) || defined(AFS_OBSD_ENV)
     int cond;			/* "all this gluck should probably be replaced by CVs" */
-#elif defined(AFS_LINUX24_ENV)
+#elif defined(AFS_LINUX_ENV)
     wait_queue_head_t cond;
 #elif defined(AFS_NBSD_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     kcondvar_t cond;		/* Currently associated condition variable */

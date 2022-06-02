@@ -306,7 +306,7 @@ int *dir_for_V = NULL;		/* Array: dir of each cache file.
 				 * -2: file exists in top-level
 				 * >=0: file exists in Dxxx
 				 */
-#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX_ENV)
 AFSD_INO_T *inode_for_V;	/* Array of inodes for desired
 				 * cache files */
 #endif
@@ -1047,7 +1047,7 @@ doSweepAFSCache(int *vFilesFound,
 	     * file's inode, directory, and bump the number of files found
 	     * total and in this directory.
 	     */
-#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX_ENV)
 	    inode_for_V[vFileNum] = currp->d_ino;
 #endif
 	    dir_for_V[vFileNum] = dirNum;	/* remember this directory */
@@ -1131,7 +1131,7 @@ doSweepAFSCache(int *vFilesFound,
 	    SetNoBackupAttr(fullpn_CellInfoFile);
 	} else if ((strcmp(currp->d_name, ".") == 0)
 		   || (strcmp(currp->d_name, "..") == 0) ||
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 		   /* this is the ext3 journal file */
 		   (strcmp(currp->d_name, ".journal") == 0) ||
 #endif
@@ -1182,7 +1182,7 @@ doSweepAFSCache(int *vFilesFound,
 			   vFileNum);
 		else {
 		    struct stat statb;
-#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX_ENV)
 		    assert(inode_for_V[vFileNum] == (AFSD_INO_T) 0);
 #endif
 		    sprintf(vFilePtr, "D%d/V%d", thisDir, vFileNum);
@@ -1195,7 +1195,7 @@ doSweepAFSCache(int *vFilesFound,
 		    if (CreateCacheFile(fullpn_VFile, &statb))
 			printf("%s: Can't create '%s'\n", rn, fullpn_VFile);
 		    else {
-#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX_ENV)
 			inode_for_V[vFileNum] = statb.st_ino;
 #endif
 			dir_for_V[vFileNum] = thisDir;
@@ -1289,7 +1289,7 @@ CheckCacheBaseDir(char *dir)
 
     /* might want to check here for anything else goofy, like cache pointed at a non-dedicated directory, etc */
 
-#ifdef AFS_LINUX24_ENV
+#ifdef AFS_LINUX_ENV
     {
 	int res;
 	struct statfs statfsbuf;
@@ -1298,7 +1298,7 @@ CheckCacheBaseDir(char *dir)
 	if (res != 0) {
 	    return "unable to statfs cache base directory";
 	}
-#if !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_LINUX_ENV)
 	if (statfsbuf.f_type == 0x52654973) {	/* REISERFS_SUPER_MAGIC */
 	    return "cannot use reiserfs as cache partition";
 	} else if (statfsbuf.f_type == 0x58465342) {	/* XFS_SUPER_MAGIC */
@@ -2549,7 +2549,7 @@ afsd_run(void)
 		   cacheStatEntries);
     }
 
-#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(AFS_LINUX_ENV)
     /*
      * Create and zero the inode table for the desired cache files.
      */
@@ -2944,7 +2944,7 @@ afsd_run(void)
 		}
 		/* fall through to setup-by-inode */
 	    }
-#if defined(AFS_SGI62_ENV) || !(defined(AFS_LINUX26_ENV) || defined(AFS_CACHE_VNODE_PATH))
+#if defined(AFS_SGI62_ENV) || !(defined(AFS_LINUX_ENV) || defined(AFS_CACHE_VNODE_PATH))
 	    afsd_syscall(AFSOP_CACHEINODE, inode_for_V[currVFile]);
 #else
 	    printf

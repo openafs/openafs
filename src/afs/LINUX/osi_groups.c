@@ -340,7 +340,7 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
     return (-code);
 }
 
-# if defined(AFS_PPC64_LINUX20_ENV)
+# if defined(AFS_PPC64_LINUX_ENV)
 /* Intercept the uid16 system call as used by 32bit programs. */
 extern asmlinkage long (*sys32_setgroupsp)(int gidsetsize, gid_t *grouplist);
 asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
@@ -370,15 +370,15 @@ asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
 }
 # endif
 
-# if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_AMD64_LINUX20_ENV)
+# if defined(AFS_SPARC64_LINUX_ENV) || defined(AFS_AMD64_LINUX_ENV)
 /* Intercept the uid16 system call as used by 32bit programs. */
-#  ifdef AFS_AMD64_LINUX20_ENV
+#  ifdef AFS_AMD64_LINUX_ENV
 extern asmlinkage long (*sys32_setgroupsp) (int gidsetsize, u16 * grouplist);
-#  endif /* AFS_AMD64_LINUX20_ENV */
-#  ifdef AFS_SPARC64_LINUX26_ENV
+#  endif /* AFS_AMD64_LINUX_ENV */
+#  ifdef AFS_SPARC64_LINUX_ENV
 extern asmlinkage int (*sys32_setgroupsp) (int gidsetsize,
 					   __kernel_gid32_t * grouplist);
-#  endif /* AFS_SPARC64_LINUX26_ENV */
+#  endif /* AFS_SPARC64_LINUX_ENV */
 asmlinkage long
 afs32_xsetgroups(int gidsetsize, u16 * grouplist)
 {
@@ -407,13 +407,13 @@ afs32_xsetgroups(int gidsetsize, u16 * grouplist)
 }
 
 /* Intercept the uid32 system call as used by 32bit programs. */
-#  ifdef AFS_AMD64_LINUX20_ENV
+#  ifdef AFS_AMD64_LINUX_ENV
 extern asmlinkage long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
-#  endif /* AFS_AMD64_LINUX20_ENV */
-#  ifdef AFS_SPARC64_LINUX26_ENV
+#  endif /* AFS_AMD64_LINUX_ENV */
+#  ifdef AFS_SPARC64_LINUX_ENV
 extern asmlinkage int (*sys32_setgroups32p) (int gidsetsize,
 					     __kernel_gid32_t * grouplist);
-#  endif /* AFS_SPARC64_LINUX26_ENV */
+#  endif /* AFS_SPARC64_LINUX_ENV */
 asmlinkage long
 afs32_xsetgroups32(int gidsetsize, gid_t * grouplist)
 {

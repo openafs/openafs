@@ -418,7 +418,7 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 #endif
 
 #ifndef AFS_RXERRQ_ENV
-# ifdef AFS_LINUX22_ENV
+# ifdef AFS_LINUX_ENV
     /* linux unfortunately returns ECONNREFUSED if the target port
      * is no longer in use */
     /* and EAGAIN if a UDP checksum is incorrect */

@@ -15,10 +15,7 @@
 /* This section for kernel libafs compiles only */
 #include <linux/version.h>
 
-#define AFS_LINUX20_ENV		1
-#define AFS_LINUX22_ENV		1
-#define AFS_LINUX24_ENV		1
-#define AFS_LINUX26_ENV		1
+#define AFS_LINUX_ENV		1
 
 #define AFS_MOUNT_AFS		"afs"	/* The name of the filesystem type */
 #define AFS_64BIT_IOPS_ENV	1
@@ -64,10 +61,8 @@
 #else /* !defined(UKERNEL) */
 
 /* This section for user space compiles only */
-#define AFS_USR_LINUX20_ENV	1
-#define AFS_USR_LINUX22_ENV	1
-#define AFS_USR_LINUX24_ENV	1
-#define AFS_USR_LINUX26_ENV	1
+
+#define AFS_USR_LINUX_ENV	1
 
 #define AFS_ENV			1
 #define AFS_64BIT_CLIENT	1

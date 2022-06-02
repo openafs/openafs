@@ -36,7 +36,7 @@
 #define IPPORT_USERRESERVED 5000
 # endif
 
-#if defined(AFS_LINUX22_ENV) && defined(AFS_RXERRQ_ENV)
+#if defined(AFS_LINUX_ENV) && defined(AFS_RXERRQ_ENV)
 # include <linux/types.h>
 # include <linux/errqueue.h>
 # if defined(AFS_ADAPT_PMTU) && !defined(IP_MTU)
@@ -94,7 +94,7 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     osi_socket socketFd = OSI_NULLSOCKET;
     struct sockaddr_in taddr;
     char *name = "rxi_GetUDPSocket: ";
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 # if defined(AFS_ADAPT_PMTU)
     int pmtu = IP_PMTUDISC_WANT;
 # else
@@ -197,7 +197,7 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
             rx_atomic_set(&rx_stats.socketGreedy, greedy);
     }
 
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
     setsockopt(socketFd, SOL_IP, IP_MTU_DISCOVER, &pmtu, sizeof(pmtu));
 #endif
 #ifdef AFS_RXERRQ_ENV
@@ -445,7 +445,7 @@ fudge_netmask(afs_uint32 addr)
 
 
 
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN160_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN160_ENV)
 int
 rxi_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
@@ -574,7 +574,7 @@ rx_GetIFInfo(void)
 	}
 #endif /* SIOCGIFFLAGS */
 
-#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN160_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN160_ENV)
 	/* this won't run on an AIX system w/o a cache manager */
 	rxi_syscallp = rxi_syscall;
 #endif

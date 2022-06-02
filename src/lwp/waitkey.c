@@ -164,7 +164,7 @@ LWP_WaitForKeystroke(int seconds)
 #if defined(HAVE_STDIO_EXT_H)
     if (__fbufsize(stdin) > 0)
         return 1;
-#elif defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX_ENV)
     if (stdin->_IO_read_ptr < stdin->_IO_read_end)
 	return 1;
 #elif (defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)) && defined(AFS_DFBSD_ENV)

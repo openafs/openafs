@@ -26,7 +26,7 @@
 #ifndef _MFC_VER		/*skip if doing Microsoft foundation class */
 #include <winsock2.h>
 #endif
-#elif defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX_ENV)
 #include <unistd.h>
 #include <time.h>
 #include <sys/time.h>
@@ -212,7 +212,7 @@ char lwp_debug;			/* ON = show LWP debugging trace */
  */
 #if defined(USE_UCONTEXT) && defined(HAVE_UCONTEXT_H)
 #define AFS_LWP_MINSTACKSIZE  (288 * 1024)
-#elif defined(AFS_LINUX22_ENV)
+#elif defined(AFS_LINUX_ENV)
 #define AFS_LWP_MINSTACKSIZE	(192 * 1024)
 #else
 #define AFS_LWP_MINSTACKSIZE	(48 * 1024)
@@ -273,7 +273,7 @@ extern afs_int32 savecontext(void (*ep)(void),
 			     struct lwp_context *savearea, char *sp);
 extern void returnto(struct lwp_context *savearea);
 
-#ifdef AFS_LINUX24_ENV
+#ifdef AFS_LINUX_ENV
 /* max time we are allowed to spend in a select call on Linux to avoid
  lost signal issues */
 #define IOMGR_MAXWAITTIME        60	/* seconds */

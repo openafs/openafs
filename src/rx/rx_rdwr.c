@@ -24,7 +24,7 @@
 #   if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
 #    include "h/systm.h"
 #   endif
-#   ifdef AFS_LINUX20_ENV
+#   ifdef AFS_LINUX_ENV
 #    include "h/socket.h"
 #   endif
 #   include "netinet/in.h"

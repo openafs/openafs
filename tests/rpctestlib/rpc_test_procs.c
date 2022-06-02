@@ -220,7 +220,7 @@ afs_int32 init_fs_channel(rpc_test_request_ctx **octx, char *cb_if,
     sprintf(ctx->fs_addr_s, "%s", fs_addr_s);
 
 #if defined(RPC_TEST_ADD_ADDRESSES)
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX_ENV)
     sprintf(cmd, "ip addr add %s/%s dev %s label %s", listen_addr_s, prefix,
             cb_if, cb_if);
     code = system(cmd);
@@ -362,7 +362,7 @@ destroy_fs_channel(rpc_test_request_ctx *ctx)
 {
     afs_int32 code = 0;
 #if defined(RPC_TEST_ADD_ADDRESSES)
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX_ENV)
     sprintf(cmd, "ip addr del %s/%s dev %s label %s", ctx->cb_listen_addr_s,
             ctx->cb_prefix_s, ctx->cb_if_s, ctx->cb_if_s);
     code = system(cmd);

@@ -58,7 +58,7 @@
 #endif
 #endif
 #else /* AFS_VFSINCL_ENV */
-#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_DARWIN_ENV)
 #include <sys/fs.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */
@@ -83,7 +83,7 @@
 #if defined(AFS_SGI_ENV)
 #include <mntent.h>
 #else
-#ifndef AFS_LINUX20_ENV
+#ifndef AFS_LINUX_ENV
 #include <fstab.h>		/* Need to find in libc 5, present in libc 6 */
 #endif
 #endif

@@ -141,7 +141,7 @@ afs_CopyOutAttrs(struct vcache *avc, struct vattr *attrs)
     attrs->va_atime.tv_nsec = attrs->va_mtime.tv_nsec =
 	attrs->va_ctime.tv_nsec = 0;
     attrs->va_gen = hgetlo(avc->f.m.DataVersion);
-#elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV) || defined(AFS_LINUX26_ENV)
+#elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV) || defined(AFS_LINUX_ENV)
     attrs->va_atime.tv_nsec = attrs->va_mtime.tv_nsec =
 	attrs->va_ctime.tv_nsec =
 	(hgetlo(avc->f.m.DataVersion) & 0x7ffff) * 1000;
@@ -298,7 +298,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 		    /* If it's the root of AFS, replace the inode number with the
 		     * inode number of the mounted on directory; otherwise this
 		     * confuses getwd()... */
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 		    if (avc == afs_globalVp) {
 			struct inode *ip = AFSTOV(avc)->i_sb->s_root->d_inode;
 			attrs->va_nodeid = ip->i_ino;	/* VTOI()? */
@@ -333,7 +333,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 			}
 # endif /* AFS_DARWIN80_ENV */
 		    }
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_LINUX_ENV */
 		}
 		afs_PutUser(au, READ_LOCK);
 	    }
@@ -365,7 +365,7 @@ afs_VAttrToAS(struct vcache *avc, struct vattr *av,
 #elif defined(AFS_AIX_ENV)
 /* Boy, was this machine dependent bogosity hard to swallow????.... */
     if (av->va_mode != -1) {
-#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
+#elif defined(AFS_LINUX_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_MODE) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_MODE) {
@@ -384,7 +384,7 @@ afs_VAttrToAS(struct vcache *avc, struct vattr *av,
     }
 #if defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_gid)) {
-#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
+#elif defined(AFS_LINUX_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_GID) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_GID) {
@@ -404,7 +404,7 @@ afs_VAttrToAS(struct vcache *avc, struct vattr *av,
     }
 #if defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_uid)) {
-#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
+#elif defined(AFS_LINUX_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_UID) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_UID) {
@@ -424,7 +424,7 @@ afs_VAttrToAS(struct vcache *avc, struct vattr *av,
     }
 #if defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_modify_time)) {
-#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
+#elif defined(AFS_LINUX_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_MTIME) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_MTIME) {
@@ -433,7 +433,7 @@ afs_VAttrToAS(struct vcache *avc, struct vattr *av,
 #endif /* AFS_DARWIN80_ENV */
 	mask |= AFS_SETMODTIME;
 #ifndef	AFS_SGI_ENV
-# if defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_LINUX26_ENV)
+# if defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_LINUX_ENV)
 	if (av->va_mtime.tv_nsec == -1)
 # else
 	if (av->va_mtime.tv_usec == -1)
@@ -470,7 +470,7 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
     OSI_VC_CONVERT(avc);
 
     AFS_STATCNT(afs_setattr);
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX22_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX_ENV)
     afs_Trace4(afs_iclSetp, CM_TRACE_SETATTR, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, attrs->va_mask, ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(attrs->va_size), ICL_TYPE_OFFSET,
@@ -510,7 +510,7 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
      */
 #if defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(attrs, va_data_size)) {
-#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
+#elif defined(AFS_LINUX_ENV) || defined(UKERNEL)
     if (attrs->va_mask & ATTR_SIZE) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
@@ -545,7 +545,7 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 #endif
 #if defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(attrs, va_data_size)) {
-#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
+#elif defined(AFS_LINUX_ENV) || defined(UKERNEL)
     if (attrs->va_mask & ATTR_SIZE) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
@@ -567,13 +567,13 @@ afs_setattr(OSI_VC_DECL(avc), struct vattr *attrs,
 	} else {
 	    code = afs_TruncateAllSegments(avc, tsize, treq, acred);
 	}
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
 	/* We must update the Linux kernel's idea of file size as soon as
 	 * possible, to avoid racing with delayed writepages delivered by
 	 * pdflush */
 	if (code == 0)
 	    i_size_write(AFSTOV(avc), tsize);
-#endif /* AFS_LINUX26_ENV */
+#endif /* AFS_LINUX_ENV */
 #if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
 	vnode_pager_setsize(vp, (u_long) tsize);
 #endif

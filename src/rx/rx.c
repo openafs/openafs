@@ -19,7 +19,7 @@
 #  include "h/types.h"
 #  include "h/time.h"
 #  include "h/stat.h"
-#  ifdef AFS_LINUX20_ENV
+#  ifdef AFS_LINUX_ENV
 #   include "h/socket.h"
 #  endif
 #  include "netinet/in.h"

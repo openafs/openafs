@@ -637,8 +637,8 @@ extern void osi_ReleaseVM(struct vcache *avc, afs_ucred_t *acred);
 extern int osi_readRandom(void *, afs_size_t);
 
 /* LINUX/osi_misc.c */
-#ifdef AFS_LINUX20_ENV
-#ifdef AFS_LINUX24_ENV
+#ifdef AFS_LINUX_ENV
+#ifdef AFS_LINUX_ENV
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 			  struct dentry **dpp);
 extern int osi_InitCacheInfo(char *aname);
@@ -702,7 +702,7 @@ extern int afs_syscall_iincdec(int, int, int, int);
 /* ARCH/osi_file.c */
 extern int afs_osicred_initialized;
 extern void *osi_UFSOpen(afs_dcache_id_t *ainode);
-#if defined(AFS_LINUX22_ENV)
+#if defined(AFS_LINUX_ENV)
 extern void osi_get_fh(struct dentry *dp, afs_ufs_dcache_id_t *ainode);
 #endif
 extern int afs_osi_Stat(struct osi_file *afile,
@@ -741,7 +741,7 @@ extern int setpag(afs_proc_t *proc, struct ucred **cred, afs_uint32 pagvalue,
 # endif /* AFS_XBSD_ENV */
 #endif /* UKERNEL */
 
-#if defined(AFS_LINUX26_ENV) || defined(AFS_PAG_ONEGROUP_ENV)
+#if defined(AFS_LINUX_ENV) || defined(AFS_PAG_ONEGROUP_ENV)
 extern afs_int32 osi_get_group_pag(afs_ucred_t *cred);
 #endif
 
@@ -787,7 +787,7 @@ extern struct mount *afs_globalVFS;
 extern struct vfs *afs_globalVFS;
 #endif
 extern struct vcache *afs_globalVp;
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 extern void vcache2inode(struct vcache *avc);
 extern void vcache2fakeinode(struct vcache *rootvp, struct vcache *mpvp);
 #endif
@@ -1451,7 +1451,7 @@ extern void afs_ntohuuid(afsUUID * uuidp);
 extern afs_int32 afs_uuid_create(afsUUID * uuid);
 extern u_short afs_uuid_hash(afsUUID * uuid);
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI62_ENV) || defined(UKERNEL)
+#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI62_ENV) || defined(UKERNEL)
 #include "osi_prototypes.h"
 #endif
 

@@ -84,7 +84,7 @@ struct nocache_read_request {
     u_offset_t offset;
     struct seg *segment;
     caddr_t address;
-#elif defined(AFS_LINUX24_ENV) || defined(UKERNEL)
+#elif defined(AFS_LINUX_ENV) || defined(UKERNEL)
     /* The tested platform, as CITI impl. just packs ab->parms */
     struct uio *auio;
     struct vrequest *areq;

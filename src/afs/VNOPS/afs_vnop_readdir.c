@@ -111,7 +111,7 @@ BlobScan(struct dcache * afile, afs_int32 ablob, int *ablobOut)
 }
 
 
-#if !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_LINUX_ENV)
 /* Changes to afs_readdir which affect dcache or vcache handling or use of
  * bulk stat data should also be reflected in the Linux specific verison of
  * the readdir routine.
@@ -952,4 +952,4 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
     return code;
 }
 
-#endif /* !AFS_LINUX20_ENV */
+#endif /* !AFS_LINUX_ENV */

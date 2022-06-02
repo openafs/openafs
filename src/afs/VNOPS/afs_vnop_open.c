@@ -151,7 +151,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
     if (writing)
 	tvc->execsOrWriters++;
     tvc->opens++;
-#if defined(AFS_SGI_ENV) || defined (AFS_LINUX26_ENV)
+#if defined(AFS_SGI_ENV) || defined (AFS_LINUX_ENV)
     if (writing && tvc->cred == NULL) {
 	crhold(acred);
 	tvc->cred = acred;

@@ -82,7 +82,7 @@
 #include  <arpa/inet.h>
 #endif /* AFS_USR_HPUX_ENV */
 
-#ifdef AFS_USR_LINUX22_ENV
+#ifdef AFS_USR_LINUX_ENV
 #include  <sys/ioctl.h>		/* _IOW() */
 #include  <sys/uio.h>		/* struct iovec */
 #include  <sys/time.h>		/* struct timeval */
@@ -97,7 +97,7 @@
 #include  <netdb.h>
 #include  <arpa/inet.h>
 #define FREAD			0x0001
-#endif /* AFS_USR_LINUX22_ENV */
+#endif /* AFS_USR_LINUX_ENV */
 
 #if defined(AFS_USR_DARWIN_ENV) || defined(AFS_USR_FBSD_ENV) || defined(AFS_USR_DFBSD_ENV)
 #ifdef _KERNEL
@@ -150,7 +150,7 @@ typedef unsigned int fsblkcnt_t;
 #include <resolv.h>
 
 /* glibc 2.2 has pthread_attr_setstacksize */
-#if (defined(AFS_LINUX22_ENV) && !defined(AFS_USR_LINUX22_ENV)) || (defined(AFS_USR_LINUX22_ENV) && (__GLIBC_MINOR__ < 2))
+#if (defined(AFS_LINUX_ENV) && !defined(AFS_USR_LINUX_ENV)) || (defined(AFS_USR_LINUX_ENV) && (__GLIBC_MINOR__ < 2))
 #define pthread_attr_setstacksize(a,b) 0
 #endif
 

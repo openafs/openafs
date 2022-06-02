@@ -235,7 +235,7 @@ typedef struct cm_initparams_v1 {
 
 /* Defines and structures for the AFS proc replacement layer for the original syscall (AFS_SYSCALL) strategy */
 
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 
 #define PROC_FSDIRNAME "openafs"
 #define PROC_SYSCALL_NAME "afs_ioctl"

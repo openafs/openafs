@@ -312,7 +312,7 @@ DECL_PIOCTL(PNFSNukeCreds);
 DECL_PIOCTL(PNewUuid);
 DECL_PIOCTL(PPrecache);
 DECL_PIOCTL(PGetPAG);
-#if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX24_ENV)
+#if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX_ENV)
 DECL_PIOCTL(PSetCachingThreshold);
 #endif
 
@@ -436,7 +436,7 @@ static pioctlFunction CpioctlSw[] = {
 static pioctlFunction OpioctlSw[]  = {
     PBogus,			/* 0 */
     PNFSNukeCreds,		/* 1 -- nuke all creds for NFS client */
-#if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX24_ENV)
+#if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX_ENV)
     PSetCachingThreshold        /* 2 -- get/set cache-bypass size threshold */
 #else
     PNoop                       /* 2 -- get/set cache-bypass size threshold */
@@ -708,7 +708,7 @@ afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 
     return (code);
 }
-#elif defined(AFS_LINUX22_ENV)
+#elif defined(AFS_LINUX_ENV)
 struct afs_ioctl_sys {
     unsigned int com;
     unsigned long arg;
@@ -1019,7 +1019,7 @@ afs_pioctl(afs_proc_t *p, void *args, int *retval)
 #endif
 
 /* macro to avoid adding any more #ifdef's to pioctl code. */
-#if defined(AFS_LINUX22_ENV) || defined(AFS_AIX41_ENV)
+#if defined(AFS_LINUX_ENV) || defined(AFS_AIX41_ENV)
 #define PIOCTL_FREE_CRED() crfree(credp)
 #else
 #define PIOCTL_FREE_CRED()
@@ -1045,7 +1045,7 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #ifdef AFS_NEED_CLIENTCONTEXT
     afs_ucred_t *tmpcred = NULL;
 #endif
-#if defined(AFS_NEED_CLIENTCONTEXT) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_NEED_CLIENTCONTEXT) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     afs_ucred_t *foreigncreds = NULL;
 #endif
     afs_int32 code = 0;
@@ -1053,7 +1053,7 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #ifdef	AFS_AIX41_ENV
     struct ucred *credp = crref();	/* don't free until done! */
 #endif
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
     cred_t *credp = crref();	/* don't free until done! */
     struct dentry *dp;
 #endif
@@ -1071,7 +1071,7 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
     }
     if ((com & 0xff) == PSetClientContext) {
 #ifdef AFS_NEED_CLIENTCONTEXT
-#if defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX_ENV)
 	code = HandleClientContext(&data, &com, &foreigncreds, credp);
 #else
 	code = HandleClientContext(&data, &com, &foreigncreds, osi_curcred());
@@ -1101,7 +1101,7 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 	 * like afs_osi_suser(cred) which, I think, is better since it
 	 * generalizes and supports multi cred environments...
 	 */
-#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV)
 	tmpcred = credp;
 	credp = foreigncreds;
 #elif defined(AFS_AIX41_ENV)
@@ -1122,7 +1122,7 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
     if ((com & 0xff) == 15) {
 	/* special case prefetch so entire pathname eval occurs in helper process.
 	 * otherwise, the pioctl call is essentially useless */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	code =
 	    Prefetch(path, &data, follow,
 		     foreigncreds ? foreigncreds : credp);
@@ -1142,13 +1142,13 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 	    lookupname(path, USR, follow, NULL, &vp,
 		       foreigncreds ? foreigncreds : credp);
 #else
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 	code = gop_lookupname_user(path, AFS_UIOUSER, follow, &dp);
 	if (!code)
 	    vp = (struct vnode *)dp->d_inode;
 #else
 	code = gop_lookupname_user(path, AFS_UIOUSER, follow, &vp);
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_LINUX_ENV */
 #endif /* AFS_AIX41_ENV */
 	AFS_GLOCK();
 	if (code) {
@@ -1209,7 +1209,7 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 	    credp = OSI_GET_CURRENT_CRED();
 	    code = afs_HandlePioctl(vp, com, &data, follow, &credp);
 	}
-#elif defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_LINUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	code = afs_HandlePioctl(vp, com, &data, follow, &credp);
 #elif defined(UKERNEL)
 	code = afs_HandlePioctl(vp, com, &data, follow,
@@ -1235,7 +1235,7 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 	set_p_cred(u.u_procp, tmpcred);	/* restore original credentials */
 #elif	defined(AFS_SGI_ENV)
 	OSI_SET_CURRENT_CRED(tmpcred);	/* restore original credentials */
-#elif	defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV)
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV)
 	credp = tmpcred;		/* restore original credentials */
 #else
 	osi_curcred() = tmpcred;	/* restore original credentials */
@@ -1245,7 +1245,7 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
     }
 #endif /* AFS_NEED_CLIENTCONTEXT */
     if (vp) {
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 	/*
 	 * Holding the global lock when calling dput can cause a deadlock
 	 * when the kernel calls back into afs_dentry_iput
@@ -1828,7 +1828,7 @@ _settok_tokenCell(char *cellName, int *cellNum, int *primary) {
 }
 
 
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX_ENV)
 static_inline int
 _settok_setParentPag(afs_ucred_t **cred)
 {
@@ -4612,7 +4612,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 #ifdef AFS_AIX51_ENV
     newcred->cr_groupset.gs_union.un_groups[0] = g0;
     newcred->cr_groupset.gs_union.un_groups[1] = g1;
-#elif defined(AFS_LINUX26_ENV)
+#elif defined(AFS_LINUX_ENV)
 # ifdef AFS_PAG_ONEGROUP_ENV
     afs_set_cr_group_info(newcred, groups_alloc(1)); /* nothing sets this */
     l = (((g0-0x3f00) & 0x3fff) << 14) | ((g1-0x3f00) & 0x3fff);
@@ -4639,8 +4639,8 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 #endif
 #ifdef AFS_AIX_ENV
     newcred->cr_ngrps = 2;
-#elif !defined(AFS_LINUX26_ENV) && !defined(AFS_SUN510_ENV)
-# if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_FBSD_ENV)
+#elif !defined(AFS_LINUX_ENV) && !defined(AFS_SUN510_ENV)
+# if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_FBSD_ENV)
     newcred->cr_ngroups = 2;
 # else
     for (i = 2; i < NGROUPS; i++)
@@ -5122,7 +5122,7 @@ DECL_PIOCTL(PNewUuid)
     return 0;
 }
 
-#if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX24_ENV)
+#if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX_ENV)
 
 DECL_PIOCTL(PSetCachingThreshold)
 {

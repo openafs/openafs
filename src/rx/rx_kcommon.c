@@ -197,7 +197,7 @@ osi_utoa(char *buf, size_t len, unsigned long val)
     return 0;
 }
 
-#ifndef AFS_LINUX26_ENV
+#ifndef AFS_LINUX_ENV
 /*
  * osi_AssertFailK() -- used by the osi_Assert() macro.
  *
@@ -250,7 +250,7 @@ osi_AssertFailK(const char *expr, const char *file, int line)
 
     osi_Panic("%s", buf);
 }
-#endif /* !AFS_LINUX26_ENV */
+#endif /* !AFS_LINUX_ENV */
 
 #ifndef UKERNEL
 /* This is the server process request loop. Kernel server
@@ -464,7 +464,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
  */
 
 
-#if ! defined(AFS_AIX_ENV) && ! defined(AFS_SUN5_ENV) && ! defined(UKERNEL) && ! defined(AFS_LINUX20_ENV) && !defined (AFS_DARWIN_ENV) && !defined (AFS_XBSD_ENV)
+#if ! defined(AFS_AIX_ENV) && ! defined(AFS_SUN5_ENV) && ! defined(UKERNEL) && ! defined(AFS_LINUX_ENV) && !defined (AFS_DARWIN_ENV) && !defined (AFS_XBSD_ENV)
 /* Routine called during the afsd "-shutdown" process to put things back to
  * the initial state.
  */
@@ -824,7 +824,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
  * most of it is simple to follow common code.
  */
 #if !defined(UKERNEL)
-# if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SOCKPROXY_ENV)
+# if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_SOCKPROXY_ENV)
 /* rxk_NewSocket creates a new socket on the specified port. The port is
  * in network byte order.
  */
@@ -1044,7 +1044,7 @@ rxk_FreeSocket(struct socket *asocket)
 #  endif
     return 0;
 }
-# endif /* !SUN5 && !LINUX20 && !AFS_SOCKPROXY_ENV */
+# endif /* !AFS_SUN5_ENV && !AFS_LINUX_ENV && !AFS_SOCKPROXY_ENV */
 
 # if defined(RXK_LISTENER_ENV) || defined(AFS_SUN5_ENV) || defined(RXK_UPCALL_ENV)
 #  ifdef RXK_TIMEDSLEEP_ENV
@@ -1218,7 +1218,7 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
  * OS's socket receive routine returns as a result of a signal.
  */
 int rxk_ListenerPid;		/* Used to signal process to wakeup at shutdown */
-#  ifdef AFS_LINUX20_ENV
+#  ifdef AFS_LINUX_ENV
 struct task_struct *rxk_ListenerTask;
 #  endif
 
@@ -1229,7 +1229,7 @@ rxk_Listener(void)
     int code;
     int host, port;
 
-#  ifdef AFS_LINUX20_ENV
+#  ifdef AFS_LINUX_ENV
     rxk_ListenerPid = current->pid;
     rxk_ListenerTask = current;
     allow_signal(SIGKILL);    /* Allowed, but blocked until shutdown */
@@ -1276,7 +1276,7 @@ rxk_Listener(void)
 	osi_rxWakeup(&afs_termState);
     }
     rxk_ListenerPid = 0;
-#  ifdef AFS_LINUX20_ENV
+#  ifdef AFS_LINUX_ENV
     rxk_ListenerTask = 0;
     osi_rxWakeup(&rxk_ListenerTask);
 #  endif
@@ -1285,7 +1285,7 @@ rxk_Listener(void)
 #  endif
 }
 
-#  if !defined(AFS_LINUX20_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
+#  if !defined(AFS_LINUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 /* The manner of stopping the rx listener thread may vary. Most unix's should
  * be able to call soclose.
  */
@@ -1303,7 +1303,7 @@ osi_Msg(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX_ENV)
     vprintk(fmt, ap);
 #else
     vprintf(fmt, ap);
@@ -1311,7 +1311,7 @@ osi_Msg(const char *fmt, ...)
     va_end(ap);
 }
 
-#if !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_LINUX_ENV)
 void
 # if defined(AFS_AIX_ENV)
 osi_Panic(char *msg, void *a1, void *a2, void *a3)
@@ -1340,7 +1340,7 @@ osi_Panic(char *msg, ...)
 	icmn_err(CE_PANIC, msg, ap);
 	va_end(ap);
     }
-# elif defined(AFS_DARWIN80_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_FBSD_ENV) || defined(UKERNEL)
+# elif defined(AFS_DARWIN80_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_FBSD_ENV) || defined(UKERNEL)
     char buf[256];
     va_list ap;
     if (!msg)
@@ -1351,7 +1351,7 @@ osi_Panic(char *msg, ...)
     va_end(ap);
     printf("%s", buf);
     panic("%s", buf);
-# else /* DARWIN80 || LINUX22 || FBSD || UKERNEL */
+# else /* DARWIN80 || LINUX || FBSD || UKERNEL */
     va_list ap;
     if (!msg)
 	msg = "Unknown AFS panic";
@@ -1359,12 +1359,12 @@ osi_Panic(char *msg, ...)
     va_start(ap, msg);
     vprintf(msg, ap);
     va_end(ap);
-#  ifdef AFS_LINUX20_ENV
+#  ifdef AFS_LINUX_ENV
     * ((char *) 0) = 0;
 #  else
     panic("%s", msg);
 #  endif
-# endif /* else DARWIN80 || LINUX22 || FBSD || UKERNEL */
+# endif /* else DARWIN80 || LINUX || FBSD || UKERNEL */
 }
 
-#endif /* !AFS_LINUX26_ENV */
+#endif /* !AFS_LINUX_ENV */

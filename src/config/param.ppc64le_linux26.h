@@ -12,10 +12,7 @@
 
 #ifndef UKERNEL
 /* This section for kernel space compiles only */
-#define AFS_PPC64_LINUX20_ENV	1
-#define AFS_PPC64_LINUX22_ENV	1
-#define AFS_PPC64_LINUX24_ENV	1
-#define AFS_PPC64_LINUX26_ENV	1
+#define AFS_PPC64_LINUX_ENV	1
 #define AFS_LINUX_64BIT_KERNEL	1
 #define AFS_64BITPOINTER_ENV	1     /* pointers are 64 bits */
 #define AFS_64BITUSERPOINTER_ENV	1

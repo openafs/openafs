@@ -40,7 +40,7 @@ lpioctl(char *path, int cmd, void *cmarg, int follow)
     return (syscall(AFS_PIOCTL, path, cmd, cmarg, follow));
 }
 
-#elif defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX_ENV)
 
 int
 lpioctl(char *path, int cmd, void *cmarg, int follow)

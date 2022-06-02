@@ -229,7 +229,7 @@ xbsa_MountLibrary(struct butx_transactionInfo *info, afs_int32 serverType)
     XBSAQueryApiVersion(&(info->apiVersion));
 #endif
 #else
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX26_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV)
     XBSAInit                    = BSAInit;
     XBSABeginTxn                = BSABeginTxn;
     XBSAEndTxn                  = BSAEndTxn;

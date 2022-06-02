@@ -52,7 +52,7 @@
 #endif
 #endif
 #else /* AFS_VFSINCL_ENV */
-#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #include <sys/fs.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */
@@ -75,7 +75,7 @@
 #include <sys/mnttab.h>
 #include <sys/mntent.h>
 #else
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 #include <mntent.h>
 #include <sys/statfs.h>
 #else
@@ -275,7 +275,7 @@ static int
 VCheckPartition(char *part, char *devname, int logging)
 {
     struct afs_stat_st status;
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_LINUX_ENV) && !defined(AFS_NT40_ENV)
     char AFSIDatPath[MAXPATHLEN];
 #endif
 
@@ -313,7 +313,7 @@ VCheckPartition(char *part, char *devname, int logging)
     }
 #endif
 
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_LINUX_ENV) && !defined(AFS_NT40_ENV)
     strcpy(AFSIDatPath, part);
     strcat(AFSIDatPath, "/AFSIDat");
 #ifdef AFS_NAMEI_ENV
@@ -343,7 +343,7 @@ VCheckPartition(char *part, char *devname, int logging)
 	return -1;
 #endif
 #endif /* AFS_NAMEI_ENV */
-#endif /* !AFS_LINUX20_ENV && !AFS_NT40_ENV */
+#endif /* !AFS_LINUX_ENV && !AFS_NT40_ENV */
 
     VInitPartition(part, devname, status.st_dev);
 
@@ -850,7 +850,7 @@ VAttachPartitions(void)
 }
 #endif
 
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 int
 VAttachPartitions(void)
 {
@@ -883,7 +883,7 @@ VAttachPartitions(void)
 
     return errors;
 }
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_LINUX_ENV */
 
 /* This routine is to be called whenever the actual name of the partition
  * is required. The canonical name is still in part->name.

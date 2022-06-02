@@ -33,8 +33,8 @@
 int setlim(int limcon, uchar_t hard, int limit);
 #endif
 
-#ifndef AFS_ARM_LINUX20_ENV
-#if defined(AFS_S390_LINUX20_ENV)
+#ifndef AFS_ARM_LINUX_ENV
+#if defined(AFS_S390_LINUX_ENV)
 int PRE_Block;	/* Remnants of preemption support. */
 #else
 char PRE_Block;	/* Remnants of preemption support. */
@@ -365,7 +365,7 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 	Initialize_PCB(temp, priority, stackmemory, stacksize, ep, parm, name);
 	insert(temp, &runnable[priority]);
 	temp2 = lwp_cpptr;
-#if !defined(AFS_ARM_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)
+#if !defined(AFS_ARM_LINUX_ENV) && !defined(AFS_ARM_DARWIN_ENV)
 	if (PRE_Block != 0)
 	    Abort_LWP("PRE_Block not 0");
 
@@ -385,18 +385,18 @@ LWP_CreateProcess(void *(*ep) (void *), int stacksize, int priority, void *parm,
 	savecontext(Create_Process_Part2, &temp2->context, stackptr + stacksize - 16);	/* 16 = 2 * jmp_buf_type */
 #endif /* !sys_x86_darwin_80 */
 #else
-#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV)
+#if defined(AFS_SPARC64_LINUX_ENV) || defined(AFS_SPARC_LINUX_ENV)
 	savecontext(Create_Process_Part2, &temp2->context, stackptr + stacksize - 0x40);	/* lomgjmp does something
 												 * with %fp + 0x38 */
 #else
-#if defined(AFS_S390_LINUX20_ENV)
+#if defined(AFS_S390_LINUX_ENV)
 	savecontext(Create_Process_Part2, &temp2->context,
 		    stackptr + stacksize - MINFRAME);
-#else /* !AFS_S390_LINUX20_ENV */
+#else /* !AFS_S390_LINUX_ENV */
 	savecontext(Create_Process_Part2, &temp2->context,
 		    stackptr + stacksize - sizeof(void *));
-#endif /* AFS_S390_LINUX20_ENV */
-#endif /* AFS_SPARC64_LINUX20_ENV || AFS_SPARC_LINUX20_ENV */
+#endif /* AFS_S390_LINUX_ENV */
+#endif /* AFS_SPARC64_LINUX_ENV || AFS_SPARC_LINUX_ENV */
 #endif /* AFS_SGI62_ENV */
 #endif
 	/* End of gross hack */
@@ -456,7 +456,7 @@ LWP_CreateProcess2(void *(*ep) (void *), int stacksize, int priority, void *parm
 	Initialize_PCB(temp, priority, stackptr, stacksize, ep, parm, name);
 	insert(temp, &runnable[priority]);
 	temp2 = lwp_cpptr;
-#if !defined(AFS_ARM_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)
+#if !defined(AFS_ARM_LINUX_ENV) && !defined(AFS_ARM_DARWIN_ENV)
 	if (PRE_Block != 0)
 	    Abort_LWP("PRE_Block not 0");
 
@@ -521,12 +521,12 @@ LWP_DestroyProcess(PROCESS pid)
 	    savecontext(Dispatcher, &(temp->context),
 			&(LWPANCHOR.
 			  dsptchstack[(sizeof LWPANCHOR.dsptchstack) - 8]));
-#elif defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV)
+#elif defined(AFS_SPARC64_LINUX_ENV) || defined(AFS_SPARC_LINUX_ENV)
 	    savecontext(Dispatcher, &(temp->context),
 			&(LWPANCHOR.
 			  dsptchstack[(sizeof LWPANCHOR.dsptchstack) -
 				      0x40]));
-#elif defined(AFS_S390_LINUX20_ENV)
+#elif defined(AFS_S390_LINUX_ENV)
 	    savecontext(Dispatcher, &(temp->context),
 			&(LWPANCHOR.
 			  dsptchstack[(sizeof LWPANCHOR.dsptchstack) -
@@ -956,7 +956,7 @@ Dispatcher(void)
 	printf("Dispatch %d [PCB at 0x%x] \"%s\"\n", ++dispatch_count,
 	       runnable[i].head, runnable[i].head->name);
 #endif
-#if !defined(AFS_ARM_LINUX20_ENV) && !defined(AFS_ARM_DARWIN_ENV)
+#if !defined(AFS_ARM_LINUX_ENV) && !defined(AFS_ARM_DARWIN_ENV)
     if (PRE_Block != 1)
 	Abort_LWP("PRE_Block not 1");
 #endif

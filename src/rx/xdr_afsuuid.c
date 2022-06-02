@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 #if defined(KERNEL) && !defined(UKERNEL)
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 #include "h/string.h"
 #else
 #include <sys/param.h>

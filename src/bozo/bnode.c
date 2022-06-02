@@ -774,7 +774,7 @@ hdl_notifier(struct bnode_proc *tp)
 	setsid();
 #elif defined(AFS_DARWIN90_ENV)
 	setpgid(0, 0);
-#elif defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV)
+#elif defined(AFS_LINUX_ENV) || defined(AFS_AIX_ENV)
 	setpgrp();
 #else
 	setpgrp(0, 0);

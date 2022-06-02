@@ -20,7 +20,7 @@
 #include <linux/unistd.h>		/* For syscall numbers. */
 #include <linux/mm.h>
 
-#ifdef AFS_AMD64_LINUX20_ENV
+#ifdef AFS_AMD64_LINUX_ENV
 #include <asm/ia32_unistd.h>
 #endif
 

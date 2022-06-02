@@ -57,7 +57,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
     int password_expires = -1;
     char *reason = NULL;
     struct passwd *upwd = NULL;
-#if !(defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV))
+#if !(defined(AFS_LINUX_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV))
     char upwd_buf[2048];       /* size is a guess. */
     struct passwd unix_pwd;
 #endif
@@ -165,7 +165,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	RET(PAM_AUTH_ERR);
     }
 #else
-#if     defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV)
+#if     defined(AFS_LINUX_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV)
     upwd = getpwnam(user);
 #else
     upwd = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));

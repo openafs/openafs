@@ -13,10 +13,7 @@
 #ifndef UKERNEL
 
 /* This section for kernel libafs compiles only */
-#define AFS_I386_LINUX20_ENV	1
-#define AFS_I386_LINUX22_ENV	1
-#define AFS_I386_LINUX24_ENV	1
-#define AFS_I386_LINUX26_ENV	1
+#define AFS_I386_LINUX_ENV	1
 
 #else /* !defined(UKERNEL) */
 

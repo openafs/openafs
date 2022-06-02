@@ -11,7 +11,7 @@
 #define _AFS_OSI_
 
 #include "h/types.h"
-#if !defined(AFS_LINUX26_ENV)
+#if !defined(AFS_LINUX_ENV)
 #include "h/param.h"
 #endif
 
@@ -23,7 +23,7 @@
 #include <sys/lock.h>
 #endif
 
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 #ifndef _LINUX_CODA_FS_I
 #define _LINUX_CODA_FS_I
 #define _CODA_HEADER_
@@ -60,10 +60,10 @@ struct osi_stat {
 
 struct osi_file {
     afs_int32 size;		/* file size in bytes XXX Must be first field XXX */
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
     struct file *filp;		/* May need this if we really open the file. */
 #else
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
     struct dentry dentry;	/* merely to hold the pointer to the inode. */
     struct file file;		/* May need this if we really open the file. */
 #else
@@ -133,7 +133,7 @@ struct afs_osi_WaitHandle {
  *
  * Darwin, all of the BSDs, and Linux have their own
  */
-#if !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_LINUX_ENV)
 # define	vType(vc)	    AFSTOV(vc)->v_type
 # define	vSetType(vc,type)   AFSTOV(vc)->v_type = (type)
 # define	vSetVfsp(vc,vfsp)   AFSTOV(vc)->v_vfsp = (vfsp)

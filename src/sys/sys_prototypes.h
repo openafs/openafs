@@ -11,7 +11,7 @@
 #define _SYS_PROTOTYPES_H
 
 /* glue.c */
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 extern int proc_afs_syscall(long, long, long, long, long, int *);
 #endif
 #ifdef AFS_DARWIN80_ENV

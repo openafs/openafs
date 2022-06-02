@@ -50,7 +50,7 @@ lsetpag(void)
 {
     int errcode;
 
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
     int rval;
 
     rval = proc_afs_syscall(AFSCALL_SETPAG,0,0,0,0,&errcode);

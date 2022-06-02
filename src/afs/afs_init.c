@@ -22,7 +22,7 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "rx/rxstat.h"
-#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
+#if defined(AFS_LINUX_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
 # include <linux/cred.h>
 #endif
 
@@ -34,7 +34,7 @@ struct osi_dev cacheDev;	/*Cache device */
 afs_int32 cacheInfoModTime;	/*Last time cache info modified */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_NBSD_ENV)
 struct mount *afs_cacheVfsp = 0;
-#elif defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX_ENV)
 struct super_block *afs_cacheSBp = 0;
 #else
 struct vfs *afs_cacheVfsp = 0;
@@ -52,7 +52,7 @@ static struct vnode *volumeVnode;
 #endif
 afs_rwlock_t afs_discon_lock;
 extern afs_rwlock_t afs_disconDirtyLock;
-#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
+#if defined(AFS_LINUX_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
 const struct cred *cache_creds;
 #endif
 
@@ -157,7 +157,7 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     if (code) {
 	return code;
     }
-#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
+#if defined(AFS_LINUX_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
     /*
      * Save current credentials for later access to disk cache files.
      * If selinux, apparmor or other security modules are enabled,
@@ -253,14 +253,14 @@ afs_LookupInodeByPath(char *filename, afs_ufs_dcache_id_t *inode,
 {
     afs_int32 code;
 
-#if defined(AFS_LINUX22_ENV)
+#if defined(AFS_LINUX_ENV)
     struct dentry *dp;
     code = gop_lookupname(filename, AFS_UIOSYS, 0, &dp);
     if (code)
 	return code;
     osi_get_fh(dp, inode);
     dput(dp);
-#else /* AFS_LINUX22_ENV */
+#else /* AFS_LINUX_ENV */
     struct vnode *filevp;
     code = gop_lookupname(filename, AFS_UIOSYS, 0, &filevp);
     if (code)
@@ -275,7 +275,7 @@ afs_LookupInodeByPath(char *filename, afs_ufs_dcache_id_t *inode,
     else {
 	AFS_RELE(filevp);
     }
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_LINUX_ENV */
 
     return 0;
 }
@@ -383,7 +383,7 @@ afs_InitCacheInfo(char *afile)
     struct osi_stat tstat;
     struct osi_file *tfile;
     struct afs_fheader theader;
-#ifndef AFS_LINUX22_ENV
+#ifndef AFS_LINUX_ENV
     struct vnode *filevp;
 #endif
     int goodFile;
@@ -391,7 +391,7 @@ afs_InitCacheInfo(char *afile)
     AFS_STATCNT(afs_InitCacheInfo);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
 	osi_Panic("afs_InitCacheInfo --- called for non-ufs cache!");
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
     code = osi_InitCacheInfo(afile);
     if (code)
 	return code;
@@ -423,7 +423,7 @@ afs_InitCacheInfo(char *afile)
 	if (!VFS_STATVFS(filevp->v_vfsp, &st))
 # elif defined(AFS_AIX41_ENV)
 	if (!VFS_STATFS(filevp->v_vfsp, &st, &afs_osi_cred))
-# elif defined(AFS_LINUX20_ENV)
+# elif defined(AFS_LINUX_ENV)
 	{
 	    KERNEL_SPACE_DECL;
 	    TO_USER_SPACE();
@@ -459,7 +459,7 @@ afs_InitCacheInfo(char *afile)
 	    afs_fsfragsize = st.f_bsize - 1;
 # endif /* AFS_SUN5_ENV || AFS_HPUX100_ENV */
     }
-# if defined(AFS_LINUX20_ENV)
+# if defined(AFS_LINUX_ENV)
     cacheInode.ufs = filevp->i_ino;
     afs_cacheSBp = filevp->i_sb;
 # elif defined(AFS_XBSD_ENV)
@@ -483,9 +483,9 @@ afs_InitCacheInfo(char *afile)
     afs_LookupInodeByPath(afile, &cacheInode.ufs, NULL);
 #  endif /* !AFS_CACHE_VNODE_PATH */
     cacheDev.dev = afs_vnodeToDev(filevp);
-# endif /* AFS_LINUX20_ENV */
+# endif /* AFS_LINUX_ENV */
     AFS_RELE(filevp);
-#endif /* AFS_LINUX22_ENV */
+#endif /* AFS_LINUX_ENV */
     if (afs_fsfragsize < AFS_MIN_FRAGSIZE) {
 	afs_fsfragsize = AFS_MIN_FRAGSIZE;
     }
@@ -734,7 +734,7 @@ shutdown_cache(void)
 	memset(&cacheDev, 0, sizeof(struct osi_dev));
 	osi_dnlc_shutdown();
     }
-#if defined(AFS_LINUX26_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
+#if defined(AFS_LINUX_ENV) && defined(STRUCT_TASK_STRUCT_HAS_CRED)
     put_cred(cache_creds);
 #endif
 }				/*shutdown_cache */
@@ -745,7 +745,7 @@ shutdown_vnodeops(void)
 {
     AFS_STATCNT(shutdown_vnodeops);
     if (afs_cold_shutdown) {
-#ifndef AFS_LINUX20_ENV
+#ifndef AFS_LINUX_ENV
 	afs_rd_stash_i = 0;
 #endif
 	shutdown_mariner();

@@ -19,7 +19,7 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"
 #include "rx/rx_globals.h"
-#if !defined(UKERNEL) && !defined(AFS_LINUX20_ENV)
+#if !defined(UKERNEL) && !defined(AFS_LINUX_ENV)
 #include "net/if.h"
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"
@@ -113,7 +113,7 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
     }
 #endif /* defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64) */
 
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX_ENV) && !defined(AFS_IA64_LINUX_ENV)
     if (afs_in_compat_syscall()) {
 	struct afs_ioctl32 dst32;
 
@@ -313,7 +313,7 @@ struct iparam32 {
 };
 
 
-#if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN5_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)) || defined(NEED_IOCTL32)
+#if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN5_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX_ENV) && !defined(AFS_IA64_LINUX_ENV)) || defined(NEED_IOCTL32)
 static void
 iparam32_to_iparam(const struct iparam32 *src, struct iparam *dst)
 {
@@ -359,7 +359,7 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
     }
 #endif /* AFS_SUN5_64BIT_ENV */
 
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX_ENV) && !defined(AFS_IA64_LINUX_ENV)
     if (afs_in_compat_syscall()) {
 	struct iparam32 dst32;
 
@@ -439,7 +439,7 @@ afs3_syscall(afs_proc_t *p, void *args, long *retval)
 	long parm5;
 	long parm6;
     } *uap = (struct a *)args;
-#elif defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX_ENV)
 struct afssysargs {
     long syscall;
     long parm1;
@@ -457,7 +457,7 @@ afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4)
     long linux_ret = 0;
     long *retval = &linux_ret;
     long eparm[4];		/* matches AFSCALL_ICL in fstrace.c */
-# ifdef AFS_SPARC64_LINUX24_ENV
+# ifdef AFS_SPARC64_LINUX_ENV
     afs_int32 eparm32[4];
 # endif
     /* eparm is also used by AFSCALL_CALL in afsd.c */
@@ -506,7 +506,7 @@ Afs_syscall()
 	return (ENODEV);
     }
 #endif
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
     /* setup uap for use below - pull out the magic decoder ring to know
      * which syscalls have folded argument lists.
      */
@@ -515,7 +515,7 @@ Afs_syscall()
     uap->parm2 = parm2;
     uap->parm3 = parm3;
     if (syscall == AFSCALL_ICL || syscall == AFSCALL_CALL) {
-#ifdef AFS_SPARC64_LINUX24_ENV
+#ifdef AFS_SPARC64_LINUX_ENV
 /* from arch/sparc64/kernel/sys_sparc32.c */
 #define AA(__x)                                \
 ({     unsigned long __ret;            \
@@ -526,7 +526,7 @@ Afs_syscall()
 })
 
 
-#ifdef AFS_SPARC64_LINUX26_ENV
+#ifdef AFS_SPARC64_LINUX_ENV
 	if (test_thread_flag(TIF_32BIT))
 #else
 	if (current->thread.flags & SPARC_FLAG_32BIT)
@@ -782,7 +782,7 @@ Afs_syscall()
 			    uap->parm5, (long *)retval);
 #endif /* !AFS_NBSD40_ENV */
 	    AFS_GUNLOCK();
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 	    if (!code) {
 		/* ICL commands can return values. */
 		code = -linux_ret;	/* Gets negated again at exit below */
@@ -793,7 +793,7 @@ Afs_syscall()
 		setuerror(code);
 #endif
 	    }
-#endif /* !AFS_LINUX20_ENV */
+#endif /* !AFS_LINUX_ENV */
 	} else {
 #if defined(KERNEL_HAVE_UERROR)
 	    setuerror(EINVAL);
@@ -808,7 +808,7 @@ Afs_syscall()
     } /* 32 bit procs */
 #endif
 #endif
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
     code = -code;
 #endif
     return code;

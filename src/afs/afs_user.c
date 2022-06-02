@@ -18,7 +18,7 @@
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 
 #if !defined(UKERNEL)
-#if !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_LINUX_ENV)
 #include <net/if.h>
 #endif
 #include <netinet/in.h>
@@ -26,7 +26,7 @@
 #ifdef AFS_SGI62_ENV
 #include "h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN_ENV)
 #include <netinet/in_var.h>
 #endif /* ! AFS_HPUX110_ENV */
 #endif /* !defined(UKERNEL) */
@@ -712,7 +712,7 @@ afs_GCPAGs_perproc_func(afs_proc_t * pproc)
     afs_GCPAGs_cred_count++;
 
     pag = PagInCred(pcred);
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_LINUX22_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_LINUX_ENV)
     uid = (pag != NOPAG ? pag : afs_cr_uid(pcred));
 #elif defined(AFS_SUN510_ENV)
     uid = (pag != NOPAG ? pag : crgetruid(pcred));

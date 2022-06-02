@@ -31,7 +31,7 @@
 #include <sys/file.h>
 #include <sys/wait.h>
 
-#if defined(AFS_LINUX20_ENV)
+#if defined(AFS_LINUX_ENV)
 #include <sys/resource.h>
 #endif
 
@@ -112,7 +112,7 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 # define SET_AFSD_RTPRI() SET_RTPRI(68)
 # define SET_RX_RTPRI()   SET_RTPRI(199)
 #else
-# ifdef AFS_LINUX20_ENV
+# ifdef AFS_LINUX_ENV
 #  define SET_AFSD_RTPRI()
 #  define SET_RX_RTPRI() do { \
     if (setpriority(PRIO_PROCESS, 0, -10) < 0) \
@@ -136,7 +136,7 @@ afsd_set_afsd_rtpri(void)
     SET_AFSD_RTPRI();
 }
 
-#if defined(AFS_LINUX20_ENV)
+#if defined(AFS_LINUX_ENV)
 int
 os_syscall(struct afsd_syscall_args *args)
 {
@@ -391,9 +391,9 @@ vmountdata(struct vmount * vmtp, char *obj, char *stub, char *host,
 static int
 HandleMTab(char *cacheMountDir)
 {
-#if (defined (AFS_HPUX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV))
+#if (defined (AFS_HPUX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX_ENV))
     FILE *tfilep;
-#if defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_LINUX_ENV)
     struct mntent tmntent;
     char *dir;
     int i;
@@ -507,7 +507,7 @@ afsd_mount_afs(const char *rn, const char *cacheMountDir)
     mountFlags = MS_FSS;
     if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, (caddr_t) MOUNT_AFS))
 	< 0) {
-#elif defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX_ENV)
     if ((mount("AFS", cacheMountDir, MOUNT_AFS, 0, NULL)) < 0) {
 #elif defined(AFS_NBSD50_ENV)
     if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, NULL, 0)) < 0) {

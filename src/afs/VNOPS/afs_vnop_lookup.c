@@ -1225,7 +1225,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 * We only do this if the entry looks clear.
 	 */
 	afs_ProcessFS(tvcp, &statsp[i], areqp);
-#if defined(AFS_LINUX22_ENV)
+#if defined(AFS_LINUX_ENV)
 	afs_fill_inode(AFSTOV(tvcp), NULL);	/* reset inode operations */
 #endif
 
@@ -1597,7 +1597,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	goto done;
     }
 
-#ifdef AFS_LINUX26_ENV
+#ifdef AFS_LINUX_ENV
     /*
      * Special case of the dynamic mount volume in a static root.
      * This is really unfortunate, but we need this for the translator.
@@ -1634,7 +1634,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    code = EACCES;
 	    goto done;
 	}
-#ifdef AFS_LINUX22_ENV
+#ifdef AFS_LINUX_ENV
 	if (tvc->mvstat == AFS_MVSTAT_ROOT) {	/* we don't trust the dnlc for root vcaches */
 	    AFS_RELE(AFSTOV(tvc));
 	    *avcp = 0;
@@ -1647,7 +1647,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	code = 0;
 	hit = 1;
 	goto done;
-#endif /* linux22 */
+#endif /* AFS_LINUX_ENV */
     }
 
     {				/* sub-block just to reduce stack usage */
@@ -1966,7 +1966,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    if (!hit && (force_eval || tvc->mvstat != AFS_MVSTAT_MTPT)) {
 		osi_dnlc_enter(adp, aname, tvc, &versionNo);
 	    } else {
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
 		/* So Linux inode cache is up to date. */
 		code = afs_VerifyVCache(tvc, treq);
 #else

@@ -19,7 +19,7 @@
 #include "afs/afs_stats.h"
 #include "rx/rx_globals.h"
 #if !defined(UKERNEL)
-# if !defined(AFS_LINUX20_ENV)
+# if !defined(AFS_LINUX_ENV)
 #  include "net/if.h"
 #  ifdef AFS_SGI62_ENV
 #   include "h/hashing.h"
@@ -41,7 +41,7 @@
 #define	AFS_MINBUFFERS	50
 #endif
 
-#if (defined(AFS_SUN5_ENV) || defined(AFS_LINUX26_ENV) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
+#if (defined(AFS_SUN5_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_DARWIN80_ENV)) && !defined(UKERNEL)
 /* If AFS_DAEMONOP_ENV is defined, it indicates we run "daemon" AFS syscalls by
  * spawning a kernel thread to do the work, instead of running them in the
  * calling process. */
@@ -281,7 +281,7 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 #endif
 
 
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX_ENV)
 struct afsd_thread_info {
 # if !defined(INIT_WORK_HAS_DATA)
     struct work_struct tq;
@@ -299,7 +299,7 @@ afsd_thread(void *rock)
     int (*sys_setpriority) (int, int, int) = sys_call_table[__NR_setpriority];
 # endif
 # if !defined(HAVE_LINUX_KTHREAD_RUN)
-#  if defined(AFS_LINUX26_ENV)
+#  if defined(AFS_LINUX_ENV)
     daemonize("afsd");
 #  else
     daemonize();
@@ -308,7 +308,7 @@ afsd_thread(void *rock)
 				/* doesn't do much, since we were forked from keventd, but
 				 * does call mm_release, which wakes up our parent (since it
 				 * used CLONE_VFORK) */
-# if !defined(AFS_LINUX26_ENV)
+# if !defined(AFS_LINUX_ENV)
     reparent_to_init();
 # endif
     afs_osi_MaskSignals();
@@ -431,13 +431,13 @@ afsd_thread(void *rock)
 }
 
 void
-# if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
+# if defined(AFS_LINUX_ENV) && !defined(INIT_WORK_HAS_DATA)
 afsd_launcher(struct work_struct *work)
 # else
 afsd_launcher(void *rock)
 # endif
 {
-# if defined(AFS_LINUX26_ENV) && !defined(INIT_WORK_HAS_DATA)
+# if defined(AFS_LINUX_ENV) && !defined(INIT_WORK_HAS_DATA)
     struct afsd_thread_info *rock = container_of(work, struct afsd_thread_info, tq);
 # endif
 
@@ -456,7 +456,7 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 	     long parm6)
 {
     DECLARE_COMPLETION(c);
-# if defined(AFS_LINUX26_ENV)
+# if defined(AFS_LINUX_ENV)
 #  if defined(INIT_WORK_HAS_DATA)
     struct work_struct tq;
 #  endif
@@ -469,7 +469,7 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
     }
     info.complete = &c;
     info.parm = parm;
-# if defined(AFS_LINUX26_ENV)
+# if defined(AFS_LINUX_ENV)
 #  if !defined(INIT_WORK_HAS_DATA)
     INIT_WORK(&info.tq, afsd_launcher);
     schedule_work(&info.tq);
@@ -1120,7 +1120,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	while (!afs_InitSetup_done)
 	    afs_osi_Sleep(&afs_InitSetup_done);
 
-#if defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_SUN5_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_SUN5_ENV)
 	temp = AFS_MINBUFFERS;	/* Should fix this soon */
 #else
 	/* number of 2k buffers we could get from all of the buffer space */
@@ -1475,7 +1475,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	afs_SynchronousCloses = 'S';
     } else if (parm == AFSOP_GETMTU) {
 	afs_uint32 mtu = 0;
-#if	!defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
+#if	!defined(AFS_SUN5_ENV) && !defined(AFS_LINUX_ENV)
 # ifdef AFS_USERSPACE_IP_ADDR
 	afs_int32 i;
 	i = rxi_Findcbi(parm2);
@@ -1608,7 +1608,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 
   out:
     AFS_GUNLOCK();
-#ifdef AFS_LINUX20_ENV
+#ifdef AFS_LINUX_ENV
     return -code;
 #else
     return code;
