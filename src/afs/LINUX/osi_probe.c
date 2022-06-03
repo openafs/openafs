@@ -108,14 +108,6 @@
 #define PROBETYPE long
 #endif
 
-#if defined(AFS_S390X_LINUX_ENV) && !defined(AFS_S390X_LINUX_ENV) 
-#define _SS(x) ((x) << 1)
-#define _SX(x) ((x) &~ 1)
-#else
-#define _SS(x) (x)
-#define _SX(x) (x)
-#endif
-
 /* Older Linux doesn't have __user. The sys_read prototype needs it. */
 #ifndef __user
 #define __user
@@ -894,17 +886,17 @@ static int check_table(probectl *P, PROBETYPE *ptr)
     if (i >= 0) return i;
 #endif
 
-    for (x = ptr, i = 0; i < _SS(NR_syscalls); i++, x++) {
+    for (x = ptr, i = 0; i < NR_syscalls; i++, x++) {
 #ifdef OSI_PROBE_DEBUG
 	if (probe_debug & 0x0040) {
 	    for (j = 0; j < 4; j++) {
-		if (_SS(P->debug_ignore_NR[j]) == _SX(i + P->offset)) break;
+		if (P->debug_ignore_NR[j] == i + P->offset) break;
 	    }
 	    if (j < 4) continue;
 	}
 #endif
 	for (j = 0; j < 8; j++) {
-	    if (_SS(probe_ignore_syscalls[j]) == _SX(i) + P->offset) break;
+	    if (probe_ignore_syscalls[j] == i + P->offset) break;
 	}
 	if (j < 8) continue;
 	if (*x <= ktxt_lower_bound) {
@@ -987,9 +979,9 @@ static void *try(probectl *P, tryctl *T, PROBETYPE *aptr,
 	if ((probe_debug & 0x0002) && DEBUG_IN_RANGE(P,ptr))
 	    printk("<7>try 0x%lx\n", (unsigned long)ptr);
 #endif
-	if (ptr[_SS(T->NR1 - P->offset)] != ip1)        continue;
-	if (ptr[_SS(T->NR2 - P->offset)] != ip2)        continue;
-	if (ip3 && ptr[_SS(T->NR3 - P->offset)] != ip3) continue;
+	if (ptr[T->NR1 - P->offset] != ip1)        continue;
+	if (ptr[T->NR2 - P->offset] != ip2)        continue;
+	if (ip3 && ptr[T->NR3 - P->offset] != ip3) continue;
 
 #ifdef OSI_PROBE_DEBUG
 	if (probe_debug & 0x0002)
@@ -1023,7 +1015,7 @@ static int check_harder(probectl *P, PROBETYPE *p)
 
     /* Check zapped syscalls */
     for (i = 1; i < P->n_zapped_syscalls; i++) {
-	if (p[_SS(P->zapped_syscalls[i])] != p[_SS(P->zapped_syscalls[0])]) {
+	if (p[P->zapped_syscalls[i]] != p[P->zapped_syscalls[0]]) {
 #ifdef OSI_PROBE_DEBUG
 	    if ((probe_debug & 0x0020) && DEBUG_IN_RANGE(P,p))
 		printk("<7>check_harder 0x%lx zapped failed i=%d\n", (unsigned long)p, i);
@@ -1035,7 +1027,7 @@ static int check_harder(probectl *P, PROBETYPE *p)
     /* Check unique syscalls */
     for (i = 0; i < P->n_unique_syscalls; i++) {
 	for (s = 0; s < NR_syscalls; s++) {
-	    if (p[_SS(s)] == p[_SS(P->unique_syscalls[i])]
+	    if (p[s] == p[P->unique_syscalls[i]]
 		&& s != P->unique_syscalls[i]) {
 #ifdef OSI_PROBE_DEBUG
 		if ((probe_debug & 0x0010) && DEBUG_IN_RANGE(P,p))
@@ -1052,7 +1044,7 @@ static int check_harder(probectl *P, PROBETYPE *p)
     ip1 = (unsigned long)(P->verify_fn);
 #endif
 
-    if (ip1 && p[_SS(P->verifyNR - P->offset)] != ip1) {
+    if (ip1 && p[P->verifyNR - P->offset] != ip1) {
 #ifdef OSI_PROBE_DEBUG
 	if ((probe_debug & 0x0010) && DEBUG_IN_RANGE(P,p))
 	    printk("<7>check_harder 0x%lx verify failed\n", (unsigned long)p);
@@ -1345,7 +1337,7 @@ static int check_table_readable(probectl *P, PROBETYPE *ptr)
     PROBETYPE *next_page;
     int i = 0, delta;
 
-    while (i < _SS(NR_syscalls)) {
+    while (i < NR_syscalls) {
 	next_page = (PROBETYPE *)PAGE_ALIGN((unsigned long)(ptr+1));
 	delta = next_page - ptr;
 	if (!check_access((unsigned long)ptr, 0)) {
