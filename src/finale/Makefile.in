@@ -43,7 +43,7 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libafsrfc3961.a \
 	${XLIBS}
 
-OBJS=${TOP_SRCDIR}/afs/unified_afs.o
+OBJS=$(top_builddir)/src/afs/unified_afs.o
 
 all: translate_et
 
