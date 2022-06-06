@@ -2541,7 +2541,6 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 			   struct list_head *page_list, unsigned num_pages)
 {
     afs_int32 page_ix;
-    struct uio *auio;
     afs_offs_t offset;
     struct iovec* iovecp;
     struct nocache_read_request *ancr;
@@ -2556,20 +2555,10 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
     afs_int32 page_count = 0;
     afs_int32 isize;
 
-    /* background thread must free: iovecp, auio, ancr */
-    iovecp = osi_Alloc(num_pages * sizeof(struct iovec));
-
-    auio = osi_Alloc(sizeof(struct uio));
-    auio->uio_iov = iovecp;
-    auio->uio_iovcnt = num_pages;
-    auio->uio_flag = UIO_READ;
-    auio->uio_seg = AFS_UIOSYS;
-    auio->uio_resid = num_pages * PAGE_SIZE;
-
-    ancr = osi_Alloc(sizeof(struct nocache_read_request));
-    ancr->auio = auio;
-    ancr->offset = auio->uio_offset;
-    ancr->length = auio->uio_resid;
+    ancr = afs_alloc_ncr(num_pages);
+    if (ancr == NULL)
+	return afs_convert_code(ENOMEM);
+    iovecp = ancr->auio->uio_iov;
 
     afs_lru_cache_init(&lrupages);
 
@@ -2591,7 +2580,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 
 	if(page_ix == 0) {
 	    offset = page_offset(pp);
-	    ancr->offset = auio->uio_offset = offset;
+	    ancr->offset = ancr->auio->uio_offset = offset;
 	    base_index = pp->index;
 	}
         iovecp[page_ix].iov_len = PAGE_SIZE;
@@ -2630,14 +2619,13 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
     if(page_count) {
 	afs_lru_cache_finalize(&lrupages);
 	credp = crref();
+	/* background thread frees the ancr */
         code = afs_ReadNoCache(avc, ancr, credp);
 	crfree(credp);
     } else {
         /* If there is nothing for the background thread to handle,
          * it won't be freeing the things that we never gave it */
-        osi_Free(iovecp, num_pages * sizeof(struct iovec));
-        osi_Free(auio, sizeof(struct uio));
-        osi_Free(ancr, sizeof(struct nocache_read_request));
+	afs_free_ncr(&ancr);
     }
     /* we do not flush, release, or unmap pages--that will be
      * done for us by the background thread as each page comes in
@@ -2669,8 +2657,17 @@ afs_linux_bypass_readpage(struct file *fp, struct page *pp)
     ClearPageError(pp);
 
     /* receiver frees */
-    auio = osi_Alloc(sizeof(struct uio));
-    iovecp = osi_Alloc(sizeof(struct iovec));
+    ancr = afs_alloc_ncr(1);
+    if (ancr == NULL) {
+	SetPageError(pp);
+	return afs_convert_code(ENOMEM);
+    }
+    /*
+     * afs_alloc_ncr has already set the auio->uio_iov, make sure setup_uio
+     * uses the existing value when it sets auio->uio_iov.
+     */
+    auio = ancr->auio;
+    iovecp = auio->uio_iov;
 
     /* address can be NULL, because we overwrite it with 'pp', below */
     setup_uio(auio, iovecp, NULL, page_offset(pp),
@@ -2680,8 +2677,6 @@ afs_linux_bypass_readpage(struct file *fp, struct page *pp)
     get_page(pp); /* see above */
     auio->uio_iov->iov_base = (void*) pp;
     /* the background thread will free this */
-    ancr = osi_Alloc(sizeof(struct nocache_read_request));
-    ancr->auio = auio;
     ancr->offset = page_offset(pp);
     ancr->length = PAGE_SIZE;
 

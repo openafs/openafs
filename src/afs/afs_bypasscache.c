@@ -115,6 +115,86 @@ int cache_bypass_prefetch = 1;	/* Should we do prefetching ? */
 extern afs_rwlock_t afs_xcbhash;
 
 /*
+ * Allocate and initialize nocache_read_request/uid/iovec.
+ * Returns NULL if there was a memory allocation error.
+ * Note: UKERNEL always passes 0 for the number of pages since the iovec
+ * and the uio are allocated by the caller
+ */
+struct nocache_read_request *
+afs_alloc_ncr(unsigned num_pages)
+{
+    struct nocache_read_request *ancr = NULL;
+#if !defined(UKERNEL)
+    struct uio *auio = NULL;
+    struct iovec *iovecp = NULL;
+#endif
+
+    ancr = osi_Alloc(sizeof(*ancr));
+    if (ancr == NULL)
+	goto error;
+
+#if defined(UKERNEL)
+    osi_Assert(num_pages == 0);
+#else
+    iovecp = osi_Alloc(num_pages * sizeof(*iovecp));
+    if (iovecp == NULL)
+	goto error;
+
+    auio = osi_Alloc(sizeof(*auio));
+    if (auio == NULL)
+	goto error;
+    auio->uio_iov = iovecp;
+    auio->uio_iovcnt = num_pages;
+    auio->uio_flag = UIO_READ;
+    auio->uio_seg = AFS_UIOSYS;
+    auio->uio_offset = 0;
+    auio->uio_resid = num_pages * PAGE_SIZE;
+
+    ancr->auio = auio;
+    ancr->offset = auio->uio_offset;
+    ancr->length = auio->uio_resid;
+#endif
+
+    return ancr;
+
+ error:
+#if !defined(UKERNEL)
+    osi_Free(iovecp, num_pages * sizeof(*iovecp));
+    osi_Free(auio, sizeof(*auio));
+#endif
+    osi_Free(ancr, sizeof(*ancr));
+    return NULL;
+}
+
+/*
+ * Free a nocache_read_request and associated structures
+ * Note: UKERNEL the iovec and uio structures are managed by the caller
+ */
+void
+afs_free_ncr(struct nocache_read_request **a_ancr)
+{
+    struct nocache_read_request *ancr = *a_ancr;
+#if !defined(UKERNEL)
+    struct uio *auio;
+    struct iovec *aiovec;
+#endif
+
+    if (ancr == NULL)
+	return;
+
+#if !defined(UKERNEL)
+    auio = ancr->auio;
+    if (auio != NULL) {
+	aiovec = auio->uio_iov;
+	osi_Free(aiovec, auio->uio_iovcnt * sizeof(*aiovec));
+    }
+    osi_Free(auio, sizeof(*auio));
+#endif
+    osi_Free(ancr, sizeof(*ancr));
+    *a_ancr = NULL;
+}
+
+/*
  * This is almost exactly like the PFlush() routine in afs_pioctl.c,
  * but that routine is static.  We are about to change a file from
  * normal caching to bypass it's caching.  Therefore, we want to
@@ -519,10 +599,7 @@ cleanup:
     AFS_GLOCK();
     afs_DestroyReq(areq);
     AFS_GUNLOCK();
-    osi_Free(bparms->auio->uio_iov,
-	     bparms->auio->uio_iovcnt * sizeof(struct iovec));
-    osi_Free(bparms->auio, sizeof(struct uio));
-    osi_Free(bparms, sizeof(struct nocache_read_request));
+    afs_free_ncr(&bparms);
     return code;
 }
 
@@ -649,12 +726,7 @@ done:
 
     afs_DestroyReq(areq);
     osi_Free(tcallspec, sizeof(struct tlocal1));
-    osi_Free(bparms, sizeof(struct nocache_read_request));
-#ifndef UKERNEL
-    /* in UKERNEL, the "pages" are passed in */
-    osi_Free(iovecp, auio->uio_iovcnt * sizeof(struct iovec));
-    osi_Free(auio, sizeof(struct uio));
-#endif
+    afs_free_ncr(&bparms);
     return code;
 }
 #endif

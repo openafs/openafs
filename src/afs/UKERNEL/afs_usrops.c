@@ -2385,12 +2385,16 @@ uafs_pread_nocache_r(int fd, char *buf, int len, off_t offset)
     }
 
     /* these get freed in PrefetchNoCache, so... */
-    bparms = afs_osi_Alloc(sizeof(struct nocache_read_request));
+    bparms = afs_alloc_ncr(0);
+    if (bparms == NULL) {
+	errno = ENOMEM;
+	return -1;
+    }
 
     code = afs_CreateReq(&bparms->areq, get_user_struct()->u_cred);
     if (code) {
 	afs_DestroyReq(bparms->areq);
-	afs_osi_Free(bparms, sizeof(struct nocache_read_request));
+	afs_free_ncr(&bparms);
 	errno = code;
 	return -1;
     }
