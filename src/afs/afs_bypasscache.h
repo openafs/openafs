@@ -103,7 +103,8 @@ enum cache_bypass_strategies
 extern int cache_bypass_prefetch;
 extern int cache_bypass_strategy;
 extern afs_size_t cache_bypass_threshold;
-
+struct nocache_read_request *afs_alloc_ncr(unsigned num_pages);
+void afs_free_ncr(struct nocache_read_request **ancr);
 void afs_TransitionToBypass(struct vcache *, afs_ucred_t *, int);
 void afs_TransitionToCaching(struct vcache *, afs_ucred_t *, int);
 
