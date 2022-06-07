@@ -355,3 +355,5 @@ rxkad/ticket5.c      : format-truncation : inside included file v5der.c in the
                                        two snprintf calls raise
                                        format-truncation warnings due to the
                                        arithmetic on tm_year and tm_mon fields
+lwp/process.c        : dangling-pointer : Ignore the legitimate use of saving
+                                       the address of a stack variable
