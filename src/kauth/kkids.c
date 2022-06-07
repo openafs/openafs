@@ -15,6 +15,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/opr.h>
 
 #include <roken.h>
 
@@ -228,7 +229,7 @@ static struct Acl *
 ParseAcl(char *astr)
 {
     int nplus, nminus, i, trights;
-    char tname[MAXNAME];
+    char tname[MAXNAME + 1] = "";
     struct AclEntry *first, *last, *tl;
     struct Acl *ta;
     sscanf(astr, "%d", &nplus);
@@ -242,7 +243,7 @@ ParseAcl(char *astr)
     last = 0;
     first = 0;
     for (i = 0; i < nplus; i++) {
-	sscanf(astr, "%100s %d", tname, &trights);
+	sscanf(astr, "%" opr_stringize(MAXNAME) "s %d", tname, &trights);
 	SkipLine(astr);
 	tl = malloc(sizeof(struct AclEntry));
 	if (!first)
