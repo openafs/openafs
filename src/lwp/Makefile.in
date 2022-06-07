@@ -60,6 +60,7 @@ process.default.s:
 # Making process.o for $(SYS_NAME)
 # The files "process.s" and "process.S" may be used internally,
 # but will be removed after building the .o
+CFLAGS_process.o = @CFLAGS_NODANGLING_POINTER@
 process.o	: process.default.s process.i386.s process.amd64.s process.c lwp.o
 	@set -x; case "$(SYS_NAME)" in \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5* | arm_linux* ) \
