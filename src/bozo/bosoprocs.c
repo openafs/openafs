@@ -306,13 +306,13 @@ SBOZO_Install(struct rx_call *acall, char *aname, afs_int32 asize, afs_int32 mod
 	return BZNOENT;
     }
     if (asprintf(&fpNew, "%s.NEW", filepath) < 0) {
-	ret = ENOMEM;
+	ret = BZIO;
 	fpNew = NULL;
 	goto out;
     }
     tbuffer = malloc(AFSDIR_PATH_MAX);
     if (tbuffer == NULL) {
-	ret =  ENOMEM;
+	ret = BZIO;
 	goto out;
     }
 
@@ -433,7 +433,7 @@ SBOZO_GetCellName(struct rx_call *acall, char **aname)
     if (code == 0) {
 	*aname = strdup(tname);
 	if (*aname == NULL)
-	    code = ENOMEM;
+	    code = BZIO;
     }
 
     return code;
