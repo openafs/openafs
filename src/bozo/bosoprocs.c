@@ -1244,6 +1244,9 @@ SBOZO_EnumerateInstance(struct rx_call *acall, afs_int32 anum,
 {
     struct eidata tdata;
 
+    if (anum < 0)
+	return BZDOM;
+
     *ainstance = malloc(BOZO_BSSIZE);
     **ainstance = 0;
     tdata.counter = anum;
