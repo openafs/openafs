@@ -2738,6 +2738,81 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     return code;
 }
 
+/*
+ * Updates the adc and acacheFp parameters
+ * Returns:
+ *    0 - success
+ *   -1 - problem getting inode or no mapping function
+ */
+static int
+get_dcache_readahead(struct dcache **adc, struct file **acacheFp,
+		     struct vcache *avc, loff_t offset)
+{
+    struct dcache *tdc = *adc;
+    struct file *cacheFp = *acacheFp;
+    int code;
+
+    if (tdc != NULL && tdc->f.chunk != AFS_CHUNK(offset)) {
+	AFS_GLOCK();
+	ReleaseReadLock(&tdc->lock);
+	afs_PutDCache(tdc);
+	AFS_GUNLOCK();
+	tdc = NULL;
+	if (cacheFp != NULL) {
+	    filp_close(cacheFp, NULL);
+	    cacheFp = NULL;
+	}
+    }
+
+    if (tdc == NULL) {
+	AFS_GLOCK();
+	tdc = afs_FindDCache(avc, offset);
+	if (tdc != NULL) {
+	    ObtainReadLock(&tdc->lock);
+	    if (!afs_IsDCacheFresh(tdc, avc) ||
+		(tdc->dflags & DFFetching) != 0) {
+		ReleaseReadLock(&tdc->lock);
+		afs_PutDCache(tdc);
+		tdc = NULL;
+	    }
+	}
+	AFS_GUNLOCK();
+	if (tdc != NULL) {
+	    cacheFp = afs_linux_raw_open(&tdc->f.inode);
+	    if (cacheFp == NULL) {
+		/* Problem getting the inode */
+		code = -1;
+		goto out;
+	    }
+	    if (cacheFp->f_dentry->d_inode->i_mapping->a_ops->readpage == NULL) {
+		cachefs_noreadpage = 1;
+		/* No mapping function */
+		code = -1;
+		goto out;
+	    }
+	}
+    }
+    code = 0;
+
+ out:
+    if (code != 0) {
+	if (cacheFp != NULL) {
+	    filp_close(cacheFp, NULL);
+	    cacheFp = NULL;
+	}
+	if (tdc != NULL) {
+	    AFS_GLOCK();
+	    ReleaseReadLock(&tdc->lock);
+	    afs_PutDCache(tdc);
+	    AFS_GUNLOCK();
+	    tdc = NULL;
+	}
+    }
+    *adc = tdc;
+    *acacheFp = cacheFp;
+    return code;
+}
+
 /* Readpages reads a number of pages for a particular file. We use
  * this to optimise the reading, by limiting the number of times upon which
  * we have to lookup, lock and open vcaches and dcaches
@@ -2787,42 +2862,9 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 	list_del(&page->lru);
 	offset = page_offset(page);
 
-	if (tdc && tdc->f.chunk != AFS_CHUNK(offset)) {
-	    AFS_GLOCK();
-	    ReleaseReadLock(&tdc->lock);
-	    afs_PutDCache(tdc);
-	    AFS_GUNLOCK();
-	    tdc = NULL;
-	    if (cacheFp) {
-		filp_close(cacheFp, NULL);
-		cacheFp = NULL;
-	    }
-	}
-
-	if (!tdc) {
-	    AFS_GLOCK();
-	    if ((tdc = afs_FindDCache(avc, offset))) {
-		ObtainReadLock(&tdc->lock);
-		if (!afs_IsDCacheFresh(tdc, avc) ||
-		    (tdc->dflags & DFFetching)) {
-		    ReleaseReadLock(&tdc->lock);
-		    afs_PutDCache(tdc);
-		    tdc = NULL;
-		}
-	    }
-	    AFS_GUNLOCK();
-	    if (tdc) {
-		cacheFp = afs_linux_raw_open(&tdc->f.inode);
-		if (cacheFp == NULL) {
-		    /* Problem getting the inode */
-		    goto out;
-		}
-		if (!cacheFp->f_dentry->d_inode->i_mapping->a_ops->readpage) {
-		    cachefs_noreadpage = 1;
-		    goto out;
-		}
-	    }
-	}
+	code = get_dcache_readahead(&tdc, &cacheFp, avc, offset);
+	if (code != 0)
+	    goto out;
 
 	if (tdc && !add_to_page_cache(page, mapping, page->index,
 				      GFP_KERNEL)) {
