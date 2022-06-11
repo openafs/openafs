@@ -47,6 +47,7 @@
 #define PRIVHELPER_ID	"org.openafs.privhelper"
 #define AFS_ID		"org.openafs.filesystems.afs"
 #define AFS_PLIST	"/Library/LaunchDaemons/org.openafs.filesystems.afs.plist"
+#define AFS_RC		"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.rc"
 
 /*
  * This is the code signing requirement imposed on anyone that connects to our
@@ -217,6 +218,10 @@ RunCommand(int log_failure, const char *arg1, const char *arg2,
  * - startup_check: Run "launchctl list" to check whether OpenAFS is configured
  *   to run at startup. If it is, return 0; otherwise, return nonzero.
  *
+ * - afsd_start: Run "afs.rc start" to start the OpenAFS client.
+ *
+ * - afsd_stop: Run "afs.rc stop" to stop the OpenAFS client.
+ *
  * @param[in] task	The name of the requested task.
  * @param[in] event	The XPC dictionary containing other task-specific
  *			arguments.
@@ -238,6 +243,12 @@ ProcessRequest(const char *task, xpc_object_t event)
 
     } else if (strcmp(task, "startup_check") == 0) {
 	return RunCommand(0, LAUNCHCTL, "list", AFS_ID, NULL);
+
+    } else if (strcmp(task, "afsd_start") == 0) {
+	return RunCommand(1, AFS_RC, "start", NULL, NULL);
+
+    } else if (strcmp(task, "afsd_stop") == 0) {
+	return RunCommand(1, AFS_RC, "stop", NULL, NULL);
     }
 
     syslog(LOG_WARNING, "%s: Received unknown task '%s'", PRIVHELPER_ID, task);

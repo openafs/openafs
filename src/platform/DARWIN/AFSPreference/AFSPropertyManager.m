@@ -1077,12 +1077,8 @@
 // -------------------------------------------------------------------------------
 -(void) shutdown
 {
-  NSString *rootHelperApp = [[NSBundle bundleForClass:[self class]] pathForResource:@"afshlp" ofType:@""];
     @try {
-	const char *stopArgs[] = {AFS_DAEMON_STARTUPSCRIPT, "stop", 0L};
-	[[AuthUtil shared] execUnixCommand:[rootHelperApp fileSystemRepresentation]
-			   args:stopArgs
-			   output:nil];
+	[TaskUtil executePrivTask:"afsd_stop"];
     }
     @catch (NSException * e) {
 	@throw e;
@@ -1097,12 +1093,8 @@
 // -------------------------------------------------------------------------------
 -(void) startup
 {
-  NSString *rootHelperApp = [[NSBundle bundleForClass:[self class]] pathForResource:@"afshlp" ofType:@""];
     @try {
-	const char *startArgs[] = {AFS_DAEMON_STARTUPSCRIPT, "start", 0L};
-	[[AuthUtil shared] execUnixCommand:[rootHelperApp fileSystemRepresentation]
-			   args:startArgs
-			   output:nil];
+	[TaskUtil executePrivTask:"afsd_start"];
     }
     @catch (NSException * e) {
 	@throw e;
