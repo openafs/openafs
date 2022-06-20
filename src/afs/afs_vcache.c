@@ -88,12 +88,12 @@ static afs_int32 afs_QueueVCB(struct vcache *avc, int *slept);
 
 
 /*
- * The PFlush algorithm makes use of the fact that Fid.Unique is not used in
- * below hash algorithms.  Change it if need be so that flushing algorithm
- * doesn't move things from one hash chain to another.
+ * Don't hash on the cell; our callback-breaking code sometimes fails to compute
+ * the cell correctly, and only scans one hash bucket.
+ *
+ * Don't hash on the uniq; afs_GenFakeFid looks through a single hash bucket to
+ * find the max possible uniq for a given fid.
  */
-/* Don't hash on the cell; our callback-breaking code sometimes fails to compute
- * the cell correctly, and only scans one hash bucket. */
 int VCHash(struct VenusFid *fid)
 {
     return opr_jhash_int2(fid->Fid.Volume, fid->Fid.Vnode, 0) &
