@@ -9,6 +9,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/opr.h>
 
 #include <roken.h>
 
@@ -77,8 +78,6 @@
 #include <afs/afs_args.h>
 #include <afs/cellconfig.h>
 #include <afs/afssyscalls.h>
-#include <afs/afsutil.h>
-
 #ifdef AFS_DARWIN_ENV
 #ifdef AFS_DARWIN80_ENV
 #include <sys/xattr.h>
@@ -276,7 +275,7 @@ afsd_call_syscall(struct afsd_syscall_args *args)
     if (afsd_debug) {
         const char *syscall_str;
 #if defined(AFS_SYSCALL)
-        syscall_str = AFS_STRINGIZE(AFS_SYSCALL);
+	syscall_str = opr_stringize(AFS_SYSCALL);
 #else
         syscall_str = "[AFS_SYSCALL]";
 #endif

@@ -9,6 +9,11 @@
 
 /* assert.c */
 
+/* A simple macro to help show the value of #define'd constants. e.g. If 'FOO'
+ * is defined as 5, then opr_stringize(FOO) expands to "5" */
+#define opr_stringize_(s) #s
+#define opr_stringize(s) opr_stringize_(s)
+
 #ifdef AFS_NT40_ENV
 # define opr_abort() opr_NTAbort()
 extern void opr_NTAbort(void);
