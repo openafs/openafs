@@ -777,6 +777,7 @@ struct nbvdata {
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
 #define AFSTOV(vc) ((vc)->v)
 #else
+#define AFS_VCACHE_EMBEDDED_VNODE
 #define VTOAFS(V) ((struct vcache *)(V))
 #define AFSTOV(V) (&(V)->v)
 #endif
@@ -847,10 +848,10 @@ struct multiPage_range {
  * !(avc->nextfree) && !avc->vlruq.next => (FreeVCList == avc->nextfree)
  */
 struct vcache {
-#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_SUN511_ENV) || (defined(AFS_LINUX_ENV) && !defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE))
-    struct vnode *v;
-#else
+#if defined(AFS_VCACHE_EMBEDDED_VNODE)
     struct vnode v;		/* Has reference count in v.v_count */
+#else
+    struct vnode *v;
 #endif
     struct afs_q vlruq;		/* lru q next and prev */
 #if !defined(AFS_LINUX_ENV)
