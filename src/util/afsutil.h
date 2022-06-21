@@ -121,11 +121,6 @@ extern int re_exec(const char *p1);
 /* b64_string_t is 8 bytes, in stds.h */
      typedef char lb64_string_t[12];
 
-/* A simple macro to help show the value of #define'd constants. e.g. If 'FOO'
- * is defined as 5, then AFS_STRINGIZE(FOO) expands to "5" */
-#define AFS_STRINGIZE_(s) #s
-#define AFS_STRINGIZE(s) AFS_STRINGIZE_(s)
-
 #include <afs/ktime.h>
 #include "afsutil_prototypes.h"
 
