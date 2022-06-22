@@ -243,8 +243,10 @@ ez_getparm(struct bnode *bn, afs_int32 aindex, char *abuffer,
 	   afs_int32 alen)
 {
     struct ezbnode *abnode = (struct ezbnode *) bn;
-    if (aindex > 0)
+
+    if (aindex != 0)
 	return BZDOM;
+
     strcpy(abuffer, abnode->command);
     return 0;
 }
