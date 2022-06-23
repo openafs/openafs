@@ -63,7 +63,6 @@ afs_rwlock_t afs_xvreclaim;	/*Lock: entries reclaimed, not on free list */
 afs_lock_t afs_xvcb;		/*Lock: fids on which there are callbacks */
 #if !defined(AFS_LINUX_ENV)
 static struct vcache *freeVCList;	/*Free list for stat cache entries */
-struct vcache *ReclaimedVCList;	/*Reclaimed list for stat entries */
 static struct vcache *Initial_freeVCList;	/*Initial list for above */
 #endif
 struct afs_q VLRU;		/*vcache LRU */
@@ -75,6 +74,9 @@ static struct afs_cbr *afs_cbrHashT[CBRSIZE];
 afs_int32 afs_bulkStatsLost;
 int afs_norefpanic = 0;
 
+#if defined(AFS_DARWIN_ENV)
+struct vcache *ReclaimedVCList;	/*Reclaimed list for stat entries */
+#endif
 
 /* Disk backed vcache definitions
  * Both protected by xvcache */
@@ -672,41 +674,49 @@ afs_RemoveVCB(struct VenusFid *afid)
     ReleaseWriteLock(&afs_xvcb);
 }
 
+/**
+ * Flush reclaimed/unlinked vcaches.
+ *
+ * In order to avoid deadlocks, Darwin doesn't block on the afs_xvcache lock
+ * when trying to flush a given vcache. Instead, if afs_xvcache can't be
+ * acquired, the entry in question is appended to the list of vcaches
+ * (ReclaimedVCList) to be flushed by this function later, which is called
+ * periodically in the background or when a new vcache is created.
+ */
 void
 afs_FlushReclaimedVcaches(void)
 {
-#if !defined(AFS_LINUX_ENV)
+#if defined(AFS_DARWIN_ENV)
     struct vcache *tvc;
-    int code, fv_slept;
+    int code, fv_slept, states;
     struct vcache *tmpReclaimedVCList = NULL;
 
+    states = CVInit;
+# ifdef AFS_DARWIN80_ENV
+    states |= CDeadVnode;
+# endif
+
     ObtainWriteLock(&afs_xvreclaim, 76);
+
     while (ReclaimedVCList) {
 	tvc = ReclaimedVCList;	/* take from free list */
 	ReclaimedVCList = tvc->nextfree;
 	tvc->nextfree = NULL;
+
 	code = afs_FlushVCache(tvc, &fv_slept);
 	if (code) {
-	    /* Ok, so, if we got code != 0, uh, wtf do we do? */
-	    /* Probably, build a temporary list and then put all back when we
-	       get to the end of the list */
-	    /* This is actually really crappy, but we need to not leak these.
-	       We probably need a way to be smarter about this. */
+	    /*
+	     * Since we must not leak vcaches that couldn't be flushed, add them
+	     * to a temporary list and put all back when we get to the end of
+	     * the list. This approach is not ideal and we probably need a way
+	     * to be smarter about this.
+	     */
 	    tvc->nextfree = tmpReclaimedVCList;
 	    tmpReclaimedVCList = tvc;
-	    /* printf("Reclaim list flush %lx failed: %d\n", (unsigned long) tvc, code); */
 	}
-        if (tvc->f.states & (CVInit
-# ifdef AFS_DARWIN80_ENV
-			  | CDeadVnode
-# endif
-           )) {
-	   tvc->f.states &= ~(CVInit
-# ifdef AFS_DARWIN80_ENV
-			    | CDeadVnode
-# endif
-	   );
-	   afs_osi_Wakeup(&tvc->f.states);
+	if ((tvc->f.states & states) != 0) {
+	    tvc->f.states &= ~states;
+	    afs_osi_Wakeup(&tvc->f.states);
 	}
     }
     if (tmpReclaimedVCList)
