@@ -2536,6 +2536,93 @@ afs_linux_prefetch(struct file *fp, struct page *pp)
 
 }
 
+#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READAHEAD)
+/*
+ * Bypass the cache while performing a readahead.
+ * See the comments for afs_linux_readahead for the semantics
+ * for 'rac'.
+ */
+static void
+afs_linux_bypass_readahead(struct readahead_control *rac)
+{
+    struct file *fp = rac->file;
+    unsigned num_pages = readahead_count(rac);
+    afs_int32 page_ix;
+    afs_offs_t offset;
+    struct iovec* iovecp;
+    struct nocache_read_request *ancr;
+    struct page *pp;
+    afs_int32 code = 0;
+
+    cred_t *credp;
+    struct inode *ip = FILE_INODE(fp);
+    struct vcache *avc = VTOAFS(ip);
+    afs_int32 base_index = 0;
+    afs_int32 page_count = 0;
+    afs_int32 isize;
+
+    ancr = afs_alloc_ncr(num_pages);
+    if (ancr == NULL)
+	goto done;
+
+    iovecp = ancr->auio->uio_iov;
+
+    for (page_ix = 0; page_ix < num_pages; ++page_ix) {
+	pp = readahead_page(rac);
+	if (pp == NULL)
+	    break;
+
+	isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_SHIFT;
+	if (pp->index > isize) {
+	    if (PageLocked(pp))
+		unlock_page(pp);
+	    put_page(pp);
+	    continue;
+	}
+
+	if (page_ix == 0) {
+	    offset = page_offset(pp);
+	    ancr->offset = ancr->auio->uio_offset = offset;
+	    base_index = pp->index;
+	}
+	iovecp[page_ix].iov_len = PAGE_SIZE;
+	if (base_index != pp->index) {
+	    if (PageLocked(pp))
+		 unlock_page(pp);
+	    put_page(pp);
+	    iovecp[page_ix].iov_base = NULL;
+	    base_index++;
+	    ancr->length -= PAGE_SIZE;
+	    continue;
+	}
+	base_index++;
+	page_count++;
+	/* save the page for background map */
+	iovecp[page_ix].iov_base = pp;
+    }
+
+    /* If there were useful pages in the page list, schedule
+     * the read */
+    if (page_count > 0) {
+	credp = crref();
+	/* The background thread frees the ancr */
+	code = afs_ReadNoCache(avc, ancr, credp);
+	crfree(credp);
+    } else {
+	/* If there is nothing for the background thread to handle,
+	 * it won't be freeing the things that we never gave it */
+	afs_free_ncr(&ancr);
+    }
+    /* we do not flush, release, or unmap pages--that will be
+     * done for us by the background thread as each page comes in
+     * from the fileserver */
+
+ done:
+    /* The vfs layer will unlock/put any of the pages in the rac that were not
+     * processed */
+    return;
+}
+#else /* STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READAHEAD */
 static int
 afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 			   struct list_head *page_list, unsigned num_pages)
@@ -2632,7 +2719,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
      * from the fileserver */
     return afs_convert_code(code);
 }
-
+#endif /* STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READAHEAD */
 
 static int
 afs_linux_bypass_readpage(struct file *fp, struct page *pp)
@@ -2813,11 +2900,104 @@ get_dcache_readahead(struct dcache **adc, struct file **acacheFp,
     return code;
 }
 
+#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READAHEAD)
+/*
+ * Readahead reads a number of pages for a particular file. We use
+ * this to optimise the reading, by limiting the number of times upon which
+ * we have to lookup, lock and open vcaches and dcaches.
+ *
+ * Upon return, the vfs layer handles unlocking and putting any pages in the
+ * rac that we did not process here.
+ *
+ * Note: any errors detected during readahead are ignored at this stage by the
+ * vfs. We just need to unlock/put the page and return.  Errors will be detected
+ * later in the vfs processing.
+ */
+static void
+afs_linux_readahead(struct readahead_control *rac)
+{
+    struct page *page;
+    struct address_space *mapping = rac->mapping;
+    struct inode *inode = mapping->host;
+    struct vcache *avc = VTOAFS(inode);
+    struct dcache *tdc;
+    struct file *cacheFp = NULL;
+    int code;
+    loff_t offset;
+    struct afs_lru_pages lrupages;
+    struct afs_pagecopy_task *task;
+
+    if (afs_linux_bypass_check(inode)) {
+	afs_linux_bypass_readahead(rac);
+	return;
+    }
+    if (cacheDiskType == AFS_FCACHE_TYPE_MEM)
+	return;
+
+    /* No readpage (ex: tmpfs) , skip */
+    if (cachefs_noreadpage)
+	return;
+
+    AFS_GLOCK();
+    code = afs_linux_VerifyVCache(avc, NULL);
+    if (code != 0) {
+	AFS_GUNLOCK();
+	return;
+    }
+
+    ObtainWriteLock(&avc->lock, 912);
+    AFS_GUNLOCK();
+
+    task = afs_pagecopy_init_task();
+
+    tdc = NULL;
+
+    afs_lru_cache_init(&lrupages);
+
+    while ((page = readahead_page(rac)) != NULL) {
+	offset = page_offset(page);
+
+	code = get_dcache_readahead(&tdc, &cacheFp, avc, offset);
+	if (code != 0) {
+	    if (PageLocked(page)) {
+		unlock_page(page);
+	    }
+	    put_page(page);
+	    goto done;
+	}
+
+	if (tdc != NULL) {
+	    /* afs_linux_read_cache will unlock the page */
+	    afs_linux_read_cache(cacheFp, page, tdc->f.chunk, &lrupages, task);
+	} else if (PageLocked(page)) {
+	    unlock_page(page);
+	}
+	put_page(page);
+    }
+
+ done:
+    afs_lru_cache_finalize(&lrupages);
+
+    if (cacheFp != NULL)
+	filp_close(cacheFp, NULL);
+
+    afs_pagecopy_put_task(task);
+
+    AFS_GLOCK();
+    if (tdc != NULL) {
+	ReleaseReadLock(&tdc->lock);
+	afs_PutDCache(tdc);
+    }
+
+    ReleaseWriteLock(&avc->lock);
+    AFS_GUNLOCK();
+    return;
+}
+#else /* STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READAHEAD */
 /* Readpages reads a number of pages for a particular file. We use
  * this to optimise the reading, by limiting the number of times upon which
  * we have to lookup, lock and open vcaches and dcaches
  */
-
 static int
 afs_linux_readpages(struct file *fp, struct address_space *mapping,
 		    struct list_head *page_list, unsigned int num_pages)
@@ -2894,6 +3074,7 @@ out:
     AFS_GUNLOCK();
     return 0;
 }
+#endif /* STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READAHEAD */
 
 /* Prepare an AFS vcache for writeback. Should be called with the vcache
  * locked */
@@ -3332,7 +3513,11 @@ static struct inode_operations afs_file_iops = {
 
 static struct address_space_operations afs_file_aops = {
   .readpage =		afs_linux_readpage,
+#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READAHEAD)
+  .readahead =		afs_linux_readahead,
+#else
   .readpages = 		afs_linux_readpages,
+#endif
   .writepage =		afs_linux_writepage,
 #if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_DIRTY_FOLIO)
   .dirty_folio =	block_dirty_folio,
