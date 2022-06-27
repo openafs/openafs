@@ -239,6 +239,9 @@ struct afs_q {
 #define	QInit(q)    ((q)->prev = (q)->next = (q))
 #define	QAdd(q,e)   ((e)->next = (q)->next, (e)->prev = (q), \
 			(q)->next->prev = (e), (q)->next = (e))
+/* QAddEnd adds 'e' to the end of queue 'q' */
+#define	QAddEnd(q,e) ((e)->prev = (q)->prev, (e)->next = (q), \
+			(q)->prev->next = (e), (q)->prev = (e))
 #define	QRemove(e)  ((e)->next->prev = (e)->prev, (e)->prev->next = (e)->next, (e)->prev = NULL, (e)->next = NULL)
 #define	QNext(e)    ((e)->next)
 #define QPrev(e)    ((e)->prev)

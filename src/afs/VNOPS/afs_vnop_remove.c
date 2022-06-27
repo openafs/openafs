@@ -48,6 +48,31 @@ FetchWholeEnchilada(struct vcache *avc, struct vrequest *areq)
     }
 }
 
+/**
+ * Move vcache to the tail of our VLRU.
+ *
+ * Move this vcache to the 'least recently used position' in our VLRU so it can
+ * be flushed the next time afs_ShakeLooseVCaches() is executed.
+ *
+ * @param[in]  avc  vcache to be moved
+ *
+ * @pre afs_xvcache is NOT held
+ */
+static void
+DemoteSmushedVCache(struct vcache *avc)
+{
+    /*
+     * Don't block on afs_xvcache. If we can't get it, let the regular flushing
+     * mechanism deal with this entry later (best-effort).
+     */
+    if (NBObtainWriteLock(&afs_xvcache, 1210) == 0) {
+	QRemove(&avc->vlruq);
+	QAddEnd(&VLRU, &avc->vlruq);
+
+	ReleaseWriteLock(&afs_xvcache);
+    }
+}
+
 int
 afsremove(struct vcache *adp, struct dcache *tdc,
 	  struct vcache *tvc, char *aname, afs_ucred_t *acred,
@@ -116,6 +141,7 @@ afsremove(struct vcache *adp, struct dcache *tdc,
      * call FindVCache instead of GetVCache since if the file's really
      * gone, we won't be able to fetch the status info anyway.  */
     if (tvc) {
+	int smushed = 0;
 	if (afs_mariner)
 	    afs_MarinerLog("store$Removing", tvc);
 	ObtainWriteLock(&tvc->lock, 141);
@@ -124,10 +150,20 @@ afsremove(struct vcache *adp, struct dcache *tdc,
 	tvc->f.m.LinkCount--;
 	tvc->f.states &= ~CUnique;	/* For the dfs xlator */
 	if (tvc->f.m.LinkCount == 0 && !osi_Active(tvc)) {
-	    if (!AFS_NFSXLATORREQ(acred))
+	    if (!AFS_NFSXLATORREQ(acred)) {
 		afs_TryToSmush(tvc, acred, 0);
+		smushed = 1;
+	    }
 	}
 	ReleaseWriteLock(&tvc->lock);
+
+	if (smushed) {
+	    /*
+	     * On many platforms, the VFS holds an additional reference on the
+	     * vcache, so we cannot flush it here. Mark it to be flushed later.
+	     */
+	    DemoteSmushedVCache(tvc);
+	}
 	afs_PutVCache(tvc);
     }
     return (0);
