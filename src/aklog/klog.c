@@ -129,7 +129,7 @@ main(int argc, char *argv[])
     cmd_AddParm(ts, "-silent", CMD_FLAG, CMD_OPTIONAL, "silent operation");
     /* Note: -lifetime is not implemented in this version of klog. */
     cmd_AddParm(ts, "-lifetime", CMD_SINGLE, CMD_OPTIONAL,
-		"ticket lifetime in hh[:mm[:ss]]");
+		"ignored (for compatibility with the krb4-based klog)");
     cmd_AddParm(ts, "-setpag", CMD_FLAG, CMD_OPTIONAL,
 		"Create a new setpag before authenticating");
     cmd_AddParm(ts, "-tmp", CMD_FLAG, CMD_OPTIONAL,
