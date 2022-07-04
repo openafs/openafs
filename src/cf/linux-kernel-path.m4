@@ -36,13 +36,11 @@ else
           linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/linux/version-up.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
           if test "x$linux_kvers" = "x"; then
             AC_MSG_ERROR(Linux headers lack version definition [2])
-            exit 1
           else
             LINUX_VERSION="$linux_kvers"
           fi
         else
           AC_MSG_ERROR(Linux headers lack version definition)
-          exit 1
         fi
       else
         LINUX_VERSION="$linux_kvers"
@@ -59,7 +57,6 @@ fi
 if test "x$enable_kernel_module" = "xno"; then
  if test "x$with_linux_kernel_headers" != "x"; then
   AC_MSG_ERROR(No usable linux headers found at $LINUX_KERNEL_PATH)
-  exit 1
  else
   AC_MSG_WARN(No usable linux headers found at $LINUX_KERNEL_PATH so disabling kernel module)
  fi

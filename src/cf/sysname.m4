@@ -308,7 +308,6 @@ else
                         ;;
                 *)
                         AC_MSG_ERROR(An AFS sysname is required)
-                        exit 1
                         ;;
         esac
         case $AFS_SYSNAME in
