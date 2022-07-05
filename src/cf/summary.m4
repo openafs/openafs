@@ -54,6 +54,9 @@ AC_DEFUN([OPENAFS_SUMMARY],[
   AS_IF([test "x$CTFCONVERT" != "x" -a "x$CTFMERGE" != "x"],
     [summary_ctf_tools="yes"],
     [summary_ctf_tools="no"])
+  AS_IF([test "x$ENABLE_KERNEL_MODULE" != "x"],
+    [summary_kernel_module="yes"],
+    [summary_kernel_module="no"])
 
   cat <<EOF
 ***************************************************************
@@ -75,7 +78,7 @@ options:
   install kauth          : ${INSTALL_KAUTH}
   ubik read while write  : ${enable_ubik_read_while_write}
 build:
-  kernel module          : ${enable_kernel_module}
+  kernel module          : ${summary_kernel_module}
   scout/afsmonitor       : ${summary_build_scout}
   pam                    : ${HAVE_PAM}
   login                  : ${BUILD_LOGIN}

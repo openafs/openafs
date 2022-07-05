@@ -1,4 +1,25 @@
-AC_DEFUN([OPENAFS_LINUX_KERNEL_PATH],[
+
+# _OPENAFS_LINUX_KERNEL_PATHS()
+# ----------------------------------------------------------------------------
+# Find the path to Linux kernel headers and build directories and get the
+# Linux kernel version of the build directory.
+#
+# Checks the following configure options:
+#
+#   --with-linux-kernel-headers=<path>
+#   --with-linux-kernel-build=<path>
+#
+# Sets the following variables:
+#
+#   LINUX_KERNEL_PATH   Path to the Linux kernel headers
+#   LINUX_KERNEL_BUILD  Path to the Linux module build directory
+#   LINUX_VERSION       Linux kernel version in located build directory
+#
+# Fails with an error message if the LINUX_VERSION was not found and
+# --with-linux-kernel-headers or --with-linux-kernel-build paths
+# were specified.
+#
+AC_DEFUN([_OPENAFS_LINUX_KERNEL_PATHS], [
 if test "x$with_linux_kernel_headers" != "x"; then
   LINUX_KERNEL_PATH="$with_linux_kernel_headers"
 else
@@ -46,19 +67,52 @@ else
         LINUX_VERSION="$linux_kvers"
       fi
     else
-      enable_kernel_module="no"
+      LINUX_VERSION=""
     fi
   fi
 fi
 if test ! -f "$LINUX_KERNEL_BUILD/include/generated/autoconf.h" &&
    test ! -f "$LINUX_KERNEL_BUILD/include/linux/autoconf.h"; then
-    enable_kernel_module="no"
+    LINUX_VERSION=""
 fi
-if test "x$enable_kernel_module" = "xno"; then
- if test "x$with_linux_kernel_headers" != "x"; then
-  AC_MSG_ERROR(No usable linux headers found at $LINUX_KERNEL_PATH)
- else
-  AC_MSG_WARN(No usable linux headers found at $LINUX_KERNEL_PATH so disabling kernel module)
- fi
-fi
+
+AS_IF([test "x$LINUX_VERSION" = "x"],
+  [AS_IF([test "x$with_linux_kernel_headers" != "x"],
+    [AC_MSG_ERROR(
+      [No usable linux headers found at $with_linux_kernel_headers])])
+  AS_IF([test "x$with_linux_kernel_build" != "x"],
+    [AC_MSG_ERROR(
+      [No usable linux build found at $with_linux_kernel_build])])])
+])
+
+# OPENAFS_LINUX_KERNEL_PATH()
+# -----------------------------------------------------------------------------
+# Check for Linux kernel header and build paths unless --disable-kernel-module
+# was specified.
+#
+# Fails if kernel paths are not found and --enable-kernel-module was specified.
+#
+# Disables kernel module compilation if the kernel paths are not found and
+# --enable-kernel-module was not specified.
+#
+AC_DEFUN([OPENAFS_LINUX_KERNEL_PATH], [
+  AS_CASE([$enable_kernel_module],
+    [yes],
+      [_OPENAFS_LINUX_KERNEL_PATHS
+      AS_IF([test "x$LINUX_VERSION" = "x"],
+        [kvers=`uname -r`
+        AC_MSG_ERROR(m4_normalize([
+          Unable to locate linux kernel headers.
+          Please install the headers for linux kernel version ${kvers},
+          or specify --with-linux-kernel-headers/--with-linux-kernel-build
+          to build a module for a different kernel version,
+          or specify --disable-kernel-module to disable kernel module
+          compilation.]))])],
+    [maybe],
+      [_OPENAFS_LINUX_KERNEL_PATHS
+      AS_IF([test "x$LINUX_VERSION" = "x"],
+        [AC_MSG_WARN(
+          [No usable linux headers found so disabling kernel module compilation.])
+        enable_kernel_module="no"],
+        [enable_kernel_module="yes"])])
 ])

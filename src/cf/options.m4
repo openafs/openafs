@@ -80,10 +80,13 @@ AC_ARG_WITH([linux-kernel-packaging],
     [AC_SUBST([LINUX_LIBAFS_NAME], [libafs])
 ])
 AC_ARG_ENABLE([kernel-module],
-    [AS_HELP_STRING([--disable-kernel-module],
-        [disable compilation of the kernel module (defaults to enabled)])],
-    [],
-    [enable_kernel_module="yes"])
+    [AS_HELP_STRING([--enable-kernel-module],
+        [enable compilation of the kernel module (defaults to autodetect)])],
+    [AS_CASE([$enable_kernel_module],
+        [yes|no|maybe], [],
+        [AC_MSG_ERROR(
+          [Invalid --enable-kernel-module value $enable_kernel_module])])],
+    [enable_kernel_module="maybe"])
 AC_ARG_ENABLE([redhat-buildsys],
     [AS_HELP_STRING([--enable-redhat-buildsys],
         [enable compilation of the redhat build system kernel (defaults to
@@ -339,7 +342,7 @@ AC_SUBST(INSTALL_KAUTH)
 ])
 
 AC_DEFUN([OPENAFS_YET_MORE_OPTION_TESTS],[
-if test "x$enable_kernel_module" = "xyes"; then
+if test "x$enable_kernel_module" != "xno"; then
 ENABLE_KERNEL_MODULE=libafs
 fi
 

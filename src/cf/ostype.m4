@@ -7,10 +7,8 @@ case $system in
                 if test "x$enable_redhat_buildsys" = "xyes"; then
                     AC_DEFINE(ENABLE_REDHAT_BUILDSYS, 1, [define if you have redhat buildsystem])
                 fi
-                if test "x$enable_kernel_module" = "xyes"; then
-                    OPENAFS_LINUX_KERNEL_PATH
-                fi
                 AC_MSG_RESULT(linux)
+                OPENAFS_LINUX_KERNEL_PATH
                 OPENAFS_LINUX_GUESS_VERSION
                 ;;
         *-solaris*)
