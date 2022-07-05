@@ -184,7 +184,8 @@ afs_Daemon(void)
 	    last3MinCheck = now;
 	}
 
-        if (afsd_dynamic_vcaches && (last5MinCheck + 300 < now)) {
+        if (afsd_dynamic_vcaches && ((last5MinCheck + 300 < now) ||
+	    afs_VCacheStressed())) {
             /* start with trying to drop us back to our base usage */
             int anumber = VCACHE_FREE + (afs_vcount - afs_cacheStats);
 
