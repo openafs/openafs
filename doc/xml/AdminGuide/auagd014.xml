@@ -1116,7 +1116,6 @@
     90-second ubik recovery time has passed, the database servers should have
     elected a new coordinator, allowing write transactions to proceed
     again.</para>
-    </sect2>
 
     <sect2 id="Header_430">
       <title>To create a new server encryption key in emergencies</title>
