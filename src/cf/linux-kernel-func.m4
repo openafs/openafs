@@ -59,9 +59,14 @@ AC_CHECK_LINUX_FUNC([find_task_by_pid],
 AC_CHECK_LINUX_FUNC([generic_file_aio_read],
                     [#include <linux/fs.h>],
                     [generic_file_aio_read(NULL,NULL,0,0);])
-AC_CHECK_LINUX_FUNC([grab_cache_page_write_begin],
+dnl - linux 5.19 removed the flags parameter, need to test
+dnl - with and without the flags parameter
+AC_CHECK_LINUX_FUNC([grab_cache_page_write_begin_withflags],
                     [#include <linux/pagemap.h>],
                     [grab_cache_page_write_begin(NULL, 0, 0);])
+AC_CHECK_LINUX_FUNC([grab_cache_page_write_begin_noflags],
+                    [#include <linux/pagemap.h>],
+                    [grab_cache_page_write_begin(NULL, 0);])
 AC_CHECK_LINUX_FUNC([hlist_unhashed],
                     [#include <linux/list.h>],
                     [hlist_unhashed(0);])
