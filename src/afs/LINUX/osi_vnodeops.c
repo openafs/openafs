@@ -2215,7 +2215,11 @@ afs_linux_put_link(struct dentry *dentry, struct nameidata *nd)
 static int
 mapping_read_page(struct address_space *mapping, struct page *page)
 {
+#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READ_FOLIO)
+    return mapping->a_ops->read_folio(NULL, page_folio(page));
+#else
     return mapping->a_ops->readpage(NULL, page);
+#endif
 }
 
 /* Populate a page by filling it from the cache file pointed at by cachefp
@@ -2326,8 +2330,13 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 static int inline
 file_can_read_pages(struct file *fp)
 {
+#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READ_FOLIO)
+    if (fp->f_dentry->d_inode->i_mapping->a_ops->read_folio != NULL)
+	return 1;
+#else
     if (fp->f_dentry->d_inode->i_mapping->a_ops->readpage != NULL)
 	return 1;
+#endif
     return 0;
 }
 
@@ -2848,6 +2857,16 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 
     return code;
 }
+
+#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READ_FOLIO)
+static int
+afs_linux_read_folio(struct file *fp, struct folio *folio)
+{
+    struct page *pp = &folio->page;
+
+    return afs_linux_readpage(fp, pp);
+}
+#endif
 
 /*
  * Updates the adc and acacheFp parameters
@@ -3536,7 +3555,11 @@ static struct inode_operations afs_file_iops = {
 };
 
 static struct address_space_operations afs_file_aops = {
+#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READ_FOLIO)
+  .read_folio =		afs_linux_read_folio,
+#else
   .readpage =		afs_linux_readpage,
+#endif
 #if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READAHEAD)
   .readahead =		afs_linux_readahead,
 #else
@@ -3609,9 +3632,22 @@ afs_symlink_filler(struct file *file, struct page *page)
     unlock_page(page);
     return code;
 }
+#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READ_FOLIO)
+static int
+afs_symlink_filler_folio(struct file *file, struct folio *folio)
+{
+    struct page *page = &folio->page;
+    return afs_symlink_filler(file, page);
+}
+#endif
+
 
 static struct address_space_operations afs_symlink_aops = {
+#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READ_FOLIO)
+  .read_folio =	afs_symlink_filler_folio
+#else
   .readpage =	afs_symlink_filler
+#endif
 };
 #endif	/* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
 

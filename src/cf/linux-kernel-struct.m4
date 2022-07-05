@@ -7,6 +7,8 @@ dnl linux 5.18 replaced set_page_dirty with dirty_folio
 AC_CHECK_LINUX_STRUCT([address_space_operations], [dirty_folio], [fs.h])
 dnl linux 5.18 replaced readpages with readahead (introduced in 5.8)
 AC_CHECK_LINUX_STRUCT([address_space_operations], [readahead], [fs.h])
+dnl linux 5.18 replaced readpage with read_folio
+AC_CHECK_LINUX_STRUCT([address_space_operations], [read_folio], [fs.h])
 AC_CHECK_LINUX_STRUCT([backing_dev_info], [name],
                       [backing-dev.h])
 AC_CHECK_LINUX_STRUCT([cred], [session_keyring], [cred.h])
