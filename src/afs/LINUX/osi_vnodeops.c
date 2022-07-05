@@ -2202,6 +2202,18 @@ afs_linux_put_link(struct dentry *dentry, struct nameidata *nd)
 
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
 
+/*
+ * Call the mapping function that reads data for a given page.
+ * Note: When we return, it is expected that the page is unlocked.  It is the
+ * responsibility of the called function (e.g. ->readpage) to unlock the given
+ * page, even when an error occurs.
+ */
+static int
+mapping_read_page(struct address_space *mapping, struct page *page)
+{
+    return mapping->a_ops->readpage(NULL, page);
+}
+
 /* Populate a page by filling it from the cache file pointed at by cachefp
  * (which contains indicated chunk)
  * If task is NULL, the page copy occurs syncronously, and the routine
@@ -2268,9 +2280,9 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 
     if (!PageUptodate(cachepage)) {
 	ClearPageError(cachepage);
-	/* Note that ->readpage always handles unlocking the given page, even
-	 * when an error is returned. */
-	code = cachemapping->a_ops->readpage(NULL, cachepage);
+	/* Note that mapping_read_page always handles unlocking the given page,
+	 * even when an error is returned. */
+	code = mapping_read_page(cachemapping, cachepage);
 	if (!code && !task) {
 	    wait_on_page_locked(cachepage);
 	}
@@ -2302,6 +2314,17 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 	put_page(cachepage);
 
     return code;
+}
+
+/*
+ * Return true if the file has a mapping that can read pages
+ */
+static int inline
+file_can_read_pages(struct file *fp)
+{
+    if (fp->f_dentry->d_inode->i_mapping->a_ops->readpage != NULL)
+	return 1;
+    return 0;
 }
 
 static int inline
@@ -2399,7 +2422,8 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
 	AFS_GLOCK();
 	goto out;
     }
-    if (!cacheFp->f_dentry->d_inode->i_mapping->a_ops->readpage) {
+
+    if (!file_can_read_pages(cacheFp)) {
 	cachefs_noreadpage = 1;
 	AFS_GLOCK();
 	goto out;
@@ -2867,7 +2891,7 @@ get_dcache_readahead(struct dcache **adc, struct file **acacheFp,
 		code = -1;
 		goto out;
 	    }
-	    if (cacheFp->f_dentry->d_inode->i_mapping->a_ops->readpage == NULL) {
+	    if (!file_can_read_pages(cacheFp)) {
 		cachefs_noreadpage = 1;
 		/* No mapping function */
 		code = -1;
