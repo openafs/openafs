@@ -5306,7 +5306,7 @@ DECL_PIOCTL(PCallBackAddr)
 	    break;
     }
 
-    ReleaseWriteLock(&afs_xinterface);
+    ReleaseReadLock(&afs_xinterface);
 
     if (afs_cb_interface.addr_in[i] != addr)
 	return EINVAL;
