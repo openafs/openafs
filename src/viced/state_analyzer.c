@@ -1244,7 +1244,7 @@ dump_he_entry(void)
     char hoststr[16];
     DPFSO0("hostDiskEntry");
     DPFS1("host", afs_inet_ntoa_r(he_cursor.he.host, hoststr));
-    DPFV1("port", "u", he_cursor.he.port);
+    DPFV1("port", "hu", ntohs(he_cursor.he.port));
     DPFX1("hostFlags", he_cursor.he.hostFlags);
     DPFV1("Console", "u", he_cursor.he.Console);
     DPFV1("hcpsfailed", "u", he_cursor.he.hcpsfailed);
@@ -1288,7 +1288,8 @@ dump_he_interfaces(void)
 	snprintf(temp_str, sizeof(temp_str), "interface[%d]", i);
 	DPFSO1(temp_str);
 	DPFS2("addr", afs_inet_ntoa_r(ifp->interface[i].addr, hoststr));
-	DPFV2("port", "u", ifp->interface[i].port);
+	DPFV2("port", "hu", ntohs(ifp->interface[i].port));
+	DPFV2("valid", "hd", ifp->interface[i].valid);
 	DPFSC1;
     }
 
