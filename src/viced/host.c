@@ -3291,6 +3291,10 @@ h_stateVerifyHost(struct host * h, void* rock)
 	return H_ENUMERATE_BAIL(0);
     }
 
+    if (h_stateVerifyAddrHash(state, h, h->z.host, h->z.port, 1)) {
+	state->bail = 1;
+    }
+
     if (h->z.interface) {
 	for (i = h->z.interface->numberOfInterfaces-1; i >= 0; i--) {
 	    if (h_stateVerifyAddrHash(state, h, h->z.interface->interface[i].addr,
@@ -3302,8 +3306,6 @@ h_stateVerifyHost(struct host * h, void* rock)
 	if (h_stateVerifyUuidHash(state, h)) {
 	    state->bail = 1;
 	}
-    } else if (h_stateVerifyAddrHash(state, h, h->z.host, h->z.port, 1)) {
-	state->bail = 1;
     }
 
     if (cb_stateVerifyHCBList(state, h)) {
