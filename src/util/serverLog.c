@@ -365,6 +365,16 @@ RenameLogFile(const char *fileName)
     }
 }
 
+static void
+checkThreadLogging(int loglevel)
+{
+#ifdef AFS_PTHREAD_ENV
+    if (loglevel > 1 && threadNumProgram != NULL && threadIdLogs == 0) {
+	threadIdLogs = 1;
+    }
+#endif
+}
+
 /*!
  * Write message to the log to indicate the log level.
  *
@@ -399,12 +409,7 @@ SetDebug_Signal(int signo)
     if (LogLevel > 0) {
 	LogLevel *= 5;
 
-#if defined(AFS_PTHREAD_ENV)
-        if (LogLevel > 1 && threadNumProgram != NULL &&
-            threadIdLogs == 0) {
-            threadIdLogs = 1;
-        }
-#endif
+	checkThreadLogging(LogLevel);
     } else {
 	LogLevel = 1;
 
@@ -660,6 +665,7 @@ OpenLog(struct logOptions *opts)
     LOCK_SERVERLOG();
 
     LogLevel = serverLogOpts.logLevel = opts->logLevel;
+    checkThreadLogging(LogLevel);
     serverLogOpts.dest = opts->dest;
     switch (serverLogOpts.dest) {
     case logDest_file:
