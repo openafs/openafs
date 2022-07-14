@@ -2691,6 +2691,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 	if(pp->index > isize) {
 	    if(PageLocked(pp))
 		unlock_page(pp);
+	    put_page(pp);
 	    continue;
 	}
 
@@ -3082,8 +3083,10 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 	offset = page_offset(page);
 
 	code = get_dcache_readahead(&tdc, &cacheFp, avc, offset);
-	if (code != 0)
+	if (code != 0) {
+	    put_page(page);
 	    goto out;
+	}
 
 	if (tdc && !add_to_page_cache(page, mapping, page->index,
 				      GFP_KERNEL)) {
