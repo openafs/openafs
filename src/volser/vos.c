@@ -288,6 +288,9 @@ IsPartValid(afs_int32 partId, afs_uint32 server, afs_int32 *code)
  * @param[in] call  rx call object
  * @param[in] rock  usd file handle opened for read
  *
+ * @pre The ufd is positioned after the DUMPBEGINMAGIC
+ *      in the dump stream.
+ *
  * @returns status
  *   @retval 0 success
  *   @retval -1 error
@@ -300,10 +303,22 @@ SendFile(struct rx_call *call, void *rock)
     afs_int32 error;
     afs_uint32 nbytes;
     long blksize = 0;
+    char tag = D_DUMPHEADER;
+    afs_uint32 magic = htonl(DUMPBEGINMAGIC);
 
     error = USD_IOCTL(ufd, USD_IOCTL_GETBLKSIZE, &blksize);
     if (error != 0) {
 	fprintf(STDERR, "Failed to get block size; error=%d\n", error);
+	return -1;
+    }
+
+    /* Send the header fields already read in CheckDumpFile(). */
+    nbytes = rx_Write(call, &tag, sizeof(tag));
+    if (nbytes != sizeof(tag)) {
+	return -1;
+    }
+    nbytes = rx_Write(call, (char *)&magic, sizeof(magic));
+    if (nbytes != sizeof(magic)) {
 	return -1;
     }
 
@@ -313,6 +328,7 @@ SendFile(struct rx_call *call, void *rock)
 	return -1;
     }
 
+    /* Send the rest of the dump. */
     while (!error) {
 #if !defined(AFS_NT40_ENV) && !defined(AFS_PTHREAD_ENV)
 	/* Only for this for non-NT, non-pthread. For NT, we can't select on
@@ -349,12 +365,18 @@ SendFile(struct rx_call *call, void *rock)
  *
  * @param[in]  ufd  dump file handle
  * @retval 0 file appears to contain a volume dump
+ *
+ * @post For a valid volume dump, ufd is positioned after the
+ *       DUMPBEGINMAGIC in the dump stream.
  */
 static int
 CheckDumpFile(usd_handle_t ufd)
 {
     afs_int32 code;
     int is_seekable = 0;
+    char tag = '\0';
+    afs_uint32 got = 0;
+    afs_uint32 magic = 0;
 
     /* Test if we have a valid dump. */
     code = USD_IOCTL(ufd, USD_IOCTL_ISSEEKABLE, &is_seekable);
@@ -365,8 +387,6 @@ CheckDumpFile(usd_handle_t ufd)
     }
     if (is_seekable) {
 	afs_int64 offset = 0;
-	afs_uint32 magic = 0;
-	afs_uint32 got = 0;
 
 	code = USD_SEEK(ufd, 0, SEEK_END, &offset);
 	if (code != 0) {
@@ -398,6 +418,20 @@ CheckDumpFile(usd_handle_t ufd)
 	    return code;
 	}
     }
+
+    code = USD_READ(ufd, &tag, sizeof(tag), &got);
+    if (code != 0 || got != sizeof(tag) || tag != D_DUMPHEADER) {
+	fprintf(STDERR, "Start tag not found in '%s'.\n",
+		ufd->fullPathName);
+	return VOLSERBADOP;
+    }
+    code = USD_READ(ufd, (char *)&magic, sizeof(magic), &got);
+    if (code != 0 || got != sizeof(magic) || ntohl(magic) != DUMPBEGINMAGIC) {
+	fprintf(STDERR, "Begin dump signature not found in '%s'.\n",
+		ufd->fullPathName);
+	return VOLSERBADOP;
+    }
+
     return 0;
 }
 
