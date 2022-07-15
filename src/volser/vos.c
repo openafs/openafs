@@ -147,26 +147,6 @@ qGet(struct tqHead *ahead, afs_uint32 *volid)
     return;
 }
 
-/* returns 1 if <filename> exists else 0 */
-static int
-FileExists(char *filename)
-{
-    usd_handle_t ufd;
-    int code;
-    afs_int64 size;
-
-    code = usd_Open(filename, USD_OPEN_RDONLY, 0, &ufd);
-    if (code) {
-	return 0;
-    }
-    code = USD_IOCTL(ufd, USD_IOCTL_GETSIZE, &size);
-    USD_CLOSE(ufd);
-    if (code) {
-	return 0;
-    }
-    return 1;
-}
-
 /* returns 1 if <name> doesnot end in .readonly or .backup, else 0 */
 static int
 VolNameOK(char *name)
@@ -368,23 +348,10 @@ SendFile(usd_handle_t ufd, struct rx_call *call)
 static afs_int32
 WriteData(struct rx_call *call, void *rock)
 {
-    char *filename = (char *) rock;
-    usd_handle_t ufd = NULL;
+    usd_handle_t ufd = (usd_handle_t)rock;
     afs_int32 error = 0;
     afs_int32 code;
     int is_seekable = 0;
-
-    if (!filename || !*filename) {
-	usd_StandardInput(&ufd);
-    } else {
-	code = usd_Open(filename, USD_OPEN_RDONLY, 0, &ufd);
-	if (code) {
-	    fprintf(STDERR, "Could not access file '%s': %s\n", filename,
-		    afs_error_message(code));
-	    error = VOLSERBADOP;
-	    goto wfail;
-	}
-    }
 
     /* Test if we have a valid dump. */
     code = USD_IOCTL(ufd, USD_IOCTL_ISSEEKABLE, &is_seekable);
@@ -440,14 +407,6 @@ WriteData(struct rx_call *call, void *rock)
 	goto wfail;
     }
   wfail:
-    if (ufd != NULL) {
-	code = USD_CLOSE(ufd);
-	if (code) {
-	    fprintf(STDERR, "Could not close dump file handle; code=%d\n", code);
-	    if (!error)
-		error = code;
-	}
-    }
     return error;
 }
 
@@ -3051,9 +3010,10 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 acreation = 0, alastupdate = 0;
     int restoreflags = 0;
     int readonly = 0, offline = 0, voltype = RWVOL;
-    char afilename[MAXPATHLEN], avolname[VOLSER_MAXVOLNAME + 1], apartName[10];
+    char avolname[VOLSER_MAXVOLNAME + 1], apartName[10];
     char volname[VOLSER_MAXVOLNAME + 1];
     struct nvldbentry entry;
+    usd_handle_t ufd = NULL;
 
     aparentid = 0;
     if (as->parms[4].items) {
@@ -3163,9 +3123,11 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
     if (as->parms[3].items) {
-	strcpy(afilename, as->parms[3].items->data);
-	if (!FileExists(afilename)) {
-	    fprintf(STDERR, "Can't access file %s\n", afilename);
+	char *filename = as->parms[3].items->data;
+
+	code = usd_Open(filename, USD_OPEN_RDONLY, 0, &ufd);
+	if (code != 0) {
+	    fprintf(STDERR, "Cannot open dump file %s; code=%d\n", filename, code);
 	    exit(1);
 	}
     } else {
@@ -3173,7 +3135,11 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 	    fprintf(STDERR, "Can't read dump from tty.\n");
 	    exit(1);
 	}
-	strcpy(afilename, "");
+	code = usd_StandardInput(&ufd);
+	if (code != 0) {
+	    fprintf(STDERR, "Cannot open stdin file descriptor; code=%d\n", code);
+	    exit(1);
+	}
     }
 
     /* Check if volume exists or not */
@@ -3323,7 +3289,8 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 
     code =
 	UV_RestoreVolume2(aserver, apart, avolid, aparentid,
-			  avolname, restoreflags, WriteData, afilename);
+			  avolname, restoreflags, WriteData, ufd);
+    USD_CLOSE(ufd);
     if (code) {
 	PrintDiagnostics("restore", code);
 	exit(1);
