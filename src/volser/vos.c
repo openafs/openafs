@@ -285,16 +285,17 @@ IsPartValid(afs_int32 partId, afs_uint32 server, afs_int32 *code)
 /**
  * Send the contents of a dump file to the volume server.
  *
- * @param[in] ufd   usd file handle opened for read
  * @param[in] call  rx call object
+ * @param[in] rock  usd file handle opened for read
  *
  * @returns status
  *   @retval 0 success
  *   @retval -1 error
  */
 static int
-SendFile(usd_handle_t ufd, struct rx_call *call)
+SendFile(struct rx_call *call, void *rock)
 {
+    usd_handle_t ufd = rock;
     char *buffer = NULL;
     afs_int32 error;
     afs_uint32 nbytes;
@@ -343,13 +344,15 @@ SendFile(usd_handle_t ufd, struct rx_call *call)
     return error;
 }
 
-/* function invoked by UV_RestoreVolume, reads the data from rx_trx_stream and
- * writes it out to the volume. */
-static afs_int32
-WriteData(struct rx_call *call, void *rock)
+/**
+ * Test if we have a valid dump file.
+ *
+ * @param[in]  ufd  dump file handle
+ * @retval 0 file appears to contain a volume dump
+ */
+static int
+CheckDumpFile(usd_handle_t ufd)
 {
-    usd_handle_t ufd = (usd_handle_t)rock;
-    afs_int32 error = 0;
     afs_int32 code;
     int is_seekable = 0;
 
@@ -358,8 +361,7 @@ WriteData(struct rx_call *call, void *rock)
     if (code != 0) {
 	fprintf(STDERR, "Failed to determine if '%s' is seekable; code=%d\n",
 		ufd->fullPathName, code);
-	error = code;
-	goto wfail;
+	return code;
     }
     if (is_seekable) {
 	afs_int64 offset = 0;
@@ -370,44 +372,33 @@ WriteData(struct rx_call *call, void *rock)
 	if (code != 0) {
 	    fprintf(STDERR, "Failed seek to end of '%s'; code=%d\n",
 		    ufd->fullPathName, code);
-	    error = code;
-	    goto wfail;
+	    return code;
 	}
 	if (offset < sizeof(magic)) {
 	    fprintf(STDERR, "End of dump signature not found in '%s'.\n",
 		    ufd->fullPathName);
-	    error = VOLSERBADOP;
-	    goto wfail;
+	    return VOLSERBADOP;
 	}
 	code = USD_SEEK(ufd, offset - sizeof(magic), SEEK_SET, &offset);
 	if (code != 0) {
 	    fprintf(STDERR, "Failed seek to dump end signature in '%s'; code=%d\n",
 		    ufd->fullPathName, code);
-	    error = code;
-	    goto wfail;
+	    return code;
 	}
 	code = USD_READ(ufd, (char *)&magic, sizeof(magic), &got);
 	if (code != 0 || got != sizeof(magic) || ntohl(magic) != DUMPENDMAGIC) {
 	    fprintf(STDERR, "End of dump signature not found in '%s'.\n",
 		    ufd->fullPathName);
-	    error = VOLSERBADOP;
-	    goto wfail;
+	    return VOLSERBADOP;
 	}
 	code = USD_SEEK(ufd, 0, SEEK_SET, &offset);
 	if (code != 0) {
 	    fprintf(STDERR, "Failed seek to start of '%s'; code=%d\n",
 		    ufd->fullPathName, code);
-	    error = code;
-	    goto wfail;
+	    return code;
 	}
     }
-    code = SendFile(ufd, call);
-    if (code) {
-	error = code;
-	goto wfail;
-    }
-  wfail:
-    return error;
+    return 0;
 }
 
 /**
@@ -3142,6 +3133,12 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 	}
     }
 
+    code = CheckDumpFile(ufd);
+    if (code != 0) {
+	fprintf(STDERR, "Dump file check failed; code=%d\n", code);
+	exit(1);
+    }
+
     /* Check if volume exists or not */
 
     vsu_ExtractName(volname, avolname);
@@ -3289,7 +3286,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 
     code =
 	UV_RestoreVolume2(aserver, apart, avolid, aparentid,
-			  avolname, restoreflags, WriteData, ufd);
+			  avolname, restoreflags, SendFile, ufd);
     USD_CLOSE(ufd);
     if (code) {
 	PrintDiagnostics("restore", code);
