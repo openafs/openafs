@@ -134,8 +134,9 @@ afs_InitSetup(int preallocs)
     memset(afs_zeros, 0, AFS_ZEROS);
 
     /* start RX */
-    if(!afscall_set_rxpck_received)
-    rx_extraPackets = AFS_NRXPACKETS;	/* smaller # of packets */
+    if (!afscall_set_rxpck_received) {
+	rx_extraPackets = AFS_NRXPACKETS;	/* smaller # of packets */
+    }
 
     host = ntohl(rx_bindhost);
     afs_warn("afs: Binding rx to %d.%d.%d.%d:%d\n",
