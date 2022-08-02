@@ -3988,7 +3988,6 @@ h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSubnetP,
 
 static afs_uint32 checktime;
 static afs_uint32 clientdeletetime;
-static struct AFSFid zerofid;
 
 
 /*
@@ -4115,7 +4114,6 @@ h_CheckHosts(void)
 {
     afs_uint32 now = time(NULL);
 
-    memset(&zerofid, 0, sizeof(zerofid));
     /*
      * Send a probe to the workstation if it hasn't been heard from in
      * 15 minutes
