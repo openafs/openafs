@@ -2,6 +2,5 @@
 #     git ls-files -i --exclude-standard
 # to check that you haven't inadvertently ignored any tracked files.
 
-/butc
-/read_tape
-/tdump
+/test_ftm
+/butm_test

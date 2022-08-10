@@ -15,6 +15,7 @@
 #include <lwp.h>
 #include <rx/rx.h>
 #include <afs/bubasics.h>
+#include <afs/bumon.h>
 #include "bc.h"
 
 #include "AFS_component_version_number.c"

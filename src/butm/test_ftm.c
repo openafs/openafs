@@ -21,6 +21,7 @@
 #include <afs/butm.h>
 
 #include "error_macros.h"
+#include "butm_prototypes.h"
 
 int isafile = 0, debugLevel = 1;
 
@@ -56,12 +57,10 @@ struct BufferBlock {
 
 struct tapeConfig confInfo;
 char dumpDone;
-int PerformDumpTest(TestInfo * tip);
+void *PerformDumpTest(void *rock);
 
-static
-GetDeviceInfo(filename, config)
-     char *filename;
-     struct tapeConfig *config;
+static int
+GetDeviceInfo(char *filename, struct tapeConfig *config)
 {
     FILE *devFile;
     char line[356];
@@ -95,12 +94,13 @@ GetDeviceInfo(filename, config)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char *argv[];
+int
+main(int argc, char *argv[])
 {
     char *config = 0;
-    char *tape = "testtape.0", *parent_pid, *pid;
+    char *tape = "testtape.0";
+    PROCESS parent_pid;
+    PROCESS pid;
     afs_int32 code;
     char **files;
     int nFiles, i;
@@ -192,9 +192,6 @@ main(argc, argv)
 	LWP_DestroyProcess(pid);
     }
 
-    IOMGR_Finalize();
-    LWP_TerminateProcessSupport();
-
     exit(code);
 
   usage:
@@ -205,9 +202,10 @@ main(argc, argv)
 }
 
 
-int
-PerformDumpTest(TestInfo * tip)
+void *
+PerformDumpTest(void *rock)
 {				/* Dump Files into target tape/file */
+    TestInfo *tip = rock;
     struct butm_tapeInfo info;
     struct butm_tapeLabel label;
     int i, past, code;
@@ -216,7 +214,7 @@ PerformDumpTest(TestInfo * tip)
     bufferBlock = malloc(sizeof(struct BufferBlock));
 
     info.structVersion = BUTM_MAJORVERSION;
-    if (code = butm_file_Instantiate(&info, tip->tc_Infop)) {
+    if ((code = butm_file_Instantiate(&info, tip->tc_Infop))) {
 	afs_com_err(whoami, code, "instantiating file tape");
 	ERROR_EXIT(2);
     }
@@ -239,7 +237,7 @@ PerformDumpTest(TestInfo * tip)
     strcpy(label.cell, T_REALM);
     strcpy(label.comment, T_COMMENT);
 
-    if (code = butm_Mount(&info, tip->tapeName)) {
+    if ((code = butm_Mount(&info, tip->tapeName))) {
 	afs_com_err(whoami, code, "setting up tape");
 	ERROR_EXIT(2);
     }
@@ -264,12 +262,12 @@ PerformDumpTest(TestInfo * tip)
 	    afs_com_err(whoami, errno, "opening file to write on tape");
 	    ERROR_EXIT(3);
 	}
-	if (code = butm_WriteFileBegin(&info)) {
+	if ((code = butm_WriteFileBegin(&info))) {
 	    afs_com_err(whoami, code, "beginning butm write file");
 	    ERROR_EXIT(3);
 	}
 	while ((len = read(fid, bufferBlock->data, BUTM_BLKSIZE)) > 0) {
-	    if (code = butm_WriteFileData(&info, bufferBlock->data, 1, len)) {
+	    if ((code = butm_WriteFileData(&info, bufferBlock->data, 1, len))) {
 		afs_com_err(whoami, code, "butm writing file data");
 		ERROR_EXIT(3);
 	    }
@@ -278,7 +276,7 @@ PerformDumpTest(TestInfo * tip)
 	    afs_com_err(whoami, errno, "reading file data");
 	    ERROR_EXIT(3);
 	}
-	if (code = butm_WriteFileEnd(&info)) {
+	if ((code = butm_WriteFileEnd(&info))) {
 	    afs_com_err(whoami, code, "ending butm write file");
 	    ERROR_EXIT(3);
 	}
@@ -295,7 +293,7 @@ PerformDumpTest(TestInfo * tip)
     /* now read the tape back in and make sure everything is OK */
 
     label.structVersion = BUTM_MAJORVERSION;
-    if (code = butm_Mount(&info, tip->tapeName)) {
+    if ((code = butm_Mount(&info, tip->tapeName))) {
 	afs_com_err(whoami, code, "setting up tape");
 	ERROR_EXIT(5);
     }
@@ -307,7 +305,7 @@ PerformDumpTest(TestInfo * tip)
 	    ERROR_EXIT(code);
 	}
     }
-    if (code = butm_ReadLabel(&info, &label, !tip->appended /*rewind */ )) {
+    if ((code = butm_ReadLabel(&info, &label, !tip->appended /*rewind */ ))) {
 	afs_com_err(whoami, code, "reading tape label");
 	ERROR_EXIT(5);
     }
@@ -352,7 +350,7 @@ PerformDumpTest(TestInfo * tip)
 		    i + 1);
 	    ERROR_EXIT(6);
 	}
-	if (code = butm_ReadFileBegin(&info)) {
+	if ((code = butm_ReadFileBegin(&info))) {
 	    afs_com_err(whoami, code, "Beginning butm %dth read file", i + 1);
 	    ERROR_EXIT(6);
 	}
@@ -390,7 +388,7 @@ PerformDumpTest(TestInfo * tip)
 		break;
 	}
 
-	if (code = butm_ReadFileEnd(&info)) {
+	if ((code = butm_ReadFileEnd(&info))) {
 	    afs_com_err(whoami, code, "Ending butm %dth read file", i + 1);
 	    ERROR_EXIT(7);
 	}
@@ -407,7 +405,7 @@ PerformDumpTest(TestInfo * tip)
 	    ERROR_EXIT(8);
 	}
     }
-    if (code = butm_Dismount(&info)) {
+    if ((code = butm_Dismount(&info))) {
 	afs_com_err(whoami, code, "Finishing up tape");
 	ERROR_EXIT(8);
     }
@@ -419,5 +417,5 @@ PerformDumpTest(TestInfo * tip)
     ERROR_EXIT(0);
   error_exit:
     LWP_SignalProcess(&tip->dumpDone);
-    return (code);
+    return (void *)(intptr_t)code;
 }

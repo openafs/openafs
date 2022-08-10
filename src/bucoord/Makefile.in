@@ -24,7 +24,8 @@ LIBS=${TOP_LIBDIR}/libbudb.a ${TOP_LIBDIR}/libbubasics.a \
 	${TOP_LIBDIR}/libafsrfc3961.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
-all: ${TOP_LIBDIR}/libbxdb.a ${TOP_INCDIR}/afs/bucoord_prototypes.h ${TOP_INCDIR}/afs/bc.h backup
+all: ${TOP_LIBDIR}/libbxdb.a ${TOP_INCDIR}/afs/bucoord_prototypes.h \
+	 ${TOP_INCDIR}/afs/bc.h backup btest
 
 generated: bucoord_errs.c bc.h
 
@@ -42,9 +43,8 @@ libbxdb.a: dsstub.o ubik_db_if.o status.o dlq.o bucoord_errs.o volstub.o AFS_com
 	$(AR) crv $@ dsstub.o ubik_db_if.o status.o dlq.o bucoord_errs.o volstub.o AFS_component_version_number.o
 	$(RANLIB) $@
 
-btest: btest.o ${TOP_LIBDIR}/libbubasics.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
-	$(AFS_LDRULE) btest.o ${TOP_LIBDIR}/libbubasics.a \
-		${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
+btest: btest.o ${LIBS}
+	$(AFS_LDRULE) btest.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 btest.o: AFS_component_version_number.c
 

@@ -15,9 +15,7 @@
 #define BLKSIZE (4096+24)	/* actual block size on our backup tapes */
 
 afs_int32
-glong(cp, index)
-     int index;
-     char *cp;
+glong(char *cp, int index)
 {
     afs_int32 temp;
     memcpy(&temp, cp + index * 4, sizeof(afs_int32));
@@ -26,9 +24,8 @@ glong(cp, index)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     char tbuffer[10000];
     int fd;

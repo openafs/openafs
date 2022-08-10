@@ -19,9 +19,11 @@ LIBS=${TOP_LIBDIR}/libbubasics.a \
 	${TOP_LIBDIR}/libbutm.a \
 	${TOP_LIBDIR}/libafscom_err.a \
 	${TOP_LIBDIR}/util.a \
+	$(TOP_LIBDIR)/libopr.a \
 	${XLIBS}
 
-all: ${TOP_LIBDIR}/libbutm.a ${TOP_INCDIR}/afs/butm_prototypes.h
+all: ${TOP_LIBDIR}/libbutm.a ${TOP_INCDIR}/afs/butm_prototypes.h \
+	 test_ftm butm_test
 
 ${TOP_LIBDIR}/libbutm.a: libbutm.a
 	${INSTALL_DATA} $? $@
@@ -39,10 +41,15 @@ file_tm.o: file_tm.c ${INCLS} AFS_component_version_number.c
 test_ftm.o: test_ftm.c ${INCLS} AFS_component_version_number.c
 
 test_ftm: test_ftm.o libbutm.a
-	$(AFS_LDRULE) test_ftm.o libbutm.a ${LIBS}
+	$(AFS_LDRULE) test_ftm.o libbutm.a ${LIBS} $(LIB_roken)
 
 test: test_ftm
 	echo 'Usage: ./test_ftm -conf config -tape xxx *'
+
+butm_test.o: butm_test.c ${INCLS} AFS_component_version_number.c
+
+butm_test: butm_test.o libbutm.a
+	$(AFS_LDRULE) butm_test.o libbutm.a ${LIBS} $(LIB_roken)
 
 install: libbutm.a
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
@@ -53,6 +60,6 @@ dest: libbutm.a
 	${INSTALL_DATA} libbutm.a ${DEST}/lib/afs/libbutm.a
 
 clean:
-	$(RM) -f *.o *.a core test_ftm AFS_component_version_number.c
+	$(RM) -f *.o *.a core test_ftm butm_test AFS_component_version_number.c
 
 include ../config/Makefile.version

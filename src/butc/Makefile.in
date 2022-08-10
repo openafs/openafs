@@ -52,7 +52,7 @@ LIBS=${TOP_LIBDIR}/libbudb.a \
 SOBJS=dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o tcudbprocs.o \
 	dump.o tcstatus.o
 
-all: butc read_tape
+all: butc read_tape tdump
 
 tdump: tdump.c AFS_component_version_number.c
 	$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(AFS_LDFLAGS) \
