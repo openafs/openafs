@@ -82,13 +82,5 @@ clean::
 	$(DEL) AFS_component_version_number.h
 
 
-############################################################################
-# Auxiliary build targets not built by default; e.g. test programs
-$(OUT)\butc_test.exe: $(OUT)\test.obj
-	$(EXECONLINK)
-        $(_VC_MANIFEST_EMBED_EXE)
-        $(CODESIGN_USERLAND)
-        $(SYMSTORE_IMPORT)
-
 mkdir:
 

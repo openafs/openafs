@@ -49,15 +49,10 @@ LIBS=${TOP_LIBDIR}/libbudb.a \
 	$(TOP_LIBDIR)/libopr.a \
 	${TOP_LIBDIR}/libprocmgmt.a
 
-TESTOBJS=test.o
-
 SOBJS=dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o tcudbprocs.o \
 	dump.o tcstatus.o
 
 all: butc read_tape
-
-butc_test: ${TESTOBJS} ${LIBS} ${INCLS} ${HACKS}
-	$(AFS_LDRULE) ${TESTOBJS} ${LIBS} $(LIB_roken) ${XLIBS}
 
 tdump: tdump.c AFS_component_version_number.c
 	$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(AFS_LDFLAGS) \
@@ -73,7 +68,6 @@ butc: ${SOBJS} ${LIBS} ${INCLS} ${HACKS}
 tcmain.o: tcmain.c ${INCLS} AFS_component_version_number.c
 dbentries.o: dbentries.c ${INCLS}
 tcprocs.o: tcprocs.c ${INCLS}
-test.o: test.c ${INCLS} AFS_component_version_number.c
 lwps.o: lwps.c ${INCLS}
 list.o: list.c ${INCLS}
 recoverDb.o: recoverDb.c ${INCLS}
@@ -92,7 +86,7 @@ read_tape: read_tape.c
 CFLAGS_tcudbprocs.o=@CFLAGS_NOERROR@
 
 clean:
-	$(RM) -f butc *.o butc_test core tdump read_tape AFS_component_version_number.c
+	$(RM) -f butc *.o core tdump read_tape AFS_component_version_number.c
 
 install: butc read_tape
 	${INSTALL} -d ${DESTDIR}${sbindir}

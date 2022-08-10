@@ -42,12 +42,6 @@ libbxdb.a: dsstub.o ubik_db_if.o status.o dlq.o bucoord_errs.o volstub.o AFS_com
 	$(AR) crv $@ dsstub.o ubik_db_if.o status.o dlq.o bucoord_errs.o volstub.o AFS_component_version_number.o
 	$(RANLIB) $@
 
-ttest: ttest.o ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a libbxdb.a
-	$(AFS_LDRULE) ttest.o libbxdb.a ${TOP_LIBDIR}/libbubasics.a \
-		${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
-
-ttest.o: AFS_component_version_number.c
-
 btest: btest.o ${TOP_LIBDIR}/libbubasics.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
 	$(AFS_LDRULE) btest.o ${TOP_LIBDIR}/libbubasics.a \
 		${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
@@ -89,7 +83,6 @@ main.o: bc.h
 restore.o: bc.h
 status.o: bc.h
 tape_hosts.o: bc.h
-ttest.o: bc.h
 ubik_db_if.o: bc.h
 vol_sets.o: bc.h
 volstub.o: bc.h
@@ -120,6 +113,6 @@ dest: libbxdb.a backup
 #
 
 clean:
-	$(RM) -f *.o backup convert *.ss.c *.cs.c *.xdr.c *.a core btest ttest AFS_component_version_number.c bc.h bucoord_errs.c
+	$(RM) -f *.o backup convert *.ss.c *.cs.c *.xdr.c *.a core btest AFS_component_version_number.c bc.h bucoord_errs.c
 
 include ../config/Makefile.version
