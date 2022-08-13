@@ -2,7 +2,11 @@
 #     git ls-files -i --exclude-standard
 # to check that you haven't inadvertently ignored any tracked files.
 
+/cfgafs
 /cfgafs64
+/cfgexport
 /cfgexport64
+/export64.exp
+/export64.ext
 /export.ext.nonfs
 /export64.ext.nonfs
