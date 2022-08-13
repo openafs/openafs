@@ -18,6 +18,7 @@
 #ifndef _OSI_MACHDEP_H_
 #define _OSI_MACHDEP_H_
 
+#include <sys/time.h>
 
 #undef osi_ThreadUnique
 #define osi_ThreadUnique()	thread_self()
