@@ -14,6 +14,7 @@
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
+#include <sys/malloc.h>		/* pinned_heap */
 
 static char waitV;
 
