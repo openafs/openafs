@@ -16,6 +16,7 @@ RXAFS_GetStatistics
 RXAFS_GetStatistics64
 RXAFS_GiveUpCallBacks
 RXAFS_MakeDir
+RXAFS_OpCodeIndex
 RXAFS_ReleaseLock
 RXAFS_RemoveDir
 RXAFS_RemoveFile
