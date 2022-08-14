@@ -14,6 +14,7 @@ RXAFS_FetchStatus
 RXAFS_GetTime
 RXAFS_GiveUpCallBacks
 RXAFS_MakeDir
+RXAFS_OpCodeIndex
 RXAFS_ReleaseLock
 RXAFS_RemoveDir
 RXAFS_RemoveFile
