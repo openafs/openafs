@@ -156,7 +156,6 @@ install_afs.ext.32: afs.ext.32
 
 install_afs.ext.64: afs.ext.64
 	${INSTALL} -d $(DESTDIR)$(afskerneldir)
-	$(DESTDIR)$(afskerneldir)/afs.ext.64
 	$(INSTALL) -m 644 afs.ext.64 $(DESTDIR)$(afskerneldir)/afs.ext.64
 	-${STRIP} -X 64 $(DESTDIR)$(afskerneldir)/afs.ext.64
 	$(INSTALL) -m 644 afs.ext.64.map $(DESTDIR)$(afskerneldir)/afs.ext.64.map
