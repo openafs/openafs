@@ -21,6 +21,7 @@ SetupLogSoftSignals
 WriteLogBuffer
 afsUUID_from_string
 afsUUID_to_string
+afs_exec_alt
 afs_htonuuid
 afs_inet_ntoa_r
 afs_ntohuuid
