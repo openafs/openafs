@@ -192,15 +192,15 @@ install: $(EXPORTS32) $(EXPORTS64)
 	  ${INSTALL_DATA} export.exp ${DESTDIR}${libdir}/afs/export.exp ; \
 	  ${INSTALL_DATA} export.ext ${DESTDIR}${afskerneldir}/export.ext ; \
 	  ${INSTALL_DATA} export.ext.nonfs ${DESTDIR}${afskerneldir}/export.ext.nonfs ; \
-	  ${INSTALL_DATA} cfgexport ${DESTDIR}${afskerneldir}/cfgexport ; \
-	  ${INSTALL_DATA} cfgafs ${DESTDIR}${afskerneldir}/cfgafs ; \
+	  ${INSTALL} cfgexport ${DESTDIR}${afskerneldir}/cfgexport ; \
+	  ${INSTALL} cfgafs ${DESTDIR}${afskerneldir}/cfgafs ; \
 	fi
 	if [ "xyes" = "x$(AIX64)" ]; then \
 	  ${INSTALL_DATA} export64.exp ${DESTDIR}${libdir}/afs/export64.exp ; \
 	  ${INSTALL_DATA} export64.ext ${DESTDIR}${afskerneldir}/export64.ext ; \
 	  ${INSTALL_DATA} export64.ext.nonfs ${DESTDIR}${afskerneldir}/export64.ext.nonfs ; \
-	  ${INSTALL_DATA} cfgexport64 ${DESTDIR}${afskerneldir}/cfgexport64 ; \
-	  ${INSTALL_DATA} cfgafs64 ${DESTDIR}${afskerneldir}/cfgafs64 ; \
+	  ${INSTALL} cfgexport64 ${DESTDIR}${afskerneldir}/cfgexport64 ; \
+	  ${INSTALL} cfgafs64 ${DESTDIR}${afskerneldir}/cfgafs64 ; \
 	fi
 
 dest: $(EXPORTS32) $(EXPORTS64)
