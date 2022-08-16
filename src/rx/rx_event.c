@@ -126,8 +126,8 @@ rxevent_alloc(void) {
 	mrec->next = freeEvents.mallocs;
 	freeEvents.mallocs = mrec;
 	MUTEX_EXIT(&freeEvents.lock);
-#endif
 	ev = &evlist[0];
+#endif
     } else {
 	ev = opr_queue_First(&freeEvents.list, struct rxevent, q);
 	opr_queue_Remove(&ev->q);
