@@ -1298,18 +1298,20 @@ osi_StopListener(void)
 # endif /* RXK_LISTENER_ENV */
 #endif /* !UKERNEL */
 
+#if !defined(AFS_AIX_ENV) || (defined(AFS_AIX_ENV) && (!defined(KERNEL) || defined(UKERNEL)))
 void
 osi_Msg(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-#if defined(AFS_LINUX_ENV)
+# if defined(AFS_LINUX_ENV)
     vprintk(fmt, ap);
-#else
+# else
     vprintf(fmt, ap);
-#endif
+# endif
     va_end(ap);
 }
+#endif
 
 #if !defined(AFS_LINUX_ENV)
 void

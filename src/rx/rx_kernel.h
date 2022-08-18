@@ -58,6 +58,10 @@ extern void osi_Panic(char *fmt, ...)
     (void)((exp) || (osi_AssertFailK( #exp , __FILE__, __LINE__), 0))
 #endif
 
+#if (defined(AFS_AIX_ENV) && defined(KERNEL))
+# define osi_Msg printf
+#endif
+
 #define	osi_YieldIfPossible()
 #define	osi_WakeupAndYieldIfPossible(x)	    rx_Wakeup(x)
 

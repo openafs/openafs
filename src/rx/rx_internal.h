@@ -76,5 +76,7 @@ extern int rxi_SendIovecs(struct rx_connection *conn, struct iovec *iov,
 extern void rxi_SendRaw(struct rx_call *call, struct rx_connection *conn,
 			int type, char *data, int bytes, int istack);
 
+#if !defined(AFS_AIX_ENV) || (defined(AFS_AIX_ENV) && (!defined(KERNEL) || defined(UKERNEL)))
 /* rx_kcommon.c / rx_user.c */
 extern void osi_Msg(const char *fmt, ...) AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+#endif
