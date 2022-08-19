@@ -60,5 +60,6 @@ dest: libdir.a dir.h
 #
 clean:
 	$(RM) -f *.o *.a core AFS_component_version_number.c
+	cd test && $(MAKE) clean
 
 include ../config/Makefile.version

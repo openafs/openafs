@@ -499,6 +499,7 @@ clean:
 	-$(RM) -rf PERLUAFS afs afsint config rx
 	-$(RM) -rf h
 	-$(RM) -f linktest $(AFS_OS_CLEAN)
+	-$(RM) -f *.o *.a
 
 install: libuafs.a libuafs_pic.la @LIBUAFS_BUILD_PERL@
 	${INSTALL} -d ${DESTDIR}${libdir}
