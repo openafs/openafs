@@ -46,7 +46,7 @@ dest: $(SHARED_LIBS) librokenafs.a
 
 clean:
 	$(LT_CLEAN)
-	$(RM) -f $(OBJECTS) librokenafs.a err.h roken.h
+	$(RM) -f *.o librokenafs.a err.h roken.h
 
 $(TOP_LIBDIR)/librokenafs.$(SHLIB_SUFFIX): librokenafs.la
 	$(LT_INSTALL_DATA) librokenafs.la $(TOP_LIBDIR)/librokenafs.la
