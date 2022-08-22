@@ -699,17 +699,23 @@ CompareCBA(const void *e1, const void *e2)
  * It _does_ get a lock on the host before setting VenusDown = 1,
  * which is sufficient only if VenusDown = 0 only happens when the
  * lock is held over the RPC and the subsequent VenusDown == 0
- * wherever that is done. */
+ * wherever that is done.
+ *
+ * \pre	    H_LOCK held
+ *
+ */
 static void
 MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 		     struct AFSCBFids *afidp)
 {
-    int i, j;
+    int i, j, res_idx;
     struct rx_connection *conns[MAX_CB_HOSTS];
+    afs_int32 results[MAX_CB_HOSTS];
     static struct AFSCBs tc = { 0, 0 };
     int multi_to_cba_map[MAX_CB_HOSTS];
 
     opr_Assert(ncbas <= MAX_CB_HOSTS);
+    memset(&results, 0, sizeof(results));
 
     /*
      * When we issue a multi_Rx callback break, we must rx_NewCall a call for
@@ -746,12 +752,16 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 	H_UNLOCK;
 	multi_Rx(conns, j) {
 	    multi_RXAFSCB_CallBack(afidp, &tc);
-	    if (multi_error) {
+	    results[multi_i] = multi_error;
+	} multi_End;
+
+	for (res_idx = 0; res_idx < j; res_idx++) {
+	    if (results[res_idx] != 0) {
 		afs_uint32 idx;
 		struct host *hp;
 		char hoststr[16];
 
-		i = multi_to_cba_map[multi_i];
+		i = multi_to_cba_map[res_idx];
 		hp = cba[i].hp;
 		idx = cba[i].thead;
 
@@ -792,7 +802,6 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 		}
 	    }
 	}
-	multi_End;
 	H_LOCK;
 	cbstuff.nbreakers--;
     }
@@ -3040,6 +3049,7 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
     int i, j;
     struct rx_connection **conns;
     struct rx_connection *connSuccess = 0;
+    afs_int32 success_i = -1;
     struct AddrPort *interfaces;
     static struct rx_securityClass *sc = 0;
     static struct AFSCBs tc = { 0, 0 };
@@ -3088,31 +3098,36 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
     H_UNLOCK;
     multi_Rx(conns, j) {
 	multi_RXAFSCB_CallBack(afidp, &tc);
-	if (!multi_error) {
+	if (multi_error == 0) {
 	    /* first success */
-	    H_LOCK;
-	    if (host->z.callback_rxcon)
-		rx_DestroyConnection(host->z.callback_rxcon);
-	    host->z.callback_rxcon = conns[multi_i];
-	    /* add then remove */
-	    addInterfaceAddr_r(host, interfaces[multi_i].addr,
-	                             interfaces[multi_i].port);
-	    removeInterfaceAddr_r(host, host->z.host, host->z.port);
-	    host->z.host = interfaces[multi_i].addr;
-	    host->z.port = interfaces[multi_i].port;
+	    success_i = multi_i;
 	    connSuccess = conns[multi_i];
-	    rx_SetConnDeadTime(host->z.callback_rxcon, 50);
-	    rx_SetConnHardDeadTime(host->z.callback_rxcon, AFS_HARDDEADTIME);
-	    ViceLog(125,
-		    ("multibreakcall success with addr %s:%d\n",
-		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr),
-                     ntohs(interfaces[multi_i].port)));
-	    H_UNLOCK;
 	    multi_Abort;
 	}
     }
     multi_End;
     H_LOCK;
+
+    if (connSuccess != NULL) {
+	opr_Assert(success_i >= 0);
+	if (host->z.callback_rxcon != NULL) {
+	    rx_DestroyConnection(host->z.callback_rxcon);
+	}
+	host->z.callback_rxcon = connSuccess;
+	/* add then remove */
+	addInterfaceAddr_r(host, interfaces[success_i].addr,
+				 interfaces[success_i].port);
+	removeInterfaceAddr_r(host, host->z.host, host->z.port);
+	host->z.host = interfaces[success_i].addr;
+	host->z.port = interfaces[success_i].port;
+	rx_SetConnDeadTime(host->z.callback_rxcon, 50);
+	rx_SetConnHardDeadTime(host->z.callback_rxcon, AFS_HARDDEADTIME);
+	ViceLog(125,
+		("multibreakcall success with addr %s:%d\n",
+		 afs_inet_ntoa_r(interfaces[success_i].addr, hoststr),
+		 ntohs(interfaces[success_i].port)));
+    }
+
     /* Destroy all connections except the one on which we succeeded */
     for (i = 0; i < j; i++)
 	if (conns[i] != connSuccess)
@@ -3131,6 +3146,8 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 /*
 ** try multi_RX probes to host.
 ** return 0 on success, non-0 on failure
+ *
+ * \pre	    H_LOCK held, h_Lock(host) held
 */
 int
 MultiProbeAlternateAddress_r(struct host *host)
@@ -3138,6 +3155,7 @@ MultiProbeAlternateAddress_r(struct host *host)
     int i, j;
     struct rx_connection **conns;
     struct rx_connection *connSuccess = 0;
+    afs_int32 *results;
     struct AddrPort *interfaces;
     static struct rx_securityClass *sc = 0;
     char hoststr[16];
@@ -3157,7 +3175,8 @@ MultiProbeAlternateAddress_r(struct host *host)
     i = host->z.interface->numberOfInterfaces;
     interfaces = calloc(i, sizeof(struct AddrPort));
     conns = calloc(i, sizeof(struct rx_connection *));
-    if (!interfaces || !conns) {
+    results = calloc(i, sizeof(*results));
+    if (interfaces == NULL || conns == NULL || results == NULL) {
 	ViceLogThenPanic(0, ("Failed malloc in "
 			     "MultiProbeAlternateAddress_r\n"));
     }
@@ -3186,47 +3205,12 @@ MultiProbeAlternateAddress_r(struct host *host)
     H_UNLOCK;
     multi_Rx(conns, j) {
 	multi_RXAFSCB_ProbeUuid(&host->z.interface->uuid);
-	if (!multi_error) {
+	results[multi_i] = multi_error;
+	if (multi_error == 0) {
 	    /* first success */
-	    H_LOCK;
-	    if (host->z.callback_rxcon)
-		rx_DestroyConnection(host->z.callback_rxcon);
-	    host->z.callback_rxcon = conns[multi_i];
-	    /* add then remove */
-	    addInterfaceAddr_r(host, interfaces[multi_i].addr,
-	                             interfaces[multi_i].port);
-	    removeInterfaceAddr_r(host, host->z.host, host->z.port);
-	    host->z.host = interfaces[multi_i].addr;
-	    host->z.port = interfaces[multi_i].port;
 	    connSuccess = conns[multi_i];
-	    rx_SetConnDeadTime(host->z.callback_rxcon, 50);
-	    rx_SetConnHardDeadTime(host->z.callback_rxcon, AFS_HARDDEADTIME);
-	    ViceLog(125,
-		    ("multiprobe success with addr %s:%d\n",
-		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr),
-                     ntohs(interfaces[multi_i].port)));
-	    H_UNLOCK;
 	    multi_Abort;
-	} else {
-	    ViceLog(125,
-		    ("multiprobe failure with addr %s:%d\n",
-		     afs_inet_ntoa_r(interfaces[multi_i].addr, hoststr),
-                     ntohs(interfaces[multi_i].port)));
-
-            /* This is less than desirable but its the best we can do.
-             * The AFS Cache Manager will return either 0 for a Uuid
-             * match and a 1 for a non-match.   If the error is 1 we
-             * therefore know that our mapping of IP address to Uuid
-             * is wrong.   We should attempt to find the correct
-             * Uuid and fix the host tables.
-             */
-            if (multi_error == 1) {
-                /* remove the current alternate address from this host */
-                H_LOCK;
-                removeInterfaceAddr_r(host, interfaces[multi_i].addr, interfaces[multi_i].port);
-                H_UNLOCK;
-            }
-        }
+	}
 #ifdef AFS_DEMAND_ATTACH_FS
 	/* try to bail ASAP if the fileserver is shutting down */
 	FS_STATE_RDLOCK;
@@ -3239,6 +3223,50 @@ MultiProbeAlternateAddress_r(struct host *host)
     }
     multi_End;
     H_LOCK;
+
+    for (i = 0; i < j; i++) {
+	if (conns[i] == connSuccess) {
+	    if (host->z.callback_rxcon != NULL) {
+		rx_DestroyConnection(host->z.callback_rxcon);
+	    }
+	    host->z.callback_rxcon = connSuccess;
+	    /* add then remove */
+	    addInterfaceAddr_r(host, interfaces[i].addr,
+				     interfaces[i].port);
+	    removeInterfaceAddr_r(host, host->z.host, host->z.port);
+	    host->z.host = interfaces[i].addr;
+	    host->z.port = interfaces[i].port;
+
+	    rx_SetConnDeadTime(host->z.callback_rxcon, 50);
+	    rx_SetConnHardDeadTime(host->z.callback_rxcon, AFS_HARDDEADTIME);
+	    ViceLog(125,
+		    ("multiprobe success with addr %s:%d\n",
+		     afs_inet_ntoa_r(interfaces[i].addr, hoststr),
+		     ntohs(interfaces[i].port)));
+	    continue;
+	}
+
+	if (results[i] != 0) {
+	    ViceLog(125,
+		    ("multiprobe failure with addr %s:%d\n",
+		     afs_inet_ntoa_r(interfaces[i].addr, hoststr),
+		     ntohs(interfaces[i].port)));
+
+	    /*
+	     * This is less than desirable but it's the best we can do.
+	     * The AFS Cache Manager will return either 0 for a Uuid
+	     * match and a 1 for a non-match.   If the error is 1 we
+	     * therefore know that our mapping of IP address to Uuid
+	     * is wrong.   We should attempt to find the correct
+	     * Uuid and fix the host tables.
+	     */
+	    if (results[i] == 1) {
+		/* remove the current alternate address from this host */
+		removeInterfaceAddr_r(host, interfaces[i].addr, interfaces[i].port);
+	    }
+	}
+    }
+
     /* Destroy all connections except the one on which we succeeded */
     for (i = 0; i < j; i++)
 	if (conns[i] != connSuccess)
@@ -3246,6 +3274,7 @@ MultiProbeAlternateAddress_r(struct host *host)
 
     free(interfaces);
     free(conns);
+    free(results);
 
     if (connSuccess)
 	return 0;		/* success */

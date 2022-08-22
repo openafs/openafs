@@ -23,6 +23,53 @@ struct multi_handle {
 #endif				/* RX_ENABLE_LOCKS */
 };
 
+/*
+ * It is generally recommended to keep the code in the body of a multi_Rx()
+ * call as fast and simple as possible; that is, try not to call other RPCs or
+ * obtain heavy locks.
+ *
+ * For example, do NOT do this:
+ *
+ * multi_Rx(conns, n_conns) {
+ *     multi_FOO_Call(arg);
+ *     if (multi_error == 0) {
+ *         connSuccess = conns[multi_i];
+ *         code = FOO_OtherCall(connSuccess);
+ *         multi_Abort;
+ *     }
+ * } multi_End;
+ *
+ * If the body takes a long time to run (because, for example, we are waiting
+ * for the net), we may be holding calls open for the other connections, even
+ * if the peer has finished responding. This can prevent other threads from
+ * using the connection if its call channels are full, causing unnecessary
+ * delays. For complex applications, this can also make ordering rules for
+ * locks and connections more complicated, making it more prone to deadlock
+ * issues.
+ *
+ * Instead, do this:
+ *
+ * connSuccess = NULL;
+ * multi_Rx(conns, n_conns) {
+ *     multi_FOO_Call(arg);
+ *     if (multi_error == 0) {
+ *         connSuccess = conns[multi_i];
+ *         multi_Abort;
+ *     }
+ * } multi_End;
+ * if (connSuccess != NULL) {
+ *     code = FOO_OtherCall(connSuccess);
+ * }
+ *
+ * This allows all calls to complete and be released for reuse as soon as
+ * possible.
+ *
+ * If you call multi_Rx on the same conns at the same time in multiple threads,
+ * you must also provide a consistent ordering of the conns (for example, see
+ * viced's usage of CompareCBA()). Otherwise, we can block on creating a call
+ * on a conn, while another thread is waiting for our already-created call to
+ * end, causing a deadlock.
+ */
 #define multi_Rx(conns, nConns) \
     do {\
 	struct multi_handle *multi_h;\
