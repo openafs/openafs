@@ -373,7 +373,8 @@ afs_RebuildDynroot(void)
 	dotLen = strlen(c->cellName) + 2;
 	dotCell = afs_osi_Alloc(dotLen);
 	osi_Assert(dotCell != NULL);
-	osi_Assert(snprintf(dotCell, dotLen, ".%s", c->cellName) < dotLen);
+	osi_Assert(strlcpy(dotCell, ".", dotLen) < dotLen);
+	osi_Assert(strlcat(dotCell, c->cellName, dotLen) < dotLen);
 
 	afs_dynroot_computeDirEnt(c->cellName, &curPage, &curChunk);
 	afs_dynroot_computeDirEnt(dotCell, &curPage, &curChunk);
@@ -391,7 +392,8 @@ afs_RebuildDynroot(void)
 	dotLen = strlen(ca->alias) + 2;
 	dotCell = afs_osi_Alloc(dotLen);
 	osi_Assert(dotCell != NULL);
-	osi_Assert(snprintf(dotCell, dotLen, ".%s", ca->alias) < dotLen);
+	osi_Assert(strlcpy(dotCell, ".", dotLen) < dotLen);
+	osi_Assert(strlcat(dotCell, ca->alias, dotLen) < dotLen);
 
 	afs_dynroot_computeDirEnt(ca->alias, &curPage, &curChunk);
 	afs_dynroot_computeDirEnt(dotCell, &curPage, &curChunk);
@@ -452,7 +454,8 @@ afs_RebuildDynroot(void)
 	dotLen = strlen(c->cellName) + 2;
 	dotCell = afs_osi_Alloc(dotLen);
 	osi_Assert(dotCell != NULL);
-	osi_Assert(snprintf(dotCell, dotLen, ".%s", c->cellName) < dotLen);
+	osi_Assert(strlcpy(dotCell, ".", dotLen) < dotLen);
+	osi_Assert(strlcat(dotCell, c->cellName, dotLen) < dotLen);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, c->cellName,
 			      VNUM_FROM_CIDX_RW(cellidx, 0), dirSize);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, dotCell,
@@ -471,7 +474,8 @@ afs_RebuildDynroot(void)
 	dotLen = strlen(ca->alias) + 2;
 	dotCell = afs_osi_Alloc(dotLen);
 	osi_Assert(dotCell != NULL);
-	osi_Assert(snprintf(dotCell, dotLen, ".%s", ca->alias) < dotLen);
+	osi_Assert(strlcpy(dotCell, ".", dotLen) < dotLen);
+	osi_Assert(strlcat(dotCell, ca->alias, dotLen) < dotLen);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, ca->alias,
 			      VNUM_FROM_CAIDX_RW(aliasidx, 0), dirSize);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, dotCell,
@@ -730,8 +734,8 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 		linklen = rw + namelen;
 		avc->linkData = afs_osi_Alloc(linklen + 1);
 		osi_Assert(avc->linkData != NULL);
-		osi_Assert(snprintf(avc->linkData, linklen + 1, "%s%s", prefix,
-			   realName) < linklen + 1);
+		osi_Assert(strlcpy(avc->linkData, prefix, linklen + 1) < linklen + 1);
+		osi_Assert(strlcat(avc->linkData, realName, linklen + 1) < linklen + 1);
 	    }
 
 	    status->UnixModeBits = 0755;
@@ -753,8 +757,10 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	    linklen = 2 + namelen + strlen(bp);
 	    avc->linkData = afs_osi_Alloc(linklen + 1);
 	    osi_Assert(avc->linkData != NULL);
-	    osi_Assert(snprintf(avc->linkData, linklen + 1, "%%%s:%s",
-		       c->cellName, bp) < linklen + 1);
+	    osi_Assert(strlcpy(avc->linkData, "%", linklen + 1) < linklen + 1);
+	    osi_Assert(strlcat(avc->linkData, c->cellName, linklen + 1) < linklen + 1);
+	    osi_Assert(strlcat(avc->linkData, ":", linklen + 1) < linklen + 1);
+	    osi_Assert(strlcat(avc->linkData, bp, linklen + 1) < linklen + 1);
 
 	    status->UnixModeBits = 0644;
 	    status->ParentVnode = AFS_DYNROOT_MOUNT_VNODE;
@@ -777,8 +783,9 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	    linklen = 1 + namelen + 10;
 	    avc->linkData = afs_osi_Alloc(linklen + 1);
 	    osi_Assert(avc->linkData != NULL);
-	    osi_Assert(snprintf(avc->linkData, linklen + 1, "%s%s:root.cell",
-		       prefix, c->cellName) < linklen + 1);
+	    osi_Assert(strlcpy(avc->linkData, prefix, linklen + 1) < linklen + 1);
+	    osi_Assert(strlcat(avc->linkData, c->cellName, linklen + 1) < linklen + 1);
+	    osi_Assert(strlcat(avc->linkData, ":root.cell", linklen + 1) < linklen + 1);
 
 	    status->UnixModeBits = 0644;
 	    afs_PutCell(c, READ_LOCK);
