@@ -711,6 +711,12 @@ osi_crypto.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_crypto.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_crypto.c
 osi_kstat.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_kstat.c
 	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_kstat.c
+strlcat-kernel.o: $(TOP_SRCDIR)/external/heimdal/roken/strlcat.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/roken/strlcat.c
+CFLAGS-strlcat-kernel.o = -DROKEN_LIB_FUNCTION="" -DROKEN_LIB_CALL="" -DROKEN_LIB_VARIABLE=""
+strlcpy-kernel.o: $(TOP_SRCDIR)/external/heimdal/roken/strlcpy.c
+	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/roken/strlcpy.c
+CFLAGS-strlcpy-kernel.o = -DROKEN_LIB_FUNCTION="" -DROKEN_LIB_CALL="" -DROKEN_LIB_VARIABLE=""
 
 clean:
 	-$(RM) -rf STATIC* MODLOAD* $(AFS_OS_CLEAN)

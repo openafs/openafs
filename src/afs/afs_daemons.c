@@ -319,7 +319,11 @@ afs_CheckRootVolume(void)
 
 	    if ((len < 9) || strcmp(&rootVolName[len - 9], ".readonly")) {
 		bufsize = sizeof(buf);
-		len = snprintf(buf, bufsize, "%s.readonly", rootVolName);
+		len = strlcpy(buf, rootVolName, bufsize);
+		if (len >= bufsize) {
+		    return ENAMETOOLONG;
+		}
+		len = strlcat(buf, ".readonly", bufsize);
 		if (len >= bufsize) {
 		    return ENAMETOOLONG;
 		}
