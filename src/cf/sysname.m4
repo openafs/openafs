@@ -318,6 +318,10 @@ else
                         AFS_SYSNAME="rs_aix61"
                         enable_pam="no"
                         ;;
+		power*-ibm-aix7.1*)
+                        AFS_SYSNAME="rs_aix71"
+                        enable_pam="no"
+                        ;;
                 power*-ibm-aix7.2*)
                         AFS_SYSNAME="rs_aix72"
                         enable_pam="no"

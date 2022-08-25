@@ -406,7 +406,7 @@ case $AFS_SYSNAME in
 		TSM_LIBS="-lsys -lcsys -lc"
 		;;
 
-	rs_aix61)	
+	rs_aix61 | rs_aix71)
 		CC="cc"
 		DBG="-g"
 		LIBSYS_AIX_EXP="afsl.exp"
