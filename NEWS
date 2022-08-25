@@ -1,5 +1,46 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.9 (in progress)
+
+  All platforms
+
+    * Performance improvements (14814 14815 15129)
+
+    * Support for building with more recent compilers (14970 14982..14987
+      14990 14991 15056 15057 15061..15064)
+
+    * Build fixes and improvements around the test suite (14879 14880
+      14909..14911 15133)
+
+    * Documentation improvements (14980 15047)
+
+    * Improved diagnostics and error messages. In particular, warn when
+      server processes are started without keys and properly print the
+      volume transaction flags in "vos status" output (14594 14968)
+
+  FreeBSD
+
+    * Added support for release 12.3 and further improvements (14878
+      14920 14921)
+
+  Linux clients
+
+    * Support mainline kernels up to 5.19 (14942..14944 14989 14945
+      14946 15058 15065 15094 15095)
+
+    * Fixed a potential memory leak (15096)
+
+    * Fixed a type cast which could make builds fail against older kernels
+      (15134)
+
+    * In Red Hat packaging, no longer have systemd load the openafs module
+      during boot (15128)
+
+  Most client platforms
+
+    * Handle certain failure conditions rather than panicking the system
+      (14927 15052)
+
 OpenAFS 1.8.8.1
 
   Linux clients
