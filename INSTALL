@@ -58,7 +58,8 @@ A  Configuring
          ppc_darwin_70, ppc_darwin_80, ppc_darwin_90
       ppc_linux26
       ppc_nbsd16, ppc_nbsd20
-      rs_aix42, rs_aix51, rs_aix52, rs_aix53, rs_aix61
+      rs_aix42, rs_aix51, rs_aix52, rs_aix53, rs_aix61, rs_aix71,
+         rs_aix72
       s390_linux26
       s390x_linux26
       sgi_62, sgi_63, sgi_64, sgi_65 (file server not tested)
