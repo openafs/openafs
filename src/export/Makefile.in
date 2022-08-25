@@ -64,6 +64,8 @@ export64.exp: ${srcdir}/export4-64.exp ${srcdir}/export5-64.exp
 		cp -p ${srcdir}/export5-64.exp export64.exp ;; \
 	rs_aix6* ) \
 		cp -p ${srcdir}/export5-64.exp export64.exp ;; \
+	rs_aix7* ) \
+		cp -p ${srcdir}/export5-64.exp export64.exp ;; \
 	esac
 
 export.ext: ${KOBJ}
