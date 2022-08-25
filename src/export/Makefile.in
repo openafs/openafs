@@ -62,9 +62,7 @@ export64.exp: ${srcdir}/export4-64.exp ${srcdir}/export5-64.exp
 		cp -p ${srcdir}/export4-64.exp export64.exp ;; \
 	rs_aix5* ) \
 		cp -p ${srcdir}/export5-64.exp export64.exp ;; \
-	rs_aix6* ) \
-		cp -p ${srcdir}/export5-64.exp export64.exp ;; \
-	rs_aix7* ) \
+	rs_aix[67]* ) \
 		cp -p ${srcdir}/export5-64.exp export64.exp ;; \
 	esac
 
@@ -102,7 +100,7 @@ symtab.o symtab64.o: ${srcdir}/symtab.c
 		mv symtab.o symtab64.o ; \
 		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -DAFS_AIX51_ENV \
 			-c ${srcdir}/symtab.c ;; \
-	rs_aix6* ) \
+	rs_aix[67]* ) \
 		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -q64 -D__XCOFF64__ \
 			-DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
 			-c ${srcdir}/symtab.c ; \
@@ -120,7 +118,7 @@ export.o export64.o: ${srcdir}/export.c
 		mv export.o export64.o ; \
 		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -DAFS_AIX51_ENV \
 			-c ${srcdir}/export.c ;; \
-	rs_aix6* ) \
+	rs_aix[67]* ) \
 		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -q64 \
 			-D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
 			-c ${srcdir}/export.c ; \
@@ -141,7 +139,7 @@ export.nonfs.o export64.nonfs.o: ${srcdir}/export.c
 		$(CC) $(CPPFLAGS) $(CFLAGS) ${INCS} -DAFS_NONFSTRANS \
 			-DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
 		mv export.o export.nonfs.o ;; \
-	rs_aix6* ) \
+	rs_aix[67]* ) \
 		$(CC) $(CPPFLAGS) $(CFLAGS) -q64 ${INCS} -D__XCOFF64__ \
 			-DAFS_64BIT_KERNEL -DAFS_NONFSTRANS -DAFS_AIX51_ENV \
 			-c ${srcdir}/export.c ; \
