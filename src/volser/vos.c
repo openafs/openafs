@@ -106,7 +106,6 @@ cmd_AddParmAtOffset(ts, COMMONPARM_OFFSET_CONFIG, \
 
 int rxInitDone = 0;
 extern struct ubik_client *cstruct;
-const char *confdir;
 
 static struct tqHead busyHead, notokHead;
 
@@ -5829,6 +5828,8 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     char *tcell;
     afs_int32 code;
     int secFlags;
+    const char *confdir = AFSDIR_CLIENT_ETC_DIRPATH;
+    const char *retry_confdir = AFSDIR_SERVER_ETC_DIRPATH;
 
     /* Initialize the ubik_client connection */
     rx_SetRxDeadTime(90);
@@ -5845,6 +5846,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     if (as->parms[COMMONPARM_OFFSET_LOCALAUTH].items) {	/* -localauth specified */
 	secFlags |= AFSCONF_SECOPTS_LOCALAUTH;
 	confdir = AFSDIR_SERVER_ETC_DIRPATH;
+	retry_confdir = NULL;
     }
 
     if (as->parms[COMMONPARM_OFFSET_ENCRYPT].items     /* -encrypt specified */
@@ -5854,11 +5856,19 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	 )
 	secFlags |= AFSCONF_SECOPTS_ALWAYSENCRYPT;
 
-    if (as->parms[COMMONPARM_OFFSET_CONFIG].items)   /* -config flag set */
+    if (as->parms[COMMONPARM_OFFSET_CONFIG].items) {  /* -config flag set */
 	confdir = as->parms[COMMONPARM_OFFSET_CONFIG].items->data;
+	retry_confdir = NULL;
+    }
 
-    if ((code = vsu_ClientInit(confdir, tcell, secFlags, UV_SetSecurity,
-			       &cstruct))) {
+    code = vsu_ClientInit(confdir, tcell, secFlags, UV_SetSecurity, &cstruct);
+    if (code != 0 && retry_confdir != NULL) {
+	fprintf(STDERR, "vos: Retrying initialization with directory %s\n",
+		retry_confdir);
+	code = vsu_ClientInit(retry_confdir, tcell, secFlags, UV_SetSecurity,
+			      &cstruct);
+    }
+    if (code != 0) {
 	fprintf(STDERR, "could not initialize VLDB library (code=%lu) \n",
 		(unsigned long)code);
 	exit(1);
@@ -5899,8 +5909,6 @@ main(int argc, char **argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-
-    confdir = AFSDIR_CLIENT_ETC_DIRPATH;
 
     cmd_SetBeforeProc(MyBeforeProc, NULL);
 

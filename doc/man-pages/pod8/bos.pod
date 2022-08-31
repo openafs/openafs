@@ -147,6 +147,10 @@ The value of the AFSCELL environment variable.
 
 The local F</usr/vice/etc/ThisCell> file.
 
+=item *
+
+The local F</usr/afs/etc/ThisCell> file.
+
 =back
 
 Do not combine the B<-cell> and B<-localauth> options. A command on which
