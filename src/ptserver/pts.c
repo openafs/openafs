@@ -46,7 +46,7 @@ struct sourcestack {
 
 struct authstate {
     int sec;
-    const char *confdir;
+    int initialized;
     char cell[MAXCELLCHARS];
 };
 
@@ -186,6 +186,7 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
     afs_int32 sec;
     int changed = 0;
     const char* confdir;
+    const char* retry_confdir;
     RXGK_Level rxgk_level = RXGK_LEVEL_BOGUS;
 
     whoami = as->a0name;
@@ -198,7 +199,7 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
     }
     sec = state->sec;
 
-    if (state->confdir == NULL) {
+    if (state->initialized == 0) {
 	changed = 1;
     }
 
@@ -229,16 +230,21 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
     if (as->parms[OPT_test].items || as->parms[OPT_localauth].items) {
 	changed = 1;
 	confdir = AFSDIR_SERVER_ETC_DIRPATH;
+	retry_confdir = NULL;
     } else {
-	if (sec == 2)
+	if (sec == 2) {
 	    confdir = AFSDIR_SERVER_ETC_DIRPATH;
-	else
+	    retry_confdir = NULL;
+	} else {
 	    confdir = AFSDIR_CLIENT_ETC_DIRPATH;
+	    retry_confdir = AFSDIR_SERVER_ETC_DIRPATH;
+	}
     }
 
     if (as->parms[OPT_config].items) { /* -config */
 	changed = 1;
 	confdir = as->parms[OPT_config].items->data;
+	retry_confdir = NULL;
     }
 
     if (as->parms[OPT_rxgk].items) {
@@ -261,6 +267,11 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
     if (changed) {
 	CleanUp(as, arock);
 	code = pr_Initialize2(sec, confdir, cell, rxgk_level);
+	if (code != 0 && retry_confdir != NULL) {
+	    fprintf(stderr, "pts: Retrying initialization with directory %s\n",
+		    retry_confdir);
+	    code = pr_Initialize2(sec, retry_confdir, cell, rxgk_level);
+	}
     } else {
 	code = 0;
     }
@@ -269,7 +280,7 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 	return code;
     }
     state->sec = sec;
-    state->confdir = confdir;
+    state->initialized = 1;
     if (cell && cell != state->cell)
         strncpy(state->cell, cell, MAXCELLCHARS-1);
 

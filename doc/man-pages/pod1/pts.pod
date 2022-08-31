@@ -111,18 +111,36 @@ The value of the AFSCELL environment variable.
 
 The local F</usr/vice/etc/ThisCell> file.
 
+=item *
+
+The local F</usr/afs/etc/ThisCell> file.
+
+=back
+
 Do not combine the B<-cell> and B<-localauth> options. A command on which
 the B<-localauth> flag is included always runs in the local cell (as
 defined in the server machine's local F</usr/afs/etc/ThisCell> file),
 whereas a command on which the B<-cell> argument is included runs in the
 specified foreign cell.
 
-=back
-
 =item B<-config> <I<config directory>>
 
 The location of the directory to use to obtain configuration information,
 including the CellServDB. This is primarily provided for testing purposes.
+If the B<-config> and B<-localauth> arguments are omitted, the command
+interpreter searches for the configuration information in the following order:
+
+=over 4
+
+=item *
+
+The F</usr/vice/etc> directory.
+
+=item *
+
+The F</usr/afs/etc> directory.
+
+=back
 
 =item B<-force>
 

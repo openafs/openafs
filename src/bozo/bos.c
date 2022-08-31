@@ -91,6 +91,7 @@ GetConn(struct cmd_syndesc *as, int aencrypt)
     char *hostname;
     char *cellname = NULL;
     const char *confdir;
+    const char *retry_confdir;
     afs_int32 code;
     struct rx_connection *tconn;
     afs_int32 addr;
@@ -116,16 +117,23 @@ GetConn(struct cmd_syndesc *as, int aencrypt)
     if (as->parms[ADDPARMOFFSET + 2].items) { /* -localauth */
 	secFlags |= AFSCONF_SECOPTS_LOCALAUTH;
 	confdir = AFSDIR_SERVER_ETC_DIRPATH;
+	retry_confdir = NULL;
     } else {
 	confdir = AFSDIR_CLIENT_ETC_DIRPATH;
+	retry_confdir = AFSDIR_SERVER_ETC_DIRPATH;
     }
 
     if (as->parms[ADDPARMOFFSET + 1].items) { /* -noauth */
+	/* If we're running with -noauth, we don't need a configuration
+	 * directory. */
 	secFlags |= AFSCONF_SECOPTS_NOAUTH;
     } else {
-	/* If we're running with -noauth, we don't need a configuration
-	 * directory */
 	tdir = afsconf_Open(confdir);
+	if (tdir == NULL && retry_confdir != NULL) {
+	    fprintf(stderr, "bos: Retrying initialization with directory %s\n",
+		    retry_confdir);
+	    tdir = afsconf_Open(retry_confdir);
+	}
 	if (tdir == NULL) {
 	    fprintf(stderr, "bos: can't open cell database (%s)\n", confdir);
 	    exit(1);
