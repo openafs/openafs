@@ -98,15 +98,6 @@ AC_SUBST([BUILD_KRB5])
 AC_SUBST([MAKE_KRB5])
 AC_SUBST([AKLOG_KRB5_LIBS])
 
-dnl Probe for GSSAPI
-RRA_LIB_GSSAPI
-dnl Check for the characteristics of whatever GSSAPI we found, if we found one
-BUILD_GSSAPI=no
-AS_IF([test x"$GSSAPI_LIBS" != x],
-    [BUILD_GSSAPI=yes
-])
-AC_SUBST([BUILD_GSSAPI])
-
 dnl Checks for summary
 OPENAFS_SUMMARY_CHECK_NAMEI
 

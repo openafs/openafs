@@ -419,9 +419,6 @@ I  Other configure options
        the kernel headers).  The SYSNAME should be one of the options
        listed in A2.
 
-   --with-gssapi=DIR
-   --with-gssapi-include=DIR
-   --with-gssapi-lib=DIR
    --with-krb5[=DIR]
    --with-krb5-include=DIR
    --with-krb5-lib=DIR
@@ -439,11 +436,6 @@ I  Other configure options
        and the libraries with --with-krb5-lib.  You may need to do this if
        Autoconf can't figure out whether to use lib, lib32, or lib64 on
        your platform.
-
-       --with-gssapi is similar, except for the GSS-API libraries instead
-       of the Kerberos libraries.  If you have to manually set the
-       location of the Kerberos libraries, you may need to do the same
-       thing for the GSS-API libraries.
 
    --with-libintl=DIR
    --with-libintl-include=DIR
