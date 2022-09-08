@@ -7179,8 +7179,12 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
 }
 
 
-/* Find all server connections that have not been active for a long time, and
- * toss them */
+/*
+ * Find and toss:
+ *  - server connections that have not been active for a long time
+ *  - client connections with refCount 0
+ *
+ */
 static void
 rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2,
 		    int unused3)
@@ -7204,6 +7208,8 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2,
 
 	  rereap:
 	    for (conn = *conn_ptr; conn; conn = next) {
+		int destroyConn = 0;
+
 		/* XXX -- Shouldn't the connection be locked? */
 		next = conn->next;
 		havecalls = 0;
@@ -7228,28 +7234,45 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2,
 		}
 		if (havecalls)
 		    continue;
+
 		if (conn->type == RX_SERVER_CONNECTION) {
-		    /* This only actually destroys the connection if
-		     * there are no outstanding calls */
+		    /*
+		     * Refcount 0 server conns are not currently in use, but
+		     * could be reused if a new call arrives from the peer.
+		     * Therefore we only destroy them here if they haven't been
+		     * used in rx_idleConnectionTime seconds.
+		     */
 		    MUTEX_ENTER(&conn->conn_data_lock);
                     MUTEX_ENTER(&rx_refcnt_mutex);
 		    if (!conn->refCount
 			&& ((conn->lastSendTime + rx_idleConnectionTime) <
 			    now.sec)) {
 			conn->refCount++;	/* it will be decr in rx_DestroyConn */
-                        MUTEX_EXIT(&rx_refcnt_mutex);
-			MUTEX_EXIT(&conn->conn_data_lock);
+			destroyConn = 1;
+		    }
+		    MUTEX_EXIT(&rx_refcnt_mutex);
+		    MUTEX_EXIT(&conn->conn_data_lock);
+		} else {
+		    /*
+		     * Refcount 0 client conns are no longer in use, and thus
+		     * may be safely destroyed on sight.  Normally a client
+		     * conn would be destroyed when the last reference is
+		     * dropped, but not all callers are diligent to do that, so
+		     * this is where we clean up any stragglers.
+		     */
+		    MUTEX_ENTER(&rx_refcnt_mutex);
+		    if (conn->refCount == 0) {
+			conn->refCount++;   /* will be decr in rx_DestroyConn */
+			destroyConn = 1;
+		    }
+		    MUTEX_EXIT(&rx_refcnt_mutex);
+		}
+
+		if (destroyConn) {
 #ifdef RX_ENABLE_LOCKS
-			rxi_DestroyConnectionNoLock(conn);
+		    rxi_DestroyConnectionNoLock(conn);
 #else /* RX_ENABLE_LOCKS */
-			rxi_DestroyConnection(conn);
-#endif /* RX_ENABLE_LOCKS */
-		    }
-#ifdef RX_ENABLE_LOCKS
-		    else {
-                        MUTEX_EXIT(&rx_refcnt_mutex);
-			MUTEX_EXIT(&conn->conn_data_lock);
-		    }
+		    rxi_DestroyConnection(conn);
 #endif /* RX_ENABLE_LOCKS */
 		}
 	    }
