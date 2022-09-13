@@ -1,6 +1,16 @@
 AC_DEFUN([OPENAFS_GSS],
+  [
 dnl Probe for GSSAPI
-  [RRA_LIB_GSSAPI
+dnl
+dnl Don't do this if we don't have krb5. Otherwise, if someone runs configure
+dnl with no arguments on a system without krb5 libs, RRA_LIB_GSSAPI will fail,
+dnl preventing the build from moving forwards.
+dnl
+dnl Also don't probe for GSSAPI if --without-gssapi was given, so we don't
+dnl accidentally autodetect gss libs and use them.
+  AS_IF([test x"$BUILD_KRB5" = xyes && test x"$with_gssapi" != xno],
+	[RRA_LIB_GSSAPI])
+
 dnl Check for the characteristics of whatever GSSAPI we found, if we found one
   BUILD_GSSAPI=no
   AS_IF([test x"$GSSAPI_LIBS" != x],
