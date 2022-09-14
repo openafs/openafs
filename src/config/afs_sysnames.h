@@ -99,6 +99,8 @@
 #define SYS_NAME_ID_arm_darwin_200       546
 #define SYS_NAME_ID_amd64_darwin_210     547
 #define SYS_NAME_ID_arm_darwin_210       548
+#define SYS_NAME_ID_amd64_darwin_220     549
+#define SYS_NAME_ID_arm_darwin_220       550
 
 #define SYS_NAME_ID_next_mach20		 601
 #define SYS_NAME_ID_next_mach30		 602

@@ -173,6 +173,10 @@ elif [ x"$majorvers" = x21 ]; then
     RELNAME="Monterey"
     THISREL=17
     OSVER=12
+elif [ x"$majorvers" = x22 ]; then
+    RELNAME="Ventura"
+    THISREL=18
+    OSVER=13
 
 
 elif [ x"$majorvers" = x ] ; then
