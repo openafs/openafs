@@ -114,7 +114,6 @@
 pthread_mutex_t vol_glock_mutex;
 pthread_mutex_t vol_trans_mutex;
 pthread_cond_t vol_put_volume_cond;
-pthread_cond_t vol_sleep_cond;
 pthread_cond_t vol_init_attach_cond;
 pthread_cond_t vol_vinit_cond;
 int vol_attach_threads = 1;
@@ -410,13 +409,6 @@ VThreadOptions_t VThread_defaults = {
 };
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-
-struct Lock vol_listLock;	/* Lock obtained when listing volumes:
-				 * prevents a volume from being missed
-				 * if the volume is attached during a
-				 * list volumes */
-
-
 /* Common message used when the volume goes off line */
 char *VSalvageMessage =
     "Files in this volume are currently unavailable; call operations";
@@ -562,13 +554,11 @@ VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
     opr_mutex_init(&vol_glock_mutex);
     opr_mutex_init(&vol_trans_mutex);
     opr_cv_init(&vol_put_volume_cond);
-    opr_cv_init(&vol_sleep_cond);
     opr_cv_init(&vol_init_attach_cond);
     opr_cv_init(&vol_vinit_cond);
 #ifndef AFS_PTHREAD_ENV
     IOMGR_Initialize();
 #endif /* AFS_PTHREAD_ENV */
-    Lock_Init(&vol_listLock);
 
     srandom(time(0));		/* For VGetVolumeInfo */
 
