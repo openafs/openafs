@@ -7,6 +7,9 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#ifndef OPENAFS_AFS_UKERNEL_AFSINCLUDES_H
+#define OPENAFS_AFS_UKERNEL_AFSINCLUDES_H 1
+
 /* AFS based headers */
 #include "afs/stds.h"
 #include "rx/rx.h"
@@ -28,3 +31,5 @@
 #include "afs/afs_prototypes.h"
 #include "afs/discon.h"
 #include "roken.h"
+
+#endif /* OPENAFS_AFS_UKERNEL_AFSINCLUDES_H */

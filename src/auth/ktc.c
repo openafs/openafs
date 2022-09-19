@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#include <roken.h>
-
 #include <afs/stds.h>
 #include <afs/opr.h>
 #include <afs/pthread_glock.h>
@@ -26,6 +24,8 @@
 #if defined(UKERNEL)
 # include "afsincludes.h"
 # include <afs_usrops.h>
+#else
+# include <roken.h>
 #endif
 
 #ifdef	AFS_AIX_ENV
