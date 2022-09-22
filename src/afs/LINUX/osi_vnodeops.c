@@ -148,6 +148,23 @@ afs_lru_cache_finalize(struct afs_lru_pages *alrupages)
 }
 #endif /* !HAVE_LINUX_LRU_ADD_FILE */
 
+static inline int
+afs_add_to_page_cache_lru(struct afs_lru_pages *alrupages, struct page *page,
+			  struct address_space *mapping,
+			  pgoff_t index, gfp_t gfp)
+{
+#if defined(HAVE_LINUX_ADD_TO_PAGE_CACHE_LRU)
+    return add_to_page_cache_lru(page, mapping, index, gfp);
+#else
+    int code;
+    code = add_to_page_cache(page, mapping, index, gfp);
+    if (code == 0) {
+	afs_lru_cache_add(alrupages, page);
+    }
+    return code;
+#endif
+}
+
 /* This function converts a positive error code from AFS into a negative
  * code suitable for passing into the Linux VFS layer. It checks that the
  * error code is within the permissable bounds for the ERR_PTR mechanism.
@@ -2265,12 +2282,11 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 		goto out;
 	    }
 
-	    code = add_to_page_cache(newpage, cachemapping,
-				     pageindex, GFP_KERNEL);
+	    code = afs_add_to_page_cache_lru(alrupages, newpage, cachemapping,
+					     pageindex, GFP_KERNEL);
 	    if (code == 0) {
 	        cachepage = newpage;
 	        newpage = NULL;
-		afs_lru_cache_add(alrupages, cachepage);
 	    } else {
 		put_page(newpage);
 		newpage = NULL;
@@ -3088,11 +3104,9 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 	    goto out;
 	}
 
-	if (tdc && !add_to_page_cache(page, mapping, page->index,
-				      GFP_KERNEL)) {
-	    afs_lru_cache_add(&lrupages, page);
-
-	    /* Note that add_to_page_cache() locked 'page'.
+	if (tdc && !afs_add_to_page_cache_lru(&lrupages, page, mapping, page->index,
+					      GFP_KERNEL)) {
+	    /* Note that afs_add_to_page_cache_lru() locks the 'page'.
 	     * afs_linux_read_cache() is guaranteed to handle unlocking it. */
 	    afs_linux_read_cache(cacheFp, page, tdc->f.chunk, &lrupages, task);
 	}
