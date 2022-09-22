@@ -189,6 +189,16 @@ AC_CHECK_LINUX_FUNC([kthread_complete_and_exit],
                      #include <linux/kthread.h>],
                     [kthread_complete_and_exit(0, 0);])
 
+dnl Linux 6.0 removed add_to_page_cache.  It's replacement, filemap_add_folio,
+dnl was added in 5.15 and is GPL-only, but has a NON-GPL wrapper called
+dnl add_to_page_cache_lru.
+dnl Note prior to 5.15, add_to_page_cache_lru was either not exported or
+dnl or exported as GPL-only.
+AC_CHECK_LINUX_FUNC([add_to_page_cache_lru],
+                    [#include <linux/kernel.h>
+                     #include <linux/pagemap.h>],
+                    [add_to_page_cache_lru(NULL, NULL, 0, 0);])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
