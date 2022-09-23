@@ -27,8 +27,6 @@
 #endif
 
 
-#define	TIMEOUT	    20
-
 static short
 PortNumber(char *aport)
 {
