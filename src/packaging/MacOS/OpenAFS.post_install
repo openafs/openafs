@@ -162,14 +162,26 @@ if [ $majorvers -ge 19 ]; then
     # If so, inform what needs to be done to load the client. This procedure is
     # unnecessary if OpenAFS is being reinstalled.
     if [ ! -d /afs ]; then
-	osascript -e 'display alert "OpenAFS successfully installed" message ¬
-	"If OpenAFS is being installed for the first time on this machine, " & ¬
-	"follow the steps below:\n\n" & ¬
-	"1. Navigate to System Preferences > Security & Privacy;\n\n" & ¬
-	"2. Under the General tab towards the bottom of the window, allow " & ¬
-	"the OpenAFS kernel extension to load by clicking on Allow;\n\n" & ¬
-	"3. Reboot the machine;\n\n" & ¬
-	"Note: An entry for /afs was added in /etc/synthetic.conf. This " & ¬
-	"change takes effect only after rebooting the system."'
+	if [ $majorvers -ge 22 ]; then
+		osascript -e 'display alert "OpenAFS successfully installed" message ¬
+		"If OpenAFS is being installed for the first time on this machine, " & ¬
+		"follow the steps below:\n\n" & ¬
+		"1. Navigate to System Settings > Privacy & Security;\n\n" & ¬
+		"2. Under the Security section towards the bottom of the window, allow " & ¬
+		"the OpenAFS kernel extension to load by clicking on Allow;\n\n" & ¬
+		"3. Reboot the machine;\n\n" & ¬
+		"Note: An entry for /afs was added in /etc/synthetic.conf. This " & ¬
+		"change takes effect only after rebooting the system."'
+	else
+		osascript -e 'display alert "OpenAFS successfully installed" message ¬
+		"If OpenAFS is being installed for the first time on this machine, " & ¬
+		"follow the steps below:\n\n" & ¬
+		"1. Navigate to System Preferences > Security & Privacy;\n\n" & ¬
+		"2. Under the General tab towards the bottom of the window, allow " & ¬
+		"the OpenAFS kernel extension to load by clicking on Allow;\n\n" & ¬
+		"3. Reboot the machine;\n\n" & ¬
+		"Note: An entry for /afs was added in /etc/synthetic.conf. This " & ¬
+		"change takes effect only after rebooting the system."'
+	fi
     fi
 fi
