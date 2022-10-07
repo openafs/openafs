@@ -40,6 +40,10 @@ case $system in
                 MKAFS_OSTYPE=DARWIN
                 AC_MSG_RESULT(arm_darwin)
                 ;;
+        aarch64-*-darwin*)
+                MKAFS_OSTYPE=DARWIN
+                AC_MSG_RESULT(arm_darwin)
+                ;;
         powerpc-*-darwin*)
                 MKAFS_OSTYPE=DARWIN
                 AC_MSG_RESULT(ppc_darwin)

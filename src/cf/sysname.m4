@@ -198,6 +198,10 @@ else
 			AFS_SYSNAME="arm_darwin_200"
 			OSXSDK="macosx11.0"
 			;;
+		aarch64-apple-darwin20.*)
+			AFS_SYSNAME="arm_darwin_200"
+			OSXSDK="macosx11.0"
+			;;
 		x86_64-apple-darwin21.*)
 			AFS_SYSNAME="x86_darwin_210"
 			OSXSDK="macosx12.0"
@@ -206,11 +210,19 @@ else
 			AFS_SYSNAME="arm_darwin_210"
 			OSXSDK="macosx12.0"
 			;;
+		aarch64-apple-darwin21.*)
+			AFS_SYSNAME="arm_darwin_210"
+			OSXSDK="macosx12.0"
+			;;
 		x86_64-apple-darwin22.*)
 			AFS_SYSNAME="x86_darwin_220"
 			OSXSDK="macosx13.0"
 			;;
 		arm-apple-darwin22.*)
+			AFS_SYSNAME="arm_darwin_220"
+			OSXSDK="macosx13.0"
+			;;
+		aarch64-apple-darwin22.*)
 			AFS_SYSNAME="arm_darwin_220"
 			OSXSDK="macosx13.0"
 			;;
