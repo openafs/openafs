@@ -192,7 +192,6 @@ rxkad_Init(void)
 /* static prototypes */
 static afs_int32 ComputeSum(struct rx_packet *apacket,
 			    fc_KeySchedule * aschedule, afs_int32 * aivec);
-static afs_int32 FreeObject(struct rx_securityClass *aobj);
 
 /* this call sets up an endpoint structure, leaving it in *network* byte
  * order so that it can be used quickly for encryption.
@@ -398,10 +397,7 @@ rxkad_DestroyConnection(struct rx_securityClass *aobj,
 	}
 	INC_RXKAD_STATS(destroyClient);
     }
-    aobj->refCount--;		/* decrement connection counter */
-    if (aobj->refCount <= 0) {
-	(void)FreeObject(aobj);
-    }
+    (void)rxkad_Close(aobj);	/* decrement connection counter */
     return 0;
 }
 
