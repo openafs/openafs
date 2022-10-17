@@ -7226,12 +7226,14 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2,
 			}
 		    }
 		}
+		if (havecalls)
+		    continue;
 		if (conn->type == RX_SERVER_CONNECTION) {
 		    /* This only actually destroys the connection if
 		     * there are no outstanding calls */
 		    MUTEX_ENTER(&conn->conn_data_lock);
                     MUTEX_ENTER(&rx_refcnt_mutex);
-		    if (!havecalls && !conn->refCount
+		    if (!conn->refCount
 			&& ((conn->lastSendTime + rx_idleConnectionTime) <
 			    now.sec)) {
 			conn->refCount++;	/* it will be decr in rx_DestroyConn */
