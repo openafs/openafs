@@ -57,6 +57,7 @@ extern afs_int32 afs_termState;
 #  include "sys/lock_def.h"
 # endif /* AFS_AIX41_ENV */
 # include "afs/rxgen_consts.h"
+# include <afs/opr.h>
 #else /* KERNEL */
 # include <roken.h>
 
@@ -7392,19 +7393,68 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2,
 }
 
 
-/* rxs_Release - This isn't strictly necessary but, since the macro name from
- * rx.h is sort of strange this is better.  This is called with a security
- * object before it is discarded.  Each connection using a security object has
- * its own refcount to the object so it won't actually be freed until the last
- * connection is destroyed.
- *
- * This is the only rxs module call.  A hold could also be written but no one
- * needs it. */
-
+/*
+ * rxs_Release - This is called with a security object before it is discarded.
+ * Each connection using a security object has its own refcount to the object
+ * so it won't actually be freed until the last connection is destroyed.
+ */
 int
 rxs_Release(struct rx_securityClass *aobj)
 {
     return RXS_Close(aobj);
+}
+
+static_inline rx_atomic_t *
+sc2refCount(struct rx_securityClass *aobj)
+{
+    opr_StaticAssert(sizeof(rx_atomic_t) <= sizeof(aobj->refCount_data));
+    return (rx_atomic_t *)&aobj->refCount_data;
+}
+
+/**
+ * Get a reference to a security object.
+ *
+ * @param[in] aobj  The security object.
+ * @returns The given security object.
+ */
+struct rx_securityClass *
+rxs_Ref(struct rx_securityClass *aobj)
+{
+    rx_atomic_t *refCount = sc2refCount(aobj);
+    rx_atomic_inc(refCount);
+    return aobj;
+}
+
+/**
+ * Puts a reference to a security object.
+ *
+ * This should only be used by securityClass implementations; users of a
+ * security class should use rxs_Release to release a reference to a security
+ * object.
+ *
+ * @param[in] aobj  The security object.
+ * @returns The refcount of the security object (post-decrement).
+ */
+int
+rxs_DecRef(struct rx_securityClass *aobj)
+{
+    rx_atomic_t *refCount = sc2refCount(aobj);
+    return rx_atomic_dec_and_read(refCount);
+}
+
+/**
+ * Set the reference count on a security object.
+ *
+ * This should only be used by securityClass implementations.
+ *
+ * @param[in] aobj  The security object.
+ * @param[in] refs  The refCount to set.
+ */
+void
+rxs_SetRefs(struct rx_securityClass *aobj, int refs)
+{
+    rx_atomic_t *refCount = sc2refCount(aobj);
+    rx_atomic_set(refCount, refs);
 }
 
 void

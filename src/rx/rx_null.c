@@ -25,7 +25,7 @@
 /* The null security object.  No authentication, no nothing. */
 
 static struct rx_securityOps null_ops;
-static struct rx_securityClass null_object = { &null_ops, 0, 0 };
+static struct rx_securityClass null_object = { &null_ops, 0, {0} };
 
 struct rx_securityClass *
 rxnull_NewServerSecurityObject(void)

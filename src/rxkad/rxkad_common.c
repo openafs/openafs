@@ -313,8 +313,6 @@ FreeObject(struct rx_securityClass *aobj)
 {
     struct rxkad_cprivate *tcp;	/* both structs start w/ type field */
 
-    if (aobj->refCount > 0)
-	return 0;		/* still in use */
     tcp = (struct rxkad_cprivate *)aobj->privateData;
     rxi_Free(aobj, sizeof(struct rx_securityClass));
     if (tcp->type & rxkad_client) {
@@ -335,10 +333,9 @@ FreeObject(struct rx_securityClass *aobj)
 int
 rxkad_Close(struct rx_securityClass *aobj)
 {
-    afs_int32 code;
-    aobj->refCount--;
-    code = FreeObject(aobj);
-    return code;
+    if (rxs_DecRef(aobj) > 0)
+	return 0;		/* still in use */
+    return FreeObject(aobj);
 }
 
 /* either: called to (re)create a new connection. */
@@ -371,7 +368,7 @@ rxkad_NewConnection(struct rx_securityClass *aobj,
 	INC_RXKAD_STATS(connections[rxkad_LevelIndex(tcp->level)]);
     }
 
-    aobj->refCount++;		/* attached connection */
+    rxs_Ref(aobj);		/* attached connection */
     return 0;
 }
 

@@ -60,15 +60,6 @@ cprivate_destroy(struct rxgk_cprivate *cp)
 }
 
 /*
- * Increment the reference count on the security object secobj.
- */
-static_inline void
-obj_ref(struct rx_securityClass *secobj)
-{
-    secobj->refCount++;
-}
-
-/*
  * Decrement the reference count on the security object secobj.
  * If the reference count falls to zero, release the underlying storage.
  */
@@ -77,8 +68,7 @@ obj_rele(struct rx_securityClass *secobj)
 {
     struct rxgk_cprivate *cp;
 
-    secobj->refCount--;
-    if (secobj->refCount > 0) {
+    if (rxs_DecRef(secobj) > 0) {
 	/* still in use */
 	return;
     }
@@ -116,7 +106,7 @@ rxgk_NewClientConnection(struct rx_securityClass *aobj,
     if (rxgk_security_overhead(aconn, cp->level, cp->k0) != 0)
 	goto error;
     rx_SetSecurityData(aconn, cc);
-    obj_ref(aobj);
+    rxs_Ref(aobj);
     return 0;
 
  error:
@@ -502,7 +492,7 @@ rxgk_NewClientSecurityObject(RXGK_Level level, afs_int32 enctype, rxgk_key k0,
     if (cp == NULL)
 	goto error;
     sc->ops = &rxgk_client_ops;
-    sc->refCount = 1;
+    rxs_SetRefs(sc, 1);
     sc->privateData = cp;
 
     /* Now get the client-private data. */

@@ -48,15 +48,6 @@
 #include "rxgk_private.h"
 
 /*
- * Increment the reference count on the security object secobj.
- */
-static_inline void
-obj_ref(struct rx_securityClass *secobj)
-{
-    secobj->refCount++;
-}
-
-/*
  * Decrement the reference count on the security object secobj.
  * If the reference count falls to zero, release the underlying storage.
  */
@@ -65,8 +56,7 @@ obj_rele(struct rx_securityClass *secobj)
 {
     struct rxgk_sprivate *sp;
 
-    secobj->refCount--;
-    if (secobj->refCount > 0) {
+    if (rxs_DecRef(secobj) > 0) {
 	/* still in use */
 	return;
     }
@@ -124,7 +114,7 @@ rxgk_NewServerConnection(struct rx_securityClass *aobj,
 
     sconn_set_noauth(sc);
     rx_SetSecurityData(aconn, sc);
-    obj_ref(aobj);
+    rxs_Ref(aobj);
     return 0;
 
  error:
@@ -753,7 +743,7 @@ rxgk_NewServerSecurityObject(void *getkey_rock, rxgk_getkey_func getkey)
 	return NULL;
     }
     sc->ops = &rxgk_server_ops;
-    sc->refCount = 1;
+    rxs_SetRefs(sc, 1);
     sc->privateData = sp;
 
     /* Now set the server-private data. */

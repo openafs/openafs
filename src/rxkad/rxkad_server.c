@@ -147,7 +147,7 @@ rxkad_NewServerSecurityObject(rxkad_level level, void *get_key_rock,
     size = sizeof(struct rx_securityClass);
     tsc = rxi_Alloc(size);
     memset(tsc, 0, size);
-    tsc->refCount = 1;		/* caller has one reference */
+    rxs_SetRefs(tsc, 1);		/* caller has one reference */
     tsc->ops = &rxkad_server_ops;
     size = sizeof(struct rxkad_sprivate);
     tsp = rxi_Alloc(size);
