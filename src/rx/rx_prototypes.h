@@ -85,6 +85,9 @@ extern void rxi_CallError(struct rx_call *call, afs_int32 error);
 extern void rx_SetConnSecondsUntilNatPing(struct rx_connection *conn,
 					  afs_int32 seconds);
 extern int rxs_Release(struct rx_securityClass *aobj);
+extern struct rx_securityClass *rxs_Ref(struct rx_securityClass *aobj);
+extern int rxs_DecRef(struct rx_securityClass *aobj);
+extern void rxs_SetRefs(struct rx_securityClass *aobj, int refs);
 #ifndef KERNEL
 extern void rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 			       afs_int32 freePackets, char version);

@@ -86,7 +86,7 @@ rxkad_NewClientSecurityObject(rxkad_level level,
     size = sizeof(struct rx_securityClass);
     tsc = rxi_Alloc(size);
     memset((void *)tsc, 0, size);
-    tsc->refCount = 1;		/* caller gets one for free */
+    rxs_SetRefs(tsc, 1);		/* caller gets one for free */
     tsc->ops = &rxkad_client_ops;
 
     psize = PDATA_SIZE(ticketLen);

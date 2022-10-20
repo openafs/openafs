@@ -603,7 +603,13 @@ struct rx_securityClass {
 	int (*op_Spare3) (void);
     } *ops;
     void *privateData;
-    int refCount;
+
+    /*
+     * Don't use this field directly. To manipulate the refcount, callers
+     * should use rxs_Ref()/rxs_Release(), and (for security class
+     * implementations only) rxs_DecRef()/rxs_SetRefs().
+     */
+    char refCount_data[8];
 };
 
 #define RXS_OP(obj,op,args) ((obj && (obj->ops->op_ ## op)) ? \
