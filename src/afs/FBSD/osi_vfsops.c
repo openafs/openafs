@@ -19,6 +19,13 @@ int afs_pbuf_freecnt = -1;
 
 extern int Afs_xsetgroups();
 
+/* r364271 dropped the 'td' arg from vget() */
+#if __FreeBSD_version >= 1300108
+# define AFS_VGET(vp, flags) vget(vp, flags)
+#else
+# define AFS_VGET(vp, flags) vget(vp, flags, curthread)
+#endif
+
 static struct syscall_helper_data afs_syscalls[] = {
     {
 	.syscall_no = AFS_SYSCALL,
@@ -197,7 +204,6 @@ afs_root(struct mount *mp, int flags, struct vnode **vpp)
     struct vrequest treq;
     struct vcache *tvp = 0;
     struct vcache *gvp;
-    struct thread *td = curthread;
     struct ucred *cr = osi_curcred();
 
     AFS_GLOCK();
@@ -231,7 +237,7 @@ tryagain:
 
 	ASSERT_VI_UNLOCKED(vp, "afs_root");
 	AFS_GUNLOCK();
-	error = vget(vp, LK_EXCLUSIVE | LK_RETRY, td);
+	error = AFS_VGET(vp, LK_EXCLUSIVE | LK_RETRY);
 	AFS_GLOCK();
 	if (error != 0) {
 	    goto tryagain;
