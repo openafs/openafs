@@ -1096,7 +1096,7 @@ afs_vop_symlink(struct vop_symlink_args *ap)
     newvp = NULL;
 
     error =
-	afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target, NULL,
+	afs_symlink(VTOAFS(dvp), name, ap->a_vap, (char*)ap->a_target, NULL,
 		    cnp->cn_cred);
     if (error == 0) {
 	error = afs_lookup(VTOAFS(dvp), name, &vcp, cnp->cn_cred);
