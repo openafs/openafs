@@ -138,6 +138,15 @@ enum vcexcl { NONEXCL, EXCL };
 # define FBSD_UMA_GETPBUF
 #endif
 
+/* r353868 removed if_addr_rlock et al, use the net epoch instead */
+#if __FreeBSD_version >= 1300054
+# define AFS_IF_ADDR_RLOCK(ifn) RX_NET_EPOCH_ENTER()
+# define AFS_IF_ADDR_RUNLOCK(ifn) RX_NET_EPOCH_EXIT()
+#else
+# define AFS_IF_ADDR_RLOCK(ifn) if_addr_rlock(ifn)
+# define AFS_IF_ADDR_RUNLOCK(ifn) if_addr_runlock(ifn)
+#endif
+
 /* r355537 removed VI_DOOMED, use VN_IS_DOOMED instead */
 #if __FreeBSD_version >= 1300064
 # define AFS_IS_DOOMED(vp) VN_IS_DOOMED(vp)
