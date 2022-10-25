@@ -128,6 +128,13 @@ enum vcexcl { NONEXCL, EXCL };
 # define AFS_FBSD_NET_FOREACH TAILQ_FOREACH
 #endif
 
+/* r355537 removed VI_DOOMED, use VN_IS_DOOMED instead */
+#if __FreeBSD_version >= 1300064
+# define AFS_IS_DOOMED(vp) VN_IS_DOOMED(vp)
+#else
+# define AFS_IS_DOOMED(vp) (((vp)->v_iflag & VI_DOOMED) != 0)
+#endif
+
 #else /* !defined(UKERNEL) */
 
 /* This section for user space compiles only */

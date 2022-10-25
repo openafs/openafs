@@ -364,14 +364,14 @@ afs_vop_close(ap)
 				 * struct thread *a_td;
 				 * } */ *ap;
 {
-    int code, iflag;
+    int code, doomed;
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
 
     VI_LOCK(vp);
-    iflag = vp->v_iflag & VI_DOOMED;
+    doomed = AFS_IS_DOOMED(vp);
     VI_UNLOCK(vp);
-    if (iflag & VI_DOOMED) {
+    if (doomed) {
         /* osi_FlushVCache (correctly) calls vgone() on recycled vnodes, we don't
          * have an afs_close to process, in that case */
         if (avc->opens != 0)
@@ -1197,9 +1197,9 @@ afs_vop_reclaim(struct vop_reclaim_args *ap)
 
     /*
      * Note that we deliberately call VOP_LOCK() instead of vn_lock() here.
-     * vn_lock() will return an error for VI_DOOMED vnodes, but we know this
-     * vnode is already VI_DOOMED. We just want to lock it again, and skip the
-     * VI_DOOMED check.
+     * vn_lock() will return an error for VN_IS_DOOMED() vnodes, but we know
+     * this vnode is already VN_IS_DOOMED(). We just want to lock it again, and
+     * skip the VN_IS_DOOMED() check.
      */
     AFS_GUNLOCK();
     VOP_LOCK(vp, LK_EXCLUSIVE);

@@ -162,7 +162,7 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
     vp = AFSTOV(avc);
 
     VI_LOCK(vp);
-    if (vp->v_iflag & VI_DOOMED) {
+    if (AFS_IS_DOOMED(vp)) {
 	VI_UNLOCK(vp);
 	return;
     }

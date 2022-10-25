@@ -627,7 +627,7 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, afs_ucred_t *acred)
             afs_int32 opens, is_free, is_gone, is_doomed, iflag;
             struct vnode *vp = AFSTOV(avc);
             VI_LOCK(vp);
-            is_doomed =  vp->v_iflag & VI_DOOMED;
+	    is_doomed = AFS_IS_DOOMED(vp);
             is_free = vp->v_iflag & VI_FREE;
             is_gone = vp->v_iflag & VI_DOINGINACT;
             iflag = vp->v_iflag;
