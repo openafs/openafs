@@ -61,6 +61,13 @@
 #define AFS_VM_OBJECT_WUNLOCK(o)	VM_OBJECT_UNLOCK(o)
 #endif
 
+/* r354158 removed OBJ_MIGHTBEDIRTY, use vm_object_mightbedirty instead */
+#if __FreeBSD_version >= 1300054
+# define AFS_VM_OBJECT_MIGHTBEDIRTY(o) vm_object_mightbedirty(o)
+#else
+# define AFS_VM_OBJECT_MIGHTBEDIRTY(o) (((o)->flags & OBJ_MIGHTBEDIRTY) != 0)
+#endif
+
 /* Try to discard pages, in order to recycle a vcache entry.
  *
  * We also make some sanity checks:  ref count, open count, held locks.
@@ -123,7 +130,7 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 
     obj = vp->v_object;
 
-    if (obj != NULL && (obj->flags & OBJ_MIGHTBEDIRTY) != 0) {
+    if (obj != NULL && AFS_VM_OBJECT_MIGHTBEDIRTY(obj)) {
 	ReleaseWriteLock(&avc->lock);
 	AFS_GUNLOCK();
 
