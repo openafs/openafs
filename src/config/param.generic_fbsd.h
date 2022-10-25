@@ -128,6 +128,11 @@ enum vcexcl { NONEXCL, EXCL };
 # define AFS_FBSD_NET_FOREACH TAILQ_FOREACH
 #endif
 
+/* r342872 changed NET_EPOCH_ENTER() et al to use explicit epoch trackers. */
+#if __FreeBSD_version >= 1300008
+# define FBSD_NET_ET_EXPLICIT
+#endif
+
 /* r343030 removed getpbuf() et al, use UMA alloc instead */
 #if __FreeBSD_version >= 1300008
 # define FBSD_UMA_GETPBUF

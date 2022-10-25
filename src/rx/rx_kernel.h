@@ -65,7 +65,10 @@ extern void osi_Panic(char *fmt, ...)
 #define	osi_YieldIfPossible()
 #define	osi_WakeupAndYieldIfPossible(x)	    rx_Wakeup(x)
 
-#ifdef AFS_FBSD120_ENV
+#ifdef FBSD_NET_ET_EXPLICIT
+# define RX_NET_EPOCH_ENTER() struct epoch_tracker _rx_epoch_et; NET_EPOCH_ENTER(_rx_epoch_et)
+# define RX_NET_EPOCH_EXIT() NET_EPOCH_EXIT(_rx_epoch_et)
+#elif defined(AFS_FBSD120_ENV)
 # define RX_NET_EPOCH_ENTER() NET_EPOCH_ENTER()
 # define RX_NET_EPOCH_EXIT() NET_EPOCH_EXIT()
 #else
