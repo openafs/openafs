@@ -530,6 +530,14 @@ case $AFS_SYSNAME in
 
 esac
 
+AS_CASE([$AFS_SYSNAME],
+	[*_fbsd_*],
+	dnl FreeBSD 13+ no longer provides a standalone /usr/bin/as in
+	dnl the base system, but we can use the compiler (clang) as an
+	dnl assembler.
+	[AS_IF([test x"$AS" = xfalse],
+	       [AS="$CC"])])
+
 MT_CFLAGS="${MT_CFLAGS} -DAFS_PTHREAD_ENV"
 
 AFS_LT_INIT
