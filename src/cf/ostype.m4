@@ -58,7 +58,7 @@ case $system in
                 MKAFS_OSTYPE=FBSD
                 AC_MSG_RESULT(i386_fbsd)
                 ;;
-        x86_64-*-freebsd*)
+	x86_64-*-freebsd* | amd64-*-freebsd*)
                 MKAFS_OSTYPE=FBSD
                 AC_MSG_RESULT(amd64_fbsd)
                 ;;

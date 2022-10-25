@@ -28,7 +28,7 @@ else
                         vm=${v#*.}
                         AFS_SYSNAME="i386_fbsd_${vM}${vm}"
                         ;;
-                x86_64-*-freebsd*.*)
+		x86_64-*-freebsd*.* | amd64-*-freebsd*.*)
                         v=${host#*freebsd}
                         vM=${v%.*}
                         vm=${v#*.}
