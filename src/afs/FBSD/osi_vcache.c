@@ -59,7 +59,7 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
 	    evicted = 1;
 	}
 
-	VOP_UNLOCK(vp, 0);
+	AFS_VOP_UNLOCK(vp);
     }
 
     vdrop(vp);
@@ -103,7 +103,7 @@ osi_AttachVnode(struct vcache *avc, int seq)
     if (!vp->v_mount) {
         vn_lock(vp, LK_EXCLUSIVE | LK_RETRY); /* !glocked */
         insmntque(vp, afs_globalVFS);
-        VOP_UNLOCK(vp, 0);
+	AFS_VOP_UNLOCK(vp);
     }
     AFS_GLOCK();
     ObtainWriteLock(&afs_xvcache,339);

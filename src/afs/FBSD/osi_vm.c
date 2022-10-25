@@ -50,7 +50,6 @@
 
 #define	lock_vnode(v, f)	vn_lock((v), (f))
 #define ilock_vnode(v)	vn_lock((v), LK_INTERLOCK|LK_EXCLUSIVE|LK_RETRY)
-#define unlock_vnode(v)	VOP_UNLOCK((v), 0)
 #define islocked_vnode(v)	VOP_ISLOCKED((v))
 
 #if __FreeBSD_version >= 1000030
@@ -209,7 +208,7 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
     if (islocked == LK_SHARED)
 	lock_vnode(vp, LK_DOWNGRADE);
     else if (!islocked)
-	unlock_vnode(vp);
+	AFS_VOP_UNLOCK(vp);
 
     AFS_GLOCK();
 }

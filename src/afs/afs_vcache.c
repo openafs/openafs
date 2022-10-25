@@ -1856,7 +1856,7 @@ afs_GetVCache(struct VenusFid *afid, struct vrequest *areq)
 	}
 	vinvalbuf(vp, V_SAVE, PINOD, 0); /* changed late in 8.0-CURRENT */
 	if (!iheldthelock)
-	    VOP_UNLOCK(vp, 0);
+	    AFS_VOP_UNLOCK(vp);
 	AFS_GLOCK();
 #  elif defined(AFS_OBSD_ENV)
 	iheldthelock = VOP_ISLOCKED(vp, curproc);

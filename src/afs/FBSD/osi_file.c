@@ -42,7 +42,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 	osi_FreeSmallSpace(afile);
 	osi_Panic("UFSOpen: igetinode failed");
     }
-    VOP_UNLOCK(vp, 0);
+    AFS_VOP_UNLOCK(vp);
     afile->vnode = vp;
     afile->size = VTOI(vp)->i_size;
     afile->offset = 0;
@@ -59,7 +59,7 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
     AFS_GUNLOCK();
     vn_lock(afile->vnode, LK_EXCLUSIVE | LK_RETRY);
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp);
-    VOP_UNLOCK(afile->vnode, 0);
+    AFS_VOP_UNLOCK(afile->vnode);
     AFS_GLOCK();
     if (code == 0) {
 	astat->size = tvattr.va_size;
@@ -108,7 +108,7 @@ osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     code = VOP_SETATTR(vp, &tvattr, afs_osi_credp);
 
 out:
-    VOP_UNLOCK(vp, 0);
+    AFS_VOP_UNLOCK(vp);
     if (glocked)
       AFS_GLOCK();
     return code;

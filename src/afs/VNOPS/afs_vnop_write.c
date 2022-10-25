@@ -164,7 +164,7 @@ afs_UFSWriteUIO(struct vcache *avc, afs_dcache_id_t *inode, struct uio *tuiop)
     AFS_GUNLOCK();
     VOP_LOCK(tfile->vnode, LK_EXCLUSIVE);
     code = VOP_WRITE(tfile->vnode, tuiop, 0, afs_osi_credp);
-    VOP_UNLOCK(tfile->vnode, 0);
+    AFS_VOP_UNLOCK(tfile->vnode);
     AFS_GLOCK();
 #elif defined(AFS_NBSD_ENV)
     AFS_GUNLOCK();

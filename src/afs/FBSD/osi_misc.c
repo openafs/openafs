@@ -47,8 +47,6 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	return error;
     }
     *vpp = n.ni_vp;
-    /* XXX should we do this?  Usually NOT (matt) */
-    /*VOP_UNLOCK(n.ni_vp, 0);*/
     NDFREE(&n, NDF_ONLY_PNBUF);
     if (glocked)
 	AFS_GLOCK();

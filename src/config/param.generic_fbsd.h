@@ -135,6 +135,13 @@ enum vcexcl { NONEXCL, EXCL };
 # define AFS_IS_DOOMED(vp) (((vp)->v_iflag & VI_DOOMED) != 0)
 #endif
 
+/* r356337 dropped the 'flags' arg from VOP_UNLOCK */
+#if __FreeBSD_version >= 1300074
+# define AFS_VOP_UNLOCK(vp) VOP_UNLOCK(vp)
+#else
+# define AFS_VOP_UNLOCK(vp) VOP_UNLOCK(vp, 0)
+#endif
+
 #else /* !defined(UKERNEL) */
 
 /* This section for user space compiles only */
