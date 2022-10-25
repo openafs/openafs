@@ -143,4 +143,10 @@ osi_GetTime(osi_timeval32_t *atv)
     atv->tv_usec = now.tv_usec;
 }
 
+#ifdef FBSD_UMA_GETPBUF
+extern uma_zone_t afs_pbuf_zone;
+#else
+extern int afs_pbuf_freecnt;
+#endif
+
 #endif /* _OSI_MACHDEP_H_ */

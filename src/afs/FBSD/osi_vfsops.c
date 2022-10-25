@@ -15,7 +15,12 @@
 
 struct vcache *afs_globalVp = NULL;
 struct mount *afs_globalVFS = NULL;
+
+#ifdef FBSD_UMA_GETPBUF
+uma_zone_t afs_pbuf_zone;
+#else
 int afs_pbuf_freecnt = -1;
+#endif
 
 extern int Afs_xsetgroups();
 
@@ -52,7 +57,11 @@ afs_init(struct vfsconf *vfc)
 	return code;
     }
     osi_Init();
+#ifdef FBSD_UMA_GETPBUF
+    afs_pbuf_zone = pbuf_zsecond_create("afspbuf", nswbuf / 2);
+#else
     afs_pbuf_freecnt = nswbuf / 2 + 1;
+#endif
     return 0;
 }
 
@@ -61,6 +70,10 @@ afs_uninit(struct vfsconf *vfc)
 {
     if (afs_globalVFS)
 	return EBUSY;
+
+#ifdef FBSD_UMA_GETPBUF
+    uma_zdestroy(afs_pbuf_zone);
+#endif
 
     return syscall_helper_unregister(afs_syscalls);
 }

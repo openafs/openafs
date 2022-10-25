@@ -62,7 +62,6 @@
 #include <vm/vm_pager.h>
 #include <vm/vnode_pager.h>
 #include <sys/vmmeter.h>
-extern int afs_pbuf_freecnt;
 
 #define GETNAME()       \
     struct componentname *cnp = ap->a_cnp; \
@@ -103,6 +102,29 @@ static __inline void ma_vm_page_unlock(vm_page_t m) { vm_page_unlock(m); };
 # define AFS_VM_CNT_ADD(var, x) PCPU_ADD(cnt.var, x)
 # define AFS_VM_CNT_INC(var)    PCPU_INC(cnt.var)
 #endif
+
+static __inline struct buf *
+afs_getpbuf(void)
+{
+#ifdef FBSD_UMA_GETPBUF
+    return uma_zalloc(afs_pbuf_zone, M_WAITOK);
+#else
+    return getpbuf(&afs_pbuf_freecnt);
+#endif
+}
+
+static __inline void
+afs_relpbuf(struct buf **a_bp)
+{
+    if (*a_bp == NULL)
+	return;
+#ifdef FBSD_UMA_GETPBUF
+    uma_zfree(afs_pbuf_zone, *a_bp);
+#else
+    relpbuf(*a_bp, &afs_pbuf_freecnt);
+#endif
+    *a_bp = NULL;
+}
 
 /*
  * Mosty copied from sys/ufs/ufs/ufs_vnops.c:ufs_pathconf().
@@ -546,7 +568,7 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	ma_vm_page_unlock_queues();
 	AFS_VM_OBJECT_WUNLOCK(object);
     }
-    bp = getpbuf(&afs_pbuf_freecnt);
+    bp = afs_getpbuf();
 
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, pages, npages);
@@ -574,7 +596,7 @@ afs_vop_getpages(struct vop_getpages_args *ap)
     AFS_GUNLOCK();
     pmap_qremove(kva, npages);
 
-    relpbuf(bp, &afs_pbuf_freecnt);
+    afs_relpbuf(&bp);
 
     if (code && (uio.uio_resid == count)) {
 #ifndef FBSD_VOP_GETPAGES_BUSIED
@@ -730,7 +752,7 @@ afs_vop_putpages(struct vop_putpages_args *ap)
     npages = btoc(ap->a_count);
     for (i = 0; i < npages; i++)
 	ap->a_rtvals[i] = VM_PAGER_AGAIN;
-    bp = getpbuf(&afs_pbuf_freecnt);
+    bp = afs_getpbuf();
 
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
@@ -772,7 +794,7 @@ afs_vop_putpages(struct vop_putpages_args *ap)
     AFS_GUNLOCK();
 
     pmap_qremove(kva, npages);
-    relpbuf(bp, &afs_pbuf_freecnt);
+    afs_relpbuf(&bp);
 
     if (!code) {
 	AFS_VM_OBJECT_WLOCK(vp->v_object);

@@ -128,6 +128,11 @@ enum vcexcl { NONEXCL, EXCL };
 # define AFS_FBSD_NET_FOREACH TAILQ_FOREACH
 #endif
 
+/* r343030 removed getpbuf() et al, use UMA alloc instead */
+#if __FreeBSD_version >= 1300008
+# define FBSD_UMA_GETPBUF
+#endif
+
 /* r355537 removed VI_DOOMED, use VN_IS_DOOMED instead */
 #if __FreeBSD_version >= 1300064
 # define AFS_IS_DOOMED(vp) VN_IS_DOOMED(vp)
