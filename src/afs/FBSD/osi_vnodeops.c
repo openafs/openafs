@@ -1271,9 +1271,17 @@ afs_vop_print(ap)
 {
     struct vnode *vp = ap->a_vp;
     struct vcache *vc = VTOAFS(ap->a_vp);
+    const char *tag;
     int s = vc->f.states;
 
-    printf("vc %p vp %p tag %s, fid: %d.%d.%d.%d, opens %d, writers %d", vc, vp, vp->v_tag,
+#if __FreeBSD_version >= 1300075
+    /* FreeBSD 1300075 removed the v_tag field. */
+    tag = "[]";
+#else
+    tag = vp->v_tag;
+#endif
+
+    printf("vc %p vp %p tag %s, fid: %d.%d.%d.%d, opens %d, writers %d", vc, vp, tag,
 	   (int)vc->f.fid.Cell, (u_int) vc->f.fid.Fid.Volume,
 	   (u_int) vc->f.fid.Fid.Vnode, (u_int) vc->f.fid.Fid.Unique, vc->opens,
 	   vc->execsOrWriters);
