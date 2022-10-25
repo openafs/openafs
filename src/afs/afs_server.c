@@ -33,6 +33,11 @@
 #include "afs/param.h"
 
 
+#if defined(AFS_FBSD_ENV) || defined(AFS_USR_FBSD_ENV)
+/* For IN_CLASSA(), etc. */
+# define IN_HISTORICAL_NETS
+#endif
+
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 
