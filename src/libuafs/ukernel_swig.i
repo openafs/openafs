@@ -31,6 +31,7 @@
 #include <afs_usrops.h>
 #include <afs/cmd.h>
 #include <afs/afs_args.h>
+#include <afs/com_err.h>
 %}
 
 %include "typemaps.i";
