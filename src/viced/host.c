@@ -1823,7 +1823,7 @@ h_GetHost_r(struct rx_connection *tcon)
 {
     struct host *host;
     struct host *oldHost;
-    int code;
+    int code = -1;
     struct interfaceAddr interf;
     int interfValid = 0;
     struct Identity *identP = NULL;

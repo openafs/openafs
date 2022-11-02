@@ -1073,7 +1073,7 @@ BreakDelayedCallBacks_r(struct host *host)
 	while (!(host->z.hostFlags & HOSTDELETED)) {
 	    nfids = 0;
 	    host->z.hostFlags &= ~VENUSDOWN;	/* presume up */
-	    cbi = first = host->z.cblist;
+	    cbi = host->z.cblist;
 	    if (!cbi)
 		break;
 	    do {

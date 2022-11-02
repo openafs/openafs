@@ -1673,7 +1673,7 @@ WriteSysIdFile(void)
     }
     vsn.magic = SYSIDMAGIC;
     vsn.version = 1;
-    if ((i = write(fd, (char *)&vsn, sizeof(vsn))) != sizeof(vsn)) {
+    if (write(fd, &vsn, sizeof(vsn)) != sizeof(vsn)) {
 	ViceLog(0,
 		("%s: write failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH,
 		 errno));
@@ -1681,17 +1681,14 @@ WriteSysIdFile(void)
     }
     uuid = FS_HostUUID;
     afs_htonuuid(&uuid);
-    if ((i =
-	 write(fd, (char *)&uuid,
-	       sizeof(struct afsUUID))) != sizeof(struct afsUUID)) {
+    if (write(fd, &uuid, sizeof(afsUUID)) != sizeof(afsUUID)) {
 	ViceLog(0,
 		("%s: write of uuid failed (%d)\n",
 		 AFSDIR_SERVER_SYSID_FILEPATH, errno));
 	return EIO;
     }
-    if ((i =
-	 write(fd, (char *)&FS_HostAddr_cnt,
-	       sizeof(afs_int32))) != sizeof(afs_int32)) {
+    if (write(fd, &FS_HostAddr_cnt, sizeof(FS_HostAddr_cnt)) !=
+		    sizeof(FS_HostAddr_cnt)) {
 	ViceLog(0,
 		("%s: write of # of entries failed (%d)\n",
 		 AFSDIR_SERVER_SYSID_FILEPATH, errno));
