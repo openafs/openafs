@@ -413,9 +413,10 @@ ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr,
     int code, i;
     Date now = time(0);
     afs_int32 newkeyver;	/* new key version number */
-    afs_int32 newtotalkeyentries = 0, oldtotalkeyentries = 0, keyentries;
+    afs_int32 newtotalkeyentries = 0, keyentries;
     int addednewkey = 0, modified;
 #ifdef AUTH_DBM_LOG
+    afs_int32 oldtotalkeyentries = 0;
     int foundcurrentkey = 0;
 #endif
 
@@ -451,11 +452,12 @@ ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr,
 	keyentries = 0;		/* Number of valid key entries in the block */
 	for (i = 0; i < NOLDKEYS; i++) {
 	    /* foreachkey */
+#ifdef AUTH_DBM_LOG
 	    /* Keep count of number of entries found */
 	    if (okeys.keys[i].superseded != 0) {
 		oldtotalkeyentries++;
 	    }
-
+#endif
 	    /* If we find the entry that is not superseded, then supersede it */
 	    if (ntohl(okeys.keys[i].superseded) == NEVERDATE) {
 		okeys.keys[i].superseded = htonl(now);

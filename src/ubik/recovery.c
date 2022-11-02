@@ -470,7 +470,9 @@ urecovery_Interact(void *dummy)
     char hoststr[16];
     char pbuffer[1028];
     int fd = -1;
+#ifndef AFS_PTHREAD_ENV
     afs_int32 pass;
+#endif
     int first;
 
     memset(pbuffer, 0, sizeof(pbuffer));
@@ -663,12 +665,15 @@ urecovery_Interact(void *dummy)
 		goto FetchEndCall;
 	    }
 
+#ifndef AFS_PTHREAD_ENV
 	    pass = 0;
+#endif
 	    while (length > 0) {
 		tlen = (length > sizeof(tbuffer) ? sizeof(tbuffer) : length);
 #ifndef AFS_PTHREAD_ENV
 		if (pass % 4 == 0)
 		    IOMGR_Poll();
+		pass++;
 #endif
 		nbytes = rx_Read(rxcall, tbuffer, tlen);
 		if (nbytes != tlen) {
@@ -678,7 +683,6 @@ urecovery_Interact(void *dummy)
 		    goto FetchEndCall;
 		}
 		nbytes = write(fd, tbuffer, tlen);
-		pass++;
 		if (nbytes != tlen) {
 		    code = UIOERROR;
 		    close(fd);

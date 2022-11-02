@@ -1046,7 +1046,9 @@ afs_BackgroundDaemon(void)
 {
     struct brequest *tb;
     int i, foundAny;
+#ifdef AFS_NEW_BKG
     int n_processed = 0;
+#endif
 
     AFS_STATCNT(afs_BackgroundDaemon);
     /* initialize subsystem */
@@ -1123,7 +1125,9 @@ afs_BackgroundDaemon(void)
 	    tb->flags |= BSTARTED;
 	    ReleaseWriteLock(&afs_xbrs);
 	    foundAny = 1;
+#ifdef AFS_NEW_BKG
 	    n_processed++;
+#endif
 	    afs_Trace1(afs_iclSetp, CM_TRACE_BKG1, ICL_TYPE_INT32,
 		       tb->opcode);
 	    if (tb->opcode == BOP_FETCH)

@@ -8510,9 +8510,9 @@ DeleteVolumeFromHashTable(Volume * vp)
 Volume *
 VLookupVolume_r(Error * ec, VolumeId volumeId, Volume * hint)
 {
-    int looks = 0;
     Volume * vp, *np;
 #ifdef AFS_DEMAND_ATTACH_FS
+    int looks = 0;
     Volume *pp;
 #endif
     VolumeHashChainHead * head;
@@ -8537,7 +8537,9 @@ VLookupVolume_r(Error * ec, VolumeId volumeId, Volume * hint)
 
     /* search the chain for this volume id */
     for(queue_Scan(head, vp, np, Volume)) {
+#ifdef AFS_DEMAND_ATTACH_FS
 	looks++;
+#endif
 	if (vp->hashid == volumeId) {
 	    break;
 	}
