@@ -1282,7 +1282,7 @@ static void
 DirectoryList(int argc, char **argv, struct vnodeData *vdata,
 	      VolumeDiskData * vol)
 {
-    int errflg = 0, lflag = 0, iflag = 0, Fflag = 0, sflag = 0, Rflag = 0;
+    int errflg = 0, lflag = 0, iflag = 0, Fflag = 0, Rflag = 0;
     int c;
 
     optind = 1;
@@ -1302,7 +1302,7 @@ DirectoryList(int argc, char **argv, struct vnodeData *vdata,
 	    Rflag++;
 	    break;
 	case 's':
-	    sflag++;
+	    /* Unused and ignored */
 	    break;
 	case '?':
 	default:
