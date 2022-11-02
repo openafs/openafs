@@ -482,8 +482,9 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
     char pbuffer[1028];
     int fd = -1;
     afs_int32 epoch = 0;
-    afs_int32 pass;
-
+#if !defined(AFS_PTHREAD_ENV)
+    afs_int32 pass = 0;
+#endif
     /* send the file back to the requester */
 
     dbase = ubik_dbase;
@@ -544,7 +545,6 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 	close(fd);
 	goto failed_locked;
     }
-    pass = 0;
     memcpy(&ubik_dbase->version, &tversion, sizeof(struct ubik_version));
     UBIK_VERSION_UNLOCK;
     while (length > 0) {
@@ -552,6 +552,7 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 #if !defined(AFS_PTHREAD_ENV)
 	if (pass % 4 == 0)
 	    IOMGR_Poll();
+	pass++;
 #endif
 	code = rx_Read(rxcall, tbuffer, tlen);
 	if (code != tlen) {
@@ -561,7 +562,6 @@ SDISK_SendFile(struct rx_call *rxcall, afs_int32 file,
 	    goto failed;
 	}
 	code = write(fd, tbuffer, tlen);
-	pass++;
 	if (code != tlen) {
 	    ViceLog(0, ("write failed tlen=%d, error=%d\n", tlen, code));
 	    code = UIOERROR;
