@@ -4,19 +4,36 @@ OpenAFS 1.8.9 (in progress)
 
   All platforms
 
-    * Performance improvements (14814 14815 15129)
-
     * Support for building with more recent compilers (14970 14982..14987
       14990 14991 15056 15057 15061..15064)
 
     * Build fixes and improvements around the test suite (14879 14880
       14909..14911 15133)
 
+    * Removed a vestigial autoconf check for GSSAPI support that could
+      cause unnecessary configure errors (15137)
+
     * Documentation improvements (14980 15047)
 
     * Improved diagnostics and error messages. In particular, warn when
       server processes are started without keys and properly print the
       volume transaction flags in "vos status" output (14594 14968)
+
+  All server platforms
+
+    * Avoid several second delays in some situations when the file server
+      is breaking callbacks on clients with alternate addresses. Avoid
+      unnecessary several second delays in some cases during database
+      quorum processing (14815)
+
+  All UNIX/Linux client platforms
+
+    * Do not perform DNS SRV/AFSDB record queries when running "fs
+      getcellstatus", "fs checkservers", and "fs setcell". The DNS
+      lookups incur network delays and were not needed to process these
+      commands. (14814)
+
+    * Avoid possible string buffer overflows with long cell names (15151)
 
   FreeBSD
 
@@ -25,15 +42,18 @@ OpenAFS 1.8.9 (in progress)
 
   Linux clients
 
-    * Support mainline kernels up to 5.19 (14942..14944 14989 14945
-      14946 15058 15065 15094 15095)
+    * Support mainline kernels up to 6.0 (14942..14944 14989 14945
+      14946 15058 15065 15094 15095 15148)
 
     * Fixed a potential memory leak (15096)
+
+    * Avoid a possible performance penalty during file reads when
+      the file was opened for both reading and writing (15129)
 
     * Fixed a type cast which could make builds fail against older kernels
       (15134)
 
-    * In Red Hat packaging, no longer have systemd load the openafs module
+    * In Red Hat packaging, systemd will no longer load the openafs module
       during boot (15128)
 
   Most client platforms
