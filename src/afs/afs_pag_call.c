@@ -509,8 +509,8 @@ out:
 
 
 int
-afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
-     long parm, parm2, parm3, parm4, parm5, parm6;
+afs_syscall_call(long parm, long parm2, long parm3,
+		 long parm4, long parm5, long parm6)
 {
     /* Superusers may shut us down, such as with afsd -shutdown. */
     if (parm == AFSOP_SHUTDOWN && afs_suser(NULL))
