@@ -336,7 +336,7 @@ osi_linux_free_afs_memory(void)
  *          our hash table.
  */
 void
-osi_linux_verify_alloced_memory()
+osi_linux_verify_alloced_memory(void)
 {
     mutex_lock(&afs_linux_alloc_sem);
 

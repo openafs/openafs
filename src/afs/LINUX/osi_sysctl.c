@@ -93,7 +93,7 @@ static struct ctl_table fs_sysctl_table[] = {
 };
 
 int
-osi_sysctl_init()
+osi_sysctl_init(void)
 {
 # if defined(REGISTER_SYSCTL_TABLE_NOFLAG)
     afs_sysctl = register_sysctl_table(fs_sysctl_table);
@@ -107,7 +107,7 @@ osi_sysctl_init()
 }
 
 void
-osi_sysctl_clean()
+osi_sysctl_clean(void)
 {
     if (afs_sysctl) {
 	unregister_sysctl_table(afs_sysctl);
