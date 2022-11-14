@@ -101,15 +101,34 @@ typedef enum krb5_salttype {
     KRB5_AFS3_SALT = 10
 } krb5_salttype;
 
-typedef enum krb5_keytype {
-    KEYTYPE_NULL        = 0,
-    KEYTYPE_DES         = 1,
-    KEYTYPE_DES3        = 7,
-    KEYTYPE_AES128      = 17,
-    KEYTYPE_AES256      = 18,
-    KEYTYPE_ARCFOUR     = 23,
-    KEYTYPE_ARCFOUR_56  = 24
-} krb5_keytype;
+/*
+ * Ew, gross!
+ *
+ * crypto.c from heimdal has hard-coded references to the symbol
+ * KEYTYPE_ARCFOUR and the enum krb5_keytype.  This enum is effectively
+ * deprecated, with comments like "Deprecated: keytypes doesn't exists, they
+ * are really enctypes" appearing near public APIs that handle krb5_keytypes.
+ *
+ * In particular, the internal "type" information about the struct
+ * _krb5_key_type is just a krb5_enctype, and the accessor to retrieve the
+ * alleged krb5_keytype value just returns this "type" (of type krb5_enctype)
+ * with an "XXX" comment but no cast.  Since krb5_keytype is otherwise unused
+ * for OpenAFS and we are not constrained to provide ABI compatible functions
+ * that expose the krb5_keytype type in the way that Heimdal is, just alias
+ * the deprecated krb5_keytype type to the underlying krb5_enctype to silence
+ * compiler warnings about implicit conversion between different enumeration
+ * types.
+ *
+ * The actual enum values are used in one place in the file, to check whether
+ * a checksum is an arcfour checksum, so provide an anonymous enum to alias
+ * that one consumer as well.
+ */
+
+typedef krb5_enctype krb5_keytype;
+
+enum {
+  KEYTYPE_ARCFOUR = ETYPE_ARCFOUR_HMAC_MD5
+};
 
 #define KRB5_ENCTYPE_NULL ETYPE_NULL
 #define KRB5_ENCTYPE_OLD_DES3_CBC_SHA1 ETYPE_OLD_DES3_CBC_SHA1
