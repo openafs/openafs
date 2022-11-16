@@ -881,19 +881,20 @@ struct vcache {
     struct afs_q shadowq;
     /*! Queue of vcaches with dirty metadata. Locked by afs_xvcdirty */
     struct afs_q metadirty;
-    /*! Vcaches slot number in the disk backup. Protected by tvc->lock */
-    afs_uint32 diskSlot;
     struct fvcache f;
     afs_rwlock_t lock;		/* The lock on the vcache contents. */
-#if	defined(AFS_SUN5_ENV)
+
+#if defined(AFS_SUN5_ENV)
     /* Lock used to protect the activeV, multipage, and vstates fields.
      * Do not try to get the vcache lock when the vlock is held */
     afs_rwlock_t vlock;
-#endif				/* defined(AFS_SUN5_ENV) */
-#if	defined(AFS_SUN5_ENV)
     krwlock_t rwlock;
     struct cred *credp;
-#endif
+    afs_int32 activeV;
+    afs_uint32 vstates;		/* vstate bits */
+    struct afs_q multiPage;	/* list of multiPage_range structs */
+#endif /* AFS_SUN5_ENV */
+
 #ifdef	AFS_AIX32_ENV
     afs_lock_t pvmlock;
     vmhandle_t vmh;
@@ -907,11 +908,13 @@ struct vcache {
 #ifdef AFS_AIX_ENV
     int ownslock;		/* pid of owner of excl lock, else 0 - defect 3083 */
 #endif
+
 #ifdef AFS_DARWIN80_ENV
     lck_mtx_t *rwlock;
 #elif defined(AFS_DARWIN_ENV)
     struct lock__bsd__ rwlock;
 #endif
+
 #ifdef AFS_XBSD_ENV
 #if !defined(AFS_DFBSD_ENV) && !defined(AFS_NBSD_ENV)
     struct lock rwlock;
@@ -930,14 +933,13 @@ struct vcache {
     char *linkData;		/* Link data if a symlink. */
     afs_hyper_t flushDV;	/* data version last flushed from text */
     afs_hyper_t mapDV;		/* data version last flushed from map */
-    struct server *callback;	/* The callback host, if any */
+    afs_uint32 diskSlot;	/* slot number in the disk backup. Protected by tvc->lock */
     afs_uint32 cbExpires;	/* time the callback expires */
+    struct server *callback;	/* The callback host, if any */
     struct afs_q callsort;	/* queue in expiry order, sort of */
     struct axscache *Access;	/* a list of cached access bits */
     afs_int32 last_looker;	/* pag/uid from last lookup here */
-#if	defined(AFS_SUN5_ENV)
-    afs_int32 activeV;
-#endif				/* defined(AFS_SUN5_ENV) */
+    afs_int32 vc_error;		/* stash write error for this vnode. */
     struct SimpleLocks *slocks;
     short opens;		/* The numbers of opens, read or write, on this file. */
     short execsOrWriters;	/* The number of execs (if < 0) or writers (if > 0) of
@@ -947,19 +949,9 @@ struct vcache {
 
     char cachingStates;			/* Caching policies for this file */
     afs_uint32 cachingTransitions;		/* # of times file has flopped between caching and not */
-
-#if defined(AFS_LINUX_ENV)
-    off_t next_seq_offset;	/* Next sequential offset (used by prefetch/readahead) */
-#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-    off_t next_seq_blk_offset; /* accounted in blocks for Solaris & IRIX */
-#endif
-
-#if	defined(AFS_SUN5_ENV)
-    afs_uint32 vstates;		/* vstate bits */
-#endif				/* defined(AFS_SUN5_ENV) */
-    struct dcache *dchint;
-    struct dcache *dcreaddir;	/* dcache for in-progress readdir */
     unsigned int readdir_pid;   /* pid of the thread in readdir */
+    struct dcache *dcreaddir;	/* dcache for in-progress readdir */
+    struct dcache *dchint;
 #if defined(AFS_SGI_ENV)
     daddr_t lastr;		/* for read-ahead */
     uint64_t vc_rwlockid;	/* kthread owning rwlock */
@@ -978,23 +970,12 @@ struct vcache {
                                  * See LINUX/osi_vnodeops.c. Note that this is
                                  * NOT an actual reference to a dentry, so this
                                  * pointer MUST NOT be dereferenced on its own. */
-#endif
-    afs_int32 vc_error;		/* stash write error for this vnode. */
-    int xlatordv;		/* Used by nfs xlator */
-    afs_ucred_t *uncred;
-    int asynchrony;		/* num kbytes to store behind */
-#ifdef AFS_SUN5_ENV
-    struct afs_q multiPage;	/* list of multiPage_range structs */
-#endif
-    int protocol;		/* RX_FILESERVER, RX_OSD, ... defined in afsint.xg */
-#if !defined(UKERNEL)
-    void *vpacRock;		/* used to read or write in visible partitions */
-#endif
-    afs_uint32 lastBRLWarnTime; /* last time we warned about byte-range locks */
-#ifdef AFS_LINUX_ENV
     spinlock_t pagewriter_lock;
     struct list_head pagewriters;	/* threads that are writing vm pages */
 #endif
+    afs_ucred_t *uncred;
+    int asynchrony;		/* num kbytes to store behind */
+    afs_uint32 lastBRLWarnTime; /* last time we warned about byte-range locks */
 };
 
 #ifdef AFS_LINUX_ENV
