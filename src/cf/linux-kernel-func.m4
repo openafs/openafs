@@ -199,6 +199,13 @@ AC_CHECK_LINUX_FUNC([add_to_page_cache_lru],
                      #include <linux/pagemap.h>],
                     [add_to_page_cache_lru(NULL, NULL, 0, 0);])
 
+dnl RHEL9.1 partially added support for address_space_operations' dirty_folio
+dnl it did not add block_dirty_folio
+AC_CHECK_LINUX_FUNC([block_dirty_folio],
+    		    [#include <linux/kernel.h>
+    		     #include <linux/buffer_head.h>],
+    		    [block_dirty_folio(NULL, NULL);])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],

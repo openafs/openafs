@@ -3609,7 +3609,8 @@ static struct address_space_operations afs_file_aops = {
   .readpages = 		afs_linux_readpages,
 #endif
   .writepage =		afs_linux_writepage,
-#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_DIRTY_FOLIO)
+#if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_DIRTY_FOLIO) && \
+    defined(HAVE_LINUX_BLOCK_DIRTY_FOLIO)
   .dirty_folio =	block_dirty_folio,
 #else
   .set_page_dirty =	__set_page_dirty_buffers,
