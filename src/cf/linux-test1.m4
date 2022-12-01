@@ -2,12 +2,9 @@
 #                 [ACTION-IF-SUCCESS], [ACTION-IF-FAILURE])
 #
 AC_DEFUN([AC_TRY_KBUILD26],[  rm -fr conftest.dir
-  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
-    CFLAGS_PREFIX='EXTRA_'
-  fi
   if mkdir conftest.dir &&
     cat >conftest.dir/Makefile <<_ACEOF &&
-${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+${ac_linux_kbuild_cflags_var} += $CPPFLAGS
 
 obj-m += conftest.o
 _ACEOF
@@ -72,18 +69,41 @@ AC_DEFUN([LINUX_KERNEL_COMPILE_WORKS], [
     AC_MSG_FAILURE([Fix problem or use --disable-kernel-module...]))
   AC_MSG_RESULT(yes)])
 
-AC_DEFUN([LINUX_KBUILD_USES_EXTRA_CFLAGS], [
-  AC_MSG_CHECKING([if linux kbuild requires EXTRA_CFLAGS])
-  save_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS=-Wall
-  AC_TRY_KBUILD(
+AC_DEFUN([AC_LINUX_KBUILD_CHECK_CFLAGS],[
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS=-DCHECK_OPENAFS_CFLAGS
+    AC_TRY_KBUILD(
 [#include <linux/sched.h>
-#include <linux/fs.h>],
-    [],
-    ac_linux_kbuild_requires_extra_cflags=no,
-    ac_linux_kbuild_requires_extra_cflags=yes)
+#include <linux/fs.h>
+#ifndef CHECK_OPENAFS_CFLAGS
+# error cflags not passed to the compiler
+#endif
+],
+	[],
+	$1, $2
+    )
     CPPFLAGS="$save_CPPFLAGS"
-    AC_MSG_RESULT($ac_linux_kbuild_requires_extra_cflags)])
+])
+
+AC_DEFUN([LINUX_KBUILD_FIND_CFLAGS_METHOD],
+   [AC_MSG_CHECKING([how to set cflags for linux kbuild])
+    ac_linux_kbuild_cflags_var=ccflags-y
+    AC_LINUX_KBUILD_CHECK_CFLAGS(
+	 [AC_MSG_RESULT([ccflags-y])],
+	 [ac_linux_kbuild_cflags_var=EXTRA_CFLAGS
+	  AC_LINUX_KBUILD_CHECK_CFLAGS(
+	      [AC_MSG_RESULT([EXTRA_CFLAGS])],
+	      [ac_linux_kbuild_cflags_var=CFLAGS
+              AC_LINUX_KBUILD_CHECK_CFLAGS(
+		  [AC_MSG_RESULT([CFLAGS])],
+                  [ac_linux_kbuild_cflags_var=
+		  AC_MSG_ERROR([cannot find way to set linux kbuild cflags])])
+	      ])
+	])
+    LINUX_KBUILD_CFLAGS_VAR=$ac_linux_kbuild_cflags_var
+    AC_SUBST([LINUX_KBUILD_CFLAGS_VAR])
+])
+
 
 AC_DEFUN([LINUX_KBUILD_SPARSE_CHECKS], [
   AC_ARG_WITH([sparse],
