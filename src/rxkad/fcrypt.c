@@ -178,13 +178,13 @@ afs_int32
 fc_cbc_encrypt(void *input, void *output, afs_int32 length,
 	       const fc_KeySchedule key, afs_uint32 * xor, int encrypt)
 {
-    afs_uint32 i, j;
+    afs_uint32 j;
     afs_uint32 t_input[2];
     afs_uint32 t_output[2];
     unsigned char *t_in_p = (unsigned char *)t_input;
 
     if (encrypt) {
-	for (i = 0; length > 0; i++, length -= 8) {
+	for (; length > 0; length -= 8) {
 	    /* get input */
 	    memcpy(t_input, input, sizeof(t_input));
 	    input=((char *)input) + sizeof(t_input);
@@ -213,7 +213,7 @@ fc_cbc_encrypt(void *input, void *output, afs_int32 length,
 	t_output[1] = 0;
     } else {
 	/* decrypt */
-	for (i = 0; length > 0; i++, length -= 8) {
+	for (; length > 0; length -= 8) {
 	    /* get input */
 	    memcpy(t_input, input, sizeof(t_input));
 	    input=((char *)input) + sizeof(t_input);
