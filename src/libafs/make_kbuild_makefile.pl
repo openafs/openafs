@@ -160,7 +160,13 @@ foreach (sort keys %vars) {
   next unless /^[AC]FLAGS_/;
   print $F "$_ = $vars{$_}\n";
 }
-print $F "EXTRA_CFLAGS=$cflags\n";
+
+if ($vars{LINUX_KBUILD_CFLAGS_VAR} ne "") {
+  print $F "$vars{LINUX_KBUILD_CFLAGS_VAR}=$cflags\n"
+} else {
+  die "Unable to set cflags";
+}
+
 print $F "obj-m := $TARG.o afspag.o\n";
 print $F "$TARG-objs := ", join("\\\n $_", @libafs_objs), "\n";
 print $F "afspag-objs := ", join("\\\n $_", @afspag_objs), "\n";
