@@ -958,7 +958,6 @@ DeleteFileCallBacks(AFSFid * fid)
     struct FileEntry *fe;
     struct CallBack *cb;
     afs_uint32 cbi;
-    int n;
 
     H_LOCK;
     cbstuff.DeleteFiles++;
@@ -970,7 +969,8 @@ DeleteFileCallBacks(AFSFid * fid)
 		 fid->Unique));
 	return 0;
     }
-    for (n = 0, cbi = fe->firstcb; cbi; n++) {
+    cbi = fe->firstcb;
+    while (cbi != 0) {
 	cb = itocb(cbi);
 	cbi = cb->cnext;
 	TDel(cb);

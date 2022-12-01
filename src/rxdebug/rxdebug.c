@@ -58,7 +58,6 @@ PortName(char *aname)
 int
 MainCommand(struct cmd_syndesc *as, void *arock)
 {
-    int i;
     osi_socket s;
     int j;
     struct sockaddr_in taddr;
@@ -331,7 +330,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 	if (onlyPort != -1)
 	    printf("Showing only connections on port %u\n", ntohs(onlyPort));
 
-	for (i = 0;; i++) {
+	while (1) {
 	    code =
 		rx_GetServerConnections(s, host, port, &nextconn, allconns,
 					supportedDebugValues, &tconn,
@@ -581,7 +580,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 	    printf("Skipped %d dallying connections.\n", dallyCounter);
     }
     if (showPeers && withPeers) {
-	for (i = 0;; i++) {
+	while (1) {
 	    struct rx_debugPeer tpeer;
 	    code =
 		rx_GetServerPeers(s, host, port, &nextpeer, allconns, &tpeer,
