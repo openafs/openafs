@@ -324,7 +324,6 @@ afs_ComputePAGStats(void)
     struct unixuser *currPAGP;	/*Ptr to curr PAG */
     struct unixuser *cmpPAGP;	/*Ptr to PAG being compared */
     struct afs_stats_AuthentInfo *authP;	/*Ptr to stats area */
-    int curr_Record;		/*Curr record */
     int currChain;		/*Curr hash chain */
     int currChainLen;		/*Length of curr hash chain */
     int currPAGRecords;		/*# records in curr PAG */
@@ -339,7 +338,6 @@ afs_ComputePAGStats(void)
      * can't bzero the structure, since some fields are cumulative over
      * the CM's lifetime.
      */
-    curr_Record = 0;
     authP = &(afs_stats_cmfullperf.authent);
     authP->curr_PAGs = 0;
     authP->curr_Records = 0;
@@ -357,7 +355,6 @@ afs_ComputePAGStats(void)
 	     * the total number of records in existence.
 	     */
 	    currChainLen++;
-	    curr_Record++;
 	    /*
 	     * We've found a previously-uncounted PAG.  If it's been deleted
 	     * but just not garbage-collected yet, we step over it.

@@ -3063,7 +3063,6 @@ afs_DisconGiveUpCallbacks(void)
 {
     int i;
     struct vcache *tvc;
-    int nq=0;
 
     ObtainWriteLock(&afs_xvcache, 1002); /* XXX - should be a unique number */
 
@@ -3074,7 +3073,6 @@ afs_DisconGiveUpCallbacks(void)
 	    int slept = 0;
             if (afs_QueueVCB(tvc, &slept)) {
                 tvc->callback = NULL;
-                nq++;
             }
 	    if (slept) {
 		goto retry;

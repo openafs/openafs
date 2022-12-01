@@ -1122,7 +1122,6 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
     int i, nVnodes, code;
     afs_foff_t offset;
     afs_foff_t *Buf;
-    int cnt = 0;
     afs_sfsize_t size;
     StreamHandle_t *afile;
     FdHandle_t *fdP;
@@ -1141,7 +1140,6 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 	Buf = *Bufp;
 	for (i = 0; i < *sizep; i++) {
 	    if (Buf[i]) {
-		cnt++;
 		STREAM_ASEEK(afile, Buf[i]);
 		code = STREAM_READ(vnode, vcp->diskSize, 1, afile);
 		if (code == 1) {
@@ -1192,7 +1190,6 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_foff_t ** Bufp, int *sizep,
 		}
 		if (vnode->type != vNull && VNDISK_GET_INO(vnode)) {
 		    Buf[(offset >> vcp->logSize) - 1] = offset;
-		    cnt++;
 		}
 		offset += vcp->diskSize;
 	    }
