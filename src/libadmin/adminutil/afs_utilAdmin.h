@@ -65,8 +65,8 @@ extern int ADMINAPI util_RPCStatsGetDone(const void *iterationId,
 					 afs_status_p st);
 
 extern int ADMINAPI util_RPCStatsStateGet(struct rx_connection *conn,
-					  int (*rpc) (struct rx_connection *,
-						      afs_RPCStatsState_p),
+					  afs_int32 (*rpc) (struct rx_connection *,
+						      afs_int32 *),
 					  afs_RPCStatsState_p state,
 					  afs_status_p st);
 
