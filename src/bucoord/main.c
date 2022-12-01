@@ -351,7 +351,6 @@ doDispatch(afs_int32 targc,
     afs_int32 code, c;
     FILE *fd;
     int i;
-    int lineNumber;
     int noExecute;		/* local capy of global variable */
     char *internalLoadFile;
 
@@ -382,9 +381,7 @@ doDispatch(afs_int32 targc,
 	if (noExecute)
 	    printf("Would have executed the following commands:\n");
 
-	lineNumber = 0;
 	while (fgets(lineBuffer, sizeof(lineBuffer) - 1, fd)) {	/* Get commands from file */
-	    lineNumber++;
 
 	    i = strlen(lineBuffer) - 1;
 	    if (lineBuffer[i] == '\n')	/* Drop return at end of line */

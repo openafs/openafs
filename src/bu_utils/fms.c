@@ -89,7 +89,6 @@ fileMarkSize(char *tapeDevice)
     usd_handle_t hTape;
     FILE *logFile;
     int count = 0;
-    afs_uint32 countr;
     afs_int32 code = 0;
 
     code =
@@ -118,12 +117,10 @@ fileMarkSize(char *tapeDevice)
 
     /* measure capacity of tape */
     nbfTape = 0;
-    countr = 0;
     while (1) {
 	code = dataBlock(hTape, bufferSize);
 	nbfTape++;
 	count++;
-	countr++;
 	if (code)
 	    break;
 
@@ -166,7 +163,6 @@ fileMarkSize(char *tapeDevice)
     nFileMarks = 0;
     nBlocks = 0;
     count = 0;
-    countr = 0;
     while (1) {
 	code = dataBlock(hTape, bufferSize);
 	nBlocks++;
@@ -177,7 +173,6 @@ fileMarkSize(char *tapeDevice)
 	if (code)
 	    break;
 	count++;
-	countr++;
 
 	if (count >= 2) {
 	    count = 0;

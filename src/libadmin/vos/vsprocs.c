@@ -2865,27 +2865,20 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
     afs_uint32 maxVolid = 0;
     struct nvldbentry entry;
     int noError = 1, error, same;
-    int totalC, totalU, totalCE, totalUE, totalG;
-    int counter;
     int aserver = ntohl(rx_HostOf(rx_PeerOf(server)));
     afs_status_t tst;
-
-    totalC = totalU = totalCE = totalUE = totalG = 0;
-    counter = 0;
 
     /* get the next  available id's from the vldb server */
     vcode = ubik_VL_GetNewVolumeId(cellHandle->vos, 0, 0, &maxVolid);
     if (vcode) {
 	return (vcode);
     }
-    totalG = myQueue->count;
-    if (totalG == 0)
+    if (myQueue->count == 0)
 	return 0;
     while (1) {
 	Lp_QEnumerate(myQueue, &success, &elem, 0);
 	if (!success)
 	    break;
-	counter++;
 
 	if (!elem.isValid[RWVOL] && !elem.isValid[ROVOL] && !elem.isValid[BACKVOL]) {	/*something is wrong with elem */
 	    noError = 0;
@@ -2924,7 +2917,6 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 	aVLDB_GetEntryByID(cellHandle, elem.ids[RWVOL], RWVOL, &entry, &tst);
 	if (tst && (tst != VL_NOENT)) {
 	    noError = 0;
-	    totalCE++;
 	} else if (tst && (tst == VL_NOENT)) {	/*entry doesnot exist */
 	    /*set up a vldb entry for elem */
 	    memset(&entry, 0, sizeof(entry));
@@ -2963,11 +2955,8 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 
 	    }
 	    VLDB_CreateEntry(cellHandle, &entry, &tst);
-	    if (tst) {
+	    if (tst)
 		noError = 0;
-		totalCE++;
-	    } else
-		totalC++;
 	} else {		/* Update the existing entry */
 	    strncpy(entry.name, elem.name, VOLSER_OLDMAXVOLNAME);	/*the name Could have changed */
 
@@ -3100,8 +3089,6 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 			      LOCKREL_TIMESTAMP, &tst);
 	    if (tst) {
 		noError = 0;
-		totalUE++;
-
 		vcode =
 		    ubik_VL_ReleaseLock(cellHandle->vos, 0,
 			      elem.ids[RWVOL], RWVOL,
@@ -3493,7 +3480,6 @@ UV_SyncServer(afs_cell_handle_p cellHandle, struct rx_connection *server,
     afs_int32 nentries;
     struct VldbListByAttributes attributes;
     nbulkentries arrayEntries;
-    int totalF;
     struct nvldbentry *vllist;
     int j;
     afs_int32 si, nsi;
@@ -3519,12 +3505,10 @@ UV_SyncServer(afs_cell_handle_p cellHandle, struct rx_connection *server,
 	    goto fail_UV_SyncServer;
 	}
 	nsi = -1;
-	totalF = 0;
 	for (j = 0; j < nentries; j++) {	/* process each entry */
 	    vllist = &arrayEntries.nbulkentries_val[j];
 	    if (!CheckVldb(cellHandle, vllist, &modified, &tst)) {
 		noError = 0;
-		totalF++;
 	    }
 	}
 	if (arrayEntries.nbulkentries_val) {

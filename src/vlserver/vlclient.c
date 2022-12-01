@@ -437,8 +437,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    ("\t%d didn't hash properly by backup volid (out of %d)\n\t%d didn't hash properly by ro volid (out of %d)\n",
 		     num3, num31, num4, num41);
 	    } else if (!strcmp(oper, "fixhash")) {
-		int index, count, num = 0, num1 = 0, num2 = 0, next_index, x =
-		    0;
+		int index, count, num = 0, num1 = 0, next_index, x = 0;
 		struct vldbentry tentry;
 
 		VL = SVL = malloc(ALLOCNT * sizeof(struct Vlent));
@@ -484,7 +483,6 @@ handleit(struct cmd_syndesc *as, void *arock)
 				  entry.volumeId[RWVOL], RWVOL, &tentry);
 		    if (code == VL_NOENT) {
 			num1++;
-			num2++;
 			updateentry.Mask = VLUPDATE_RWID;
 			updateentry.spares3 = entry.volumeId[RWVOL];
 			printf("\tVolume %s %d (not in rw id hash)\n",

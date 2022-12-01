@@ -993,7 +993,6 @@ DumpRecreate(char map[], struct misc_data *misc)
     afs_int32 flags;
     afs_int32 owner;
     char *name;
-    int builtinUsers = 0;
     int createLow = 0;		/* users uncreate from here */
 #if defined(SUPERGROUPS)
     struct idused *idmap;	/* map of all id's */
@@ -1036,10 +1035,8 @@ DumpRecreate(char map[], struct misc_data *misc)
 		    || !strcmp(e.name, "system:anyuser")
 		    || !strcmp(e.name, "system:authuser")
 		    || !strcmp(e.name, "system:backup")
-		    || !strcmp(e.name, "anonymous")) {
-		    builtinUsers++;
+		    || !strcmp(e.name, "anonymous"))
 		    goto user_done;
-		}
 
 		/* check for duplicate id.  This may still lead to duplicate
 		 * names. */
