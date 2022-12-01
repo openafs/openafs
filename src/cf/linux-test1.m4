@@ -127,12 +127,13 @@ AC_DEFUN([LINUX_KBUILD_SPARSE_CHECKS], [
 ])
 
 
-dnl AC_CHECK_LINUX_BUILD([msg], [var], [includes], [code], [define], [CFLAGS])
+dnl AC_CHECK_LINUX_BUILD([msg], [var], [includes], [code],
+dnl                      [define], [description], [CFLAGS])
 AC_DEFUN([AC_CHECK_LINUX_BUILD],
  [AS_VAR_PUSHDEF([ac_linux_build], [$2])dnl
   AC_CACHE_CHECK([$1], [ac_linux_build],
    [save_CPPFLAGS="$CPPFLAGS"
-     CPPFLAGS="$CPPFLAGS $7"
+     CPPFLAGS="$CPPFLAGS -Wno-error $7"
      AC_TRY_KBUILD([$3], [$4],
 		  AS_VAR_SET([ac_linux_build], [yes]),
 		  AS_VAR_SET([ac_linux_build], [no]))
@@ -156,7 +157,7 @@ AC_DEFUN([AC_CHECK_LINUX_FUNC],
  [AS_VAR_PUSHDEF([ac_linux_func], [ac_cv_linux_func_$1])dnl
   AC_CACHE_CHECK([for $1], [ac_linux_func],
     [save_CPPFLAGS="$CPPFLAGS"
-     CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+     CPPFLAGS="$CPPFLAGS -Wno-error -Werror-implicit-function-declaration"
      AC_TRY_KBUILD([$2], [$3],
 		   AS_VAR_SET([ac_linux_func], [yes]),
 		   AS_VAR_SET([ac_linux_func], [no]))
