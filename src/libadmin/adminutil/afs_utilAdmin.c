@@ -1524,13 +1524,14 @@ util_RPCStatsGetDone(const void *iterationId, afs_status_p st)
  */
 
 int ADMINAPI
-util_RPCStatsStateGet(struct rx_connection *conn, 
-		      int (*rpc) (struct rx_connection *,
-			      	  afs_RPCStatsState_p),
+util_RPCStatsStateGet(struct rx_connection *conn,
+		      afs_int32 (*rpc) (struct rx_connection *,
+					afs_int32 *),
 		      afs_RPCStatsState_p state, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
+    afs_int32 istate;
 
     if (conn == NULL) {
 	tst = ADMRXCONNNULL;
@@ -1547,7 +1548,8 @@ util_RPCStatsStateGet(struct rx_connection *conn,
 	goto fail_util_RPCStatsStateGet;
     }
 
-    tst = (*rpc) (conn, state);
+    tst = (*rpc) (conn, &istate);
+    *state = istate;
 
     if (!tst) {
 	rc = 1;
