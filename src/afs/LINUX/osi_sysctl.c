@@ -80,6 +80,8 @@ static struct ctl_table afs_sysctl_table[] = {
     AFS_SYSCTL_INT( 13, 0644, afs_cacheBlocks),
     AFS_SYSCTL_INT2(14, 0644, "md5inum", afs_md5inum),
 
+    AFS_SYSCTL_INT( 15, 0644, afs_usednlc),
+
     AFS_SYSCTL_SENTINEL
 };
 # if !defined(HAVE_LINUX_REGISTER_SYSCTL)

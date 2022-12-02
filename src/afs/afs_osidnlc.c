@@ -53,7 +53,11 @@ typedef enum { osi_dnlc_enterT, InsertEntryT, osi_dnlc_lookupT,
     osi_dnlc_purgevpT, osi_dnlc_purgeT
 } traceevt;
 
+#ifdef AFS_LINUX_ENV
+int afs_usednlc = 0;
+#else
 int afs_usednlc = 1;
+#endif
 
 struct dt {
     traceevt event;
