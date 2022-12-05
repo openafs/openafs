@@ -2228,6 +2228,7 @@ CheckOptions(struct cmd_syndesc *as)
 	    ("afsd: [-biods] currently only enabled for aix3.x VM supported systems\n");
 #else
 	cmd_OptionAsInt(as, OPT_biods, &nBiods);
+	sawBiod = 1;
 #endif
     }
     cmd_OptionAsInt(as, OPT_prealloc, &preallocs);
