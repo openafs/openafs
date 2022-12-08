@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.8.9 (in progress)
+OpenAFS 1.8.9
 
   All platforms
 
@@ -25,6 +25,12 @@ OpenAFS 1.8.9 (in progress)
       is breaking callbacks on clients with alternate addresses. Avoid
       unnecessary several second delays in some cases during database
       quorum processing (14815)
+
+    * Detect invalid (negative) inputs to FetchData RPCs and reject them
+      early.  The previous behavior only detected the error when actually
+      attempting to read from storage, which resulted in the volume being
+      taken offline since errors were assumed to originate from the
+      underlying storage (15224)
 
   All UNIX/Linux client platforms
 
