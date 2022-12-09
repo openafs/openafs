@@ -629,6 +629,9 @@ if test "x$GCC" = "xyes"; then
     XCFLAGS="${XCFLAGS} -Wall -Wstrict-prototypes -Wold-style-definition -Werror -fdiagnostics-show-option -Wpointer-arith -fno-common"
     CFLAGS_WERROR="-Werror"
     if test "x$enable_checking" != "xall"; then
+      XCFLAGS="${XCFLAGS} -Wno-unknown-pragmas"
+      CFLAGS_WERROR="${CFLAGS_WERROR} -Wno-unknown-pragmas"
+
       CFLAGS_NOERROR="-Wno-error"
       CFLAGS_NOUNUSED="-Wno-unused"
       CFLAGS_NOOLDSTYLE="-Wno-old-style-definition"
