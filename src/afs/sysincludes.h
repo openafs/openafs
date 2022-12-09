@@ -110,9 +110,6 @@
 
 #elif defined(AFS_LINUX_ENV)
 # include <linux/version.h>
-# ifdef HAVE_LINUX_CONFIG_H
-#  include <linux/config.h>
-# endif
 # include <linux/linkage.h>
 # include <linux/limits.h>
 # include <linux/wait.h>

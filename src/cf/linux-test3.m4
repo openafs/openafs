@@ -22,8 +22,6 @@ AC_SUBST(RHCONFIG_MP)
 ])
 
 
-dnl This depends on LINUX_CONFIG_H_EXISTS running first!
-
 AC_DEFUN([LINUX_WHICH_MODULES],[
 if test "x$enable_redhat_buildsys" = "xyes"; then
   MPS=Default
@@ -31,18 +29,11 @@ else
   save_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $RHCONFIG_SP $CPPFLAGS"
   AC_MSG_CHECKING(which kernel modules to build)
-  if test "x$ac_cv_linux_header_config_h" = "xyes"; then
-    CPPFLAGS="-DCONFIG_H_EXISTS $CPPFLAGS"
-  fi
   if test "x$ac_linux_rhconfig" = "xyes"; then
       MPS="MP SP"
   else
   AC_CACHE_VAL(ac_cv_linux_config_smp, [
-  AC_TRY_KBUILD(
-[#ifdef CONFIG_H_EXISTS
-#include <linux/config.h>
-#endif
-],
+  AC_TRY_KBUILD([],
 [#ifndef CONFIG_SMP
 lose;
 #endif

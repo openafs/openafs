@@ -14,9 +14,6 @@
 #include "afs/afs_stats.h"	/* afs statistics */
 
 #include <linux/sysctl.h>
-#ifdef HAVE_LINUX_CONFIG_H
-#include <linux/config.h>
-#endif
 
 #ifdef CONFIG_SYSCTL
 

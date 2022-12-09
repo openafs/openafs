@@ -66,9 +66,6 @@
 #define scsi_command_size scsi_command_size_tbl
 #endif
 #include <linux/sched.h>
-#ifdef HAVE_LINUX_CONFIG_H
-# include <linux/config.h>
-#endif
 #include <linux/linkage.h>
 #include <linux/init.h>
 #include <linux/unistd.h>
