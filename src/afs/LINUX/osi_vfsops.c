@@ -164,7 +164,10 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
 #endif
 #endif
     code = afs_root(sb);
-out:
+
+#if defined(HAVE_LINUX_SUPER_SETUP_BDI) || defined(HAVE_LINUX_BDI_INIT)
+ out:
+#endif
     if (code) {
 	afs_globalVFS = NULL;
 	afs_FlushAllVCaches();
