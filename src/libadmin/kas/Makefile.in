@@ -46,6 +46,7 @@ libkasadmin.a: ${LIBOBJS}
 	$(AR) crv $@ ${LIBOBJS}
 	${RANLIB} $@
 
+CFLAGS_afs_kasAdmin.o=@CFLAGS_NOSTRICT_PROTOTYPES@
 afs_kasAdmin.o: afs_kasAdmin.c afs_kasAdmin.h
 
 kauth.cs.o: ../../kauth/kauth.cs.c

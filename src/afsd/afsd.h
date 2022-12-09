@@ -10,10 +10,6 @@
 #ifndef AFSD_AFSD_H
 #define AFSD_AFSD_H
 
-#ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wstrict-prototypes"
-#endif
-
 extern int afsd_debug;
 extern int afsd_verbose;
 extern char *afsd_cacheMountDir;

@@ -13,11 +13,6 @@
 #include <afs/stds.h>
 
 #include <roken.h>
-
-#ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wstrict-prototypes"
-#endif
-
 #include <afs/cmd.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>

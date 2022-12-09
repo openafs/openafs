@@ -13,10 +13,6 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-#ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wstrict-prototypes"
-#endif
-
 #include <roken.h>
 
 #include <rx/rx.h>

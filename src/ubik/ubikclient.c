@@ -17,10 +17,6 @@
 # include <opr/lock.h>
 #endif
 
-#ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wstrict-prototypes"
-#endif
-
 #include <afs/pthread_glock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
