@@ -23,6 +23,7 @@
 #include <afs/cmd.h>
 #include <afs/com_err.h>
 #include <afs/bubasics.h>
+#include <afs/opr_assert.h>
 
 #include "bc.h"
 #include "bucoord_internal.h"
@@ -191,8 +192,14 @@ bc_CreateVolumeSet(struct bc_config *aconfig, char *avolName,
     /* move to end of the list */
 
     nset = calloc(1, sizeof(struct bc_volumeSet));
+    if (nset == NULL)
+	return ENOMEM;
     nset->flags = aflags;
     nset->name = strdup(avolName);
+    if (nset->name == NULL) {
+	free(nset);
+	return ENOMEM;
+    }
     if (aflags & VSFLAG_TEMPORARY) {
 	/* Add to beginning of list */
 	nset->next = aconfig->vset;
@@ -303,20 +310,31 @@ bc_AddVolumeItem(struct bc_config *aconfig, char *avolName, char *ahost,
     /* move to end of the list */
     for (tentry = *tlast; tentry; tlast = &tentry->next, tentry = *tlast);
     tentry = calloc(1, sizeof(struct bc_volumeEntry));
+    if (tentry == NULL)
+	return ENOMEM;
     tentry->serverName = strdup(ahost);
     tentry->partname = strdup(apart);
     tentry->name = strdup(avol);
+    if (tentry->serverName == NULL || tentry->partname == NULL ||
+	tentry->name == NULL) {
+	code = ENOMEM;
+	goto error;
+    }
 
     code = bc_ParseHost(tentry->serverName, &tentry->server);
     if (code)
-	return (code);
+	goto error;
 
     code = bc_GetPartitionID(tentry->partname, &tentry->partition);
     if (code)
-	return (code);
+	goto error;
 
     *tlast = tentry;		/* thread on the list */
     return 0;
+
+ error:
+    FreeVolumeEntry(tentry);
+    return code;
 }
 
 struct bc_volumeSet *
@@ -365,6 +383,8 @@ bc_CreateDumpSchedule(struct bc_config *aconfig, char *adumpName,
 	return -2;		/* name specification error */
 
     tdump = calloc(1, sizeof(struct bc_dumpSchedule));
+    if (tdump == NULL)
+	return ENOMEM;
 
     /* prepend this node to the dump schedule list */
     tdump->next = aconfig->dsched;
@@ -372,6 +392,10 @@ bc_CreateDumpSchedule(struct bc_config *aconfig, char *adumpName,
 
     /* save the name of this dump node */
     tdump->name = strdup(adumpName);
+    if (tdump->name == NULL) {
+	free(tdump);
+	return ENOMEM;
+    }
 
     /* expiration information */
     tdump->expDate = expDate;
@@ -532,6 +556,8 @@ FindDump(struct bc_config *aconfig, char *nodeString,
 
     *parentptr = 0;
     *nodeptr = 0;
+
+    opr_Assert(nodeString != NULL);
 
     /* ensure first char is correct separator */
     if ((nodeString[0] != '/')

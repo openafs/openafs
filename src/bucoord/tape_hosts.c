@@ -248,7 +248,7 @@ bc_ParseHosts(void)
 	if (!tp)
 	    break;		/* end of file */
 
-	sscanf(tbuffer, "%s %u", hostName, &port);
+	sscanf(tbuffer, "%255s %u", hostName, &port);
 	th = gethostbyname(hostName);
 	if (th == 0) {
 	    afs_com_err(whoami, 0,
@@ -256,8 +256,11 @@ bc_ParseHosts(void)
 		    hostName);
 	}
 	the = calloc(1, sizeof(struct bc_hostEntry));
-	if (the == (struct bc_hostEntry *)0)
+	if (the == NULL) {
+	    bc_globalConfig->tapeHosts = tfirst;
+	    bc_ClearHosts();
 	    return (BC_NOMEM);
+	}
 	if (tlast) {
 	    tlast->next = the;
 	    tlast = the;
@@ -266,6 +269,11 @@ bc_ParseHosts(void)
 	}
 	the->next = (struct bc_hostEntry *)0;
 	the->name = strdup(hostName);
+	if (the->name == NULL) {
+	    bc_globalConfig->tapeHosts = tfirst;
+	    bc_ClearHosts();
+	    return (BC_NOMEM);
+	}
 	the->portOffset = port;
 	if (th) {
 	    memcpy(&the->addr.sin_addr.s_addr, th->h_addr, 4);

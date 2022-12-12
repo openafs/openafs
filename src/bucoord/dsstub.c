@@ -200,8 +200,8 @@ tailCompPtr(char *pathNamePtr)
  *	afile - ptr to file, for reading.
  *	various - ptrs for return values
  * exit:
- *	aname - string of form volume_set.dump_level
- *	dumpName - pathname of dump schedule node
+ *	aname - string of form volume_set.dump_level (char [256])
+ *	dumpName - pathname of dump schedule node (char [1024])
  *	aparent - id of parent
  *	aincTime
  *	acreateTime - time at which dump was created
@@ -219,7 +219,7 @@ ScanDumpHdr(FILE *afile, char *aname, char *dumpName, afs_int32 *aparent, afs_in
     if (!tp)
 	return -1;
     code =
-	sscanf(tbuffer, "%d %d %s %s %ld %ld %ld %ld", &dbmagic, &dbversion,
+	sscanf(tbuffer, "%d %d %255s %1023s %ld %ld %ld %ld", &dbmagic, &dbversion,
 	       aname, dumpName, (long int *) aparent, (long int *) aincTime,
 	       (long int *) acreateTime, (long int *) alevel);
     if (code != 8)
@@ -255,7 +255,7 @@ afs_int32 ScanTapeVolume(FILE *afile, char *avolName, afs_int32 *avolID, char *a
 	    return 1;		/* eof */
     }
     code =
-	sscanf(tbuffer, "%s %ld %s %ld %ld %ld %ld", avolName,
+	sscanf(tbuffer, "%255s %ld %255s %ld %ld %ld %ld", avolName,
 	       (long int *) avolID, atapeName, (long int *)apos,
 	       (long int *) aseq, (long int *) alastp,
 	       (long int *) cloneTime);

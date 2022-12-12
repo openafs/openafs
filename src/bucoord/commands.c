@@ -788,7 +788,7 @@ printIfStatus(struct tciStatusS *statusPtr)
 {
     printf("Task %d: %s: ", statusPtr->taskId, statusPtr->taskName);
     if (statusPtr->nKBytes)
-	printf("%ld Kbytes transferred", (long unsigned int) statusPtr->nKBytes);
+	printf("%lu Kbytes transferred", (long unsigned int) statusPtr->nKBytes);
     if (strlen(statusPtr->volumeName) != 0) {
 	if (statusPtr->nKBytes)
 	    printf(", ");
@@ -1232,8 +1232,10 @@ bc_VolRestoreCmd(struct cmd_syndesc *as, void *arock)
 
 	for (ti = as->parms[5].items, i = 0; ti; ti = ti->next, i++) {
 	    ports[i] = getPortOffset(ti->data);
-	    if (ports[i] < 0)
+	    if (ports[i] < 0) {
+		free(ports);
 		return (BC_BADARG);
+	    }
 	}
     }
 
@@ -1362,8 +1364,10 @@ bc_DiskRestoreCmd(struct cmd_syndesc *as, void *arock)
 
 	for (ti = as->parms[2].items, i = 0; ti; ti = ti->next, i++) {
 	    ports[i] = getPortOffset(ti->data);
-	    if (ports[i] < 0)
+	    if (ports[i] < 0) {
+		free(ports);
 		return (BC_BADARG);
+	    }
 	}
     }
 
@@ -1378,6 +1382,7 @@ bc_DiskRestoreCmd(struct cmd_syndesc *as, void *arock)
 			 cstruct);
     if (code) {
 	afs_com_err(whoami, code, "; Failed to evaluate volume set");
+	free(ports);
 	return (-1);
     }
 
@@ -1497,7 +1502,7 @@ bc_VolsetRestoreCmd(struct cmd_syndesc *as, void *arock)
 
 	while (fgets(line, 255, fd)) {
 	    count =
-		sscanf(line, "%s %s %s %s", server, partition, volume, rest);
+		sscanf(line, "%49s %49s %49s %255s", server, partition, volume, rest);
 
 	    if (count <= 0)
 		continue;
@@ -1522,11 +1527,20 @@ bc_VolsetRestoreCmd(struct cmd_syndesc *as, void *arock)
 
 	    /* Allocate a volumeDump structure and link it in */
 	    tvol = calloc(1, sizeof(struct bc_volumeDump));
+	    if (tvol == NULL) {
+		fclose(fd);
+		afs_com_err(whoami, BC_NOMEM, NULL);
+		code = BC_NOMEM;
+		goto error;
 
+	    }
 	    tvol->name = malloc(VOLSER_MAXVOLNAME + 1);
 	    if (!tvol->name) {
+		fclose(fd);
+		free(tvol);
 		afs_com_err(whoami, BC_NOMEM, NULL);
-		return BC_NOMEM;
+		code = BC_NOMEM;
+		goto error;
 	    }
 	    strncpy(tvol->name, volume, VOLSER_OLDMAXVOLNAME);
 	    memcpy(&tvol->server, &destServer, sizeof(destServer));
@@ -1552,13 +1566,16 @@ bc_VolsetRestoreCmd(struct cmd_syndesc *as, void *arock)
 	ports = malloc(portCount * sizeof(afs_int32));
 	if (!ports) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
-	    return BC_NOMEM;
+	    code = BC_NOMEM;
+	    goto error;
 	}
 
 	for (ti = as->parms[2].items, i = 0; ti; ti = ti->next, i++) {
 	    ports[i] = getPortOffset(ti->data);
-	    if (ports[i] < 0)
-		return (BC_BADARG);
+	    if (ports[i] < 0) {
+		code = BC_BADARG;
+		goto error;
+	    }
 	}
     }
 
@@ -1577,6 +1594,18 @@ bc_VolsetRestoreCmd(struct cmd_syndesc *as, void *arock)
 			  /*dumpSched */ NULL, /*append */ 0, dontExecute);
     if (code)
 	afs_com_err(whoami, code, "; Failed to queue restore");
+
+    return code;
+
+  error:
+    while (volsToRestore != NULL) {
+	struct bc_volumeDump *tvol;
+	free(volsToRestore->name);
+	tvol = volsToRestore;
+	volsToRestore = volsToRestore->next;
+	free(tvol);
+    }
+    free(ports);
 
     return code;
 }
@@ -1636,17 +1665,17 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
     code = bc_UpdateDumpSchedule();
     if (code) {
 	afs_com_err(whoami, code, "; Can't retrieve dump schedule");
-	return (code);
+	goto exit;
     }
     code = bc_UpdateVolumeSet();
     if (code) {
 	afs_com_err(whoami, code, "; Can't retrieve volume sets");
-	return (code);
+	goto exit;
     }
     code = bc_UpdateHosts();
     if (code) {
 	afs_com_err(whoami, code, "; Can't retrieve tape hosts");
-	return (code);
+	goto exit;
     }
 
     /*
@@ -1659,14 +1688,16 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	if (as->parms[0].items || as->parms[1].items || as->parms[2].items
 	    || as->parms[4].items) {
 	    afs_com_err(whoami, 0, "Invalid option specified with -file option");
-	    return -1;
+	    code = -1;
+	    goto exit;
 	}
     } else {
 	loadfile = 0;
 	if (!as->parms[0].items || !as->parms[1].items) {
 	    afs_com_err(whoami, 0,
 		    "Must specify volume set name and dump level name");
-	    return -1;
+	    code = -1;
+	    goto exit;
 	}
     }
 
@@ -1677,8 +1708,10 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	doAt = 1;
 
 	timeString = concatParams(as->parms[3].items);
-	if (!timeString)
-	    return (-1);
+	if (timeString == NULL) {
+	    code = -1;
+	    goto exit;
+	}
 
 	/*
 	 * Now parse this string for the time to start.
@@ -1688,7 +1721,8 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	if (code) {
 	    afs_com_err(whoami, 0, "Can't parse dump start date and time");
 	    afs_com_err(whoami, 0, "%s", ktime_GetDateUsage());
-	    return (1);
+	    code = 1;
+	    goto exit;
 	}
     } else
 	doAt = 0;
@@ -1705,14 +1739,17 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	/* get the port number, if one was specified */
 	if (as->parms[2].items) {
 	    portp = malloc(sizeof(afs_int32));
-	    if (!portp) {
+	    if (portp == NULL) {
 		afs_com_err(whoami, BC_NOMEM, NULL);
-		return BC_NOMEM;
+		code = BC_NOMEM;
+		goto exit;
 	    }
 
 	    *portp = getPortOffset(as->parms[2].items->data);
-	    if (*portp < 0)
-		return (BC_BADARG);
+	    if (*portp < 0) {
+		code = BC_BADARG;
+		goto exit;
+	    }
 	}
 
 	doAppend = (as->parms[4].items ? 1 : 0);	/* -append */
@@ -1724,14 +1761,16 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	if (!tvs) {
 	    afs_com_err(whoami, 0,
 		    "Can't find volume set '%s' in backup database", vsName);
-	    return (-1);
+	    code = -1;
+	    goto exit;
 	}
 	baseds = bc_FindDumpSchedule(bc_globalConfig, dumpPath);
 	if (!baseds) {
 	    afs_com_err(whoami, 0,
 		    "Can't find dump schedule '%s' in backup database",
 		    dumpPath);
-	    return (-1);
+	    code = -1;
+	    goto exit;
 	}
 
     }
@@ -1788,7 +1827,8 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	    statusPtr->cmdLine = malloc(length);
 	    if (!statusPtr->cmdLine) {
 		afs_com_err(whoami, BC_NOMEM, NULL);
-		return BC_NOMEM;
+		code = BC_NOMEM;
+		goto exit;
 	    }
 
 	    /* Now reconstruct the dump command */
@@ -1828,7 +1868,8 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	    unlock_Status();
 	}
 
-	return (0);
+	code = 0;
+	goto exit;
     }
 
     /*
@@ -1840,9 +1881,11 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	loadFile = strdup(as->parms[6].items->data);
 	if (!loadFile) {
 	    afs_com_err(whoami, BC_NOMEM, NULL);
-	    return BC_NOMEM;
+	    code = BC_NOMEM;
+	    goto exit;
 	}
-	return 0;
+	code = 0;
+	goto exit;
     }
 
     /*
@@ -1914,11 +1957,13 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
     code = bc_EvalVolumeSet(bc_globalConfig, tvs, &volsToDump, cstruct);
     if (code) {
 	afs_com_err(whoami, code, "; Failed to evaluate volume set");
-	return (-1);
+	code = -1;
+	goto exit;
     }
     if (!volsToDump) {
 	printf("No volumes to dump\n");
-	return (0);
+	code = 0;
+	goto exit;
     }
 
     /* Determine what the clone time of the volume was when it was
@@ -1958,8 +2003,10 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
     for (tve = volsToDump; tve; tve = tve->next) {
 	printf("\t%s (%u)\n", tve->name, tve->vid);
     }
-    if (dontExecute)
-	return (0);
+    if (dontExecute) {
+	code = 0;
+	goto exit;
+    }
 
     code = bc_StartDmpRst(bc_globalConfig, dumpPath, vsName, volsToDump,
 			  /*destServer */ NULL, /*destPartition */ 0,
@@ -1970,6 +2017,11 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
     if (code)
 	afs_com_err(whoami, code, "; Failed to queue dump");
 
+    /* portp is freed by bc_StartDmpRst */
+    portp = NULL;
+
+ exit:
+    free(portp);
     return (code);
 }				/*bc_DumpCmd */
 

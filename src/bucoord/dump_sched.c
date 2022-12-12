@@ -416,7 +416,7 @@ bc_ParseDumpSchedule(void)
 	if (tp == 0)
 	    break;		/* hit eof? */
 	code =
-	    sscanf(tbuffer, "%s %s %d %d", dsname, period, &expDate,
+	    sscanf(tbuffer, "%255s %63s %d %d", dsname, period, &expDate,
 		   &expType);
 	if (code != 4) {
 	    afs_com_err(whoami, 0,
@@ -425,9 +425,15 @@ bc_ParseDumpSchedule(void)
 	    return (BC_INTERNALERROR);
 	}
 	tds = calloc(1, sizeof(struct bc_dumpSchedule));
+        if (tds == NULL)
+	    return ENOMEM;
 
 	tds->next = (struct bc_dumpSchedule *)0;
 	tds->name = strdup(dsname);
+	if (tds->name == NULL) {
+	    free(tds);
+	    return ENOMEM;
+	}
 
 	tds->expDate = expDate;
 	tds->expType = expType;

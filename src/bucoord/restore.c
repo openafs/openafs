@@ -148,7 +148,7 @@ bc_Restorer(afs_int32 aindex)
 
     char vname[BU_MAXNAMELEN];
     struct budb_dumpEntry *dumpDescr, dumpDescr1, dumpDescr2;
-    struct budb_volumeEntry *volumeEntries;
+    struct budb_volumeEntry *volumeEntries = NULL;
     struct bc_volumeDump *tvol;
     afs_int32 code = 0, tcode;
     afs_int32 tapedumpid, parent;
@@ -186,6 +186,10 @@ bc_Restorer(afs_int32 aindex)
     int foundtape, c;
 
     dlevels = malloc(num_dlevels * sizeof(*dlevels));
+    if (dlevels == NULL) {
+	afs_com_err(whoami, BC_NOMEM, NULL);
+	ERROR(BC_NOMEM);
+    }
 
     dumpTaskPtr = &bc_dumpTasks[aindex];
     serverAll = HOSTADDR(&dumpTaskPtr->destServer);
@@ -332,6 +336,10 @@ bc_Restorer(afs_int32 aindex)
 
 		num_dlevels += num_dlevels;	/* double */
 		dlevels = malloc(num_dlevels * sizeof(*dlevels));
+		if (dlevels == NULL) {
+		    afs_com_err(whoami, BC_NOMEM, NULL);
+		    ERROR(BC_NOMEM);
+		}
 		memcpy(dlevels, tdl, (num_dlevels/2) * sizeof(*dlevels));
 		free(tdl);
 	    }
@@ -471,14 +479,14 @@ bc_Restorer(afs_int32 aindex)
 			    tle = calloc(1, sizeof(struct bc_tapeList));
 			    if (!tle) {
 				afs_com_err(whoami, BC_NOMEM, NULL);
-				return (BC_NOMEM);
+				ERROR(BC_NOMEM);
 			    }
 
 			    tle->tapeName = strdup(volumeEntries[ve].tape);
 			    if (!tle->tapeName) {
 				free(tle);
 				afs_com_err(whoami, BC_NOMEM, NULL);
-				return (BC_NOMEM);
+				ERROR(BC_NOMEM);
 			    }
 
 			    tle->dumpID = dlevels[lv].DumpId;
@@ -521,14 +529,14 @@ bc_Restorer(afs_int32 aindex)
 			    ti = calloc(1, sizeof(struct bc_tapeItem));
 			    if (!ti) {
 				afs_com_err(whoami, BC_NOMEM, NULL);
-				return (BC_NOMEM);
+				ERROR(BC_NOMEM);
 			    }
 
 			    ti->volumeName = strdup(volumeEntries[ve].name);
 			    if (!ti->volumeName) {
 				free(ti);
 				afs_com_err(whoami, BC_NOMEM, NULL);
-				return (BC_NOMEM);
+				ERROR(BC_NOMEM);
 			    }
 
 			    ti->server = vi->server;
@@ -683,7 +691,7 @@ bc_Restorer(afs_int32 aindex)
 
 	code = ConnectButc(dumpTaskPtr->config, port, &aconn);
 	if (code)
-	    return (code);
+	    ERROR(code);
 
 	if (tcarray[startentry].dumpLevel == 0)
 	    printf("\nFull restore being processed on port %d\n", port);

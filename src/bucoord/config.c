@@ -75,7 +75,13 @@ HostAdd(struct bc_hostEntry **alist, char *aname, afs_int32 aport)
 
     /* tlast now points to the next pointer (or head pointer) we should overwrite */
     tentry = calloc(1, sizeof(struct bc_hostEntry));
+    if (tentry == NULL)
+	return ENOMEM;
     tentry->name = strdup(aname);
+    if (tentry->name == NULL) {
+	free(tentry);
+	return ENOMEM;
+    }
     *tlast = tentry;
     tentry->next = (struct bc_hostEntry *)0;
     tentry->addr.sin_family = AF_INET;

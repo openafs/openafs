@@ -423,6 +423,10 @@ bc_ScanDumps(struct bc_config *config, afs_int32 dbAddFlag, afs_int32 port)
 
     /* create status monitor block */
     statusPtr = createStatusNode();
+    if (statusPtr == NULL) {
+	afs_com_err(whoami, ENOMEM, "; Failed to start scantape");
+	return ENOMEM;
+    }
     lock_Status();
     statusPtr->taskId = taskId;
     statusPtr->port = port;

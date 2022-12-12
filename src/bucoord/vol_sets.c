@@ -472,7 +472,7 @@ bc_ParseVolumeSet(void)
 	     * Scan a header entry.
 	     */
 	    readHeader = 0;
-	    code = sscanf(tbuffer, "%s %s", serverName, vsname);
+	    code = sscanf(tbuffer, "%255s %255s", serverName, vsname);
 	    if ((code != 2)
 		|| (strcmp(serverName, "volumeset") != 0)
 		) {
@@ -485,7 +485,18 @@ bc_ParseVolumeSet(void)
 	     * global configuration structure.
 	     */
 	    tvs = calloc(1, sizeof(struct bc_volumeSet));
+	    if (tvs == NULL) {
+		afs_com_err(whoami, 0,
+			"Can't malloc() a new volume set!");
+		return -1;
+	    }
 	    tvs->name = strdup(vsname);
+	    if (tvs->name == NULL) {
+		free(tvs);
+		afs_com_err(whoami, 0,
+			"Can't malloc() a new volume set name!");
+		return -1;
+	    }
 
 	    /* append to the end */
 	    for (ppvs = &bc_globalConfig->vset, pvs = *ppvs; pvs;
@@ -497,7 +508,7 @@ bc_ParseVolumeSet(void)
 	    /* Scan a volume name entry, which contains the server name,
 	     * partition pattern, and volume pattern.
 	     */
-	    code = sscanf(tbuffer, "%s %s %s", serverName, partName, vsname);
+	    code = sscanf(tbuffer, "%255s %255s %255s", serverName, partName, vsname);
 	    if (code == 1 && strcmp(serverName, "end") == 0) {
 		/* This was really a line delimiting the current volume set.
 		 * Next time around, we should try to read a header.
@@ -525,23 +536,32 @@ bc_ParseVolumeSet(void)
 	     */
 	    tve->serverName = strdup(serverName);
 	    if (!tve->serverName) {
+		free(tve);
 		afs_com_err(whoami, 0,
 			"Can't malloc() a new volume spec server name field!");
 		return (-1);
 	    }
 	    tve->partname = strdup(partName);
 	    if (!tve->partname) {
+		free(tve->serverName);
+		free(tve);
 		afs_com_err(whoami, 0,
 			"Can't malloc() a new volume spec partition pattern field!");
 		return (-1);
 	    }
 	    code = bc_GetPartitionID(partName, &tve->partition);
 	    if (code) {
+		free(tve->serverName);
+		free(tve->partname);
+		free(tve);
 		afs_com_err(whoami, 0, "Can't parse partition '%s'", partName);
 		return -1;
 	    }
 	    tp = strdup(vsname);
 	    if (!tp) {
+		free(tve->serverName);
+		free(tve->partname);
+		free(tve);
 		afs_com_err(whoami, 0,
 			"Can't malloc() a new volume spec volume pattern field!");
 		return (-1);
