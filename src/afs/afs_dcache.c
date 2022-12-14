@@ -2559,7 +2559,6 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 
 	if (size)
 	    afs_stats_cmperf.dcacheMisses++;
-	code = 0;
 	/*
 	 * Dynamic root support:  fetch data from local memory.
 	 */
@@ -2633,7 +2632,6 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 			newCallback = tc->parent->srvr->server;
 			setNewCallback = 1;
 		    }
-		    i = osi_Time();
 		    code = afs_CacheFetchProc(tc, rxconn, file, Position, tdc,
 					       avc, size, tsmall);
 		} else
@@ -3654,8 +3652,6 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
 	cacheDiskType = AFS_FCACHE_TYPE_MEM;
 	afs_cacheType = &afs_MemCacheOps;
 	afiles = (afiles < aDentries) ? afiles : aDentries;	/* min */
-	ablocks = afiles * (AFS_FIRSTCSIZE / 1024);
-	/* ablocks is reported in 1K blocks */
 	code = afs_InitMemCache(afiles, AFS_FIRSTCSIZE, aflags);
 	if (code != 0) {
 	    afs_warn("afsd: memory cache too large for available memory.\n");

@@ -412,17 +412,13 @@ afs_NoCacheFetchProc(struct rx_call *acall,
     afs_int32 length;
     afs_int32 code;
     int moredata, iovno, iovoff, iovmax, result, locked;
-    struct iovec *ciov;
     struct iovec *rxiov;
     int nio = 0;
-    bypass_page_t pp;
 
     int curpage, bytes;
     int pageoff;
 
     rxiov = osi_AllocSmallSpace(sizeof(struct iovec) * RX_MAXIOVECS);
-    ciov = auio->uio_iov;
-    pp = (bypass_page_t) ciov->iov_base;
     iovmax = auio->uio_iovcnt - 1;
     iovno = iovoff = result = 0;
 
@@ -475,6 +471,7 @@ afs_NoCacheFetchProc(struct rx_call *acall,
 	    /* properly, this should track uio_resid, not a fixed page size! */
 	    while (pageoff < auio->uio_iov[curpage].iov_len) {
 		/* If no more iovs, issue new read. */
+		bypass_page_t pp;
 		if (iovno >= nio) {
 		    COND_GUNLOCK(locked);
 		    bytes = rx_Readv(acall, rxiov, &nio, RX_MAXIOVECS, length);
