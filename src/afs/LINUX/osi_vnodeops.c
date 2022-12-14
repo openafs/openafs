@@ -32,7 +32,7 @@
 #endif
 #include <linux/pagemap.h>
 #include <linux/writeback.h>
-#if defined(HAVE_LINUX_LRU_CACHE_ADD_FILE)
+#if defined(HAVE_LINUX_FOLIO_ADD_LRU) || defined(HAVE_LINUX_LRU_CACHE_ADD_FILE)
 # include <linux/swap.h>
 #else
 # include <linux/pagevec.h>
@@ -78,7 +78,8 @@ extern struct vcache *afs_globalVp;
 
 /* Handle interfacing with Linux's pagevec/lru facilities */
 
-#if defined(HAVE_LINUX_LRU_CACHE_ADD_FILE) || defined(HAVE_LINUX_LRU_CACHE_ADD)
+#if defined(HAVE_LINUX_FOLIO_ADD_LRU) || \
+    defined(HAVE_LINUX_LRU_CACHE_ADD_FILE) || defined(HAVE_LINUX_LRU_CACHE_ADD)
 
 /*
  * Linux's lru_cache_add_file provides a simplified LRU interface without
@@ -97,7 +98,10 @@ afs_lru_cache_init(struct afs_lru_pages *alrupages)
 static inline void
 afs_lru_cache_add(struct afs_lru_pages *alrupages, struct page *page)
 {
-# if defined(HAVE_LINUX_LRU_CACHE_ADD)
+# if defined(HAVE_LINUX_FOLIO_ADD_LRU)
+    struct folio *folio = page_folio(page);
+    folio_add_lru(folio);
+# elif defined(HAVE_LINUX_LRU_CACHE_ADD)
     lru_cache_add(page);
 # elif defined(HAVE_LINUX_LRU_CACHE_ADD_FILE)
     lru_cache_add_file(page);

@@ -173,9 +173,16 @@ AC_CHECK_LINUX_FUNC([in_compat_syscall],
 
 dnl lru_cache_add exported in Linux 5.8
 dnl    replaces lru_cache_add_file
+dnl removed in linux 6.1.  folio_add_lru is a replacement
 AC_CHECK_LINUX_FUNC([lru_cache_add],
                     [#include <linux/swap.h>],
                     [lru_cache_add(NULL);])
+
+dnl Linux 5.16 added folio_add_lru as a replacement for
+dnl lru_cache_add
+AC_CHECK_LINUX_FUNC([folio_add_lru],
+                    [#include <linux/swap.h>],
+		    [folio_add_lru(NULL);])
 
 dnl Linux 5.8 replaced kernel_setsockopt with helper functions
 dnl e.g. ip_sock_set_mtu_discover, ip_sock_set_recverr
