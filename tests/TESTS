@@ -18,6 +18,7 @@ opr/time
 opr/uuid
 ptserver/pt_util
 ptserver/pts-man
+rx/atomic
 rx/event
 rx/perf
 volser/vos-man

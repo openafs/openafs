@@ -10,9 +10,12 @@ MODULE_CFLAGS = -I$(TOP_OBJDIR)
 LIBS = $(abs_top_builddir)/tests/common/libafstest_common.la \
        $(abs_top_builddir)/src/rx/liboafs_rx.la
 
-BINS = event-t
+BINS = atomic-t event-t
 
 all: $(BINS)
+
+atomic-t: atomic-t.o $(LIBS)
+	$(LT_LDRULE_static) atomic-t.o $(LIBS) $(LIB_roken) $(XLIBS)
 
 event-t: event-t.o $(LIBS)
 	$(LT_LDRULE_static) event-t.o $(LIBS) $(LIB_roken) $(XLIBS)
