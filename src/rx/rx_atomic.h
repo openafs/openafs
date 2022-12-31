@@ -318,7 +318,7 @@ rx_atomic_add(rx_atomic_t *atomic, int change) {
 
 static_inline int
 rx_atomic_add_and_read(rx_atomic_t *atomic, int change) {
-    return __sync_fetch_and_add(&atomic->var, change);
+    return __sync_add_and_fetch(&atomic->var, change);
 }
 
 static_inline void
