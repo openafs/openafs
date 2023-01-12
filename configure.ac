@@ -5,7 +5,7 @@ AC_CONFIG_MACRO_DIR([src/cf])
 AC_CONFIG_SRCDIR([src/config/stds.h])
 
 AC_CONFIG_HEADERS([src/config/afsconfig.h])
-MACOS_VERSION=1.8.9
+MACOS_VERSION=1.8.10fc1
 
 AC_SUBST([MACOS_VERSION])
 
