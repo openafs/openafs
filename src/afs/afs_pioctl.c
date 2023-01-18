@@ -2210,8 +2210,11 @@ afs_LookupName(struct vcache *avc, struct vrequest *areq, char *aname,
     struct dcache *tdc;
     afs_size_t offset, len;
 
-    memset(asys, 0, sizeof(*asys));
-    memset(afid, 0, sizeof(*afid));
+    /* do not leave garbage in the output parameters in error cases */
+    if (asys != NULL)
+	memset(asys, 0, sizeof(*asys));
+    if (afid != NULL)
+	memset(afid, 0, sizeof(*afid));
 
     if (!avc || !areq || !aname || !asys || !afid) {
 	afs_warn("afs: Internal error, bad args to afs_LookupName: %p, %p, %p, "
