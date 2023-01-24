@@ -1743,6 +1743,7 @@ GetLastComponent(const char *data, char **outdir, char **outbase,
 
     *outbase = NULL;
     *outdir = NULL;
+    memset(&statbuff, 0, sizeof(statbuff));
 
     if (thru_symlink)
 	*thru_symlink = 0;
@@ -1750,7 +1751,7 @@ GetLastComponent(const char *data, char **outdir, char **outbase,
     snprintf(orig_name, sizeof(orig_name), "%s%s",
 	     (data[0] == '/') ? "" : "./", data);
 
-    if (lstat(orig_name, &statbuff) < 0) {
+    if (!literal && lstat(orig_name, &statbuff) < 0) {
 	/* if lstat fails, we should still try the pioctl, since it
 	 * may work (for example, lstat will fail, but pioctl will
 	 * work if the volume of offline (returning ENODEV). */
