@@ -223,6 +223,7 @@ CmdProlog(struct cmd_syndesc *as, char **cellp, char **realmp,
           char **fnp, char **slp)
 {
     int i;
+    int code;
     struct cmd_parmdesc *pdp;
 
     if (as == NULL) {
@@ -273,10 +274,25 @@ CmdProlog(struct cmd_syndesc *as, char **cellp, char **realmp,
 		waittime = atoi(pdp->items->data);
             else if (strcmp(pdp->name, "-readlock") == 0)
 		readlock = 1;
+	    else if (strcmp(pdp->name, "-as-user") == 0) {
+		code = afscp_LocalAuthAs(pdp->items->data);
+		if (code != 0) {
+		    afs_com_err(pnp, code, "error setting -as-user '%s'",
+				pdp->items->data);
+		    return -1;
+		}
+	    }
 	}
     }
     return 0;
 }				/* CmdProlog */
+
+static void
+common_parms(struct cmd_syndesc *as)
+{
+    cmd_AddParm(as, "-as-user", CMD_SINGLE, CMD_OPTIONAL,
+		"impersonate user via localauth");
+}
 
 int
 main(int argc, char **argv)
@@ -319,6 +335,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
     cmd_AddParm(ts, "-readlock", CMD_FLAG, CMD_OPTIONAL, "read lock only");
+    common_parms(ts);
 
     ts = cmd_CreateSyntax("fidlock", lockFile, (void *)LockWrite, 0,
 			  "lock by FID a file from AFS");
@@ -332,6 +349,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
     cmd_AddParm(ts, "-readlock", CMD_FLAG, CMD_OPTIONAL, "read lock only");
+    common_parms(ts);
 
     ts = cmd_CreateSyntax("unlock", lockFile, (void *)LockRelease, 0,
 			  "unlock a file in AFS");
@@ -343,6 +361,7 @@ main(int argc, char **argv)
     cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
+    common_parms(ts);
 
     ts = cmd_CreateSyntax("fidunlock", lockFile, (void *)LockRelease, 0,
 			  "unlock by FID a file from AFS");
@@ -355,6 +374,7 @@ main(int argc, char **argv)
     cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
+    common_parms(ts);
 
     ts = cmd_CreateSyntax("read", readFile, NULL, 0,
 			  "read a file from AFS");
@@ -365,6 +385,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    common_parms(ts);
 
     ts = cmd_CreateSyntax("fidread", readFile, CMD_REQUIRED, 0,
 			  "read on a non AFS-client a file from AFS");
@@ -375,6 +396,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    common_parms(ts);
 
     ts = cmd_CreateSyntax("readdir", readFile, CMD_REQUIRED, 0,
 			  "read a directory from AFS");
@@ -385,6 +407,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    common_parms(ts);
 
     ts = cmd_CreateSyntax("fidreaddir", readFile, CMD_REQUIRED, 0,
 			  "read on a non AFS-client a directory from AFS");
@@ -396,6 +419,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    common_parms(ts);
 
     ts = cmd_CreateSyntax("write", writeFile, NULL, 0,
 			  "write a file into AFS");
@@ -410,6 +434,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-synthesize", CMD_SINGLE, CMD_OPTIONAL,
 		"create data pattern of specified length instead reading from stdin");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    common_parms(ts);
 
     ts = cmd_CreateSyntax("fidwrite", writeFile, CMD_REQUIRED, 0,
 			  "write a file into AFS");
@@ -423,6 +448,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"overwrite existing file");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    common_parms(ts);
 
     ts = cmd_CreateSyntax("append", writeFile, NULL, 0,
 			  "append to a file in AFS");
@@ -432,6 +458,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    common_parms(ts);
 
     ts = cmd_CreateSyntax("fidappend", writeFile, NULL, 0,
 			  "append to a file in AFS");
@@ -442,6 +469,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    common_parms(ts);
 
     if (afscp_Init(NULL) != 0)
 	exit(1);
