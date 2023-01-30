@@ -184,7 +184,7 @@ afscp_GetStatus(const struct afscp_venusfid *fid, struct AFSFetchStatus *s)
 	stored = *(struct afscp_statent **)cached;
 	pthread_mutex_lock(&(stored->mtx));
 	memmove(s, &stored->status, sizeof(*s));
-	afs_dprintf(("Stat %u.%lu.%lu.%lu returning cached result\n",
+	afs_dprintf(("Stat %u.%u.%u.%u returning cached result\n",
 		     fid->cell->id, fid->fid.Volume, fid->fid.Vnode,
 		     fid->fid.Unique));
 	if (stored->nwaiters)

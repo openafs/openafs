@@ -623,7 +623,7 @@ _ResolvePath(const struct afscp_venusfid *start, fidstack infids,
 	} else {
 	    ret = afscp_ResolveName(cwd, p);
 	    if (ret == NULL) {
-		afs_dprintf(("Lookup %s in %lu.%lu.%lu failed\n", p,
+		afs_dprintf(("Lookup %s in %u.%u.%u failed\n", p,
 			     cwd->fid.Volume, cwd->fid.Vnode,
 			     cwd->fid.Unique));
 		free(cwd);
@@ -631,7 +631,7 @@ _ResolvePath(const struct afscp_venusfid *start, fidstack infids,
 		    fidstack_free(fids);
 		return NULL;
 	    }
-	    afs_dprintf(("Lookup %s in %lu.%lu.%lu->%lu.%lu.%lu\n", p,
+	    afs_dprintf(("Lookup %s in %u.%u.%u->%u.%u.%u\n", p,
 			 cwd->fid.Volume, cwd->fid.Vnode, cwd->fid.Unique,
 			 ret->fid.Volume, ret->fid.Vnode, ret->fid.Unique));
 	    linkcount = 0;
@@ -664,7 +664,7 @@ _ResolvePath(const struct afscp_venusfid *start, fidstack infids,
 			    fidstack_free(fids);
 			return NULL;
 		    }
-		    afs_dprintf(("   ....-> %lu.%lu.%lu\n", ret->fid.Volume,
+		    afs_dprintf(("   ....-> %u.%u.%u\n", ret->fid.Volume,
 				 ret->fid.Vnode, ret->fid.Unique));
 		    goto retry;
 		} else {
