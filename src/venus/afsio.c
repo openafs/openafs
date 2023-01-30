@@ -47,6 +47,7 @@
 #else
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG 1
+#include <afs/unified_afs.h>
 #endif
 
 #include <afs/opr.h>
@@ -298,6 +299,10 @@ main(int argc, char **argv)
     else
 	strlcpy(pnp, argv[0], AFSPATHMAX);
     free(baseName);
+
+#ifndef AFS_NT40_ENV
+    initialize_uae_error_table();
+#endif
 
 #ifdef AFS_PTHREAD_ENV
     opr_Verify(pthread_key_create(&uclient_key, NULL) == 0);

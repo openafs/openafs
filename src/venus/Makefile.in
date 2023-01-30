@@ -90,8 +90,12 @@ afsio.o: afsio.c ${AFSIO_INCLS} AFS_component_version_number.c
 afscbint.ss.o: ../fsint/afscbint.ss.c
 	${PTH_CCRULE} ../fsint/afscbint.ss.c
 
-afsio: afsio.o afscbint.ss.o ${AFSIO_LIBS}
-	$(LT_LDRULE_static) afsio.o afscbint.ss.o \
+
+AFSIO_objs = afsio.o \
+	     afscbint.ss.o \
+	     $(top_builddir)/src/afs/unified_afs.o
+afsio: ${AFSIO_objs} ${AFSIO_LIBS}
+	$(LT_LDRULE_static) ${AFSIO_objs} \
 		${AFSIO_LIBS} \
 		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} \
 		$(LDFLAGS_krb5) $(LIB_krb5)

@@ -334,7 +334,7 @@ dvolser: project viced usd libafsrpc libafsauthent volser
 rxosdsrc: rxgen
 	+${COMPILE_PART1} rxosd ${COMPILE_PART2A} source
 
-venus: cmd comerr volser ptserver libafscp libafsauthent
+venus: afs cmd comerr volser ptserver libafscp libafsauthent
 	+${COMPILE_PART1} venus ${COMPILE_PART2}
 venustests: venus
 	+${COMPILE_PART1} venus/test ${COMPILE_PART2}
