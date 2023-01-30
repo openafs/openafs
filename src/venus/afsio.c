@@ -620,7 +620,7 @@ BreakUpPath(char *fullPath, char **dirName, char **baseName)
 	    if (*dirName != NULL) {
 		code++;
 		/* Wastes some memory, but avoids needing libroken. */
-		*dirName[dirNameLen] = '\0';
+		(*dirName)[dirNameLen] = '\0';
 	    }
 	}
 	if (useBaseName) {
