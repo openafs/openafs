@@ -37,7 +37,7 @@ et_lex.lex.c: et_lex.lex.l
 
 compile_et:	compile_et.o error_table.o
 	$(Q)case $(SYS_NAME) in \
-	*_linux* | *_umlinux* | *_darwin* | rs_aix72 ) \
+	*_linux* | *_umlinux* | *_darwin* | rs_aix72 | rs_aix73 ) \
 	$(LT_LDRULE_static_NOQ) compile_et.o error_table.o -L${TOP_LIBDIR} -lopr $(buildtool_roken) $(MT_LIBS);; \
 	* ) \
 	$(LT_LDRULE_static_NOQ) compile_et.o error_table.o -L${TOP_LIBDIR} -lopr -ll $(buildtool_roken) $(MT_LIBS);; \
