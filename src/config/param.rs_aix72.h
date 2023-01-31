@@ -21,6 +21,8 @@
 #define AFS_AIX52_ENV		1
 #define AFS_AIX53_ENV		1
 #define AFS_AIX61_ENV		1
+#define AFS_AIX71_ENV		1
+#define AFS_AIX72_ENV		1
 
 #define AFS_64BIT_CLIENT	1
 #define AFS_NAMEI_ENV		1

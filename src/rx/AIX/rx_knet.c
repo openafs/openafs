@@ -72,7 +72,12 @@ rxk_input(struct mbuf *am, int hlen)
  * are in a separate kernel extension, and they are unwilling to export their
  * symbols to us.  We can get there indirectly, however.
  */
-#include <net/netisr.h>
+#ifdef AFS_AIX72_ENV /* Avoid including net/netisr.h on AIX 7.2 and higher */
+# define NETISR_MAX	64
+# define NET_KPROC	0
+#else
+# include <net/netisr.h>
+#endif
 static struct ifqueue rxk_q;	/* RXKluge queue        */
 static struct arpcom rxk_bogosity;
 
