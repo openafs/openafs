@@ -115,6 +115,7 @@
 #define SYS_NAME_ID_rs_aix61		 708
 #define SYS_NAME_ID_rs_aix72		 709
 #define SYS_NAME_ID_rs_aix71		 710
+#define SYS_NAME_ID_rs_aix73		 711
 
 #define SYS_NAME_ID_sun3_411		 906
 #define SYS_NAME_ID_sun3x_411		 912

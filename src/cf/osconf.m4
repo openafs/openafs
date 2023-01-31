@@ -377,7 +377,7 @@ case $AFS_SYSNAME in
 		TSM_LIBS="-lsys -lcsys -lc"
 		;;
 
-	rs_aix61 | rs_aix71)
+	rs_aix61 | rs_aix7*)
 		CC="cc"
 		DBG="-g"
 		LIBSYS_AIX_EXP="afsl.exp"
@@ -390,11 +390,6 @@ case $AFS_SYSNAME in
 		AIX64="yes"
 		TSM_IMPORTS="-bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp"
 		TSM_LIBS="-lsys -lcsys -lc"
-		;;
-
-	rs_aix72)
-		TSM_IMPORTS="-bI:/lib/aio.exp"
-		TSM_LIBS="-lsys -lc"
 		;;
 
 	s390_linux26)
