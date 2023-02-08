@@ -1031,7 +1031,7 @@ VInitPreAttachVolumes(int nthreads, struct volume_init_queue *vq)
     while (nthreads) {
         /* dequeue next volume */
 	opr_mutex_enter(&vq->mutex);
-        if (queue_IsEmpty(vq)) {
+	while (queue_IsEmpty(vq)) {
 	    opr_cv_wait(&vq->cv, &vq->mutex);
         }
         vb = queue_First(vq, volume_init_batch);
@@ -1201,7 +1201,9 @@ VShutdown_r(void)
     if (VInit < 2) {
         Log("VShutdown:  aborting attach volumes\n");
         vinit_attach_abort = 1;
-        VOL_CV_WAIT(&vol_init_attach_cond);
+	while (VInit < 2) {
+	    VOL_CV_WAIT(&vol_init_attach_cond);
+	}
     }
 
     for (params.n_parts=0, diskP = DiskPartitionList;
@@ -1326,11 +1328,13 @@ VShutdown_r(void)
     if (VInit < 2) {
         Log("VShutdown:  aborting attach volumes\n");
         vinit_attach_abort = 1;
+	while (VInit < 2) {
 #ifdef AFS_PTHREAD_ENV
-        VOL_CV_WAIT(&vol_init_attach_cond);
+	    VOL_CV_WAIT(&vol_init_attach_cond);
 #else
-        LWP_WaitProcess(VInitAttachVolumes);
+	    LWP_WaitProcess(VInitAttachVolumes);
 #endif /* AFS_PTHREAD_ENV */
+	}
     }
 
     Log("VShutdown:  shutting down on-line volumes...\n");
