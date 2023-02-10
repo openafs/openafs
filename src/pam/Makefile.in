@@ -70,7 +70,7 @@ pam_afs.la: $(LT_objs) $(LT_deps) \
 		afs_setcred.lo afs_auth.lo afs_util.lo ktc.lo \
 		$(LT_objs) $(LT_deps) $(LT_libs)
 
-pam_afs.krb.la: $(LT_objs) $(LT_deps) \
+pam_afs.krb.la: pam_afs.la $(LT_objs) $(LT_deps) \
 		afs_setcred_krb.lo afs_auth_krb.lo afs_util_krb.lo \
 		ktc_krb.lo pam_afs.map
 	$(LIBTOOL) --quiet --mode=link --tag=CC $(MT_CC) $(XLDFLAGS) -rpath $(libdir) \

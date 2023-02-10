@@ -184,7 +184,7 @@ Kkauth.h: kauth.rg
 libkauth.a: $(LWP_objs)
 	$(LT_LDLIB_lwp) $(LWP_objs)
 
-libkauth.krb.a: $(KRB_objs)
+libkauth.krb.a: libkauth.a $(KRB_objs)
 	$(LT_LDLIB_lwp) $(KRB_objs)
 
 kas.o: kas.c ${INCLS} AFS_component_version_number.o

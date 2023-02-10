@@ -98,7 +98,7 @@ ktc.krb.lo: ktc.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 libauth.a: $(LT_objs)
 	$(LT_LDLIB_lwp) $(LT_objs)
 
-libauth.krb.a: $(KRB_objs)
+libauth.krb.a: libauth.a $(KRB_objs)
 	$(LT_LDLIB_lwp) $(KRB_objs)
 
 liboafs_auth.la: liboafs_auth.la.sym $(LT_objs) $(LT_deps)
