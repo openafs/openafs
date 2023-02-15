@@ -267,21 +267,6 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 
 	    /* If a directory, mark vnode in old volume as cloned */
 	    if ((rwvnode->type == vDirectory) && ReadWriteOriginal) {
-#ifdef DVINC
-		/*
-		 * It is my firmly held belief that immediately after
-		 * copy-on-write, the two directories can be identical.
-		 * If the new copy is changed (presumably, that is the very
-		 * next thing that will happen) then the dataVersion will
-		 * get bumped.
-		 */
-		/* NOTE:  the dataVersion++ is incredibly important!!!.
-		 * This will cause the inode created by the file server
-		 * on copy-on-write to be stamped with a dataVersion bigger
-		 * than the current one.  The salvager will then do the
-		 * right thing */
-		rwvnode->dataVersion++;
-#endif /* DVINC */
 		rwvnode->cloned = 1;
 		code = STREAM_ASEEK(rwfile, offset);
 		if (code == -1)
@@ -293,10 +278,6 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 		code = STREAM_ASEEK(rwfile, offset + vcp->diskSize);
 		if (code == -1)
 		    goto clonefailed;
-#ifdef DVINC
-		rwvnode->dataVersion--;	/* Really needs to be set to the value in the inode,
-					 * for the read-only volume */
-#endif /* DVINC */
 	    }
 	}
 
