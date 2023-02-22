@@ -1087,6 +1087,7 @@ cmd_Parse(int argc, char **argv, struct cmd_syndesc **outsyntax)
 out:
     if (code && ts != NULL)
 	ResetSyntax(ts);
+    free(param);
 
     return code;
 }
