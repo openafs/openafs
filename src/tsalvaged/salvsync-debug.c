@@ -182,6 +182,9 @@ common_prolog(struct cmd_syndesc * as, struct fssync_state * state)
     }
     DInit(1);
 
+    state->sop = calloc(1, sizeof(state->sop[0]));
+    assert(state->sop != NULL);
+
     if ((ti = as->parms[COMMON_PARMS_OFFSET].items)) {	/* -reason */
 	state->reason = atoi(ti->data);
     } else {
@@ -216,7 +219,6 @@ common_salv_prolog(struct cmd_syndesc * as, struct fssync_state * state)
 {
     struct cmd_item *ti;
 
-    state->sop = (struct salv_state *) calloc(1, sizeof(struct salv_state));
     assert(state->sop != NULL);
 
     if ((ti = as->parms[COMMON_SALV_PARMS_OFFSET].items)) {	/* -volumeid */
@@ -380,7 +382,6 @@ OpStats(struct cmd_syndesc * as, void * rock)
     struct fssync_state state;
 
     common_prolog(as, &state);
-    common_salv_prolog(as, &state);
 
     do_salvop(&state, SALVSYNC_NOP, NULL);
 
@@ -419,7 +420,6 @@ OpCancelAll(struct cmd_syndesc * as, void * rock)
     struct fssync_state state;
 
     common_prolog(as, &state);
-    common_salv_prolog(as, &state);
 
     do_salvop(&state, SALVSYNC_CANCELALL, NULL);
 
