@@ -1452,7 +1452,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 				 * it once in order to avoid races.  */
     tlen = rlen - tlen;
     if (tlen > 0) {
-	tlen = rxi_AllocDataBuf(p, tlen, RX_PACKET_CLASS_SEND_CBUF);
+	tlen = rxi_AllocDataBuf(p, tlen, RX_PACKET_CLASS_RECV_CBUF);
 	if (tlen > 0) {
 	    tlen = rlen - tlen;
 	} else
