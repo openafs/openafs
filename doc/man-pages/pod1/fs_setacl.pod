@@ -56,6 +56,15 @@ note that it is futile to deny permissions that are granted to members of
 the system:anyuser group on the same ACL; the user needs only to issue the
 B<unlog> command to receive the denied permissions.
 
+Combining C<Negative rights> granted from machine entries (IP addresses) and
+C<Normal rights> granted from non-machine entries (or vice versa) will
+generally not work as expected. Permissions granted by machine entries and by
+non-machine entries are calculated separately, and both sets of permissions are
+given to an accessing user. For example, if permissions are granted to an
+authenticated user or group (or C<system:anyuser>), you cannot remove those
+permissions from specific hosts by adding machine entries to a group in an ACL
+in the C<Negative rights> section.
+
 When including the B<-clear> option, be sure to reinstate an entry for
 each directory's owner that includes at least the C<l> (lookup)
 permission. Without that permission, it is impossible to resolve the "dot"
