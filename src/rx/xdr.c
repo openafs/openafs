@@ -537,7 +537,7 @@ xdr_string(XDR * xdrs, char **cpp, u_int maxsize)
     if (!xdr_u_int(xdrs, &size)) {
 	return (FALSE);
     }
-    if (size > maxsize) {
+    if (xdrs->x_op != XDR_FREE && size > maxsize) {
 	return (FALSE);
     }
     nodesize = size + 1;
