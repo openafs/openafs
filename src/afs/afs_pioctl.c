@@ -5599,7 +5599,7 @@ out:
     xdr_free((xdrproc_t)xdr_ktc_setTokenData, &tokenSet);
 
     return code;
-};
+}
 
 DECL_PIOCTL(PNFSNukeCreds)
 {
