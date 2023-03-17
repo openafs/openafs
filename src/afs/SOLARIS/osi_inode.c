@@ -34,13 +34,13 @@ extern int (*ufs_iallocp) (), (*ufs_iupdatp) (), (*ufs_igetp) (),
 #define AFS_ITIMES_NOLOCK(ip) \
 	(*ufs_itimes_nolockp)(ip);
 
-getinode(vfsp, dev, inode, ipp, credp, perror)
-     struct vfs *vfsp;
-     afs_ucred_t *credp;
-     struct inode **ipp;
-     dev_t dev;
-     ino_t inode;
-     int *perror;
+afs_int32
+getinode(struct vfs *vfsp,
+	dev_t dev,
+	ino_t inode,
+	struct inode **ipp,
+	afs_ucred_t *credp,
+	int *perror)
 {
     struct inode *ip;
     afs_int32 code;
@@ -75,13 +75,13 @@ getinode(vfsp, dev, inode, ipp, credp, perror)
 }
 
 /* get an existing inode.  Common code for iopen, iread/write, iinc/dec. */
-igetinode(vfsp, dev, inode, ipp, credp, perror)
-     afs_ucred_t *credp;
-     struct inode **ipp;
-     struct vfs *vfsp;
-     dev_t dev;
-     ino_t inode;
-     int *perror;
+int
+igetinode(struct vfs *vfsp,
+	    dev_t dev,
+	    ino_t inode,
+	    struct inode **ipp,
+	    afs_ucred_t *credp,
+	    int *perror)
 {
     struct inode *pip, *ip;
     extern struct osi_dev cacheDev;
@@ -135,12 +135,15 @@ igetinode(vfsp, dev, inode, ipp, credp, perror)
 
 int CrSync = 1;
 
-afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp,
-		    credp)
-     rval_t *rvp;
-     afs_ucred_t *credp;
-     long near_inode, param1, param2, param3, param4;
-     dev_t dev;
+int
+afs_syscall_icreate(dev_t dev,
+		    long near_inode,
+		    long param1,
+		    long param2,
+		    long param3,
+		    long param4,
+		    rval_t *rvp,
+		    afs_ucred_t *credp)
 {
     int dummy, err = 0;
     struct inode *ip, *newip;
@@ -225,11 +228,12 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp,
     return (code);
 }
 
-afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
-     rval_t *rvp;
-     afs_ucred_t *credp;
-     int inode, usrmod;
-     dev_t dev;
+int
+afs_syscall_iopen(dev_t dev,
+		    int inode,
+		    int usrmod,
+		    rval_t *rvp,
+		    afs_ucred_t *credp)
 {
     struct file *fp;
     struct inode *ip;
@@ -301,11 +305,11 @@ afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
 
 int IncSync = 1;
 
-afs_syscall_iincdec(dev, inode, inode_p1, amount, rvp, credp)
-     rval_t *rvp;
-     afs_ucred_t *credp;
-     int inode, inode_p1, amount;
-     dev_t dev;
+int
+afs_syscall_iincdec(dev_t dev,
+		    int inode, int inode_p1, int amount,
+		    rval_t *rvp,
+		    afs_ucred_t *credp)
 {
     int dummy;
     struct inode *ip;
