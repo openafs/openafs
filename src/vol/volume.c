@@ -659,7 +659,7 @@ VInitAttachVolumes(ProgramType pt)
     }
     VOL_LOCK;
     VSetVInit_r(2);			/* Initialized, and all volumes have been attached */
-    LWP_NoYieldSignal(VInitAttachVolumes);
+    LWP_NoYieldSignal((void *)VInitAttachVolumes);
     VOL_UNLOCK;
     return 0;
 }
@@ -1326,7 +1326,7 @@ VShutdown_r(void)
 #ifdef AFS_PTHREAD_ENV
 	    VOL_CV_WAIT(&vol_init_attach_cond);
 #else
-	    LWP_WaitProcess(VInitAttachVolumes);
+	    LWP_WaitProcess((void *)VInitAttachVolumes);
 #endif /* AFS_PTHREAD_ENV */
 	}
     }
@@ -4237,7 +4237,7 @@ GetVolume(Error * ec, Error * client_ec, VolumeId volumeId, Volume * hint,
 		    /* LWP has no timed wait, so the caller better not be
 		     * expecting one */
 		    opr_Assert(!timeout);
-		    LWP_WaitProcess(VPutVolume);
+		    LWP_WaitProcess((void *)VPutVolume);
 #endif /* AFS_PTHREAD_ENV */
 		    continue;
 		}
@@ -4384,7 +4384,7 @@ VForceOffline_r(Volume * vp, int flags)
 #ifdef AFS_PTHREAD_ENV
     opr_cv_broadcast(&vol_put_volume_cond);
 #else /* AFS_PTHREAD_ENV */
-    LWP_NoYieldSignal(VPutVolume);
+    LWP_NoYieldSignal((void *)VPutVolume);
 #endif /* AFS_PTHREAD_ENV */
 
     VReleaseVolumeHandles_r(vp);
@@ -5070,7 +5070,7 @@ VCheckDetach(Volume * vp)
 #if defined(AFS_PTHREAD_ENV)
 	    opr_cv_broadcast(&vol_put_volume_cond);
 #else /* AFS_PTHREAD_ENV */
-	    LWP_NoYieldSignal(VPutVolume);
+	    LWP_NoYieldSignal((void *)VPutVolume);
 #endif /* AFS_PTHREAD_ENV */
 	}
     }
@@ -5170,7 +5170,7 @@ VCheckOffline(Volume * vp)
 #ifdef AFS_PTHREAD_ENV
 	opr_cv_broadcast(&vol_put_volume_cond);
 #else /* AFS_PTHREAD_ENV */
-	LWP_NoYieldSignal(VPutVolume);
+	LWP_NoYieldSignal((void *)VPutVolume);
 #endif /* AFS_PTHREAD_ENV */
     }
     return ret;
