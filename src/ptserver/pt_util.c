@@ -84,7 +84,7 @@ struct usr_list {
 };
 static struct usr_list *usr_head = 0;
 
-char buffer[1024];
+char *buffer = NULL;
 int dbase_fd;
 FILE *dfp;
 
@@ -178,6 +178,8 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 	dfile = tparm[8].items->data;
     }
 
+    buffer = calloc(1, UBIK_PAGESIZE);
+
     if (pfile == NULL) {
         snprintf(pbuffer, sizeof(pbuffer), "%s.DB0", pbase);
         pfile = pbuffer;
@@ -238,7 +240,7 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 	struct usr_list *u;
 	int seenGroup = 0, id = 0, flags = 0;
 
-	while (fgets(buffer, sizeof(buffer), dfp)) {
+	while (fgets(buffer, UBIK_PAGESIZE, dfp)) {
 	    int oid, cid, quota, uid;
 	    char name[PR_MAXNAMELEN], mem[PR_MAXNAMELEN];
 
@@ -387,6 +389,7 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 		uv.epoch, uv.counter, uh->version.epoch, uh->version.counter);
     }
     close(dbase_fd);
+    free(buffer);
     exit(0);
 }
 
