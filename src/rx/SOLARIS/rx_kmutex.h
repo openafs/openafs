@@ -36,6 +36,17 @@ typedef kcondvar_t afs_kcondvar_t;
 #define CV_BROADCAST(a)		cv_broadcast(a)
 
 #ifdef RX_LOCKS_DB
+extern int afs_cv_wait(afs_kcondvar_t *cv, afs_kmutex_t *m, int sigok,
+		       int fileid, int line);
+extern int afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *m, clock_t t,
+			    int sigok, int fileid, int line);
+#else
+extern int afs_cv_wait(afs_kcondvar_t *cv, afs_kmutex_t *m, int sigok);
+extern int afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *m, clock_t t,
+			    int sigok);
+#endif
+
+#ifdef RX_LOCKS_DB
 
 #define MUTEX_ENTER(a) \
     do { \

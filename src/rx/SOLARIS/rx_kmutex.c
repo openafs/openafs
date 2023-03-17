@@ -30,16 +30,12 @@
 
 #ifdef RX_LOCKS_DB
 int
-afs_cv_wait(cv, m, sigok, fileid, line)
-     int fileid;
-     int line;
+afs_cv_wait(afs_kcondvar_t *cv, afs_kmutex_t *m, int sigok,
+	    int fileid, int line)
 #else
 int
-afs_cv_wait(cv, m, sigok)
+afs_cv_wait(afs_kcondvar_t *cv, afs_kmutex_t *m, int sigok)
 #endif
-     afs_kcondvar_t *cv;
-     afs_kmutex_t *m;
-     int sigok;
 {
     int haveGlock = ISAFS_GLOCK();
     int retval = 0;
@@ -68,17 +64,12 @@ afs_cv_wait(cv, m, sigok)
 
 #ifdef RX_LOCKS_DB
 int
-afs_cv_timedwait(cv, m, t, sigok, fileid, line)
-     int fileid;
-     int line;
+afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *m, clock_t t, int sigok,
+		 int fileid, int line)
 #else
 int
-afs_cv_timedwait(cv, m, t, sigok)
+afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *m, clock_t t, int sigok)
 #endif
-     afs_kcondvar_t *cv;
-     afs_kmutex_t *m;
-     clock_t t;
-     int sigok;
 {
     int haveGlock = ISAFS_GLOCK();
     int retval = 0;
