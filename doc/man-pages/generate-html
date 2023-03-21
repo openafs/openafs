@@ -4,8 +4,14 @@ package OpenAFS::HTML;
 use strict;
 use vars qw(@ISA);
 
+use Getopt::Long;
 use Pod::Simple::Search;
 @ISA = qw(Pod::Simple::HTML);
+
+my $stylesheet = "style.css";
+GetOptions(
+    "stylesheet=s" => \$stylesheet,
+) or die("Usage: $0 [--stylesheet=<path>]\n");
 
 # Add a link back to the index page to the top and bottom of each generated
 # page.
@@ -156,7 +162,7 @@ for my $dir (qw(pod1 pod3 pod5 pod8)) {
     $conv->html_render_class ('OpenAFS::HTML');
     $conv->batch_convert ($dir, "html/$section");
 }
-copy ('style.css', 'html/style.css') or die "Cannot copy style.css: $!\n";
+copy ($stylesheet, 'html/style.css') or die "Cannot copy $stylesheet to html/style.css: $!\n";
 
 open (INDEX, '> html/index.html')
     or die "Cannot create html/index.html: $!\n";
