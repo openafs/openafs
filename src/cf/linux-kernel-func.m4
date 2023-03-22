@@ -94,7 +94,11 @@ AC_CHECK_LINUX_FUNC([ktime_get_real_ts64],
                     [struct timespec64 *s;
                     ktime_get_real_ts64(s);])
 AC_CHECK_LINUX_FUNC([locks_lock_file_wait],
-                    [#include <linux/fs.h>],
+		    [#ifdef HAVE_LINUX_FILELOCK_H
+		     # include <linux/filelock.h>
+		     #else
+		     # include <linux/fs.h>
+		     #endif],
                     [locks_lock_file_wait(NULL, NULL);])
 AC_CHECK_LINUX_FUNC([override_creds],
                     [#include <linux/cred.h>],

@@ -10,4 +10,6 @@ AC_CHECK_LINUX_HEADER([seq_file.h])
 AC_CHECK_LINUX_HEADER([sched/signal.h])
 AC_CHECK_LINUX_HEADER([uaccess.h])
 AC_CHECK_LINUX_HEADER([stdarg.h])
+dnl Linux 6.3 relocated file locking related declarations into it's own header
+AC_CHECK_LINUX_HEADER([filelock.h])
 ])
