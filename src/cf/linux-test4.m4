@@ -142,7 +142,11 @@ AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM], [
 AC_DEFUN([LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG], [
   AC_CHECK_LINUX_BUILD([for 3rd argument in posix_lock_file found in new kernels],
 		       [ac_cv_linux_kernel_posix_lock_file_wait_arg],
-		       [#include <linux/fs.h>],
+		       [#ifdef HAVE_LINUX_FILELOCK_H
+			# include <linux/filelock.h>
+			#else
+			# include <linux/fs.h>
+			#endif],
 		       [posix_lock_file(0,0,0);],
 		       [POSIX_LOCK_FILE_WAIT_ARG],
 		       [define if your kernel uses 3 arguments for posix_lock_file],

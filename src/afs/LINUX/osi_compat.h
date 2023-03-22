@@ -13,6 +13,10 @@
 # include <linux/freezer.h>
 #endif
 
+#if defined(HAVE_LINUX_FILELOCK_H)
+# include <linux/filelock.h>
+#endif
+
 #if defined(LINUX_KEYRING_SUPPORT)
 # include <linux/rwsem.h>
 # include <linux/key.h>
