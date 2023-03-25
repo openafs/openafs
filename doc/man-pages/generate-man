@@ -49,8 +49,9 @@ pod3=`ls pod3`
 if [ -n "$pod3" ] ; then
     cd pod3
     for f in *.pod ; do
-        pod2man -c 'AFS Library Reference' -r 'OpenAFS' -s 3 "$f" \
-            > ../man3/`echo "$f" | sed -e 's/\.pod$//' -e 's/^AFS\./AFS::/'`.3
+        name=`echo "$f" | sed -e 's/\.pod$//' -e 's/^AFS\./AFS::/'`
+        pod2man -c 'AFS Library Reference' -r 'OpenAFS' -s 3 "$f" -n "$name" \
+            > ../man3/${name}.3
 	# Perl module manpages are named AFS.foo instead of AFS::foo, since
 	# we cannot have colons in filenames on Windows. So here, we assume
 	# anything with "AFS." should be "AFS::" instead.
