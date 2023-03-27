@@ -13,19 +13,34 @@
 #define _AFS_VICED_HOST_H
 
 #include "fs_stats.h"		/*File Server stats package */
-
-/*
- * There are three locks in the host package.
- * the global hash lock protects hash chains.
- * the global list lock protects the list of hosts.
- * a mutex in each host structure protects the structure.
- * precedence is host_listlock_mutex, host->mutex, host_glock_mutex.
- */
 #include <rx/rx_globals.h>
 #include <pthread.h>
+
+/*
+ * Host package locking order:
+ *
+ * - client->lock
+ * - h_Lock (host->lock)
+ * - H_LOCK (host_glock_mutex)
+ */
+
+/*
+ * H_LOCK is the global host lock. This protects:
+ *
+ * - Globals for the host package (e.g., hostList, hostAddrHashTable).
+ * - Globals for the callback package (e.g., cbstuff, FE, CB).
+ * - Most fields in struct host and struct client.
+ *
+ * You must drop H_LOCK before doing anything that may block, such as:
+ *
+ * - Network I/O.
+ * - Calling rx_NewCall().
+ * - Waiting for other blocking locks (e.g., host->lock, client->lock).
+ */
 extern pthread_mutex_t host_glock_mutex;
 #define H_LOCK opr_mutex_enter(&host_glock_mutex)
 #define H_UNLOCK opr_mutex_exit(&host_glock_mutex)
+
 extern pthread_key_t viced_uclient_key;
 
 #define h_MAXHOSTTABLEENTRIES 1000
@@ -54,7 +69,25 @@ struct Interface {
 
 struct host_to_zero {
     struct host *next, *prev;	/* linked list of all hosts */
-    struct rx_connection *callback_rxcon;	/* rx callback connection */
+
+    /*
+     * The Rx connection for this host's callback channel.
+     *
+     * The field itself is protected by H_LOCK, but you must drop H_LOCK before
+     * making any calls on the conn. In order to use the conn to make calls,
+     * you must first grab a reference to the conn with rx_GetConnection()
+     * while H_LOCK is held, and put back the reference with rx_PutConnection()
+     * afterwards.
+     *
+     * When making calls to multiple hosts at the same time, you must call
+     * rx_NewCall() in order of the hosts' host->index. See CompareCBA for an
+     * example.
+     *
+     * While you have a call open on callback_rxcon, you must not wait on
+     * blocking locks (host->lock, client->lock). H_LOCK is okay.
+     */
+    struct rx_connection *callback_rxcon;
+
     afs_uint32 refCount;     	/* reference count */
     afs_uint32 host;	 	/* IP address of host interface that is
 				 * currently being used, in network
@@ -87,8 +120,17 @@ struct host {
     struct host_to_zero z;
 
     afs_uint32 index;		/* Host table index, for vicecb.c */
-    struct Lock lock;		/* Write lock for synchronization of
-				 * VenusDown flag */
+
+    /*
+     * per-host lock, aka h_Lock.
+     *
+     * This lock can be held across RPC calls, but you must not wait for h_Lock
+     * during an RPC call on callback_rxcon (e.g. a multi_Rx or split call).
+     * You also must not wait for h_Lock while you already hold h_Lock on
+     * another host; in other words, don't acquire h_Lock on two different
+     * hosts at the same time.
+     */
+    struct Lock lock;
     pthread_cond_t cond;	/* used to wait on hcpsValid */
 };
 

@@ -2711,6 +2711,12 @@ h_FindClient_r(struct rx_connection *tcon, afs_int32 *a_viceid)
 	    }
 	    created = 1;
 	    client = GetCE();
+
+	    /*
+	     * Normally we must drop H_LOCK and h_Lock before grabbing
+	     * client->lock. But this client was just allocated; there's no way
+	     * anyone could be already holding the lock.
+	     */
 	    ObtainWriteLock(&client->lock);
 	    client->z.refCount = 1;
 	    client->z.host = host;
