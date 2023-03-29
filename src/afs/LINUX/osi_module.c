@@ -31,6 +31,10 @@
 #include <linux/sched.h>
 #include <linux/kernel.h>
 
+#if defined(IOP_TAKES_MNT_IDMAP)
+# include <linux/fs_struct.h>
+#endif
+
 #include "osi_pagecopy.h"
 
 extern struct file_system_type afs_fs_type;
@@ -46,6 +50,20 @@ int afs_global_owner = 0;
 struct user_namespace *afs_ns;
 #endif
 
+#if defined(IOP_TAKES_MNT_IDMAP)
+struct mnt_idmap *afs_mnt_idmap;
+
+static void
+afs_init_idmap(void)
+{
+    struct path fs_root;
+
+    get_fs_root(current->fs, &fs_root);
+    afs_mnt_idmap = mnt_idmap(fs_root.mnt);
+    path_put(&fs_root);
+}
+#endif
+
 int __init
 afs_init(void)
 {
@@ -53,6 +71,10 @@ afs_init(void)
 
 #ifdef HAVE_LINUX_KUID_T
     afs_ns = afs_current_user_ns();
+#endif
+
+#if defined(IOP_TAKES_MNT_IDMAP)
+    afs_init_idmap();
 #endif
 
     osi_Init();

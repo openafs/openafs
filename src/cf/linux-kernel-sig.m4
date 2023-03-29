@@ -28,4 +28,17 @@ dnl define.
 AS_IF([test AS_VAR_GET([ac_cv_linux_operation_inode_operations_create_user_namespace]) = yes],
       [AC_DEFINE([IOP_TAKES_USER_NAMESPACE], 1,
                  [define if inodeops require struct user_namespace])])
+dnl Linux 6.3 replaced the user_namespace parameter with mnt_idmap for
+dnl the inode operations functions.
+AC_CHECK_LINUX_OPERATION([inode_operations], [create], [mnt_idmap],
+                         [#include <linux/fs.h>],
+                         [int],
+                         [struct mnt_idmap *idmap,
+                         struct inode *inode, struct dentry *dentry,
+                         umode_t umode, bool flag])
+dnl if HAVE_LINUX_INODE_OPERATIONS_CREATE_MNT_IDMAP, create a more generic
+dnl define.
+AS_IF([test AS_VAR_GET([ac_cv_linux_operation_inode_operations_create_mnt_idmap]) = yes],
+      [AC_DEFINE([IOP_TAKES_MNT_IDMAP], 1,
+                 [define if inodeops require struct mnt_idmap])])
 ])

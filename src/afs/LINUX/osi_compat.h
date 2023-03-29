@@ -534,7 +534,9 @@ afs_inode_setattr(struct osi_file *afile, struct iattr *newattrs) {
 
     int code = 0;
     struct inode *inode = OSIFILE_INODE(afile);
-#if defined(IOP_TAKES_USER_NAMESPACE)
+#if defined(IOP_TAKES_MNT_IDMAP)
+    code = inode->i_op->setattr(afs_mnt_idmap, afile->filp->f_dentry, newattrs);
+#elif defined(IOP_TAKES_USER_NAMESPACE)
     code = inode->i_op->setattr(afs_ns, afile->filp->f_dentry, newattrs);
 #elif !defined(HAVE_LINUX_INODE_SETATTR)
     code = inode->i_op->setattr(afile->filp->f_dentry, newattrs);
@@ -763,7 +765,9 @@ afs_d_path(struct dentry *dp, struct vfsmount *mnt, char *buf, int buflen)
 static inline int
 afs_setattr_prepare(struct dentry *dp, struct iattr *newattrs)
 {
-#if defined(IOP_TAKES_USER_NAMESPACE)
+#if defined(IOP_TAKES_MNT_IDMAP)
+    return setattr_prepare(afs_mnt_idmap, dp, newattrs);
+#elif defined(IOP_TAKES_USER_NAMESPACE)
     return setattr_prepare(afs_ns, dp, newattrs);
 #elif defined(HAVE_LINUX_SETATTR_PREPARE)
     return setattr_prepare(dp, newattrs);

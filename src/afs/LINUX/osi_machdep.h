@@ -217,6 +217,10 @@ extern struct user_namespace *afs_ns;
 #  define afs_current_user_ns() ((struct user_namespace *)NULL)
 # endif
 
+#if defined(IOP_TAKES_MNT_IDMAP)
+extern struct mnt_idmap *afs_mnt_idmap;
+#endif
+
 static inline kuid_t afs_make_kuid(uid_t uid) {
     return make_kuid(afs_ns, uid);
 }
