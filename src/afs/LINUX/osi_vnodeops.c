@@ -994,16 +994,7 @@ canonical_dentry(struct inode *ip)
 
     afs_d_alias_lock(ip);
 
-#if defined(D_ALIAS_IS_HLIST)
-# if defined(HLIST_ITERATOR_NO_NODE)
-    hlist_for_each_entry(cur, &ip->i_dentry, d_alias) {
-# else
-    hlist_for_each_entry(cur, p, &ip->i_dentry, d_alias) {
-# endif
-#else
-    list_for_each_entry_reverse(cur, &ip->i_dentry, d_alias) {
-#endif
-
+    afs_d_alias_foreach_reverse(cur, ip, p) {
 	if (!vcp->target_link || cur == vcp->target_link) {
 	    ret = cur;
 	    break;

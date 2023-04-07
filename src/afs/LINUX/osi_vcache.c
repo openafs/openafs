@@ -26,15 +26,7 @@ TryEvictDirDentries(struct inode *inode)
     afs_d_alias_lock(inode);
 
  restart:
-#if defined(D_ALIAS_IS_HLIST)
-# if defined(HLIST_ITERATOR_NO_NODE)
-    hlist_for_each_entry(dentry, &inode->i_dentry, d_alias) {
-# else
-    hlist_for_each_entry(dentry, p, &inode->i_dentry, d_alias) {
-# endif
-#else
-    list_for_each_entry(dentry, &inode->i_dentry, d_alias) {
-#endif
+    afs_d_alias_foreach(dentry, inode, p) {
 	spin_lock(&dentry->d_lock);
 	if (d_unhashed(dentry)) {
 	    spin_unlock(&dentry->d_lock);
