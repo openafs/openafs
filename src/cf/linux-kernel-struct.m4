@@ -14,6 +14,9 @@ AC_CHECK_LINUX_STRUCT([backing_dev_info], [name],
 AC_CHECK_LINUX_STRUCT([cred], [session_keyring], [cred.h])
 AC_CHECK_LINUX_STRUCT([ctl_table], [ctl_name], [sysctl.h])
 AC_CHECK_LINUX_STRUCT([dentry], [d_u.d_alias], [dcache.h])
+dnl linux 2.6.16 moved dentry->d_child to dentry->d_u.d_child
+dnl linux 3.19 moved it back to dentry->d_child
+AC_CHECK_LINUX_STRUCT([dentry], [d_u.d_child], [dcache.h])
 AC_CHECK_LINUX_STRUCT([dentry_operations], [d_automount], [dcache.h])
 AC_CHECK_LINUX_STRUCT([group_info], [gid], [cred.h])
 AC_CHECK_LINUX_STRUCT([inode], [i_alloc_sem], [fs.h])

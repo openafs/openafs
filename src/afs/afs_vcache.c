@@ -2538,6 +2538,8 @@ afs_ResetVCache(struct vcache *avc, afs_ucred_t *acred, afs_int32 skipdnlc)
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;
     }
+
+    osi_ResetVCache(avc);
 }
 
 /*!

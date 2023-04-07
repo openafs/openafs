@@ -149,6 +149,12 @@ extern void osi_PrePopulateVCache(struct vcache *);
 extern void osi_PostPopulateVCache(struct vcache *);
 extern void osi_AttachVnode(struct vcache *, int seq);
 
+#ifdef AFS_LINUX_ENV
+extern void osi_ResetVCache(struct vcache *avc);
+#else
+# define osi_ResetVCache(avc) do { } while (0)
+#endif
+
 /**
  * Increment the refcount on the given vcache.
  *
