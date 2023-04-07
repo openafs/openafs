@@ -49,6 +49,10 @@ typedef struct path afs_linux_path_t;
 # define d_alias d_u.d_alias
 #endif
 
+#if defined(STRUCT_DENTRY_HAS_D_U_D_CHILD)
+# define d_child d_u.d_child
+#endif
+
 #if defined(STRUCT_FILE_HAS_F_PATH)
 # if !defined(f_dentry)
 #  define f_dentry f_path.dentry

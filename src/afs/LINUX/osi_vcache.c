@@ -272,3 +272,56 @@ osi_ShouldDeferRemunlink(struct vcache *avc)
     }
     return 0;
 }
+
+/*
+ * Invalidate Linux-specific cached data for the given vcache. This doesn't
+ * handle anything with the OpenAFS disk cache or stat cache, etc; those things
+ * are handled by afs_ResetVCache().
+ *
+ * The Linux-specific stuff we clear here is dcache entries. This means
+ * clearing d_time in all dentry's for the vcache, and all immediate children
+ * (for directories). We don't call d_invalidate() or any similar functions
+ * here; let afs_linux_dentry_revalidate() figure out what to do with the
+ * invalid dentry's whenever they are accessed.
+ *
+ * @pre AFS_GLOCK held
+ */
+void
+osi_ResetVCache(struct vcache *avc)
+{
+    struct dentry *dp;
+    struct inode *ip = AFSTOV(avc);
+#if defined(D_ALIAS_IS_HLIST) && !defined(HLIST_ITERATOR_NO_NODE)
+    struct hlist_node *node;
+#endif
+
+    AFS_GUNLOCK();
+
+    afs_d_alias_lock(ip);
+
+    afs_d_alias_foreach(dp, ip, node) {
+	spin_lock(&dp->d_lock);
+
+	/* Invalidate the dentry for the given vcache. */
+	dp->d_time = 0;
+
+	if (S_ISDIR(ip->i_mode)) {
+	    /*
+	     * If the vcache is a dir, also invalidate all of its children.
+	     * Note that we can lock child->d_lock while dp->d_lock is held,
+	     * because 'dp' is an ancestor of 'child'.
+	     */
+	    struct dentry *child;
+	    list_for_each_entry(child, &dp->d_subdirs, d_child) {
+		spin_lock(&child->d_lock);
+		child->d_time = 0;
+		spin_unlock(&child->d_lock);
+	    }
+	}
+
+	spin_unlock(&dp->d_lock);
+    }
+    afs_d_alias_unlock(ip);
+
+    AFS_GLOCK();
+}
