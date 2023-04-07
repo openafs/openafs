@@ -776,4 +776,46 @@ afs_setattr_prepare(struct dentry *dp, struct iattr *newattrs)
 #endif
 }
 
+/*
+ * afs_d_alias_foreach - Iterate over dentry aliases of an inode. Use like this:
+ *
+ * afs_d_alias_lock(inode);
+ * afs_d_alias_foreach(dentry, inode, node) {
+ *     spin_lock(&dentry->d_lock);
+ *     dentry->d_foo = bar;
+ *     spin_unlock(&dentry->d_lock);
+ * }
+ * afs_d_alias_unlock(inode);
+ *
+ * 'node' is a struct hlist_node, and is only used when D_ALIAS_IS_HLIST &&
+ * !HLIST_ITERATOR_NO_NODE.
+ *
+ * afs_d_alias_foreach_reverse is the same, but traverses the list in the
+ * reverse direction when possible (non-D_ALIAS_IS_HLIST). For
+ * D_ALIAS_IS_HLIST, Linux doesn't provide macros for going in reverse (struct
+ * hlist_head doesn't point directly to the end of the list), so just traverse
+ * forwards.
+ *
+ * @pre afs_d_alias_lock(inode) held
+ */
+#if defined(D_ALIAS_IS_HLIST)
+
+# if defined(HLIST_ITERATOR_NO_NODE)
+#  define afs_d_alias_foreach(dentry, inode, node) \
+	  hlist_for_each_entry((dentry), &((inode)->i_dentry), d_alias)
+# else
+#  define afs_d_alias_foreach(dentry, inode, node) \
+	  hlist_for_each_entry((dentry), (node), &((inode)->i_dentry), d_alias)
+# endif /* HLIST_ITERATOR_NO_NODE */
+# define afs_d_alias_foreach_reverse afs_d_alias_foreach
+
+#else /* D_ALIAS_IS_HLIST */
+
+# define afs_d_alias_foreach(dentry, inode, node) \
+	 list_for_each_entry((dentry), &((inode)->i_dentry), d_alias)
+# define afs_d_alias_foreach_reverse(dentry, inode, node) \
+	 list_for_each_entry_reverse((dentry), &((inode)->i_dentry), d_alias)
+
+#endif /* D_ALIAS_IS_HLIST */
+
 #endif /* AFS_LINUX_OSI_COMPAT_H */
