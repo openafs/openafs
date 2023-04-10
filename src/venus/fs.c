@@ -1305,8 +1305,8 @@ FlushVolumeCmd(struct cmd_syndesc *as, void *arock)
 	blob.in_size = blob.out_size = 0;
 	code = pioctl(ti->data, VIOC_FLUSHVOLUME, &blob, 0);
 	if (code) {
-	    fprintf(stderr, "Error flushing volume ");
-	    perror(ti->data);
+	    fprintf(stderr, "Error flushing volume %s: %s\n", ti->data,
+		    strerror(errno));
 	    error = 1;
 	    continue;
 	}
@@ -1327,7 +1327,7 @@ FlushAllVolumesCmd(struct cmd_syndesc *as, void *arock)
 
     code = pioctl(NULL, VIOC_FLUSHALL, &blob, 0);
     if (code) {
-	fprintf(stderr, "Error flushing all volumes\n");
+	fprintf(stderr, "Error flushing all volumes: %s\n", strerror(errno));
 	error = 1;
     }
     return error;
@@ -1454,8 +1454,8 @@ FlushCmd(struct cmd_syndesc *as, void *arock)
 		fprintf(stderr, "%s: Can't flush active file %s\n", pn,
 			ti->data);
 	    } else {
-		fprintf(stderr, "%s: Error flushing file ", pn);
-		perror(ti->data);
+		fprintf(stderr, "%s: Error flushing file %s: %s\n", pn,
+			ti->data, strerror(errno));
 	    }
 	    error = 1;
 	    continue;
