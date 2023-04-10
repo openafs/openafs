@@ -42,7 +42,7 @@ as follows:
 
 =head1 PRIVILEGE REQUIRED
 
-No special privileges are required for this command.
+The issuer must be logged in as the local superuser C<root>.
 
 =head1 SEE ALSO
 

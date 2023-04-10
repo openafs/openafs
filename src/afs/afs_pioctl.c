@@ -3680,6 +3680,7 @@ DECL_PIOCTL(PFlushVolumeData)
  *
  * \retval EINVAL	Error if some of the standard args aren't set
  * \retval EIO		Error if the afs daemon hasn't started yet
+ * \retval EACCES	Error if the user doesn't have super-user credentials
  *
  * \post
  * 	Flush all cached contents.  Exactly what stays and what
@@ -3696,6 +3697,9 @@ DECL_PIOCTL(PFlushAllVolumeData)
 
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
+
+    if (!afs_osi_suser(*acred))
+	return EACCES;
 
     return FlushVolumeData(NULL, *acred);
 }
