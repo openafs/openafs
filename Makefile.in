@@ -761,10 +761,17 @@ clean2:
 dist:
 	./build-tools/make-release --dir=packages HEAD
 
+RPM_RELNOTES = NEWS
+RPM_CHANGELOG = packages/ChangeLog
+RPM_CELLSERVDB = src/afsd/CellServDB
 srpm: dist
-	./src/packaging/RedHat/makesrpm.pl --dir=packages \
+	./src/packaging/RedHat/makesrpm.pl \
+	  --dir=packages \
 	  packages/openafs-*-src.tar.bz2 \
-	  packages/openafs-*-doc.tar.bz2
+	  packages/openafs-*-doc.tar.bz2 \
+	  "$(RPM_RELNOTES)" \
+	  "$(RPM_CHANGELOG)" \
+	  "$(RPM_CELLSERVDB)"
 
 rpm: srpm
 	rpmbuild --rebuild --define "_topdir @TOP_OBJDIR@/packages/rpmbuild" \
