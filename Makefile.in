@@ -773,8 +773,14 @@ srpm: dist
 	  "$(RPM_CHANGELOG)" \
 	  "$(RPM_CELLSERVDB)"
 
+RPM_BUILD_USERSPACE = 1
+RPM_BUILD_MODULES = 1
 rpm: srpm
-	rpmbuild --rebuild --define "_topdir @TOP_OBJDIR@/packages/rpmbuild" \
+	rpmbuild \
+	  --rebuild \
+	  --define "_topdir @TOP_OBJDIR@/packages/rpmbuild" \
+	  --define "build_userspace $(RPM_BUILD_USERSPACE)" \
+	  --define "build_modules $(RPM_BUILD_MODULES)" \
 	  packages/openafs-*.src.rpm
 
 dox:
