@@ -1260,7 +1260,6 @@ extern void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 
 
 /* VNOPS/afs_vnop_readdir.c */
-extern int afs_rd_stash_i;
 extern int BlobScan(struct dcache * afile, afs_int32 ablob, int *ablobOut);
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int afs_readdir(OSI_VC_DECL(avc), struct uio *auio,

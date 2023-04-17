@@ -13,7 +13,6 @@
  * Implements:
  * BlobScan
  * afs_readdir_move
- * afs_bulkstat_send
  * afs_readdir/afs_readdir2(HP)
  * afs_readdir1 - HP NFS version
  * 
@@ -195,17 +194,6 @@ struct minnfs_direct {
 #endif
 #endif /* !defined(UKERNEL) */
 
-
-/*
- *------------------------------------------------------------------------------
- *
- * Keep a stack of about 256 fids for the bulk stat call.
- * Fill it during the readdir_move.  Later empty it...
- */
-
-#define	READDIR_STASH	AFSCBMAX
-struct AFSFid afs_readdir_stash[READDIR_STASH];
-int afs_rd_stash_i = 0;
 
 /*
  *------------------------------------------------------------------------------
@@ -552,12 +540,6 @@ afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio,
  *
  * This routine encodes knowledge of Vice dirs.
  */
-
-void
-afs_bulkstat_send(struct vcache *avc, struct vrequest *req)
-{
-    afs_rd_stash_i = 0;
-}
 
 /*
  * Here is the bad, bad, really bad news.

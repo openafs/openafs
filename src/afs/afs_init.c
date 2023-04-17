@@ -739,9 +739,6 @@ shutdown_vnodeops(void)
 {
     AFS_STATCNT(shutdown_vnodeops);
     if (afs_cold_shutdown) {
-#ifndef AFS_LINUX_ENV
-	afs_rd_stash_i = 0;
-#endif
 	shutdown_mariner();
     }
 }
