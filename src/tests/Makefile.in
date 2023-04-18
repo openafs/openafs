@@ -7,11 +7,27 @@ SHELL		= /bin/sh
 all: run-tests OpenAFS/Dirpath.pm $(TEST_PROGRAMS) OpenAFS/Dirpath.sh
 	@chmod +x run-tests
 
-SYS_LIBS	= ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
+SYS_LIBS =	${TOP_LIBDIR}/libsys.a \
+		${TOP_LIBDIR}/librx.a \
+		${TOP_LIBDIR}/liblwp.a \
+		${TOP_LIBDIR}/util.a
 
-AUTH_LIBS	= ${TOP_LIBDIR}/libauth.a ${SYS_LIBS}
+AUTH_LIBS =	${TOP_LIBDIR}/libauth.a \
+		${SYS_LIBS}
 
-INT_LIBS	= ${TOP_LIBDIR}/libafsint.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libafscom_err.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libafsrfc3961.a ${TOP_LIBDIR}/libopr.a $(LIB_roken) $(LIB_hcrypto)
+INT_LIBS =	${TOP_LIBDIR}/libafsint.a \
+		${TOP_LIBDIR}/libsys.a \
+		${TOP_LIBDIR}/librxkad.a \
+		${TOP_LIBDIR}/librx.a \
+		${TOP_LIBDIR}/liblwp.a \
+		${TOP_LIBDIR}/libafscom_err.a \
+		${TOP_LIBDIR}/util.a \
+		${TOP_LIBDIR}/libafsrfc3961.a \
+		${TOP_LIBDIR}/libopr.a \
+		$(LIB_roken) \
+		$(LIB_hcrypto)
+
+COMMON_LIBS =	${LIBS}
 
 TEST_PROGRAMS = write-ro-file hello-world read-vs-mmap read-vs-mmap2	 \
 		mmap-and-read large-dir large-dir2 large-dir3 mountpoint \
@@ -67,182 +83,182 @@ TEST_SRCS     = write-ro-file.c read-vs-mmap.c read-vs-mmap2.c		   \
 EXTRA_OBJS = err.o errx.o warn.o warnx.o vwarn.o vwarnx.o verr.o verrx.o warnerr.o snprintf.o
 
 fsx: fsx.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) fsx.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) fsx.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 write-rand: write-rand.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) write-rand.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) write-rand.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 write-ro-file: write-ro-file.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) write-ro-file.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) write-ro-file.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 write-large: write-large.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) write-large.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) write-large.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 read-vs-mmap: read-vs-mmap.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) read-vs-mmap.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) read-vs-mmap.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 read-vs-mmap2: read-vs-mmap2.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) read-vs-mmap2.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) read-vs-mmap2.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 mmap-vs-read: mmap-vs-read.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) mmap-vs-read.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) mmap-vs-read.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 mmap-vs-read2: mmap-vs-read2.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) mmap-vs-read2.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) mmap-vs-read2.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 read-write: read-write.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) read-write.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) read-write.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 mmap-and-read: mmap-and-read.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) mmap-and-read.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) mmap-and-read.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 large-dir: large-dir.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) large-dir.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) large-dir.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 large-dir2: large-dir2.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) large-dir2.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) large-dir2.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 large-dir3: large-dir3.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) large-dir3.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) large-dir3.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 fchmod: fchmod.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) fchmod.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) fchmod.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 truncate: truncate.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) truncate.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) truncate.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 make-page: make-page.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) make-page.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) make-page.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 still-there-p: still-there-p.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) still-there-p.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) still-there-p.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 intr-read: intr-read.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) intr-read.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) intr-read.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 blocks-new-file: blocks-new-file.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) blocks-new-file.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) blocks-new-file.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 asu: asu.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) asu.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) asu.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 test-setgroups: test-setgroups.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) test-setgroups.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS)
+	$(AFS_LDRULE) test-setgroups.o $(EXTRA_OBJS) $(SYS_LIBS) $(COMMON_LIBS)
 
 test-setpag: test-setpag.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) test-setpag.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS)
+	$(AFS_LDRULE) test-setpag.o $(EXTRA_OBJS) $(SYS_LIBS) $(COMMON_LIBS)
 
 hardlink1: hardlink1.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) hardlink1.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) hardlink1.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 hardlink2: hardlink2.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) hardlink2.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) hardlink2.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 hardlink4: hardlink4.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) hardlink4.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) hardlink4.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 mkdir2: mkdir2.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) mkdir2.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) mkdir2.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 mkdir3: mkdir3.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) mkdir3.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) mkdir3.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 create-files: create-files.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) create-files.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) create-files.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 create-symlinks: create-symlinks.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) create-symlinks.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) create-symlinks.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 create-dirs: create-dirs.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) create-dirs.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) create-dirs.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 create-remove: create-remove.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) create-remove.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) create-remove.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 dup2-and-unlog: dup2-and-unlog.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) dup2-and-unlog.o  $(EXTRA_OBJS) $(AUTH_LIBS) $(LIBS)
+	$(AFS_LDRULE) dup2-and-unlog.o  $(EXTRA_OBJS) $(AUTH_LIBS) $(COMMON_LIBS)
 
 readdir-vs-lstat: readdir-vs-lstat.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) readdir-vs-lstat.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) readdir-vs-lstat.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 symlink: symlink.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) symlink.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) symlink.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 echo-n: echo-n.o $(EXTRA_OBJS)
 	$(AFS_LDRULE) echo-n.o $(EXTRA_OBJS)
 
 test-parallel1: test-parallel1.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) test-parallel1.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) test-parallel1.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 test-parallel2: test-parallel2.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) test-parallel2.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) test-parallel2.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 create-stat: create-stat.o fs_lib.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) create-stat.o fs_lib.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS)
+	$(AFS_LDRULE) create-stat.o fs_lib.o $(EXTRA_OBJS) $(SYS_LIBS) $(COMMON_LIBS)
 
 kill-softly: kill-softly.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) kill-softly.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) kill-softly.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 kill-softer: kill-softer.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) kill-softer.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) kill-softer.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 rm-rf: rm-rf.o fs_lib.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) rm-rf.o fs_lib.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS)
+	$(AFS_LDRULE) rm-rf.o fs_lib.o $(EXTRA_OBJS) $(SYS_LIBS) $(COMMON_LIBS)
 
 exit-wo-close: exit-wo-close.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) exit-wo-close.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) exit-wo-close.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 strange-characters-c: strange-characters-c.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) strange-characters-c.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) strange-characters-c.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 pine: pine.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) pine.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) pine.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 append-over-page: append-over-page.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) append-over-page.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) append-over-page.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 write-ucc: write-ucc.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) write-ucc.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) write-ucc.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 utime-dir: utime-dir.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) utime-dir.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) utime-dir.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 utime-file: utime-file.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) utime-file.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) utime-file.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 mmap-shared-write: mmap-shared-write.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) mmap-shared-write.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) mmap-shared-write.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 rename5: rename5.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) rename5.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) rename5.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 rename6: rename6.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) rename6.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) rename6.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 write3: write3.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) write3.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) write3.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 rename-under-feet: rename-under-feet.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) rename-under-feet.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) rename-under-feet.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 write-closed: write-closed.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) write-closed.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) write-closed.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 write-closed2: write-closed2.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) write-closed2.o $(EXTRA_OBJS) $(SYS_LIBS) $(LIBS)
+	$(AFS_LDRULE) write-closed2.o $(EXTRA_OBJS) $(SYS_LIBS) $(COMMON_LIBS)
 
 truncate-files: truncate-files.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) truncate-files.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) truncate-files.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 mmap-cat: mmap-cat.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) mmap-cat.o $(EXTRA_OBJS) $(LIBS)
+	$(AFS_LDRULE) mmap-cat.o $(EXTRA_OBJS) $(COMMON_LIBS)
 
 run-tests: run-tests.in
 	(cd ../..; CONFIG_FILES=src/tests/run-tests CONFIG_HEADERS= $(SHELL) @TOP_OBJDIR@/config.status)
 	@chmod +x run-tests
 
 afscp: afscp.o afscp_callback.o $(EXTRA_OBJS)
-	$(AFS_LDRULE) afscp.o afscp_callback.o $(EXTRA_OBJS) $(INT_LIBS) ${XLIBS}
+	$(AFS_LDRULE) afscp.o afscp_callback.o $(EXTRA_OBJS) $(INT_LIBS) $(COMMON_LIBS) ${XLIBS}
 
 hello-world:   hello-world.in
 	sed -e "s!%CC%!$(CC)!" $(srcdir)/hello-world.in > $@
