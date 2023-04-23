@@ -77,7 +77,7 @@ afs_GCUserData(void)
 	    delFlag = 0;	/* should we delete this dude? */
 	    /* Don't garbage collect users in use now (refCount) */
 	    if (tu->refCount == 0) {
-		if (tu->tokens) {
+		if (tu->tokens != NULL && (tu->states & UHasTokens) != 0) {
 		    /* Need to walk the token stack, and dispose of
 		     * all expired tokens */
 		    afs_DiscardExpiredTokens(&tu->tokens, now);
