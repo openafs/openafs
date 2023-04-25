@@ -202,13 +202,6 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 
     memcpy(tmpvec, iov, iovcnt * sizeof(struct iovec));
     msg.msg_name = from;
-#if defined(STRUCT_MSGHDR_HAS_MSG_ITER)
-    msg.msg_iter.iov = tmpvec;
-    msg.msg_iter.nr_segs = iovcnt;
-#else
-    msg.msg_iov = tmpvec;
-    msg.msg_iovlen = iovcnt;
-#endif
     msg.msg_control = NULL;
     msg.msg_controllen = 0;
     msg.msg_flags = 0;
