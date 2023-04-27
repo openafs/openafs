@@ -38,10 +38,11 @@ extern struct osi_audit_ops audit_file_ops;
 extern struct osi_audit_ops audit_sysvmq_ops;
 #endif
 
-static struct {
+struct audit_user_check {
     void *rock;
     int (*islocal)(void *rock, char *name, char *inst, char *cell);
-} audit_user_check = { NULL, NULL };
+};
+static struct audit_user_check audit_user_check_global = { NULL, NULL };
 
 static struct {
     const char *name;
@@ -86,22 +87,44 @@ struct audit_msg {
 };
 
 #ifdef AFS_PTHREAD_ENV
+/*
+ * audit_lock protects:
+ *   - audit_logs queue
+ *   - struct audit_log fields
+ *   - auditout_open_global
+ *   - audit_user_check_global
+ *
+ * note:
+ *  - osi_audit_all does not require serialization by audit_lock
+ *    because it is only modified under pthread_once.
+ */
 static pthread_mutex_t audit_lock;
 static pthread_once_t audit_lock_once = PTHREAD_ONCE_INIT;
-#endif
+# define AUDIT_LOCK \
+    do { \
+	osi_audit_init(); \
+	opr_mutex_enter(&audit_lock); \
+    } while (0)
+# define AUDIT_UNLOCK opr_mutex_exit(&audit_lock)
+#else  /* AFS_PTHREAD_ENV */
+# define AUDIT_LOCK \
+    do { \
+	osi_audit_init(); \
+    } while (0)
+# define AUDIT_UNLOCK do {} while (0)
+#endif  /* AFS_PTHREAD_ENV */
 
 /* Chain of active interfaces */
 static struct opr_queue audit_logs = {&audit_logs, &audit_logs};
 
 static int osi_audit_all = (-1);	/* Not determined yet */
 
-static int auditout_open = 0;		/* True if any interface is open */
+static int auditout_open_global = 0;	/* True if any interface is open */
 
 static int osi_audit_check(void);
 
 /*
  * Send the message to all the interfaces
- * @pre audit_lock held
  */
 static void
 multi_send_msg(struct audit_msg *msg)
@@ -111,6 +134,7 @@ multi_send_msg(struct audit_msg *msg)
     if (msg->len < 1) /* Don't send empty strings */
 	return;
 
+    AUDIT_LOCK;
     for (opr_queue_Scan(&audit_logs, cursor)) {
 	struct audit_log *alog;
 	alog = opr_queue_Entry(cursor, struct audit_log, link);
@@ -119,6 +143,7 @@ multi_send_msg(struct audit_msg *msg)
 				      msg->truncated);
 	}
     }
+    AUDIT_UNLOCK;
 }
 static void
 append_msg(struct audit_msg *msg, const char *format, ...)
@@ -555,9 +580,7 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
 	vaEntry = va_arg(vaList, int);
     }				/* end while */
 
-    MUTEX_ENTER(&audit_lock);
     multi_send_msg(msg);
-    MUTEX_EXIT(&audit_lock);
 
     free(msg);
 }
@@ -599,11 +622,7 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
     afs_int32 err;
     static char BUFFER[32768];
     int result;
-#endif
 
-    osi_audit_init();
-
-#ifdef AFS_AIX32_ENV
     switch (errCode) {
     case 0:
 	result = AUDIT_OK;
@@ -627,10 +646,8 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
 	result = AUDIT_FAIL;
 	break;
     }
-#endif
 
-#ifdef AFS_AIX32_ENV
-    MUTEX_ENTER(&audit_lock);
+    AUDIT_LOCK;
     bufferPtr = BUFFER;
 
     /* Put the error code into the buffer list */
@@ -641,10 +658,14 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
 
     bufferLen = (int)((afs_int32) bufferPtr - (afs_int32) & BUFFER[0]);
     code = auditlog(audEvent, result, BUFFER, bufferLen);
-    MUTEX_EXIT(&audit_lock);
+    AUDIT_UNLOCK;
 #else
-    if (auditout_open) {
+    AUDIT_LOCK;
+    if (auditout_open_global) {
+	AUDIT_UNLOCK;
 	printbuf(0, audEvent, afsName, hostId, errCode, vaList);
+    } else {
+	AUDIT_UNLOCK;
     }
 #endif
 
@@ -706,8 +727,12 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 
     audit_report_status_once();
 
-    if (!osi_audit_all && !auditout_open)
+    AUDIT_LOCK;
+    if (!osi_audit_all && !auditout_open_global) {
+	AUDIT_UNLOCK;
 	return 0;
+    }
+    AUDIT_UNLOCK;
 
     va_start(vaList, errCode);
     osi_audit_internal(audEvent, errCode, NULL, 0, vaList);
@@ -730,11 +755,26 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
     char afsName[MAXKTCNAMELEN + MAXKTCNAMELEN + MAXKTCREALMLEN + 3];
     afs_int32 hostId;
     va_list vaList;
+    struct audit_user_check work_user_check;
 
     audit_report_status_once();
 
-    if (!osi_audit_all && !auditout_open)
+    AUDIT_LOCK;
+    if (!osi_audit_all && !auditout_open_global) {
+	AUDIT_UNLOCK;
 	return 0;
+    }
+
+    /*
+     * Obtain a work copy of audit_user_check_global.
+     *
+     * The copy is safe to use without holding AUDIT_LOCK, because the calling
+     * server code is not allowed to free the given values after calling
+     * osi_audit_set_user_check(); typically osi_audit_set_user_check() is only
+     * called once, early during server startup.
+     */
+    work_user_check = audit_user_check_global;
+    AUDIT_UNLOCK;
 
     strcpy(afsName, "--Unknown--");
     hostId = 0;
@@ -759,9 +799,9 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 		strcpy(afsName, "--NoName--");
 	    } else {
 		afs_int32 islocal = 0;
-		if (audit_user_check.islocal) {
+		if (work_user_check.islocal) {
 		    islocal =
-			audit_user_check.islocal(audit_user_check.rock,
+			work_user_check.islocal(work_user_check.rock,
 						 name, inst, tcell);
 		}
 		strlcpy(afsName, name, sizeof(afsName));
@@ -1034,6 +1074,11 @@ osi_audit_file(const char *fileplusoptions)
 	goto done;
     }
 
+    /*
+     * Normally, we need AUDIT_LOCK to touch the fields in 'new_alog'. But we
+     * don't hold AUDIT_LOCK here because nobody else knows about 'new_alog'
+     * yet.
+     */
     new_alog->audit_ops = ops;
     new_alog->auditout_open = 0;
 
@@ -1057,10 +1102,12 @@ osi_audit_file(const char *fileplusoptions)
     }
 
     new_alog->auditout_open = 1;
-    auditout_open = 1;
+    AUDIT_LOCK;
+    auditout_open_global = 1;
 
     /* Add to chain of active interfaces */
     opr_queue_Append(&audit_logs, &new_alog->link);
+    AUDIT_UNLOCK;
     new_alog = NULL;
 
     code = 0;
@@ -1109,12 +1156,14 @@ osi_audit_open(void)
 {
     struct opr_queue *cursor;
 
+    AUDIT_LOCK;
     for (opr_queue_Scan(&audit_logs, cursor)) {
 	struct audit_log *alog;
 	alog = opr_queue_Entry(cursor, struct audit_log, link);
 	if (alog->auditout_open && alog->audit_ops->open_interface != NULL)
 	    alog->audit_ops->open_interface(alog->context);
     }
+    AUDIT_UNLOCK;
 }
 
 /*
@@ -1125,6 +1174,7 @@ osi_audit_close(void)
 {
     struct opr_queue *cursor, *cursorsave;
 
+    AUDIT_LOCK;
     for (opr_queue_ScanSafe(&audit_logs, cursor, cursorsave)) {
 	struct audit_log *alog;
 	alog = opr_queue_Entry(cursor, struct audit_log, link);
@@ -1132,15 +1182,31 @@ osi_audit_close(void)
 	opr_queue_Remove(&alog->link);
 	free(alog);
     }
+    AUDIT_UNLOCK;
 }
 
+/*
+ * Provide a function (islocal) to check if a given user is considered a local
+ * user or a foreign user. Usually this involves calling
+ * afsconf_IsLocalRealmMatch().
+ *
+ * Note that once osi_audit_set_user_check() is called, the provided 'islocal'
+ * function may be called with the given 'rock' outside of any locks in
+ * different threads. So, the provided 'islocal' function must provide its own
+ * data protection, and it is not safe to free a previously-provided 'rock'
+ * even after calling osi_audit_set_user_check() again with different values.
+ * The intended use is for a server process to call osi_audit_set_user_check()
+ * once during startup, and never call it again.
+ */
 void
 osi_audit_set_user_check(void *rock,
 			 int (*islocal) (void *rock, char *name, char *inst,
 					 char *cell))
 {
-    audit_user_check.rock = rock;
-    audit_user_check.islocal = islocal;
+    AUDIT_LOCK;
+    audit_user_check_global.rock = rock;
+    audit_user_check_global.islocal = islocal;
+    AUDIT_UNLOCK;
 }
 
 void
@@ -1148,10 +1214,12 @@ audit_PrintStats(FILE *out)
 {
     struct opr_queue *cursor;
 
+    AUDIT_LOCK;
     for (opr_queue_Scan(&audit_logs, cursor)) {
 	struct audit_log *alog;
 	alog = opr_queue_Entry(cursor, struct audit_log, link);
 	if (alog->auditout_open)
 	    alog->audit_ops->print_interface_stats(alog->context, out);
     }
+    AUDIT_UNLOCK;
 }
