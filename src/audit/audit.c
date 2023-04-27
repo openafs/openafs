@@ -62,14 +62,15 @@ static int default_interface = 0; /* Set default to the file interface */
  * Audit interface calling sequence:
  * osi_audit_interface - sets the default audit interface
  * osi_audit_file
- *    create_instance - Called during command arg processing (-auditlog)
+ *    create_interface - Called during command arg processing (-auditlog)
  *    open_file - Called during command arg processing (-auditlog)
- * osi_audit_open_interface
+ * osi_audit_open
  *    open_interface - Called after thread environment has been established
- * osi_audit_close_interface
- *    close_interface - Called during main process shutdown
  * osi_audit
  *    send_msg - Called during audit events
+ * osi_audit_close
+ *    close_interface - Called during main process shutdown
+
  */
 struct audit_log {
     struct opr_queue link;
