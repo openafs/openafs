@@ -108,11 +108,11 @@ osi_HandleSocketError(osi_socket so, void *cmsgbuf, size_t cmsgbuf_len)
     int code;
     struct socket *sop = (struct socket *)so;
 
+    memset(&msg, 0, sizeof(msg));
     msg.msg_name = &addr;
     msg.msg_namelen = sizeof(addr);
     msg.msg_control = cmsgbuf;
     msg.msg_controllen = cmsgbuf_len;
-    msg.msg_flags = 0;
 
     code = kernel_recvmsg(sop, &msg, NULL, 0, 0,
 			  MSG_ERRQUEUE|MSG_DONTWAIT|MSG_TRUNC);
@@ -153,12 +153,9 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
     struct msghdr msg;
     int code;
 
-
+    memset(&msg, 0, sizeof(msg));
     msg.msg_name = to;
     msg.msg_namelen = sizeof(*to);
-    msg.msg_control = NULL;
-    msg.msg_controllen = 0;
-    msg.msg_flags = 0;
 
     code = kernel_sendmsg(sop, &msg, (struct kvec *) iovec, iovcnt, size);
 
@@ -201,10 +198,8 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
     }
 
     memcpy(tmpvec, iov, iovcnt * sizeof(struct iovec));
+    memset(&msg, 0, sizeof(msg));
     msg.msg_name = from;
-    msg.msg_control = NULL;
-    msg.msg_controllen = 0;
-    msg.msg_flags = 0;
 
     code = kernel_recvmsg(sop, &msg, (struct kvec *)tmpvec, iovcnt,
 			  *lengthp, 0);
