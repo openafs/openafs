@@ -324,11 +324,9 @@ audmakebuf(char *audEvent, va_list vaList)
 		break;
 	    }
 	default:
-#ifdef AFS_AIX32_ENV
 	    code =
 		auditlog("AFS_Aud_EINVAL", (-1), audEvent,
 			 (strlen(audEvent) + 1));
-#endif
 	    return;
 	    break;
 	}			/* end switch */
@@ -336,7 +334,7 @@ audmakebuf(char *audEvent, va_list vaList)
 	vaEntry = va_arg(vaList, int);
     }				/* end while */
 }
-#endif
+#endif	/* AFS_AIX32_ENV */
 
 static void
 printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
