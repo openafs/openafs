@@ -93,7 +93,6 @@ static pthread_once_t audit_lock_once = PTHREAD_ONCE_INIT;
 static struct opr_queue audit_logs = {&audit_logs, &audit_logs};
 
 static int osi_audit_all = (-1);	/* Not determined yet */
-static int osi_echo_trail = (-1);
 
 static int auditout_open = 0;		/* True if any interface is open */
 
@@ -604,7 +603,7 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
     pthread_once(&audit_lock_once, osi_audit_init_lock);
 #endif /* AFS_PTHREAD_ENV */
 
-    if ((osi_audit_all < 0) || (osi_echo_trail < 0))
+    if (osi_audit_all < 0)
 	osi_audit_check();
     if (!osi_audit_all && !auditout_open)
 	return 0;
@@ -663,7 +662,7 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 {
     va_list vaList;
 
-    if ((osi_audit_all < 0) || (osi_echo_trail < 0))
+    if (osi_audit_all < 0)
 	osi_audit_check();
     if (!osi_audit_all && !auditout_open)
 	return 0;
@@ -771,16 +770,12 @@ osi_audit_check(void)
     osi_audit_all = 1;		/* say we made check (>= 0) */
     /* and assume audit all events (for now) */
     onoff = 0;			/* assume we will turn auditing off */
-    osi_echo_trail = 0;		/* assume no echoing   */
 
     fds = fopen(AFSDIR_SERVER_AUDIT_FILEPATH, "r");
     if (fds) {
 	while (fscanf(fds, "%256s", event) > 0) {
 	    if (strcmp(event, "AFS_AUDIT_AllEvents") == 0)
 		onoff = 1;
-
-	    if (strcmp(event, "Echo_Trail") == 0)
-		osi_echo_trail = 1;
 	}
 	fclose(fds);
     }
