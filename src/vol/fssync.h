@@ -188,11 +188,6 @@ typedef struct FSSYNC_VGUpdate_command {
 #define FSSYNC_ENDPOINT_DECL    SYNC_ENDPOINT_DECL(FSSYNC_IN_PORT, FSSYNC_UN_PATH)
 
 /*
- * common interfaces
- */
-extern void FSYNC_Init(void);
-
-/*
  * fsync client interfaces
  */
 extern void FSYNC_clientFinis(void);
