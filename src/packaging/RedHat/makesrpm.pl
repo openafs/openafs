@@ -19,11 +19,13 @@ use File::Spec;
 my $help = 0;
 my $man = 0;
 my $dir = ".";
+my $cellservdb_url;
 
 GetOptions(
     "help|?" => \$help,
     "man" => \$man,
     "dir=s" => \$dir,
+    "cellservdb-url=s" => \$cellservdb_url,
 ) or pod2usage(-exitval => 1, -verbose => 1);
 pod2usage(-exitval => 0, -verbose => 1) if $help;
 pod2usage(-exitval => 0, -verbose => 2, -noperldoc => 1) if $man;
@@ -133,22 +135,36 @@ undef $dirh;
 # This file needs particular modes.
 chmod 0755, $tmpdir."/rpmdir/SOURCES/openafs-kvers-is.sh";
 
-# Create the specfile. Use sed for this, cos its easier
-system("cat ".$srcdir."/src/packaging/RedHat/openafs.spec.in | ".
-       "sed -e 's/\@PACKAGE_VERSION\@/$afsversion/g' ".
-       "    -e 's/\@LINUX_PKGVER\@/$linuxver/g' ".
-       "    -e 's/\@LINUX_PKGREL\@/$linuxrel/g' ".
-       "    -e 's/\%define afsvers.*/%define afsvers $afsversion/g' ".
-       "    -e 's/\%define pkgvers.*/%define pkgvers $linuxver/g' > ".
-       $tmpdir."/rpmdir/SPECS/openafs.spec") == 0
-  or die "sed failed : $!\n";
+my $spec_template = "$srcdir/src/packaging/RedHat/openafs.spec.in";
+my $cellservdb_substitute = "";
+if ($cellservdb_url) {
+    # Set the CellServDB source URL in the generated the spec file.
+    $cellservdb_substitute = "-e 's%^Source20:.*%Source20: $cellservdb_url%'";
+} else {
+    # Extract the CellServDB source URL from the spec file template.
+    open(my $fh, $spec_template) or die "Unable to open $spec_template: $!\n";
+    while (<$fh>) {
+        if (/^Source20:\s*(.*)\s*$/) {
+            $cellservdb_url = $1;
+            last;
+        }
+    }
+    close($fh);
+    if (not $cellservdb_url) {
+        die "Unable to find CellServDB source directive in $spec_template\n";
+    }
+}
 
 if ($cellservdb) {
-    File::Copy::copy($cellservdb,
-		     $tmpdir."/rpmdir/SOURCES/$cellservdb")
-	or die "Unable to copy $cellservdb into position\n";
+    my $filename = File::Basename::fileparse($cellservdb_url);
+    my $dest = "$tmpdir/rpmdir/SOURCES/$filename";
+    print "Copying $cellservdb to $dest\n";
+    File::Copy::copy($cellservdb, "$dest")
+        or die "Unable to copy $cellservdb to $dest: $!\n";
 } else {
-    system("cd ".$tmpdir."/rpmdir/SOURCES && wget `cat ".$srcdir."/src/packaging/RedHat/openafs.spec.in |grep dl/cellservdb |awk '{print \$2}'`")
+    print "Downloading $cellservdb_url\n";
+    system("cd $tmpdir/rpmdir/SOURCES && wget $cellservdb_url") == 0
+        or die "Unable to download $cellservdb_url: $!\n";
 }
 
 if ($relnotes) {
@@ -168,6 +184,17 @@ if ($changelog) {
   print "WARNING: No changelog provided. Using empty file\n";
   system("touch $tmpdir/rpmdir/SOURCES/ChangeLog");
 }
+
+# Create the specfile. Use sed for this, cos its easier
+system("cat $spec_template | ".
+       "sed -e 's/\@PACKAGE_VERSION\@/$afsversion/g' ".
+       "    -e 's/\@LINUX_PKGVER\@/$linuxver/g' ".
+       "    -e 's/\@LINUX_PKGREL\@/$linuxrel/g' ".
+       "    -e 's/\%define afsvers.*/%define afsvers $afsversion/g' ".
+       "    -e 's/\%define pkgvers.*/%define pkgvers $linuxver/g' ".
+       "    $cellservdb_substitute  >".
+       "$tmpdir/rpmdir/SPECS/openafs.spec") == 0
+  or die "sed failed : $!\n";
 
 # Build an RPM
 system("rpmbuild -bs --nodeps --define \"dist %undefined\" ".
@@ -219,6 +246,13 @@ Print full man page and exit.
 =item B<--dir> I<path>
 
 Place the generated SRPM file in I<path> instead of the current directory.
+
+=item B<--cellservdb-url> I<URL>
+
+The URL of the CellServDB file to be downloaded when B<cellservdb> is not
+specified, and the URL to be set in the C<Source20> source directive in the
+generated F<openafs.spec> RPM spec file.  When not specified, I<URL> is is read
+from the F<openafs.spec.in> file extracted from the source archive.
 
 =back
 
