@@ -203,10 +203,10 @@ enum {
 
 /*
  * Note that the AFS_*ALLOCSIZ values should be multiples of sizeof(void*) to
- * accomodate pointer alignment.
+ * accommodate pointer alignment.
  */
 /* Used in rx.c as well as afs directory. */
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
+#if (defined(AFS_AIX32_ENV) && !defined(AFS_AIX61_ENV)) || defined(AFS_HPUX_ENV)
 /* XXX Because of rxkad_cprivate... XXX */
 #define AFS_SMALLOCSIZ 	(38*sizeof(void *))	/* "Small" allocated size */
 #else
