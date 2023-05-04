@@ -15,7 +15,8 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #ifdef AFS_AIX_ENV
-#include <sys/adspace.h>	/* for vm_att(), vm_det() */
+# include <sys/adspace.h>	/* for vm_att(), vm_det() */
+# include <sys/malloc.h>        /* pinned_heap */
 #endif
 
 /* osi_Init -- do once per kernel installation initialization.
@@ -241,7 +242,7 @@ shutdown_osisleep(void)
 		afs_warn("nonzero refcount in shutdown_osisleep()\n");
 	    } else {
 #if defined(AFS_AIX_ENV)
-		xmfree(tmp);
+		xmfree(tmp, pinned_heap);
 #elif defined(AFS_FBSD_ENV)
 		afs_osi_Free(tmp, sizeof(*tmp));
 #elif defined(AFS_SGI_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_SUN5_ENV)
