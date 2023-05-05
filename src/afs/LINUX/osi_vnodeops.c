@@ -3746,6 +3746,7 @@ static struct inode_operations afs_symlink_iops = {
   .put_link =		afs_linux_put_link,
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
   .setattr =		afs_notify_change,
+  .getattr =		afs_linux_getattr,
 };
 
 void
