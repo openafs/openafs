@@ -10,7 +10,8 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 
-OSXSDK = @OSXSDK@
+XCODEBUILD_FLAGS = @XCODEBUILD_FLAGS@
+XCODEBUILD = xcodebuild $(XCODEBUILD_FLAGS)
 
 .PHONY: all afscell
 
@@ -21,20 +22,10 @@ afscell/build/Release/afscell.bundle: afscell
 afscell/InstallerSections.plist: afscell
 
 OpenAFS.prefPane:
-	@case ${OSXSDK} in \
-	macosx* ) \
-		xcodebuild -sdk ${OSXSDK} -project ${srcdir}/AFSPreference/OpenAFS.xcodeproj SYMDIR=`pwd`/AFSPreference/build;; \
-	* ) \
-		echo Not building AFS prefPane for ${OSXSDK} ;; \
-	esac
+	$(XCODEBUILD) -project ${srcdir}/AFSPreference/OpenAFS.xcodeproj SYMDIR=`pwd`/AFSPreference/build
 
 aklog.bundle:
-	@case ${OSXSDK} in \
-	macosx* ) \
-		xcodebuild -sdk ${OSXSDK} -project ${srcdir}/AklogAuthPlugin/AklogAuthPlugin.xcodeproj SYMDIR=`pwd`/AklogAuthPlugin/build;; \
-	* ) \
-		echo Not building AklogAuthPlugin for ${OSXSDK} ;; \
-	esac
+	$(XCODEBUILD) -project ${srcdir}/AklogAuthPlugin/AklogAuthPlugin.xcodeproj SYMDIR=`pwd`/AklogAuthPlugin/build
 
 growlagent:
 	cd growlagent && $(MAKE) all
@@ -43,12 +34,7 @@ PrivilegedHelper: OpenAFS.prefPane
 	cd PrivilegedHelper && $(MAKE) all
 
 afscell:
-	@case ${OSXSDK} in \
-	macosx* ) \
-		xcodebuild -sdk ${OSXSDK} -project ${srcdir}/afscell/afscell.xcodeproj SYMROOT=`pwd`/afscell/build;; \
-	* ) \
-		echo Not building afscell.bundle for ${OSXSDK} ;; \
-	esac
+	$(XCODEBUILD) -project ${srcdir}/afscell/afscell.xcodeproj SYMROOT=`pwd`/afscell/build
 
 afssettings: afssettings.m
 	${CC} ${AFS_CFLAGS} -o afssettings $? -framework Foundation
