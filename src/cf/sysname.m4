@@ -88,155 +88,139 @@ else
                         ;;
                 powerpc-apple-darwin7*)
                         AFS_SYSNAME="ppc_darwin_70"
-                        OSXSDK="macosx10.3"
+			XCODEBUILD_FLAGS="-sdk macosx10.3"
                         ;;
                 powerpc-apple-darwin8.*)
                         AFS_SYSNAME="ppc_darwin_80"
-                        OSXSDK="macosx10.4"
+			XCODEBUILD_FLAGS="-sdk macosx10.4"
                         ;;
                 i386-apple-darwin8.*)
                         AFS_SYSNAME="x86_darwin_80"
-                        OSXSDK="macosx10.4"
+			XCODEBUILD_FLAGS="-sdk macosx10.4"
                         ;;
                 powerpc-apple-darwin9.*)
                         AFS_SYSNAME="ppc_darwin_90"
-                        OSXSDK="macosx10.5"
+			XCODEBUILD_FLAGS="-sdk macosx10.5"
                         ;;
                 i386-apple-darwin9.*)
                         AFS_SYSNAME="x86_darwin_90"
-                        OSXSDK="macosx10.5"
+			XCODEBUILD_FLAGS="-sdk macosx10.5"
                         ;;
                 i?86-apple-darwin10.*)
                         AFS_SYSNAME="x86_darwin_100"
-                        OSXSDK="macosx10.6"
+			XCODEBUILD_FLAGS="-sdk macosx10.6"
                         ;;
                 x86_64-apple-darwin10.*)
                         AFS_SYSNAME="x86_darwin_100"
-                        OSXSDK="macosx10.6"
+			XCODEBUILD_FLAGS="-sdk macosx10.6"
                         ;;
                 arm-apple-darwin10.*)
                         AFS_SYSNAME="arm_darwin_100"
-                        OSXSDK="iphoneos4.0"
+			XCODEBUILD_FLAGS="-sdk iphoneos4.0"
                         ;;
                 x86_64-apple-darwin11.*)
                         AFS_SYSNAME="x86_darwin_110"
-                        OSXSDK="macosx10.7"
+			XCODEBUILD_FLAGS="-sdk macosx10.7"
                         ;;
                 i?86-apple-darwin11.*)
                         AFS_SYSNAME="x86_darwin_110"
-                        OSXSDK="macosx10.7"
+			XCODEBUILD_FLAGS="-sdk macosx10.7"
                         ;;
                 x86_64-apple-darwin12.*)
                         AFS_SYSNAME="x86_darwin_120"
-                        OSXSDK="macosx10.8"
+			XCODEBUILD_FLAGS="-sdk macosx10.8"
                         ;;
                 i?86-apple-darwin12.*)
                         AFS_SYSNAME="x86_darwin_120"
-                        OSXSDK="macosx10.8"
+			XCODEBUILD_FLAGS="-sdk macosx10.8"
                         ;;
                 x86_64-apple-darwin13.*)
                         AFS_SYSNAME="x86_darwin_130"
-                        OSXSDK="macosx10.9"
+			XCODEBUILD_FLAGS="-sdk macosx10.9"
                         ;;
                 i?86-apple-darwin13.*)
                         AFS_SYSNAME="x86_darwin_130"
-                        OSXSDK="macosx10.9"
+			XCODEBUILD_FLAGS="-sdk macosx10.9"
                         ;;
                 x86_64-apple-darwin14.*)
                         AFS_SYSNAME="x86_darwin_140"
-                        OSXSDK="macosx10.10"
+			XCODEBUILD_FLAGS="-sdk macosx10.10"
                         ;;
                 i?86-apple-darwin14.*)
                         AFS_SYSNAME="x86_darwin_140"
-                        OSXSDK="macosx10.10"
+			XCODEBUILD_FLAGS="-sdk macosx10.10"
                         ;;
                 x86_64-apple-darwin15.*)
                         AFS_SYSNAME="x86_darwin_150"
-                        OSXSDK="macosx10.11"
+			XCODEBUILD_FLAGS="-sdk macosx10.11"
                         ;;
                 i?86-apple-darwin15.*)
                         AFS_SYSNAME="x86_darwin_150"
-                        OSXSDK="macosx10.11"
+			XCODEBUILD_FLAGS="-sdk macosx10.11"
                         ;;
                 x86_64-apple-darwin16.*)
                         AFS_SYSNAME="x86_darwin_160"
-                        OSXSDK="macosx10.12"
+			XCODEBUILD_FLAGS="-sdk macosx10.12"
                         ;;
                 i?86-apple-darwin16.*)
                         AFS_SYSNAME="x86_darwin_160"
-                        OSXSDK="macosx10.12"
+			XCODEBUILD_FLAGS="-sdk macosx10.12"
                         ;;
                 x86_64-apple-darwin17.*)
                         AFS_SYSNAME="x86_darwin_170"
-                        OSXSDK="macosx10.13"
+			XCODEBUILD_FLAGS="-sdk macosx10.13"
                         ;;
                 i?86-apple-darwin17.*)
                         AFS_SYSNAME="x86_darwin_170"
-                        OSXSDK="macosx10.13"
+			XCODEBUILD_FLAGS="-sdk macosx10.13"
                         ;;
 		x86_64-apple-darwin18.*)
 			AFS_SYSNAME="x86_darwin_180"
-			OSXSDK="macosx10.14"
 			;;
 		i?86-apple-darwin18.*)
 			AFS_SYSNAME="x86_darwin_180"
-			OSXSDK="macosx10.14"
 			;;
 		x86_64-apple-darwin19.*)
 			AFS_SYSNAME="x86_darwin_190"
-			OSXSDK="macosx10.15"
 			;;
 		i?86-apple-darwin19.*)
 			AFS_SYSNAME="x86_darwin_190"
-			OSXSDK="macosx10.15"
 			;;
 		x86_64-apple-darwin20.*)
 			AFS_SYSNAME="x86_darwin_200"
-			OSXSDK="macosx11.0"
 			;;
 		arm-apple-darwin20.*)
 			AFS_SYSNAME="arm_darwin_200"
-			OSXSDK="macosx11.0"
 			;;
 		aarch64-apple-darwin20.*)
 			AFS_SYSNAME="arm_darwin_200"
-			OSXSDK="macosx11.0"
 			;;
 		x86_64-apple-darwin21.*)
 			AFS_SYSNAME="x86_darwin_210"
-			OSXSDK="macosx12.0"
 			;;
 		arm-apple-darwin21.*)
 			AFS_SYSNAME="arm_darwin_210"
-			OSXSDK="macosx12.0"
 			;;
 		aarch64-apple-darwin21.*)
 			AFS_SYSNAME="arm_darwin_210"
-			OSXSDK="macosx12.0"
 			;;
 		x86_64-apple-darwin22.*)
 			AFS_SYSNAME="x86_darwin_220"
-			OSXSDK="macosx13.0"
 			;;
 		arm-apple-darwin22.*)
 			AFS_SYSNAME="arm_darwin_220"
-			OSXSDK="macosx13.0"
 			;;
 		aarch64-apple-darwin22.*)
 			AFS_SYSNAME="arm_darwin_220"
-			OSXSDK="macosx13.0"
 			;;
 		x86_64-apple-darwin23.*)
 			AFS_SYSNAME="x86_darwin_230"
-			OSXSDK="macosx14.0"
 			;;
 		arm-apple-darwin23.*)
 			AFS_SYSNAME="arm_darwin_230"
-			OSXSDK="macosx14.0"
 			;;
 		aarch64-apple-darwin23.*)
 			AFS_SYSNAME="arm_darwin_230"
-			OSXSDK="macosx14.0"
 			;;
                 sparc-sun-solaris2.8)
                         AFS_SYSNAME="sun4x_58"
@@ -381,7 +365,7 @@ case $AFS_SYSNAME in
                 AC_CHECK_HEADERS(crt_externs.h)
                 DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
                 DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
-                AC_SUBST(OSXSDK)
+		AC_SUBST([XCODEBUILD_FLAGS])
                 ;;
 esac
 
