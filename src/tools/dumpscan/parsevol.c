@@ -28,6 +28,8 @@
 
 /* parsevol.c - Parse a volume header */
 
+#include <time.h>
+
 #include "dumpscan.h"
 #include "dumpscan_errs.h"
 #include "dumpfmt.h"

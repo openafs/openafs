@@ -28,6 +28,8 @@
 
 /* dump.c - Write out parts of a volume dump */
 
+#include <time.h>
+
 #include "dumpscan.h"
 #include "dumpfmt.h"
 

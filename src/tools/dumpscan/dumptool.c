@@ -76,6 +76,7 @@
 #include <fnmatch.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <time.h>
 
 #include <rx/rx_queue.h>
 #include <lock.h>

@@ -29,6 +29,7 @@
 /* backuphdr.c - Parse and print backup system headers */
 
 #include <stdlib.h>
+#include <time.h>
 
 #include "dumpscan.h"
 #include "dumpscan_errs.h"
