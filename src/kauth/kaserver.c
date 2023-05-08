@@ -55,11 +55,6 @@ struct afsconf_dir *KA_conf;	/* for getting cell info */
 int MinHours = 0;
 int npwSums = KA_NPWSUMS;	/* needs to be variable sometime */
 
-#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
-#undef vfprintf
-#define vfprintf(stream,fmt,args) _doprnt(fmt,args,stream)
-#endif
-
 static int debugOutput;
 
 /* check whether caller is authorized to manage RX statistics */
