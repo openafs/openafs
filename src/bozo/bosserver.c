@@ -634,7 +634,7 @@ BozoDaemon(void *unused)
 }
 
 #ifdef AFS_AIX32_ENV
-static int
+static void
 tweak_config(void)
 {
     FILE *f;
