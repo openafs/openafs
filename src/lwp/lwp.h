@@ -228,9 +228,13 @@ extern int lwp_overflowAction;
 extern int lwp_stackUseEnabled;
 extern int lwp_MaxStackSeen;
 
-#ifndef	AFS_AIX32_ENV
-#define	LWP_CreateProcess2(a, b, c, d, e, f)	\
-	LWP_CreateProcess((a), (b), (c), (d), (e), (f))
+#ifdef AFS_AIX32_ENV
+extern int LWP_CreateProcess2(void *(*ep) (void *), int stacksize,
+			      int priority, void *parm, char *name,
+			      PROCESS * pid);
+#else
+# define LWP_CreateProcess2(a, b, c, d, e, f)	\
+	 LWP_CreateProcess((a), (b), (c), (d), (e), (f))
 #endif
 
 /* iomgr.c */
