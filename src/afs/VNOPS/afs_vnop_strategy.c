@@ -70,7 +70,7 @@ int afs_ustrategy(struct buf *abp)
     if ((abp->b_flags & B_READ) == B_READ) {
 #endif
 	/* read b_bcount bytes into kernel address b_un.b_addr starting
-	 * at byte DEV_BSIZE * b_blkno.  Bzero anything we can't read,
+	 * at byte DEV_BSIZE * b_blkno.  Zero anything we can't read,
 	 * and finally call iodone(abp).  File is in abp->b_vp.  Credentials
 	 * are from u area??
 	 */

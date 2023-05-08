@@ -335,7 +335,7 @@ afs_ComputePAGStats(void)
 
     /*
      * Initialize the tallies, then sweep through each hash chain.  We
-     * can't bzero the structure, since some fields are cumulative over
+     * can't zero the structure, since some fields are cumulative over
      * the CM's lifetime.
      */
     authP = &(afs_stats_cmfullperf.authent);

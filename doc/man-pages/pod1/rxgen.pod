@@ -669,7 +669,7 @@ Sample CLIENT code:
     vldb_list       linkedvldbs;
     vldblist        vllist, vllist1;
 
-    bzero(&linkedvldbs, sizeof(vldb_list));
+    memset(&linkedvldbs, 0, sizeof(vldb_list));
     code = VL_LinkedList(&attributes, &nentries, &linkedvldbs);
     if (!code) {
         printf("We got %d vldb entries\n", nentries);

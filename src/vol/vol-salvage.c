@@ -2426,7 +2426,7 @@ SalvageVolumeHeaderFile(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 
     for (i = 0; i < MAXINODETYPE; i++) {
 	if (stuff[i].inodeType == VI_LINKTABLE) {
-	    /* Gross hack: SalvageHeader does a bcmp on the volume header.
+	    /* Gross hack: SalvageHeader does a memcmp on the volume header.
 	     * And we may have recreated the link table earlier, so set the
 	     * RW header as well. The header magic was already checked.
 	     */

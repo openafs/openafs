@@ -2029,7 +2029,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 
     shortcut = 0;
 
-    /* check hints first! (might could use bcmp or some such...) */
+    /* check hints first! */
     if ((tdc = avc->dchint)) {
 	int dcLocked;
 

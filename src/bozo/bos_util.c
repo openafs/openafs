@@ -136,7 +136,7 @@ main(int argc, char **argv)
 	    exit(1);
 	}
 	kvno = atoi(argv[2]);
-	bzero(tkey, sizeof(tkey));
+	memset(tkey, 0, sizeof(tkey));
 	code = kname_parse(name, inst, realm, argv[4]);
 	if (code != 0) {
 	    printf("Invalid kerberos name\n");

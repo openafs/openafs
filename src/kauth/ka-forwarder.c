@@ -108,7 +108,7 @@ setup_servers(int argc, char **argv)
 		fprintf(stderr, "%s: unknown host %s\n", prog, host);
 		exit(1);
 	    }
-	    bcopy(h->h_addr, &fwdaddr, 4);
+	    memcpy(&fwdaddr, h->h_addr, 4);
 	}
 
 	servers[i].sin_family = AF_INET;
@@ -221,8 +221,8 @@ main(int argc, char **argv)
 
 	    to = &reply;
 	    reply.sin_family = AF_INET;
-	    bcopy(bufp, &reply.sin_addr.s_addr, 4);
-	    bcopy(bufp + 4, &reply.sin_port, 2);
+	    memcpy(&reply.sin_addr.s_addr, bufp, 4);
+	    memcpy(&reply.sin_port, bufp + 4, 2);
 	    sendptr = bufp + 8;
 	    sendlen = rv - 8;
 	}
@@ -232,8 +232,8 @@ main(int argc, char **argv)
 	    cur_server = (cur_server + 1) % num_servers;
 	    to = &servers[cur_server];
 
-	    bcopy(&from.sin_addr.s_addr, bufp - 8, 4);
-	    bcopy(&from.sin_port, bufp - 4, 2);
+	    memcpy(bufp - 8, &from.sin_addr.s_addr, 4);
+	    memcpy(bufp - 4, &from.sin_port, 2);
 
 	    sendptr = bufp - 8;
 	    sendlen = rv + 8;

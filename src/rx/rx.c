@@ -3096,7 +3096,7 @@ rxi_FindPeer(afs_uint32 host, u_short port, int create)
     }
     if (!pp) {
 	if (create) {
-	    pp = rxi_AllocPeer();	/* This bzero's *pp */
+	    pp = rxi_AllocPeer();	/* This zeroes *pp */
 	    pp->host = host;	/* set here or in InitPeerParams is zero */
 	    pp->port = port;
 #ifdef AFS_RXERRQ_ENV
@@ -3219,7 +3219,7 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
             *unknownService = 1;
 	    return (struct rx_connection *)0;
 	}
-	conn = rxi_AllocConnection();	/* This bzero's the connection */
+	conn = rxi_AllocConnection();	/* This zeroes the connection */
 	MUTEX_INIT(&conn->conn_call_lock, "conn call lock", MUTEX_DEFAULT, 0);
 	MUTEX_INIT(&conn->conn_data_lock, "conn data lock", MUTEX_DEFAULT, 0);
 	CV_INIT(&conn->conn_call_cv, "conn call cv", CV_DEFAULT, 0);

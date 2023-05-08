@@ -3236,7 +3236,7 @@ attach2(Error * ec, VolumeId volumeId, char *path, struct DiskPartition64 *partp
 
 	/*
 	 * We just read in the diskstuff part of the header.  If the detailed
-	 * volume stats area has not yet been initialized, we should bzero the
+	 * volume stats area has not yet been initialized, we should zero the
 	 * area and mark it as initialized.
 	 */
 	if (!(V_stat_initialized(vp))) {
@@ -6761,7 +6761,7 @@ VAdjustVolumeStatistics_r(Volume * vp)
 	V_dayUseDate(vp) = Midnight(now);
 
 	/*
-	 * All we need to do is bzero the entire VOL_STATS_BYTES of
+	 * All we need to do is zero the entire VOL_STATS_BYTES of
 	 * the detailed volume statistics area.
 	 */
 	memset((V_stat_area(vp)), 0, VOL_STATS_BYTES);

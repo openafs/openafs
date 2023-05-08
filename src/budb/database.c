@@ -213,7 +213,7 @@ UpdateCache(struct ubik_trans *ut, void *rock)
 		db.h.lastUpdate = db.h.lastDumpId = htonl(time(0));
 		db.h.eofPtr = htonl(sizeof(db.h));
 
-		/* text ptrs cleared by bzero */
+		/* text ptrs cleared by memset */
 		ht_DBInit();
 
 		code = dbwrite(ut, 0, (char *)&db.h, sizeof(db.h));

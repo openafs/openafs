@@ -339,7 +339,7 @@ main(int argc, char **argv)
 	exit(2);
     }
 
-    bzero(&dp, sizeof(dp));
+    memset(&dp, 0, sizeof(dp));
     dp.cb_error = my_error_cb;
     dp.repair_flags = repairflags;
     if (X->is_seekable)
@@ -365,7 +365,7 @@ main(int argc, char **argv)
 	dt_uint64 where;
 
 	dp.print_flags = printflags & DSPRINT_DEBUG;
-	bzero(&phi, sizeof(phi));
+	memset(&phi, 0, sizeof(phi));
 	phi.p = &dp;
 
 	if ((r = xftell(X, &where))

@@ -4389,7 +4389,7 @@
  * \par
  * \#define rx_Read(call, buf, nbytes) 
  * \n ((call)->nLeft > (nbytes) ? 
- * \n bcopy((call)->bufPtr, (buf), (nbytes)), 
+ * \n memcpy((buf), (call)->bufPtr, (nbytes)),
  * \n (call)->nLeft -= (nbytes), (call)->bufPtr += (nbytes), (nbytes) 
  * \n : rx_ReadProc((call), (buf), (nbytes))) 
  * \par
@@ -4410,7 +4410,7 @@
  * \par
  * \#define rx_Write(call, buf, nbytes) 
  * \n ((call)->nFree > (nbytes) ? 
- * \n bcopy((buf), (call)->bufPtr, (nbytes)), 
+ * \n memcpy((call)->bufPtr, (buf), (nbytes)),
  * \n (call)->nFree -= (nbytes), 
  * \n (call)->bufPtr += (nbytes), (nbytes) 
  * \n : rx_WriteProc((call), (buf), (nbytes))) 
@@ -5269,7 +5269,7 @@
  * 		pn, rn, hostEntP->h_length, sizeof(u_long)); 
  * 		exit(1); 
  * 	} 
- * 	bcopy(hostEntP->h_addr, (char *)&hostIPAddr, sizeof(hostIPAddr)); 
+ * 	memcpy(&hostIPAddr, hostEntP->h_addr, sizeof(hostIPAddr));
  * 	return(hostIPAddr); 
  * } /* GetIpAddress */
  * \endcode
