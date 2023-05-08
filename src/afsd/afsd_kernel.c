@@ -383,35 +383,7 @@ afsd_call_syscall(struct afsd_syscall_args *args)
 
 #define	ROUNDUP(x)  (((x) + 3) & ~3)
 
-aix_vmount(const char *cacheMountDir)
-{
-    struct vmount *vmountp;
-    int size, error;
-
-    size = sizeof(struct vmount) + ROUNDUP(strlen(cacheMountDir) + 1) + 5 * 4;
-    /* Malloc and zero the vmount structure */
-    if ((vmountp = calloc(1, size)) == NULL) {
-	printf("Can't allocate space for the vmount structure (AIX)\n");
-	exit(1);
-    }
-
-    /* transfer info into the vmount structure */
-    vmountp->vmt_revision = VMT_REVISION;
-    vmountp->vmt_length = size;
-    vmountp->vmt_fsid.fsid_dev = 0;
-    vmountp->vmt_fsid.fsid_type = AFS_FSNO;
-    vmountp->vmt_vfsnumber = 0;
-    vmountp->vmt_time = 0;	/* We'll put the time soon! */
-    vmountp->vmt_flags = VFS_DEVMOUNT;	/* read/write permission */
-    vmountp->vmt_gfstype = AFS_FSNO;
-    vmountdata(vmountp, "AFS", cacheMountDir, "", "", "", "rw");
-
-    /* Do the actual mount system call */
-    error = vmount(vmountp, size);
-    free(vmountp);
-    return (error);
-}
-
+static void
 vmountdata(struct vmount * vmtp, char *obj, char *stub, char *host,
 	   char *hostsname, char *info, char *args)
 {
@@ -462,6 +434,36 @@ vmountdata(struct vmount * vmtp, char *obj, char *stub, char *host,
     size = ROUNDUP(strlen(args) + 1);
     vdp->vmt_size = size;
     strcpy(vmt2dataptr(vmtp, VMT_ARGS), args);
+}
+
+static int
+aix_vmount(const char *cacheMountDir)
+{
+    struct vmount *vmountp;
+    int size, error;
+
+    size = sizeof(struct vmount) + ROUNDUP(strlen(cacheMountDir) + 1) + 5 * 4;
+    /* Malloc and zero the vmount structure */
+    if ((vmountp = calloc(1, size)) == NULL) {
+	printf("Can't allocate space for the vmount structure (AIX)\n");
+	exit(1);
+    }
+
+    /* transfer info into the vmount structure */
+    vmountp->vmt_revision = VMT_REVISION;
+    vmountp->vmt_length = size;
+    vmountp->vmt_fsid.fsid_dev = 0;
+    vmountp->vmt_fsid.fsid_type = AFS_FSNO;
+    vmountp->vmt_vfsnumber = 0;
+    vmountp->vmt_time = 0;	/* We'll put the time soon! */
+    vmountp->vmt_flags = VFS_DEVMOUNT;	/* read/write permission */
+    vmountp->vmt_gfstype = AFS_FSNO;
+    vmountdata(vmountp, "AFS", cacheMountDir, "", "", "", "rw");
+
+    /* Do the actual mount system call */
+    error = vmount(vmountp, size);
+    free(vmountp);
+    return (error);
 }
 #endif /* AFS_AIX_ENV */
 
