@@ -705,7 +705,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 
     pp->ifMTU = 0;
     rx_rto_setPeerTimeoutSecs(pp, 2);
-    /* I don't initialize these, because I presume they are bzero'd...
+    /* I don't initialize these, because I presume they are zeroed...
      * pp->burstSize pp->burst pp->burstWait.sec pp->burstWait.usec
      */
 

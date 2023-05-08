@@ -40,7 +40,7 @@ void ll_init(linked_list *list)
     }
 
     /* This sets everything to zero, which is what we want. */
-    bzero((char *)list, sizeof(linked_list));
+    memset(list, 0, sizeof(linked_list));
 }
 
 ll_node *ll_add_node(linked_list *list, ll_end which_end)

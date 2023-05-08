@@ -296,7 +296,7 @@ check_buffers(unsigned offset, unsigned size)
     unsigned op = 0;
     unsigned bad = 0;
 
-    if (bcmp(good_buf + offset, temp_buf, size) != 0) {
+    if (memcmp(good_buf + offset, temp_buf, size) != 0) {
 	prt("READ BAD DATA: offset = 0x%x, size = 0x%x\n", offset, size);
 	prt("OFFSET\tGOOD\tBAD\tRANGE\n");
 	while (size > 0) {
@@ -500,7 +500,7 @@ dowrite(unsigned offset, unsigned size)
     gendata(original_buf, good_buf, offset, size);
     if (file_size < offset + size) {
 	if (file_size < offset)
-	    bzero(good_buf + file_size, offset - file_size);
+	    memset(good_buf + file_size, 0, offset - file_size);
 	file_size = offset + size;
 	if (lite) {
 	    warn("Lite file size bug in fsx!");
@@ -556,7 +556,7 @@ domapwrite(unsigned offset, unsigned size)
     gendata(original_buf, good_buf, offset, size);
     if (file_size < offset + size) {
 	if (file_size < offset)
-	    bzero(good_buf + file_size, offset - file_size);
+	    memset(good_buf + file_size, 0, offset - file_size);
 	file_size = offset + size;
 	if (lite) {
 	    warn("Lite file size bug in fsx!");
@@ -618,7 +618,7 @@ dotruncate(unsigned size)
     log4(OP_TRUNCATE, size, (unsigned)file_size, 0);
 
     if (size > file_size)
-	bzero(good_buf + file_size, size - file_size);
+	memset(good_buf + file_size, 0, size - file_size);
     file_size = size;
 
     if (testcalls <= simulatedopcount)

@@ -260,7 +260,7 @@ NFSCopyToken(afs_int32 ahost, afs_int32 auid)
     char space[1200];
     struct ClearToken ct;
     afs_int32 index, newIndex;
-    afs_int32 temp;		/* for bcopy */
+    afs_int32 temp;
     char *tp;
     struct ViceIoctl blob;
 
