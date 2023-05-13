@@ -3367,6 +3367,8 @@ attach2(Error * ec, VolumeId volumeId, char *path, struct DiskPartition64 *partp
 	goto locked_error;
     }
 
+    free(vp->vnodeIndex[vSmall].bitmap);
+    free(vp->vnodeIndex[vLarge].bitmap);
     vp->vnodeIndex[vSmall].bitmap = vp->vnodeIndex[vLarge].bitmap = NULL;
 #ifndef BITMAP_LATER
     if (programType == fileServer && VolumeWriteable(vp)) {
