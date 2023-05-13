@@ -673,6 +673,7 @@ rxkad_derive_des_key(const void *in, size_t insize,
 	HMAC_Update(&mctx, Lbuf, 4);
 	mdsize = sizeof(tmp);
 	HMAC_Final(&mctx, tmp, &mdsize);
+	HMAC_CTX_cleanup(&mctx);
 	memcpy(ktmp, tmp, 8);
 	DES_set_odd_parity(&ktmp);
 	if (!DES_is_weak_key(&ktmp)) {
