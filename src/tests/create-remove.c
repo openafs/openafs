@@ -86,7 +86,7 @@ unlink_file(const char *name)
 static void
 usage(int ret)
 {
-    fprintf(stderr, "%s [file|dir] number-of-dirs\n", __progname);
+    warnx("[file|dir] number-of-dirs");
     exit(ret);
 }
 

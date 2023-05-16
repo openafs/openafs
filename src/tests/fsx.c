@@ -17,12 +17,10 @@
 #if defined(sun) || defined(_UWIN) || defined(__linux)
 # include <sys/param.h>
 # include <limits.h>
-# include <time.h>
 # include <strings.h>
 # define MAP_FILE 0
-#else
-# include <sys/dirent.h>
 #endif
+#include <time.h>
 #include <sys/file.h>
 #include <sys/mman.h>
 #include <limits.h>
@@ -359,14 +357,20 @@ check_trunc_hack(void)
 {
     struct stat statbuf;
 
-    ftruncate(fd, (off_t) 0);
-    ftruncate(fd, (off_t) 100000);
+    if (ftruncate(fd, (off_t) 0) != 0) {
+	prterr("check_trunc_hack ftruncate(0)");
+    }
+    if (ftruncate(fd, (off_t) 100000) != 0) {
+	prterr("check_trunc_hack ftruncate(100000)");
+    }
     fstat(fd, &statbuf);
     if (statbuf.st_size != (off_t) 100000) {
 	prt("no extend on truncate! not posix!\n");
 	exit(130);
     }
-    ftruncate(fd, 0);
+    if (ftruncate(fd, 0) != 0) {
+	prterr("check_trunc_hack ftruncate(0) again");
+    }
 }
 
 
@@ -884,6 +888,13 @@ main(int argc, char **argv)
 	    if (monitorend == 0)
 		monitorend = -1;	/* aka infinity */
 	    debug = 1;
+
+	    /*
+	     * Falling through to 'n' seems like a mistake, but this is what
+	     * the historical 'fsx' tool has always done. We do the same here,
+	     * for compatibility.
+	     */
+	    AFS_FALLTHROUGH;
 	case 'n':
 	    sizechecks = 0;
 	    break;

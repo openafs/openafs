@@ -110,7 +110,6 @@ main(int argc, char **argv)
     const char *file = "foo";
     const size_t sz = 16384;
     char *random_buf;
-    char *read_buf1;
     char *read_buf2;
     int fd;
 
@@ -126,7 +125,7 @@ main(int argc, char **argv)
     write_null_file(fd, sz);
     if (lseek(fd, 0, SEEK_SET) < 0)
 	err(1, "lseek");
-    read_buf1 = read_file(fd, sz);
+    read_file(fd, sz);
     if (lseek(fd, 0, SEEK_SET) < 0)
 	err(1, "lseek");
     random_buf = write_random_file(fd, sz);

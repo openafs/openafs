@@ -96,7 +96,7 @@ creat_files(const char *dirname, int count)
 static void
 usage(int ret)
 {
-    fprintf(stderr, "%s directory number-of-files\n", __progname);
+    warnx("directory number-of-files");
     exit(ret);
 }
 

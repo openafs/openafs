@@ -80,10 +80,18 @@ main(int argc, char **argv)
 	if (setgroups(1, groups))
 	    errx(1, "setgroups failed");
 
-	setgid(gid);
-	setuid(uid);
-	setegid(gid);
-	seteuid(uid);
+	if (setgid(gid) != 0) {
+	    err(1, "setgid failed");
+	}
+	if (setuid(uid) != 0) {
+	    err(1, "setuid failed");
+	}
+	if (setegid(gid) != 0) {
+	    err(1, "setegid failed");
+	}
+	if (seteuid(uid) != 0) {
+	    err(1, "seteuid failed");
+	}
     }
 
     execvp(prog, &argv[2]);

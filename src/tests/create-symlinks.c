@@ -109,7 +109,7 @@ verify_contents(int count)
 static void
 usage(int ret)
 {
-    fprintf(stderr, "%s number-of-symlinks\n", __progname);
+    warnx("number-of-symlinks");
     exit(ret);
 }
 

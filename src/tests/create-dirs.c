@@ -66,7 +66,7 @@ creat_dirs(int count)
 static void
 usage(int ret)
 {
-    fprintf(stderr, "%s number-of-dirs\n", __progname);
+    warnx("number-of-dirs");
     exit(ret);
 }
 

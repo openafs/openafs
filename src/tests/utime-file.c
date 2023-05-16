@@ -64,6 +64,7 @@ main(int argc, char **argv)
 	len = atoi(argv[1]);
 	if (len == 0)
 	    errx(1, "invalid len");
+	break;
     default:
 	errx(1, "argv != [12]");
     }
@@ -81,7 +82,9 @@ main(int argc, char **argv)
     ret = ftruncate(fd, len);
     fstat(fd, &sb);
     lseek(fd, 0, SEEK_SET);
-    write(fd, buf, len);
+    if (write(fd, buf, len) != len) {
+	errx(1, "write");
+    }
     fstat(fd, &sb);
 
     t.modtime = t.actime = time(NULL);

@@ -62,7 +62,9 @@ getcwd_worker(int num)
     for (i = 0; i < WORKER_TIMES; ++i) {
 	char buf[256];
 
-	getcwd(buf, sizeof(buf));
+	if (getcwd(buf, sizeof(buf)) == NULL) {
+	    err(1, "getcwd %s", name);
+	}
     }
     return 0;
 }
@@ -138,7 +140,9 @@ stat_worker(int num)
     if (chdir(name) < 0)
 	err(1, "chdir %s", name);
     for (i = 0; i < WORKER_TIMES; ++i) {
-	getcwd(buf, sizeof(buf));
+	if (getcwd(buf, sizeof(buf)) == NULL) {
+	    err(1, "getcwd %s", name);
+	}
 	stat(buf, &sb);
     }
     return 0;

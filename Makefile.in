@@ -140,7 +140,7 @@ prelude: ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/hcrypto \
 
 project: cmd comerr
 
-tests: all
+srctests: sys rx lwp util auth fsint comerr opr hcrypto ${DIR_roken}
 	+${COMPILE_PART1} tests ${COMPILE_PART2}
 
 config: prelude
@@ -623,7 +623,7 @@ finale_notest: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ \
 	bozo @VFSCK@ volser tvolser tsalvaged dviced dvolser libafscp \
 	venus venustests update xstat afsmonitor rxdebug libafsrpc rfc3961 \
 	hcrypto libafsauthent libadmin man-pages tools platform kopenafs \
-	authtools $(DIR_roken) rxgk rx_test rxkad_test
+	authtools $(DIR_roken) rxgk rx_test rxkad_test srctests
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs_notest: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth \
@@ -631,7 +631,7 @@ finale_nolibafs_notest: project cmd comerr afsd butc tbutc tbudb libuafs audit k
 	volser tvolser tsalvaged dviced dvolser libafscp venus venustests \
 	update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
 	libafsauthent libadmin man-pages tools platform kopenafs \
-	authtools $(DIR_roken) rxgk rx_test rxkad_test
+	authtools $(DIR_roken) rxgk rx_test rxkad_test srctests
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale: finale_notest test_build

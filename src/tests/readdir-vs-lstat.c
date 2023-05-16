@@ -77,7 +77,7 @@ verify_inodes(const char *dirname)
 static void
 usage(int ret)
 {
-    fprintf(stderr, "%s [directory]\n", __progname);
+    warnx("[directory]");
     exit(ret);
 }
 

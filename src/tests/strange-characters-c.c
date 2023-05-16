@@ -69,14 +69,14 @@ look_at_file(char *name)
 static void
 usage(int ret)
 {
-    fprintf(stderr, "%s\n", __progname);
+    warnx(NULL);
     exit(ret);
 }
 
 int
 main(int argc, char **argv)
 {
-    char *file = "едц";
+    char *file = "\xe5\xe4\xf6";
 
 
     if (argc != 1)

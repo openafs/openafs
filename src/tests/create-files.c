@@ -89,7 +89,7 @@ creat_files(int count, long startsize)
 static void
 usage(int ret)
 {
-    fprintf(stderr, "%s number-of-files size-of-files\n", __progname);
+    warnx("number-of-files size-of-files");
     exit(ret);
 }
 

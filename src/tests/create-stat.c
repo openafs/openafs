@@ -34,6 +34,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,7 +54,7 @@
 static void
 usage(int ret)
 {
-    fprintf(stderr, "%s file\n", __progname);
+    warnx("file");
     exit(ret);
 }
 
