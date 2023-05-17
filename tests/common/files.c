@@ -120,11 +120,13 @@ path_from_tdir(char *env_var, char *filename)
     /* 'tdir' points to the 'tests' dir, so go up one level to get to the top
      * srcdir/objdir. */
     top_rel = afstest_asprintf("%s/..", tdir);
-    top_abs = realpath(top_rel, NULL);
-    free(top_rel);
+    top_abs = bcalloc(1, PATH_MAX);
+    top_abs = realpath(top_rel, top_abs);
     if (top_abs == NULL) {
 	sysbail("realpath");
     }
+
+    free(top_rel);
 
     /*
      * The given 'filename' is relative to the top srcdir/objdir, so to get the
