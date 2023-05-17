@@ -378,13 +378,48 @@ case $AFS_SYSNAME in
 		TSM_LIBS="-lsys -lcsys -lc"
 		;;
 
-	rs_aix61 | rs_aix7*)
+	rs_aix61 | rs_aix71)
 		CC="cc"
 		DBG="-g"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
 		SHLIB_SUFFIX="o"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
+		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
+		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
+		AIX32="no"
+		AIX64="yes"
+		TSM_IMPORTS="-bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp"
+		TSM_LIBS="-lsys -lcsys -lc"
+		;;
+
+	rs_aix7*)
+		# Prefer 'ibm-clang' for CC, otherwise use 'cc'
+		CC=
+		AC_PROG_CC([ibm-clang cc])
+
+		# Are we using the newer ibm-clang compiler, or the older xlc?
+		AC_MSG_CHECKING([AIX compiler type])
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
+		  #ifndef __open_xl__
+		    this is not open xl c
+		  #endif]])],
+		 [
+		  # This is Open XL C 17.1+
+		  AC_MSG_RESULT([ibm-clang])
+		  MT_CC="$CC"
+		  MT_CFLAGS="-pthread"
+		  XLDFLAGS="-Wl,-K"
+		 ],
+		 [
+		  # Assume this is XL C 16.1 or earlier
+		  AC_MSG_RESULT([xlc])
+		  MT_CC="xlc_r"
+		  XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
+		 ]
+		)
+
+		SHLIB_SUFFIX="o"
 		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32="no"
