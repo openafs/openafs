@@ -31,12 +31,11 @@
  * SUCH DAMAGE.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #ifndef _LARGEFILE64_SOURCE
 # define _LARGEFILE64_SOURCE
-#endif
-
-#ifdef HAVE_CONFIG_H
-#include <config.h>
 #endif
 
 #include <sys/types.h>

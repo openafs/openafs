@@ -9,6 +9,9 @@
  *	Rewritten 8/98 by Conrad Minshall.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #if defined(sun) || defined(_UWIN) || defined(__linux)

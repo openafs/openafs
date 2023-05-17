@@ -31,9 +31,8 @@
  * SUCH DAMAGE.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <afsconfig.h>
+#include <afs/param.h>
 
 #include <fcntl.h>
 #include <stdio.h>

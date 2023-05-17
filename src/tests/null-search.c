@@ -1,3 +1,6 @@
+#include <afsconfig.h>
+#include <afs/param.h>
+
 #include <sys/fcntl.h>
 #include <stdlib.h>
 #include <stdarg.h>
