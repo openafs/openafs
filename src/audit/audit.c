@@ -602,11 +602,6 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
     pthread_once(&audit_lock_once, osi_audit_init_lock);
 #endif /* AFS_PTHREAD_ENV */
 
-    if (osi_audit_all < 0)
-	osi_audit_check();
-    if (!osi_audit_all && !auditout_open)
-	return 0;
-
 #ifdef AFS_AIX32_ENV
     switch (errCode) {
     case 0:
@@ -654,6 +649,29 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
 
     return 0;
 }
+
+static int
+osi_audit_always(char *audEvent, afs_int32 errCode, ...)
+{
+    va_list vaList;
+
+    va_start(vaList, errCode);
+    osi_audit_internal(audEvent, errCode, NULL, 0, vaList);
+    va_end(vaList);
+
+    return 0;
+}
+
+static void
+osi_audit_report_status(void)
+{
+    /* Audit this event all of the time */
+    if (osi_audit_all)
+	osi_audit_always("AFS_Aud_On", 0, AUD_END);
+    else
+	osi_audit_always("AFS_Aud_Off", 0, AUD_END);
+}
+
 int
 osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 	  afs_int32 errCode,	/* The error code */
@@ -772,14 +790,10 @@ osi_audit_check(void)
 	fclose(fds);
     }
 
-    /* Audit this event all of the time */
-    if (onoff)
-	osi_audit("AFS_Aud_On", 0, AUD_END);
-    else
-	osi_audit("AFS_Aud_Off", 0, AUD_END);
-
     /* Now set whether we audit all events from here on out */
     osi_audit_all = onoff;
+
+    osi_audit_report_status();
 
     return 0;
 }
