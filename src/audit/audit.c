@@ -562,19 +562,25 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
     free(msg);
 }
 
-#ifdef AFS_PTHREAD_ENV
 static void
-osi_audit_init_lock(void)
+init_internal(void)
 {
     MUTEX_INIT(&audit_lock, "audit", MUTEX_DEFAULT, 0);
+    osi_audit_check();
 }
-#endif
 
 void
 osi_audit_init(void)
 {
 #ifdef AFS_PTHREAD_ENV
-    pthread_once(&audit_lock_once, osi_audit_init_lock);
+    opr_Verify(pthread_once(&audit_lock_once, init_internal) == 0);
+#else
+    static int inited = 0;
+
+    if (inited)
+	return;
+    inited = 1;
+    init_internal();
 #endif /* AFS_PTHREAD_ENV */
 }
 
@@ -595,12 +601,7 @@ osi_audit_internal(char *audEvent,	/* Event name (15 chars or less) */
     int result;
 #endif
 
-#ifdef AFS_PTHREAD_ENV
-    /* i'm pretty sure all the server apps now call osi_audit_init(),
-     * but to be extra careful we'll leave this in here for a
-     * while to make sure */
-    pthread_once(&audit_lock_once, osi_audit_init_lock);
-#endif /* AFS_PTHREAD_ENV */
+    osi_audit_init();
 
 #ifdef AFS_AIX32_ENV
     switch (errCode) {
@@ -672,6 +673,30 @@ osi_audit_report_status(void)
 	osi_audit_always("AFS_Aud_Off", 0, AUD_END);
 }
 
+#ifdef AFS_PTHREAD_ENV
+static pthread_once_t audit_report_once = PTHREAD_ONCE_INIT;
+#endif /* AFS_PTHREAD_ENV */
+
+static void
+audit_report_status_once(void)
+{
+    /* Initialize now to establish report status */
+    osi_audit_init();
+
+#ifdef AFS_PTHREAD_ENV
+    opr_Verify(pthread_once(&audit_report_once, osi_audit_report_status) == 0);
+#else
+    {
+	static int reported = 0;
+
+	if (reported)
+	    return;
+	reported = 1;
+	osi_audit_report_status();
+    }
+#endif
+}
+
 int
 osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 	  afs_int32 errCode,	/* The error code */
@@ -679,8 +704,8 @@ osi_audit(char *audEvent,	/* Event name (15 chars or less) */
 {
     va_list vaList;
 
-    if (osi_audit_all < 0)
-	osi_audit_check();
+    audit_report_status_once();
+
     if (!osi_audit_all && !auditout_open)
 	return 0;
 
@@ -706,8 +731,8 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
     afs_int32 hostId;
     va_list vaList;
 
-    if (osi_audit_all < 0)
-	osi_audit_check();
+    audit_report_status_once();
+
     if (!osi_audit_all && !auditout_open)
 	return 0;
 
@@ -792,8 +817,6 @@ osi_audit_check(void)
 
     /* Now set whether we audit all events from here on out */
     osi_audit_all = onoff;
-
-    osi_audit_report_status();
 
     return 0;
 }
