@@ -31,8 +31,11 @@
 
 sym_t *toc_syms;		/* symbol table                 */
 int toc_nsyms;			/* # of symbols                 */
-caddr_t toc_strs;		/* string table                 */
-int toc_size;			/* size of toc_syms             */
+static caddr_t toc_strs;		/* string table                 */
+static int toc_size;			/* size of toc_syms             */
+
+static int config(struct uio *uiop);
+static int export_cleanup(void);
 
 /*
  * export	-	entry point to EXPORT kernel extension
@@ -41,11 +44,10 @@ int toc_size;			/* size of toc_syms             */
  *	cmd	-	add/delete command
  *	uiop	-	uio vector describing any config params
  */
-export(cmd, uiop)
-     struct uio *uiop;
+int
+export(int cmd, struct uio *uiop)
 {
     int err, monster;
-    static once;
 
     err = 0;
     monster = lockl(&kernel_lock, LOCK_SHORT);
@@ -75,8 +77,8 @@ export(cmd, uiop)
 /*
  * config -	process configuration data
  */
-config(uiop)
-     struct uio *uiop;
+static int
+config(struct uio *uiop)
 {
     struct k_conf conf;
     struct export_nl *np;
@@ -129,7 +131,8 @@ config(uiop)
 /*
  * export_cleanup -	cleanup EXPORT prior to removing kernel extension
  */
-export_cleanup()
+static int
+export_cleanup(void)
 {
 
     /*
@@ -156,11 +159,11 @@ export_cleanup()
  *	the /unix symbol table) we are in trouble.
  */
 #ifdef __XCOFF64__
-u_int64 *myg_toc;
+static u_int64 *myg_toc;
 #else
-u_int32 *myg_toc;
+static u_int32 *myg_toc;
 #endif
-
+int
 import_kfunc(struct k_func * kfp)
 {
     sym_t *sym;
@@ -202,6 +205,7 @@ import_kfunc(struct k_func * kfp)
  * import_kvar -	import a kernel variable that was mistakenly left
  *			off the exports list
  */
+int
 import_kvar(struct k_var * kvp, caddr_t * toc)
 {
     sym_t *sym;
@@ -249,6 +253,7 @@ import_kvar(struct k_var * kvp, caddr_t * toc)
  * Call vanilla syscalls
  */
 #ifndef AFS_AIX51_ENV
+int
 osetgroups(ngroups, gidset)
      int ngroups;
      gid_t *gidset;
@@ -262,13 +267,16 @@ osetgroups(ngroups, gidset)
 
 #ifdef AFS_AIX51_ENV
 #ifdef AFS_64BIT_KERNEL
-okioctl(fdes, cmd, arg, ext, arg2, arg3)
+int
+okioctl(int fdes, int cmd, caddr_t arg, caddr_t ext, caddr_t arg2,
+	caddr_t arg3)
 #else /* AFS_64BIT_KERNEL */
-okioctl32(fdes, cmd, arg, ext, arg2, arg3)
+int
+okioctl32(int fdes, int cmd, caddr_t arg, caddr_t ext, caddr_t arg2,
+	  caddr_t arg3)
 #endif /* AFS_64BIT_KERNEL */
-     int fdes, cmd;
-     caddr_t ext, arg, arg2, arg3;
 #else
+int
 okioctl(fdes, cmd, arg, ext)
      int fdes, cmd, arg;
      caddr_t ext;
@@ -278,6 +286,7 @@ okioctl(fdes, cmd, arg, ext)
 
 #ifdef AFS_AIX51_ENV
 #ifdef AFS_64BIT_KERNEL
+    extern int kioctl(int, int, caddr_t, caddr_t, caddr_t, caddr_t);
     error = kioctl(fdes, cmd, arg, ext, arg2, arg3);
 #else /* AFS_64BIT_KERNEL */
     error = kioctl32(fdes, cmd, arg, ext, arg2, arg3);
@@ -287,16 +296,3 @@ okioctl(fdes, cmd, arg, ext)
 #endif
     return (error);
 }
-
-#ifdef	notdef
-ocore(signo, sigctx)
-     char signo;
-     struct sigcontext *sigctx;
-{
-    int error;
-#include <sys/user.h>
-    u.u_sigflags[signo] |= SA_FULLDUMP;	/* XXX */
-    error = core(signo, sigctx);
-    return (error);
-}
-#endif

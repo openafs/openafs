@@ -44,7 +44,5 @@ struct toc_syment {
 typedef struct toc_syment sym_t;
 
 extern struct toc_syment *toc_syms;	/* symbol table         */
-extern caddr_t toc_strs;	/* string table         */
-extern toc_nsyms;		/* # symbols            */
-extern sym_t *sym_flex();
-extern sym_t *sym_lookup();
+extern int toc_nsyms;		/* # symbols            */
+extern sym_t *sym_lookup(char *name, int value);

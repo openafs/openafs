@@ -17,6 +17,8 @@
 #include <errno.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/device.h>
 #include <sys/sysconfig.h>
@@ -25,14 +27,22 @@
 #include <setjmp.h>
 #include <signal.h>
 
-extern char *malloc(), *optarg;
+extern char *optarg;
 
 extern int sysconfig(int cmd, void *arg, int len);
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     char **argv;
+static void
+usage(void)
+{
+
+    fprintf(stderr, "usage: cfgafs [-a mod_file] [-d mod_file]\n");
+    exit(1);
+}
+
+int
+main(int argc, char **argv)
 {
     int add, del;
     int c;
@@ -153,11 +163,4 @@ main(argc, argv)
 	}
 	exit(0);
     }
-}
-
-usage()
-{
-
-    fprintf(stderr, "usage: cfgafs [-a mod_file] [-d mod_file]\n");
-    exit(1);
 }
