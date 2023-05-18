@@ -253,7 +253,7 @@ typedef struct afsUUID afsUUID;
  * just 'static' so we can at least compile */
 # define static_inline static
 # define hdr_static_inline(x) static x
-#elif defined(AFS_AIX_ENV) || defined(AFS_USR_AIX_ENV)
+#elif (defined(AFS_AIX_ENV) || defined(AFS_USR_AIX_ENV)) && !defined(__clang__)
 # define static_inline static
 # define hdr_static_inline(x) static x
 #elif defined(AFS_SGI_ENV) || defined(AFS_USR_SGI_ENV)
