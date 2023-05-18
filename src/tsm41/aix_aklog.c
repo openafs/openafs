@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <usersec.h>
 #include <syslog.h>
+#include <ctype.h>
 
 #include <krb5.h>
 
@@ -38,6 +39,7 @@
 #include <afs/ktc.h>
 #include <afs/token.h>
 #include <afs/ptserver.h>
+#include <afs/ptuser.h>
 #include "aix_auth_prototypes.h"
 
 static int uidpag = 0;
@@ -112,7 +114,7 @@ static int get_user_realm(krb5_context, char *);
 #error "Must have either keyblock or session member of krb5_creds"
 #endif
 
-char *
+static char *
 afs_realm_of_cell(krb5_context context, struct afsconf_cell *cellconfig, int fallback)
 {
     static char krbrlm[REALM_SZ+1];
@@ -143,43 +145,6 @@ afs_realm_of_cell(krb5_context context, struct afsconf_cell *cellconfig, int fal
         if (hrealms) krb5_free_host_realm(context, hrealms);
     }
     return krbrlm;
-}
-
-int
-aklog_authenticate(char *userName, char *response, int *reenter, char **message)
-{
-    char *reason, *pword, prompt[256];
-    struct passwd *pwd;
-    int code, unixauthneeded, password_expires = -1;
-    int status;
-    krb5_context context;
-
-    syslog(LOG_AUTH|LOG_DEBUG, "LAM aklog: uidpag %s localuid %s",
-                               uidpag ? "yes" : "no",
-                               localuid ? "yes" : "no");
-
-    krb5_init_context(&context);
-    *reenter = 0;
-    *message = (char *)0;
-
-    status = auth_to_cell(context, userName, NULL, NULL);
-
-    if (status) {
-	char *str = afs_error_message(status);
-	*message = malloc(1024);
-#ifdef HAVE_KRB5_SVC_GET_MSG
-	if (strncmp(str, "unknown", strlen("unknown")) == 0) {
-	    krb5_svc_get_msg(status,&str);
-	    sprintf(*message, "Unable to obtain AFS tokens: %s.\n",
-                    str);
-	    krb5_free_string(context, str);
-	} else
-#endif
-	    sprintf(*message, "Unable to obtain AFS tokens: %s.\n",
-		    str);
-	return AUTH_FAILURE; /* NOTFOUND? */
-    }
-    return AUTH_SUCCESS;
 }
 
 static krb5_error_code
@@ -221,7 +186,6 @@ get_credv5(krb5_context context, char *user,
     return r;
 }
 
-
 static int
 get_user_realm(krb5_context context, char *realm)
 {
@@ -241,26 +205,26 @@ get_user_realm(krb5_context context, char *realm)
     return 0;
 }
 
-int
+static int
 aklog_chpass(char *userName, char *oldPasswd, char *newPasswd, char **message)
 {
     return AUTH_SUCCESS;
 }
 
-int
+static int
 aklog_passwdexpired(char *userName, char **message)
 {
     return AUTH_SUCCESS;
 }
 
-int
+static int
 aklog_passwdrestrictions(char *userName, char *newPasswd, char *oldPasswd,
 			 char **message)
 {
     return AUTH_SUCCESS;
 }
 
-char *
+static char *
 aklog_getpasswd(char * userName)
 {
     errno = ENOSYS;
@@ -661,6 +625,43 @@ auth_to_cell(krb5_context context, char *user, char *cell, char *realm)
     }
     token_FreeSet(&token);
     return(status);
+}
+
+static int
+aklog_authenticate(char *userName, char *response, int *reenter, char **message)
+{
+    char *reason, *pword, prompt[256];
+    struct passwd *pwd;
+    int code, unixauthneeded, password_expires = -1;
+    int status;
+    krb5_context context;
+
+    syslog(LOG_AUTH|LOG_DEBUG, "LAM aklog: uidpag %s localuid %s",
+			       uidpag ? "yes" : "no",
+			       localuid ? "yes" : "no");
+
+    krb5_init_context(&context);
+    *reenter = 0;
+    *message = (char *)0;
+
+    status = auth_to_cell(context, userName, NULL, NULL);
+
+    if (status) {
+	char *str = afs_error_message(status);
+	*message = malloc(1024);
+#ifdef HAVE_KRB5_SVC_GET_MSG
+	if (strncmp(str, "unknown", strlen("unknown")) == 0) {
+	    krb5_svc_get_msg(status,&str);
+	    sprintf(*message, "Unable to obtain AFS tokens: %s.\n",
+		    str);
+	    krb5_free_string(context, str);
+	} else
+#endif
+	    sprintf(*message, "Unable to obtain AFS tokens: %s.\n",
+		    str);
+	return AUTH_FAILURE; /* NOTFOUND? */
+    }
+    return AUTH_SUCCESS;
 }
 
 int

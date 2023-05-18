@@ -381,7 +381,7 @@ pam: auth libafsauthent
 		echo Skipping pam for ${SYS_NAME} ; \
 	fi
 
-tsm41: cmd comerr kauth rxkad
+tsm41: cmd comerr ptserver kauth rxkad
 	+set -x; \
 	case ${SYS_NAME} in \
 	rs_aix* ) \
