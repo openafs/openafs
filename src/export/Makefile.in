@@ -94,14 +94,14 @@ symtab.o symtab64.o: ${srcdir}/symtab.c
 	rs_aix4* ) \
 		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -c ${srcdir}/symtab.c ;; \
 	rs_aix5* ) \
-		$(CC) $(AFS_CPPFLAGS) ${AFS_CFLAGS} -q64 -D__XCOFF64__ \
+		$(CC) $(AFS_CPPFLAGS) ${AFS_CFLAGS} $(XCFLAGS64) -D__XCOFF64__ \
 			-DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
 			-c ${srcdir}/symtab.c ; \
 		mv symtab.o symtab64.o ; \
 		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -DAFS_AIX51_ENV \
 			-c ${srcdir}/symtab.c ;; \
 	rs_aix[67]* ) \
-		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -q64 -D__XCOFF64__ \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(XCFLAGS64) -D__XCOFF64__ \
 			-DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
 			-c ${srcdir}/symtab.c ; \
 		mv symtab.o symtab64.o ;; \
@@ -112,14 +112,14 @@ export.o export64.o: ${srcdir}/export.c
 	rs_aix4* ) \
 		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -c ${srcdir}/export.c ;; \
 	rs_aix5* ) \
-		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -q64 -D__XCOFF64__ \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(XCFLAGS64) -D__XCOFF64__ \
 			-DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
 			-c ${srcdir}/export.c ; \
 		mv export.o export64.o ; \
 		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -DAFS_AIX51_ENV \
 			-c ${srcdir}/export.c ;; \
 	rs_aix[67]* ) \
-		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) -q64 \
+		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(XCFLAGS64) \
 			-D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
 			-c ${srcdir}/export.c ; \
 		mv export.o export64.o ;; \
@@ -132,7 +132,7 @@ export.nonfs.o export64.nonfs.o: ${srcdir}/export.c
 			-c ${srcdir}/export.c ; \
 		mv export.o export.nonfs.o ;; \
 	rs_aix5* ) \
-		$(CC) $(CPPFLAGS) $(CFLAGS) -q64 ${INCS} -D__XCOFF64__ \
+		$(CC) $(CPPFLAGS) $(CFLAGS) $(XCFLAGS64) ${INCS} -D__XCOFF64__ \
 			-DAFS_64BIT_KERNEL -DAFS_NONFSTRANS -DAFS_AIX51_ENV \
 			-c ${srcdir}/export.c ; \
 		mv export.o export64.nonfs.o ; \
@@ -140,7 +140,7 @@ export.nonfs.o export64.nonfs.o: ${srcdir}/export.c
 			-DAFS_AIX51_ENV -c ${srcdir}/export.c ; \
 		mv export.o export.nonfs.o ;; \
 	rs_aix[67]* ) \
-		$(CC) $(CPPFLAGS) $(CFLAGS) -q64 ${INCS} -D__XCOFF64__ \
+		$(CC) $(CPPFLAGS) $(CFLAGS) $(XCFLAGS64) ${INCS} -D__XCOFF64__ \
 			-DAFS_64BIT_KERNEL -DAFS_NONFSTRANS -DAFS_AIX51_ENV \
 			-c ${srcdir}/export.c ; \
 		mv export.o export64.nonfs.o ;; \
@@ -151,7 +151,7 @@ cfgexport: cfgexport.o
 
 cfgexport64: cfgexport64.o
 	if [ "x$(AIX64)" = "xyes" ]; then  \
-	  $(CC) $(LDFLAGS) -g ${INCS} -q64 -o cfgexport64 cfgexport64.o ; \
+	  $(CC) $(LDFLAGS) -g ${INCS} $(XCFLAGS64) -o cfgexport64 cfgexport64.o ; \
 	fi
 
 cfgafs: cfgafs.o
@@ -159,10 +159,10 @@ cfgafs: cfgafs.o
 
 cfgafs64: cfgafs64.o
 	if [ "x$(AIX64)" = "xyes" ]; then  \
-	  $(CC) $(LDFLAGS) -g ${INCS} -q64 -o cfgafs64 cfgafs64.o ; \
+	  $(CC) $(LDFLAGS) -g ${INCS} $(XCFLAGS64) -o cfgafs64 cfgafs64.o ; \
 	fi
 
-CFLAGS_cfgexport64.o = -g -q64 -D__XCOFF64__
+CFLAGS_cfgexport64.o = -g $(XCFLAGS64) -D__XCOFF64__
 cfgexport64.o: ${srcdir}/cfgexport.c AFS_component_version_number.c
 	$(Q)if [ "x$(AIX64)" = "xyes" ]; then  \
 	  $(AFS_CCRULE_NOQ) $(srcdir)/cfgexport.c ; \
@@ -171,7 +171,7 @@ cfgexport64.o: ${srcdir}/cfgexport.c AFS_component_version_number.c
 cfgexport.o: ${srcdir}/cfgexport.c AFS_component_version_number.c
 cfgafs.o: ${srcdir}/cfgafs.c AFS_component_version_number.c
 
-CFLAGS_cfgafs64.o = -q64
+CFLAGS_cfgafs64.o = $(XCFLAGS64)
 cfgafs64.o: ${srcdir}/cfgafs.c AFS_component_version_number.c
 	$(Q)if [ "x$(AIX64)" = "xyes" ]; then  \
 	  $(AFS_CCRULE_NOQ) $(srcdir)/cfgafs.c ; \

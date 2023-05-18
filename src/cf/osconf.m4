@@ -370,6 +370,7 @@ case $AFS_SYSNAME in
 		MT_CC="xlc_r"
 		SHLIB_SUFFIX="o"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
+		XCFLAGS64=-q64
 		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32="yes"
@@ -385,6 +386,7 @@ case $AFS_SYSNAME in
 		MT_CC="xlc_r"
 		SHLIB_SUFFIX="o"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
+		XCFLAGS64=-q64
 		XLIBS="${LIB_AFSDB} ${LIB_libintl} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
 		AIX32="no"
@@ -410,12 +412,14 @@ case $AFS_SYSNAME in
 		  MT_CC="$CC"
 		  MT_CFLAGS="-pthread"
 		  XLDFLAGS="-Wl,-K"
+		  XCFLAGS64=-m64
 		 ],
 		 [
 		  # Assume this is XL C 16.1 or earlier
 		  AC_MSG_RESULT([xlc])
 		  MT_CC="xlc_r"
 		  XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
+		  XCFLAGS64=-q64
 		 ]
 		)
 
