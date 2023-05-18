@@ -19,7 +19,7 @@ DEFINES= -DKERNEL -DUKERNEL
 AR = /usr/bin/ar
 ARFLAGS = -r
 RANLIB = /bin/ranlib
-CC = xlc_r
+CC = $(MT_CC)
 DEF_LIBPATH=/usr/lib/threads:/usr/lib:/lib
 
 TEST_CFLAGS=-DAFS_PTHREAD_ENV -Daix -DAFS_AIX_ENV $(XCFLAGS)
