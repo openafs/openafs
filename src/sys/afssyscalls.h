@@ -138,4 +138,19 @@ int     lpioctl(char *path, int cmd, void *cmarg, int follow);
 
 #endif /* AFS_NT40_ENV */
 
+#ifdef AFS_AIX_ENV
+/*
+ * Note that on AIX, syscall() is the confusing name of a system call exported
+ * by libafs defined in src/afs/afs_syscall.c, not a generic syscall-calling
+ * function like it is on other platforms (syscalls on AIX look like function
+ * calls due to some linker magic). This is just like lsetpag() and lpioctl(),
+ * so declare a prototype for it here.
+ *
+ * Ideally this prototype would match what's in src/afs/afs_syscall.c, but our
+ * callers call this with varying arguments, so we can't easily provide a real
+ * prototype with all arguments.
+ */
+int syscall();
+#endif
+
 #endif /* AFS_AFSSYSCALLS_H */

@@ -23,6 +23,7 @@
 #include <rx/rx.h>
 #include <afs/vice.h>
 #include <afs/sys_prototypes.h>
+#include <afs/afssyscalls.h>
 
 /* For SGI 6.2, this is changed to 1 if it's a 32 bit kernel. */
 int afs_icl_sizeofLong = ICL_LONG;
