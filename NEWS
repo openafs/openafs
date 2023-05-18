@@ -1,5 +1,68 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.10 (in progress)
+
+  All platforms
+
+    * Improved error messages and diagnostics (15302 15313)
+
+    * Fixes for parallel or out of tree builds (15297..9)
+
+    * Fixed "make clean" to remove several artifacts overlooked in the past
+      (15377)
+
+    * Fixed the autoconf check for ncurses to catch libs built with
+      "--enable-reentrant" (15296)
+
+    * Removed the obsolete kdump debugging tool (15315)
+
+    * Avoid some more possible string buffer overflows (15240)
+
+  All client platforms
+
+    * Take the readonly volume offline during "vos convertROtoRW" (15233)
+
+    * Updated the CellServDB to the latest version from grand.central.org
+      (15323)
+
+  All UNIX/Linux client platforms
+
+    * Trim trailing slashes from paths given to "fs lsmount" and
+      "fs flushmount" (15242)
+
+    * Provide the "-literal" option for the "fs getfid" command, which allows
+      querying a symlink or mount point rather than the object pointed to
+      (15235)
+
+    * Avoid some potential kernel panics (15295 15324 15331)
+
+  AIX
+
+    * Improved support for this platform, including releases 7.1, 7.2 and 7.3
+      (15309 15368..76 15378..86 15403 15422 15424..5 15441..2)
+
+  macOS
+    * Added support for Apple Silicon and macOS releases up to 13 ("Ventura")
+      (15246 15250..1 15254 15258..64)
+
+    * Fixes around signing and notarization of the OpenAFS packages (15255..7)
+
+    * Build "afscell" on supported platforms, and only those (15247)
+
+  Linux
+
+    * Support building for newer distributions and compilers (15266..71
+      15273..5 15277)
+
+  Linux clients
+
+    * Support mainline kernels up to 6.3 and distribution kernels
+      derived from those (15228 15281 15388..9 15410..11)
+
+    * Fixes and enhancements around the kernel module build (15229..31 15265)
+
+    * Fixed potential cache inconsistencies for symbolic link metadata (15443)
+
 OpenAFS 1.8.9
 
   All platforms
