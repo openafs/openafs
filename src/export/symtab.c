@@ -14,6 +14,7 @@
 #include <afs/param.h>
 
 
+#include <string.h>
 #include "sys/types.h"
 #include "sym.h"
 
@@ -29,11 +30,13 @@
 	((sym)->n_zeroes == 0 ? (char *) sym_off(sym) : (sym)->n_name)
 #endif
 
+static sym_t * search(unsigned addr);
+static sym_t * symsrch(char *s);
+static sym_t * sym_flex(sym_t *sym);
+
 sym_t *
-sym_lookup(name, value)
-     char *name;
+sym_lookup(char *name, int value)
 {
-    static sym_t *symsrch(), *search();
     char buf[64];
     sym_t *sym;
 
@@ -59,8 +62,7 @@ sym_lookup(name, value)
 }
 
 static sym_t *
-search(addr)
-     unsigned addr;
+search(unsigned addr)
 {
     sym_t *sp;
     sym_t *save;
@@ -81,8 +83,7 @@ search(addr)
 }
 
 static sym_t *
-symsrch(s)
-     char *s;
+symsrch(char *s)
 {
     sym_t *sp;
     sym_t *found;
@@ -126,9 +127,8 @@ symsrch(s)
  * Returns:
  *	^ to static location containing modified symbol.
  */
-sym_t *
-sym_flex(sym)
-     sym_t *sym;
+static sym_t *
+sym_flex(sym_t *sym)
 {
     static sym_t symbol;
     static char name[48];

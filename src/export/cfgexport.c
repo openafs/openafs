@@ -17,6 +17,8 @@
 #include <errno.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/device.h>
 #include <sys/sysconfig.h>
@@ -28,17 +30,32 @@
 #include "export.h"
 #include "sym.h"
 
-extern char *malloc(), *optarg;
+extern char *optarg;
 extern int sysconfig(int cmd, void *arg, int len);
 
-int debug = 0;
-char *syms = "/unix";
-char *xstrings;
+static int debug = 0;
+static char *syms = "/unix";
+static char *xstrings;
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     char **argv;
+static void get_syms(struct k_conf *conf, char *syms);
+static void xlate_xtok(struct syment *xp, sym_t *kp, char **strp, uint *szp);
+static int find_suffix(char *p, char *strings, int max, uint *offp);
+static int xsym_compar(struct syment *xp, struct syment *xq);
+static void dump_xsym(struct syment *xsp);
+static void dump_ksym(sym_t *ksp, char *strings);
+static void error();
+static void sys_error();
+
+static void
+usage(void)
+{
+    error("usage: cfgexport [-a mod_file [-s symbols]] [-d mod_file]\n");
+}
+
+int
+main(int argc, char **argv)
 {
     int add, del, opts;
     int c;
@@ -170,12 +187,9 @@ main(argc, argv)
 	}
 	exit(0);
     }
-}
 
-usage()
-{
-
-    error("usage: cfgexport [-a mod_file [-s symbols]] [-d mod_file]\n");
+    /* unreached */
+    return -1;
 }
 
 /*
@@ -185,9 +199,8 @@ usage()
  *	conf	-	^ to EXPORT extension configuration struct
  *	syms	-	^ to name of file containing XCOFF symbols
  */
-get_syms(conf, syms)
-     struct k_conf *conf;
-     char *syms;
+static void
+get_syms(struct k_conf *conf, char *syms)
 {
     sym_t *k_symtab, *ksp;
     struct syment *x_symtab, *xsp, *xsq;
@@ -198,7 +211,6 @@ get_syms(conf, syms)
     int i, nsyms, nksyms, nxsyms = 0;
     int xstr_size, kstr_size;
     FILE *fp;
-    int xsym_compar();
 
     if (syms == NULL)
       sys_error("syms is NULL");
@@ -365,7 +377,6 @@ get_syms(conf, syms)
     conf->strtab = kstrings;
 }
 
-
 /*
  * xlate_xtok	-	xlate XCOFF to EXPORT format
  *
@@ -376,15 +387,12 @@ get_syms(conf, syms)
  *	szp	-	^ to EXPORT string table size
  */
 #define SYMBUFSIZE 1048576
-xlate_xtok(xp, kp, strp, szp)
-     struct syment *xp;
-     sym_t *kp;
-     char **strp;
-     uint *szp;
+static void
+xlate_xtok(struct syment *xp, sym_t *kp, char **strp, uint *szp)
 {
     int len;
     static char *export_strings = NULL, *prev = "";
-    static left, offset, sz;
+    static int left, offset, sz;
 
     if (!export_strings) {
 	export_strings = malloc(sz = SYMBUFSIZE);
@@ -488,9 +496,8 @@ xlate_xtok(xp, kp, strp, szp)
  * NOTE:
  *	This is rather inefficient.
  */
-find_suffix(p, strings, max, offp)
-     char *p, *strings;
-     uint *offp;
+static int
+find_suffix(char *p, char *strings, int max, uint *offp)
 {
     char *q, *e;
     int len = strlen(p) - 1;
@@ -530,8 +537,8 @@ find_suffix(p, strings, max, offp)
  * If the names are the same, sort by descending storage class, so that
  * C_EXT < C_HIDEXT;
  */
-xsym_compar(xp, xq)
-     struct syment *xp, *xq;
+static int
+xsym_compar(struct syment *xp, struct syment *xq)
 {
     char *p, *q;
     int compar;
@@ -558,8 +565,8 @@ xsym_compar(xp, xq)
 /*
  * dump_xsym -	print to XCOFF symbol
  */
-dump_xsym(xsp)
-     struct syment *xsp;
+static void
+dump_xsym(struct syment *xsp)
 {
 
 #ifndef __XCOFF64__
@@ -581,9 +588,8 @@ dump_xsym(xsp)
 	     xsp->n_sclass, xsp->n_numaux);
 }
 
-dump_ksym(ksp, strings)
-     sym_t *ksp;
-     char *strings;
+static void
+dump_ksym(sym_t *ksp, char *strings)
 {
 
 #ifndef __XCOFF64__
@@ -594,28 +600,18 @@ dump_ksym(ksp, strings)
 	printf("%8.8x %s\n", ksp->n_value, ksp->n_offset + strings);
 }
 
-error(p, a, b, c, d, e)
-     char *p;
+static void
+error(char *p, long a, long b, long c, long d, long e)
 {
-
     fprintf(stderr, p, a, b, c, d, e);
     fprintf(stderr, "\n");
     exit(1);
 }
 
-sys_error(p, a, b, c, d, e)
-     char *p;
+static void
+sys_error(char *p, long a, long b, long c, long d, long e)
 {
-
     fprintf(stderr, p, a, b, c, d, e);
     perror(": ");
     exit(1);
-}
-
-warn(p, a, b, c, d, e)
-     char *p;
-{
-
-    fprintf(stderr, p, a, b, c, d, e);
-    fprintf(stderr, "\n");
 }
