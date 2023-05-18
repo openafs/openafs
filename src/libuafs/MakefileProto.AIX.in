@@ -30,7 +30,4 @@ AFS_OS_CLEAN = \
 	*.exp \
 	export.h
 
-# To get __file__ you need to specify the language level C99 to xlc_r
-CFLAGS_afs_osi_pag.lo=-qlanglvl=stdc99
-
 include Makefile.common
