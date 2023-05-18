@@ -19,6 +19,7 @@
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
 #endif
+#include <afs/afssyscalls.h>
 
 
 #include <afs/afs_args.h>
