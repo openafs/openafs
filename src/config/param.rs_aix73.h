@@ -54,8 +54,8 @@
 #ifndef _POWER
 #define _POWER		1	/* _POWERseries!                */
 #endif
-#ifndef COMPAT_43
-#define COMPAT_43
+#if !defined(__clang__) && !defined(COMPAT_43)
+# define COMPAT_43
 #endif
 
 #define KERNEL_HAVE_UERROR 1
