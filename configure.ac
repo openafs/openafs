@@ -9,15 +9,10 @@ MACOS_VERSION=1.9.1
 
 AC_SUBST([MACOS_VERSION])
 
-dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
-AS_IF([test -z "$CFLAGS"], [CFLAGS=" "])
-
-AC_USE_SYSTEM_EXTENSIONS
-
-AC_PROG_CC
-
 AC_PATH_PROGS([PATH_CPP], [cpp], [${CC-cc} -E], [$PATH:/lib:/usr/ccs/lib])
 AC_SUBST([PATH_CPP])
+
+OPENAFS_PATH_CC
 OPENAFS_CONFIGURE_COMMON
 OPENAFS_KRB5
 OPENAFS_GSS

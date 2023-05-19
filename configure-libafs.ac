@@ -8,10 +8,7 @@ MACOS_VERSION=1.9.1
 
 AC_SUBST([MACOS_VERSION])
 
-dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
-AS_IF([test -z "$CFLAGS"], [CFLAGS=" "], [])
-AC_PROG_CC
-
+OPENAFS_PATH_CC
 OPENAFS_CONFIGURE_COMMON
 
 AC_CONFIG_FILES([

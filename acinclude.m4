@@ -5,9 +5,14 @@ dnl NB: Because this code is a macro, references to positional shell
 dnl parameters must be done like $[]1 instead of $1
 
 AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
+
+dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
+AS_IF([test -z "$CFLAGS"], [CFLAGS=" "])
+AC_USE_SYSTEM_EXTENSIONS
+AC_PROG_CC
+
 OPENAFS_AUTOHEADER_TOP
 OPENAFS_AUTOHEADER_BOTTOM
-AC_CANONICAL_HOST
 SRCDIR_PARENT=`pwd`
 
 #BOZO_SAVE_CORES pam

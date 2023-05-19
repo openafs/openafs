@@ -54,7 +54,6 @@ case $AFS_SYSNAME in
 
 	hp_ux102)
 		AS="/usr/ccs/bin/as"
-		CC="/opt/ansic/bin/cc -Ae"
 		DBM="/lib/libndbm.a"
 		LD="/bin/ld"
 		LEX="/opt/langtools/bin/lex"
@@ -79,7 +78,6 @@ case $AFS_SYSNAME in
 	hp_ux11*)
 		AR="/usr/bin/ar"
 		AS="/usr/ccs/bin/as"
-		CC="/opt/ansic/bin/cc"
 		DBM="/lib/libndbm.a"
 		LD="/bin/ld   "
 		LEX="/opt/langtools/bin/lex"
@@ -103,7 +101,6 @@ case $AFS_SYSNAME in
 	ia64_hpux*)
 		AR="/usr/bin/ar"
 		AS="/usr/ccs/bin/as"
-		CC="/opt/ansic/bin/cc"
 		DBM="/lib/hpux32/libndbm.so"
 		LD="/bin/ld   "
 		LEX="/opt/langtools/bin/lex"
@@ -233,7 +230,6 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc_darwin_70)
-		CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS='-D_REENTRANT'
 		KROOT=
@@ -248,7 +244,6 @@ case $AFS_SYSNAME in
 		;;
 
 	*_darwin_80)
-		CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS="-D_REENTRANT"
 		KROOT=
@@ -349,7 +344,6 @@ case $AFS_SYSNAME in
 		;;
 
 	rs_aix42)
-		CC="cc"
 		DBG=""
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
@@ -364,7 +358,6 @@ case $AFS_SYSNAME in
 		;;
 
 	rs_aix51 | rs_aix52 | rs_aix53)	
-		CC="cc"
 		DBG="-g"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
@@ -380,7 +373,6 @@ case $AFS_SYSNAME in
 		;;
 
 	rs_aix61 | rs_aix71)
-		CC="cc"
 		DBG="-g"
 		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
@@ -396,10 +388,6 @@ case $AFS_SYSNAME in
 		;;
 
 	rs_aix7*)
-		# Prefer 'ibm-clang' for CC, otherwise use 'cc'
-		CC=
-		AC_PROG_CC([ibm-clang cc])
-
 		# Are we using the newer ibm-clang compiler, or the older xlc?
 		AC_MSG_CHECKING([AIX compiler type])
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
@@ -457,7 +445,6 @@ case $AFS_SYSNAME in
 
 	sgi_65)
 		AFSD_LIBS="/usr/lib32/libdwarf.a /usr/lib32/libelf.a"
-		CC="/usr/bin/cc"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LD="/usr/bin/ld"
 		MT_CFLAGS='-D_SGI_MP_SOURCE'
@@ -480,7 +467,6 @@ case $AFS_SYSNAME in
 		;;
 
 	sun4x_5*)
-		CC=$SOLARISCC
 		LD="/usr/ccs/bin/ld"
 		MT_CFLAGS='-mt'
 		PAM_CFLAGS="-KPIC"
@@ -514,7 +500,6 @@ case $AFS_SYSNAME in
 				;;
 		esac
 
-		CC=$SOLARISCC
 		CFLAGS="$CFLAGS ${XARCHFLAGS}"
 		LD="/usr/ccs/bin/ld"
 		MT_CFLAGS='-mt'
