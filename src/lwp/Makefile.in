@@ -67,14 +67,6 @@ process.o	: process.default.s process.i386.s process.amd64.s process.c lwp.o
 		$(PATH_CPP) -P -I${TOP_INCDIR} ${srcdir}/process.default.s > process.s; \
 		${AS} process.s -o process.o; \
 			$(RM) process.s ;; \
-	sgi_5* ) \
-		cp ${srcdir}/process.default.s process.s ; \
-		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c -I${TOP_INCDIR} -KPIC -G0  process.s; \
-		$(RM) -f process.s ;;\
-	sgi_61 | sgi_62 | sgi_63 ) \
-		cp ${srcdir}/process.default.s process.s ; \
-		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} ${ARCHFLAGS} -I${TOP_INCDIR} -KPIC -G0  process.s; \
-		$(RM) -f process.s ;;\
 	*_darwin* ) \
 		$(RM) -f process.o ; \
 		CURRENTBUILDARCH="${ARCHFLAGS}"; \
@@ -163,7 +155,7 @@ process.o	: process.default.s process.i386.s process.amd64.s process.c lwp.o
 		$(PATH_CPP) -DASSEMBLER -P -I${TOP_INCDIR} ${srcdir}/process.default.s > process.s; \
 		${AS} -o process.o process.s; \
 		$(RM) process.s ;; \
-	hp* | *_linux* | *_umlinux* | sgi_64 | sgi_65 ) \
+	hp* | *_linux* | *_umlinux* | sgi_65 ) \
 		$(AFS_CCRULE_NOQ) -c ${srcdir}/process.c;; \
 	ia64_hpux11* | hp_ux11* ) \
 		$(AFS_CCRULE_NOQ) -c ${srcdir}/process.c;; \

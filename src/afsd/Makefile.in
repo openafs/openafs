@@ -96,15 +96,6 @@ dest: afsd vsys @ENABLE_FUSE_CLIENT@
 			${INSTALL} -d ${DEST}/root.server/etc/init.d ; \
 			${INSTALL_SCRIPT} ${srcdir}/afs.rc.sgi_ipnos ${DEST}/root.client/usr/vice/etc/sgiload/afs.rc ;\
 			${INSTALL_SCRIPT} ${srcdir}/afs.rc.sgi_ipnos ${DEST}/root.server/etc/init.d/afs.rc ;;\
-		sgi_* ) \
-			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/sgiload ; \
-			${INSTALL} -d ${DEST}/root.server/etc/init.d ; \
-			${INSTALL_SCRIPT} ${srcdir}/afs.rc.sgi ${DEST}/root.client/usr/vice/etc/sgiload/afs.rc ;\
-			${INSTALL_SCRIPT} ${srcdir}/afs.rc.sgi ${DEST}/root.server/etc/init.d/afs.rc ;\
-			case ${SYS_NAME} in \
-				sgi_53 | sgi_61 ) \
-				${INSTALL_SCRIPT} ${srcdir}/afs_rtsymtab.pl.${SYS_NAME} ${DEST}/root.client/usr/vice/etc/sgiload/afs_rtsymtab.pl ;;\
-			esac;; \
 		sun*_58 ) \
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload ; \
 			${INSTALL_SCRIPT} ${srcdir}/afs.rc.solaris.2.8 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\

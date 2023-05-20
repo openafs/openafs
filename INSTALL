@@ -62,7 +62,7 @@ A  Configuring
          rs_aix72, rs_aix73
       s390_linux26
       s390x_linux26
-      sgi_62, sgi_63, sgi_64, sgi_65 (file server not tested)
+      sgi_65 (file server not tested)
       sparc64_linux26
       sun4x_58, sun4x_59, sun4x_510, sun4x_511
          (logging UFS not supported for mixed-use partitions containing

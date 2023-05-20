@@ -415,42 +415,6 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -shared"
 		;;
 
-	sgi_62)
-		CC="cc"
-		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
-		FSINCLUDES="-I/usr/include/sys/fs"
-		MT_CFLAGS='-D_SGI_MP_SOURCE'
-		XCFLAGS64="-64 -mips3"
-		XCFLAGS="-o32"
-		XLDFLAGS64="-64"
-		XLDFLAGS="-o32"
-		SHLIB_LINKER="${CC} -shared"
-		;;
-
-	sgi_63)
-		CC="cc"
-		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
-		FSINCLUDES="-I/usr/include/sys/fs"
-		MT_CFLAGS='-D_SGI_MP_SOURCE'
-		XCFLAGS64="-D_BSD_COMPAT -64 -mips3"
-		XCFLAGS="-D_OLD_TERMIOS -D_BSD_COMPAT -o32"
-		XLDFLAGS64="-64"
-		XLDFLAGS="-o32"
-		SHLIB_LINKER="${CC} -shared"
-		;;
-
-	sgi_64)
-		CC="cc"
-		AFSD_LIBS="/usr/lib32/libdwarf.a /usr/lib32/libelf.a"
-		FSINCLUDES="-I/usr/include/sys/fs"
-		MT_CFLAGS='-D_SGI_MP_SOURCE'
-		XCFLAGS64="-D_BSD_COMPAT -64 -mips3"
-		XCFLAGS="-D_OLD_TERMIOS -D_BSD_COMPAT -n32 -woff 1009,1014,1110,1116,1164,1169,1171,1174,1177,1183,1185,1204,1233,1515,1516,1548,1169,1174,1177,1196,1498,1506,1552,3201 -Wl,-woff,84,-woff,15"
-		XLDFLAGS64="-64"
-		XLDFLAGS="-n32"
-		SHLIB_LINKER="${CC} -shared"
-		;;
-
 	sgi_65)
 		AFSD_LIBS="/usr/lib32/libdwarf.a /usr/lib32/libelf.a"
 		CC="/usr/bin/cc"

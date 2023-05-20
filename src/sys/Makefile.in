@@ -204,12 +204,6 @@ fixit:	fixit.c AFS_component_version_number.c
 	$(CC) -o fixit $(AFS_CFLAGS) ${srcdir}/fixit.c ${LIBS}
 
 
-xfsinode: xfsinode.c  AFS_component_version_number.c
-	@set -x; case "${SYS_NAME}" in \
-		sgi_62 | sgi_64 ) \
-		$(CC) -o xfsinode $(AFS_CFLAGS) ${srcdir}/xfsinode.c ${LIBS}
-	esac
-
 afs.exp: ${srcdir}/afs4.exp ${srcdir}/afs5.exp
 	@set -x; case ${SYS_NAME} in \
 		rs_aix[567]* ) \
@@ -267,7 +261,7 @@ include ../config/Makefile.version
 
 clean:
 	$(LT_CLEAN)
-	$(RM) -f *.o libsys.a xfsinode iinc idec icreate iopen istat core \
+	$(RM) -f *.o libsys.a iinc idec icreate iopen istat core \
 	rmtsysc rmtsyss *.o rmtsys.ss.c rmtsys.cs.c rmtsys.xdr.c rmtsys.h \
 	rmtsysd AFS_component_version_number.c syscall.c \
 	afs.exp afsl.exp libafssetpag.* Krmtsys.cs.c Krmtsys.h Krmtsys.xdr.c
