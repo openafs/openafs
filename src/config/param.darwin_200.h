@@ -37,9 +37,6 @@
 #  define AFS_NEW_BKG                 1
 #  define NEED_IOCTL32
 
-/* File system entry (used if mount.h doesn't define MOUNT_AFS) */
-#  define AFS_MOUNT_AFS               "afs"
-
 #  define AFS_HAVE_FFS                1	/* Use system's ffs. */
 
 #  define AFS_GCPAGS                  0
@@ -113,9 +110,6 @@
 #  define AFS_SYSCALL                 230
 #  define DARWIN_REFBASE              0
 #  define AFS_WARNUSER_MARINER_ENV    1
-
-/* File system entry (used if mount.h doesn't define MOUNT_AFS) */
-#  define AFS_MOUNT_AFS               "afs"
 
 #  define AFS_HAVE_FFS                1	/* Use system's ffs. */
 
