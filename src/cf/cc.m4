@@ -77,6 +77,24 @@ AC_DEFUN([OPENAFS_PATH_CC], [
    [])
 ])
 
+dnl OPENAFS_PATH_PROGS_GLOB(VARIABLE, PROGS-TO-CHECK-FOR, PATH-GLOB)
+dnl
+dnl Calls AC_PATH_PROGS(VARIABLE, PROGS-TO-CHECK-FOR, [], path), but build the
+dnl path from a shell glob. If the glob doesn't match anything, don't run
+dnl AC_PATH_PROGS.
+AC_DEFUN([OPENAFS_PATH_PROGS_GLOB],
+ [path=
+  for item in $3 ; do
+    AS_IF([test -e "$item"],
+     [AS_IF([test x"$path" = x],
+       [path="$item"],
+       [path="$path:$item"])])
+  done
+  AS_IF([test x"$path" != x],
+   [AC_PATH_PROGS([$1], [$2], [], [$path])])
+  path=
+])
+
 AC_DEFUN([AIX7_PATH_CC], [
   # On AIX, we need to use the xlc compiler. Starting with AIX 7.2, a new
   # version of the compiler (17.1) is available, which is invoked via
@@ -88,6 +106,15 @@ AC_DEFUN([AIX7_PATH_CC], [
   # to find 'cc' in the user's PATH.
   AS_IF([test x"$CC" = x],
    [AC_PATH_PROGS([CC], [ibm-clang cc])])
+
+  # If we haven't found anything, try to find ibm-clang in common locations.
+  AS_IF([test x"$CC" = x],
+   [OPENAFS_PATH_PROGS_GLOB([CC], [ibm-clang], [/opt/IBM/openxlC/*/bin])])
+
+  # If we haven't found anything, try to find the old xlc compiler in common
+  # locations.
+  AS_IF([test x"$CC" = x],
+   [OPENAFS_PATH_PROGS_GLOB([CC], [cc], [/opt/IBM/xlC/*/bin])])
 
   AS_IF([test x"$CC" = x],
    [AC_MSG_FAILURE([m4_join([ ],

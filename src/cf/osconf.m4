@@ -405,7 +405,10 @@ case $AFS_SYSNAME in
 		 [
 		  # Assume this is XL C 16.1 or earlier
 		  AC_MSG_RESULT([xlc])
-		  MT_CC="xlc_r"
+
+		  # Replace the last path component of $CC with xlc_r, whether
+		  # $CC is cc, xlc, or /path/to/xlc, etc.
+		  MT_CC="${CC%${CC##*/}}xlc_r"
 		  XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
 		  XCFLAGS64=-q64
 		 ]
