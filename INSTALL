@@ -268,6 +268,13 @@ H  AIX notes
    Kerberos v5 libraries are in the packages krb5.client.rte and
    krb5.toolkit.adt on the Expansion Pack.
 
+   You also may need to install following packages: bos.adt.debug,
+   bos.adt.syscalls, and bos.adt.utils. These are available from the AIX
+   install media, sometimes located in /usr/sys/inst.images.
+
+   We only support building with the IBM XL C family of compilers. We do not
+   yet support building the kernel module with XL C 17.1 and higher.
+
 I  Other configure options
 
    AFS has a ton of other optional features that must be enabled using
