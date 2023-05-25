@@ -6765,7 +6765,7 @@ VAdjustVolumeStatistics_r(Volume * vp)
 	 * the detailed volume statistics area.
 	 */
 	memset((V_stat_area(vp)), 0, VOL_STATS_BYTES);
-	}
+    }
 
     /*It's been more than a day of collection */
     /*
