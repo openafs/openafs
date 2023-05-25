@@ -23,8 +23,6 @@
 extern void Log(const char *format, ...)
     AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 
-#define printf	Log		/* To make it work with volume salvager */
-
 /* This routine is called with one parameter, the id (the same thing that is
  * passed to physio or the buffer package) of a directory to check.  It
  * returns 1 if the directory looks good, and 0 otherwise. */
@@ -92,18 +90,18 @@ DirOK(void *file)
 	 * error.  Claim the dir is OK, but log something.
 	 */
 	if (physerr != 0) {
-	    printf("Could not read first page in directory (%d)\n", physerr);
+	    Log("Could not read first page in directory (%d)\n", physerr);
 	    Die("dirok1");
 	    return 1;
 	}
-	printf("First page in directory does not exist.\n");
+	Log("First page in directory does not exist.\n");
 	return 0;
     }
     dhp = (struct DirHeader *)headerbuf.data;
 
     /* Check magic number for first page */
     if (dhp->header.tag != htons(1234)) {
-	printf("Bad first pageheader magic number.\n");
+	Log("Bad first pageheader magic number.\n");
 	DRelease(&headerbuf, 0);
 	return 0;
     }
@@ -124,13 +122,13 @@ DirOK(void *file)
 		/* First page's dirheader uses 13 entries and at least
 		 * two must exist for "." and ".."
 		 */
-		printf("The dir header alloc map for page %d is bad.\n", i);
+		Log("The dir header alloc map for page %d is bad.\n", i);
 		DRelease(&headerbuf, 0);
 		return 0;
 	    }
 	} else {
 	    if ((j < 0) || (j > EPP)) {
-		printf("The dir header alloc map for page %d is bad.\n", i);
+		Log("The dir header alloc map for page %d is bad.\n", i);
 		DRelease(&headerbuf, 0);
 		return 0;
 	    }
@@ -139,9 +137,7 @@ DirOK(void *file)
 	/* Check if contiguous */
 	if (k) {		/* last page found */
 	    if (j != EPP) {	/* remaining entries must be EPP */
-		printf
-		    ("A partially-full page occurs in slot %d, after the dir end.\n",
-		     i);
+		Log("A partially-full page occurs in slot %d, after the dir end.\n", i);
 		DRelease(&headerbuf, 0);
 		return 0;
 	    }
@@ -158,8 +154,7 @@ DirOK(void *file)
      ** not exists for pages between MAXPAGES and BIGMAXPAGES */
     usedPages = ComputeUsedPages(dhp);
     if (usedPages < up) {
-	printf
-	    ("Count of used directory pages does not match count in directory header\n");
+	Log("Count of used directory pages does not match count in directory header\n");
 	DRelease(&headerbuf, 0);
 	return 0;
     }
@@ -175,18 +170,18 @@ DirOK(void *file)
 	    DRelease(&headerbuf, 0);
 	    if (physerr != 0) {
 		/* couldn't read page, but not because it wasn't there permanently */
-		printf("Failed to read dir page %d (errno %d)\n", i, physerr);
+		Log("Failed to read dir page %d (errno %d)\n", i, physerr);
 		Die("dirok2");
 		return 1;
 	    }
-	    printf("Directory shorter than alloMap indicates (page %d)\n", i);
+	    Log("Directory shorter than alloMap indicates (page %d)\n", i);
 	    return 0;
 	}
 	pp = (struct PageHeader *)pagebuf.data;
 
 	/* check the tag field */
 	if (pp->tag != htons(1234)) {
-	    printf("Directory page %d has a bad magic number.\n", i);
+	    Log("Directory page %d has a bad magic number.\n", i);
 	    DRelease(&pagebuf, 0);
 	    DRelease(&headerbuf, 0);
 	    return 0;
@@ -219,9 +214,8 @@ DirOK(void *file)
 
 	/* Now check that the count of free entries matches the count in the alloMap */
 	if ((i < MAXPAGES) && ((count & 0xff) != (dhp->alloMap[i] & 0xff))) {
-	    printf
-		("Header alloMap count doesn't match count in freebitmap for page %d.\n",
-		 i);
+	    Log("Header alloMap count doesn't match count in freebitmap for page %d.\n",
+		i);
 	    DRelease(&pagebuf, 0);
 	    DRelease(&headerbuf, 0);
 	    return 0;
@@ -254,7 +248,7 @@ DirOK(void *file)
 	for (entry = ntohs(dhp->hashTable[i]); entry; entry = ne) {
 	    /* Verify that the entry is within range */
 	    if (entry < 0 || entry >= maxents) {
-		printf("Out-of-range hash id %d in chain %d.\n", entry, i);
+		Log("Out-of-range hash id %d in chain %d.\n", entry, i);
 		DRelease(&headerbuf, 0);
 		return 0;
 	    }
@@ -266,12 +260,11 @@ DirOK(void *file)
 		    /* something went wrong reading the page, but it wasn't
 		     * really something wrong with the dir that we can fix.
 		     */
-		    printf("Could not get dir blob %d (errno %d)\n", entry,
-			   physerr);
+		    Log("Could not get dir blob %d (errno %d)\n", entry, physerr);
 		    DRelease(&headerbuf, 0);
 		    Die("dirok3");
 		}
-		printf("Invalid hash id %d in chain %d.\n", entry, i);
+		Log("Invalid hash id %d in chain %d.\n", entry, i);
 		DRelease(&headerbuf, 0);
 		return 0;
 	    }
@@ -281,7 +274,7 @@ DirOK(void *file)
 
 	    /* There can't be more than maxents entries */
 	    if (++entcount >= maxents) {
-		printf("Directory's hash chain %d is circular.\n", i);
+		Log("Directory's hash chain %d is circular.\n", i);
 		DRelease(&entrybuf, 0);
 		DRelease(&headerbuf, 0);
 		return 0;
@@ -289,8 +282,7 @@ DirOK(void *file)
 
 	    /* A null name is no good */
 	    if (ep->name[0] == '\000') {
-		printf("Dir entry %p in chain %d has bogus (null) name.\n",
-			ep, i);
+		Log("Dir entry %p in chain %d has bogus (null) name.\n", ep, i);
 		DRelease(&entrybuf, 0);
 		DRelease(&headerbuf, 0);
 		return 0;
@@ -298,8 +290,7 @@ DirOK(void *file)
 
 	    /* The entry flag better be FFIRST */
 	    if (ep->flag != FFIRST) {
-		printf("Dir entry %p in chain %d has bogus flag field.\n",
-			ep, i);
+		Log("Dir entry %p in chain %d has bogus flag field.\n", ep, i);
 		DRelease(&entrybuf, 0);
 		DRelease(&headerbuf, 0);
 		return 0;
@@ -308,7 +299,7 @@ DirOK(void *file)
 	    /* Check the size of the name */
 	    j = strlen(ep->name);
 	    if (j >= MAXENAME) {	/* MAXENAME counts the null */
-		printf("Dir entry %p in chain %d has too-long name.\n", ep, i);
+		Log("Dir entry %p in chain %d has too-long name.\n", ep, i);
 		DRelease(&entrybuf, 0);
 		DRelease(&headerbuf, 0);
 		return 0;
@@ -324,8 +315,8 @@ DirOK(void *file)
 
 	    /* Hash the name and make sure it is in the correct name hash */
 	    if ((j = afs_dir_DirHash(ep->name)) != i) {
-		printf("Dir entry %p should be in hash bucket %d but IS in %d.\n",
-		       ep, j, i);
+		Log("Dir entry %p should be in hash bucket %d but IS in %d.\n",
+		    ep, j, i);
 		DRelease(&entrybuf, 0);
 		DRelease(&headerbuf, 0);
 		return 0;
@@ -336,9 +327,8 @@ DirOK(void *file)
 		if (strcmp(ep->name, ".") == 0) {
 		    havedot = 1;
 		} else {
-		    printf
-			("Dir entry %p, index 13 has name '%s' should be '.'\n",
-			 ep, ep->name);
+		    Log("Dir entry %p, index 13 has name '%s' should be '.'\n",
+			ep, ep->name);
 		    DRelease(&entrybuf, 0);
 		    DRelease(&headerbuf, 0);
 		    return 0;
@@ -350,9 +340,8 @@ DirOK(void *file)
 		if (strcmp(ep->name, "..") == 0) {
 		    havedotdot = 1;
 		} else {
-		    printf
-			("Dir entry %p, index 14 has name '%s' should be '..'\n",
-			 ep, ep->name);
+		    Log("Dir entry %p, index 14 has name '%s' should be '..'\n",
+			ep, ep->name);
 		    DRelease(&entrybuf, 0);
 		    DRelease(&headerbuf, 0);
 		    return 0;
@@ -367,8 +356,7 @@ DirOK(void *file)
 
     /* Verify that we found '.' and '..' in the correct place */
     if (!havedot || !havedotdot) {
-	printf
-	    ("Directory entry '.' or '..' does not exist or is in the wrong index.\n");
+	Log("Directory entry '.' or '..' does not exist or is in the wrong index.\n");
 	DRelease(&headerbuf, 0);
 	return 0;
     }
@@ -380,9 +368,8 @@ DirOK(void *file)
     for (i = 0; i < usedPages; i++) {
 	code = DReadWithErrno(file, i, &pagebuf, &physerr);
 	if (code) {
-	    printf
-		("Failed on second attempt to read dir page %d (errno %d)\n",
-		 i, physerr);
+	    Log("Failed on second attempt to read dir page %d (errno %d)\n",
+		i, physerr);
 	    DRelease(&headerbuf, 0);
 	    /* if physerr is 0, then the dir is really bad, and we return dir
 	     * *not* OK.  Otherwise, we Die instead of returning true (1),
@@ -399,9 +386,8 @@ DirOK(void *file)
 	count = i * (EPP / 8);
 	for (j = 0; j < EPP / 8; j++) {
 	    if (eaMap[count + j] != pp->freebitmap[j]) {
-		printf
-		    ("Entry freebitmap error, page %d, map offset %d, %x should be %x.\n",
-		     i, j, pp->freebitmap[j], eaMap[count + j]);
+		Log("Entry freebitmap error, page %d, map offset %d, %x should be %x.\n",
+		    i, j, pp->freebitmap[j], eaMap[count + j]);
 		DRelease(&pagebuf, 0);
 		DRelease(&headerbuf, 0);
 		return 0;
@@ -453,14 +439,14 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 
     code = afs_dir_MakeDir(toFile, dot, dotdot);
     if (code) {
-	printf("Failed to create target directory\n");
+	Log("Failed to create target directory\n");
 	return code;
     }
 
     /* Find out how many pages are valid. */
     code = DReadWithErrno(fromFile, 0, &headerbuf, &physerr);
     if (code) {
-	printf("Failed to read first page of fromDir!\n");
+	Log("Failed to read first page of fromDir!\n");
 	/* if physerr != 0, then our call failed and we should let our
 	 * caller know that there's something wrong with the new dir.  If not,
 	 * then we return here anyway, with an empty, but at least good, directory.
@@ -478,22 +464,19 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 	    if (!entry)
 		break;
 	    if (entry < 0 || entry >= usedPages * EPP) {
-		printf
-		    ("Warning: bogus hash table entry encountered, ignoring.\n");
+		Log("Warning: bogus hash table entry encountered, ignoring.\n");
 		break;
 	    }
 
 	    code = afs_dir_GetBlobWithErrno(fromFile, entry, &entrybuf, &physerr);
 	    if (code) {
 		if (physerr != 0) {
-		    printf
-			("can't continue down hash chain (entry %d, errno %d)\n",
-			 entry, physerr);
+		    Log("can't continue down hash chain (entry %d, errno %d)\n",
+			entry, physerr);
 		    DRelease(&headerbuf, 0);
 		    return physerr;
 		}
-		printf
-		    ("Warning: bogus hash chain encountered, switching to next.\n");
+		Log("Warning: bogus hash chain encountered, switching to next.\n");
 		break;
 	    }
 	    ep = (struct DirEntry *)entrybuf.data;
@@ -509,9 +492,8 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 		lfid[2] = ntohl(ep->fid.vunique);
 		code = afs_dir_Create(toFile, tname, lfid);
 		if (code) {
-		    printf
-			("Create of %s returned code %d, skipping to next hash chain.\n",
-			 tname, code);
+		    Log("Create of %s returned code %d, skipping to next hash chain.\n",
+			tname, code);
 		    DRelease(&entrybuf, 0);
 		    break;
 		}
