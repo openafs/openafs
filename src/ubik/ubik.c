@@ -590,7 +590,6 @@ static int
 BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 	   struct ubik_trans **transPtr, int readAny)
 {
-    struct ubik_trans *jt;
     struct ubik_trans *tt;
     afs_int32 code;
 
@@ -641,8 +640,7 @@ BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
     }
 
     /* create the transaction */
-    code = udisk_begin(dbase, transMode, &jt);	/* can't take address of register var */
-    tt = jt;			/* move to a register */
+    code = udisk_begin(dbase, transMode, &tt);
     if (code || tt == NULL) {
 	DBRELE(dbase);
 	return code;
