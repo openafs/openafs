@@ -756,7 +756,7 @@ clean2:
 	-(cd src/libuafs; /bin/rm -rf afs afsint config rx)
 	-(cd tests ${COMPILE_CLEAN})
 	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR}
-	-/bin/rm -rf libafs_tree ${SYS_NAME}
+	-/bin/rm -rf libafs_tree ${SYS_NAME} packages
 
 dist:
 	./build-tools/make-release --dir=packages HEAD
