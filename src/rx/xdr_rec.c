@@ -71,7 +71,7 @@ typedef struct rec_strm {
     caddr_t out_base;		/* output buffer (points to frag header) */
     caddr_t out_finger;		/* next output position */
     caddr_t out_boundry;	/* data cannot up to this address */
-    afs_uint32 *frag_header;	/* beginning of curren fragment */
+    afs_uint32 *frag_header;	/* beginning of current fragment */
     bool_t frag_sent;		/* true if buffer sent in middle of record */
     /*       * in-coming bits
      */
