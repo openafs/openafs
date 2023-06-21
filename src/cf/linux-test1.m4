@@ -173,7 +173,7 @@ AC_DEFUN([AC_CHECK_LINUX_TYPE],
  [AC_CHECK_LINUX_BUILD([for $1],
                        [ac_cv_linux_type_$1_exists],
                        [#include <linux/$2>],
-                       [$1 _test; ],
+                       [static $1 _test; ],
                        AS_TR_CPP(HAVE_LINUX_$1),
                        [Define if kernel defines $1])
  ])
@@ -188,7 +188,7 @@ AC_DEFUN([AC_CHECK_LINUX_TYPED_STRUCT],
  [AC_CHECK_LINUX_BUILD([for $2 in $1],
 		       [ac_cv_linux_$1_has_$2],
 		       [#include <linux/$3>],
-		       [$1 _test; printk("%x\n", &_test.$2); ],
+		       [static $1 _test; printk("%x\n", &_test.$2); ],
 		       AS_TR_CPP($1_HAS_$2),
 		       [Define if kernel $1 has the $2 element])
  ])
@@ -202,7 +202,7 @@ AC_DEFUN([AC_CHECK_LINUX_OPERATION],
      AC_TRY_KBUILD(
       [$4
        $5 op($6) { return ($5)0; };],
-      [struct $1 ops;  ops.$2 = op;],
+      [static struct $1 ops;  ops.$2 = op;],
 		   AS_VAR_SET([ac_linux_operation], [yes]),
 		   AS_VAR_SET([ac_linux_operation], [no]))
      CPPFLAGS="$save_CPPFLAGS"
