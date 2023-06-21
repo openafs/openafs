@@ -132,7 +132,7 @@ AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM], [
 #ifdef HAVE_LINUX_SCHED_SIGNAL_H
 #include <linux/sched/signal.h>
 #endif],
-		       [struct task_struct _tsk; printk("%d\n", _tsk.signal->rlim);],
+		       [static struct task_struct _tsk; printk("%d\n", _tsk.signal->rlim);],
 		       [STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM],
 		       [define if your struct task_struct has signal->rlim],
 		       [])
@@ -178,8 +178,8 @@ AC_DEFUN([LINUX_INODE_SETATTR_RETURN_TYPE], [
   AC_CHECK_LINUX_BUILD([for inode_setattr return type],
 		       [ac_cv_linux_func_inode_setattr_returns_int],
 		       [#include <linux/fs.h>],
-		       [struct inode _inode;
-			struct iattr _iattr;
+		       [static struct inode _inode;
+			static struct iattr _iattr;
 			int i;
 			i = inode_setattr(&_inode, &_iattr);],
 		       [INODE_SETATTR_NOT_VOID],
@@ -192,7 +192,7 @@ AC_DEFUN([LINUX_IATTR_64BIT_TIME], [
                        [ac_cv_linux_func_iattr_ctime_takes_timespec64],
                        [#include <linux/fs.h>
                         #include <linux/timekeeping.h>],
-                       [struct iattr _attrs;
+                       [static struct iattr _attrs;
                        #if defined(HAVE_LINUX_KTIME_GET_COARSE_REAL_TS64)
                         ktime_get_coarse_real_ts64(&_attrs.ia_ctime);
                        #else
@@ -210,9 +210,9 @@ AC_DEFUN([LINUX_AOP_WRITEBACK_CONTROL], [
 [#include <linux/fs.h>
 #include <linux/mm.h>
 #include <linux/writeback.h>],
-[struct address_space_operations _aops;
-struct page _page;
-struct writeback_control _writeback_control;
+[static struct address_space_operations _aops;
+static struct page _page;
+static struct writeback_control _writeback_control;
 (void)_aops.writepage(&_page, &_writeback_control);],
 		       [AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL],
 		       [define if aops.writepage takes a struct writeback_control],
@@ -239,9 +239,9 @@ AC_DEFUN([LINUX_IOP_I_CREATE_TAKES_NAMEIDATA], [
 		       [ac_cv_linux_func_i_create_takes_nameidata],
 [#include <linux/fs.h>
 #include <linux/namei.h>],
-[struct inode _inode;
-struct dentry _dentry;
-struct nameidata _nameidata;
+[static struct inode _inode;
+static struct dentry _dentry;
+static struct nameidata _nameidata;
 (void)_inode.i_op->create(&_inode, &_dentry, 0, &_nameidata);],
 
 		       [IOP_CREATE_TAKES_NAMEIDATA],
@@ -255,9 +255,9 @@ AC_DEFUN([LINUX_IOP_I_LOOKUP_TAKES_NAMEIDATA], [
 		       [ac_cv_linux_func_i_lookup_takes_nameidata],
 [#include <linux/fs.h>
 #include <linux/namei.h>],
-[struct inode _inode;
-struct dentry _dentry;
-struct nameidata _nameidata;
+[static struct inode _inode;
+static struct dentry _dentry;
+static struct nameidata _nameidata;
 (void)_inode.i_op->lookup(&_inode, &_dentry, &_nameidata);],
 		       [IOP_LOOKUP_TAKES_NAMEIDATA],
 		       [define if your iops.lookup takes a nameidata argument],
@@ -270,8 +270,8 @@ AC_DEFUN([LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA], [
 		       [ac_cv_linux_func_i_permission_takes_nameidata],
 [#include <linux/fs.h>
 #include <linux/namei.h>],
-[struct inode _inode;
-struct nameidata _nameidata;
+[static struct inode _inode;
+static struct nameidata _nameidata;
 (void)_inode.i_op->permission(&_inode, 0, &_nameidata);],
 		       [IOP_PERMISSION_TAKES_NAMEIDATA],
 		       [define if your iops.permission takes a nameidata argument],
@@ -297,8 +297,8 @@ AC_DEFUN([LINUX_IOP_I_PUT_LINK_TAKES_COOKIE], [
 		       [ac_cv_linux_func_i_put_link_takes_cookie],
 [#include <linux/fs.h>
 #include <linux/namei.h>],
-[struct inode _inode;
-struct dentry _dentry;
+[static struct inode _inode;
+static struct dentry _dentry;
 struct nameidata *_nameidata;
 void *cookie;
 (void)_inode.i_op->put_link(&_dentry, _nameidata, cookie);],
@@ -373,7 +373,7 @@ AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK], [
 			[ac_cv_key_alloc_needs_struct_task],
 			[#include <linux/rwsem.h>
 			#include <linux/key.h> ],
-			[struct task_struct *t=NULL;
+			[static struct task_struct *t=NULL;
 			struct key k = {};
 			(void) key_alloc(NULL, NULL, k.uid, k.gid, t, 0, 0);],
 			[KEY_ALLOC_NEEDS_STRUCT_TASK],
@@ -427,8 +427,8 @@ AC_DEFUN([LINUX_FOP_F_FLUSH_TAKES_FL_OWNER_T], [
   AC_CHECK_LINUX_BUILD([whether file_operations.flush takes a fl_owner_t],
 		       [ac_cv_linux_func_f_flush_takes_fl_owner_t],
 		       [#include <linux/fs.h>],
-[struct inode _inode;
-struct file _file;
+[static struct inode _inode;
+static struct file _file;
 fl_owner_t id;
 (void)_inode.i_fop->flush(&_file, &id);],
 		       [FOP_FLUSH_TAKES_FL_OWNER_T],
@@ -441,9 +441,9 @@ AC_DEFUN([LINUX_FOP_F_FSYNC_TAKES_DENTRY], [
   AC_CHECK_LINUX_BUILD([whether file_operations.fsync takes a dentry argument],
 		       [ac_cv_linux_func_f_fsync_takes_dentry],
 		       [#include <linux/fs.h>],
-[struct inode _inode;
-struct file _file;
-struct dentry _d;
+[static struct inode _inode;
+static struct file _file;
+static struct dentry _d;
 (void)_inode.i_fop->fsync(&_file, &_d, 0);],
 		       [FOP_FSYNC_TAKES_DENTRY],
 		       [define if your fops.fsync takes an dentry argument],
@@ -457,8 +457,8 @@ AC_DEFUN([LINUX_FOP_F_FSYNC_TAKES_RANGE], [
   AC_CHECK_LINUX_BUILD([whether file_operations.fsync takes a range],
 		       [ac_cv_linux_func_f_fsync_takes_range],
 		       [#include <linux/fs.h>],
-[struct inode _inode;
-struct file _file;
+[static struct inode _inode;
+static struct file _file;
 loff_t start, end;
 (void)_inode.i_fop->fsync(&_file, start, end, 0);],
 		       [FOP_FSYNC_TAKES_RANGE],
@@ -508,7 +508,7 @@ AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_SPLICE], [
   AC_CHECK_LINUX_BUILD([for splice_write and splice_read in struct file_operations],
 		       [ac_cv_linux_fs_struct_fop_has_splice],
 		       [#include <linux/fs.h>],
-		       [struct file_operations _fop;
+		       [static struct file_operations _fop;
 			_fop.splice_write(NULL, NULL, NULL, 0, 0);
 			_fop.splice_read(NULL, NULL, NULL, 0, 0);],
 		       [STRUCT_FILE_OPERATIONS_HAS_SPLICE],
@@ -558,7 +558,7 @@ AC_DEFUN([LINUX_NEW_EXPORT_OPS], [
   AC_CHECK_LINUX_BUILD([if kernel uses new export ops],
 		       [ac_cv_linux_new_export_ops],
 		       [#include <linux/exportfs.h>],
-		       [struct export_operations _eops;
+		       [static struct export_operations _eops;
 			_eops.fh_to_parent(NULL, NULL, 0, 0);],
 		       [NEW_EXPORT_OPS],
 		       [define if kernel uses new export ops],
@@ -693,7 +693,7 @@ AC_DEFUN([LINUX_IOP_CREATE_TAKES_UMODE_T], [
   AC_CHECK_LINUX_BUILD([whether inode.i_op->create takes a umode_t argument],
 			[ac_cv_linux_iop_create_takes_umode_t],
 			[#include <linux/fs.h>],
-			[struct inode_operations _i_ops;
+			[static struct inode_operations _i_ops;
 			int _create(struct inode *i, struct dentry *d, umode_t m, struct nameidata *n)
 				{return 0;};
 			_i_ops.create = _create;],
@@ -732,7 +732,7 @@ AC_DEFUN([LINUX_DENTRY_OPEN_TAKES_PATH], [
   AC_CHECK_LINUX_BUILD([whether dentry_open takes a path argument],
 			[ac_cv_linux_dentry_open_takes_path],
 			[#include <linux/fs.h>],
-			[struct path p;
+			[static struct path p;
 			dentry_open(&p, 0, NULL);],
 			[DENTRY_OPEN_TAKES_PATH],
 			[define if dentry_open takes a path argument],
@@ -780,8 +780,8 @@ AC_DEFUN([LINUX_IOP_I_CREATE_TAKES_BOOL], [
 			[ac_cv_linux_func_i_create_takes_bool],
 			[#include <linux/fs.h>
 			#include <linux/namei.h>],
-			[struct inode _inode = {};
-			struct dentry _dentry;
+			[static struct inode _inode = {};
+			static struct dentry _dentry;
 			bool b = true;
 			(void)_inode.i_op->create(&_inode, &_dentry, 0, b);],
 		       [IOP_CREATE_TAKES_BOOL],
