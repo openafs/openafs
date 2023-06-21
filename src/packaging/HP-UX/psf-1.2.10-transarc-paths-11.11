@@ -183,7 +183,6 @@
         file_permissions -u 222 -o root -g sys
           file	backup
           file  butc
-          file  copyauth
 	  file	fms
 	  file	fstrace
           file	kas

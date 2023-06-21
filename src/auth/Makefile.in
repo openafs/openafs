@@ -87,7 +87,6 @@ cellconfig.lo: cellconfig.c ${INCLS}
 realms.lo: realms.c ${INCLS}
 netrestrict.lo: ${INCLS}
 
-copyauth.o: copyauth.c ${INCLS} AFS_component_version_number.o
 setkey.o: setkey.c ${INCLS} AFS_component_version_number.o
 
 $(LT_objs): $(INCLS)
@@ -111,9 +110,6 @@ libauth_pic.la: $(LT_objs)
 libpam_auth.la: $(BASE_objs)
 	$(LT_LDLIB_pic) $(BASE_objs)
 
-copyauth: copyauth.o ${LIBS}
-	$(AFS_LDRULE) copyauth.o ${LIBS} ${XLIBS}
-
 setkey: setkey.o ${LIBS}
 	$(AFS_LDRULE) setkey.o ${LIBS} ${XLIBS}
 
@@ -126,7 +122,6 @@ cellconfig.h: acfg_errors.et cellconfig.p.h
 CFLAGS_authcon.lo = @CFLAGS_NODEPRECATED_DECLARATIONS@
 authcon.lo: cellconfig.h
 cellconfig.lo: cellconfig.h
-copyauth.o: cellconfig.h
 keys.lo: cellconfig.h
 ktc.lo: cellconfig.h
 netrestrict.lo: cellconfig.h
@@ -141,7 +136,6 @@ auth.h: ktc_errors.et auth.p.h
 	${COMPILE_ET_H} -p ${srcdir} ktc_errors -h auth
 
 authcon.lo: auth.h
-copyauth.o: auth.h
 ktc.lo: auth.h
 token.lo: auth.h
 userok.lo: auth.h
@@ -187,7 +181,7 @@ test:
 
 clean:
 	$(LT_CLEAN)
-	$(RM) -f *.o *.a copyauth setkey auth.h cellconfig.h acfg_errors.c \
+	$(RM) -f *.o *.a setkey auth.h cellconfig.h acfg_errors.c \
 		ktc_errors.c token.h token.xdr.c core Ktoken.xdr.c \
 		AFS_component_version_number.c
 

@@ -361,7 +361,6 @@
                             <File Id="file_CmdRef_1_afsmonitor_html" Name="afsmonit.htm" LongName="afsmonitor.html" DiskId="1" />
                             <File Id="file_CmdRef_1_aklog_html" Name="aklog.htm" LongName="aklog.html" DiskId="1" />
                             <File Id="file_CmdRef_1_cmdebug_html" Name="cmdebug.htm" LongName="cmdebug.html" DiskId="1" />
-                            <File Id="file_CmdRef_1_copyauth_html" Name="copyauth.htm" LongName="copyauth.html" DiskId="1" />
                             <File Id="file_CmdRef_1_dlog_html" Name="dlog.htm" LongName="dlog.html" DiskId="1" />
                             <File Id="file_CmdRef_1_fs_html"  Name="fs.htm"  LongName="fs.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_apropos_html"  Name="fs_aprop.htm"  LongName="fs_apropos.html"  DiskId="1"  />

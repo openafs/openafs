@@ -776,7 +776,6 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man1/symlink_list.1
 rm -f $RPM_BUILD_ROOT%{_mandir}/man1/symlink_make.1
 rm -f $RPM_BUILD_ROOT%{_mandir}/man1/symlink_remove.1
 rm -f $RPM_BUILD_ROOT%{_mandir}/man1/dlog.*
-rm -f $RPM_BUILD_ROOT%{_mandir}/man1/copyauth.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man1/dpass.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man1/livesys.*
 rm -f $RPM_BUILD_ROOT%{_mandir}/man8/afsd.fuse.8

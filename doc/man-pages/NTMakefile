@@ -33,7 +33,6 @@ PODS = \
         pod1\aklog.pod                 \
         pod1\cmdebug.pod               \
         pod1\afs_compile_et.pod        \
-        pod1\copyauth.pod              \
         pod1\dlog.pod                  \
         pod1\fs.pod                    \
         pod1\fs_apropos.pod            \

@@ -33,7 +33,7 @@ testnetrestrict: testnetrestrict.lo
 
 clean:
 	$(LT_CLEAN)
-	$(RM) -f *.o copyauth testcellconf ktctest testnetrestrict core
+	$(RM) -f *.o testcellconf ktctest testnetrestrict core
 
 install:
 

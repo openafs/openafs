@@ -108,19 +108,6 @@ $(SETKEY_EXEFILE): $(SETKEY_EXEOBJS) $(EXELIBS)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
-# build copyauth
-COPYAUTH_EXEFILE = $(DESTDIR)\etc\copyauth.exe
-
-COPYAUTH_EXEOBJS =\
-	$(OUT)\copyauth.obj
-
-$(COPYAUTH_EXEFILE): $(COPYAUTH_EXEOBJS) $(EXELIBS)
-	$(EXECONLINK)
-        $(_VC_MANIFEST_EMBED_EXE)
-	$(EXEPREP)
-        $(CODESIGN_USERLAND)
-        $(SYMSTORE_IMPORT)
-
 $(INCFILES):$$(@F)
 	 $(COPY)  $** $(INCFILEDIR)\.
 
@@ -134,7 +121,7 @@ ktc_errors.c auth.h: ktc_errors.et auth.p.h
 
 install_headers: $(INCFILES)
 
-install: $(AFSAUTH_LIBFILE) $(AFSAUTH_KRB_LIBFILE) $(OUT)\setkey.exe # $(COPYAUTH_EXEFILE)
+install: $(AFSAUTH_LIBFILE) $(AFSAUTH_KRB_LIBFILE) $(OUT)\setkey.exe
 
 clean::
 	$(DEL) acfg_errors.c ktc_errors.c
