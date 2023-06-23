@@ -913,8 +913,8 @@ XDisplayFormat2(volintXInfo *a_xInfoP, afs_uint32 a_servID, afs_int32 a_partID,
 			struct in_addr s;
 
 			s.s_addr = a_servID;
-			strcpy(hostname, hostutil_GetNameByINet(a_servID));
-			strcpy(address, inet_ntoa(s));
+			strlcpy(hostname, hostutil_GetNameByINet(a_servID), sizeof(hostname));
+			strlcpy(address, inet_ntoa(s), sizeof(address));
 			server_cache = a_servID;
 		}
 		if (a_partID != partition_cache) {
@@ -1063,8 +1063,8 @@ DisplayFormat2(long server, long partition, volintInfo *pntr)
 	struct in_addr s;
 
 	s.s_addr = server;
-	strcpy(hostname, hostutil_GetNameByINet(server));
-	strcpy(address, inet_ntoa(s));
+	strlcpy(hostname, hostutil_GetNameByINet(server), sizeof(hostname));
+	strlcpy(address, inet_ntoa(s), sizeof(address));
 	server_cache = server;
     }
     if (partition != partition_cache) {
@@ -2552,7 +2552,11 @@ ShadowVolume(struct cmd_syndesc *as, void *arock)
 		(unsigned long)volid);
 	    exit(1);
 	}
-	strcpy(toVolName, p->name);
+	if (strlcpy(toVolName, p->name, sizeof(toVolName)) >= sizeof(toVolName)) {
+	    fprintf(STDERR, "vos: the name of the volume %s exceeds the size limit\n",
+		    p->name);
+	    exit(1);
+	}
 	tovolume = toVolName;
 	/* save p for size checks later */
     }
@@ -2890,7 +2894,7 @@ DumpVolumeCmd(struct cmd_syndesc *as, void *arock)
     afs_uint32 avolid;
     afs_uint32 aserver;
     afs_int32 apart, voltype, fromdate = 0, code, err, i, flags;
-    char filename[MAXPATHLEN];
+    char *filename;
     struct nvldbentry entry;
 
     rx_SetRxDeadTime(60 * 10);
@@ -2942,9 +2946,9 @@ DumpVolumeCmd(struct cmd_syndesc *as, void *arock)
 	}
     }
     if (as->parms[2].items) {
-	strcpy(filename, as->parms[2].items->data);
+	filename = as->parms[2].items->data;
     } else {
-	strcpy(filename, "");
+	filename = "";
     }
 
     flags = as->parms[6].items ? VOLDUMPV2_OMITDIRS : 0;
@@ -3092,8 +3096,8 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 		    as->parms[1].items->data);
 	exit(1);
     }
-    strcpy(avolname, as->parms[2].items->data);
-    if (!ISNAMEVALID(avolname)) {
+    code = strlcpy(avolname, as->parms[2].items->data, sizeof(avolname));
+    if (code >= sizeof(avolname) || !ISNAMEVALID(avolname)) {
 	fprintf(STDERR,
 		"vos: the name of the volume %s exceeds the size limit\n",
 		avolname);
