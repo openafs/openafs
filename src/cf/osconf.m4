@@ -662,8 +662,6 @@ if test "x$GCC" = "xyes"; then
       CFLAGS_NOOLDSTYLE="-Wno-old-style-definition"
       AX_APPEND_COMPILE_FLAGS([-Wno-implicit-fallthrough],
 			      [CFLAGS_NOIMPLICIT_FALLTHROUGH], [-Werror])
-      AX_APPEND_COMPILE_FLAGS([-Wno-cast-function-type],
-			      [CFLAGS_NOCAST_FUNCTION_TYPE], [-Werror])
       AX_APPEND_COMPILE_FLAGS([-Wno-dangling-pointer],
 			      [CFLAGS_NODANGLING_POINTER], [-Werror])
       AC_DEFINE(IGNORE_SOME_GCC_WARNINGS, 1, [define to disable some gcc warnings in warnings-as-errors mode])
@@ -671,6 +669,16 @@ if test "x$GCC" = "xyes"; then
       CFLAGS_NOSTRICT=
     fi
   fi
+dnl If a linux kernel has CONFIG_WERROR enabled, the openafs kernel module
+dnl will be built with the -Werror compiler flag even when the openafs tree is
+dnl configured with --disable-checking.
+
+dnl Provide compiler flags that can be used to disable certain warnings when the
+dnl openafs tree is configued with --enable-checking or --disable-checking.
+  AS_IF([test "x$enable_checking" != "xall"],
+	[AX_APPEND_COMPILE_FLAGS([-Wno-cast-function-type],
+				 [CFLAGS_NOCAST_FUNCTION_TYPE], [-Werror])
+  ])
 else
   case $AFS_SYSNAME in
     sun*_51?)
