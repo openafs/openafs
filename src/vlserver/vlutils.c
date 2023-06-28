@@ -19,7 +19,6 @@
 #include "vlserver.h"
 #include "vlserver_internal.h"
 
-struct vlheader xheader;
 extern int maxnservers;
 extern afs_uint32 rd_HostAddress[MAXSERVERID + 1];
 extern afs_uint32 wr_HostAddress[MAXSERVERID + 1];
