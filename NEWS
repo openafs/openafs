@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.8.10 (in progress)
+OpenAFS 1.8.10
 
   All platforms
 
@@ -56,7 +56,7 @@ OpenAFS 1.8.10 (in progress)
 
   Linux clients
 
-    * Support mainline kernels up to 6.3 and distribution kernels
+    * Support mainline kernels up to 6.4 and distribution kernels
       derived from those (15228 15281 15388..9 15410..11)
 
     * Fixes and enhancements around the kernel module build (15229..31 15265)
