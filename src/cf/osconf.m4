@@ -664,6 +664,7 @@ if test "x$GCC" = "xyes"; then
 			      [CFLAGS_NOIMPLICIT_FALLTHROUGH], [-Werror])
       AX_APPEND_COMPILE_FLAGS([-Wno-dangling-pointer],
 			      [CFLAGS_NODANGLING_POINTER], [-Werror])
+      OPENAFS_GCC_UAF_BUG_CHECK
       AC_DEFINE(IGNORE_SOME_GCC_WARNINGS, 1, [define to disable some gcc warnings in warnings-as-errors mode])
     else
       CFLAGS_NOSTRICT=

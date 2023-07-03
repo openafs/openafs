@@ -339,6 +339,8 @@ external/heimdal/hcrypto/evp.c:      cast-function-type
              : Linux kernel build uses -Wcast-function-type
 external/heimdal/hcrypto/evp-algs.c: cast-function-type
              : Linux kernel build uses -Wcast-function-type
+external/heimdal/krb5/crypto.c: use-after-free : False postive on certain GCC
+                                                 compilers
 kauth/admin_tools.c  : strict-proto  : ubik_Call
 kauth/authclient.c   : strict-proto  : ubik_Call nonsense
 libadmin/kas/afs_kasAdmin.c: strict-proto : ubik_Call nonsense
