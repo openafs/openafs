@@ -48,6 +48,7 @@ ${TOP_LIBDIR}/libafsrfc3961.a: libafsrfc3961.a
 
 CFLAGS_crypto-arcfour.lo=@CFLAGS_NOERROR@
 CFLAGS_crypto-des-common.lo=@CFLAGS_NOERROR@
+CFLAGS_crypto.lo=@CFLAGS_USE_AFTER_FREE_GCCBUG@
 
 context.lo: context.c ${HEADERS}
 copy.lo: copy.c ${HEADERS}
