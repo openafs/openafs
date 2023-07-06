@@ -31,7 +31,7 @@ AC_DEFUN([OPENAFS_GCC_UAF_BUG_CHECK],[
     AS_IF([test "x$GCC" = "xyes"], [
 	AC_MSG_CHECKING([gcc use-after-free warning bug])
 	ac_save_CFLAGS="$CFLAGS"
-	CFLAGS="$CFLAGS -Wall -Werror -O0"
+	CFLAGS="$CFLAGS -Wall -Werror -O0 -U_FORTIFY_SOURCE"
 	_OPENAFS_UAF_COMPILE_IFELSE(
 	    [AC_MSG_RESULT(no)],
 	    [
