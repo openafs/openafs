@@ -91,7 +91,13 @@ extern int osi_readRandom(void *, afs_size_t);
 static_inline pid_t getpid(void) {return 1;};
 #endif
 static_inline int open(const char *path, int flags, ...) {return -1;}
-static_inline void abort(void) {osi_Panic("hckernel aborting\n");}
+
+#ifdef abort
+# undef abort
+#endif
+#define abort _afscrypto_abort
+static_inline void _afscrypto_abort(void) {osi_Panic("hckernel aborting\n");}
+
 static_inline void rk_cloexec(int fd) {}
 static_inline ssize_t read(int d, void *buf, size_t nbytes) {return -1;}
 static_inline int close(int d) {return -1;}
