@@ -79,7 +79,7 @@ static struct ctl_table afs_sysctl_table[] = {
 	.procname	= 0
     }
 };
-
+# if !defined(HAVE_LINUX_REGISTER_SYSCTL)
 static struct ctl_table fs_sysctl_table[] = {
     {
 	AFS_SYSCTL_NAME(1)
@@ -91,11 +91,13 @@ static struct ctl_table fs_sysctl_table[] = {
 	.procname	= 0
     }
 };
-
+# endif
 int
 osi_sysctl_init(void)
 {
-# if defined(REGISTER_SYSCTL_TABLE_NOFLAG)
+# if defined(HAVE_LINUX_REGISTER_SYSCTL)
+    afs_sysctl = register_sysctl("afs", afs_sysctl_table);
+# elif defined(REGISTER_SYSCTL_TABLE_NOFLAG)
     afs_sysctl = register_sysctl_table(fs_sysctl_table);
 # else
     afs_sysctl = register_sysctl_table(fs_sysctl_table, 0);
