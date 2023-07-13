@@ -217,6 +217,14 @@ AC_CHECK_LINUX_FUNC([block_dirty_folio],
     		     #include <linux/buffer_head.h>],
     		    [block_dirty_folio(NULL, NULL);])
 
+dnl Linux 6.5 removed the Linux function register_sysctl_table(), which
+dnl was deprecated in Linux 6.3 in favor of register_sysctl() which was
+dnl introduced in Linux 3.3
+AC_CHECK_LINUX_FUNC([register_sysctl],
+    		    [#include <linux/kernel.h>
+    		     #include <linux/sysctl.h>],
+    		    [(void)register_sysctl(NULL, NULL);])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
