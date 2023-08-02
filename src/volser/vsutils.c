@@ -418,12 +418,12 @@ vsu_ExtractName(char rname[], char name[])
     strncpy(sname, name, sizeof(sname));
     sname[sizeof(sname) - 1] = '\0';
     total = strlen(sname);
-    if (!strcmp(&sname[total - 9], ".readonly")) {
+    if (total >= 9 && !strcmp(&sname[total - 9], ".readonly")) {
 	/*discard the last 8 chars */
 	sname[total - 9] = '\0';
 	strcpy(rname, sname);
 	return 0;
-    } else if (!strcmp(&sname[total - 7], ".backup")) {
+    } else if (total >= 7 && !strcmp(&sname[total - 7], ".backup")) {
 	/*discard last 6 chars */
 	sname[total - 7] = '\0';
 	strcpy(rname, sname);

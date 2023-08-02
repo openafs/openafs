@@ -174,9 +174,9 @@ VolNameOK(char *name)
     size_t total;
 
     total = strlen(name);
-    if (!strcmp(&name[total - 9], ".readonly")) {
+    if (total >= 9 && !strcmp(&name[total - 9], ".readonly")) {
 	return 0;
-    } else if (!strcmp(&name[total - 7], ".backup")) {
+    } else if (total >= 7 && !strcmp(&name[total - 7], ".backup")) {
 	return 0;
     } else {
 	return 1;

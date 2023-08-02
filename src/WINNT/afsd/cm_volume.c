@@ -1989,9 +1989,9 @@ cm_VolumeStateByName(cm_volume_t *volp, char *volname)
     size_t len = strlen(volname);
     cm_vol_state_t *statep;
 
-    if (cm_stricmp_utf8N(".readonly", &volname[len-9]) == 0)
+    if (len >= 9 && cm_stricmp_utf8N(".readonly", &volname[len - 9]) == 0)
         statep = &volp->vol[ROVOL];
-    else if (cm_stricmp_utf8N(".backup", &volname[len-7]) == 0)
+    else if (len >= 7 && cm_stricmp_utf8N(".backup", &volname[len - 7]) == 0)
         statep = &volp->vol[BACKVOL];
     else
         statep = &volp->vol[RWVOL];

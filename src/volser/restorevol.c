@@ -948,9 +948,9 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     if (strlcat(rootdir, dh.volumeName, sizeof(rootdir)) >= sizeof(rootdir))
 	goto str_error_exit;
     len = strlen(rootdir);
-    if (strcmp(".backup", rootdir + len - 7) == 0) {
+    if (len >= 7 && strcmp(".backup", rootdir + len - 7) == 0) {
 	rootdir[len - 7] = 0;
-    } else if (strcmp(".readonly", rootdir + len - 9) == 0) {
+    } else if (len >= 9 && strcmp(".readonly", rootdir + len - 9) == 0) {
 	rootdir[len - 9] = 0;
     }
 
