@@ -3313,9 +3313,17 @@ rxi_ReceiveServerCall(osi_socket socket, struct rx_packet *np,
     struct rx_call *call;
 
     channel = np->header.cid & RX_CHANNELMASK;
-    MUTEX_ENTER(&conn->conn_call_lock);
-    call = conn->call[channel];
 
+    MUTEX_ENTER(&conn->conn_call_lock);
+
+    if (np->header.callNumber < conn->callNumber[channel]) {
+	MUTEX_EXIT(&conn->conn_call_lock);
+	if (rx_stats_active)
+	    rx_atomic_inc(&rx_stats.spuriousPacketsRead);
+	return NULL;
+    }
+
+    call = conn->call[channel];
     if (!call) {
 	if (np->header.type != RX_PACKET_TYPE_DATA) {
 	    /*
@@ -3369,13 +3377,6 @@ rxi_ReceiveServerCall(osi_socket socket, struct rx_packet *np,
 	MUTEX_ENTER(&call->lock);
 	MUTEX_EXIT(&conn->conn_call_lock);
 	return call;
-    }
-
-    if (np->header.callNumber < conn->callNumber[channel]) {
-	MUTEX_EXIT(&conn->conn_call_lock);
-	if (rx_stats_active)
-	    rx_atomic_inc(&rx_stats.spuriousPacketsRead);
-	return NULL;
     }
 
     MUTEX_ENTER(&call->lock);
