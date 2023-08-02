@@ -34,7 +34,7 @@ volutil_GetPartitionID(char *aname)
 {
     char tc;
     afs_int32 temp;
-    char ascii[3];
+    char ascii[3] = {0};
 
     tc = *aname;
     if (tc == 0)
@@ -53,7 +53,6 @@ volutil_GetPartitionID(char *aname)
 	    return temp;
     }
     /* otherwise check for vicepa or /vicepa, or just plain "a" */
-    ascii[2] = 0;
     if (strlen(aname) <= 2) {
 	strcpy(ascii, aname);
     } else if (!strncmp(aname, "/vicep", 6)) {
@@ -64,6 +63,10 @@ volutil_GetPartitionID(char *aname)
 	    return -1;  /* bad partition name: trailing characters */
     } else
 	return -1;		/* bad partition name */
+    if (ascii[0] == '\0') {
+	/* Invalid partition name "/vicep" or "vicep". */
+	return -1;
+    }
     /* now partitions are named /vicepa ... /vicepz, /vicepaa, /vicepab, .../vicepzz,
      * and are numbered from 0.  Do the appropriate conversion */
     if (ascii[1] == 0) {

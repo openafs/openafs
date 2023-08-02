@@ -32,6 +32,8 @@
 char *out_of_range_names[] = {
     "/vicepiv",
     "/vicepzz",
+    "vicepiv",
+    "vicepzz",
     "iv",
     "zz",
     "255",
@@ -45,6 +47,10 @@ char *invalid_names[] = {
     "/vicep",
     "/vicepbogus",
     "/vicep0",
+    "vice",
+    "vicep",
+    "vicepbogus",
+    "vicep0",
     "foo",
     "!?",
     "-1",
@@ -173,7 +179,7 @@ test_partition_id_to_name(void)
 int
 main(int argc, char **argv)
 {
-    plan(1293);
+    plan(1299);
     test_partition_name_to_id();
     test_partition_id_to_name();
     return 0;
