@@ -1164,6 +1164,24 @@ rx_SetConnIdleDeadTime(struct rx_connection *conn, int seconds)
     rxi_CheckConnTimeouts(conn);
 }
 
+int
+rx_GetConnDeadTime(struct rx_connection *conn)
+{
+    return conn->secondsUntilDead;
+}
+
+int
+rx_GetConnHardDeadTime(struct rx_connection *conn)
+{
+    return conn->hardDeadTime;
+}
+
+int
+rx_GetConnIdleDeadTime(struct rx_connection *conn)
+{
+    return conn->idleDeadTime;
+}
+
 int rxi_lowPeerRefCount = 0;
 int rxi_lowConnRefCount = 0;
 

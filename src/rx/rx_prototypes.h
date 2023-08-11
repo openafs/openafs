@@ -40,6 +40,9 @@ extern void rx_SetConnDeadTime(struct rx_connection *conn,
 			       int seconds);
 extern void rx_SetConnHardDeadTime(struct rx_connection *conn, int seconds);
 extern void rx_SetConnIdleDeadTime(struct rx_connection *conn, int seconds);
+extern int rx_GetConnDeadTime(struct rx_connection *conn);
+extern int rx_GetConnHardDeadTime(struct rx_connection *conn);
+extern int rx_GetConnIdleDeadTime(struct rx_connection *conn);
 extern void rxi_DestroyConnection(struct rx_connection *conn);
 extern void rx_GetConnection(struct rx_connection *conn);
 extern void rx_DestroyConnection(struct rx_connection *conn);

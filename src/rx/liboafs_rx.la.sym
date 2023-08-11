@@ -33,6 +33,9 @@ rx_FreeStatistics
 rx_GetCachedConnection
 rx_GetCallAbortCode
 rx_GetCallStatus
+rx_GetConnDeadTime
+rx_GetConnHardDeadTime
+rx_GetConnIdleDeadTime
 rx_GetConnection
 rx_GetConnectionEpoch
 rx_GetConnectionId
