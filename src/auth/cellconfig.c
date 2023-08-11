@@ -600,19 +600,22 @@ GetCellUnix(struct afsconf_dir *adir)
 {
     char *rc;
     char tbuffer[256];
+    char *thiscell_path = NULL;
     char *start, *p;
     afsconf_FILE *fp;
 
-    strcompose(tbuffer, 256, adir->name, "/", AFSDIR_THISCELL_FILE,
-	(char *)NULL);
-    fp = afsconf_fopen(tbuffer, "r");
+    if (asprintf(&thiscell_path, "%s/%s", adir->name, AFSDIR_THISCELL_FILE) < 0) {
+	thiscell_path = NULL;
+	goto fail;
+    }
+    fp = afsconf_fopen(thiscell_path, "r");
     if (fp == 0) {
-	return -1;
+	goto fail;
     }
     rc = afsconf_fgets(tbuffer, 256, fp);
     afsconf_fclose(fp);
     if (rc == NULL)
-        return -1;
+	goto fail;
 
     start = tbuffer;
     while (*start != '\0' && isspace(*start))
@@ -622,10 +625,15 @@ GetCellUnix(struct afsconf_dir *adir)
         p++;
     *p = '\0';
     if (*start == '\0')
-        return -1;
+	goto fail;
 
     adir->cellName = strdup(start);
+    free(thiscell_path);
     return 0;
+
+ fail:
+    free(thiscell_path);
+    return -1;
 }
 
 
@@ -734,6 +742,7 @@ LoadConfig(struct afsconf_dir *adir)
     afs_int32 i;
     char tbuffer[256];
     struct stat tstat;
+    char *alias_path = NULL;
 
 #ifdef AFS_NT40_ENV
     cm_enumCellRegistry_t enumCellRegistry = {0, 0};
@@ -874,10 +883,13 @@ LoadConfig(struct afsconf_dir *adir)
 #endif /* AFS_NT40_ENV */
 
     /* Read in the alias list */
-    strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLALIAS_FILE,
-	(char *)NULL);
+    if (asprintf(&alias_path, "%s/%s", adir->name, AFSDIR_CELLALIAS_FILE) < 0) {
+	alias_path = NULL;
+	code = ENOMEM;
+	goto done;
+    }
 
-    tf = afsconf_fopen(tbuffer, "r");
+    tf = afsconf_fopen(alias_path, "r");
     while (tf) {
 	char *aliasPtr;
 
@@ -921,10 +933,12 @@ LoadConfig(struct afsconf_dir *adir)
     /* now read the fs keys, if possible */
     code = _afsconf_LoadKeys(adir);
     if (code) {
-        return code;
+	goto done;
     }
     code = _afsconf_LoadRealms(adir);
 
+ done:
+    free(alias_path);
     return code;
 }
 
@@ -1891,7 +1905,7 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
 {
     afs_int32 code;
     int fd;
-    char tbuffer[1024];
+    char *thiscell_path = NULL;
     FILE *tf;
     afs_int32 i;
 
@@ -1900,31 +1914,34 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
 
     LOCK_GLOBAL_MUTEX;
     /* write ThisCell file */
-    strcompose(tbuffer, 1024, apath, "/", AFSDIR_THISCELL_FILE, (char *)NULL);
+    if (asprintf(&thiscell_path, "%s/%s", apath, AFSDIR_THISCELL_FILE) < 0) {
+	thiscell_path = NULL;
+	code = ENOMEM;
+	goto done;
+    }
 
-    fd = open(tbuffer, O_RDWR | O_CREAT | O_TRUNC, 0666);
+    fd = open(thiscell_path, O_RDWR | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
-	UNLOCK_GLOBAL_MUTEX;
-	return errno;
+	code = errno;
+	goto done;
     }
     i = (int)strlen(acellInfo->name);
     code = write(fd, acellInfo->name, i);
     if (code != i) {
 	close(fd);
-	UNLOCK_GLOBAL_MUTEX;
-	return AFSCONF_FAILURE;
+	code = AFSCONF_FAILURE;
+	goto done;
     }
     if (close(fd) < 0) {
-	UNLOCK_GLOBAL_MUTEX;
-	return errno;
+	code = errno;
+	goto done;
     }
 
     /* make sure we have both name and address for each host, looking up other
      * if need be */
     code = VerifyEntries(acellInfo);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX;
-	return code;
+	goto done;
     }
 
     /* write CellServDB */
@@ -1940,8 +1957,8 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
 	free(cellservDB);
     }
     if (!tf) {
-	UNLOCK_GLOBAL_MUTEX;
-	return AFSCONF_NOTFOUND;
+	code = AFSCONF_NOTFOUND;
+	goto done;
     }
     fprintf(tf, ">%s	#Cell name\n", acellInfo->name);
     for (i = 0; i < acellInfo->numServers; i++) {
@@ -1960,10 +1977,15 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
     }
     if (ferror(tf)) {
 	fclose(tf);
-	UNLOCK_GLOBAL_MUTEX;
-	return AFSCONF_FAILURE;
+	code = AFSCONF_FAILURE;
+	goto done;
     }
     code = fclose(tf);
+    if (code == EOF) {
+	code = AFSCONF_FAILURE;
+    } else {
+	code = 0;
+    }
 
     /* Reset the timestamp in the cache, so that
      * the CellServDB is read into the cache next time.
@@ -1972,8 +1994,8 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
     if (adir)
 	adir->timeRead = 0;
 
+ done:
     UNLOCK_GLOBAL_MUTEX;
-    if (code == EOF)
-	return AFSCONF_FAILURE;
-    return 0;
+    free(thiscell_path);
+    return code;
 }
