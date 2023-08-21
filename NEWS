@@ -1,5 +1,93 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.11 (pre-release)
+
+  All platforms
+
+    * Check Rx RPC call number in incoming packets before allocating new
+      RPC calls to avoid re-running RPC calls when spurious packets are
+      received (15562)
+
+    * Fix memory leaks (15516 15517)
+
+    * Fix build failure when building with _FORTIFY_SOURCE (15518 15519)
+
+    * Fix build failures when building with the clang compiler (15540 15541
+      15547 15548)
+
+    * Improve error detection in OpenAFS directories for both clients
+      and servers (15544 15545 15546)
+
+    * Add a Makefile target to build Red Hat RPM packages (15514)
+
+    * Add support for custom version numbers in Red Hat RPM packages (15513)
+
+  All server platforms
+
+    * Fix File Server and Protection Server crashes due to recursive thread
+      lock bug (15609)
+
+    * Fix fileserver crashes during startup (15509 15543)
+
+    * The bosserver no longer creates the client configuration directory and
+      "ThisCell" and "CellServDB" symlinks.  The "vos", "pts", and "bos"
+      commands now read cell configuration from the server cell configuration
+      directory when the client cell configuration directory is not present.
+      This change allows server packaging to be independent of client packaging
+      and removes the need for client configuration artifacts on hosts running
+      server processes only (15510 15511 15512)
+
+    * Print a warning in the volserver log when an older version of a volume
+      is restored over an existing volume, unless the volume was restored with
+      "-overwrite full" (15531)
+
+    * Print a warning in the bosserver log when the bosserver was not started
+      in restricted mode (15537)
+
+    * Avoid unbounded string copies when looking up volumes by name in
+      the vlserver (15538)
+
+    * Fix off-by-one directory entry name size check in salvager (15598)
+
+  All client platforms
+
+    * Updated the CellServDB to the latest version from grand.central.org
+      (15603)
+
+  All UNIX/Linux client platforms
+
+    * Fix PAG object memory leak which can degrade performance (15506)
+
+    * Improve kernel memory reclamation after accessing a large number of
+      files (15536)
+
+    * Improve cache corruption detection and refetch cache entries
+      when cache entry size mismatches are detected (15532 15533 15535)
+
+    * Fix panic in user-space client (libuafs, Fuse client) (15539)
+
+  Linux clients
+
+    * Add support for Linux 6.7 (15600)
+
+    * Add support for Linux 6.6 (15575 15589 15590)
+
+    * Add support for Linux 6.5 (15520 15521 15522 15523 15558)
+
+    * Fix BUG when directory entry names are longer than 16 characters.
+      Affects Linux 6.5 or higher built with GCC 13 or higher (15599)
+
+    * Invalidate Linux VFS dentry caches in the AFS filesystem when running
+      "fs flush*" commands. This reduces the need to drop Linux VFS caches
+      by writing to the "/proc/sys/vm/drop_caches" file when
+      troubleshooting (15515)
+
+    * Fix build failures (15507 15508 15596 15542 15549)
+
+  macOS
+
+    * Add support for MacOS 14 ("Sonoma") (15602)
+
 OpenAFS 1.8.10
 
   All platforms
