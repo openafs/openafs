@@ -254,6 +254,7 @@ ubeacon_NewVOTEConnection(afs_uint32 shost)
     vote_conn = rx_NewConnection(shost, ubik_callPortal, VOTE_SERVICE_ID,
 			         addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
     rx_SetConnDeadTime(vote_conn, VOTE_RPCTIMEOUT);
+    rx_SetConnHardDeadTime(vote_conn, VOTE_RPCTIMEOUT);
     return vote_conn;
 }
 
