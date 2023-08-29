@@ -225,6 +225,16 @@ AC_CHECK_LINUX_FUNC([register_sysctl],
     		     #include <linux/sysctl.h>],
     		    [(void)register_sysctl(NULL, NULL);])
 
+dnl Linux 6.5 removed the file_operations method 'iterate'.  Filesystems should
+dnl using the iterate_shared method (introduced in linux 4.6).  Linux 6.4
+dnl provides a wrapper that can be used for filesystems that haven't fully
+dnl converted to meet the iterate_shared requirements.
+
+AC_CHECK_LINUX_FUNC([wrap_directory_iterator],
+    		    [#include <linux/kernel.h>
+    		     #include <linux/fs.h>],
+    		    [(void)wrap_directory_iterator(NULL, NULL, NULL);])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
