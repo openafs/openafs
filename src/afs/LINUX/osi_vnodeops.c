@@ -54,7 +54,7 @@
 # define D_SPLICE_ALIAS_RACE
 #endif
 
-#if defined(STRUCT_FILE_OPERATIONS_HAS_ITERATE_SHARED) && defined(HAVE_LINUX_WRAP_DIRECTORY_ITERATOR)
+#if defined(STRUCT_FILE_OPERATIONS_HAS_ITERATE_SHARED)
 # define USE_FOP_ITERATE 1
 #elif defined(STRUCT_FILE_OPERATIONS_HAS_ITERATE) && !defined(FMODE_KABI_ITERATE)
 /* Workaround for RH 7.5 which introduced file operation iterate() but requires
@@ -911,18 +911,11 @@ out:
     crfree(credp);
     return afs_convert_code(code);
 }
-#if defined(STRUCT_FILE_OPERATIONS_HAS_ITERATE_SHARED) && defined(HAVE_LINUX_WRAP_DIRECTORY_ITERATOR)
-# if defined(WRAP_DIR_ITER)
-WRAP_DIR_ITER(afs_linux_readdir)	/* Adds necessary locking for iterate_shared */
-# else
-#  error the Linux provided macro WRAP_DIR_ITER is not available
-# endif
-#endif
 
 struct file_operations afs_dir_fops = {
   .read =	generic_read_dir,
-#if defined(STRUCT_FILE_OPERATIONS_HAS_ITERATE_SHARED) && defined(HAVE_LINUX_WRAP_DIRECTORY_ITERATOR)
-  .iterate_shared = shared_afs_linux_readdir,
+#if defined(STRUCT_FILE_OPERATIONS_HAS_ITERATE_SHARED)
+  .iterate_shared = afs_linux_readdir,
 #elif defined(USE_FOP_ITERATE)
   .iterate =	afs_linux_readdir,
 #else
