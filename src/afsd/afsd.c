@@ -2740,12 +2740,12 @@ afsd_run(void)
      * Pass the kernel the name of the workstation cache file holding the
      * dcache entries.
      */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_CACHEINFO: dcache file is '%s'\n", rn,
-	       fullpn_DCacheFile);
-    /* once again, meaningless for a memory-based cache. */
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))
+    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) {
+	if (afsd_debug)
+	    printf("%s: Calling AFSOP_CACHEINFO: dcache file is '%s'\n", rn,
+		   fullpn_DCacheFile);
 	afsd_syscall(AFSOP_CACHEINFO, fullpn_DCacheFile);
+    }
 
     /*
      * Pass the kernel the name of the workstation cache file holding the
@@ -2898,12 +2898,12 @@ afsd_run(void)
      * Pass the kernel the name of the workstation cache file holding the
      * volume information.
      */
-    if (afsd_debug)
-	printf("%s: Calling AFSOP_VOLUMEINFO: volume info file is '%s'\n", rn,
-	       fullpn_VolInfoFile);
-    /* once again, meaningless for a memory-based cache. */
-    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE))
+    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) {
+	if (afsd_debug)
+	    printf("%s: Calling AFSOP_VOLUMEINFO: volume info file is '%s'\n", rn,
+		   fullpn_VolInfoFile);
 	afsd_syscall(AFSOP_VOLUMEINFO, fullpn_VolInfoFile);
+    }
 
     /*
      * Give the kernel the names of the AFS files cached on the workstation's
