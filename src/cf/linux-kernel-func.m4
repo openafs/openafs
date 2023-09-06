@@ -220,10 +220,13 @@ AC_CHECK_LINUX_FUNC([block_dirty_folio],
 dnl Linux 6.5 removed the Linux function register_sysctl_table(), which
 dnl was deprecated in Linux 6.3 in favor of register_sysctl() which was
 dnl introduced in Linux 3.3
+dnl Linux 6.6 changed the function register_sysctl to a macro that requires
+dnl an array of ctl_table structures as its 2nd parameter
 AC_CHECK_LINUX_FUNC([register_sysctl],
-    		    [#include <linux/kernel.h>
-    		     #include <linux/sysctl.h>],
-    		    [(void)register_sysctl(NULL, NULL);])
+		    [#include <linux/kernel.h>
+		     #include <linux/sysctl.h>],
+		    [[static struct ctl_table cf_sysctl_table[1];
+		    (void)register_sysctl(NULL, cf_sysctl_table);]])
 
 dnl Consequences - things which get set as a result of the
 dnl                above tests
