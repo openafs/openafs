@@ -1137,8 +1137,7 @@ vattr2inode(struct inode *ip, struct vattr *vp)
      * any time the sysname list changes.
      */
     ip->i_mtime.tv_nsec = afs_sysnamegen;
-    ip->i_ctime.tv_sec = vp->va_ctime.tv_sec;
-    ip->i_ctime.tv_nsec = 0;
+    afs_inode_set_ctime(ip, vp->va_ctime.tv_sec, 0);
 }
 
 /* afs_notify_change
