@@ -848,6 +848,8 @@ HandlePart(struct VolInfoOpt *opt, struct DiskPartition64 *partP)
     char *p = VPartitionPath(partP);
 #endif
 
+    memset(&partitionTotals, 0, sizeof(partitionTotals));
+
     if ((dirp = opendir(p)) == NULL) {
 	fprintf(stderr, "%s: Can't read directory %s; giving up\n", progname,
 		p);
