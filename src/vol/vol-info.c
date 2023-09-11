@@ -291,8 +291,8 @@ PrintPartitionTotals(afs_uint64 nvols)
 
     PrintVolumeSizeHeading();
     printf("\nPart Totals  %12llu%9llu%10llu%10llu%9lld (%llu volumes)\n\n",
-	   partitionTotals.diskused_k, partitionTotals.auxsize,
-	   partitionTotals.vnodesize, partitionTotals.size_k, diff_k, nvols);
+	   partitionTotals.diskused_k, partitionTotals.auxsize_k,
+	   partitionTotals.vnodesize_k, partitionTotals.size_k, diff_k, nvols);
     PrintingVolumeSizes = 0;
 }
 
@@ -307,8 +307,8 @@ PrintServerTotals(void)
     afs_int64 diff_k = serverTotals.size_k - serverTotals.diskused_k;
 
     printf("\nServer Totals%12lld%9lld%10lld%10lld%9lld\n",
-	   serverTotals.diskused_k, serverTotals.auxsize,
-	   serverTotals.vnodesize, serverTotals.size_k, diff_k);
+	   serverTotals.diskused_k, serverTotals.auxsize_k,
+	   serverTotals.vnodesize_k, serverTotals.size_k, diff_k);
 }
 
 /**
