@@ -51,6 +51,32 @@ struct DirHeader {
     unsigned short hashTable[NHASHENT];
 };
 
+/*
+ * This struct is just a copy of DirEntry, but with name defined as a flexible
+ * array if possible.
+ *
+ * Using this helps us convince safety-minded string functions (e.g.
+ * _FORTIFY_SOURCE) that an OpenAFS directory entry name really does fit
+ * in the allotted space, and thus avoid undefined behavior.
+ */
+struct DirEntryFlex {
+    char flag;
+    char length;                /* currently unused */
+    unsigned short next;
+    struct MKFid fid;
+#ifdef HAVE_FLEXIBLE_ARRAY
+    char name[];
+#else
+    char name[16];
+#endif
+};
+
+/*
+ * This struct was the original format for directory entries in very early
+ * versions of AFS.  But now it just represents the minimum possible on-disk
+ * representation of a directory entry.  The 16-character limit was relieved by
+ * the introduction of extension struct DirXEntry in AFS-2.
+*/
 struct DirEntry {
     /* A directory entry */
     char flag;

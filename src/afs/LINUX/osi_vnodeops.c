@@ -426,7 +426,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     int code;
     int offset;
     afs_int32 dirpos;
-    struct DirEntry *de;
+    struct DirEntryFlex *de;
     struct DirBuffer entry;
     ino_t ino;
     int len;
@@ -531,7 +531,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	    goto unlock_out;
         }
 
-	de = (struct DirEntry *)entry.data;
+	de = entry.data;
 	ino = afs_calc_inum (avc->f.fid.Cell, avc->f.fid.Fid.Volume,
 			     ntohl(de->fid.vnode));
 	len = strlen(de->name);

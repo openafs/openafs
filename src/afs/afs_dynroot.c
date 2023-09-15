@@ -228,7 +228,7 @@ afs_dynroot_addDirEnt(struct DirHeader *dirHeader, int *curPageP,
 {
     char *dirBase = (char *)dirHeader;
     struct PageHeader *pageHeader;
-    struct DirEntry *dirEntry;
+    struct DirEntryFlex *dirEntry;
     int sizeOfEntry, i, t1, t2;
     int curPage = *curPageP;
     int curChunk = *curChunkP;
@@ -257,7 +257,7 @@ afs_dynroot_addDirEnt(struct DirHeader *dirHeader, int *curPageP,
 	dirHeader->alloMap[curPage] = EPP - 1;
     }
 
-    dirEntry = (struct DirEntry *)(pageHeader + curChunk);
+    dirEntry = (struct DirEntryFlex *)(pageHeader + curChunk);
     dirEntry->flag = 1;
     dirEntry->length = 0;
     dirEntry->next = 0;
