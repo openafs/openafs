@@ -521,12 +521,7 @@ DFSSymlink(
   AFSVolSync *Sync
 ) = 163;
 
-StoreACL(
-  IN  AFSFid *Fid,
-  AFSOpaque *AccessList,
-  OUT AFSFetchStatus *OutStatus,
-  AFSVolSync *Sync
-) = 164;
+/* StoreACL (164) is declared below to avoid changing rxstat function indices. */
 
 FsCmd(
   IN AFSFid *Fid,
@@ -606,6 +601,13 @@ GetStatistics64(
     IN afs_int32 statsVersion,
     OUT ViceStatistics64 *Statistics
 ) = 65542;
+
+StoreACL(
+  IN  AFSFid *Fid,
+  AFSOpaque *AccessList,
+  OUT AFSFetchStatus *OutStatus,
+  AFSVolSync *Sync
+) = 164;
 
 /* rx osd. put here now to hold version numbers.
 ServerPath(
