@@ -97,7 +97,7 @@ afs_dir_Create(dir_file_t dir, char *entry, void *voidfid)
     int blobs, firstelt;
     int i;
     struct DirBuffer entrybuf, prevbuf, headerbuf;
-    struct DirEntry *ep;
+    struct DirEntryFlex *ep;
     struct DirHeader *dhp;
     int code;
     size_t rlen;
@@ -125,7 +125,7 @@ afs_dir_Create(dir_file_t dir, char *entry, void *voidfid)
     /* First, we fill in the directory entry. */
     if (afs_dir_GetBlob(dir, firstelt, &entrybuf) != 0)
 	return EIO;
-    ep = (struct DirEntry *)entrybuf.data;
+    ep = entrybuf.data;
 
     ep->flag = FFIRST;
     ep->fid.vnode = htonl(vfid[1]);
