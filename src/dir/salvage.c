@@ -19,6 +19,8 @@
 #include <roken.h>
 
 #include "dir.h"
+#include <afs/afsint.h>	    /* for AFSNAMEMAX */
+
 /* Defined in vol/vol-salvage.c */
 extern void Log(const char *format, ...)
     AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
@@ -26,8 +28,6 @@ extern void Log(const char *format, ...)
 /* This routine is called with one parameter, the id (the same thing that is
  * passed to physio or the buffer package) of a directory to check.  It
  * returns 1 if the directory looks good, and 0 otherwise. */
-
-#define MAXENAME 256
 
 /* figure out how many pages in use in a directory, given ptr to its (locked)
  * header */
@@ -298,7 +298,7 @@ DirOK(void *file)
 
 	    /* Check the size of the name */
 	    j = strlen(ep->name);
-	    if (j >= MAXENAME) {	/* MAXENAME counts the null */
+	    if (j > AFSNAMEMAX) {	    /* does not include the nul */
 		Log("Dir entry %p in chain %d has too-long name.\n", ep, i);
 		DRelease(&entrybuf, 0);
 		DRelease(&headerbuf, 0);
@@ -420,7 +420,7 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 	   afs_int32 pvn, afs_int32 pvu)
 {
     afs_int32 dot[3], dotdot[3], lfid[3], code, usedPages;
-    char tname[256];
+    char tname[AFSNAMEMAX+1];
     int i;
     char *tp;
     struct DirBuffer headerbuf, entrybuf;
@@ -481,8 +481,8 @@ DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 	    }
 	    ep = (struct DirEntry *)entrybuf.data;
 
-	    strncpy(tname, ep->name, MAXENAME);
-	    tname[MAXENAME - 1] = '\000';	/* just in case */
+	    strncpy(tname, ep->name, sizeof(tname));
+	    tname[sizeof(tname) - 1] = '\0';	/* just in case */
 	    tp = tname;
 
 	    entry = ntohs(ep->next);
