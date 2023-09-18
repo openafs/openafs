@@ -1195,7 +1195,11 @@ afs_linux_getattr(struct mnt_idmap *idmap, const struct path *path, struct kstat
 {
 	int err = afs_linux_revalidate(path->dentry);
 	if (!err) {
+# if defined(GENERIC_FILLATTR_TAKES_REQUEST_MASK)
+		generic_fillattr(afs_mnt_idmap, request_mask, path->dentry->d_inode, stat);
+# else
 		generic_fillattr(afs_mnt_idmap, path->dentry->d_inode, stat);
+# endif
 	}
 	return err;
 }
