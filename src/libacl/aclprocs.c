@@ -122,6 +122,10 @@ acl_FreeACL(struct acl_accessList **acl)
     /* Releases the access list defined by acl.  Returns 0 always. */
     struct freeListEntry *x;
 
+    if (*acl == NULL) {
+	return 0;
+    }
+
     x = (struct freeListEntry *)
 	((char *)*acl - sizeof(struct freeListEntry *) - sizeof(int));
     *acl = NULL;
