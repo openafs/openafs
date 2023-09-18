@@ -2431,9 +2431,17 @@ MapName_r(char *uname, afs_int32 * aval)
     namelist lnames;
     idlist lids;
     afs_int32 code;
+    prname namebuf;
+
+    memset(&namebuf, 0, sizeof(namebuf));
+
+    if (strlcpy(namebuf, uname, sizeof(namebuf)) >= sizeof(namebuf)) {
+	ViceLog(0, ("MapName: name %s is too long\n", uname));
+	return -1;
+    }
 
     lnames.namelist_len = 1;
-    lnames.namelist_val = (prname *) uname;
+    lnames.namelist_val = &namebuf;
     lids.idlist_len = 0;
     lids.idlist_val = NULL;
 

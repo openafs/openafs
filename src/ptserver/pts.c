@@ -441,14 +441,14 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
     lids->idlist_len = n;
     ids.idlist_val = malloc(n * sizeof(afs_int32));
     ids.idlist_len = n;
-    names.namelist_val = malloc(n * PR_MAXNAMELEN);
+    names.namelist_val = calloc(n, PR_MAXNAMELEN);
     names.namelist_len = n;
     if (lnames) {
 	lnames->namelist_val = malloc(n * PR_MAXNAMELEN);
 	lnames->namelist_len = 0;
     }
     for (i = as->parms[0].items; i; i = i->next) {
-	tnames.namelist_val = malloc(PR_MAXNAMELEN);
+	tnames.namelist_val = calloc(1, PR_MAXNAMELEN);
 	strncpy(tnames.namelist_val[0], i->data, PR_MAXNAMELEN);
 	tnames.namelist_len = 1;
 	tids.idlist_len = 0;

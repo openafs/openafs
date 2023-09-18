@@ -235,7 +235,7 @@ main()
 		continue;
 	    }
 	    names.namelist_len = 1;
-	    names.namelist_val = malloc(strlen(name) + 1);
+	    names.namelist_val = calloc(1, PR_MAXNAMELEN);
 	    strncpy(names.namelist_val, name, PR_MAXNAMELEN);
 	    code = pr_NameToId(&names, &ids);
 	    if (code) {

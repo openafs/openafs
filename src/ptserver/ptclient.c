@@ -342,7 +342,7 @@ main(int argc, char **argv)
 	    lid.idlist_val = 0;
 	    lid.idlist_len = 0;
 	} else if (!strcmp(op, "ntoi")) {
-	    lnames.namelist_val = malloc(PR_MAXLIST * PR_MAXNAMELEN);
+	    lnames.namelist_val = calloc(PR_MAXLIST, PR_MAXNAMELEN);
 	    lnames.namelist_len = 0;
 	    foo = line;
 	    skip(&foo);

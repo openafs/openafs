@@ -191,6 +191,8 @@ TranslateTwoNames(const afs_cell_handle_p c_handle, const char *id1,
     namelist names;
     char tmp_array[2 * PTS_MAX_NAME_LEN];
 
+    memset(tmp_array, 0, sizeof(tmp_array));
+
     /*
      * Copy the group and user names in order to translate them
      */
@@ -270,6 +272,8 @@ TranslateOneName(const afs_cell_handle_p c_handle, const char *ptsName,
     namelist names[1];
     char tmp_array[PTS_MAX_NAME_LEN];
     idlist ids;
+
+    memset(tmp_array, 0, sizeof(tmp_array));
 
     /*
      * Copy the name in order to translate it
