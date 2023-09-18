@@ -4191,6 +4191,9 @@ RenameVolume(struct cmd_syndesc *as, void *arock)
     struct nvldbentry entry;
     struct nvldbentry entry2;
 
+    memset(&entry, 0, sizeof(entry));
+    memset(&entry2, 0, sizeof(entry2));
+
     /* Get the entry of the volume to be renamed (-oldname), by name or id. */
     code = VLDB_GetEntryByName(as->parms[0].items->data, &entry);
     if (code) {

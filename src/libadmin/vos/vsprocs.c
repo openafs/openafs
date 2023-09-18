@@ -133,6 +133,8 @@ UV_CreateVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
     struct volintInfo tstatus;
 
     memset(&tstatus, 0, sizeof(tstatus));
+    memset(&entry, 0, sizeof(entry));
+
     tstatus.dayUse = -1;
     tstatus.maxquota = quota;
 
@@ -213,6 +215,8 @@ UV_DeleteVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
     int islocked = 0;
     afs_int32 avoltype = -1, vtype;
     int notondisk = 0, notinvldb = 0;
+
+    memset(&entry, 0, sizeof(entry));
 
     /* Find and read the VLDB entry for this volume */
     tst =
@@ -400,6 +404,8 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     volEntries volumeInfo;
     struct volintInfo *infop = 0;
 #endif
+
+    memset(&entry, 0, sizeof(entry));
 
     islocked = 0;
     fromconn = (struct rx_connection *)0;
@@ -983,6 +989,7 @@ UV_BackupVolume(afs_cell_handle_p cellHandle, afs_int32 aserver,
     struct rx_connection *aconn = UV_Bind(cellHandle, aserver,
 					  AFSCONF_VOLUMEPORT);
 
+    memset(&entry, 0, sizeof(entry));
 
     /* the calls to VLDB will succeed only if avolid is a RW volume,
      * since we are following the RW hash chain for searching */
@@ -1383,6 +1390,7 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 
     memset(remembertime, 0, sizeof(remembertime));
     memset(&results, 0, sizeof(results));
+    memset(&entry, 0, sizeof(entry));
 
     tst =
 	ubik_VL_SetLock(cellHandle->vos, 0, afromvol, RWVOL,
@@ -1987,6 +1995,8 @@ UV_DumpVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     struct nvldbentry entry;
     int islocked;
 
+    memset(&entry, 0, sizeof(entry));
+
     islocked = 0;
     fromconn = (struct rx_connection *)0;
     fromtid = 0;
@@ -2186,6 +2196,8 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
 
 
     memset(&cookie, 0, sizeof(cookie));
+    memset(&entry, 0, sizeof(entry));
+
     islocked = 0;
     reuseID = 1;
     tocall = (struct rx_call *)0;
@@ -2473,6 +2485,8 @@ UV_AddSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
     struct nvldbentry entry;
     int same = 0;
 
+    memset(&entry, 0, sizeof(entry));
+
     tst =
 	ubik_VL_SetLock(cellHandle->vos, 0, volid, RWVOL, VLOP_ADDSITE);
     if (tst) {
@@ -2551,6 +2565,8 @@ UV_RemoveSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
     afs_status_t tst = 0;
     struct nvldbentry entry;
     int islocked = 0;
+
+    memset(&entry, 0, sizeof(entry));
 
     tst =
 	ubik_VL_SetLock(cellHandle->vos, 0, volid, RWVOL, VLOP_ADDSITE);
@@ -2881,6 +2897,8 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
     int noError = 1, error, same;
     int aserver = ntohl(rx_HostOf(rx_PeerOf(server)));
     afs_status_t tst;
+
+    memset(&entry, 0, sizeof(entry));
 
     /* get the next  available id's from the vldb server */
     vcode = ubik_VL_GetNewVolumeId(cellHandle->vos, 0, 0, &maxVolid);

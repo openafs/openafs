@@ -722,6 +722,7 @@ UV_CreateVolume3(afs_uint32 aserver, afs_int32 apart, char *aname,
     tid = 0;
     error = 0;
 
+    memset(&entry, 0, sizeof(entry));
     memset(&storeEntry, 0, sizeof(struct nvldbentry));
 
     init_volintInfo(&tstatus);
@@ -858,6 +859,8 @@ UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
     int islocked = 0;
     afs_int32 avoltype = -1, vtype;
     int notondisk = 0, notinvldb = 0;
+
+    memset(&entry, 0, sizeof(entry));
 
     /* Find and read the VLDB entry for this volume */
     code = GetLockedEntry(avolid, avoltype, VLOP_DELETE, &entry);
@@ -1303,6 +1306,7 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
     struct rx_connection *aconn;
     int islocked = 0;
 
+    memset(&checkEntry, 0, sizeof(checkEntry));
     memset(&storeEntry, 0, sizeof(struct nvldbentry));
 
     /* make sure the VLDB entry hasn't changed since we started */
@@ -1474,6 +1478,9 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     char in, lf;		/* for test code */
     int same;
     char hoststr[16];
+
+    memset(&entry, 0, sizeof(entry));
+    memset(&storeEntry, 0, sizeof(storeEntry));
 
     islocked = 0;
     fromconn = (struct rx_connection *)0;
@@ -2219,6 +2226,9 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     afs_int32 tmp;
     afs_uint32 tmpVol;
 
+    memset(&entry, 0, sizeof(entry));
+    memset(&newentry, 0, sizeof(newentry));
+
     fromconn = (struct rx_connection *)0;
     toconn = (struct rx_connection *)0;
     fromtid = 0;
@@ -2527,6 +2537,8 @@ cpincr:
     if (!(flags & RV_NOVLDB)) {
 	struct nvldbentry storeEntry;
 
+	memset(&storeEntry, 0, sizeof(storeEntry));
+
 	/* create the vldb entry for the copied volume */
 	strncpy(newentry.name, atovolname, VOLSER_OLDMAXVOLNAME);
 	newentry.nServers = 1;
@@ -2690,6 +2702,8 @@ UV_BackupVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
     afs_int32 error = 0;
     int vldblocked = 0, vldbmod = 0;
 
+    memset(&entry, 0, sizeof(entry));
+
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
 
     /* the calls to VLDB will succeed only if avolid is a RW volume,
@@ -2815,6 +2829,8 @@ UV_BackupVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
     if (vldblocked) {
 	if (vldbmod) {
 	    struct nvldbentry storeEntry;
+
+	    memset(&storeEntry, 0, sizeof(storeEntry));
 
 	    MapNetworkToHost(&entry, &storeEntry);
 	    code =
@@ -3380,6 +3396,8 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     memset(remembertime, 0, sizeof(remembertime));
     memset(&results, 0, sizeof(results));
     memset(origflags, 0, sizeof(origflags));
+    memset(&entry, 0, sizeof(entry));
+    memset(&storeEntry, 0, sizeof(storeEntry));
 
     vcode = GetLockedEntry(afromvol, RWVOL, VLOP_RELEASE, &entry);
     ONERROR(vcode, afromvol,
@@ -4473,6 +4491,9 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
     char hoststr[16];
 
     memset(&cookie, 0, sizeof(cookie));
+    memset(&entry, 0, sizeof(entry));
+    memset(&storeEntry, 0, sizeof(storeEntry));
+
     islocked = 0;
     error = 0;
     reuseID = 1;
@@ -4920,6 +4941,10 @@ UV_AddSite2(afs_uint32 server, afs_int32 part, afs_uint32 volid,
     afs_int32 vcode, error = 0;
     char apartName[10];
 
+    memset(&entry, 0, sizeof(entry));
+    memset(&storeEntry, 0, sizeof(storeEntry));
+    memset(&entry2, 0, sizeof(entry2));
+
     error = GetLockedEntry(volid, RWVOL, VLOP_ADDSITE, &entry);
     if (error) {
 	fprintf(STDERR,
@@ -5039,6 +5064,9 @@ UV_RemoveSite(afs_uint32 server, afs_int32 part, afs_uint32 volid)
     afs_int32 vcode;
     struct nvldbentry entry, storeEntry;
 
+    memset(&entry, 0, sizeof(entry));
+    memset(&storeEntry, 0, sizeof(storeEntry));
+
     vcode = GetLockedEntry(volid, RWVOL, VLOP_ADDSITE, &entry);
     if (vcode) {
 	fprintf(STDERR, " Could not fetch locked VLDB entry for volume %lu \n",
@@ -5110,6 +5138,9 @@ UV_ChangeLocation(afs_uint32 server, afs_int32 part, afs_uint32 volid)
     afs_int32 vcode;
     struct nvldbentry entry, storeEntry;
     int index;
+
+    memset(&entry, 0, sizeof(entry));
+    memset(&storeEntry, 0, sizeof(storeEntry));
 
     vcode = GetLockedEntry(volid, RWVOL, VLOP_ADDSITE, &entry);
     if (vcode) {
@@ -5830,6 +5861,8 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
     int pass = 0, createentry, modified, doit = 1;
     afs_uint32 rwvolid;
 
+    memset(&entry, 0, sizeof(entry));
+
     if (modentry) {
 	if (*modentry == 1)
 	    doit = 0;
@@ -5926,6 +5959,8 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 
     if (modified && doit) {
 	struct nvldbentry storeEntry;
+
+	memset(&storeEntry, 0, sizeof(storeEntry));
 
 	MapNetworkToHost(&entry, &storeEntry);
 
@@ -6672,6 +6707,8 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified, afs_int32 * deleted)
 	} else {
 	    struct nvldbentry storeEntry;
 
+	    memset(&storeEntry, 0, sizeof(storeEntry));
+
 	    /* Replace old entry with our new one */
 	    MapNetworkToHost(entry, &storeEntry);
 	    code =
@@ -6843,6 +6880,8 @@ UV_RenameVolume(struct nvldbentry *entry, char oldname[], char newname[])
     struct rx_connection *aconn;
     int islocked;
     char hoststr[16];
+
+    memset(&storeEntry, 0, sizeof(storeEntry));
 
     error = 0;
     aconn = (struct rx_connection *)0;

@@ -102,6 +102,8 @@ VLDB_CreateEntry(struct nvldbentry *entryp)
     struct vldbentry oentry;
     int code;
 
+    memset(&oentry, 0, sizeof(oentry));
+
     if (newvlserver == vltype_old) {
       tryold:
 	code = nvlentry_to_ovlentry(entryp, &oentry);
@@ -128,6 +130,9 @@ VLDB_GetEntryByID(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp
     struct vldbentry oentry;
     int code;
 
+    memset(&oentry, 0, sizeof(oentry));
+    memset(entryp, 0, sizeof(*entryp));
+
     if (newvlserver == vltype_old) {
       tryold:
 	code =
@@ -136,7 +141,6 @@ VLDB_GetEntryByID(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp
 	    ovlentry_to_nvlentry(&oentry, entryp);
 	return code;
     }
-    memset(entryp, 0, sizeof(*entryp));	    /* ensure padding is cleared */
     code = ubik_VL_GetEntryByIDN(cstruct, 0, volid, voltype, entryp);
     if (newvlserver == vltype_unknown) {
 	if (code == RXGEN_OPCODE) {
@@ -155,6 +159,9 @@ VLDB_GetEntryByName(char *namep, struct nvldbentry *entryp)
     struct vldbentry oentry;
     int code;
 
+    memset(&oentry, 0, sizeof(oentry));
+    memset(entryp, 0, sizeof(*entryp));
+
     if (newvlserver == vltype_old) {
       tryold:
 	code = ubik_VL_GetEntryByNameO(cstruct, 0, namep, &oentry);
@@ -162,7 +169,6 @@ VLDB_GetEntryByName(char *namep, struct nvldbentry *entryp)
 	    ovlentry_to_nvlentry(&oentry, entryp);
 	return code;
     }
-    memset(entryp, 0, sizeof(*entryp));	    /* ensure padding is cleared */
     code = ubik_VL_GetEntryByNameN(cstruct, 0, namep, entryp);
     if (newvlserver == vltype_unknown) {
 	if (code == RXGEN_OPCODE) {
@@ -180,6 +186,8 @@ VLDB_ReplaceEntry(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp
 {
     struct vldbentry oentry;
     int code;
+
+    memset(&oentry, 0, sizeof(oentry));
 
     if (newvlserver == vltype_old) {
       tryold:

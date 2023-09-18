@@ -3050,6 +3050,8 @@ vos_VolumeRename(const void *cellHandle, vos_MessageCallBack_t callBack,
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     struct nvldbentry entry;
 
+    memset(&entry, 0, sizeof(entry));
+
     /*
      * Validate arguments
      */

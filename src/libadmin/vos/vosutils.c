@@ -100,6 +100,8 @@ VLDB_CreateEntry(afs_cell_handle_p cellHandle, struct nvldbentry *entryp,
     int rc = 0;
 
     do {
+	memset(&oentry, 0, sizeof(oentry));
+
 	if (cellHandle->vos_new) {
 	    tst = ubik_VL_CreateEntryN(cellHandle->vos, 0, entryp);
 	    if (tst) {
