@@ -5945,12 +5945,14 @@ TryLocalVLServer(char *avolid, struct VolumeInfo *avolinfo)
     struct rx_securityClass *vlSec;
     afs_int32 code;
 
+    FS_LOCK;
     if (!vlConn) {
 	vlSec = rxnull_NewClientSecurityObject();
 	vlConn =
 	    rx_NewConnection(htonl(0x7f000001), htons(7003), 52, vlSec, 0);
 	rx_SetConnDeadTime(vlConn, 15);	/* don't wait long */
     }
+    FS_UNLOCK;
     if (down && (time(NULL) < lastDownTime + 180)) {
 	return 1;		/* failure */
     }
