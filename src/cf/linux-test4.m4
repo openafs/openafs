@@ -854,3 +854,16 @@ AC_DEFUN([LINUX_KEYRING_SEARCH_TAKES_RECURSE], [
                        [define if your keyring_search has the recurse parameter],
                        [])
 ])
+
+dnl Linux 6.6 added the 'request_mask' parameter to generic_fillattr.
+AC_DEFUN([LINUX_GENERIC_FILLATTR_TAKES_REQUEST_MASK], [
+  AC_CHECK_LINUX_BUILD([whether generic_fillattr has the request_mask parameter],
+                       [ac_cv_linux_func_generic_fillattr_takes_request_mask],
+                       [#include <linux/fs.h>],
+                       [
+                       generic_fillattr(NULL, 0, NULL, NULL);
+                       ],
+                       [GENERIC_FILLATTR_TAKES_REQUEST_MASK],
+                       [define if your generic_fillattr has the request_mask_parameter],
+                       [])
+])
