@@ -1248,16 +1248,24 @@ RXFetch_AccessList(Vnode * targetptr, Vnode * parentwhentargetnotdir,
 static afs_int32
 RXStore_AccessList(Vnode * targetptr, struct AFSOpaque *AccessList)
 {
-    struct acl_accessList *newACL;	/* PlaceHolder for new access list */
+    int code;
+    struct acl_accessList *newACL = NULL;
 
     if (acl_Internalize_pr(hpr_NameToId, AccessList->AFSOpaque_val, &newACL)
-	!= 0)
-	return (EINVAL);
-    if ((newACL->size + 4) > VAclSize(targetptr))
-	return (E2BIG);
+	!= 0) {
+	code = EINVAL;
+	goto done;
+    }
+    if ((newACL->size + 4) > VAclSize(targetptr)) {
+	code = E2BIG;
+	goto done;
+    }
     memcpy((char *)VVnodeACL(targetptr), (char *)newACL, (int)(newACL->size));
+    code = 0;
+
+ done:
     acl_FreeACL(&newACL);
-    return (0);
+    return code;
 
 }				/*RXStore_AccessList */
 
