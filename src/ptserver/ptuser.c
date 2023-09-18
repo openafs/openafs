@@ -435,7 +435,7 @@ pr_AddToGroup(prname user, prname group)
     if (code)
 	return code;
     lnames.namelist_len = 2;
-    lnames.namelist_val = malloc(2 * PR_MAXNAMELEN);
+    lnames.namelist_val = calloc(2, PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[0], user, PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[1], group, PR_MAXNAMELEN);
     lids.idlist_val = 0;
@@ -478,7 +478,7 @@ pr_RemoveUserFromGroup(prname user, prname group)
     if (code)
 	return code;
     lnames.namelist_len = 2;
-    lnames.namelist_val = malloc(2 * PR_MAXNAMELEN);
+    lnames.namelist_val = calloc(2, PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[0], user, PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[1], group, PR_MAXNAMELEN);
     lids.idlist_val = 0;
@@ -540,7 +540,7 @@ pr_SNameToId(prname name, afs_int32 *id)
     lids.idlist_len = 0;
     lids.idlist_val = 0;
     lnames.namelist_len = 1;
-    lnames.namelist_val = malloc(PR_MAXNAMELEN);
+    lnames.namelist_val = calloc(1, PR_MAXNAMELEN);
     stolower(name);
     strncpy(lnames.namelist_val[0], name, PR_MAXNAMELEN);
     code = ubik_PR_NameToID(pruclient, 0, &lnames, &lids);

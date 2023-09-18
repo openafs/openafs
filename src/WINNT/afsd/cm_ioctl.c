@@ -2518,7 +2518,7 @@ cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
     lids.idlist_len = 0;
     lids.idlist_val = 0;
     lnames.namelist_len = 1;
-    lnames.namelist_val = (prname *) malloc(PR_MAXNAMELEN);
+    lnames.namelist_val = calloc(1, PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[0], uname, PR_MAXNAMELEN);
     lnames.namelist_val[0][PR_MAXNAMELEN-1] = '\0';
     for ( p=lnames.namelist_val[0], r=NULL; *p; p++ ) {
