@@ -3462,6 +3462,36 @@ SRXAFS_StoreData64(struct rx_call * acall, struct AFSFid * Fid,
     return code;
 }
 
+/**
+ * Check if the given ACL blob is okay to use.
+ *
+ * If the given ACL is 0-length, or doesn't contain a NUL byte, return an error
+ * and refuse the process the given ACL. The ACL must contain a NUL byte,
+ * otherwise ACL-processing code may run off the end of the buffer and process
+ * uninitialized memory.
+ *
+ * If there is any data beyond the NUL byte, just ignore it and return success.
+ * We won't look at any post-NUL data, but theoretically clients could send
+ * such an ACL to us, since historically it's been allowed.
+ *
+ * @param[in] AccessList    The ACL blob to check
+ *
+ * @returns errno error code to abort the call with
+ * @retval 0 ACL is okay to use
+ */
+static afs_int32
+check_acl(struct AFSOpaque *AccessList)
+{
+    if (AccessList->AFSOpaque_len == 0) {
+	return EINVAL;
+    }
+    if (memchr(AccessList->AFSOpaque_val, '\0',
+	       AccessList->AFSOpaque_len) == NULL) {
+	return EINVAL;
+    }
+    return 0;
+}
+
 afs_int32
 SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
 		struct AFSOpaque * AccessList,
@@ -3495,6 +3525,11 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
 #endif /* FS_STATS_DETAILED */
     if ((errorCode = CallPreamble(acall, ACTIVECALL, Fid, &tcon, &thost)))
 	goto Bad_StoreACL;
+
+    errorCode = check_acl(AccessList);
+    if (errorCode != 0) {
+	goto Bad_StoreACL;
+    }
 
     /* Get ptr to client data for user Id for logging */
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
