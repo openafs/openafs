@@ -5237,7 +5237,7 @@ SRXAFS_GetStatistics64(struct rx_call *acall, afs_int32 statsVersion, ViceStatis
 
     ViceLog(1, ("SAFS_GetStatistics64 Received\n"));
     Statistics->ViceStatistics64_val =
-	malloc(statsVersion*sizeof(afs_uint64));
+	calloc(statsVersion, sizeof(afs_uint64));
     Statistics->ViceStatistics64_len = statsVersion;
     FS_LOCK;
     AFSCallStats.GetStatistics++, AFSCallStats.TotalCalls++;
