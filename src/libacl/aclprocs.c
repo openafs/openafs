@@ -278,6 +278,10 @@ acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struc
 	}
 	(*acl)->entries[i].rights = k;
 	nextc = strchr(nextc, '\n');
+	if (nextc == NULL) {
+	    free(lnames.namelist_val);
+	    return (-1);
+	}
 	nextc++;		/* 1 + index can cast ptr to integer */
     }
     j = i;
@@ -290,6 +294,10 @@ acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struc
 	    return (-1);
 	}
 	nextc = strchr(nextc, '\n');
+	if (nextc == NULL) {
+	    free(lnames.namelist_val);
+	    return (-1);
+	}
 	nextc++;
     }
     lids.idlist_len = 0;
