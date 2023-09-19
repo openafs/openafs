@@ -274,10 +274,12 @@ acl_Internalize_pr(int (*func)(namelist *names, idlist *ids), char *elist, struc
     nextc = elist;
     while (*nextc && *nextc != '\n')
 	nextc++;
-    nextc++;
+    if (*nextc != '\0')
+	nextc++;
     while (*nextc && *nextc != '\n')
 	nextc++;
-    nextc++;			/* now at the beginning of the entry list */
+    if (*nextc != '\0')
+	nextc++;			/* now at the beginning of the entry list */
     for (i = 0; i < (*acl)->positive; i++) {
 	int k;
 	if (sscanf(nextc, "%63s\t%d\n", lnames.namelist_val[i], &k) != 2) {
