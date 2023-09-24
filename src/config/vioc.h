@@ -25,12 +25,58 @@
 #include <afs/vice.h>
 #endif
 
-/* IOCTLS to Venus.  Apply these to open file decriptors. */
+
+/*
+ * IOCTLS to Venus.  Apply these to open file descriptors.
+ *
+ * Transarc/IBM and Legacy codes.
+ *
+ * This namespace is managed by IBM.
+ *
+ * ** Reserved codes
+ *
+ * Code 0 is reserved and must not be used.
+ *
+ * Code V.239 is reserved for future code space expansion
+ * by the registrar and must not be used for any other purpose.
+ *
+ * Codes V.240 through V.247 (VIOC_SITE1 through VIOC_SITE8)
+ * are reserved for use by extensions local to a specific site.
+ * They should never be used in any distributed software.
+ *
+ * Codes V.248 through V.255 (VIOC_PRIVATE1 through VIOC_PRIVATE8)
+ * are reserved for private implementation-specific extensions.
+ * They should be used only by software which is absolutely certain
+ * which cache manager implementation is in use.
+ */
 #define	VIOCCLOSEWAIT		_VICEIOCTL(1)	/* Force close to wait for store */
 #define	VIOCABORT		_VICEIOCTL(2)	/* Abort close on this fd */
 #define	VIOCIGETCELL		_VICEIOCTL(3)	/* ioctl to get cell name */
+/* End of IBM managed ioctl namespace */
 
-/* PIOCTLS to Venus.  Apply these to path names with pioctl. */
+/*
+ * PIOCTLS to Venus.  Apply these to path names with pioctl.
+ *
+ * Transarc/IBM and Legacy codes.
+ *
+ * This namespace is managed by IBM.
+ *
+ * ** Reserved codes
+ *
+ * Code 0 is reserved and must not be used.
+ *
+ * Code V.239 is reserved for future code space expansion
+ * by the registrar and must not be used for any other purpose.
+ *
+ * Codes V.240 through V.247 (VIOC_SITE1 through VIOC_SITE8)
+ * are reserved for use by extensions local to a specific site.
+ * They should never be used in any distributed software.
+ *
+ * Codes V.248 through V.255 (VIOC_PRIVATE1 through VIOC_PRIVATE8)
+ * are reserved for private implementation-specific extensions.
+ * They should be used only by software which is absolutely certain
+ * which cache manager implementation is in use.
+ */
 #define	VIOCSETAL		_VICEIOCTL(1)	/* Set access control list */
 #define	VIOCGETAL		_VICEIOCTL(2)	/* Get access control list */
 #define	VIOCSETTOK		_VICEIOCTL(3)	/* Set authentication tokens */
@@ -93,8 +139,18 @@
 
 #define VIOC_STATISTICS         _VICEIOCTL(68)	/* arla: fetch statistics */
 #define VIOC_GETVCXSTATUS2      _VICEIOCTL(69)  /* vcache statistics */
+/* End of IBM managed pioctl namespace */
 
-/* Coordinated 'C' pioctl's */
+/*
+ * Coordinated 'C' pioctl's managed by https://registrar.central.org
+ *
+ * Codes for ioctl() and pioctl() functions in the 'C' group will be
+ * assigned on request for new common, implementation-independent functions
+ * supported by any cache manager implementation wishing to provide these
+ * interfaces.
+ *
+ * Submit requests to registrar@grand.central.org.
+ */
 #define VIOC_NEWALIAS		_CVICEIOCTL(1)	/* create new cell alias */
 #define VIOC_GETALIAS		_CVICEIOCTL(2)	/* get alias info */
 #define VIOC_CBADDR		_CVICEIOCTL(3)	/* push callback addr */
@@ -106,8 +162,18 @@
 #define VIOC_GETPAG             _CVICEIOCTL(13) /* get pag value */
 #define VIOC_FLUSHALL           _CVICEIOCTL(14) /* flush all volume data */
 #define VIOC_GETLITERALFID      _CVICEIOCTL(15) /* get fid from parent directory */
+/* End of Coordinated 'C' pioctl namespace.*/
 
-/* OpenAFS-specific 'O' pioctl's */
+/*
+ * OpenAFS-specific 'O' pioctl's
+ *
+ * The OpenAFS-specific codes are managed by the maintainers of OpenAFS.
+ *
+ * Please send a notification of allocation to registrar@grand.central.org
+ * to permit the https://registrar.central.org published registry to be
+ * updated.
+ */
 #define VIOC_NFS_NUKE_CREDS	_OVICEIOCTL(1)	/* nuke creds for all PAG's */
+/* End of OpenAFS 'O' managed pioctl namespace */
 
 #endif /* AFS_VIOC_H */
