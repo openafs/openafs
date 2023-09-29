@@ -4294,12 +4294,7 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
 	    code = GetCell(ti->data, cell);
 	}
         if (code) {
-	    if (errno == ENOENT)
-		fprintf(stderr, "%s: no such cell as '%s'\n", pn, ti->data);
-	    else
-		Die(errno, ti->data);
-	    error = 1;
-	    goto next_item;
+	    strlcpy(cell, "unknown-cell", sizeof(cell));
         }
 
         printf("File %s (%u.%u.%u) located in cell %s\n",
