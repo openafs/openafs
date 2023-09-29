@@ -45,7 +45,7 @@ ignored.
 =head1 OUTPUT
 
 The output contains the name of the file or directory, the FID, and the
-volume containing the FID.  The Windows version also outputs the object
+cell containing the FID.  The Windows version also outputs the object
 type instead of using "File" to describe all objects.
 
 =head1 EXAMPLES
@@ -53,10 +53,10 @@ type instead of using "File" to describe all objects.
 On Unix:
 
    % fs getfid .
-   File . (536870918.1.1) contained in volume 536870918
+   File . (536870918.1.1) located in cell example.com
 
    % fs getfid /afs/example.com/foo 
-   File /afs/example.com/foo (536870918.20404.20997) contained in volume 536870918
+   File /afs/example.com/foo (536870918.20404.20997) located in cell example.com
 
 On Windows:
 
