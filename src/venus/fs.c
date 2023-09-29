@@ -4261,50 +4261,54 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
     }
     for (ti = as->parms[0].items; ti; ti = ti->next) {
         struct VenusFid vfid;
+	char *parent_dir = NULL;
+	char *last_component = NULL;
 
         blob.out_size = sizeof(struct VenusFid);
         blob.out = (char *) &vfid;
         blob.in_size = 0;
 
 	if (literal) {
-	    char *parent_dir = NULL;
-	    char *last_component = NULL;
-
 	    if (GetLastComponent(ti->data, &parent_dir,
 				 &last_component, NULL, literal) != 0) {
 		error = 1;
-		continue;
+		goto next_item;
 	    }
 
 	    blob.in = last_component;
 	    blob.in_size = strlen(last_component) + 1;
 	    code = pioctl(parent_dir, VIOC_GETLITERALFID, &blob, 1);
 
-	    free(parent_dir);
-	    free(last_component);
 	} else {
 	    code = pioctl(ti->data, VIOCGETFID, &blob, 1);
 	}
         if (code) {
             Die(errno,ti->data);
             error = 1;
-            continue;
+	    goto next_item;
         }
 
-        code = GetCell(ti->data, cell);
+	if (literal) {
+	    code = GetCell(parent_dir, cell);
+	} else {
+	    code = GetCell(ti->data, cell);
+	}
         if (code) {
 	    if (errno == ENOENT)
 		fprintf(stderr, "%s: no such cell as '%s'\n", pn, ti->data);
 	    else
 		Die(errno, ti->data);
 	    error = 1;
-	    continue;
+	    goto next_item;
         }
 
         printf("File %s (%u.%u.%u) located in cell %s\n",
                ti->data, vfid.Fid.Volume, vfid.Fid.Vnode, vfid.Fid.Unique,
                cell);
 
+ next_item:
+	free(parent_dir);
+	free(last_component);
     }
 
     return error;
