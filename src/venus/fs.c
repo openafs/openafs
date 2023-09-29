@@ -1017,7 +1017,12 @@ GetCell(char *fname, char *cellname)
     blob.out = cellname;
 
     code = pioctl(fname, VIOC_FILE_CELL_NAME, &blob, 1);
-    return code ? errno : 0;
+    if (code != 0) {
+	code = errno;
+	fprintf(stderr, "%s: Failed to get cell for '%s'\n", pn, fname);
+	Die(code, fname);
+    }
+    return code;
 }
 
 /* Check if a username is valid: If it contains only digits (or a
@@ -2676,10 +2681,6 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
     for (ti = as->parms[0].items; ti; ti = ti->next) {
 	code = GetCell(ti->data, cell);
 	if (code) {
-	    if (errno == ENOENT)
-		fprintf(stderr, "%s: no such cell as '%s'\n", pn, ti->data);
-	    else
-		Die(errno, ti->data);
 	    error = 1;
 	    continue;
 	}
