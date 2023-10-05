@@ -118,6 +118,17 @@ osi_GetTime(osi_timeval32_t *atv)
 }
 #endif
 
+#if defined(HAVE_LINUX_INODE_SET_CTIME)
+# define afs_inode_set_ctime(inode, sec, nsec) inode_set_ctime((inode), (sec), (nsec))
+#else
+static inline void
+afs_inode_set_ctime(struct inode *inode, time64_t sec, long nsec)
+{
+    inode->i_ctime.tv_sec = sec;
+    inode->i_ctime.tv_nsec = nsec;
+}
+#endif
+
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
 

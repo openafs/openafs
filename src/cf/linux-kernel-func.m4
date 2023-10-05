@@ -238,6 +238,12 @@ AC_CHECK_LINUX_FUNC([wrap_directory_iterator],
     		     #include <linux/fs.h>],
     		    [(void)wrap_directory_iterator(NULL, NULL, NULL);])
 
+dnl Linux 6.6 requires the use of a getter/setter for accessing a inode's
+dnl ctime member.  Test for the setter inode_set_ctime
+AC_CHECK_LINUX_FUNC([inode_set_ctime],
+		    [#include <linux/fs.h>],
+		    [inode_set_ctime(NULL, 0, 0);])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
