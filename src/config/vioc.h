@@ -174,6 +174,7 @@
  * updated.
  */
 #define VIOC_NFS_NUKE_CREDS	_OVICEIOCTL(1)	/* nuke creds for all PAG's */
+#define VIOC_SETBYPASS_THRESH	_OVICEIOCTL(2)	/* cache-bypass size thresh */
 /* End of OpenAFS 'O' managed pioctl namespace */
 
 #endif /* AFS_VIOC_H */
