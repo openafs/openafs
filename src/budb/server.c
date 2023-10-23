@@ -516,8 +516,6 @@ main(int argc, char **argv)
     if (r < 0 || dbNamePtr == 0)
 	ERROR(-1);
 
-    rx_SetRxDeadTime(60);	/* 60 seconds inactive before timeout */
-
     if (rxBind) {
 	afs_int32 ccode;
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH ||
