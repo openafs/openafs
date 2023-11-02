@@ -122,7 +122,7 @@ osi_GetTime(osi_timeval32_t *atv)
 # define afs_inode_set_ctime(inode, sec, nsec) inode_set_ctime((inode), (sec), (nsec))
 #else
 static inline void
-afs_inode_set_ctime(struct inode *inode, time64_t sec, long nsec)
+afs_inode_set_ctime(struct inode *inode, time_t sec, long nsec)
 {
     inode->i_ctime.tv_sec = sec;
     inode->i_ctime.tv_nsec = nsec;
