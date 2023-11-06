@@ -132,7 +132,7 @@ afs_addevent(char *event)
 #define relevent(evp) ((evp)->refcount--)
 
 static int
-afs_linux_sleep(void *event, int aintok)
+afs_linux_sleep(void *event, int killable)
 {
     struct afs_event *evp;
     int seq;
@@ -151,22 +151,22 @@ afs_linux_sleep(void *event, int aintok)
 
     AFS_GUNLOCK();
 
-    if (!aintok) {
-	SIG_LOCK(current);
-	saved_set = current->blocked;
+    SIG_LOCK(current);
+    saved_set = current->blocked;
+    if (killable) {
+	siginitsetinv(&current->blocked, sigmask(SIGKILL));
+    } else {
 	sigfillset(&current->blocked);
-	RECALC_SIGPENDING(current);
-	SIG_UNLOCK(current);
     }
+    RECALC_SIGPENDING(current);
+    SIG_UNLOCK(current);
 
     code = wait_event_freezable(evp->cond, seq != evp->seq);
 
-    if (!aintok) {
-	SIG_LOCK(current);
-	current->blocked = saved_set;
-	RECALC_SIGPENDING(current);
-	SIG_UNLOCK(current);
-    }
+    SIG_LOCK(current);
+    current->blocked = saved_set;
+    RECALC_SIGPENDING(current);
+    SIG_UNLOCK(current);
 
     AFS_GLOCK();
 
