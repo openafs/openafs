@@ -131,17 +131,15 @@ afs_addevent(char *event)
 /* Release the specified event */
 #define relevent(evp) ((evp)->refcount--)
 
-/* afs_osi_SleepSig
- *
- * Waits for an event to be notified, returning early if a signal
- * is received.  Returns EINTR if signaled, and 0 otherwise.
- */
-int
-afs_osi_SleepSig(void *event)
+static int
+afs_linux_sleep(void *event, int aintok)
 {
     struct afs_event *evp;
     int seq;
     int code;
+    sigset_t saved_set;
+
+    sigemptyset(&saved_set);
 
     evp = afs_getevent(event);
     if (!evp) {
@@ -152,7 +150,24 @@ afs_osi_SleepSig(void *event)
     seq = evp->seq;
 
     AFS_GUNLOCK();
+
+    if (!aintok) {
+	SIG_LOCK(current);
+	saved_set = current->blocked;
+	sigfillset(&current->blocked);
+	RECALC_SIGPENDING(current);
+	SIG_UNLOCK(current);
+    }
+
     code = wait_event_freezable(evp->cond, seq != evp->seq);
+
+    if (!aintok) {
+	SIG_LOCK(current);
+	current->blocked = saved_set;
+	RECALC_SIGPENDING(current);
+	SIG_UNLOCK(current);
+    }
+
     AFS_GLOCK();
 
     if (code == -ERESTARTSYS)
@@ -162,6 +177,17 @@ afs_osi_SleepSig(void *event)
 
     relevent(evp);
     return code;
+}
+
+/* afs_osi_SleepSig
+ *
+ * Waits for an event to be notified, returning early if a signal
+ * is received.  Returns EINTR if signaled, and 0 otherwise.
+ */
+int
+afs_osi_SleepSig(void *event)
+{
+    return afs_linux_sleep(event, 1);
 }
 
 /* afs_osi_Sleep -- waits for an event to be notified, ignoring signals.
@@ -174,20 +200,7 @@ afs_osi_SleepSig(void *event)
 void
 afs_osi_Sleep(void *event)
 {
-    sigset_t saved_set;
-
-    SIG_LOCK(current);
-    saved_set = current->blocked;
-    sigfillset(&current->blocked);
-    RECALC_SIGPENDING(current);
-    SIG_UNLOCK(current);
-
-    afs_osi_SleepSig(event);
-
-    SIG_LOCK(current);
-    current->blocked = saved_set;
-    RECALC_SIGPENDING(current);
-    SIG_UNLOCK(current);
+    afs_linux_sleep(event, 0);
 }
 
 /* afs_osi_TimedSleep
