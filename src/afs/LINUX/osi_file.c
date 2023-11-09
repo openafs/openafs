@@ -175,9 +175,8 @@ afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
 {
     AFS_STATCNT(osi_Stat);
     astat->size = i_size_read(OSIFILE_INODE(afile));
-    astat->mtime = OSIFILE_INODE(afile)->i_mtime.tv_sec;
-    astat->atime = OSIFILE_INODE(afile)->i_atime.tv_sec;
-
+    astat->mtime = afs_inode_get_mtime_sec(OSIFILE_INODE(afile));
+    astat->atime = afs_inode_get_atime_sec(OSIFILE_INODE(afile));
     return 0;
 }
 

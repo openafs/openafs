@@ -234,6 +234,14 @@ AC_CHECK_LINUX_FUNC([inode_set_ctime],
 		    [#include <linux/fs.h>],
 		    [inode_set_ctime(NULL, 0, 0);])
 
+dnl Linux 6.7 requires the use of a getter/setter for accessing a inode's
+dnl atime and mtime members.  Test for the setters.  Assummes that the
+dnl getters are present if the setters are.
+AC_CHECK_LINUX_FUNC([inode_atime_mtime_accessors],
+		    [#include <linux/fs.h>],
+		    [inode_set_atime(NULL, 0, 0);
+		     inode_set_mtime(NULL, 0, 0);])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
