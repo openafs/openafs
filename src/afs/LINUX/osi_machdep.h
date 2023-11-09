@@ -128,6 +128,35 @@ afs_inode_set_ctime(struct inode *inode, time_t sec, long nsec)
     inode->i_ctime.tv_nsec = nsec;
 }
 #endif
+#if defined(HAVE_LINUX_INODE_ATIME_MTIME_ACCESSORS)
+# define afs_inode_set_atime(inode, sec, nsec) inode_set_atime((inode), (sec), (nsec))
+# define afs_inode_get_atime_sec(inode) inode_get_atime_sec((inode))
+# define afs_inode_set_mtime(inode, sec, nsec) inode_set_mtime((inode), (sec), (nsec))
+# define afs_inode_get_mtime_sec(inode) inode_get_mtime_sec((inode))
+#else
+static inline void
+afs_inode_set_atime(struct inode *inode, time_t sec, long nsec)
+{
+    inode->i_atime.tv_sec = sec;
+    inode->i_atime.tv_nsec = nsec;
+}
+static inline time_t
+afs_inode_get_atime_sec(struct inode *inode)
+{
+    return inode->i_atime.tv_sec;
+}
+static inline void
+afs_inode_set_mtime(struct inode *inode, time_t sec, long nsec)
+{
+    inode->i_mtime.tv_sec = sec;
+    inode->i_mtime.tv_nsec = nsec;
+}
+static inline time_t
+afs_inode_get_mtime_sec(struct inode *inode)
+{
+    return inode->i_mtime.tv_sec;
+}
+#endif /* HAVE_LINUX_INODE_ATIME_MTIME_ACCESSORS */
 
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname

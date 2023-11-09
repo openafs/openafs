@@ -1136,14 +1136,12 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_uid = afs_make_kuid(vp->va_uid);
     ip->i_gid = afs_make_kgid(vp->va_gid);
     i_size_write(ip, vp->va_size);
-    ip->i_atime.tv_sec = vp->va_atime.tv_sec;
-    ip->i_atime.tv_nsec = 0;
-    ip->i_mtime.tv_sec = vp->va_mtime.tv_sec;
+    afs_inode_set_atime(ip, vp->va_atime.tv_sec, 0);
     /* Set the mtime nanoseconds to the sysname generation number.
      * This convinces NFS clients that all directories have changed
      * any time the sysname list changes.
      */
-    ip->i_mtime.tv_nsec = afs_sysnamegen;
+    afs_inode_set_mtime(ip, vp->va_mtime.tv_sec, afs_sysnamegen);
     afs_inode_set_ctime(ip, vp->va_ctime.tv_sec, 0);
 }
 
