@@ -7499,8 +7499,8 @@ rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 		size, sizeof(struct rx_statistics));
     }
 
-    fprintf(file, "rx stats: free packets %d, allocs %d, ", (int)freePackets,
-	    s->packetRequests);
+    fprintf(file, "rx stats: free packets %u, allocs %u, ",
+	    (unsigned int)freePackets, s->packetRequests);
 
     if (version >= RX_DEBUGI_VERSION_W_NEWPACKETTYPES) {
 	fprintf(file, "alloc-failures(rcv %u/%u,send %u/%u,ack %u)\n",
