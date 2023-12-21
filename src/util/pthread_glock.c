@@ -74,6 +74,7 @@ pthread_recursive_mutex_unlock(pthread_recursive_mutex_t * mut)
 	mut->times_inside--;
 	if (mut->times_inside == 0) {
 	    mut->locked = 0;
+	    mut->owner = 0;
 	    rc = pthread_mutex_unlock(&mut->mut);
 	}
     } else {
