@@ -797,6 +797,7 @@ distclean: clean
 	/bin/rm -rf lib include packages
 	/bin/rm -f config.log config.cache config.status \
 	src/config/afsconfig.h src/config/stamp-h1 \
+	src/config/cc-wrapper \
 	src/libafs/Makefile \
 	src/libuafs/Makefile \
 	Makefile \
@@ -878,6 +879,7 @@ distclean: clean
 	src/packaging/MacOS/OpenAFS.Info.plist \
 	src/packaging/MacOS/OpenAFS.info \
 	src/packaging/MacOS/buildpkg.sh \
+	src/packaging/MacOS/pkgbuild.sh \
 	src/packaging/RedHat/openafs.spec \
 	src/pam/Makefile \
 	src/platform/Makefile \

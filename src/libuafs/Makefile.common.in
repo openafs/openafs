@@ -494,6 +494,7 @@ clean:
 	-$(RM) -rf h
 	-$(RM) -f linktest $(AFS_OS_CLEAN)
 	-$(RM) -f *.o *.a
+	-${RM} -f AFS_component_version_number.c
 
 install: libuafs.a libuafs_pic.la @LIBUAFS_BUILD_PERL@
 	${INSTALL} -d ${DESTDIR}${libdir}
