@@ -1,5 +1,5 @@
 Notes on Coding Standards/Requirements for OpenAFS Source
----------------------------------------------------------
+=========================================================
 
 We have an official style.  Please use it.  If you have gnu indent 2.2.9 or
 later you can reformat for this style with the following option:
@@ -19,14 +19,17 @@ Try to test builds using gmake -j # MAKE="gmake -j #", it seems like a good
 way to find missing or order-dependent dependency rules. (Is there a better
 way to do this?)
 
--- Prototyping and Style --
+Prototyping and Style
+---------------------
+
 Prototypes for all source files in a given dir DDD should be placed
 in the file DDD/DDD_prototypes.h. All externally used (either API
 or used by other source files) routines and variables should be
 prototyped in this file.
 
 The prototypes should be a full prototype, with argument and return
-types. (Should not generate a warning with gcc -Wstrict-prototypes.)
+types. (That is, they should not generate a warning with
+gcc -Wstrict-prototypes.)
 
 Format of the prototype files should look like:
 
@@ -66,7 +69,7 @@ All routines should be declared static if they are not used outside that
 source file.
 
 Compiles on gcc-using machines should strive to handle using
--Wstrict-prototypes -Werror. (this may take a while)
+-Wstrict-prototypes -Werror (this may take a while).
 
 Routines shall be defined in source prior to use if possible, and
 prototyped in block at top of file if static.
@@ -80,11 +83,12 @@ the AIX .exp files.
 Suggested compiler flags:
 	gcc: -Wall -Wstrict-prototypes
 	Solaris Workshop CC: -fd -v
-		(You might not want the -fd, it isn't really useful, just complains about the
-		K&R style functions, but -v gives useful info.)
+		(You might not want the -fd, it isn't really useful,
+		just complains about the K&R style functions, but -v
+		gives useful info.)
 
-Multiple line comment blocks should begin with only /* on one line and end with
-only */ on one line.
+Multiple line comment blocks should begin with only /* on one line and
+end with only */ on one line.
 
 Example:
 
@@ -93,7 +97,8 @@ Example:
 	 * like this example.
 	 */
 
-Do not use braces on one-line if and loop statements.
+Do not use braces on one-line if and loop statements (but if one branch of
+a multi-branch conditional needs braces, use braces for all branches).
 
 Use:
 
@@ -158,7 +163,8 @@ Or not marking the fall through:
     }
 
 Dependencies required to build OpenAFS from source
---------------------------------------------------
+==================================================
+
 The following packages are required to build all of the OpenAFS code
 from source on various operating systems:
 
@@ -167,7 +173,7 @@ On Debian:
   libncurses5-dev, libpam0g-dev, libxml2-utils, perl, pkg-config;
 - libfuse-dev (for the FUSE-based user-mode client);
 - dblatex, docbook-xsl, doxygen, xsltproc (for documentation);
-- debhelper, hardening-wrapper, dkms (to build the Debian packages)
+- debhelper, dkms, dh-dkms (to build the Debian packages)
 
 On FreeBSD:
 - autoconf, automake, libtool;
@@ -213,7 +219,7 @@ Step-by-step
    a subdirectory of the current directory named openafs. The repository
    itself is in the .git subdirectory of that directory.
 
-   WARNING: The repository is approximately 60MiB currently and will only
+   WARNING: The repository is approximately 86MiB currently and will only
    grow, so it may take some time to download the first time over a slow
    network connection.
 
@@ -242,12 +248,15 @@ will have to be forwarded to Gerrit by someone else, and it's easier for
 everyone if you can enter them into Gerrit yourself.
 
 Backport policy
-------------
+---------------
 All patches should land on master first, unless the patch fixes a bug
 that only exists in the stable branch.
 
 Once a patch has been accepted into master, anyone can propose
-backports to stable branches.
+backports to stable branches.  It is preferred to check with the
+Stable Release Manager before doing so, though, as that will give
+an opportunity to check where in the stack of pending changes any
+new addition should go.
 
 When cherry-picking a commit from another branch, please append a
 "cherry picked from" section in your commit message. You'll also need
@@ -278,7 +287,9 @@ later, and is disabled unless the --enable-checking option is supplied to
 configure. Because we can't remove all of the warnings, we permit file by
 file (and warning by warning) disabling of specific warnings. The
 --enable-checking=all option prevents
-this, and errors for any file containing a warning.
+this, and errors for any file containing a warning.  (At present, using
+--enable-checking=all will error out quite early in the build, so this
+is only useful for developers attempting to clean up compiler warnings.)
 
 Disabling warnings
 ------------------
@@ -319,34 +330,42 @@ example:
   lex.yy.o : lex.yy.c y.tab.c
          ${CC} -c ${CFLAGS} @CFLAGS_NOERROR@ lex.yy.c
 
-If you add a new warning inhibition, please also add it to the list below.
+If you add a new warning inhibition, also add it to the list below.
 
 Inhibited warnings
 ------------------
+
 uss/lex.i            : fallthrough   : clang fallthrough, flex generated code
 comerr/et_lex.lex.l  : fallthrough   : clang fallthrough, flex generated code
                                        pragma set to ignored where included in
                                        error_table.y
 afs/afs_syscall.c    : old-style
-		     : strict-proto
-		     : all (ukernel) : syscall pointer issues
+                     : strict-proto
+                     : all (ukernel) : syscall pointer issues
 afsd/afsd_kernel.c   : deprecated    : daemon() marked as deprecated on Darwin
 bozo/bosserver.c     : deprecated    : daemon() marked as deprecated on Darwin
 bucoord/ubik_db_if.c : strict-proto  : ubik_Call_SingleServer
-bucoord/commands.c   : all	     : signed vs unsigned for dates
-external/heimdal/hcrypto/validate.c: all: statement with empty body
-external/heimdal/hcrypto/evp.c:      cast-function-type
-             : Linux kernel build uses -Wcast-function-type
-external/heimdal/hcrypto/evp-algs.c: cast-function-type
-             : Linux kernel build uses -Wcast-function-type
-external/heimdal/krb5/crypto.c: use-after-free : False postive on certain GCC
-                                                 compilers
+bucoord/commands.c   : all           : signed vs unsigned for dates
+external/heimdal/hcrypto/validate.c
+                     : all           : statement with empty body
+external/heimdal/hcrypto/evp.c
+                     : cast-function-type : Linux kernel build uses
+                                            -Wcast-function-type
+external/heimdal/hcrypto/evp-algs.c
+                     : cast-function-type : Linux kernel build uses
+                                            -Wcast-function-type
+external/heimdal/krb5/crypto.c
+                     : use-after-free: False postive on certain GCC compilers
 kauth/admin_tools.c  : strict-proto  : ubik_Call
 kauth/authclient.c   : strict-proto  : ubik_Call nonsense
-libadmin/kas/afs_kasAdmin.c: strict-proto : ubik_Call nonsense
-libadmin/samples/rxstat_query_peer.c : all : util_RPCStatsStateGet types
-libadmin/samples/rxstat_query_process.c : all : util_RPCStatsStateGet types
-libadmin/test/client.c : all         : util_RPCStatsStateGet types
+libadmin/kas/afs_kasAdmin.c
+                     : strict-proto  : ubik_Call nonsense
+libadmin/samples/rxstat_query_peer.c
+                     : all           : util_RPCStatsStateGet types
+libadmin/samples/rxstat_query_process.c
+                     : all           : util_RPCStatsStateGet types
+libadmin/test/client.c
+                     : all           : util_RPCStatsStateGet types
 ubik/ubikclient.c    : strict-protos : ubik_Call
 volser/vol-dump.c    : format        : afs_sfsize_t
 rxkad/ticket5.c      : format-truncation : inside included file v5der.c in the
