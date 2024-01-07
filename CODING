@@ -1,26 +1,25 @@
 Notes on Coding Standards/Requirements for OpenAFS Source
 =========================================================
 
+This document covers the rules for coding style, lists the dependencies
+needed to build from source, covers how we use git and gerrit for
+development and code review, gives guidelines for what we expect code
+review to cover, and discusses how we handle compiler warnings.
+
+Prototyping and Style
+=====================
+
 We have an official style.  Please use it.  If you have gnu indent 2.2.9 or
-later you can reformat for this style with the following option:
+later you can format new files for this style with the following options:
 
 -npro -nbad -bap -nbc -bbo -br -ce -cdw -brs -ncdb -cp1 -ncs -di2 -ndj -nfc1
 -nfca -i4 -lp -npcs -nprs -psl -sc -nsob -ts8
 
-Do not use $< for non-pattern rules in any cross-platform dir as it
-requires a reasonable make that is not available on all systems.
-
-Do not have build rules that build multiple targets. Make doesn't seem able
-to handle this, and it interferes with -j builds. (In particular, build the
-rxgen targets individually and not using the flags for building all the files
-in one shot.)
-
-Try to test builds using gmake -j # MAKE="gmake -j #", it seems like a good
-way to find missing or order-dependent dependency rules. (Is there a better
-way to do this?)
-
-Prototyping and Style
----------------------
+but since historic compliance with the style has been poor, caution is
+needed when operating on existing files.  It is often suitable to do an
+initial style cleanup commit before making sweeping changes to a given
+file, and otherwise try to accommodate the prevailing style in the file
+when making minor changes.
 
 Prototypes for all source files in a given dir DDD should be placed
 in the file DDD/DDD_prototypes.h. All externally used (either API
@@ -80,12 +79,8 @@ comments.
 If you make a routine or variable static, be sure and remove it from
 the AIX .exp files.
 
-Suggested compiler flags:
-	gcc: -Wall -Wstrict-prototypes
-	Solaris Workshop CC: -fd -v
-		(You might not want the -fd, it isn't really useful,
-		just complains about the K&R style functions, but -v
-		gives useful info.)
+It's recommended to configure with --enable-checking to activate the
+compiler warning flags that the codebase complies with.
 
 Multiple line comment blocks should begin with only /* on one line and
 end with only */ on one line.
@@ -182,6 +177,21 @@ On FreeBSD:
 
 In addition, FreeBSD systems require kernel sources and a configured kernel
 build directory (see section "FreeBSD Notes" in the README file).
+
+Build System
+============
+
+Do not use $< for non-pattern rules in any cross-platform dir as it
+requires a reasonable make that is not available on all systems.
+
+Do not have build rules that build multiple targets. Make doesn't seem able
+to handle this, and it interferes with -j builds. (In particular, build the
+rxgen targets individually and not using the flags for building all the files
+in one shot.)
+
+Try to test builds using gmake -j # MAKE="gmake -j #", it seems like a good
+way to find missing or order-dependent dependency rules. (Is there a better
+way to do this?)
 
 GIT Usage
 =========
