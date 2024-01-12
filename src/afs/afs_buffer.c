@@ -515,31 +515,6 @@ DFlushBuffer(struct buffer *ab)
     afs_CFileClose(tfile);
 }
 
-void
-DFlushDCache(struct dcache *adc)
-{
-    int i;
-    struct buffer *tb;
-
-    ObtainReadLock(&afs_bufferLock);
-
-    for (i = 0; i <= PHPAGEMASK; i++)
-        for (tb = phTable[pHash(adc->index, i)]; tb; tb = tb->hashNext)
-	    if (tb->fid == adc->index) {
-		ObtainWriteLock(&tb->lock, 701);
-		tb->lockers++;
-		ReleaseReadLock(&afs_bufferLock);
-		if (tb->dirty) {
-		    DFlushBuffer(tb);
-		}
-		tb->lockers--;
-		ReleaseWriteLock(&tb->lock);
-		ObtainReadLock(&afs_bufferLock);
-	    }
-
-    ReleaseReadLock(&afs_bufferLock);
-}
-
 int
 DFlush(void)
 {
