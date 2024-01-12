@@ -6555,7 +6555,7 @@ mtuout:
     return -1;
 }
 
-void
+static void
 rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1,
 		      void *dummy, int dummy2)
 {
@@ -6657,7 +6657,7 @@ rx_SetConnSecondsUntilNatPing(struct rx_connection *conn, afs_int32 seconds)
  * declared dead; if nothing has been sent for a while, we send a
  * keep-alive packet (if we're actually trying to keep the call alive)
  */
-void
+static void
 rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy,
 		   int dummy2)
 {
@@ -6698,7 +6698,7 @@ rxi_KeepAliveEvent(struct rxevent *event, void *arg1, void *dummy,
 }
 
 /* Does what's on the nameplate. */
-void
+static void
 rxi_GrowMTUEvent(struct rxevent *event, void *arg1, void *dummy, int dummy2)
 {
     struct rx_call *call = arg1;
@@ -8310,7 +8310,7 @@ static int rxi_monitor_processStats = 0;
 static int rxi_monitor_peerStats = 0;
 
 
-void
+static void
 rxi_ClearRPCOpStat(rx_function_entry_v1_p rpc_stat)
 {
     rpc_stat->invocations = 0;
