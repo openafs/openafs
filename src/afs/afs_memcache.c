@@ -302,16 +302,6 @@ afs_MemCacheTruncate(struct osi_file *fP, int size)
     return 0;
 }
 
-int
-afs_MemExtendEntry(struct memCacheEntry *mceP, afs_uint32 size)
-{
-    int code = 0;
-    ObtainWriteLock(&mceP->afs_memLock, 560);
-    code = _afs_MemExtendEntry(mceP, size);
-    ReleaseWriteLock(&mceP->afs_memLock);
-    return code;
-}
-
 void
 shutdown_memcache(void)
 {
