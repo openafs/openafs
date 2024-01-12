@@ -535,6 +535,7 @@ FsCmd(
 ) = 220;
 
 #ifdef RPC_CLIENT
+%int RXAFS_ResidencyCmd(struct rx_connection *z_conn, AFSFid *Fid, struct FsCmdInputs *Inputs, struct FsCmdOutputs *Outputs);
 %int RXAFS_ResidencyCmd(struct rx_connection *z_conn, AFSFid *Fid, struct FsCmdInputs *Inputs, struct FsCmdOutputs *Outputs)
 %{
 %  return RXAFS_FsCmd(z_conn, Fid, Inputs, Outputs);
