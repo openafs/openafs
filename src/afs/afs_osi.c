@@ -152,14 +152,6 @@ afs_osi_MaskUserLoop(void)
 #endif
 }
 
-void
-afs_osi_UnmaskUserLoop(void)
-{
-#ifdef AFS_DARWIN_ENV
-    afs_osi_fullSigRestore();
-#endif
-}
-
 /* register rxk listener proc info */
 void
 afs_osi_RxkRegister(void)
