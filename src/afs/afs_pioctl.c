@@ -1426,12 +1426,6 @@ DECL_PIOCTL(PGetFID)
  *
  * \post Changed ACL, via direct writing to the wire
  */
-int
-dummy_PSetAcl(char *ain, char *aout)
-{
-    return 0;
-}
-
 DECL_PIOCTL(PSetAcl)
 {
     afs_int32 code;
