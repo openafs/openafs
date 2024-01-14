@@ -9,8 +9,9 @@ review to cover, and discusses how we handle compiler warnings.
 Prototyping and Style
 =====================
 
-We have an official style.  Please use it.  If you have gnu indent 2.2.9 or
-later you can format new files for this style with the following options:
+We have an official style for C code.  Please use it.  If you have gnu indent
+2.2.9 or later you can format new files for this style with the following
+options:
 
 -npro -nbad -bap -nbc -bbo -br -ce -cdw -brs -ncdb -cp1 -ncs -di2 -ndj -nfc1
 -nfca -i4 -lp -npcs -nprs -psl -sc -nsob -ts8
@@ -20,6 +21,13 @@ needed when operating on existing files.  It is often suitable to do an
 initial style cleanup commit before making sweeping changes to a given
 file, and otherwise try to accommodate the prevailing style in the file
 when making minor changes.
+
+The style for non-C code varies.  Makefiles must use literal tabs to
+indent rule bodies, but use spaces for any additional indentation
+needed.  Plain text files (such as this one) should use spaces for
+indentation, with a 4-space indent as the default when one is needed.
+Other cases will be added here as they are encountered and a consensus
+determined for how to handle them.
 
 Prototypes for all source files in a given dir DDD should be placed
 in the file DDD/DDD_prototypes.h. All externally used (either API
