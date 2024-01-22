@@ -16,7 +16,10 @@ ExecStart=/usr/vice/etc/afsd $AFSD_ARGS
 ExecStop=/bin/umount /afs
 ExecStop=/usr/vice/etc/afsd -shutdown
 ExecStop=/sbin/rmmod openafs
-KillMode=none
+KillMode=process
+GuessMainPID=no
+SendSIGKILL=no
+KillSignal=SIGCONT
 
 [Install]
 WantedBy=multi-user.target remote-fs.target
