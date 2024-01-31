@@ -5,6 +5,7 @@
 #ifdef KERNEL
 
 #include "config.h"
+#include <roken.h>
 
 #else
 #include <afsconfig.h>
@@ -285,11 +286,6 @@ int copy_EncryptionKey(const krb5_keyblock *, krb5_keyblock *);
 krb5_error_code krb5_enctype_to_string(krb5_context context,
 				       krb5_enctype etype,
 				       char **string);
-#ifdef KERNEL
-/* Roken provides this in userspace, but we're on our own in the kernel. */
-int ct_memcmp(const void *p1, const void *p2, size_t len);
-#endif
-
 
 #include "crypto.h"
 
