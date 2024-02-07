@@ -400,9 +400,9 @@ AC_DEFUN([LINUX_INIT_WORK_HAS_DATA], [
   AC_CHECK_LINUX_BUILD([whether INIT_WORK has a _data argument],
 		       [ac_cv_linux_init_work_has_data],
 [#include <linux/kernel.h>
-#include <linux/workqueue.h>],
-[ 
-void f(struct work_struct *w) {}
+#include <linux/workqueue.h>
+static void f(struct work_struct *w) {}],
+[
 struct work_struct *w;
 int *i;
 INIT_WORK(w,f,i);],
@@ -493,7 +493,7 @@ AC_DEFUN([LINUX_KMEM_CACHE_CREATE_CTOR_TAKES_VOID],[
   AC_CHECK_LINUX_BUILD([whether kmem_cache_create constructor takes a void pointer],
 			[ac_cv_linux_kmem_cache_create_ctor_takes_void],
 			[#include <linux/slab.h>
-			 void _ctor(void *v) { };],
+			 static void _ctor(void *v) { };],
 			[kmem_cache_create(NULL, 0, 0, 0, _ctor);],
 			[KMEM_CACHE_CTOR_TAKES_VOID],
 			[define if kmem_cache_create constructor takes a single void ptr],
@@ -667,7 +667,7 @@ AC_DEFUN([LINUX_IOP_GETATTR_TAKES_PATH_STRUCT], [
   AC_CHECK_LINUX_BUILD([whether 4.11+ inode.i_op->getattr takes a struct path argument],
                         [ac_cv_linux_iop_getattr_takes_path_struct],
                         [#include <linux/fs.h>
-                        int _getattr(const struct path *path, struct kstat *stat, u32 request_mask,
+                        static int _getattr(const struct path *path, struct kstat *stat, u32 request_mask,
                           unsigned int sync_mode) {return 0;};
                         struct inode_operations _i_ops;],
                         [_i_ops.getattr = _getattr;],
@@ -692,10 +692,10 @@ AC_DEFUN([LINUX_IOP_MKDIR_TAKES_UMODE_T], [
 AC_DEFUN([LINUX_IOP_CREATE_TAKES_UMODE_T], [
   AC_CHECK_LINUX_BUILD([whether inode.i_op->create takes a umode_t argument],
 			[ac_cv_linux_iop_create_takes_umode_t],
-			[#include <linux/fs.h>],
+			[#include <linux/fs.h>
+			 static int _create(struct inode *i, struct dentry *d, umode_t m, struct nameidata *n)
+			 {return 0;};],
 			[static struct inode_operations _i_ops;
-			int _create(struct inode *i, struct dentry *d, umode_t m, struct nameidata *n)
-				{return 0;};
 			_i_ops.create = _create;],
 			[IOP_CREATE_TAKES_UMODE_T],
 			[define if inode.i_op->create takes a umode_t argument],
