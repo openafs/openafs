@@ -16,7 +16,7 @@ _ACEOF
 /* end confdefs.h */
 #include <linux/module.h>
 $1
-
+void conftest(void);
 void conftest(void)
 { 
 $2
@@ -201,7 +201,7 @@ AC_DEFUN([AC_CHECK_LINUX_OPERATION],
      CPPFLAGS="$CPPFLAGS -Werror"
      AC_TRY_KBUILD(
       [$4
-       $5 op($6) { return ($5)0; };],
+       static $5 op($6) { return ($5)0; };],
       [static struct $1 ops;  ops.$2 = op;],
 		   AS_VAR_SET([ac_linux_operation], [yes]),
 		   AS_VAR_SET([ac_linux_operation], [no]))
