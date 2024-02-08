@@ -1335,37 +1335,6 @@ afs_DisconDiscardAll(afs_ucred_t *acred)
 }
 
 /*!
- * Print list of disconnected files.
- *
- * \note Call with afs_DDirtyVCListLock read locked.
- */
-void
-afs_DbgDisconFiles(void)
-{
-    struct vcache *tvc;
-    struct afs_q *q;
-    int i = 0;
-
-    afs_warn("List of dirty files: \n");
-
-    ObtainReadLock(&afs_disconDirtyLock);
-    for (q = QPrev(&afs_disconDirty); q != &afs_disconDirty; q = QPrev(q)) {
-        tvc = QEntry(q, struct vcache, dirtyq);
-
-	afs_warn("Cell=%u Volume=%u VNode=%u Unique=%u\n",
-		tvc->f.fid.Cell,
-		tvc->f.fid.Fid.Volume,
-		tvc->f.fid.Fid.Vnode,
-		tvc->f.fid.Fid.Unique);
-
-	i++;
-	if (i >= 30)
-	    osi_Panic("afs_DbgDisconFiles: loop in dirty list\n");
-    }
-    ReleaseReadLock(&afs_disconDirtyLock);
-}
-
-/*!
  * Generate a fake fid for a disconnected shadow dir.
  * Similar to afs_GenFakeFid, only that it uses the dhash
  * to search for a uniquifier because a shadow dir lives only
