@@ -24,9 +24,10 @@ extern void rx_rto_setPeerTimeoutSecs(struct rx_peer *, int secs);
 
 extern int rx_Init(u_int port);
 extern int rx_InitHost(u_int host, u_int port);
-#ifdef AFS_NT40_ENV
+
 extern void rx_DebugOnOff(int on);
 extern void rx_StatsOnOff(int on);
+#ifdef AFS_NT40_ENV
 extern void rx_StartClientThread(void);
 #endif
 extern void rx_StartServer(int donateMe);
@@ -331,6 +332,8 @@ extern void rxi_ListenerProc(osi_socket usockp, int *tnop,
 # if !defined(RXK_LISTENER_ENV) && !defined(RXK_UPCALL_ENV)
 extern void rxk_init(void);
 # endif
+
+extern osi_socket *rxk_NewSocketHost(afs_uint32 ahost, short aport);
 
 /* UKERNEL/rx_knet.c */
 # ifdef UKERNEL

@@ -33,7 +33,6 @@ int (*rxk_PacketArrivalProc) (struct rx_packet * ahandle, struct sockaddr_in * a
 int (*rxk_GetPacketProc) (struct rx_packet **ahandle, int asize);
 #endif
 
-osi_socket *rxk_NewSocketHost(afs_uint32 ahost, short aport);
 extern struct interfaceAddr afs_cb_interface;
 
 rxk_ports_t rxk_ports;
