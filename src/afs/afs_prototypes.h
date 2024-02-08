@@ -103,13 +103,6 @@ extern int SRXAFSCB_GetCacheConfig(struct rx_call *a_call,
 				   afs_uint32 * serverVersion,
 				   afs_uint32 * configCount,
 				   cacheConfig * config);
-extern int SRXAFSCB_FetchData(struct rx_call *rxcall, struct AFSFid *Fid,
-			      afs_int32 Fd, afs_int64 Position,
-			      afs_int64 Length, afs_int64 * TotalLength);
-extern int SRXAFSCB_StoreData(struct rx_call *rxcall, struct AFSFid *Fid,
-			      afs_int32 Fd, afs_int64 Position,
-			      afs_int64 Length, afs_int64 * TotalLength);
-
 
 /* afs_cbqueue.c */
 extern afs_rwlock_t afs_xcbhash;
