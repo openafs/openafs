@@ -25,11 +25,6 @@
  *     -- On HP called from afsc_link.
  *     -- On SGI called from afs_init. */
 
-/* No hckernel-specific header for this prototype. */
-#ifndef UKERNEL
-extern void init_hckernel_mutex(void);
-#endif
-
 afs_lock_t afs_ftf;		/* flush text lock */
 
 #ifdef AFS_SGI_ENV

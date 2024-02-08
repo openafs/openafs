@@ -453,4 +453,9 @@ extern int osi_ShouldDeferRemunlink(struct vcache *avc);
 # define osi_ShouldDeferRemunlink(avc) 0
 #endif
 
+/* No hckernel-specific header for this prototype. */
+#ifndef UKERNEL
+extern void init_hckernel_mutex(void);
+#endif
+
 #endif /* _AFS_OSI_ */
