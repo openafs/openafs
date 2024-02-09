@@ -564,7 +564,6 @@ afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
 		     afs_hyper_t *anewDV, afs_size_t *amaxStoredLength)
 {
     afs_int32 code = 0;
-    struct storeOps *ops;
     void * rock = NULL;
     unsigned int i, j;
 
@@ -619,7 +618,8 @@ afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
 		       ICL_HANDLE_OFFSET(length));
 
 	    do {
-	        tc = afs_Conn(&avc->f.fid, areq, 0, &rxconn);
+		struct storeOps *ops = NULL;
+		tc = afs_Conn(&avc->f.fid, areq, 0, &rxconn);
 
 #ifdef AFS_64BIT_CLIENT
 	      restart:
