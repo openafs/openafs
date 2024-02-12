@@ -19,6 +19,8 @@
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
+#define FSINT_COMMON_XG
+#include "afs/afscbint.h"
 #include "afs/afs_stats.h"	/*Cache Manager stats */
 #include "afs/opr.h"
 #include "afs/afs_args.h"

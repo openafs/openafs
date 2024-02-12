@@ -65,44 +65,7 @@ extern osi_timeval32_t lastCallBack_time;
 extern struct interfaceAddr afs_cb_interface;
 
 extern int afs_RXCallBackServer(void);
-extern int SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index,
-			  struct AFSDBCacheEntry *a_result);
-extern int SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
-			    struct AFSDBCacheEntry64 *a_result);
-extern int SRXAFSCB_GetLock(struct rx_call *a_call, afs_int32 a_index,
-			    struct AFSDBLock *a_result);
-extern int SRXAFSCB_CallBack(struct rx_call *a_call,
-			     struct AFSCBFids *a_fids,
-			     struct AFSCBs *a_callbacks);
-extern int SRXAFSCB_Probe(struct rx_call *a_call);
-extern int SRXAFSCB_InitCallBackState(struct rx_call *a_call);
-extern int SRXAFSCB_XStatsVersion(struct rx_call *a_call,
-				  afs_int32 * a_versionP);
-extern int SRXAFSCB_GetXStats(struct rx_call *a_call,
-			      afs_int32 a_clientVersionNum,
-			      afs_int32 a_collectionNumber,
-			      afs_int32 * a_srvVersionNumP,
-			      afs_int32 * a_timeP, AFSCB_CollData * a_dataP);
-extern int afs_RXCallBackServer(void);
 extern int shutdown_CB(void);
-extern int SRXAFSCB_InitCallBackState2(struct rx_call *a_call,
-				       struct interfaceAddr *addr);
-extern int SRXAFSCB_WhoAreYou(struct rx_call *a_call,
-			      struct interfaceAddr *addr);
-extern int SRXAFSCB_InitCallBackState3(struct rx_call *a_call,
-				       afsUUID * a_uuid);
-extern int SRXAFSCB_ProbeUuid(struct rx_call *a_call, afsUUID * a_uuid);
-extern int SRXAFSCB_GetServerPrefs(struct rx_call *a_call, afs_int32 a_index,
-				   afs_int32 * a_srvr_addr,
-				   afs_int32 * a_srvr_rank);
-extern int SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
-				  char **a_name, serverList * a_hosts);
-extern int SRXAFSCB_GetLocalCell(struct rx_call *a_call, char **a_name);
-extern int SRXAFSCB_GetCacheConfig(struct rx_call *a_call,
-				   afs_uint32 callerVersion,
-				   afs_uint32 * serverVersion,
-				   afs_uint32 * configCount,
-				   cacheConfig * config);
 
 /* afs_cbqueue.c */
 extern afs_rwlock_t afs_xcbhash;
