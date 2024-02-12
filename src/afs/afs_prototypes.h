@@ -800,6 +800,23 @@ extern int afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg,
 extern int HandleIoctl(struct vcache *avc, afs_int32 acom,
 		       struct afs_ioctl *adata);
 
+#if defined(AFS_SUN5_ENV)
+struct afs_ioctl_sys;
+extern int afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp);
+#elif defined(AFS_LINUX_ENV)
+extern int afs_xioctl(struct inode *ip, struct file *fp, unsigned int com, unsigned long arg);
+#elif defined(AFS_DAWRIN_ENV) & !defined(AFS_DARWIN80)
+extern int afs_xioctl(afs_proc_t *p, struct ioctl_args *uap, register_t *retval);
+#elif defined(AFS_FBSD_ENV)
+extern int afs_xioctl(struct thread *td, struct ioctl_args *uap, register_t *retval);
+#elif defined(AFS_NBSD_ENV)
+extern int afs_xioctl(afs_proc_t *p, const struct sys_ioctl_args *uap, register_t *retval);
+#elif defined(AFS_XBSD_ENV)
+extern int afs_xioctl(afs_proc_t *p, const struct ioctl_args *uap, register_t *retval);
+#elif defined(UKERNEL)
+extern int afs_xioctl(void);
+#endif
+
 
 /* afs_segments.c */
 extern int afs_StoreAllSegments(struct vcache *avc,

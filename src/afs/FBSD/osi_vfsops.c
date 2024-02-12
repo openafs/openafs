@@ -18,7 +18,6 @@ struct mount *afs_globalVFS = NULL;
 int afs_pbuf_freecnt = -1;
 
 extern int Afs_xsetgroups();
-extern int afs_xioctl();
 
 static struct syscall_helper_data afs_syscalls[] = {
     {

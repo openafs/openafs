@@ -290,7 +290,7 @@ int afs_vfs_slot = -1;
 
 afsc_link()
 {
-    extern int Afs_syscall(), afs_xioctl(), Afs_xsetgroups();
+    extern int Afs_syscall(), Afs_xsetgroups();
 
     /* For now nothing special is required during AFS initialization. */
     AFS_STATCNT(afsc_link);

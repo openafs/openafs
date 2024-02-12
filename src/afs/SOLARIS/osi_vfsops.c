@@ -389,7 +389,6 @@ afsinit(int fstype, char *dummy)
 afsinit(struct vfssw *vfsswp, int fstype)
 #endif
 {
-    extern int afs_xioctl();
     extern int afs_xsetgroups();
 
     AFS_STATCNT(afsinit);

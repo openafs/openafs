@@ -613,10 +613,6 @@ out1:
 }
 
 
-/* in afs_pioctl.c */
-extern int afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
-		      unsigned long arg);
-
 static long afs_unlocked_xioctl(struct file *fp, unsigned int com,
                                unsigned long arg) {
     return afs_xioctl(FILE_INODE(fp), fp, com, arg);
