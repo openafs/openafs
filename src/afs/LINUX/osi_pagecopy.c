@@ -61,6 +61,7 @@
 #include <linux/wait.h>
 #include <linux/workqueue.h>
 #include <linux/slab.h>
+#include "osi_pagecopy.h"
 
 static DECLARE_WAIT_QUEUE_HEAD (afs_pagecopy_wq);
 static spinlock_t afs_pagecopy_lock;

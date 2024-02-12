@@ -48,9 +48,13 @@
 #ifdef OSI_PROBE_STANDALONE
 # define OSI_PROBE_DEBUG
 #endif
+
 #ifndef OSI_PROBE_STANDALONE
 # include <afsconfig.h>
 # include "afs/param.h"
+
+# include "afs/sysincludes.h"
+# include "afsincludes.h"
 #endif
 
 #include <linux/version.h>
@@ -60,10 +64,6 @@
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2,6,26)
 /* Slightly kludgy, but too bad */
 #define scsi_command_size scsi_command_size_tbl
-#endif
-#ifndef OSI_PROBE_STANDALONE
-# include "afs/sysincludes.h"
-# include "afsincludes.h"
 #endif
 #include <linux/sched.h>
 #ifdef HAVE_LINUX_CONFIG_H
