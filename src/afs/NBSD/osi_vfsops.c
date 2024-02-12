@@ -110,7 +110,6 @@ VFS_PROTOS(afs);
 #ifndef AFS_NBSD60_ENV
 extern int sys_lkmnosys(struct lwp *, const void *, register_t *);
 extern int afs3_syscall(struct lwp *, const void *, register_t *);
-extern int afs_xioctl(struct lwp *, const void *, register_t *);
 extern int Afs_xsetgroups(struct lwp *, const void *, register_t *);
 static int afs_badcall(struct lwp *, const void *, register_t *);
 

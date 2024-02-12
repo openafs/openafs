@@ -44,7 +44,6 @@
 #include "afs/afsincludes.h"    /* Afs-based standard headers */
 
 extern int afs3_syscall(struct lwp *, const void *, register_t *);
-extern int afs_xioctl(struct lwp *, const void *, register_t *);
 extern int Afs_xsetgroups(struct lwp *, const void *, register_t *);
 
 #if !defined(AFS_NBSD60_ENV)

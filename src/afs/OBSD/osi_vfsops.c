@@ -108,7 +108,7 @@ NONINFRINGEMENT.
 /* from /usr/src/sys/kern/vfs_subr.c */
 extern void insmntque(struct vnode *, struct mount *);
 
-extern int sys_lkmnosys(), afs_xioctl(), Afs_xsetgroups();
+extern int sys_lkmnosys(), Afs_xsetgroups();
 
 static int lkmid = -1;
 static int afs_badcall(struct proc *p, void *xx, register_t * yy);
