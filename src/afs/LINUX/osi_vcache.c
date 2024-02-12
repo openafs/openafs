@@ -15,6 +15,14 @@
 
 #include "osi_compat.h"
 
+#if defined(STRUCT_DENTRY_HAS_D_CHILDREN)
+# define afs_for_each_child(child, parent) \
+	 hlist_for_each_entry((child), &(parent)->d_children, d_sib)
+#else
+# define afs_for_each_child(child, parent) \
+	 list_for_each_entry((child), &(parent)->d_subdirs, d_child)
+#endif
+
 static void
 TryEvictDirDentries(struct inode *inode)
 {
@@ -312,7 +320,7 @@ osi_ResetVCache(struct vcache *avc)
 	     * because 'dp' is an ancestor of 'child'.
 	     */
 	    struct dentry *child;
-	    list_for_each_entry(child, &dp->d_subdirs, d_child) {
+	    afs_for_each_child(child, dp) {
 		spin_lock(&child->d_lock);
 		child->d_time = 0;
 		spin_unlock(&child->d_lock);

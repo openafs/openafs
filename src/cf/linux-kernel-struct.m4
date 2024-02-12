@@ -17,6 +17,9 @@ AC_CHECK_LINUX_STRUCT([dentry], [d_u.d_alias], [dcache.h])
 dnl linux 2.6.16 moved dentry->d_child to dentry->d_u.d_child
 dnl linux 3.19 moved it back to dentry->d_child
 AC_CHECK_LINUX_STRUCT([dentry], [d_u.d_child], [dcache.h])
+dnl linux 6.8 uses hlist for dentry children and renamed
+dnl d_subdirs/d_child to d_childern/d_sib
+AC_CHECK_LINUX_STRUCT([dentry], [d_children], [dcache.h])
 AC_CHECK_LINUX_STRUCT([dentry_operations], [d_automount], [dcache.h])
 AC_CHECK_LINUX_STRUCT([group_info], [gid], [cred.h])
 AC_CHECK_LINUX_STRUCT([inode], [i_alloc_sem], [fs.h])
