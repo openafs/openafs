@@ -7,9 +7,9 @@ Before=remote-fs.target
 [Service]
 Type=forking
 RemainAfterExit=true
-ExecStartPre=/usr/vice/etc/openafs-client-systemd-helper.sh ExecStartPre
 ExecStart=   /usr/vice/etc/openafs-client-systemd-helper.sh ExecStart
 ExecStop=    /usr/vice/etc/openafs-client-systemd-helper.sh ExecStop
+ExecStopPost=/usr/vice/etc/openafs-client-systemd-helper.sh ExecStopPost
 KillMode=process
 GuessMainPID=no
 SendSIGKILL=no
