@@ -160,7 +160,6 @@ afs_nfsclient_init(void)
     osi_Assert(ISAFS_GLOCK());
 #endif
     if (!init_nfsexporter) {
-	extern struct afs_exporter *exporter_add();
 
 	init_nfsexporter = 1;
 	LOCK_INIT(&afs_xnfspag, "afs_xnfspag");

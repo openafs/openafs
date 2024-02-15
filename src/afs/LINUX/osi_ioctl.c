@@ -34,9 +34,6 @@
 
 extern struct proc_dir_entry *openafs_procfs;
 
-extern asmlinkage long
-afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4);
-
 static int
 afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
 	  unsigned long arg)

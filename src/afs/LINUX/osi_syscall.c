@@ -91,9 +91,6 @@ osi_syscall_clean(void)
 
 
 /***** ALL PLATFORMS *****/
-extern asmlinkage long
-afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4);
-
 static SYSCALLTYPE *afs_sys_call_table;
 static SYSCALLTYPE afs_ni_syscall = 0;
 

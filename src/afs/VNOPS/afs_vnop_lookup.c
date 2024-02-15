@@ -667,8 +667,6 @@ afs_CheckBulkStatus(struct afs_conn *tc, int nFids, AFSBulkStats *statParm,
     return 0;
 }
 
-extern int BlobScan(struct dcache * afile, afs_int32 ablob, afs_int32 *ablobOut);
-
 /* called with an unlocked directory and directory cookie.  Areqp
  * describes who is making the call.
  * Scans the next N (about 30, typically) directory entries, and does

@@ -331,6 +331,8 @@ extern void init_sys_error_to_et(void);
 
 /* afs_exporter.c */
 extern struct afs_exporter *root_exported;
+extern struct afs_exporter * exporter_add(afs_int32 size, struct exporterops *ops,
+					  afs_int32 state, afs_int32 type, char *data);
 extern struct afs_exporter *exporter_find(int type);
 extern void shutdown_exporter(void);
 
@@ -923,6 +925,10 @@ extern int afs3_syscall(afs_proc_t *p, void *args, long *retval);
 extern int Afs_syscall(void);
 #endif
 
+#if defined(AFS_LINUX_ENV)
+extern asmlinkage long afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4);
+#endif
+
 /* afs_tokens.c */
 struct ktc_tokenUnion;
 struct ktc_setTokenData;
@@ -1292,6 +1298,7 @@ extern void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 
 /* VNOPS/afs_vnop_readdir.c */
 extern int afs_rd_stash_i;
+extern int BlobScan(struct dcache * afile, afs_int32 ablob, int *ablobOut);
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int afs_readdir(OSI_VC_DECL(avc), struct uio *auio,
 		       afs_ucred_t *acred, int *eofp);
