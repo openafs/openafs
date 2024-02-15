@@ -407,8 +407,6 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
 }
 #endif
 
-extern int BlobScan(struct dcache * afile, afs_int32 ablob, afs_int32 *ablobOut);
-
 /* This is a complete rewrite of afs_readdir, since we can make use of
  * filldir instead of afs_readdir_move. Note that changes to vcache/dcache
  * handling and use of bulkstats will need to be reflected here as well.
