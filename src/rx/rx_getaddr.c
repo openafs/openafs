@@ -31,11 +31,10 @@
 #  include "rx_globals.h"
 # endif /* AFS_NT40_ENV */
 #else /* KERNEL */
-# ifdef UKERNEL
-#  include "rx/rx_kcommon.h"
-# else /* UKERNEL */
+# include "rx/rx_kcommon.h"
+# ifndef UKERNEL
 #  include "rx/rx.h"
-# endif /* UKERNEL */
+# endif
 #endif /* KERNEL */
 
 #define NIFS		512

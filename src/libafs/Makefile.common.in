@@ -196,7 +196,9 @@ AFSAOBJS = \
 	crypto-keyblock.o \
 	crypto-store-int.o \
 	crypto-random.o	\
-	afs_uuid.o $(AFS_OS_OBJS)
+	afs_uuid.o	\
+	strlcat-kernel.o\
+	strlcpy-kernel.o $(AFS_OS_OBJS)
 
 # These next two allow nfs and nonfs builds to occur in the same directory.
 AFSNFSOBJS = \
@@ -281,7 +283,9 @@ AFSPAGOBJS = \
 	xdr_afsuuid.o	\
 	xdr.o		\
 	Ktoken.xdr.o	\
-	afs_uuid.o $(AFS_OS_PAGOBJS)
+	afs_uuid.o	\
+	strlcat-kernel.o\
+	strlcpy-kernel.o $(AFS_OS_PAGOBJS)
 
 
 # Compilation rules
@@ -713,10 +717,8 @@ osi_kstat.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_kstat.c
 	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_kstat.c
 strlcat-kernel.o: $(TOP_SRCDIR)/external/heimdal/roken/strlcat.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/roken/strlcat.c
-CFLAGS-strlcat-kernel.o = -DROKEN_LIB_FUNCTION="" -DROKEN_LIB_CALL="" -DROKEN_LIB_VARIABLE=""
 strlcpy-kernel.o: $(TOP_SRCDIR)/external/heimdal/roken/strlcpy.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/roken/strlcpy.c
-CFLAGS-strlcpy-kernel.o = -DROKEN_LIB_FUNCTION="" -DROKEN_LIB_CALL="" -DROKEN_LIB_VARIABLE=""
 
 clean:
 	-$(RM) -rf STATIC* MODLOAD* $(AFS_OS_CLEAN)

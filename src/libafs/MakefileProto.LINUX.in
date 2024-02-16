@@ -42,8 +42,7 @@ AFS_OS_OBJS = \
 	osi_ioctl.o \
 	osi_proc.o \
 	osi_vnodeops.o \
-	osi_pagecopy.o \
-	strlcpy-kernel.o
+	osi_pagecopy.o
 
 AFS_OS_PAGOBJS = \
 	osi_alloc.o \
@@ -60,8 +59,7 @@ AFS_OS_PAGOBJS = \
 	osi_flush.o \
 <all>
 	osi_ioctl.o \
-	osi_pag_module.o \
-	strlcpy-kernel.o
+	osi_pag_module.o
 
 AFS_OS_NFSOBJS =
 

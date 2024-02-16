@@ -16,9 +16,7 @@
 #  include "afsincludes.h"
 #  include "rx_kcommon.h"
 # else /* defined(UKERNEL) */
-#  ifdef RX_KERNEL_TRACE
-#   include "rx_kcommon.h"
-#  endif
+#  include "rx_kcommon.h"
 #  include "h/types.h"
 #  ifndef AFS_LINUX_ENV
 #   include "h/systm.h"

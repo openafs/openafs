@@ -24,4 +24,5 @@ heimdal/krb5/crypto-evp.c
 heimdal/krb5/keyblock.c
 heimdal/krb5/store-int.c
 heimdal/roken/ct.c
+heimdal/roken/strlcat.c
 heimdal/roken/strlcpy.c

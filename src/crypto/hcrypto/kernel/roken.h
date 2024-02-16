@@ -20,24 +20,34 @@
 #define ROKEN_LIB_VARIABLE
 
 /*
- * Our HAVE_STRLCPY from autoconf refers to whether strlcpy() is available in
- * userspace. Whether it's available in the kernel is another question, so
- * override HAVE_STRLCPY here. Usually it is available (only a few cases lack
- * it), so turn it on by default, and turn it off for a few cases below.
+ * Our HAVE_STRLCPY et al from autoconf refer to whether, e.g., strlcpy() is
+ * available in userspace. Whether it's available in the kernel is another
+ * question, so set them again here. Usually they are available (they are
+ * missing only for a few cases) so define them by default, and
+ * undefine them for a few cases below.
  */
 #undef HAVE_STRLCPY
 #define HAVE_STRLCPY 1
+#undef HAVE_STRLCAT
+#define HAVE_STRLCAT 1
 
 #ifdef AFS_AIX_ENV
 # undef HAVE_STRLCPY
+# undef HAVE_STRLCAT
 #elif defined(AFS_LINUX_ENV) && defined(HAVE_LINUX_NO_STRLCPY)
 # undef HAVE_STRLCPY
 #endif
 
 /* strlcpy.c */
-#if defined (AFS_LINUX_ENV) && !defined(HAVE_STRLCPY)
+#ifndef HAVE_STRLCPY
 # define strlcpy rk_strlcpy
 ROKEN_LIB_FUNCTION size_t ROKEN_LIB_CALL strlcpy (char *, const char *, size_t);
+#endif
+
+/* strlcat.c */
+#ifndef HAVE_STRLCAT
+# define strlcat rk_strlcat
+ROKEN_LIB_FUNCTION size_t ROKEN_LIB_CALL strlcat (char *, const char *, size_t);
 #endif
 
 /* ct.c */

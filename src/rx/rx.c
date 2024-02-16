@@ -31,9 +31,7 @@
 #  endif
 #  include "afs/afs_args.h"
 #  include "afs/afs_osi.h"
-#  ifdef RX_KERNEL_TRACE
-#   include "rx_kcommon.h"
-#  endif
+#  include "rx_kcommon.h"
 #  if	defined(AFS_AIX_ENV)
 #   include "h/systm.h"
 #  endif

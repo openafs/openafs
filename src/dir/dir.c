@@ -32,9 +32,7 @@
 #    include "h/kernel.h"
 #   endif
 #  endif
-#  if	defined(AFS_SUN5_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DARWIN80_ENV)
-#   include "afs/sysincludes.h"
-#  endif
+#  include "afs/sysincludes.h"
 #  if !defined(AFS_SGI_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD48_ENV) && !defined(AFS_NBSD_ENV)
 #   include "h/user.h"
 #  endif /* AFS_SGI_ENV */
@@ -45,6 +43,7 @@
 #  ifndef AFS_LINUX_ENV
 #   include "netinet/in.h"
 #  endif
+#  include "afsincludes.h"
 # else /* !defined(UKERNEL) */
 #  include "afs/stds.h"
 #  include "afs/sysincludes.h"

@@ -77,7 +77,6 @@
 #endif
 
 #include "afs/sysincludes.h"
-#include "roken.h"
 
 #if !defined(HAVE_LINUX_TIME_T)
 typedef time64_t time_t;

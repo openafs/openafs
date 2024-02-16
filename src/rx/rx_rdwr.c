@@ -12,9 +12,7 @@
 
 #ifdef KERNEL
 # ifndef UKERNEL
-#  ifdef RX_KERNEL_TRACE
-#   include "rx_kcommon.h"
-#  endif
+#  include "rx_kcommon.h"
 #  if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #   include "afs/sysincludes.h"
 #  else
