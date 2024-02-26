@@ -265,7 +265,6 @@ enable_login="no"
 ])
 
 AC_DEFUN([OPENAFS_OPTION_TESTS],[
-# Fast restart
 if test "$enable_supergroups" = "yes"; then
         AC_DEFINE(SUPERGROUPS, 1, [define if you want to have support for nested pts groups])
 fi
