@@ -102,7 +102,7 @@ afs_FindDCacheByFid(struct VenusFid *afid)
  *
  * \return Mask of operations.
  */
-int
+static int
 afs_GenStoreStatus(struct vcache *avc, struct AFSStoreStatus *astat)
 {
     if (!avc || !astat || !avc->f.ddirty_flags)
@@ -157,7 +157,7 @@ get_parent_dir_fid_hook(void *hdata, char *aname, afs_int32 vnode,
  *
  * \return 0 on success, -1 on failure
  */
-int
+static int
 afs_GetParentDirFid(struct vcache *avc, struct VenusFid *afid)
 {
     struct dcache *tdc;
@@ -234,7 +234,7 @@ get_vnode_name_hook(void *hdata, char *aname, afs_int32 vnode,
  * \param deleted Has this file been deleted? If yes, use the shadow
  * dir for looking up the name.
  */
-int
+static int
 afs_GetVnodeName(struct vcache *avc, struct VenusFid *afid, char *aname,
 		 int deleted)
 {
@@ -358,7 +358,7 @@ chk_del_children_hook(void *hdata, char *aname, afs_int32 vnode,
  *
  * \note afs_DDirtyVCListLock must be write locked.
  */
-int
+static int
 afs_CheckDeletedChildren(struct vcache *avc)
 {
     struct dcache *tdc;
@@ -452,7 +452,7 @@ fix_children_fids_hook(void *hdata, char *aname, afs_int32 vnode,
  * \param old_fid The current dir's fid.
  * \param new_fid The new dir's fid.
  */
-void
+static void
 afs_FixChildrenFids(struct VenusFid *old_fid, struct VenusFid *new_fid)
 {
     struct dcache *tdc;
@@ -499,7 +499,7 @@ afs_DbgListDirEntries(struct VenusFid *afid)
  * 	   be deferred to later in the resync process
  */
 
-int
+static int
 afs_GetParentVCache(struct vcache *avc, int deleted, struct VenusFid *afid,
 		    char *aname, struct vcache **adp)
 {
@@ -548,7 +548,7 @@ end:
  * - Get the new name from the current dir.
  * - Old dir fid and new dir fid are collected along the way.
  * */
-int
+static int
 afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
 {
     struct VenusFid old_pdir_fid, new_pdir_fid;
@@ -651,7 +651,7 @@ done:
  * - Handle errors.
  * - Reorder vhash and dcaches in their hashes, using the newly acquired fid.
  */
-int
+static int
 afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 		    afs_ucred_t *acred)
 {
@@ -921,7 +921,7 @@ end:
  *
  * \note avc must be write locked.
  */
-int
+static int
 afs_ProcessOpRemove(struct vcache *avc, struct vrequest *areq)
 {
     char *tname = NULL;
@@ -1022,7 +1022,7 @@ end:
  *
  * \return 0 for success. On failure, other error codes.
  */
-int
+static int
 afs_SendChanges(struct vcache *avc, struct vrequest *areq)
 {
     struct afs_conn *tc;

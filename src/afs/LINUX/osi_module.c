@@ -64,7 +64,7 @@ afs_init_idmap(void)
 }
 #endif
 
-int __init
+static int __init
 afs_init(void)
 {
     int err;
@@ -114,7 +114,7 @@ afs_init(void)
     return 0;
 }
 
-void __exit
+static void __exit
 afs_cleanup(void)
 {
     afs_shutdown_pagecopy();

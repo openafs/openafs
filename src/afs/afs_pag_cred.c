@@ -32,7 +32,7 @@ static struct afspag_cell *cells = 0;
 static struct afspag_cell *primary_cell = 0;
 
 
-struct afspag_cell *
+static struct afspag_cell *
 afspag_GetCell(char *acell)
 {
     struct afspag_cell *tcell;
@@ -66,7 +66,7 @@ out:
 }
 
 
-struct afspag_cell *
+static struct afspag_cell *
 afspag_GetPrimaryCell(void)
 {
     struct afspag_cell *tcell;

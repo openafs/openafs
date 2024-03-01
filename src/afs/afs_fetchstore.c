@@ -77,14 +77,14 @@ FillStoreStats(int code, int idx, osi_timeval32_t xferStartTime,
 
 
 
-afs_int32
+static afs_int32
 rxfs_storeUfsPrepare(void *r, afs_uint32 size, afs_uint32 *tlen)
 {
     *tlen = (size > AFS_LRALLOCSIZ ?  AFS_LRALLOCSIZ : size);
     return 0;
 }
 
-afs_int32
+static afs_int32
 rxfs_storeMemPrepare(void *r, afs_uint32 size, afs_uint32 *tlen)
 {
     afs_int32 code;
@@ -105,7 +105,7 @@ rxfs_storeMemPrepare(void *r, afs_uint32 size, afs_uint32 *tlen)
     return code;
 }
 
-afs_int32
+static afs_int32
 rxfs_storeUfsRead(void *r, struct osi_file *tfile, afs_uint32 offset,
 		  afs_uint32 tlen, afs_uint32 *bytesread)
 {
@@ -126,7 +126,7 @@ rxfs_storeUfsRead(void *r, struct osi_file *tfile, afs_uint32 offset,
     return 0;
 }
 
-afs_int32
+static afs_int32
 rxfs_storeMemRead(void *r, struct osi_file *tfile, afs_uint32 offset,
 		  afs_uint32 tlen, afs_uint32 *bytesread)
 {
@@ -142,7 +142,7 @@ rxfs_storeMemRead(void *r, struct osi_file *tfile, afs_uint32 offset,
     return 0;
 }
 
-afs_int32
+static afs_int32
 rxfs_storeMemWrite(void *r, afs_uint32 l, afs_uint32 *byteswritten)
 {
     afs_int32 code;
@@ -159,7 +159,7 @@ rxfs_storeMemWrite(void *r, afs_uint32 l, afs_uint32 *byteswritten)
     return 0;
 }
 
-afs_int32
+static afs_int32
 rxfs_storeUfsWrite(void *r, afs_uint32 l, afs_uint32 *byteswritten)
 {
     afs_int32 code;
@@ -179,7 +179,7 @@ rxfs_storeUfsWrite(void *r, afs_uint32 l, afs_uint32 *byteswritten)
     return 0;
 }
 
-afs_int32
+static afs_int32
 rxfs_storePadd(void *rock, afs_uint32 size)
 {
     afs_int32 code = 0;
@@ -203,7 +203,7 @@ rxfs_storePadd(void *rock, afs_uint32 size)
     return 0;
 }
 
-afs_int32
+static afs_int32
 rxfs_storeStatus(void *rock)
 {
     struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)rock;
@@ -213,7 +213,7 @@ rxfs_storeStatus(void *rock)
     return 1;
 }
 
-afs_int32
+static afs_int32
 rxfs_storeClose(void *r, struct AFSFetchStatus *OutStatus, int *doProcessFS)
 {
     afs_int32 code;
@@ -236,7 +236,7 @@ rxfs_storeClose(void *r, struct AFSFetchStatus *OutStatus, int *doProcessFS)
     return code;
 }
 
-afs_int32
+static afs_int32
 rxfs_storeDestroy(void **r, afs_int32 code)
 {
     struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)*r;
@@ -255,7 +255,7 @@ rxfs_storeDestroy(void **r, afs_int32 code)
     return code;
 }
 
-afs_int32
+static afs_int32
 afs_GenericStoreProc(struct storeOps *ops, void *rock,
 		     struct dcache *tdc, int *shouldwake,
 		     afs_size_t *bytesXferred)
@@ -353,7 +353,7 @@ struct storeOps rxfs_storeMemOps = {
 #endif
 };
 
-afs_int32
+static afs_int32
 rxfs_storeInit(struct vcache *avc, struct afs_conn *tc,
                 struct rx_connection *rxconn, afs_size_t base,
 		afs_size_t bytes, afs_size_t length,
@@ -437,7 +437,7 @@ unsigned int storeallmissing = 0;
  * \param ops pointer to the block of storeOps to be used for this operation
  * \param rock pointer to the opaque protocol-specific data of this operation
  */
-afs_int32
+static afs_int32
 afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 		      afs_size_t bytes, afs_hyper_t *anewDV, int *doProcessFS,
 		      struct AFSFetchStatus *OutStatus, afs_uint32 nchunks,
@@ -720,7 +720,7 @@ struct rxfs_fetchVariables {
     afs_int32 iovmax;
 };
 
-afs_int32
+static afs_int32
 rxfs_fetchUfsRead(void *r, afs_uint32 size, afs_uint32 *bytesread)
 {
     afs_int32 code;
@@ -738,7 +738,7 @@ rxfs_fetchUfsRead(void *r, afs_uint32 size, afs_uint32 *bytesread)
     return 0;
 }
 
-afs_int32
+static afs_int32
 rxfs_fetchMemRead(void *r, afs_uint32 tlen, afs_uint32 *bytesread)
 {
     afs_int32 code;
@@ -755,7 +755,7 @@ rxfs_fetchMemRead(void *r, afs_uint32 tlen, afs_uint32 *bytesread)
 }
 
 
-afs_int32
+static afs_int32
 rxfs_fetchMemWrite(void *r, struct osi_file *fP, afs_uint32 offset,
 		   afs_uint32 tlen, afs_uint32 *byteswritten)
 {
@@ -771,7 +771,7 @@ rxfs_fetchMemWrite(void *r, struct osi_file *fP, afs_uint32 offset,
     return 0;
 }
 
-afs_int32
+static afs_int32
 rxfs_fetchUfsWrite(void *r, struct osi_file *fP, afs_uint32 offset,
 		   afs_uint32 tlen, afs_uint32 *byteswritten)
 {
@@ -787,7 +787,7 @@ rxfs_fetchUfsWrite(void *r, struct osi_file *fP, afs_uint32 offset,
 }
 
 
-afs_int32
+static afs_int32
 rxfs_fetchClose(void *r, struct vcache *avc, struct dcache * adc,
 		struct afs_FetchOutput *o)
 {
@@ -814,7 +814,7 @@ rxfs_fetchClose(void *r, struct vcache *avc, struct dcache * adc,
     return code;
 }
 
-afs_int32
+static afs_int32
 rxfs_fetchDestroy(void **r, afs_int32 code)
 {
     struct rxfs_fetchVariables *v = (struct rxfs_fetchVariables *)*r;
@@ -833,7 +833,7 @@ rxfs_fetchDestroy(void **r, afs_int32 code)
     return code;
 }
 
-afs_int32
+static afs_int32
 rxfs_fetchMore(void *r, afs_int32 *length, afs_uint32 *moredata)
 {
     afs_int32 code;
@@ -882,7 +882,7 @@ struct fetchOps rxfs_fetchMemOps = {
     rxfs_fetchDestroy
 };
 
-afs_int32
+static afs_int32
 rxfs_fetchInit(struct afs_conn *tc, struct rx_connection *rxconn,
                struct vcache *avc, afs_offs_t base,
 	       afs_uint32 size, afs_int32 *alength, struct dcache *adc,

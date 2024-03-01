@@ -34,7 +34,7 @@ int afs_icl_sizeofLong = ICL_LONG;
 int afs_icl_inited = 0;
 
 /* init function, called once, under afs_icl_lock */
-int
+static int
 afs_icl_Init(void)
 {
     afs_icl_inited = 1;
@@ -539,7 +539,7 @@ afs_icl_AppendString(struct afs_icl_log *logp, char *astr)
 #endif
 
 
-void
+static void
 afs_icl_AppendOne(struct afs_icl_log *logp, int type, long parm)
 {
     if (type) {

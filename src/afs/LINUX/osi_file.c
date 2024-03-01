@@ -47,7 +47,7 @@ extern struct cred *cache_creds;
 #endif
 
 /* Old export ops: decode_fh will call back here. Accept any dentry it suggests */
-int
+static int
 afs_fh_acceptable(void *context, struct dentry *dp)
 {
     return 1;
