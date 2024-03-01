@@ -726,7 +726,7 @@ afs_FlushReclaimedVcaches(void)
 #endif
 }
 
-void
+static void
 afs_PostPopulateVCache(struct vcache *avc, struct VenusFid *afid, int seq)
 {
     /*

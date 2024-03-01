@@ -289,7 +289,7 @@ afsd_thread(int *rock)
     }
 }
 
-void
+static void
 afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 	     long parm6)
 {
@@ -458,7 +458,7 @@ afsd_thread(void *rock)
     return 0;
 }
 
-void
+static void
 # if defined(AFS_LINUX_ENV) && !defined(INIT_WORK_HAS_DATA)
 afsd_launcher(struct work_struct *work)
 # else
@@ -479,7 +479,7 @@ afsd_launcher(void *rock)
 # endif /* !HAVE_LINUX_KTHREAD_RUN */
 }
 
-void
+static void
 afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 	     long parm6)
 {

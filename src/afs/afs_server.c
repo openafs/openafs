@@ -556,7 +556,7 @@ CkSrv_MarkUpDown(struct afs_conn **conns, struct rx_connection **rxconns,
     }
 }
 
-void
+static void
 CkSrv_GetCaps(int nconns, struct rx_connection **rxconns,
 	      struct afs_conn **conns)
 {

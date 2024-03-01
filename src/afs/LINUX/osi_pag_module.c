@@ -47,7 +47,7 @@ int afs_global_owner = 0;
 struct user_namespace *afs_ns;
 #endif
 
-int __init
+static int __init
 afspag_init(void)
 {
 #if !defined(EXPORTED_PROC_ROOT_FS)
@@ -79,7 +79,7 @@ afspag_init(void)
     return 0;
 }
 
-void __exit
+static void __exit
 afspag_cleanup(void)
 {
 #if !defined(EXPORTED_PROC_ROOT_FS)
