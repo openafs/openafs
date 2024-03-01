@@ -166,8 +166,11 @@ __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 }
 
 #ifdef LINUX_KEYRING_SUPPORT
-extern struct key_type key_type_keyring __attribute__((weak));
+# if defined(EXPORTED_KEY_TYPE_KEYRING)
 static struct key_type *__key_type_keyring = &key_type_keyring;
+# else
+static struct key_type *__key_type_keyring;
+# endif
 
 /* install_session_keyring returns negative error values */
 static int
