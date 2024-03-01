@@ -21,10 +21,6 @@
  * table, calling afs_GCPAGs_perproc_func() for each process.
  */
 
-
-#ifdef EXPORTED_TASKLIST_LOCK
-extern rwlock_t tasklist_lock __attribute__((weak));
-#endif
 void
 afs_osi_TraverseProcTable(void)
 {
