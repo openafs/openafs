@@ -59,10 +59,6 @@ typedef afs_int32 osi_socket;
 
 #define	osi_GetTime(timevalptr)	    gettimeofday(timevalptr, 0)
 
-/* Just in case it's possible to distinguish between relatively long-lived stuff and stuff which will be freed very soon, but which needs quick allocation (e.g. dynamically allocated xdr things) */
-#define	osi_QuickFree(ptr, size)    osi_Free(ptr, size)
-#define	osi_QuickAlloc(size)	    osi_Alloc(size)
-
 #define osi_Assert(e) opr_Assert(e)
 
 #endif /* RX_USER_INCLUDE */
