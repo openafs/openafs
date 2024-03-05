@@ -54,6 +54,14 @@ extern afs_int32 afs_pct2;
 # define AFS_SYSCTL_INT(num, perms, var) \
 	AFS_SYSCTL_INT2(num, perms, #var, var)
 
+# if LINUX_VERSION_CODE >= KERNEL_VERSION(6,8,0)
+/* end of list sentinel not needed */
+#  define AFS_SYSCTL_SENTINEL
+# else
+/* NULL entry to mark the end of the list */
+#  define AFS_SYSCTL_SENTINEL { .procname = NULL }
+# endif
+
 static struct ctl_table_header *afs_sysctl = NULL;
 
 static struct ctl_table afs_sysctl_table[] = {
@@ -75,9 +83,7 @@ static struct ctl_table afs_sysctl_table[] = {
     AFS_SYSCTL_INT( 13, 0644, afs_cacheBlocks),
     AFS_SYSCTL_INT2(14, 0644, "md5inum", afs_md5inum),
 
-    {
-	.procname	= 0
-    }
+    AFS_SYSCTL_SENTINEL
 };
 # if !defined(HAVE_LINUX_REGISTER_SYSCTL)
 static struct ctl_table fs_sysctl_table[] = {
@@ -87,9 +93,7 @@ static struct ctl_table fs_sysctl_table[] = {
 	.mode		= 0555,
 	.child		= afs_sysctl_table
     },
-    {
-	.procname	= 0
-    }
+    AFS_SYSCTL_SENTINEL
 };
 # endif
 int
