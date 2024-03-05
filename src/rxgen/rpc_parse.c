@@ -2111,10 +2111,14 @@ er_TailofOldStyleProc_setup(void)
 static void
 h_ProcMainBody_setup(void)
 {
+    char *pprefix = PackagePrefix[PackageIndex];
     f_print(fout,"\nextern int %s%sExecuteRequest(struct rx_call *);\n",
-	    prefix, PackagePrefix[PackageIndex]);
+	    prefix, pprefix);
     f_print(fout,"extern char * %s%sTranslateOpCode(int op);\n", prefix,
-	    PackagePrefix[PackageIndex]);
+	    pprefix);
+    f_print(fout,"extern struct %s%sstats *%s%sOpCodeStats(int op);\n",
+	    prefix, pprefix,
+	    prefix, pprefix);
 }
 
 static void
@@ -2128,6 +2132,8 @@ h_HeadofOldStyleProc_setup(void)
     f_print(fout,"\nextern int %sOpCodeIndex(int op);\n", PackagePrefix[PackageIndex]);
     f_print(fout, "extern char * %s%sTranslateOpCode(int op);\n",
 	    prefix, pprefix);
+    f_print(fout, "extern struct %s%sstats *%s%sOpCodeStats(int op);\n",
+	    prefix, pprefix, prefix, pprefix);
 }
 
 void
