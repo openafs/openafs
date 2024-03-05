@@ -75,8 +75,6 @@
 #define	AFS_UIOUSER	UIO_USERSPACE
 #define	AFS_CLBYTES	CLBYTES
 #define AFS_KALLOC(x)   osi_fbsd_alloc((x), 1)
-#undef	AFS_KALLOC_NOSLEEP
-#define	AFS_KALLOC_NOSLEEP(x) osi_fbsd_alloc((x), 0)
 #define AFS_KFREE(x,y)  osi_fbsd_free((x))
 #define	v_count		v_usecount
 #define v_vfsp		v_mount

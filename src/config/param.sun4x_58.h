@@ -78,7 +78,6 @@
 #endif
 
 #define	AFS_KALLOC(n)	kmem_alloc(n, KM_SLEEP)
-#define AFS_KALLOC_NOSLEEP(n)   kmem_alloc(n, KM_NOSLEEP)
 #define	AFS_KFREE	kmem_free
 #define	VATTR_NULL	vattr_null
 #define memset(A, B, S) bzero(A, S)
