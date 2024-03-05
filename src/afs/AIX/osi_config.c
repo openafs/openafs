@@ -10,8 +10,6 @@
 /*
  * Implements:
  * afs_config
- * mem_getbytes
- * mem_freebytes
  * kmem_alloc
  * kmem_free
  * VN_RELE
@@ -172,29 +170,6 @@ afs_config(cmd, uiop)
 /*
  * The following stuff is (hopefully) temporary.
  */
-
-
-/*
- * mem_getbytes	-	memory allocator
- *
- * Seems we can't make up our mind what to call these
- */
-char *
-mem_getbytes(size)
-{
-
-    return malloc(size);
-}
-
-/*
- * mem_freebytes	-	memory deallocator
- */
-mem_freebytes(p, size)
-     char *p;
-{
-
-    free(p);
-}
 
 char *
 kmem_alloc(size)

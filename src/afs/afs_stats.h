@@ -220,8 +220,8 @@ struct afs_MeanStats {
     AFS_CS(afs_ChunkToSize)	/* afs_chunk.c */ \
     AFS_CS(afs_SetChunkSize)	/* afs_chunk.c */ \
     AFS_CS(afs_config)		/* afs_config.c */ \
-    AFS_CS(mem_freebytes)	/* afs_config.c */ \
-    AFS_CS(mem_getbytes)	/* afs_config.c */ \
+    AFS_CS(mem_freebytes)	/* UNUSED */ \
+    AFS_CS(mem_getbytes)	/* UNUSED */ \
     AFS_CS(fpalloc)		/* afs_config.c */ \
     AFS_CS(kluge_init)		/* afs_config.c */ \
     AFS_CS(ufdalloc)		/* afs_config.c */ \
