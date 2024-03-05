@@ -232,14 +232,6 @@ extern int afs_icl_sizeofLong;
 extern struct afs_icl_set *afs_iclSetp;	/* standard icl trace */
 /* A separate icl set to collect long term debugging info. */
 extern struct afs_icl_set *afs_iclLongTermSetp;
-#else
-#define	osi_Alloc		malloc
-#define	osi_Free(a,b)		free(a)
-
-#define ICL_RPC_MAX_SETS (64)
-#define ICL_RPC_MAX_LOGS (64)
-
-
 #endif
 
 
