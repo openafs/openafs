@@ -242,6 +242,17 @@ AC_CHECK_LINUX_FUNC([inode_atime_mtime_accessors],
 		    [inode_set_atime(NULL, 0, 0);
 		     inode_set_mtime(NULL, 0, 0);])
 
+dnl Linux 6.8 removed the strlcpy() function.  We test to see if we can redefine
+dnl a strlcpy() function.  We use a totally different function signature to
+dnl to ensure that this fails when the kernel does provide strlcpy().
+AC_CHECK_LINUX_FUNC([no_strlcpy],
+		    [[#include <linux/string.h>
+		     size_t strlcpy(char *d);
+		     size_t strlcpy(char *d) { return strlen(d); }]],
+		    [[static char buff[10];
+		     size_t s;
+		     s = strlcpy(buff);]])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
