@@ -187,12 +187,12 @@ timer_status(void)
 }
 
 const RAND_METHOD hc_rand_timer_method = {
-    timer_seed,
-    timer_bytes,
-    timer_cleanup,
-    timer_add,
-    timer_pseudorand,
-    timer_status
+    .seed       = timer_seed,
+    .bytes      = timer_bytes,
+    .cleanup    = timer_cleanup,
+    .add        = timer_add,
+    .pseudorand = timer_pseudorand,
+    .status     = timer_status
 };
 
 const RAND_METHOD *
