@@ -10,12 +10,11 @@ MODULE_CFLAGS=-I$(TOP_OBJDIR) -I$(srcdir)/../common/
 
 all: $(BINS)
 
-MODULE_LIBS = 	$(abs_top_builddir)/tests/common/libafstest_common.la \
-		$(abs_top_builddir)/src/vlserver/liboafs_vldb.la \
-		$(XLIBS)
+LIBS = 	$(abs_top_builddir)/tests/common/libafstest_common.la \
+	$(abs_top_builddir)/src/vlserver/liboafs_vldb.la
 
-vos-t: vos-t.o
-	$(LT_LDRULE_static) vos-t.o $(MODULE_LIBS)
+vos-t: vos-t.o $(LIBS)
+	$(LT_LDRULE_static) vos-t.o $(LIBS) $(XLIBS)
 
 clean:
 	$(LT_CLEAN)

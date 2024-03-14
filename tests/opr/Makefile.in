@@ -19,7 +19,7 @@ cache-t: cache-t.o $(LIBS)
 dict-t: dict-t.o $(LIBS)
 	$(LT_LDRULE_static) dict-t.o $(LIBS) $(XLIBS)
 
-fmt-t: fmt-t.o
+fmt-t: fmt-t.o $(LIBS)
 	$(LT_LDRULE_static) fmt-t.o $(LIBS) $(XLIBS)
 
 queues-t: queues-t.o $(LIBS)
@@ -28,13 +28,13 @@ queues-t: queues-t.o $(LIBS)
 rbtree-t: rbtree-t.o $(LIBS)
 	$(LT_LDRULE_static) rbtree-t.o $(LIBS) $(XLIBS)
 
-jhash-t: jhash-t.o
+jhash-t: jhash-t.o $(LIBS)
 	$(LT_LDRULE_static) jhash-t.o $(LIBS) $(XLIBS)
 
-time-t: time-t.o
+time-t: time-t.o $(LIBS)
 	$(LT_LDRULE_static) time-t.o $(LIBS) $(XLIBS)
 
-uuid-t: uuid-t.o
+uuid-t: uuid-t.o $(LIBS)
 	$(LT_LDRULE_static) uuid-t.o $(LIBS) $(XLIBS)
 
 softsig-helper: softsig-helper.o $(LIBS)

@@ -10,25 +10,24 @@ MODULE_CFLAGS=-I$(TOP_OBJDIR) -I$(srcdir)/../common/
 
 all: $(BINS)
 
-MODULE_LIBS = 	$(abs_top_builddir)/tests/common/libafstest_common.la \
-		$(abs_top_builddir)/src/auth/liboafs_auth.la \
-		$(XLIBS)
+LIBS = $(abs_top_builddir)/tests/common/libafstest_common.la \
+	  $(abs_top_builddir)/src/auth/liboafs_auth.la
 
-authcon-t: authcon-t.o
-	$(LT_LDRULE_static) authcon-t.o $(MODULE_LIBS)
+authcon-t: authcon-t.o $(LIBS)
+	$(LT_LDRULE_static) authcon-t.o $(LIBS) $(XLIBS)
 
-superuser-t: superuser-t.o test.cs.o test.ss.o test.xdr.o
+superuser-t: superuser-t.o test.cs.o test.ss.o test.xdr.o $(LIBS)
 	$(LT_LDRULE_static) superuser-t.o test.cs.o test.ss.o test.xdr.o \
-		$(MODULE_LIBS)
+		$(LIBS) $(XLIBS)
 
-keys-t: keys-t.o
-	$(LT_LDRULE_static) keys-t.o $(MODULE_LIBS)
+keys-t: keys-t.o $(LIBS)
+	$(LT_LDRULE_static) keys-t.o $(LIBS) $(XLIBS)
 
-realms-t: realms-t.o
-	$(LT_LDRULE_static) realms-t.o $(MODULE_LIBS)
+realms-t: realms-t.o $(LIBS)
+	$(LT_LDRULE_static) realms-t.o $(LIBS) $(XLIBS)
 
-writekeyfile: writekeyfile.o
-	$(LT_LDRULE_static) writekeyfile.o $(MODULE_LIBS)
+writekeyfile: writekeyfile.o $(LIBS)
+	$(LT_LDRULE_static) writekeyfile.o $(LIBS) $(XLIBS)
 
 test.cs.c: test.xg
 	$(RXGEN) -A -x -C -o $@ $(srcdir)/test.xg
