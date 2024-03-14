@@ -91,7 +91,7 @@ afstest_rmdtemp(char *path)
 	return;
     }
     afstest_systemlp("rm", "-rf",
-#if defined(AFS_LINUX_ENV) || defined(AFS_SUN511_ENV)
+#if defined(AFS_LINUX_ENV)
 		     "--one-file-system",
 #endif
 		     path, (char*)NULL);
