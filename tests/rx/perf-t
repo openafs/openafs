@@ -11,21 +11,45 @@ use POSIX qw(:sys_wait_h :signal_h);
 my $port = 4000;
 my $rxperf = obj_path("src/tools/rxperf/rxperf");
 
+
+# Wait for the server to finish initializing.
+sub
+wait_for_server {
+    my $pid = shift;
+    for (my $i = 0; $i < 10; $i++) {
+        if ($i > 0) {
+            sleep(1);
+        }
+        my $rc = system($rxperf, "client", "-c", "rpc", "-p", $port, "-S",
+                        "128", "-R", "128", "-T", "1", "-H", "-N",
+                        "-o", "/dev/null");
+        if ($rc == 0) {
+            return;
+        }
+    }
+    kill("TERM", $pid);
+    waitpid($pid, 0);
+    die("Unable to contact rxperf server.");
+}
+
 # Start up an rxperf server
 
 my $pid = fork();
 if ($pid == -1) {
     fail("Failed to fork rxperf server");
     exit(1);
-} elsif ($pid == 0) { 
+} elsif ($pid == 0) {
     exec({$rxperf}
 	 "rxperf", "server", "-p", $port, "-u", "1024", "-H", "-N");
     die("Kabooom ?");
 }
+# Give the server some time to initialize
+wait_for_server($pid);
+
 pass("Started rxperf server");
 
 # Start up an rxperf client, and run a test
-is(0, 
+is(0,
    system("$rxperf client -c rpc -p $port -S 1048576 -R 1048576 -T 30 -u 1024 -H -N"),
    "single threaded client ran successfully");
 
@@ -45,5 +69,3 @@ if (WIFSIGNALED($ecode) && WTERMSIG($ecode) != SIGTERM) {
 } else {
     pass("Server exited succesfully");
 }
-
-
