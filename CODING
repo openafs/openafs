@@ -100,28 +100,29 @@ Example:
 	 * like this example.
 	 */
 
-Do not use braces on one-line if and loop statements (but if one branch of
-a multi-branch conditional needs braces, use braces for all branches).
+Always use braces for the bodies of conditionals and loops.  This makes
+it easier to follow the logic flow for complicated nested constructs,
+and reduces the risk of bugs.
 
 Use:
 
-	if (some_condition)
-	    do_some_action();
-	else
-	    do_something_else();
-
-	while (some_condition)
-	    do_something();
-
-Instead of:
-
 	if (some_condition) {
 	    do_some_action();
+	} else {
+	    do_something_else();
 	}
 
 	while (some_condition) {
 	    do_something();
 	}
+
+Instead of:
+
+	if (some_condition)
+	    do_some_action();
+
+	while (some_condition)
+	    do_something();
 
 In switch statements, to fall through from one case statement to another, use
 AFS_FALLTHROUGH to mark the intentional fall through.  Do not use fall through
