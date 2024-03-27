@@ -117,6 +117,7 @@ ez_create(char *ainstance, char *acommand, char *unused1, char *unused2,
     te = calloc(1, sizeof(struct ezbnode));
     if (bnode_InitBnode((struct bnode *)te, &ezbnode_ops, ainstance) != 0) {
 	free(te);
+	free(cmdpath);
 	return NULL;
     }
     te->command = cmdpath;
