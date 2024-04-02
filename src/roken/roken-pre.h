@@ -1,0 +1,2 @@
+#ifndef OPENAFS_ROKEN_H
+#define OPENAFS_ROKEN_H

@@ -6,3 +6,4 @@
 #ifdef __attribute__
 #undef __attribute__
 #endif
+#endif /* OPENAFS_ROKEN_H */

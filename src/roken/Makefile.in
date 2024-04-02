@@ -77,8 +77,8 @@ $(TOP_INCDIR)/roken-common.h: $(UPSTREAM)/roken-common.h
 err.h: ${UPSTREAM}/err.hin
 	$(INSTALL_DATA) $? $@
 
-roken.h: $(UPSTREAM)/roken.h.in roken-post.h
-	cat $(UPSTREAM)/roken.h.in $(srcdir)/roken-post.h >$@
+roken.h: $(UPSTREAM)/roken.h.in roken-pre.h roken-post.h
+	cat $(srcdir)/roken-pre.h $(UPSTREAM)/roken.h.in $(srcdir)/roken-post.h >$@
 
 # Here we have explicit rules for all the libtool objects we might need to
 # build.  The implicit rules don't work since the sources are in a different
