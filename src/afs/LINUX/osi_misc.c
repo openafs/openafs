@@ -155,7 +155,8 @@ int osi_abspath(char *aname, char *buf, int buflen,
 
 
 /* This could use some work, and support on more platforms. */
-int afs_thread_wrapper(void *rock)
+static int
+afs_thread_wrapper(void *rock)
 {
     void (*proc)(void) = rock;
     __module_get(THIS_MODULE);
