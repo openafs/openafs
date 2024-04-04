@@ -35,6 +35,31 @@ check test tests: all runtests
 	MAKECHECK=1 $(abs_top_srcdir)/tests/libwrap @TOP_OBJDIR@/lib \
 	    ./runtests $(RUNTESTS_ARGS)
 
+# To start an interactive subshell with the environment required to run
+# the test programs, run 'make shell'. Run 'exit' to end the subshell.
+#
+# Example usage:
+#
+#     $ make shell
+#     Starting a shell to run tests. Run 'exit' when done.
+#     $ PS1="(tests) $PS1"  # Optionally set the PS1 in the subshell.
+#     (tests) $ rx/perf-t   # Run tests directly or via a debugger.
+#     ...
+#     (tests) $ exit        # Exit when done.
+#
+shell: all runtests
+	@if [ "x$$MAKECHECK" = "x1" ]; then \
+	    echo "Already in the tests subshell."; \
+	else \
+	    echo "Starting a shell to run tests. Run 'exit' when done."; \
+	    MAKECHECK=1 \
+	    C_TAP_SOURCE=@abs_top_srcdir@/tests \
+	    C_TAP_BUILD=@abs_top_builddir@/tests \
+	    SOURCE=@abs_top_srcdir@/tests \
+	    BUILD=@abs_top_builddir@/tests \
+	    @abs_top_srcdir@/tests/libwrap @TOP_OBJDIR@/lib $(SHELL); \
+	fi
+
 install:
 
 clean distclean:
