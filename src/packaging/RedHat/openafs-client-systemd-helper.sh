@@ -5,6 +5,8 @@
 
 set -e
 
+UMOUNT_TIMEOUT=30
+
 [ -f /etc/sysconfig/openafs ] && . /etc/sysconfig/openafs
 
 case $1 in
@@ -37,6 +39,28 @@ case $1 in
 	    exit 0
 	else
 	    echo "Failed to unmount /afs: $?"
+	fi
+
+	state=$(systemctl is-system-running || true)
+	if [ "$state" = stopping ] && [ x"$UMOUNT_TIMEOUT" != x ] && /bin/mountpoint --quiet /afs ; then
+	    # If we are shutting down the system, failing to umount /afs
+	    # can lead to longer delays later as systemd tries to forcibly
+	    # kill our afsd processes. So retry the umount a few times,
+	    # just in case other /afs-using processes just need a few
+	    # seconds to go away.
+	    echo "For system shutdown, retrying umount /afs for $UMOUNT_TIMEOUT secs"
+	    interval=3
+	    for (( i = 0; i < $UMOUNT_TIMEOUT; i += $interval )) ; do
+		sleep $interval
+		if /bin/umount --verbose /afs ; then
+		    exit 0
+		fi
+		if ! /bin/mountpoint --quiet /afs ; then
+		    echo "mountpoint /afs disappeared; bailing out"
+		    exit 0
+		fi
+	    done
+	    echo "Still cannot umount /afs, bailing out"
 	fi
 	exit 1
 	;;
