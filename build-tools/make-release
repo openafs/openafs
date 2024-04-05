@@ -6,12 +6,34 @@ use Getopt::Long;
 use Pod::Usage;
 use File::Path;
 use File::Temp;
+use File::Basename;
+use Cwd;
 
 my $help;
 my $man;
 my $tagPoint;
 my $last;
 my $outDir = ".";
+my $errorCount = 0;
+
+# Find a command in the PATH.
+sub which {
+    my $command = shift;
+    my @paths = split(/:/, $ENV{'PATH'});
+    my $path;
+
+    # Add some common locations for the commands we need.
+    push(@paths, qw(/sbin /usr/bin /usr/local/bin));
+
+    # Search for the command.
+    foreach $path (@paths) {
+        my $bin = File::Spec->catfile($path, $command);
+        if (-x $bin) {
+            return $bin;  # Return the first one found.
+        }
+    }
+    return undef;
+}
 
 GetOptions(
     "help|?" => \$help,
@@ -103,38 +125,83 @@ if ($last) {
     push @toCompress, "$outDir/$name.diff";
 }
 
-my @toMD5;
+my @toMD;
 
 # Compress everything that needs squashing,
-# and also set up a list for md5 checksumming.
+# and also set up a list for checksumming.
 foreach my $file (@toCompress) {
     system("gzip < $file > $file.gz") == 0
         or die "Unable to create gzip file of '$file' : $!";
-    push @toMD5, "$file.gz";
+    push @toMD, "$file.gz";
 
     system("bzip2 < $file > $file.bz2") == 0
         or die "Unable to create bzip file of '$file' : $!";
-    push @toMD5, "$file.bz2";
+    push @toMD, "$file.bz2";
 
     # Delete the uncompressed tar files.
     if ($file =~ /\.tar$/) {
       unlink($file);
     } else {
-      # Otherwise, queue this file for md5 checksumming.
-      push @toMD5, $file;
+      # Otherwise, queue this file for checksumming.
+      push @toMD, $file;
     }
 }
 
-foreach my $file (@toMD5) {
-    if (-x "/sbin/md5") {
-        system("/sbin/md5 -q $file > $file.md5");
-    } elsif (-x "/usr/bin/md5sum") {
-        system("/usr/bin/md5sum $file > $file.md5");
+# Generate message digest files.
+
+my $cwd = getcwd() or die "Failed getcwd(): $!";
+my $md5 = which('md5');
+my $md5sum = which('md5sum');
+my $shasum = which("shasum");
+my $sha256sum = which("sha256sum");
+
+foreach my $pathname (@toMD) {
+    my $directory = dirname($pathname);
+    my $file = basename($pathname);
+    my $rc;
+
+    chdir($directory) or die "Failed cd $directory: $!";
+
+    if ($md5) {
+        $rc = system("$md5 -q $file > $file.md5");
+        if ($rc != 0) {
+            warn "Command failed: $md5 -q $file, code=$rc";
+            $errorCount += 1;
+        }
+    } elsif ($md5sum) {
+        $rc = system("$md5sum $file > $file.md5");
+        if ($rc != 0) {
+            warn "Command failed: md5sum $file, code=$rc";
+            $errorCount += 1;
+        }
     } else {
-        print STDERR "No md5 utility found. Not producing checksums\n";
+        warn "MD5 utility not found. Not producing $file.md5";
+        $errorCount += 1;
     }
+
+    if ($shasum) {
+        $rc = system("$shasum -a 256 $file > $file.sha256");
+        if ($rc != 0) {
+            warn "Command failed: $shasum -a 256 $file, code=$rc";
+            $errorCount += 1;
+        }
+    } elsif ($sha256sum) {
+        $rc = system("$sha256sum $file > $file.sha256");
+        if ($rc != 0) {
+            warn "Command failed: $sha256sum $file, code=$rc";
+            $errorCount += 1;
+        }
+    } else {
+        warn "SHA256 utility program not found. Not producing $file.sha256";
+        $errorCount += 1;
+    }
+
+    chdir($cwd) or die "Failed cd $cwd: $!";
 }
 
+if ($errorCount != 0) {
+    die "Failed to create all files; $errorCount errors encountered.";
+}
 
 __END__
 
@@ -158,7 +225,7 @@ make-release [options] <tag>
 make-release constructs an OpenAFS release from a local git clone. If run
 with just the standard arguments, it will extract the contents of the
 specified tag into the current directory, creating src and doc tarballs,
-gzipping and bzipping them, and generating md5 hashes. It will also create a
+gzipping and bzipping them, and generating digest files. It will also create a
 ChangeLog file, listing all of the changes in that release.
 
 This standard behaviour may be modified by the following options
