@@ -118,7 +118,7 @@ start_timer(void)
  */
 
 static void
-end_and_print_timer(char *str, long long bytes)
+end_and_print_timer(FILE *output, char *str, long long bytes)
 {
     long long start_l, stop_l;
     double kbps;
@@ -128,15 +128,15 @@ end_and_print_timer(char *str, long long bytes)
     gettimeofday(&timer_stop, NULL);
     start_l = timer_start.tv_sec * 1000000 + timer_start.tv_usec;
     stop_l = timer_stop.tv_sec * 1000000 + timer_stop.tv_usec;
-    printf("%s:\t%8llu msec", str, (stop_l - start_l) / 1000);
+    fprintf(output, "%s:\t%8llu msec", str, (stop_l - start_l) / 1000);
 
     kbps = bytes * 8000.0 / (stop_l - start_l);
     if (kbps > 1000000.0)
-        printf("\t[%.4g Gbit/s]\n", kbps/1000000.0);
+        fprintf(output, "\t[%.4g Gbit/s]\n", kbps/1000000.0);
     else if (kbps > 1000.0)
-        printf("\t[%.4g Mbit/s]\n", kbps/1000.0);
+        fprintf(output, "\t[%.4g Mbit/s]\n", kbps/1000.0);
     else
-        printf("\t[%.4g kbit/s]\n", kbps);
+        fprintf(output, "\t[%.4g kbit/s]\n", kbps);
 }
 
 /*
@@ -685,7 +685,7 @@ static void
 do_client(const char *server, short port, char *filename, afs_int32 command,
 	  afs_int32 times, afs_int32 bytes, afs_int32 sendbytes, afs_int32 readbytes,
           int dumpstats, int nojumbo, int maxmtu, int maxwsize, int minpeertimeout,
-          int udpbufsz, int nostats, int hotthread, int threads)
+          int udpbufsz, int nostats, int hotthread, int threads, FILE *output)
 {
     struct rx_connection *conn;
     afs_uint32 addr;
@@ -804,20 +804,21 @@ do_client(const char *server, short port, char *filename, afs_int32 command,
 
     switch (command) {
     case RX_PERF_RPC:
-        end_and_print_timer(stamp, (long long)threads*times*(sendbytes+readbytes));
+        end_and_print_timer(output, stamp, (long long)threads*times*(sendbytes+readbytes));
         break;
     case RX_PERF_RECV:
     case RX_PERF_SEND:
     case RX_PERF_FILE:
-        end_and_print_timer(stamp, (long long)threads*times*bytes);
+        end_and_print_timer(output, stamp, (long long)threads*times*bytes);
         break;
     }
 
     DBFPRINT(("done for good\n"));
 
+
     if (dumpstats) {
-	rx_PrintStats(stdout);
-	rx_PrintPeerStats(stdout, rx_PeerOf(conn));
+	rx_PrintStats(output);
+	rx_PrintPeerStats(output, rx_PeerOf(conn));
     }
     rx_Finalize();
 
@@ -987,10 +988,11 @@ rxperf_client(int argc, char **argv)
     int minpeertimeout = 0;
     char *ptr;
     int ch;
+    FILE *output = NULL;
 
     cmd = RX_PERF_UNKNOWN;
 
-    while ((ch = getopt(argc, argv, "T:S:R:b:c:d:p:P:r:s:w:W:f:HDNjm:u:4:t:V")) != -1) {
+    while ((ch = getopt(argc, argv, "T:S:R:b:c:d:o:p:P:r:s:w:W:f:HDNjm:u:4:t:V")) != -1) {
 	switch (ch) {
 	case 'b':
 	    bytes = strtol(optarg, &ptr, 0);
@@ -1017,6 +1019,16 @@ rxperf_client(int argc, char **argv)
 #else
 	    errx(1, "compiled without RXDEBUG");
 #endif
+	    break;
+	case 'o':
+	    if (output == NULL) {
+		output = fopen(optarg, "w");
+		if (output == NULL) {
+		    err(1, "can't open %s", optarg);
+		}
+	    } else {
+		warnx("-o option given more than once, ignoring -o %s", optarg);
+	    }
 	    break;
 	case 'P':
 	    minpeertimeout = strtol(optarg, &ptr, 0);
@@ -1130,7 +1142,14 @@ rxperf_client(int argc, char **argv)
 
     do_client(host, port, filename, cmd, times, bytes, sendbytes,
 	      readbytes, dumpstats, nojumbo, maxmtu, maxwsize, minpeertimeout,
-              udpbufsz, nostats, hotthreads, threads);
+	      udpbufsz, nostats, hotthreads, threads,
+	      (output == NULL ? stdout : output));
+
+    if (output != NULL) {
+	if (fclose(output) < 0) {
+	    err(1, "fclose");
+	}
+    }
 
     return 0;
 }
