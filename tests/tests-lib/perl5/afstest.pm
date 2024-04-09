@@ -25,6 +25,17 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(src_path obj_path);
 
+use Test::More;
+
+# Make Test::More print diag() messages to stdout, instead of stderr.
+# Historically, diag() from Test::More prints to stderr, but diag() from
+# c-tap-harness prints to stdout as part of the TAP stream. Running
+# 'runtests -v' ignores stderr, so by default any perl diag()s are lost. Change
+# the default behavior to diag() to stdout, so we can see diagnostics in
+# 'runtests -v' when tests fail.
+my $tb = Test::More->builder;
+$tb->failure_output($tb->output);
+
 sub
 x_path($;$)
 {
