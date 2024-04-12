@@ -614,7 +614,7 @@ PRFplus(krb5_data *out, krb5_enctype enctype, rxgk_key k0,
     unsigned char *pre_key = NULL;
     size_t block_len;
     size_t desired_len = out->length;
-    afs_uint32 n_iter, iterations, dummy;
+    afs_uint32 n_iter, iterations = 0, dummy;
 
     memset(&prf_in, 0, sizeof(prf_in));
     memset(&prf_out, 0, sizeof(prf_out));
