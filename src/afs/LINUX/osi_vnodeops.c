@@ -712,6 +712,61 @@ afs_linux_fsync(struct file *fp, int datasync)
 
 }
 
+/* Handle getting/setting file_lock type */
+
+static inline unsigned char
+afs_get_flock_type(struct file_lock *flp)
+{
+#if defined(HAVE_FILE_LOCK_CORE)
+    return flp->c.flc_type;
+#else
+    return flp->fl_type;
+#endif
+}
+
+static inline void
+afs_set_flock_type(struct file_lock *flp, unsigned char type)
+{
+#if defined(HAVE_FILE_LOCK_CORE)
+    flp->c.flc_type = type;
+#else
+    flp->fl_type = type;
+#endif
+}
+
+/* Handle getting/setting file_lock pid */
+
+static inline pid_t
+afs_get_flock_pid(struct file_lock *flp)
+{
+#if defined(HAVE_FILE_LOCK_CORE)
+    return flp->c.flc_pid;
+#else
+    return flp->fl_pid;
+#endif
+}
+
+static inline void
+afs_set_flock_pid(struct file_lock *flp, pid_t pid)
+{
+#if defined(HAVE_FILE_LOCK_CORE)
+    flp->c.flc_pid = pid;
+#else
+    flp->fl_pid = pid;
+#endif
+}
+
+/* Handle clearing file_lock sleep */
+
+static inline void
+afs_clear_flock_sleep(struct file_lock *flp)
+{
+#if defined(HAVE_FILE_LOCK_CORE)
+	flp->c.flc_flags &= ~FL_SLEEP;
+#else
+	flp->fl_flags &= ~FL_SLEEP;
+#endif
+}
 
 static int
 afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
@@ -723,8 +778,8 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 
     /* Convert to a lock format afs_lockctl understands. */
     memset(&flock, 0, sizeof(flock));
-    flock.l_type = flp->fl_type;
-    flock.l_pid = flp->fl_pid;
+    flock.l_type = afs_get_flock_type(flp);
+    flock.l_pid = afs_get_flock_pid(flp);
     flock.l_whence = 0;
     flock.l_start = flp->fl_start;
     if (flp->fl_end == OFFSET_MAX)
@@ -746,10 +801,10 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     code = afs_convert_code(afs_lockctl(vcp, &flock, cmd, credp));
     AFS_GUNLOCK();
 
-    if ((code == 0 || flp->fl_type == F_UNLCK) &&
-        (cmd == F_SETLK || cmd == F_SETLKW)) {
+    if ((code == 0 || afs_get_flock_type(flp) == F_UNLCK) &&
+	(cmd == F_SETLK || cmd == F_SETLKW)) {
 	code = afs_posix_lock_file(fp, flp);
-	if (code && flp->fl_type != F_UNLCK) {
+	if (code && afs_get_flock_type(flp) != F_UNLCK) {
 	    struct AFS_FLOCK flock2;
 	    flock2 = flock;
 	    flock2.l_type = F_UNLCK;
@@ -762,17 +817,17 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
      * kernel, as lockctl knows nothing about byte range locks
      */
     if (code == 0 && cmd == F_GETLK && flock.l_type == F_UNLCK) {
-        afs_posix_test_lock(fp, flp);
-        /* If we found a lock in the kernel's structure, return it */
-        if (flp->fl_type != F_UNLCK) {
-            crfree(credp);
-            return 0;
-        }
+	afs_posix_test_lock(fp, flp);
+	/* If we found a lock in the kernel's structure, return it */
+	if (afs_get_flock_type(flp) != F_UNLCK) {
+	    crfree(credp);
+	    return 0;
+	}
     }
 
     /* Convert flock back to Linux's file_lock */
-    flp->fl_type = flock.l_type;
-    flp->fl_pid = flock.l_pid;
+    afs_set_flock_type(flp, flock.l_type);
+    afs_set_flock_pid(flp, flock.l_pid);
     flp->fl_start = flock.l_start;
     if (flock.l_len == 0)
 	flp->fl_end = OFFSET_MAX; /* Lock to end of file */
@@ -792,8 +847,8 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
     struct AFS_FLOCK flock;
     /* Convert to a lock format afs_lockctl understands. */
     memset(&flock, 0, sizeof(flock));
-    flock.l_type = flp->fl_type;
-    flock.l_pid = flp->fl_pid;
+    flock.l_type = afs_get_flock_type(flp);
+    flock.l_pid = afs_get_flock_pid(flp);
     flock.l_whence = 0;
     flock.l_start = 0;
     flock.l_len = 0;
@@ -812,11 +867,11 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
     code = afs_convert_code(afs_lockctl(vcp, &flock, cmd, credp));
     AFS_GUNLOCK();
 
-    if ((code == 0 || flp->fl_type == F_UNLCK) &&
-        (cmd == F_SETLK || cmd == F_SETLKW)) {
-	flp->fl_flags &=~ FL_SLEEP;
+    if ((code == 0 || afs_get_flock_type(flp) == F_UNLCK) &&
+	(cmd == F_SETLK || cmd == F_SETLKW)) {
+	afs_clear_flock_sleep(flp);
 	code = flock_lock_file_wait(fp, flp);
-	if (code && flp->fl_type != F_UNLCK) {
+	if (code && afs_get_flock_type(flp) != F_UNLCK) {
 	    struct AFS_FLOCK flock2;
 	    flock2 = flock;
 	    flock2.l_type = F_UNLCK;
@@ -826,8 +881,8 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
 	}
     }
     /* Convert flock back to Linux's file_lock */
-    flp->fl_type = flock.l_type;
-    flp->fl_pid = flock.l_pid;
+    afs_set_flock_type(flp, flock.l_type);
+    afs_set_flock_pid(flp, flock.l_pid);
 
     crfree(credp);
     return code;
