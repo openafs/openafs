@@ -867,3 +867,21 @@ AC_DEFUN([LINUX_GENERIC_FILLATTR_TAKES_REQUEST_MASK], [
                        [define if your generic_fillattr has the request_mask_parameter],
                        [])
 ])
+
+dnl linux 6.9 moved and renamed fl_type, fl_pid  and fl_flags
+dnl from file_lock into a new structure file_lock_core.  Check for these as a
+dnl single test
+AC_DEFUN([LINUX_FILE_LOCK_CORE], [
+  AC_CHECK_LINUX_BUILD([whether fl_type fl_pid and fl_flags are in structure file_lock_core],
+                       [ac_cv_linux_file_lock_core],
+                       [#include <linux/filelock.h>],
+                       [
+                       static struct file_lock flock;
+                       flock.c.flc_type = 0;
+                       flock.c.flc_pid = 0;
+                       flock.c.flc_flags = 0;
+                       ],
+                       [HAVE_FILE_LOCK_CORE],
+                       [define if file_lock_core exists],
+                       [])
+])
