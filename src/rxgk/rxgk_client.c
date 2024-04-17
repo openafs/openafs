@@ -118,7 +118,7 @@ rxgk_NewClientConnection(struct rx_securityClass *aobj,
 
  error:
     rxi_Free(cc, sizeof(*cc));
-    return RXGK_INCONSISTENCY;
+    return rxgk_misc_error();
 }
 
 static int
@@ -160,7 +160,7 @@ rxgk_ClientPreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	    ret = rxgk_enc_packet(tk, RXGK_CLIENT_ENC_PACKET, aconn, apacket);
 	    break;
 	default:
-	    ret = RXGK_INCONSISTENCY;
+	    ret = rxgk_misc_error();
 	    break;
     }
 
@@ -197,11 +197,11 @@ fill_authenticator(RXGK_Authenticator *authenticator, RXGK_Challenge *challenge,
     /* Export the call numbers. */
     ret = rxi_GetCallNumberVector(aconn, call_numbers);
     if (ret != 0)
-	return ret;
+	return rxgk_int_error(ret);
     authenticator->call_numbers.val = xdr_alloc(RX_MAXCALLS *
 						sizeof(afs_int32));
     if (authenticator->call_numbers.val == NULL)
-	return RXGEN_CC_MARSHAL;
+	return rxgk_int_error(RXGEN_CC_MARSHAL);
     authenticator->call_numbers.len = RX_MAXCALLS;
     for (call_i = 0; call_i < RX_MAXCALLS; call_i++)
 	authenticator->call_numbers.val[call_i] = (afs_uint32)call_numbers[call_i];
@@ -223,17 +223,19 @@ pack_wrap_authenticator(RXGK_Data *encdata, RXGK_Authenticator *authenticator,
 
     xdrlen_create(&xdrs);
     if (!xdr_RXGK_Authenticator(&xdrs, authenticator)) {
-	ret = RXGEN_CC_MARSHAL;
+	ret = rxgk_int_error(RXGEN_CC_MARSHAL);
 	goto done;
     }
     len = xdr_getpos(&xdrs);
     ret = rx_opaque_alloc(&data, len);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     xdr_destroy(&xdrs);
     xdrmem_create(&xdrs, data.val, len, XDR_ENCODE);
     if (!xdr_RXGK_Authenticator(&xdrs, authenticator)) {
-	ret = RXGEN_CC_MARSHAL;
+	ret = rxgk_int_error(RXGEN_CC_MARSHAL);
 	goto done;
     }
     ret = rxgk_derive_tk(&tk, cp->k0, authenticator->epoch, authenticator->cid,
@@ -266,18 +268,20 @@ pack_response(RXGK_Data *out, RXGK_Response *response)
 
     xdrlen_create(&xdrs);
     if (!xdr_RXGK_Response(&xdrs, response)) {
-	ret = RXGEN_CC_MARSHAL;
+	ret = rxgk_int_error(RXGEN_CC_MARSHAL);
 	goto done;
     }
     len = xdr_getpos(&xdrs);
     ret = rx_opaque_alloc(out, len);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     xdr_destroy(&xdrs);
     xdrmem_create(&xdrs, out->val, len, XDR_ENCODE);
     if (!xdr_RXGK_Response(&xdrs, response)) {
 	rx_opaque_freeContents(out);
-	ret = RXGEN_CC_MARSHAL;
+	ret = rxgk_int_error(RXGEN_CC_MARSHAL);
 	goto done;
     }
 
@@ -326,20 +330,20 @@ rxgk_GetResponse(struct rx_securityClass *aobj, struct rx_connection *aconn,
      * buffer overrun or anything scary like that.
      */
     if (rx_Contiguous(apacket) < RXGK_CHALLENGE_NONCE_LEN) {
-        ret = RXGK_PACKETSHORT;
+	ret = rxgk_int_error(RXGK_PACKETSHORT);
 	goto done;
     }
     xdrmem_create(&xdrs, rx_DataOf(apacket), rx_Contiguous(apacket),
 		  XDR_DECODE);
     if (!xdr_RXGK_Challenge(&xdrs, &challenge)) {
-	ret = RXGEN_CC_UNMARSHAL;
+	ret = rxgk_int_error(RXGEN_CC_UNMARSHAL);
 	goto done;
     }
 
     /* Start filling the response. */
     response.start_time = cc->start_time;
     if (rx_opaque_copy(&response.token, &cp->token) != 0) {
-	ret = RXGEN_CC_MARSHAL;
+	ret = rxgk_int_error(RXGEN_CC_MARSHAL);
 	goto done;
     }
 
@@ -493,11 +497,15 @@ rxgk_NewClientSecurityObject(RXGK_Level level, afs_int32 enctype, rxgk_key k0,
     struct rxgk_cprivate *cp = NULL;
 
     sc = rxi_Alloc(sizeof(*sc));
-    if (sc == NULL)
+    if (sc == NULL) {
+	rxgk_misc_error();
 	goto error;
+    }
     cp = rxi_Alloc(sizeof(*cp));
-    if (cp == NULL)
+    if (cp == NULL) {
+	rxgk_misc_error();
 	goto error;
+    }
     sc->ops = &rxgk_client_ops;
     rxs_SetRefs(sc, 1);
     sc->privateData = cp;
@@ -507,8 +515,10 @@ rxgk_NewClientSecurityObject(RXGK_Level level, afs_int32 enctype, rxgk_key k0,
 	goto error;
     cp->enctype = enctype;
     cp->level = level;
-    if (rx_opaque_copy(&cp->token, token) != 0)
+    if (rx_opaque_copy(&cp->token, token) != 0) {
+	rxgk_misc_error();
 	goto error;
+    }
 
     return sc;
 

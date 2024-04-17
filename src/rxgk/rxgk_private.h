@@ -134,6 +134,18 @@ afs_int32 rxgk_extract_token(RXGK_Data *tc, RXGK_Token *out,
 afs_int32 rxgk_security_overhead(struct rx_connection *aconn, RXGK_Level level,
 				 rxgk_key k0);
 afs_int32 rxgk_key_number(afs_uint16 wire, afs_uint32 local, afs_uint32 *real);
+afs_int32 rxgk_int_error_line(afs_int32 code, const char *fname, int line);
+
+/*
+ * When an internal unexpected error occurs, try to use rxgk_misc_error() or
+ * rxgk_int_error(RXGK_*) instead of using RXGK_INCONSISTENCY or other RXGK_*
+ * constants directly. These functions allow for handling of unexpected errors
+ * to be modified in a single location, which can be helpful for setting
+ * debugger breakpoints or logging messages. Currently, these log a
+ * rate-limited debug message, so internal errors don't happen silently.
+ */
+#define rxgk_int_error(code) rxgk_int_error_line((code), __FILE__, __LINE__)
+#define rxgk_misc_error() rxgk_int_error(RXGK_INCONSISTENCY)
 
 /* rxgk_packet.c */
 int rxgk_mic_packet(rxgk_key tk, afs_int32 keyusage,

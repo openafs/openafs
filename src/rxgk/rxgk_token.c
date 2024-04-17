@@ -80,20 +80,22 @@ pack_token(RXGK_Token *token, struct rx_opaque *out)
     memset(out, 0, sizeof(*out));
     xdrlen_create(&xdrs);
     if (!xdr_RXGK_Token(&xdrs, token)) {
-	ret = RXGEN_SS_MARSHAL;
+	ret = rxgk_int_error(RXGEN_SS_MARSHAL);
 	goto done;
     }
     len = xdr_getpos(&xdrs);
 
     ret = rx_opaque_alloc(out, len);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
 
     xdr_destroy(&xdrs);
     xdrmem_create(&xdrs, out->val, len, XDR_ENCODE);
     if (!xdr_RXGK_Token(&xdrs, token)) {
 	rx_opaque_freeContents(out);
-	ret = RXGEN_SS_MARSHAL;
+	ret = rxgk_int_error(RXGEN_SS_MARSHAL);
 	goto done;
     }
     ret = 0;
@@ -122,20 +124,22 @@ pack_container(RXGK_TokenContainer *container, struct rx_opaque *out)
     memset(&xdrs, 0, sizeof(xdrs));
     xdrlen_create(&xdrs);
     if (!xdr_RXGK_TokenContainer(&xdrs, container)) {
-	ret = RXGEN_SS_MARSHAL;
+	ret = rxgk_int_error(RXGEN_SS_MARSHAL);
 	goto done;
     }
     len = xdr_getpos(&xdrs);
 
     ret = rx_opaque_alloc(out, len);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
 
     xdr_destroy(&xdrs);
     xdrmem_create(&xdrs, out->val, len, XDR_ENCODE);
     if (!xdr_RXGK_TokenContainer(&xdrs, container)) {
 	rx_opaque_freeContents(out);
-	ret = RXGEN_SS_MARSHAL;
+	ret = rxgk_int_error(RXGEN_SS_MARSHAL);
 	goto done;
     }
     ret = 0;
@@ -176,8 +180,10 @@ pack_wrap_token(rxgk_key server_key, afs_int32 kvno, afs_int32 enctype,
 	goto done;
     ret = rx_opaque_populate(&container.encrypted_token, encrypted_token.val,
 			     encrypted_token.len);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     container.kvno = kvno;
     container.enctype = enctype;
 
@@ -222,7 +228,7 @@ rxgk_print_token_and_key(struct rx_opaque *out, RXGK_TokenInfo *input_info,
 
     len = rxgk_etype_to_len(input_info->enctype);
     if (len < 0) {
-	ret = RXGK_BADETYPE;
+	ret = rxgk_int_error(RXGK_BADETYPE);
         goto done;
     }
 
@@ -260,7 +266,7 @@ unpack_container(RXGK_Data *in, RXGK_TokenContainer *container)
     xdrmem_create(&xdrs, in->val, in->len, XDR_DECODE);
     if (!xdr_RXGK_TokenContainer(&xdrs, container)) {
 	xdr_destroy(&xdrs);
-	return RXGEN_SS_UNMARSHAL;
+	return rxgk_int_error(RXGEN_SS_UNMARSHAL);
     }
     xdr_destroy(&xdrs);
     return 0;
@@ -274,7 +280,7 @@ decrypt_token(struct rx_opaque *enctoken, afs_int32 kvno, afs_int32 enctype,
     afs_int32 ret;
 
     if (kvno <= 0 || enctype <= 0) {
-	ret = RXGK_BAD_TOKEN;
+	ret = rxgk_int_error(RXGK_BAD_TOKEN);
         goto done;
     }
 
@@ -299,7 +305,7 @@ unpack_token(RXGK_Data *in, RXGK_Token *token)
     xdrmem_create(&xdrs, in->val, in->len, XDR_DECODE);
     if (!xdr_RXGK_Token(&xdrs, token)) {
 	xdr_destroy(&xdrs);
-	return RXGEN_SS_UNMARSHAL;
+	return rxgk_int_error(RXGEN_SS_UNMARSHAL);
     }
     xdr_destroy(&xdrs);
     return 0;
@@ -359,7 +365,7 @@ make_token(struct rx_opaque *out, RXGK_TokenInfo *info,
     memset(out, 0, sizeof(*out));
 
     if (nids < 0) {
-        ret = RXGK_INCONSISTENCY;
+	ret = rxgk_misc_error();
         goto done;
     }
 
@@ -368,8 +374,10 @@ make_token(struct rx_opaque *out, RXGK_TokenInfo *info,
 
     /* Create the rest of the token. */
     ret = rx_opaque_populate(&token.K0, k0->val, k0->len);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     token.identities.len = (afs_uint32)nids;
     token.identities.val = identities;
     ret = pack_wrap_token(key, kvno, enctype, &token, out);
@@ -418,7 +426,7 @@ rxgk_make_token(struct rx_opaque *out, RXGK_TokenInfo *info,
 	/* You cannot make printed tokens with this function; use
 	 * rxgk_print_token instead. */
 	memset(out, 0, sizeof(*out));
-	return RXGK_INCONSISTENCY;
+	return rxgk_misc_error();
     }
     return make_token(out, info, k0, identities, nids, key, kvno, enctype);
 }

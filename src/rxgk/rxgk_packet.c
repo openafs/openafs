@@ -102,21 +102,25 @@ rxgk_check_mic_packet(rxgk_key tk, afs_int32 keyusage,
 
     miclen = rx_GetSecurityHeaderSize(aconn);
     if (miclen == 0) {
-        ret = RXGK_INCONSISTENCY;
+	ret = rxgk_misc_error();
         goto done;
     }
     if (rx_GetDataSize(apacket) < miclen) {
-	ret = RXGK_PACKETSHORT;
+	ret = rxgk_int_error(RXGK_PACKETSHORT);
         goto done;
     }
     len = rx_GetDataSize(apacket) - miclen;
     ret = rx_opaque_alloc(&plain, sizeof(*header) + len);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     header = plain.val;
     ret = rx_opaque_alloc(&mic, miclen);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     populate_header(header, apacket, rx_SecurityClassOf(aconn), len);
     rx_packetread(apacket, 0, miclen, mic.val);
     rx_packetread(apacket, miclen, len,
@@ -163,18 +167,20 @@ rxgk_decrypt_packet(rxgk_key tk, afs_int32 keyusage,
     len = rx_GetDataSize(apacket);
 
     if (rx_GetSecurityHeaderSize(aconn) != sizeof(*header)) {
-        ret = RXGK_INCONSISTENCY;
+	ret = rxgk_misc_error();
         goto done;
     }
 
     header = rxi_Alloc(sizeof(*header));
     if (header == NULL) {
-	ret = ENOMEM;
+	ret = rxgk_int_error(ENOMEM);
         goto done;
     }
     ret = rx_opaque_alloc(&crypt, len);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     rx_packetread(apacket, 0, len, crypt.val);
 
     /* The actual decryption */
@@ -188,7 +194,7 @@ rxgk_decrypt_packet(rxgk_key tk, afs_int32 keyusage,
          * don't even have enough bytes for an rxgk_header, something is
          * clearly wrong.
 	 */
-        ret = RXGK_DATA_LEN;
+	ret = rxgk_int_error(RXGK_DATA_LEN);
         goto done;
     }
     cryptheader = plain.val;
@@ -204,7 +210,7 @@ rxgk_decrypt_packet(rxgk_key tk, afs_int32 keyusage,
      * size of the plaintext in our decrypted buffer.
      */
     if (ntohl(cryptheader->length) > plain.len - sizeof(*cryptheader)) {
-        ret = RXGK_DATA_LEN;
+	ret = rxgk_int_error(RXGK_DATA_LEN);
         goto done;
     }
 
@@ -215,13 +221,13 @@ rxgk_decrypt_packet(rxgk_key tk, afs_int32 keyusage,
      * this is a security-sensitive comparison. */
     ret = ct_memcmp(header, cryptheader, sizeof(*header));
     if (ret != 0) {
-	ret = RXGK_SEALED_INCON;
+	ret = rxgk_int_error(RXGK_SEALED_INCON);
 	goto done;
     }
 
     len = ntohl(cryptheader->length) + sizeof(*header);
     if (len > 0xffffu) {
-	ret = RXGK_DATA_LEN;
+	ret = rxgk_int_error(RXGK_DATA_LEN);
 	goto done;
     }
 
@@ -268,8 +274,10 @@ rxgk_mic_packet(rxgk_key tk, afs_int32 keyusage, struct rx_connection *aconn,
     len = rx_GetDataSize(apacket);
     miclen = rx_GetSecurityHeaderSize(aconn);
     ret = rx_opaque_alloc(&plain, sizeof(*header) + len);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     header = plain.val;
     populate_header(header, apacket, rx_SecurityClassOf(aconn), len);
     rx_packetread(apacket, miclen, len,
@@ -281,7 +289,7 @@ rxgk_mic_packet(rxgk_key tk, afs_int32 keyusage, struct rx_connection *aconn,
 	goto done;
 
     if (mic.len != miclen) {
-	ret = RXGK_INCONSISTENCY;
+	ret = rxgk_misc_error();
 	goto done;
     }
 
@@ -318,12 +326,14 @@ rxgk_enc_packet(rxgk_key tk, afs_int32 keyusage, struct rx_connection *aconn,
 
     len = rx_GetDataSize(apacket);
     if (rx_GetSecurityHeaderSize(aconn) != sizeof(*header)) {
-        ret = RXGK_INCONSISTENCY;
+	ret = rxgk_misc_error();
         goto done;
     }
     ret = rx_opaque_alloc(&plain, sizeof(*header) + len);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     header = plain.val;
     populate_header(header, apacket, rx_SecurityClassOf(aconn), len);
     rx_packetread(apacket, sizeof(*header), len,
@@ -334,7 +344,7 @@ rxgk_enc_packet(rxgk_key tk, afs_int32 keyusage, struct rx_connection *aconn,
     if (ret != 0)
 	goto done;
     if (crypt.len > 0xffffu) {
-	ret = RXGK_DATA_LEN;
+	ret = rxgk_int_error(RXGK_DATA_LEN);
 	goto done;
     }
 
@@ -410,7 +420,7 @@ rxgk_check_packet(int server, struct rx_connection *aconn,
 		break;
 
 	    default:
-		ret = RXGK_INCONSISTENCY;
+		ret = rxgk_misc_error();
 	}
 	rxgk_release_key(&tk);
     }

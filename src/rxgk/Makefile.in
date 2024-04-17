@@ -13,7 +13,8 @@ LT_objs = rxgk_client.lo rxgk_server.lo rxgk_errs.lo rxgk_int.cs.lo \
 LT_deps =   $(top_builddir)/src/opr/liboafs_opr.la \
 	    $(top_builddir)/src/comerr/liboafs_comerr.la \
 	    $(top_builddir)/src/rx/liboafs_rx.la \
-	    $(top_builddir)/src/crypto/rfc3961/liboafs_rfc3961.la
+	    $(top_builddir)/src/crypto/rfc3961/liboafs_rfc3961.la \
+	    $(top_builddir)/src/util/liboafs_util.la
 
 LT_libs =   # gssapi will go here
 

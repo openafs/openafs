@@ -49,10 +49,25 @@
 # include "afs/sysincludes.h"
 # include "afsincludes.h"
 #else
+# include <afs/afsutil.h>
 # include <errno.h>
 #endif
 
 #include "rxgk_private.h"
+
+/* Called via rxgk_int_error(). Logs an internal/unusual error. */
+afs_int32
+rxgk_int_error_line(afs_int32 code, const char *fname, int line)
+{
+#ifdef KERNEL
+    afs_warn_limit(("rxgk: Internal error %d at %s:%d. Please report a bug "
+		    "if this causes problems.\n", code, fname, line));
+#else
+    ViceLog_limit(0, ("rxgk: Internal error %d at %s:%d. Please report a bug "
+		      "if this causes problems.\n", code, fname, line));
+#endif
+    return code;
+}
 
 /**
  * Set the security header and trailer sizes on a connection
@@ -92,7 +107,7 @@ rxgk_security_overhead(struct rx_connection *aconn, RXGK_Level level,
 	    rx_SetSecurityMaxTrailerSize(aconn, elen);
 	    return 0;
 	default:
-	    return RXGK_INCONSISTENCY;
+	    return rxgk_misc_error();
     }
 }
 
@@ -130,17 +145,17 @@ rxgk_key_number(afs_uint16 wire, afs_uint32 local, afs_uint32 *real)
     } else if (diff == 1) {
 	/* Our peer is using a kvno 1 higher than 'local' */
 	if (local == MAX_AFS_UINT32)
-	    return RXGK_INCONSISTENCY;
+	    return rxgk_misc_error();
 	*real = local + 1;
 
     } else if (diff == (afs_uint16)0xffffu) {
 	/* Our peer is using a kvno 1 lower than 'local' */
 	if (local == 0)
-	    return RXGK_INCONSISTENCY;
+	    return rxgk_misc_error();
 	*real = local - 1;
 
     } else {
-	return RXGK_BADKEYNO;
+	return rxgk_int_error(RXGK_BADKEYNO);
     }
     return 0;
 }

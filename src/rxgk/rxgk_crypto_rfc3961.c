@@ -162,11 +162,11 @@ rxgk_etype_to_len(int etype)
 
     code = krb5_init_context(&ctx);
     if (code != 0)
-	return -1;
+	return rxgk_int_error(-1);
     code = krb5_enctype_keybits(ctx, etype, &bits);
     krb5_free_context(ctx);
     if (code != 0)
-	return -1;
+	return rxgk_int_error(-1);
     return (bits + 7) / 8;
 }
 
@@ -203,18 +203,22 @@ rxgk_make_key(rxgk_key *key_out, void *raw_key, afs_uint32 length,
 
     new_key = rxi_Alloc(sizeof(*new_key));
     if (new_key == NULL) {
-	ret = RXGK_INCONSISTENCY;
+	ret = rxgk_misc_error();
 	goto done;
     }
     ret = krb5_init_context(&new_key->init_ctx);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     ret = krb5_enctype_keysize(new_key->init_ctx, enctype, &full_length);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     input_length = rxgk_etype_to_len(enctype);
     if (input_length < 0) {
-	ret = RXGK_INCONSISTENCY;
+	ret = rxgk_misc_error();
 	goto done;
     }
     if (length == full_length) {
@@ -228,8 +232,10 @@ rxgk_make_key(rxgk_key *key_out, void *raw_key, afs_uint32 length,
     } else {
 	ret = RXGK_BADETYPE;
     }
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     *key_out = keyblock2key(new_key);
  done:
     if (ret != 0 && new_key != NULL) {
@@ -288,10 +294,10 @@ rxgk_random_key(afs_int32 *enctype, rxgk_key *key_out)
 
     len = rxgk_etype_to_len(*enctype);
     if (len < 0)
-	return RXGK_INCONSISTENCY;
+	return rxgk_misc_error();
     buf = rxi_Alloc(len);
     if (buf == NULL)
-	return RXGK_INCONSISTENCY;
+	return rxgk_misc_error();
     krb5_generate_random_block(buf, (size_t)len);
     ret = rxgk_make_key(key_out, buf, len, *enctype);
     rxi_Free(buf, len);
@@ -341,18 +347,22 @@ rxgk_mic_length(rxgk_key key, size_t *out)
     *out = 0;
 
     ret = krb5_init_context(&ctx);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
         goto done;
+    }
 
     enctype = deref_keyblock_enctype(&keyblock->key);
     cstype = etoc(enctype);
     if (cstype == -1) {
-	ret = RXGK_BADETYPE;
+	ret = rxgk_int_error(RXGK_BADETYPE);
 	goto done;
     }
     ret = krb5_checksumsize(ctx, cstype, &len);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     *out = len;
 
  done:
@@ -396,31 +406,42 @@ rxgk_mic_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
     memset(out, 0, sizeof(*out));
 
     ret = krb5_init_context(&ctx);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
         goto done;
+    }
 
     enctype = deref_keyblock_enctype(&keyblock->key);
     cstype = etoc(enctype);
     if (cstype == -1) {
-	ret = RXGK_BADETYPE;
+	ret = rxgk_int_error(RXGK_BADETYPE);
 	goto done;
     }
     ret = krb5_checksumsize(ctx, cstype, &len);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     ret = krb5_crypto_init(ctx, &keyblock->key, enctype, &crypto);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     ret = krb5_create_checksum(ctx, crypto, usage, cstype, in->val,
 			       in->len, &cksum);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     /* sanity check */
     if (len != cksum.checksum.length) {
-	ret = RXGK_INCONSISTENCY;
+	ret = rxgk_misc_error();
 	goto done;
     }
     ret = rx_opaque_populate(out, cksum.checksum.data, len);
+    if (ret != 0) {
+	rxgk_int_error(ret);
+    }
 
  done:
     free_Checksum(&cksum);
@@ -460,14 +481,18 @@ rxgk_check_mic_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
     memset(&cksum, 0, sizeof(cksum));
 
     ret = krb5_init_context(&ctx);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
         goto done;
+    }
 
     enctype = deref_keyblock_enctype(&keyblock->key);
     cksum.cksumtype = etoc(enctype);
     ret = krb5_crypto_init(ctx, &keyblock->key, enctype, &crypto);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     cksum.checksum.data = mic->val;
     cksum.checksum.length = mic->len;
     ret = krb5_verify_checksum(ctx, crypto, usage, in->val, in->len,
@@ -476,6 +501,7 @@ rxgk_check_mic_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
     cksum.checksum.data = NULL;
     cksum.checksum.length = 0;
     if (ret != 0) {
+	rxgk_int_error(ret);
 	ret = RXGK_SEALED_INCON;
     }
 
@@ -521,17 +547,26 @@ rxgk_encrypt_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
     memset(out, 0, sizeof(*out));
 
     ret = krb5_init_context(&ctx);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
         goto done;
+    }
 
     enctype = deref_keyblock_enctype(&keyblock->key);
     ret = krb5_crypto_init(ctx, &keyblock->key, enctype, &crypto);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     ret = krb5_encrypt(ctx, crypto, usage, in->val, in->len, &kd_out);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     ret = rx_opaque_populate(out, kd_out.data, kd_out.length);
+    if (ret != 0) {
+	rxgk_int_error(ret);
+    }
 
  done:
     if (crypto != NULL)
@@ -575,19 +610,27 @@ rxgk_decrypt_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
     memset(&kd_out, 0, sizeof(kd_out));
 
     ret = krb5_init_context(&ctx);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
         goto done;
+    }
 
     enctype = deref_keyblock_enctype(&keyblock->key);
     ret = krb5_crypto_init(ctx, &keyblock->key, enctype, &crypto);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     ret = krb5_decrypt(ctx, crypto, usage, in->val, in->len, &kd_out);
     if (ret != 0) {
+	rxgk_int_error(ret);
         ret = RXGK_SEALED_INCON;
 	goto done;
     }
     ret = rx_opaque_populate(out, kd_out.data, kd_out.length);
+    if (ret != 0) {
+	rxgk_int_error(ret);
+    }
 
  done:
     if (crypto != NULL)
@@ -621,27 +664,33 @@ PRFplus(krb5_data *out, krb5_enctype enctype, rxgk_key k0,
     memset(&prf_out, 0, sizeof(prf_out));
 
     ret = krb5_init_context(&ctx);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
         goto done;
+    }
 
     ret = krb5_crypto_init(ctx, &keyblock->key, enctype, &crypto);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     prf_in.length = sizeof(n_iter) + seed_len;
     prf_in.data = rxi_Alloc(prf_in.length);
     if (prf_in.data == NULL) {
-	ret = RXGK_INCONSISTENCY;
+	ret = rxgk_misc_error();
 	goto done;
     }
     memcpy((unsigned char *)prf_in.data + sizeof(n_iter), seed, seed_len);
     ret = krb5_crypto_prf_length(ctx, enctype, &block_len);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     /* We need desired_len/block_len iterations, rounded up. */
     iterations = (desired_len + block_len - 1) / block_len;
     pre_key = rxi_Alloc(iterations * block_len);
     if (pre_key == NULL) {
-	ret = RXGK_INCONSISTENCY;
+	ret = rxgk_misc_error();
 	goto done;
     }
 
@@ -650,8 +699,10 @@ PRFplus(krb5_data *out, krb5_enctype enctype, rxgk_key k0,
 	memcpy(prf_in.data, &dummy, sizeof(dummy));
 	krb5_data_free(&prf_out);
 	ret = krb5_crypto_prf(ctx, crypto, &prf_in, &prf_out);
-	if (ret != 0)
+	if (ret != 0) {
+	    ret = rxgk_misc_error();
 	    goto done;
+	}
 	memcpy(pre_key + (n_iter - 1) * block_len, prf_out.data, block_len);
     }
     memcpy(out->data, pre_key, desired_len);
@@ -721,7 +772,7 @@ rxgk_derive_tk(rxgk_key *tk, rxgk_key k0, afs_uint32 epoch, afs_uint32 cid,
     enctype = deref_keyblock_enctype(&keyblock->key);
     ell = rxgk_etype_to_len(enctype);
     if (ell < 0)
-	return RXGK_INCONSISTENCY;
+	return rxgk_misc_error();
 
     seed.epoch = htonl(epoch);
     seed.cid = htonl(cid);
@@ -733,7 +784,7 @@ rxgk_derive_tk(rxgk_key *tk, rxgk_key k0, afs_uint32 epoch, afs_uint32 cid,
 
     pre_key.data = rxi_Alloc(ell);
     if (pre_key.data == NULL) {
-	ret = RXGK_INCONSISTENCY;
+	ret = rxgk_misc_error();
 	goto done;
     }
     pre_key.length = ell;
@@ -771,11 +822,15 @@ rxgk_cipher_expansion(rxgk_key k0, afs_uint32 *len_out)
 
     enctype = deref_keyblock_enctype(&keyblock->key);
     ret = krb5_init_context(&ctx);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
         goto done;
+    }
     ret = krb5_crypto_init(ctx, &keyblock->key, enctype, &crypto);
-    if (ret != 0)
+    if (ret != 0) {
+	rxgk_int_error(ret);
 	goto done;
+    }
     len = krb5_crypto_overhead(ctx, crypto);
     *len_out = len;
 
@@ -799,7 +854,7 @@ afs_int32
 rxgk_nonce(RXGK_Data *nonce, afs_uint32 len)
 {
     if (rx_opaque_alloc(nonce, len) != 0)
-	return RXGK_INCONSISTENCY;
+	return rxgk_misc_error();
 
     krb5_generate_random_block(nonce->val, len);
     return 0;
