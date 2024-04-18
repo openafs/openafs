@@ -458,9 +458,6 @@ kauth_depinstall: config rxgen comerr
 ptserver_depinstall: config rxgen comerr
 	+${COMPILE_PART1} ptserver ${COMPILE_DEPINSTALL}
 
-${DEST}/bin/dedebug: dedebug
-	${INSTALL} $? $@
-
 
 #
 # libafs build targets

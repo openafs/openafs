@@ -120,11 +120,6 @@ cmdebug.o: cmdebug.c ${INCLS} AFS_component_version_number.c
 cmdebug: cmdebug.o ${CMLIBS}
 	$(AFS_LDRULE) cmdebug.o ${CMLIBS} $(LIB_roken) ${XLIBS}
 
-dedebug.o: dedebug.c ${INCLS} AFS_component_version_number.c
-
-dedebug: dedebug.o ${CMLIBS}
-	$(AFS_LDRULE) dedebug.o ${CMLIBS} $(LIB_roken) ${XLIBS}
-
 #
 # Install targets
 #
@@ -159,7 +154,7 @@ dest: fs livesys up fstrace cmdebug afsio
 clean:
 	$(LT_CLEAN)
 	$(RM) -f *.o *.a up fs core cmdebug \
-		AFS_component_version_number.c fstrace gcpags livesys dedebug \
+		AFS_component_version_number.c fstrace gcpags livesys \
 		cacheout afsio
 
 .PHONY: test
