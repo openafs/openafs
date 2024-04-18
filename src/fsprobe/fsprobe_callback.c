@@ -745,10 +745,3 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call * rxcall,
      */
     return (0);
 }
-
-int SRXAFSCB_GetDE(struct rx_call *a_call, afs_int32 a_index,
-		   afs_int32 addr, afs_int32 inode, afs_int32 flags,
-		   afs_int32 time, char ** fileName)
-{
-    return RXGEN_OPCODE;
-}
