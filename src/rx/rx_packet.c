@@ -276,7 +276,9 @@ AllocPacketBufs(int class, int num_pkts, struct opr_queue * q)
     if (transfer > 0) {
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
+	MUTEX_ENTER(&rx_packets_mutex);
 	transfer = opr_max(transfer, rx_TSFPQGlobSize);
+	MUTEX_EXIT(&rx_packets_mutex);
 	if (transfer > rx_nFreePackets) {
 	    /* alloc enough for us, plus a few globs for other threads */
 	    rxi_MorePacketsNoLock(transfer + 4 * rx_initSendWindow);
@@ -367,10 +369,27 @@ AllocPacketBufs(int class, int num_pkts, struct opr_queue * q)
 }
 #endif /* RX_ENABLE_TSFPQ */
 
-/*
- * Free a packet currently used as a continuation buffer
- */
 #ifdef RX_ENABLE_TSFPQ
+/*
+ * Returns 1 if the given thread-specific free packet queue is over quota (that
+ * is, has more than rx_TSFPQLocalMax packets). Returns 0 otherwise.
+ *
+ * rx_packets_mutex must NOT be held.
+ */
+static int
+rxi_ts_fpq_overquota(struct rx_ts_info_t *rx_ts_info)
+{
+    int overquota = 0;
+
+    MUTEX_ENTER(&rx_packets_mutex);
+    if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
+	overquota = 1;
+    }
+    MUTEX_EXIT(&rx_packets_mutex);
+
+    return overquota;
+}
+
 /* num_pkts=0 means queue length is unknown */
 int
 rxi_FreePackets(int num_pkts, struct opr_queue * q)
@@ -399,7 +418,7 @@ rxi_FreePackets(int num_pkts, struct opr_queue * q)
 	RX_TS_FPQ_QCHECKIN(rx_ts_info, num_pkts, q);
     }
 
-    if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
+    if (rxi_ts_fpq_overquota(rx_ts_info)) {
         NETPRI;
 	MUTEX_ENTER(&rx_freePktQ_lock);
 
@@ -616,7 +635,7 @@ rxi_MorePackets(int apackets)
     }
     rx_ts_info->_FPQ.delta += apackets;
 
-    if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
+    if (rxi_ts_fpq_overquota(rx_ts_info)) {
         NETPRI;
 	MUTEX_ENTER(&rx_freePktQ_lock);
 
@@ -661,7 +680,9 @@ rxi_MorePackets(int apackets)
 	rx_mallocedP = p;
     }
 
+    MUTEX_ENTER(&rx_packets_mutex);
     rx_nPackets += apackets;
+    MUTEX_EXIT(&rx_packets_mutex);
     rx_nFreePackets += apackets;
     rxi_NeedMorePackets = FALSE;
     rxi_PacketsUnWait();
@@ -822,8 +843,10 @@ rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit)
 	    rxi_PacketsUnWait();
         } else {
             xfer = num_keep_local - rx_ts_info->_FPQ.len;
+	    MUTEX_ENTER(&rx_packets_mutex);
             if ((num_keep_local > rx_TSFPQLocalMax) && !allow_overcommit)
                 xfer = rx_TSFPQLocalMax - rx_ts_info->_FPQ.len;
+	    MUTEX_EXIT(&rx_packets_mutex);
             if (rx_nFreePackets < xfer) {
 		rxi_MorePacketsNoLock(opr_max(xfer - rx_nFreePackets, 4 * rx_initSendWindow));
             }
@@ -888,7 +911,7 @@ rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
     RX_TS_INFO_GET(rx_ts_info);
     RX_TS_FPQ_CHECKIN(rx_ts_info,p);
 
-    if (flush_global && (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax)) {
+    if (flush_global && rxi_ts_fpq_overquota(rx_ts_info)) {
         NETPRI;
 	MUTEX_ENTER(&rx_freePktQ_lock);
 
@@ -993,7 +1016,7 @@ rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first, int flush_global)
     p->length = 0;
     p->niovecs = 0;
 
-    if (flush_global && (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax)) {
+    if (flush_global && rxi_ts_fpq_overquota(rx_ts_info)) {
         NETPRI;
 	MUTEX_ENTER(&rx_freePktQ_lock);
 
@@ -1067,7 +1090,7 @@ rxi_TrimDataBufs(struct rx_packet *p, int first)
 	RX_TS_FPQ_CHECKIN(rx_ts_info,RX_CBUF_TO_PACKET(iov->iov_base, p));
 	p->niovecs--;
     }
-    if (rx_ts_info->_FPQ.len > rx_TSFPQLocalMax) {
+    if (rxi_ts_fpq_overquota(rx_ts_info)) {
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
 

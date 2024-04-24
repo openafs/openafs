@@ -295,7 +295,10 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
     do { \
         int i; \
         struct rx_packet * p; \
-        int tsize = opr_min((rx_ts_info_p)->_FPQ.len, (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + 3 *  rx_TSFPQGlobSize); \
+	int tsize; \
+	MUTEX_ENTER(&rx_packets_mutex); \
+	tsize = opr_min((rx_ts_info_p)->_FPQ.len, (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + 3 * rx_TSFPQGlobSize); \
+	MUTEX_EXIT(&rx_packets_mutex); \
 	if (tsize <= 0) break; \
         for (i=0,p=opr_queue_Last(&((rx_ts_info_p)->_FPQ.queue), \
 				 struct rx_packet, entry); \
@@ -343,8 +346,10 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
     do { \
         int i, tsize; \
         struct rx_packet * p; \
+	MUTEX_ENTER(&rx_packets_mutex); \
         tsize = (rx_TSFPQGlobSize <= rx_nFreePackets) ? \
                  rx_TSFPQGlobSize : rx_nFreePackets; \
+	MUTEX_EXIT(&rx_packets_mutex); \
         for (i=0, \
 	       p=opr_queue_First(&rx_freePacketQueue, struct rx_packet, entry); \
              i < tsize; \
