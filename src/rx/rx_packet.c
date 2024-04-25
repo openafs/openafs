@@ -628,15 +628,15 @@ rxi_MorePackets(int apackets)
 
 	RX_TS_FPQ_CHECKIN(rx_ts_info,p);
 
+#ifdef RXDEBUG_PACKET
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
-#ifdef RXDEBUG_PACKET
         p->packetId = rx_packet_id++;
         p->allNextp = rx_mallocedP;
         rx_mallocedP = p;
-#endif /* RXDEBUG_PACKET */
         MUTEX_EXIT(&rx_freePktQ_lock);
         USERPRI;
+#endif /* RXDEBUG_PACKET */
     }
     rx_ts_info->_FPQ.delta += apackets;
 
@@ -726,15 +726,15 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 	p->niovecs = 2;
 	RX_TS_FPQ_CHECKIN(rx_ts_info,p);
 
+#ifdef RXDEBUG_PACKET
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
-#ifdef RXDEBUG_PACKET
         p->packetId = rx_packet_id++;
         p->allNextp = rx_mallocedP;
         rx_mallocedP = p;
-#endif /* RXDEBUG_PACKET */
         MUTEX_EXIT(&rx_freePktQ_lock);
         USERPRI;
+#endif /* RXDEBUG_PACKET */
     }
     rx_ts_info->_FPQ.delta += apackets;
 
