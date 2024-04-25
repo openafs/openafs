@@ -84,8 +84,13 @@ struct rx_mallocedPacket {
 /* rxdb_fileID is used to identify the lock location, along with line#. */
 static int rxdb_fileID = RXDB_FILE_RX_PACKET;
 #endif /* RX_LOCKS_DB */
-static struct rx_packet *rx_mallocedP = 0;
+
 #ifdef RXDEBUG_PACKET
+/*
+ * Points to the last allocated packet (specifically the last packet in the
+ * latest allocated block of packets), from rxi_MorePackets*.
+ */
+static struct rx_packet *rx_mallocedP;
 static afs_uint32       rx_packet_id = 0;
 #endif
 
@@ -628,8 +633,8 @@ rxi_MorePackets(int apackets)
 #ifdef RXDEBUG_PACKET
         p->packetId = rx_packet_id++;
         p->allNextp = rx_mallocedP;
-#endif /* RXDEBUG_PACKET */
         rx_mallocedP = p;
+#endif /* RXDEBUG_PACKET */
         MUTEX_EXIT(&rx_freePktQ_lock);
         USERPRI;
     }
@@ -676,8 +681,8 @@ rxi_MorePackets(int apackets)
 #ifdef RXDEBUG_PACKET
         p->packetId = rx_packet_id++;
         p->allNextp = rx_mallocedP;
-#endif /* RXDEBUG_PACKET */
 	rx_mallocedP = p;
+#endif /* RXDEBUG_PACKET */
     }
 
     MUTEX_ENTER(&rx_packets_mutex);
@@ -726,8 +731,8 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 #ifdef RXDEBUG_PACKET
         p->packetId = rx_packet_id++;
         p->allNextp = rx_mallocedP;
-#endif /* RXDEBUG_PACKET */
         rx_mallocedP = p;
+#endif /* RXDEBUG_PACKET */
         MUTEX_EXIT(&rx_freePktQ_lock);
         USERPRI;
     }
@@ -790,8 +795,8 @@ rxi_MorePacketsNoLock(int apackets)
 #ifdef RXDEBUG_PACKET
         p->packetId = rx_packet_id++;
         p->allNextp = rx_mallocedP;
-#endif /* RXDEBUG_PACKET */
 	rx_mallocedP = p;
+#endif /* RXDEBUG_PACKET */
     }
 
     rx_nFreePackets += apackets;
