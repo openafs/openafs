@@ -26,6 +26,7 @@ extern void afs_FreeAllAxs(struct axscache **headp);
 extern void shutdown_xscache(void);
 
 /* afs_buffer.c */
+extern void DFlushDCache(struct dcache *);
 extern void shutdown_bufferpackage(void);
 
 /* afs_call.c */
