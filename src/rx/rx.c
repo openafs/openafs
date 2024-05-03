@@ -495,6 +495,8 @@ rx_InitHost(u_int host, u_int port)
 	UNLOCK_RX_INIT;
 	return 0; /* already started */
     }
+
+    rxi_ResetStatistics();
 #ifdef RXDEBUG
     rxi_DebugInit();
 #endif
@@ -552,7 +554,6 @@ rx_InitHost(u_int host, u_int port)
     rxi_nCalls = 0;
     rx_connDeadTime = RX_DEFAULT_DEAD_TIME;
     rx_tranquil = 0;		/* reset flag */
-    rxi_ResetStatistics();
     htable = osi_Alloc(rx_hashTableSize * sizeof(struct rx_connection *));
     PIN(htable, rx_hashTableSize * sizeof(struct rx_connection *));	/* XXXXX */
     memset(htable, 0, rx_hashTableSize * sizeof(struct rx_connection *));
