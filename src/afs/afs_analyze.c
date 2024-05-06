@@ -424,18 +424,15 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
     struct afs_stats_RPCErrors *aerrP;
     afs_uint32 address;
 
+    afs_FinalizeReq(areq);
+
     if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
 	/* On reconnection, act as connected. XXX: for now.... */
-        /* SXW - This may get very tired after a while. We should try and
+	/* SXW - This may get very tired after a while. We should try and
 	 *       intercept all RPCs before they get here ... */
 	/*printf("afs_Analyze: disconnected\n");*/
-	afs_FinalizeReq(areq);
-	if (aconn) {
-	    /* SXW - I suspect that this will _never_ happen - we shouldn't
-	     *       get a connection because we're disconnected !!!*/
-	    afs_PutConn(aconn, rxconn, locktype);
-	}
-	return 0;
+	shouldRetry = 0;
+	goto out;
     }
 
     AFS_STATCNT(afs_Analyze);
@@ -443,12 +440,11 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	       ICL_TYPE_POINTER, aconn, ICL_TYPE_INT32, acode, ICL_TYPE_LONG,
 	       areq->uid);
 
-    aerrP = (struct afs_stats_RPCErrors *)0;
+    aerrP = NULL;
 
     if ((op >= 0) && (op < AFS_STATS_NUM_FS_RPC_OPS))
 	aerrP = &(afs_stats_cmfullperf.rpc.fsRPCErrors[op]);
 
-    afs_FinalizeReq(areq);
     if (!aconn && areq->busyCount) {	/* one RPC or more got VBUSY/VRESTARTING */
 
 	tvp = afs_FindVolume(afid, READ_LOCK);
@@ -484,7 +480,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	if (shouldRetry != 0)
 	    areq->busyCount++;
 
-	return shouldRetry;	/* should retry */
+	goto out;	/* should retry */
     }
 
     if (!aconn || !aconn->parent->srvr) {
@@ -578,9 +574,7 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 		}
 	    }
 	}
-	if (aconn) /* simply lacking aconn->server doesn't absolve this */
-	    afs_PutConn(aconn, rxconn, locktype);
-	return shouldRetry;
+	goto out;
     }
 
     /* Find server associated with this connection. */
@@ -606,9 +600,8 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 		afs_PutVolume(tvp, READ_LOCK);
 	    }
 	}
-
-	afs_PutConn(aconn, rxconn, locktype);
-	return 0;
+	shouldRetry = 0;
+	goto out;
     }
 
     /* Save the last code of this server on this request. */
@@ -845,8 +838,10 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 	VSleep(1);		/* Just a hack for desperate times. */
 	shouldRetry = 1;
     }
-out:
+ out:
     /* now unlock the connection and return */
-    afs_PutConn(aconn, rxconn, locktype);
+    if (aconn != NULL) {
+	afs_PutConn(aconn, rxconn, locktype);
+    }
     return (shouldRetry);
 }				/*afs_Analyze */
