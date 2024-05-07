@@ -1876,8 +1876,6 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-all", CMD_FLAG, CMD_OPTIONAL, "restart all processes");
     add_std_args(ts);
 
-#ifndef OPBOS
-
     ts = cmd_CreateSyntax("create", CreateServer, NULL, 0,
 			  "create a new server instance");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
@@ -2046,7 +2044,6 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-mode", CMD_SINGLE, 0, "mode to set");
     add_std_args(ts);
-#endif
 
     code = cmd_Dispatch(argc, argv);
     rx_Finalize();
