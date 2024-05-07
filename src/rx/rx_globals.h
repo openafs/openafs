@@ -167,16 +167,13 @@ typedef struct rx_ts_info_t {
         int galloc_ops;
         int galloc_xfer;
     } _FPQ;
+
+    /*
+     * A packet dedicated for rxi_SendAck(), since that function is in the
+     * critical path and can be responsible for a lot of allocs.
+     */
     struct rx_packet * local_special_packet;
 } rx_ts_info_t;
-EXT struct rx_ts_info_t * rx_ts_info_init(void);   /* init function for thread-specific data struct */
-#define RX_TS_INFO_GET(ts_info_p) \
-    do { \
-        ts_info_p = (struct rx_ts_info_t*)pthread_getspecific(rx_ts_info_key); \
-        if (ts_info_p == NULL) { \
-            opr_Verify((ts_info_p = rx_ts_info_init()) != NULL); \
-        } \
-    } while(0)
 #endif /* AFS_PTHREAD_ENV */
 
 

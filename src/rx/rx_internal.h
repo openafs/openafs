@@ -74,6 +74,7 @@ extern void rxi_GetLocalAddr(struct sockaddr_in *sin);
 
 /* rx_packet.c */
 extern struct rx_packet *rxi_SplitJumboPacket(struct rx_packet *p);
+extern struct rx_packet *rxi_GetLocalSpecialPacket(void);
 
 #if !defined(AFS_AIX_ENV) || (defined(AFS_AIX_ENV) && (!defined(KERNEL) || defined(UKERNEL)))
 /* rx_kcommon.c / rx_user.c */

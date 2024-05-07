@@ -5630,9 +5630,6 @@ rxi_SendAck(struct rx_call *call,
     u_char offset = 0;
     afs_int32 templ;
     afs_uint32 padbytes = 0;
-#ifdef RX_ENABLE_TSFPQ
-    struct rx_ts_info_t * rx_ts_info;
-#endif
 
     /*
      * Open the receive window once a thread starts reading packets
@@ -5669,25 +5666,15 @@ rxi_SendAck(struct rx_call *call,
     p = optionalPacket;
 
     if (p) {
-	rx_computelen(p, p->length);	/* reset length, you never know */
-    } /* where that's been...         */
-#ifdef RX_ENABLE_TSFPQ
-    else {
-        RX_TS_INFO_GET(rx_ts_info);
-        if ((p = rx_ts_info->local_special_packet)) {
-            rx_computelen(p, p->length);
-        } else if ((p = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL))) {
-            rx_ts_info->local_special_packet = p;
-        } else { /* We won't send the ack, but don't panic. */
-            return optionalPacket;
-        }
+	/* reset length, you never know where that's been */
+	rx_computelen(p, p->length);
+    } else {
+	p = rxi_GetLocalSpecialPacket();
+	if (p == NULL) {
+	    /* We won't send the ack, but don't panic. */
+	    return optionalPacket;
+	}
     }
-#else
-    else if (!(p = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL))) {
-	/* We won't send the ack, but don't panic. */
-	return optionalPacket;
-    }
-#endif
 
     templ = padbytes +
 	rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32) -

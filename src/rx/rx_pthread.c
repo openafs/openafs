@@ -418,20 +418,6 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
     return -1;
 }
 
-struct rx_ts_info_t * rx_ts_info_init(void) {
-    struct rx_ts_info_t * rx_ts_info;
-    rx_ts_info = calloc(1, sizeof(rx_ts_info_t));
-    osi_Assert(rx_ts_info != NULL && pthread_setspecific(rx_ts_info_key, rx_ts_info) == 0);
-#ifdef RX_ENABLE_TSFPQ
-    opr_queue_Init(&rx_ts_info->_FPQ.queue);
-
-    MUTEX_ENTER(&rx_packets_mutex);
-    rx_TSFPQMaxProcs++;
-    RX_TS_FPQ_COMPUTE_LIMITS;
-    MUTEX_EXIT(&rx_packets_mutex);
-#endif /* RX_ENABLE_TSFPQ */
-    return rx_ts_info;
-}
 
 int
 rx_GetThreadNum(void) {

@@ -268,6 +268,35 @@ rxi_AllocPackets(int class, int num_pkts, struct opr_queue * q)
 }
 
 #ifdef RX_ENABLE_TSFPQ
+# define RX_TS_INFO_GET(ts_info_p) \
+    do { \
+	ts_info_p = (struct rx_ts_info_t*)pthread_getspecific(rx_ts_info_key); \
+	if (ts_info_p == NULL) { \
+	    opr_Verify((ts_info_p = rx_ts_info_init()) != NULL); \
+	} \
+    } while(0)
+
+static struct rx_ts_info_t *
+rx_ts_info_init(void)
+{
+    rx_ts_info_t *rx_ts_info;
+
+    rx_ts_info = calloc(1, sizeof(*rx_ts_info));
+    opr_Assert(rx_ts_info != NULL);
+    opr_Verify(pthread_setspecific(rx_ts_info_key, rx_ts_info) == 0);
+
+    opr_queue_Init(&rx_ts_info->_FPQ.queue);
+
+    MUTEX_ENTER(&rx_packets_mutex);
+    rx_TSFPQMaxProcs++;
+    RX_TS_FPQ_COMPUTE_LIMITS;
+    MUTEX_EXIT(&rx_packets_mutex);
+
+    return rx_ts_info;
+}
+#endif /* RX_ENABLE_TSFPQ */
+
+#ifdef RX_ENABLE_TSFPQ
 static int
 AllocPacketBufs(int class, int num_pkts, struct opr_queue * q)
 {
@@ -2978,3 +3007,34 @@ int rx_DumpPackets(FILE *outputFile, char *cookie)
     return 0;
 }
 #endif
+
+#ifdef RX_ENABLE_TSFPQ
+/*
+ * Alloc a RX_PACKET_CLASS_SPECIAL packet, using the
+ * rx_ts_info->local_special_packet field if possible.
+ */
+struct rx_packet *
+rxi_GetLocalSpecialPacket(void)
+{
+    struct rx_packet *p;
+    struct rx_ts_info_t *rx_ts_info;
+
+    RX_TS_INFO_GET(rx_ts_info);
+
+    p = rx_ts_info->local_special_packet;
+    if (p != NULL) {
+	rx_computelen(p, p->length);
+	return p;
+    }
+
+    p = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
+    rx_ts_info->local_special_packet = p;
+    return p;
+}
+#else
+struct rx_packet *
+rxi_GetLocalSpecialPacket(void)
+{
+    return rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
+}
+#endif /* RX_ENABLE_TSFPQ */
