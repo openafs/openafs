@@ -258,7 +258,6 @@ extern afs_kmutex_t rx_refcnt_mutex;
 extern afs_kmutex_t des_init_mutex;
 extern afs_kmutex_t des_random_mutex;
 #ifndef KERNEL
-extern afs_kmutex_t rx_clock_mutex;
 extern afs_kmutex_t rxi_connCacheMutex;
 extern afs_kmutex_t event_handler_mutex;
 extern afs_kmutex_t listener_mutex;
@@ -269,7 +268,6 @@ extern afs_kcondvar_t rx_event_handler_cond;
 extern afs_kcondvar_t rx_listener_cond;
 #endif /* !KERNEL */
 
-static afs_kmutex_t epoch_mutex;
 static afs_kmutex_t rx_init_mutex;
 static afs_kmutex_t rx_debug_mutex;
 static afs_kmutex_t rx_rpc_stats;
@@ -282,7 +280,6 @@ rxi_InitPthread(void)
     MUTEX_INIT(&rx_packets_mutex, "packets", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_refcnt_mutex, "refcnts", MUTEX_DEFAULT, 0);
 #ifndef KERNEL
-    MUTEX_INIT(&rx_clock_mutex, "clock", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rxi_connCacheMutex, "conn cache", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&event_handler_mutex, "event handler", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&listener_mutex, "listener", MUTEX_DEFAULT, 0);
@@ -291,7 +288,6 @@ rxi_InitPthread(void)
 #endif
     MUTEX_INIT(&rx_stats_mutex, "stats", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_atomic_mutex, "atomic", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&epoch_mutex, "epoch", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_init_mutex, "init", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_debug_mutex, "debug", MUTEX_DEFAULT, 0);
 
@@ -427,7 +423,6 @@ struct rx_connection *rxLastConn = 0;
  *
  * lowest level:
  *	multi_handle->lock
- *	rxevent_lock
  *      rx_packets_mutex
  *	rx_stats_mutex
  *      rx_refcnt_mutex

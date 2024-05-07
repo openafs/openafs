@@ -118,7 +118,6 @@ rx_freeCallQueue_lock
 rx_waitingForPackets_cv
 rx_peerHashTable_lock
 rx_connHashTable_lock
-rxevent_lock
 * rxdb_idHash
 * rxdb_lockList
 afs_duplicate_nfs_fids

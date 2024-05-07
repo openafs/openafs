@@ -59,7 +59,6 @@ afs_kmutex_t event_handler_mutex;
 afs_kcondvar_t rx_listener_cond;
 afs_kmutex_t listener_mutex;
 static int listeners_started = 0;
-afs_kmutex_t rx_clock_mutex;
 struct clock rxi_clockNow;
 
 static rx_atomic_t threadHiNum;

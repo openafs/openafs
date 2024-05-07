@@ -617,7 +617,6 @@ EXT pthread_key_t rx_thread_id_key;
 #endif
 
 #if defined(RX_ENABLE_LOCKS)
-EXT afs_kmutex_t rx_waiting_mutex POSTAMBLE;	/* used to protect waiting counters */
 EXT afs_kmutex_t rx_quota_mutex POSTAMBLE;	/* used to protect quota counters */
 EXT afs_kmutex_t rx_pthread_mutex POSTAMBLE;	/* used to protect pthread counters */
 EXT afs_kmutex_t rx_packets_mutex POSTAMBLE;	/* used to protect packet counters */
