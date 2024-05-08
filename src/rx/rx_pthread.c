@@ -31,7 +31,6 @@
 #include "rx_clock.h"
 #include "rx_atomic.h"
 #include "rx_internal.h"
-#include "rx_pthread.h"
 #ifdef AFS_NT40_ENV
 #include "rx_xmit_nt.h"
 #endif
