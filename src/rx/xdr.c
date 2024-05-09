@@ -200,7 +200,12 @@ xdr_char(XDR * xdrs, char *sp)
     switch (xdrs->x_op) {
 
     case XDR_ENCODE:
-	l = (afs_int32) * sp;
+	/*
+	 * Note that 'signed char' is not the same as 'char'! The cast here is
+	 * necessary when 'char' is unsigned (for example, with
+	 * CFLAGS=-funsigned-char).
+	 */
+	l = (afs_int32)(signed char)*sp;
 	return (XDR_PUTINT32(xdrs, &l));
 
     case XDR_DECODE:
