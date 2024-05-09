@@ -17,7 +17,8 @@ BINS = atomic-t \
        event-t \
        opaque-t \
        simple-client \
-       simple-server
+       simple-server \
+       xdr-t
 
 all: $(BINS)
 
@@ -29,6 +30,9 @@ event-t: event-t.o $(LIBS)
 
 opaque-t: opaque-t.o $(LIBS)
 	$(LT_LDRULE_static) opaque-t.o $(LIBS) $(LIB_roken) $(XLIBS)
+
+xdr-t: xdr-t.o $(LIBS)
+	$(LT_LDRULE_static) xdr-t.o $(LIBS) $(LIB_roken) $(XLIBS)
 
 simple-client: simple-client.o $(SIMPLE_LIBS)
 	$(LT_LDRULE_static) simple-client.o $(SIMPLE_LIBS) ${LIB_hcrypto} $(LIB_roken) $(XLIBS)
