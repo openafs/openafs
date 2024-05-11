@@ -1,4 +1,5 @@
 # Makefile to build the AFS Reference Guide for Unix.
+srcdir=@srcdir@
 
 BOOK = auarf000
 
@@ -16,20 +17,26 @@ DOCBOOK2PDF = @DOCBOOK2PDF@
 DBTOEPUB = $(DOCBOOK_STYLESHEETS)/epub/bin/dbtoepub
 KINDLEGEN = @KINDLEGEN@
 
+XSL_FLAGS = --path '@abs_builddir@'
+
 entities.dtd sect1.xml sect3.xml sect5.xml sect8.xml:
-	./generate-xml.pl $(TOP_SRCDIR)
+	$(srcdir)/generate-xml.pl $(TOP_SRCDIR)
 
 $(BOOK).pdf: $(SRCS)
 	if test "x$(DOCBOOK2PDF)" = "xfop"; then \
-		$(XSLTPROC) $(DOCBOOK_STYLESHEETS)/fo/docbook.xsl $(BOOK).xml > $(BOOK).fo; \
+		$(XSLTPROC) $(XSL_FLAGS) \
+		    $(DOCBOOK_STYLESHEETS)/fo/docbook.xsl \
+		    $(srcdir)/$(BOOK).xml > $(BOOK).fo; \
 		$(DOCBOOK2PDF) $(BOOK).fo $(BOOK).pdf; \
 	else \
-		$(DOCBOOK2PDF) $(BOOK).xml; \
+		$(DOCBOOK2PDF) --output=$@ --xslt-opts="$(XSL_FLAGS)" \
+		    $(srcdir)/$(BOOK).xml; \
 	fi
 
 $(BOOK).epub: $(SRCS)
 	if test -x "$(DBTOEPUB)" ; then \
-		$(DBTOEPUB) -s $(TOP_SRCDIR)/../doc/xml/mobi-fixup.xsl $(BOOK).xml; \
+		$(DBTOEPUB) -s $(TOP_SRCDIR)/../doc/xml/mobi-fixup.xsl \
+		    $(srcdir)/$(BOOK).xml; \
 	fi
 
 $(BOOK).mobi: $(BOOK).epub
@@ -38,7 +45,7 @@ $(BOOK).mobi: $(BOOK).epub
 	fi
 
 check:
-	xmllint --noout --valid $(BOOK).xml
+	xmllint $(XSL_FLAGS) --noout --valid $(srcdir)/$(BOOK).xml
 
 clean:
 	rm -f $(BOOK).pdf $(BOOK).mobi $(BOOK).epub $(BOOK).fo \
