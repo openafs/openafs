@@ -348,6 +348,14 @@ pthread_once_t rx_once_init = PTHREAD_ONCE_INIT;
 /*
  * The rx_freePktQ_lock protects the following global variables:
  * rx_nFreePackets
+ * rx_freePacketQueue
+ * rxi_NeedMorePackets
+ * rx_waitingForPackets
+ */
+
+/*
+ * The rx_mallocedPktQ_lock protects the following global variables:
+ * rx_mallocedPacketQueue
  */
 
 /*
@@ -420,6 +428,7 @@ struct rx_connection *rxLastConn = 0;
  * conn_data_lock - that more than one thread is not updating a conn data
  *		    field at the same time.
  * rx_freePktQ_lock
+ * rx_mallocedPktQ_lock
  *
  * lowest level:
  *	multi_handle->lock

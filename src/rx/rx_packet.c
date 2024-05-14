@@ -875,6 +875,14 @@ rxi_FlushLocalPacketsTSFPQ(void)
 void
 rx_CheckPackets(void)
 {
+    /*
+     * Note that we are checking rxi_NeedMorePackets outside of
+     * rx_freePktQ_lock here. This isn't really safe, but currently this
+     * function is just a best-effort attempt at allocating more packets when
+     * needed. If a caller needs to ensure that packets are allocated, they
+     * should take additional steps to ensure that beyond just calling
+     * rx_CheckPackets().
+     */
     if (rxi_NeedMorePackets) {
 	rxi_MorePackets(rx_maxSendWindow);
     }
@@ -1803,8 +1811,17 @@ rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
 #endif /*KERNEL && !UKERNEL */
 
 
-/* send a response to a debug packet */
-
+/*
+ * Send a response to a debug packet.
+ *
+ * This function reads a few values outside of the locks that are supposed to
+ * protect them. That's okay for simple values; we intentionally avoid taking
+ * the locks to be faster, and because getting the values exactly right doesn't
+ * matter.
+ *
+ * We must take locks to dereference pointers and traverse lists and
+ * hashtables, etc, but we don't worry about locks for the actual values.
+ */
 struct rx_packet *
 rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 		       afs_uint32 ahost, short aport, int istack)
