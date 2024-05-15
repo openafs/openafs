@@ -11,9 +11,10 @@
 #define _AFS_PROTOTYPES_H_
 
 /* afs_analyze.c */
+extern int afs_kill_pending(void);
 extern int afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
-                       afs_int32 acode, struct VenusFid *afid,
-                       struct vrequest *areq,
+		       afs_int32 acode, struct VenusFid *afid,
+		       struct vrequest *areq,
 		       int op, afs_int32 locktype, struct cell *cellp);
 
 /* afs_axscache.c */

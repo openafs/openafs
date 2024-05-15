@@ -186,3 +186,20 @@ afs_start_thread(void (*proc)(void), char *name, int needs_glock)
 	kthread_run(afs_thread_wrapper, proc, "%s", name);
     }
 }
+
+/*
+ * Check for a pending fatal signal
+ * Return 1 if a fatal signal is pending, otherwise return 0;
+ */
+int
+osi_kill_pending(void)
+{
+#if defined(HAVE_LINUX_FATAL_SIGNAL_PENDING)
+    if (fatal_signal_pending(current)) {
+	return 1;
+    }
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25)
+# error fatal_signal_pending not available, but it should be
+#endif
+    return 0;
+}

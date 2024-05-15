@@ -1305,17 +1305,19 @@ parent_vcache_dv(struct inode *inode, cred_t *credp)
     }
     return hgetlo(pvcp->f.m.DataVersion);
 }
-
+/*
+ * Make sure we don't accidentally yield an ENOENT that's caused by internal
+ * errors instead of the requested filename actually not existing. This has been
+ * possible in the past because Linux returns errors for some low-level routines
+ * when the process is dying. Incorrect ENOENT errors can cause bogus negative
+ * dentries to exist, which is very bad, so make sure that doesn't happen.
+ */
 static inline int
 filter_enoent(int code)
 {
-#ifdef HAVE_LINUX_FATAL_SIGNAL_PENDING
-    if (code == ENOENT && fatal_signal_pending(current)) {
-        return EINTR;
+    if (code == ENOENT && afs_kill_pending()) {
+	return EINTR;
     }
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25)
-# error fatal_signal_pending not available, but it should be
-#endif
     return code;
 }
 

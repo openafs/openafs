@@ -385,6 +385,38 @@ afs_PrintServerErrors(struct vrequest *areq, struct VenusFid *afid)
 
 /*!
  * \brief
+ *	Determine if the current process is pending termination and will be
+ *	killed when returning to userspace.
+ *
+ * \retval 1 if the process is dying
+ * \retval 0 if the process is not dying
+ *
+ * \note
+ *	If the process is pending termination, there is no need to retry requests
+ *	or wait for a server to return data, etc. as the process is going to die
+ *	before it can process any data.  However we will still need to ensure that
+ *	we don't corrupt any locks, cache, etc., or any data that persists in other
+ *	processes.
+ *
+ * \note
+ *	On some platforms (Linux), a process will not sleep if it is pending
+ *	termination.  If we can detect that the process will be killed, it is better
+ *	to not retry the requests, etc. to avoid spinning the CPU.
+ */
+int
+afs_kill_pending(void)
+{
+#if defined(UKERNEL)
+    return 0;
+#elif defined(AFS_LINUX_ENV)
+    return osi_kill_pending();
+#else
+    return 0;
+#endif /* UKERNEL */
+}
+
+/*!
+ * \brief
  *	Analyze the outcome of an RPC operation, taking whatever support
  *	actions are necessary.
  *

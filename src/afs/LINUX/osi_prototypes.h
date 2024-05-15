@@ -51,6 +51,7 @@ extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 extern int osi_abspath(char *aname, char *buf, int buflen,
 		       int followlink, char **pathp);
 extern void afs_start_thread(void (*proc)(void), char *name, int needs_glock);
+extern int osi_kill_pending(void);
 
 /* osi_probe.c */
 extern void *osi_find_syscall_table(int which);
