@@ -458,6 +458,12 @@ afs_Analyze(struct afs_conn *aconn, struct rx_connection *rxconn,
 
     afs_FinalizeReq(areq);
 
+    if (afs_kill_pending()) {
+	/* If the current process is terminating, don't attempt to retry */
+	shouldRetry = 0;
+	goto out;
+    }
+
     if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
 	/* On reconnection, act as connected. XXX: for now.... */
 	/* SXW - This may get very tired after a while. We should try and
