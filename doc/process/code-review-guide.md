@@ -1,5 +1,4 @@
-Code Review Guidelines
-======================
+# Code Review Guidelines
 
 OpenAFS's use of Gerrit imposes a requirement that all changes undergo
 code review prior to being merged to any branch, whether it be master or
@@ -9,8 +8,7 @@ addressed by some reviewer, though not necessarily by the same reviewer.
 When doing a review that only addresses some of these topics, indicate
 in the review comment which portions were/were not done.
 
-What does the change claim to do?
----------------------------------
+## What does the change claim to do?
 
 This is often taken for granted, but in order to review a change we have
 to know what it is trying to do (so that we can tell if it successfully
@@ -25,8 +23,7 @@ when assessing if this change is the right thing to do (see below).
 At this part of the review, it's enough to ensure that the what and why
 are documented and seem plausible.
 
-Does the change do what it claims to do?
-----------------------------------------
+## Does the change do what it claims to do?
 
 With the newfound knowledge of the goal of the change, it becomes possible
 to assess whether it achieves that goal.  Follow through the "normal" or
@@ -63,8 +60,7 @@ just above and just below.  This holds especially for string lengths
 (e.g., in PRNAMEs the length bound need not account for a trailing NUL)
 but checking for edge cases is always important.
 
-Does the change not do something it should be doing?
-----------------------------------------------------
+## Does the change not do something it should be doing?
 
 If the goal of the change is to be comprehensive about doing something
 (within a given scope), check that it has actually changed all the
@@ -102,15 +98,13 @@ to see if there are other places where an analogous fix would apply.
 Returning uninitialized data to a network caller is the classic example
 here, but this can arise in many ways.
 
-Does the change not do what it claims to not do?
-------------------------------------------------
+## Does the change not do what it claims to not do?
 
 If there is supposed to be no functional change, is that true?
 If a given class of behavior/logic is supposed to be unmodified, trace
 through the code and confirm that that's the case.
 
-Is that the right thing to do?
-------------------------------
+## Is that the right thing to do?
 
 This question is a bit open-ended and sometimes hard to apply in
 practice, but it's usually worth taking a step back and thinking about
@@ -123,8 +117,7 @@ different overall structure.  Contrariwise, though, changing the
 behavior of a network API is pretty complicated to get right, and a
 local adjustment may be more worthwhile.
 
-Style and Standard Compliance
------------------------------
+## Style and Standard Compliance
 
 This is sometimes done in passing during an earlier stage of the review,
 but always make a point to consider whether the changes conform to the
@@ -139,9 +132,11 @@ specification; we officially target C89 plus a handful of extensions
 (though it may be simpler to reason about it as C99 minus a handful of
 features).  The precise list of extensions over C89 that we use is a
 work in progress, but includes (and will be updated as encountered):
+
 - the long long int type
 - designated initializers
-- the __func__ predefined macro
+- the `__func__` predefined macro
+
 If we're using additional language extensions or more modern
 features, they need to be scoped to a file/situation where we can
 guarantee they are available.
@@ -153,12 +148,11 @@ Our network and userspace/kernel APIs need to conform to any relevant
 standards or specifications that apply.  We cannot unilaterally change
 existing RPC-L (the .xg files processed by rxgen), and the scope for
 adding new things is limited.  When we add new pioctls, they have to
-come from the OpenAFS-specific range (i.e., be 'O' pioctls).  Com_err
+come from the OpenAFS-specific range (i.e., be 'O' pioctls).  `Com_err`
 codes in .et files are generally managed by the central.org registrar,
 etc.
 
-Documentation
--------------
+## Documentation
 
 New APIs should get documented via at least doxygen comments attached to
 their implementation.  Changes to CLI commands require man page changes.
@@ -172,8 +166,7 @@ documentation, the code review is a good opportunity to ask if
 documentation should be added, but the answer to that question will vary
 on the specifics of the case in question.
 
-Test Coverage
--------------
+## Test Coverage
 
 The current test coverage in the tree is very sparse.  If adding to or
 changing the behavior of an area of the code that does have some test
