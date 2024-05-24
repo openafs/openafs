@@ -1,5 +1,22 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.12 (pre-release)
+
+  All client platforms
+
+    * Avoid panics when writing to the cache fails while creating
+      or extending directories. (15742..15744, 15758)
+
+  Linux clients
+
+    * Add support for Linux 6.9 (15739)
+
+    * Add support for Linux 6.8 (15679..15706, 15727)
+
+    * Resolve a kernel module loading issue on the AArch64 architecture,
+      which occurs due to an unsupported RELA relocation (15728)
+
+
 OpenAFS 1.8.11
 
   All platforms
