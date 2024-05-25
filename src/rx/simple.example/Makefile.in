@@ -19,20 +19,22 @@ LIBS=$(TOP_LIBDIR)/libafsauthent.a $(TOP_LIBDIR)/libafsrpc.a \
 
 all: sample_client sample_server
 
+install dest:
+
 sample_client: sample_client.o ${LIBS} sample.cs.o
-	$(AFS_LDRULE) sample_client.o sample.cs.o ${LIBS}
+	$(AFS_LDRULE) sample_client.o sample.cs.o ${LIBS} ${LIB_hcrypto} ${LIB_roken}
 
 sample_server: sample_server.o sample.ss.o ${LIBS}
-	$(AFS_LDRULE) sample_server.o sample.ss.o ${LIBS}
+	$(AFS_LDRULE) sample_server.o sample.ss.o ${LIBS} ${LIB_hcrypto} ${LIB_roken}
 
 sample_client.o:	sample.h
 sample_server.o:	sample.h
 sample.cs.c: sample.xg
-	$(RXGEN) -A -x -C -o $@ sample.xg
+	$(RXGEN) -A -x -C -o $@ ${srcdir}/sample.xg
 sample.ss.c: sample.xg
-	$(RXGEN) -A -x -S -o $@ sample.xg
+	$(RXGEN) -A -x -S -o $@ ${srcdir}/sample.xg
 sample.h: sample.xg
-	$(RXGEN) -A -x -h -o $@ sample.xg
+	$(RXGEN) -A -x -h -o $@ ${srcdir}/sample.xg
 
 clean:
 	rm -f *.o sample.cs.c sample.ss.c sample_client sample_server

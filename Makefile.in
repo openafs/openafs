@@ -190,8 +190,9 @@ rxgen: $(DIR_roken) config
 rx: config lwp rxgen rx_depinstall util rxgk_depinstall
 	+${COMPILE_PART1} rx ${COMPILE_PART2}
 
-rx_test: rx libafsrpc
+rx_test: rx libafsrpc libafsauthent
 	+${COMPILE_PART1} rx/test ${COMPILE_PART2}
+	+${COMPILE_PART1} rx/simple.example ${COMPILE_PART2}
 
 rxstat: rx rxstat_depinstall
 	+${COMPILE_PART1} rxstat ${COMPILE_PART2}
