@@ -583,7 +583,7 @@ DFlush(void)
  * Prepare a new directory page buffer
  *
  * \param adc	    pointer to the directory object dcache
- * \param nblobs    page we want
+ * \param page	    page we want
  * \param entry	    buffer to return requested page
  *
  * \retval 0	    success; entry is updated
