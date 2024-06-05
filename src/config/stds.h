@@ -241,32 +241,37 @@ typedef struct afsUUID afsUUID;
 #endif /* AFS_NT40_ENV */
 #define AFS_VOLID_FMT "lu"
 
-/* Functions to safely cast afs_int32 and afs_uint32 so they can be used in
- * printf statemements with %ld and %lu
+/*
+ * Define macros to allow the use of the static inline attributes for platforms
+ * that support those attributes
  */
 #ifdef AFS_NT40_ENV
-#define static_inline __inline static
-#define hdr_static_inline(x) __inline static x
+# define static_inline __inline static
+# define hdr_static_inline(x) __inline static x
 #elif defined(AFS_HPUX_ENV) || defined(AFS_USR_HPUX_ENV)
 /* The HPUX compiler can segfault on 'static __inline', so fall back to
  * just 'static' so we can at least compile */
-#define static_inline static
-#define hdr_static_inline(x) static x
+# define static_inline static
+# define hdr_static_inline(x) static x
 #elif defined(AFS_AIX_ENV) || defined(AFS_USR_AIX_ENV)
-#define static_inline static
-#define hdr_static_inline(x) static x
+# define static_inline static
+# define hdr_static_inline(x) static x
 #elif defined(AFS_SGI_ENV) || defined(AFS_USR_SGI_ENV)
-#define static_inline static
-#define hdr_static_inline(x) x
+# define static_inline static
+# define hdr_static_inline(x) x
 #elif defined(AFS_NBSD_ENV) && !defined(AFS_NBSD50_ENV) \
       && defined(HAVE_FUNC_ATTRIBUTE_ALWAYS_INLINE)
-#define static_inline static __inline __attribute__((always_inline))
-#define hdr_static_inline(x) static __inline __attribute__((always_inline)) x
+# define static_inline static __inline __attribute__((always_inline))
+# define hdr_static_inline(x) static __inline __attribute__((always_inline)) x
 #else
-#define static_inline static inline
-#define hdr_static_inline(x) static inline x
+# define static_inline static inline
+# define hdr_static_inline(x) static inline x
 #endif
 
+/*
+ * Functions to safely cast afs_int32 and afs_uint32 so they can be used in
+ * printf statemements with %ld and %lu
+ */
 hdr_static_inline(long) afs_printable_int32_ld(afs_int32 d) { return (long) d; }
 
 hdr_static_inline(unsigned long) afs_printable_uint32_lu(afs_uint32 d) { return (unsigned long) d; }
