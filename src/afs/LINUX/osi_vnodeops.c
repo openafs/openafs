@@ -2454,7 +2454,7 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 /*
  * Return true if the file has a mapping that can read pages
  */
-static int inline
+static inline int
 file_can_read_pages(struct file *fp)
 {
 #if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READ_FOLIO)
@@ -2467,7 +2467,7 @@ file_can_read_pages(struct file *fp)
     return 0;
 }
 
-static int inline
+static inline int
 afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
 {
     loff_t offset = page_offset(pp);
