@@ -407,9 +407,7 @@ tools: config audit volser vlserver
 	+${COMPILE_PART1} tools ${COMPILE_PART2}
 
 man-pages: config
-	+if test -d "doc/man-pages" ; then \
-		cd doc/man-pages ${COMPILE_PART2} ; \
-	fi
+	cd doc/man-pages ${COMPILE_PART2}
 
 #
 # _depinstall targets - only build and install headers/sources that are
@@ -942,13 +940,10 @@ distclean: clean
 	doc/xml/AdminGuide/Makefile \
 	doc/xml/QuickStartUnix/Makefile \
 	doc/xml/UserGuide/Makefile \
-	doc/xml/AdminRef/Makefile
-	if test -d doc/man-pages ; then \
-	    /bin/rm -f doc/man-pages/Makefile doc/man-pages/install-man ; \
-	fi
-	if test -d doc/doxygen ; then \
-	    /bin/rm -f doc/doxygen/Doxyfile ; \
-	fi
+	doc/xml/AdminRef/Makefile \
+	doc/man-pages/Makefile \
+	doc/man-pages/install-man \
+	doc/doxygen/Doxyfile
 
 pristine: distclean
 	/bin/rm -f src/config/afsconfig.h.in configure configure-libafs \
@@ -959,16 +954,12 @@ pristine: distclean
 	src/cf/ltoptions.m4 \
 	src/cf/ltsugar.m4 \
 	src/cf/ltversion.m4 \
-	src/cf/lt~obsolete.m4
-	if test -d doc/xml ; then \
-	    /bin/rm -f doc/xml/mobi-fixup.xsl ; \
-	fi
-	if test -d doc/man-pages ; then \
-	    /bin/rm -rf doc/man-pages/man1 \
-		doc/man-pages/man3 \
-		doc/man-pages/man5 \
-		doc/man-pages/man8 ; \
-	fi
+	src/cf/lt~obsolete.m4 \
+	doc/xml/mobi-fixup.xsl \
+	doc/man-pages/man1 \
+	doc/man-pages/man3 \
+	doc/man-pages/man5 \
+	doc/man-pages/man8 \
 	for i in doc/man-pages/pod*/*.pod.in; do \
 	    /bin/rm -f $${i%.in}; \
 	done
