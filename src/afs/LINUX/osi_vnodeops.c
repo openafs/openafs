@@ -2320,6 +2320,24 @@ mapping_read_page(struct address_space *mapping, struct page *page)
 #endif
 }
 
+/*
+ * small compat wrapper for filemap_alloc_folio/page_cache_alloc
+ */
+static struct page *
+afs_page_cache_alloc(struct address_space *cachemapping)
+{
+#if defined(HAVE_LINUX_FILEMAP_ALLOC_FOLIO)
+    struct folio *folio;
+    folio = filemap_alloc_folio(mapping_gfp_mask(cachemapping), 0);
+    if (folio == NULL) {
+	return NULL;
+    }
+    return &folio->page;
+#else
+    return page_cache_alloc(cachemapping);
+#endif
+}
+
 /* Populate a page by filling it from the cache file pointed at by cachefp
  * (which contains indicated chunk)
  * If task is NULL, the page copy occurs syncronously, and the routine
@@ -2358,11 +2376,12 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
     pageindex = (offset - AFS_CHUNKTOBASE(chunk)) >> PAGE_SHIFT;
 
     while (cachepage == NULL) {
-        cachepage = find_get_page(cachemapping, pageindex);
+	cachepage = find_get_page(cachemapping, pageindex);
 	if (!cachepage) {
-	    if (!newpage)
-		newpage = page_cache_alloc(cachemapping);
-	    if (!newpage) {
+	    if (newpage == NULL) {
+		newpage = afs_page_cache_alloc(cachemapping);
+	    }
+	    if (newpage == NULL) {
 		code = -ENOMEM;
 		goto out;
 	    }
