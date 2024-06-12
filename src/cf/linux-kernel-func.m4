@@ -263,6 +263,16 @@ AC_CHECK_LINUX_FUNC([no_strlcpy],
 		     size_t s;
 		     s = strlcpy(buff);]])
 
+dnl Linux 5.15 introduced filemap_alloc_folio() as a replacement for
+dnl page_cache_alloc().  page_cache_alloc() was updated to become just a
+dnl wrapper for filemap_alloc_folio().
+dnl Linux 6.10 removed page_cache_alloc().
+AC_CHECK_LINUX_FUNC([filemap_alloc_folio],
+		    [#include <linux/kernel.h>
+		     #include <linux/pagemap.h>],
+		    [[static struct folio *folio;
+		      folio = filemap_alloc_folio(0, 0);]])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
