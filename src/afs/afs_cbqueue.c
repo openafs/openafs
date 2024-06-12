@@ -139,7 +139,9 @@ afs_DequeueCallback(struct vcache *avc)
     debugvc = avc;
     if (avc->callsort.prev) {
 	QRemove(&(avc->callsort));
-    } else;			/* must have got dequeued in a race */
+    } else {
+	/* must have got dequeued in a race */
+    }
 
     return;
 }				/* afs_DequeueCallback */

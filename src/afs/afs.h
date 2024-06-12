@@ -349,7 +349,8 @@ struct cell_alias {
     char *cell;
 };
 
-#define	afs_PutCell(cellp, locktype)
+/* In case someday a counterpart for afs_GetCell is needed */
+#define afs_PutCell(cellp, locktype) do {} while(0)
 
 /* the unixuser flag bit definitions */
 #define	UHasTokens	1	/* are the st and ct fields valid (ever set)? */
@@ -537,7 +538,8 @@ struct server {
     afs_int32 capabilities;
 };
 
-#define	afs_PutServer(servp, locktype)
+/* In case someday a counterpart for afs_GetServer is needed */
+#define afs_PutServer(servp, locktype) do {} while(0)
 
 /* structs for some pioctls  - these are (or should be)
  * also in venus.h
