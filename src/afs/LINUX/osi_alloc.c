@@ -196,6 +196,15 @@ local_free(void *p, size_t n)
     vfree(p);
 }
 
+/*
+ * wrapper for vmalloc(), since vmalloc() may be a macro
+ */
+static void *
+local_vmalloc(size_t size)
+{
+    return vmalloc(size);
+}
+
 /* linux_alloc_init(): Initializes the kernel memory allocator. As part
  *    of this process, it also initializes a pool of osi_linux_mem
  *    structures as well as the hash table itself.
@@ -209,14 +218,14 @@ linux_alloc_init(void)
     /* initiate our pool of osi_linux_mem structs */
     al_mem_pool =
 	afs_atomlist_create(sizeof(struct osi_linux_mem), sizeof(long) * 1024,
-			    (void *)vmalloc, local_free);
+			    local_vmalloc, local_free);
     if (!al_mem_pool) {
 	printf("afs_osi_Alloc: Error in initialization(atomlist_create)\n");
 	return 0;
     }
 
     /* initialize the hash table to hold references to alloc'ed chunks */
-    lh_mem_htab = afs_lhash_create(hash_equal, (void *)vmalloc, local_free);
+    lh_mem_htab = afs_lhash_create(hash_equal, local_vmalloc, local_free);
     if (!lh_mem_htab) {
 	printf("afs_osi_Alloc: Error in initialization(lhash_create)\n");
 	return 0;
