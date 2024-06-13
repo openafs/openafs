@@ -1971,32 +1971,31 @@ DECL_PIOCTL(PSetTokens)
  */
 DECL_PIOCTL(PGetVolumeStatus)
 {
-    char volName[32];
-    char *offLineMsg = afs_osi_Alloc(256);
-    char *motd = afs_osi_Alloc(256);
+    char *volName = NULL;
+    char *offLineMsg = NULL;
+    char *motd = NULL;
     struct afs_conn *tc;
     afs_int32 code = 0;
     struct AFSFetchVolumeStatus volstat;
-    char *Name;
     struct rx_connection *rxconn;
     XSTATS_DECLS;
 
-    osi_Assert(offLineMsg != NULL);
-    osi_Assert(motd != NULL);
     AFS_STATCNT(PGetVolumeStatus);
     if (!avc) {
 	code = EINVAL;
 	goto out;
     }
-    Name = volName;
     do {
 	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK, &rxconn);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GETVOLUMESTATUS);
 	    RX_AFS_GUNLOCK();
+	    xdr_free((xdrproc_t) xdr_string, &volName);
+	    xdr_free((xdrproc_t) xdr_string, &offLineMsg);
+	    xdr_free((xdrproc_t) xdr_string, &motd);
 	    code =
 		RXAFS_GetVolumeStatus(rxconn, avc->f.fid.Fid.Volume, &volstat,
-				      &Name, &offLineMsg, &motd);
+				      &volName, &offLineMsg, &motd);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
@@ -2017,8 +2016,9 @@ DECL_PIOCTL(PGetVolumeStatus)
     if (afs_pd_putString(aout, motd) != 0)
 	return E2BIG;
   out:
-    afs_osi_Free(offLineMsg, 256);
-    afs_osi_Free(motd, 256);
+    xdr_free((xdrproc_t) xdr_string, &volName);
+    xdr_free((xdrproc_t) xdr_string, &offLineMsg);
+    xdr_free((xdrproc_t) xdr_string, &motd);
     return code;
 }
 

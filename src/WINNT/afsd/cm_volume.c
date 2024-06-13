@@ -1228,21 +1228,11 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
     cm_conn_t *connp;
     long code;
     AFSFetchVolumeStatus volStat;
-    char *Name;
-    char *OfflineMsg;
-    char *MOTD;
     cm_req_t req;
     struct rx_connection * rxconnp;
-    char volName[32];
-    char offLineMsg[256];
-    char motd[256];
     long alldown, alldeleted;
     cm_serverRef_t *serversp;
     cm_fid_t fid;
-
-    Name = volName;
-    OfflineMsg = offLineMsg;
-    MOTD = motd;
 
     if (statep->ID != 0 && (!volID || volID == statep->ID)) {
         /* create fid for volume root so that VNOVOL and VMOVED errors can be processed */
@@ -1285,6 +1275,10 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
 
                 lock_ReleaseWrite(&volp->rw);
                 do {
+		    char *Name = NULL;
+		    char *OfflineMsg = NULL;
+		    char *MOTD = NULL;
+
                     code = cm_ConnFromVolume(volp, statep->ID, cm_rootUserp, &req, &connp);
                     if (code)
                         continue;
@@ -1293,6 +1287,11 @@ cm_CheckOfflineVolumeState(cm_volume_t *volp, cm_vol_state_t *statep, afs_uint32
                     code = RXAFS_GetVolumeStatus(rxconnp, statep->ID,
                                                  &volStat, &Name, &OfflineMsg, &MOTD);
                     rx_PutConnection(rxconnp);
+
+		    xdr_free((xdrproc_t) xdr_string, &Name);
+		    xdr_free((xdrproc_t) xdr_string, &OfflineMsg);
+		    xdr_free((xdrproc_t) xdr_string, &MOTD);
+
                 } while (cm_Analyze(connp, cm_rootUserp, &req, &fid, 0, NULL, NULL, NULL, code));
                 code = cm_MapRPCError(code, &req);
 
