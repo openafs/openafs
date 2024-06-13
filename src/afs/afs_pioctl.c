@@ -1593,11 +1593,10 @@ DECL_PIOCTL(PGetAcl)
 	    return ERANGE;
 	Fid.Vnode |= (ain->remaining << 30);
     }
-    acl.AFSOpaque_val = aout->ptr;
+    memset(&acl, 0, sizeof(acl));
     do {
 	tconn = afs_Conn(&avc->f.fid, areq, SHARED_LOCK, &rxconn);
 	if (tconn) {
-	    acl.AFSOpaque_val[0] = '\0';
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHACL);
 	    RX_AFS_GUNLOCK();
 	    code = RXAFS_FetchACL(rxconn, &Fid, &acl, &OutStatus, &tsync);
@@ -1611,7 +1610,7 @@ DECL_PIOCTL(PGetAcl)
 
     if (code == 0) {
 	if (acl.AFSOpaque_len == 0) {
-	    afs_pd_skip(aout, 1); /* leave the NULL */
+	    code = afs_pd_putBytes(aout, "\0", 1); /* leave a single NUL byte */
 
 	} else if (memchr(acl.AFSOpaque_val, '\0', acl.AFSOpaque_len) == NULL) {
 	    /* Do not return an unterminated ACL string. */
@@ -1622,9 +1621,10 @@ DECL_PIOCTL(PGetAcl)
 	    code = EINVAL;
 
 	} else {
-	    afs_pd_skip(aout, acl.AFSOpaque_len); /* Length of the ACL */
+	    code = afs_pd_putBytes(aout, acl.AFSOpaque_val, acl.AFSOpaque_len);
 	}
     }
+    xdr_free((xdrproc_t) xdr_AFSOpaque, &acl);
     return code;
 }
 

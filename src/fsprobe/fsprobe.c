@@ -224,6 +224,7 @@ fsprobe_LWP(void *unused)
     struct ProbeViceStatistics *curr_stats;	/*Current stats region */
     int *curr_probeOK;		/*Current probeOK field */
     ViceStatistics64 stats64;      /*Current stats region */
+    stats64.ViceStatistics64_len = STATS64_VERSION;
     stats64.ViceStatistics64_val = malloc(STATS64_VERSION *
 					  sizeof(afs_uint64));
     while (1) {			/*Service loop */
