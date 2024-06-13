@@ -1289,6 +1289,8 @@ bos_ProcessNotifierGet(const void *serverHandle, const char *processName,
     int rc = 0;
     afs_status_t tst = 0;
     bos_server_p b_handle = (bos_server_p) serverHandle;
+    char *tnotif = NULL;
+    size_t len;
 
     if (!isValidServerHandle(b_handle, &tst)) {
 	goto fail_bos_ProcessNotifierGet;
@@ -1305,14 +1307,22 @@ bos_ProcessNotifierGet(const void *serverHandle, const char *processName,
     }
 
     tst = BOZO_GetInstanceParm(b_handle->server, (char *)processName,
-			       999, &notifier);
-
-    if (tst == 0) {
-	rc = 1;
+			       999, &tnotif);
+    if (tst != 0) {
+	goto fail_bos_ProcessNotifierGet;
     }
+
+    len = strlcpy(notifier, tnotif, BOS_MAX_NAME_LEN);
+    if (len >= BOS_MAX_NAME_LEN) {
+	tst = ADMRPCTOOBIG;
+	goto fail_bos_ProcessNotifierGet;
+    }
+
+    rc = 1;
 
   fail_bos_ProcessNotifierGet:
 
+    xdr_free((xdrproc_t)xdr_string, &tnotif);
     if (st != NULL) {
 	*st = tst;
     }

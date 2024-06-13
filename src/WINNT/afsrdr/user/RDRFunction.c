@@ -5820,14 +5820,8 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
     DWORD       status;
     FILETIME ft = {0x832cf000, 0x01abfcc4}; /* October 1, 1982 00:00:00 +0600 */
 
-    char volName[32]="(unknown)";
-    char offLineMsg[256]="server temporarily inaccessible";
-    char motd[256]="server temporarily inaccessible";
     cm_conn_t *connp;
     AFSFetchVolumeStatus volStat;
-    char *Name;
-    char *OfflineMsg;
-    char *MOTD;
     struct rx_connection * rxconnp;
     int scp_locked = 0;
 
@@ -5928,13 +5922,14 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
         
         if (code == -1)
         {
-	    Name = volName;
-	    OfflineMsg = offLineMsg;
-	    MOTD = motd;
 	    lock_ReleaseWrite(&scp->rw);
 	    scp_locked = 0;
 
 	    do {
+		char *Name = NULL;
+		char *OfflineMsg = NULL;
+		char *MOTD = NULL;
+
 		code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
 		if (code) continue;
 
@@ -5942,6 +5937,10 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
 		code = RXAFS_GetVolumeStatus(rxconnp, scp->fid.volume,
 					     &volStat, &Name, &OfflineMsg, &MOTD);
 		rx_PutConnection(rxconnp);
+
+		xdr_free((xdrproc_t) xdr_string, &Name);
+		xdr_free((xdrproc_t) xdr_string, &OfflineMsg);
+		xdr_free((xdrproc_t) xdr_string, &MOTD);
 
 	    } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, NULL, code));
 	    code = cm_MapRPCError(code, &req);
@@ -6056,14 +6055,8 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
     cm_req_t    req;
     DWORD       status;
 
-    char volName[32]="(unknown)";
-    char offLineMsg[256]="server temporarily inaccessible";
-    char motd[256]="server temporarily inaccessible";
     cm_conn_t *connp;
     AFSFetchVolumeStatus volStat;
-    char *Name;
-    char *OfflineMsg;
-    char *MOTD;
     struct rx_connection * rxconnp;
     int scp_locked = 0;
 
@@ -6141,13 +6134,14 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
         
         if (code == -1)
         {
-	    Name = volName;
-	    OfflineMsg = offLineMsg;
-	    MOTD = motd;
 	    lock_ReleaseWrite(&scp->rw);
 	    scp_locked = 0;
 
 	    do {
+		char *Name = NULL;
+		char *OfflineMsg = NULL;
+		char *MOTD = NULL;
+
 		code = cm_ConnFromFID(&scp->fid, userp, &req, &connp);
 		if (code) continue;
 
@@ -6155,6 +6149,10 @@ RDR_GetVolumeSizeInfo( IN cm_user_t     *userp,
 		code = RXAFS_GetVolumeStatus(rxconnp, scp->fid.volume,
 					     &volStat, &Name, &OfflineMsg, &MOTD);
 		rx_PutConnection(rxconnp);
+
+		xdr_free((xdrproc_t) xdr_string, &Name);
+		xdr_free((xdrproc_t) xdr_string, &OfflineMsg);
+		xdr_free((xdrproc_t) xdr_string, &MOTD);
 
 	    } while (cm_Analyze(connp, userp, &req, &scp->fid, NULL, 0, NULL, NULL, NULL, NULL, code));
 	    code = cm_MapRPCError(code, &req);
