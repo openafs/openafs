@@ -2743,12 +2743,6 @@ cm_IsSpaceAvailable(cm_fid_t * fidp, osi_hyper_t *sizep, cm_user_t *userp, cm_re
     AFSFetchVolumeStatus volStat;
     cm_volume_t *volp = NULL;
     afs_uint32   volType;
-    char *Name;
-    char *OfflineMsg;
-    char *MOTD;
-    char volName[32]="(unknown)";
-    char offLineMsg[256]="server temporarily inaccessible";
-    char motd[256]="server temporarily inaccessible";
     osi_hyper_t freespace;
     cm_fid_t    vfid;
     cm_scache_t *vscp;
@@ -2778,11 +2772,11 @@ cm_IsSpaceAvailable(cm_fid_t * fidp, osi_hyper_t *sizep, cm_user_t *userp, cm_re
                           CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         lock_ReleaseWrite(&vscp->rw);
         if (code == 0) {
-            Name = volName;
-            OfflineMsg = offLineMsg;
-            MOTD = motd;
-
             do {
+		char *Name = NULL;
+		char *OfflineMsg = NULL;
+		char *MOTD = NULL;
+
                 code = cm_ConnFromFID(&vfid, userp, reqp, &connp);
                 if (code) continue;
 
@@ -2790,6 +2784,10 @@ cm_IsSpaceAvailable(cm_fid_t * fidp, osi_hyper_t *sizep, cm_user_t *userp, cm_re
                 code = RXAFS_GetVolumeStatus(rxconnp, fidp->volume,
                                              &volStat, &Name, &OfflineMsg, &MOTD);
                 rx_PutConnection(rxconnp);
+
+		xdr_free((xdrproc_t) xdr_string, &Name);
+		xdr_free((xdrproc_t) xdr_string, &OfflineMsg);
+		xdr_free((xdrproc_t) xdr_string, &MOTD);
 
             } while (cm_Analyze(connp, userp, reqp, &vfid, NULL, 0, NULL, NULL, NULL, NULL, code));
             code = cm_MapRPCError(code, reqp);

@@ -764,9 +764,6 @@ cm_IoctlGetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
     cm_conn_t *connp;
     AFSFetchVolumeStatus volStat;
     char *cp;
-    char *Name;
-    char *OfflineMsg;
-    char *MOTD;
     struct rx_connection * rxconnp;
 
 #ifdef AFS_FREELANCE_CLIENT
@@ -785,18 +782,22 @@ cm_IoctlGetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
     {
         cm_fid_t    vfid;
         cm_scache_t *vscp;
+	char *Name = NULL;
+	char *OfflineMsg = NULL;
+	char *MOTD = NULL;
 
         cm_SetFid(&vfid, scp->fid.cell, scp->fid.volume, 1, 1);
         code = cm_GetSCache(&vfid, NULL, &vscp, userp, reqp);
         if (code)
             return code;
 
-        Name = volName;
-        OfflineMsg = offLineMsg;
-        MOTD = motd;
         do {
             code = cm_ConnFromFID(&vfid, userp, reqp, &connp);
             if (code) continue;
+
+	    xdr_free((xdrproc_t) xdr_string, &Name);
+	    xdr_free((xdrproc_t) xdr_string, &OfflineMsg);
+	    xdr_free((xdrproc_t) xdr_string, &MOTD);
 
             rxconnp = cm_GetRxConn(connp);
             code = RXAFS_GetVolumeStatus(rxconnp, vfid.volume,
@@ -807,6 +808,19 @@ cm_IoctlGetVolumeStatus(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
         code = cm_MapRPCError(code, reqp);
 
         cm_ReleaseSCache(vscp);
+
+	strncpy(volName, Name, sizeof(volName));
+	volName[sizeof(volName) - 1] = '\0';
+
+	strncpy(offLineMsg, OfflineMsg, sizeof(offLineMsg));
+	offLineMsg[sizeof(offLineMsg) - 1] = '\0';
+
+	strncpy(motd, MOTD, sizeof(motd));
+	motd[sizeof(motd) - 1] = '\0';
+
+	xdr_free((xdrproc_t) xdr_string, &Name);
+	xdr_free((xdrproc_t) xdr_string, &OfflineMsg);
+	xdr_free((xdrproc_t) xdr_string, &MOTD);
     }
 
     if (code)
