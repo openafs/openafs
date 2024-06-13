@@ -413,7 +413,7 @@ cm_IoctlGetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t 
         afid.Unique = scp->fid.unique;
         do {
             acl.AFSOpaque_val = ioctlp->outDatap;
-            acl.AFSOpaque_len = 0;
+	    acl.AFSOpaque_len = SMB_IOCTL_MAXDATA - (ioctlp->outDatap - ioctlp->outAllocp);
             code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
             if (code)
                 continue;
