@@ -2065,15 +2065,27 @@ DECL_PIOCTL(PGetVolumeStatus)
 
     if (code)
 	goto out;
-    /* Copy all this junk into msg->im_data, keeping track of the lengths. */
-    if (afs_pd_putBytes(aout, &volstat, sizeof(VolumeStatus)) != 0)
-	return E2BIG;
-    if (afs_pd_putString(aout, volName) != 0)
-	return E2BIG;
-    if (afs_pd_putString(aout, offLineMsg) != 0)
-	return E2BIG;
-    if (afs_pd_putString(aout, motd) != 0)
-	return E2BIG;
+
+    if (afs_pd_putBytes(aout, &volstat, sizeof(volstat)) != 0) {
+	code = E2BIG;
+	goto out;
+    }
+
+    if (afs_pd_putString(aout, volName) != 0) {
+	code = E2BIG;
+	goto out;
+    }
+
+    if (afs_pd_putString(aout, offLineMsg) != 0) {
+	code = E2BIG;
+	goto out;
+    }
+
+    if (afs_pd_putString(aout, motd) != 0) {
+	code = E2BIG;
+	goto out;
+    }
+
   out:
     xdr_free((xdrproc_t) xdr_string, &volName);
     xdr_free((xdrproc_t) xdr_string, &offLineMsg);
