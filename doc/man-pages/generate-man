@@ -1,78 +1,101 @@
-#!/bin/sh
+#!/usr/bin/perl -w
 #
-# Generate the OpenAFS man pages from POD source.  This script is normally
-# invoked by regen.sh but may be run at any time to rebuild all of the man
-# pages (with a newer version of pod2man than was used for the release, for
-# instance).
+# Generate the OpenAFS man pages from POD source. Run merge-pod
+# first to generate the POD source files.
+#
 
-# Exit on any error.
-set -e
+package OpenAFS::Man;
 
-if [ ! -d pod1 ] ; then
-    echo 'generate-man must be run from the doc/man-pages directory' >&2
-    exit 1
-fi
+use strict;
+use vars qw(@ISA);
+use Pod::Man;
 
-if pod2man pod1/afs.pod > /dev/null ; then
-    :
-else
-    echo 'pod2man not found, skipping man page generation' >&2
-    exit 1
-fi
-if perl -e 'use Pod::Man 2.04' > /dev/null 2>&1 ; then
-    :
-else
-    echo 'Pod::Man is older than the recommended version of 2.04 or later' >&2
-    echo 'Continuing with man page generation anyway' >&2
-fi
+@ISA = qw(Pod::Man);
 
-# Create the directories.  We generate each section into its own directory
-# to make installation rules easier.
-[ -d man1 ] || mkdir man1
-[ -d man3 ] || mkdir man3
-[ -d man5 ] || mkdir man5
-[ -d man8 ] || mkdir man8
+# Subclass Pod::Man to support OpenAFS man page generation.
+sub new {
+    my $class = shift;
+    my $self = Pod::Man->new('release' => 'OpenAFS', 'errors' => 'die');
+    bless ($self, 'OpenAFS::Man');
+    return $self;
+}
 
-# Generate each set of man pages.  For each, allow for the case of the
-# directory being empty.  In that case, for won't expand the wildcard, and
-# we want to avoid running pod2man with a wildcard as an argument.
-pod1=`ls pod1`
-if [ -n "$pod1" ] ; then
-    cd pod1
-    for f in *.pod ; do
-        pod2man -c 'AFS Command Reference' -r 'OpenAFS' -s 1 "$f" \
-            > ../man1/`echo "$f" | sed 's/\.pod$//'`.1
-    done
-    cd ..
-fi
-pod3=`ls pod3`
-if [ -n "$pod3" ] ; then
-    cd pod3
-    for f in *.pod ; do
-        name=`echo "$f" | sed -e 's/\.pod$//' -e 's/^AFS\./AFS::/'`
-        pod2man -c 'AFS Library Reference' -r 'OpenAFS' -s 3 "$f" -n "$name" \
-            > ../man3/${name}.3
-	# Perl module manpages are named AFS.foo instead of AFS::foo, since
-	# we cannot have colons in filenames on Windows. So here, we assume
-	# anything with "AFS." should be "AFS::" instead.
-    done
-    cd ..
-fi
-pod5=`ls pod5`
-if [ -n "$pod5" ] ; then
-    cd pod5
-    for f in *.pod ; do
-        pod2man -c 'AFS File Reference' -r 'OpenAFS' -s 5 "$f" \
-            > ../man5/`echo "$f" | sed 's/\.pod$//'`.5
-    done
-    cd ..
-fi
-pod8=`ls pod8`
-if [ -n "$pod8" ] ; then
-    cd pod8
-    for f in *.pod ; do
-        pod2man -c 'AFS Command Reference' -r 'OpenAFS' -s 8 "$f" \
-            > ../man8/`echo "$f" | sed 's/\.pod$//'`.8
-    done
-    cd ..
-fi
+# Set the current section number and heading text.
+sub start_section {
+    my ($self, $section, $heading) = @_;
+    $self->{'section'} = $section;
+    $self->{'center'} = $heading;
+}
+
+# Set the man page title based on the file name and section number.
+#
+# Unless the current section number is 3, the title is taken from the
+# name of the pod file being converted.
+#
+# Special handing is required for man pages in section 3 (libraries). The
+# title of these pages are like "AFS::foo.3", but Windows does not support
+# colon characters (:) in filenames, so we use dot '.' as a placeholder
+# and convert the '.' found to '::' to create the title string set in
+# the generated man page.
+#
+# In the future, the pod files may be organized in subdirectories, like
+# pod3/lib/AFS/foo.pod (instead of pod3/AFS.foo.pod), which would be more
+# conventional solution.
+sub set_name {
+    my ($self, $pod) = @_;
+    my $name = $pod;
+    $name =~ s/\.pod$//;
+    if ($self->{'section'} == 3) {
+        $name =~ s/\./::/g;
+    }
+    $self->{'name'} = $name;
+    return $self->{'name'};
+}
+
+# Required for Pod::Simple::version_report()
+sub VERSION () { '1.0' }
+
+package main;
+
+use strict;
+use File::Spec;
+
+my %HEADINGS = (
+    1 => 'AFS Command Reference',
+    3 => 'AFS Library Reference',
+    5 => 'AFS File Reference',
+    8 => 'AFS Command Reference'
+);
+
+# Create the parser object and generate the man pages for each pod file
+# in each section.
+#
+# Remove partially generated files if an error is encountered.
+sub generate_man_pages {
+    my $parser = OpenAFS::Man->new();
+    for my $section (sort(keys(%HEADINGS))) {
+        if (! -d "man${section}") {
+            mkdir("man${section}", 0755) or
+                die "Cannot create man${section} directory: $!\n";
+        }
+        $parser->start_section($section, $HEADINGS{$section});
+        opendir(D, "pod${section}") or die "Cannot open pod${section}: $!\n";
+        for my $file (readdir(D)) {
+            next unless $file =~ /\.pod$/;  # Skip non-pod files.
+            my $name = $parser->set_name($file);
+            my $input = File::Spec->join("pod${section}", $file);
+            my $output = File::Spec->join("man${section}", "${name}.${section}");
+            eval {
+                $parser->parse_from_file($input, $output);
+            };
+            if ($@) {
+                if (-s $output) {
+                    unlink($output);  # Remove partially created file.
+                }
+                die "Unable to parse $input: $@";
+            }
+        }
+    }
+}
+
+generate_man_pages();
