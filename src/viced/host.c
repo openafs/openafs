@@ -1362,6 +1362,7 @@ reconcileHosts_r(afs_uint32 addr, afs_uint16 port, struct host *newHost,
 
     opr_Assert(oldHost != newHost);
     caps.Capabilities_val = NULL;
+    caps.Capabilities_len = 0;
 
     if (!sc) {
 	sc = rxnull_NewClientSecurityObject();

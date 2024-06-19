@@ -1493,6 +1493,7 @@ pts_GroupMemberRemove(const void *cellHandle, const char *userName,
     idlist ids;
 
     ids.idlist_val = NULL;
+    ids.idlist_len = 0;
 
     /*
      * Validate arguments
