@@ -1,29 +1,38 @@
 #!/usr/bin/perl -w
 #
-# POD currently doesn't support any sort of =include directive.  This
-# processor works around that limitation.  It takes a list of files ending in
-# *.in as its argument and processes any POD directives of the form =include
-# <file> in that file, generating a file with the *.in suffix removed.  All
-# paths are taken to be relative to the directory containing the file being
-# processed.
+# POD currently doesn't support any sort of =include directive.  This processor
+# works around that limitation.  Currently, only single include nesting is
+# supported.  The included file is not processed for additional =include
+# statements. The include paths are taken to be relative to the directory
+# containing the file being processed.
 #
-# Currently, only single include nesting is supported.  The included file is
-# not processed for additional =include statements.
+# Usage: merge-pod <input-file> [<input-file> ...]
+#        merge-pod
+#
+# The first form takes a list of file paths ending in .in as its arguments and
+# processes any POD directives of the form =include <file> in that file,
+# generating a file with the .in suffix removed. The output file is written to
+# the same directory as the input file.
+#
+# When no input files are given, merge-pod scans the pod<n> directories
+# relative to the path of the merge-pod script itself for files ending in
+# *.in. For each input file file found, merge-pod processes any POD
+# directives of the form =include <file> in that file, generating an output
+# file with the .in suffix removed in the pod<n> directory in the current
+# working directory.  The pod<n> directories are created in the current
+# directory if not already present.
 
 require 5.00503;
 
 use Cwd qw(getcwd);
 use File::Basename qw(dirname basename);
+use File::Spec::Functions qw(catfile);
 
-my $start = getcwd;
-for my $file (@ARGV) {
-    chdir $start or die "cannot chdir to $start: $!\n";
-    $file =~ s:\\:/:g if $^O eq 'cygwin';
+sub merge_pod {
+    my ($file, $out) = @_;
+    my $start = getcwd;
     my $dir = dirname ($file);
-    my $out = $file;
-    unless ($out =~ s/\.in\z//) {
-        die "input file $file does not end in .in\n";
-    }
+
     open (FILE, "< $file") or die "cannot open $file: $!\n";
     binmode FILE, ':crlf' if $^O eq 'MSWin32';
     binmode FILE, ':crlf' if $^O eq 'cygwin';
@@ -44,4 +53,34 @@ for my $file (@ARGV) {
     }
     close OUT or die "cannot write to $out: $!\n";
     close FILE or die "cannot read from $file\n";
+    chdir $start or die "cannot chdir to $start: $!\n";
+}
+
+if (scalar(@ARGV) > 0) {
+    for my $file (@ARGV) {
+        $file =~ s:\\:/:g if $^O eq 'cygwin';
+        my $out = $file;
+        unless ($out =~ s/\.in\z//) {
+            die "input file $file does not end in .in\n";
+        }
+        merge_pod($file, $out);
+    }
+} else {
+    my $srcdir = dirname(__FILE__);
+    for my $section (qw(1 3 5 8)) {
+        unless (-d "pod${section}") {
+            mkdir("pod${section}", 0755) or
+                die "Cannot create pod${section} directory: $!\n";
+        }
+        my $dir = catfile($srcdir, "pod${section}");
+        opendir(D, $dir) or die "Cannot open $dir: $!\n";
+        for my $file (readdir(D)) {
+            if ($file =~ /\.in\z/) {
+                my $input = catfile($srcdir, "pod${section}", $file);
+                my $output = catfile("pod${section}", $file);
+                $output =~ s/\.in\z//;
+                merge_pod($input, $output);
+            }
+        }
+    }
 }
