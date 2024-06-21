@@ -4,7 +4,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/doc/man-pages/Makefile.vars
 
-all: prep-noinstall
+all:
 
 maintclean:
 	rm -rf html man1 man3 man5 man8
@@ -12,33 +12,19 @@ maintclean:
 html:
 	perl generate-html
 
-INSTALL_KAUTH = @INSTALL_KAUTH@
-
-# This really depends on the options to configure, but configure will
-# regenerate the Makefile so this is a reasonable proxy.
-prep-noinstall: Makefile
-	rm -f man*/*.noinstall
-	if [ "$(INSTALL_KAUTH)" = "no" ] ; then \
-		mkdir -p man1 man3 man5 man8; \
-		for M in $(KAUTH_MAN); do \
-			touch $$M.noinstall; \
-		done; \
-	fi
-
-dest: prep-noinstall
+dest:
 	chmod +x install-man
 	$(INSTALL) -d $(DEST)/man/man1
 	$(INSTALL) -d $(DEST)/man/man3
 	$(INSTALL) -d $(DEST)/man/man5
 	$(INSTALL) -d $(DEST)/man/man8
-	set -e; orig_pwd=`pwd` ; cd $(srcdir) ; \
-	for M in man1/*.1 man3/*.3 man5/*.5 man8/*.8 ; do \
-	    cd $$orig_pwd ; \
-	    if ! [ -e $$M.noinstall ] ; then \
-		./install-man $(srcdir)/$$M $(DEST)/man/$$M ; \
-	    fi ; \
+	set -e; for M in $(MAN_PAGES); do \
+	    ./install-man $(srcdir)/$$M $(DEST)/man/$$M ; \
 	done
-	set -e; if [ "x$(INSTALL_KAUTH)" = "xyes" ] ; then \
+	set -e; if [ "x@INSTALL_KAUTH@" = "xyes" ] ; then \
+	    for M in $(MAN_PAGES_KAUTH); do \
+		./install-man $(srcdir)/$$M $(DEST)/man/$$M ; \
+	    done;
 	    $(LN) -fs klog.1 $(DEST)/man/man1/klog.krb.1 ; \
 	    $(LN) -fs pagsh.1 $(DEST)/man/man1/pagsh.krb.1 ; \
 	    $(LN) -fs tokens.1 $(DEST)/man/man1/tokens.krb.1 ; \
@@ -50,20 +36,19 @@ dest: prep-noinstall
 	    $(LN) -fs afsd.8 $(DEST)/man/man8/afsd.fuse.8; \
 	fi
 
-install: prep-noinstall
+install:
 	chmod +x install-man
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man3
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man5
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
-	set -e; orig_pwd=`pwd` ; cd $(srcdir) ; \
-	for M in man1/*.1 man3/*.3 man5/*.5 man8/*.8 ; do \
-	    cd $$orig_pwd ; \
-	    if ! [ -e $$M.noinstall ] ; then \
+	set -e; for M in $(MAN_PAGES); do \
+	    ./install-man $(srcdir)/$$M $(DESTDIR)$(mandir)/$$M ; \
+	done;
+	set -e; if [ "x@INSTALL_KAUTH@" = "xyes" ] ; then \
+	    for M in $(MAN_PAGES_KAUTH); do \
 		./install-man $(srcdir)/$$M $(DESTDIR)$(mandir)/$$M ; \
-	    fi; \
-	done
-	set -e; if [ "x$(INSTALL_KAUTH)" = "xyes" ] ; then \
+	    done; \
 	    $(LN) -fs klog.1 $(DESTDIR)$(mandir)man1/klog.krb.1 ; \
 	    $(LN) -fs pagsh.1 $(DESTDIR)$(mandir)/man1/pagsh.krb.1 ; \
 	    $(LN) -fs tokens.1 $(DESTDIR)$(mandir)/man1/tokens.krb.1 ; \
