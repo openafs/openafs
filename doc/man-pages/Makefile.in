@@ -52,21 +52,21 @@ dest: prep-noinstall
 	done
 	set -e; if [ "x$(INSTALL_KAUTH)" = "xyes" ] ; then \
 	    test -h $(DEST)/man/man1/klog.krb.1 \
-	        || ln -s klog.1 $(DEST)/man/man1/klog.krb.1 ; \
+	        || $(LN) -s klog.1 $(DEST)/man/man1/klog.krb.1 ; \
 	    test -h $(DEST)/man/man1/pagsh.krb.1 \
-	        || ln -s pagsh.1 $(DEST)/man/man1/pagsh.krb.1 ; \
+	        || $(LN) -s pagsh.1 $(DEST)/man/man1/pagsh.krb.1 ; \
 	    test -h $(DEST)/man/man1/tokens.krb.1 \
-	        || ln -s tokens.1 $(DEST)/man/man1/tokens.krb.1 ; \
+	        || $(LN) -s tokens.1 $(DEST)/man/man1/tokens.krb.1 ; \
 	fi
 	test -h $(DEST)/man/man8/dafssync-debug.8 \
-	    || ln -s fssync-debug.8 $(DEST)/man/man8/dafssync-debug.8
+	    || $(LN) -s fssync-debug.8 $(DEST)/man/man8/dafssync-debug.8
 	set -e; for M in ${FSSYNCDEBUG_PAGES} ; do \
 	    test -h $(DEST)/man/man8/dafssync-debug_$$M.8 \
-		|| ln -s fssync-debug_$$M.8 $(DEST)/man/man8/dafssync-debug_$$M.8 ; \
+		|| $(LN) -s fssync-debug_$$M.8 $(DEST)/man/man8/dafssync-debug_$$M.8 ; \
 	done
 	set -e; if [ -n "@ENABLE_FUSE_CLIENT@" ] ; then \
 	    test -h $(DEST)/man/man8/afsd.fuse.8 \
-		|| ln -s afsd.8 $(DEST)/man/man8/afsd.fuse.8; \
+		|| $(LN) -s afsd.8 $(DEST)/man/man8/afsd.fuse.8; \
 	fi
 
 install: prep-noinstall
@@ -84,19 +84,19 @@ install: prep-noinstall
 	done
 	set -e; if [ "x$(INSTALL_KAUTH)" = "xyes" ] ; then \
 	    test -h $(DESTDIR)$(mandir)/man1/klog.krb.1 \
-	        || ln -s klog.1 $(DESTDIR)$(mandir)man1/klog.krb.1 ; \
+	        || $(LN) -s klog.1 $(DESTDIR)$(mandir)man1/klog.krb.1 ; \
 	    test -h $(DESTDIR)$(mandir)/man1/pagsh.krb.1 \
-	        || ln -s pagsh.1 $(DESTDIR)$(mandir)/man1/pagsh.krb.1 ; \
+	        || $(LN) -s pagsh.1 $(DESTDIR)$(mandir)/man1/pagsh.krb.1 ; \
 	    test -h $(DESTDIR)$(mandir)/man1/tokens.krb.1 \
-	        || ln -s tokens.1 $(DESTDIR)$(mandir)/man1/tokens.krb.1 ; \
+	        || $(LN) -s tokens.1 $(DESTDIR)$(mandir)/man1/tokens.krb.1 ; \
 	fi
 	test -h $(DESTDIR)/$(mandir)/man8/dafssync-debug.8 \
-	    || ln -s fssync-debug.8 $(DESTDIR)/$(mandir)/man8/dafssync-debug.8
+	    || $(LN) -s fssync-debug.8 $(DESTDIR)/$(mandir)/man8/dafssync-debug.8
 	set -e; for M in ${FSSYNCDEBUG_PAGES} ; do \
 	    test -h $(DESTDIR)/$(mandir)/man8/dafssync-debug_$$M.8 \
-		|| ln -s fssync-debug_$$M.8 $(DESTDIR)/$(mandir)/man8/dafssync-debug_$$M.8 ; \
+		|| $(LN) -s fssync-debug_$$M.8 $(DESTDIR)/$(mandir)/man8/dafssync-debug_$$M.8 ; \
 	done
 	set -e; if [ -n "@ENABLE_FUSE_CLIENT@" ] ; then \
 	    test -h $(DESTDIR)$(mandir)/man8/afsd.fuse.8 \
-		|| ln -s afsd.8 $(DESTDIR)$(mandir)/man8/afsd.fuse.8; \
+		|| $(LN) -s afsd.8 $(DESTDIR)$(mandir)/man8/afsd.fuse.8; \
 	fi
