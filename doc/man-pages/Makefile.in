@@ -11,7 +11,6 @@ maintclean:
 html:
 	perl generate-html
 
-LINKEDPAGES = klog pagsh tokens
 FSSYNCDEBUG_PAGES = attach callback detach error header leaveoff list mode \
                     move offline online query stats vgcadd vgcdel vgcquery \
                     vgcscan vgcscanall vnode volop
@@ -24,7 +23,6 @@ KAUTH_MAN = man1/klog.1 man1/knfs.1 man1/kpasswd.1 man5/kaserver.DB0.5 \
 	man8/kas_noauthentication.8 man8/kas_quit.8 man8/kas_setfields.8 \
 	man8/kas_setpassword.8 man8/kas_statistics.8 man8/kas_stringtokey.8 \
 	man8/kas_unlock.8 man8/kaserver.8 man8/kdb.8 man8/kpwvalid.8 \
-	man1/klog.krb.1
 
 INSTALL_KAUTH = @INSTALL_KAUTH@
 
@@ -50,12 +48,14 @@ dest: prep-noinstall
 		./install-man $(srcdir)/$$M $(DEST)/man/$$M ; \
 	    fi ; \
 	done
-	set -e; for M in ${LINKEDPAGES}; do \
-	    if ! [ -e man1/$$M.1.noinstall ] ; then \
-		test -h $(DEST)/man/man1/$$M.krb.1 \
-		    || ln -s $$M.1 $(DEST)/man/man1/$$M.krb.1 ; \
-	    fi ; \
-	done
+	set -e; if [ "x$(INSTALL_KAUTH)" = "xyes" ] ; then \
+	    test -h $(DEST)/man/man1/klog.krb.1 \
+	        || ln -s klog.1 $(DEST)/man/man1/klog.krb.1 ; \
+	    test -h $(DEST)/man/man1/pagsh.krb.1 \
+	        || ln -s pagsh.1 $(DEST)/man/man1/pagsh.krb.1 ; \
+	    test -h $(DEST)/man/man1/tokens.krb.1 \
+	        || ln -s tokens.1 $(DEST)/man/man1/tokens.krb.1 ; \
+	fi
 	test -h $(DEST)/man/man8/dafssync-debug.8 \
 	    || ln -s fssync-debug.8 $(DEST)/man/man8/dafssync-debug.8
 	set -e; for M in ${FSSYNCDEBUG_PAGES} ; do \
@@ -78,12 +78,14 @@ install: prep-noinstall
 		./install-man $(srcdir)/$$M $(DESTDIR)$(mandir)/$$M ; \
 	    fi; \
 	done
-	set -e; for M in ${LINKEDPAGES}; do \
-	    if ! [ -e man1/$$M.1.noinstall ] ; then \
-		test -h $(DESTDIR)$(mandir)/man1/$$M.krb.1 \
-		    || ln -s $$M.1 $(DESTDIR)$(mandir)/man1/$$M.krb.1 ; \
-	    fi ; \
-	done
+	set -e; if [ "x$(INSTALL_KAUTH)" = "xyes" ] ; then \
+	    test -h $(DESTDIR)$(mandir)/man1/klog.krb.1 \
+	        || ln -s klog.1 $(DESTDIR)$(mandir)man1/klog.krb.1 ; \
+	    test -h $(DESTDIR)$(mandir)/man1/pagsh.krb.1 \
+	        || ln -s pagsh.1 $(DESTDIR)$(mandir)/man1/pagsh.krb.1 ; \
+	    test -h $(DESTDIR)$(mandir)/man1/tokens.krb.1 \
+	        || ln -s tokens.1 $(DESTDIR)$(mandir)/man1/tokens.krb.1 ; \
+	fi
 	test -h $(DESTDIR)/$(mandir)/man8/dafssync-debug.8 \
 	    || ln -s fssync-debug.8 $(DESTDIR)/$(mandir)/man8/dafssync-debug.8
 	set -e; for M in ${FSSYNCDEBUG_PAGES} ; do \
