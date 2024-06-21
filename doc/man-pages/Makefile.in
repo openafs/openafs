@@ -39,8 +39,10 @@ prep-noinstall: Makefile
 
 dest: prep-noinstall
 	chmod +x install-man
-	mkdir -p $(DEST)/man/man1 $(DEST)/man/man3 \
-	         $(DEST)/man/man5 $(DEST)/man/man8
+	$(INSTALL) -d $(DEST)/man/man1
+	$(INSTALL) -d $(DEST)/man/man3
+	$(INSTALL) -d $(DEST)/man/man5
+	$(INSTALL) -d $(DEST)/man/man8
 	set -e; orig_pwd=`pwd` ; cd $(srcdir) ; \
 	for M in man1/*.1 man3/*.3 man5/*.5 man8/*.8 ; do \
 	    cd $$orig_pwd ; \
@@ -69,8 +71,10 @@ dest: prep-noinstall
 
 install: prep-noinstall
 	chmod +x install-man
-	mkdir -p $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(mandir)/man3 \
-	    $(DESTDIR)$(mandir)/man5 $(DESTDIR)$(mandir)/man8
+	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
+	$(INSTALL) -d $(DESTDIR)$(mandir)/man3
+	$(INSTALL) -d $(DESTDIR)$(mandir)/man5
+	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
 	set -e; orig_pwd=`pwd` ; cd $(srcdir) ; \
 	for M in man1/*.1 man3/*.3 man5/*.5 man8/*.8 ; do \
 	    cd $$orig_pwd ; \
