@@ -23,6 +23,7 @@ OPENAFS_SUMMARY_CHECK_NAMEI
 AC_CONFIG_FILES([
     Makefile
     doc/man-pages/Makefile
+    doc/man-pages/Makefile.vars
     doc/man-pages/install-man
     doc/xml/AdminGuide/Makefile
     doc/xml/QuickStartUnix/Makefile

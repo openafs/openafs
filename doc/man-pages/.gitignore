@@ -2,9 +2,10 @@
 #     git ls-files -i --exclude-standard
 # to check that you haven't inadvertently ignored any tracked files.
 
-html
-install-man
-man1
-man3
-man5
-man8
+/Makefile.vars
+/install-man
+/html
+/man1
+/man3
+/man5
+/man8

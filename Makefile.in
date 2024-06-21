@@ -946,6 +946,7 @@ distclean: clean
 	doc/xml/UserGuide/Makefile \
 	doc/xml/AdminRef/Makefile \
 	doc/man-pages/Makefile \
+	doc/man-pages/Makefile.vars \
 	doc/man-pages/install-man \
 	doc/doxygen/Doxyfile
 
