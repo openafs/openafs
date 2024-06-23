@@ -419,7 +419,7 @@ F</vicepiu> is the last permissible OpenAFS partition name.
 A cell's full name usually matches its Internet domain name (such as
 B<example.org> for the Example Organization or C<example.com> for Example
 Corporation). Some AFS commands accept unambiguous shortened forms,
-usually with respect to the local F</usr/vice/etc/CellServDB file> but
+usually with respect to the local F</usr/vice/etc/CellServDB> file but
 sometimes depending on the ability of the local name service to resolve
 the corresponding domain name.
 
