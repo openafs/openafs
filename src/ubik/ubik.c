@@ -356,7 +356,8 @@ ContactQuorum_DISK_SetVersion(struct ubik_trans *atrans, int aflags,
 
 #if defined(AFS_PTHREAD_ENV)
 static int
-ubik_thread_create(pthread_attr_t *tattr, pthread_t *thread, void *proc) {
+ubik_thread_create(pthread_attr_t *tattr, pthread_t *thread, void *(* proc)(void *))
+{
     opr_Verify(pthread_attr_init(tattr) == 0);
     opr_Verify(pthread_attr_setdetachstate(tattr,
 					   PTHREAD_CREATE_DETACHED) == 0);
@@ -505,7 +506,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
      * the "steplock" problem in ubik initialization. Defect 11037.
      */
 #ifdef AFS_PTHREAD_ENV
-    ubik_thread_create(&rxServer_tattr, &rxServerThread, (void *)rx_ServerProc);
+    ubik_thread_create(&rxServer_tattr, &rxServerThread, rx_ServerProc);
 #else
     LWP_CreateProcess(rx_ServerProc, rx_stackSize, RX_PROCESS_PRIORITY,
               NULL, "rx_ServerProc", &junk);
@@ -519,7 +520,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
     /* now start up async processes */
 #ifdef AFS_PTHREAD_ENV
     ubik_thread_create(&ubeacon_Interact_tattr, &ubeacon_InteractThread,
-		(void *)ubeacon_Interact);
+		ubeacon_Interact);
 #else
     code = LWP_CreateProcess(ubeacon_Interact, 16384 /*8192 */ ,
 			     LWP_MAX_PRIORITY - 1, (void *)0, "beacon",
@@ -530,7 +531,7 @@ ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 
 #ifdef AFS_PTHREAD_ENV
     ubik_thread_create(&urecovery_Interact_tattr, &urecovery_InteractThread,
-		(void *)urecovery_Interact);
+		urecovery_Interact);
     return 0;  /* is this correct?  - klm */
 #else
     code = LWP_CreateProcess(urecovery_Interact, 16384 /*8192 */ ,
