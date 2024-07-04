@@ -61,13 +61,13 @@
 #include <roken.h>
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wdeprecated-declarations"
 # pragma GCC diagnostic warning "-Wimplicit-function-declaration"
 #endif
 
 #include <rx/xdr.h>
 #include <rx/rx.h>
 
-#define HC_DEPRECATED_CRYPTO
 #include <hcrypto/md4.h>
 #include <hcrypto/md5.h>
 #include <hcrypto/des.h>

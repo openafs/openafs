@@ -373,7 +373,14 @@ rxkad/ticket5.c      : format-truncation : inside included file v5der.c in the
                                        two snprintf calls raise
                                        format-truncation warnings due to the
                                        arithmetic on tm_year and tm_mon fields
+rxkad/ticket5.c      : deprecated    : hcrypto single-DES
 lwp/process.c        : dangling-pointer : Ignore the legitimate use of saving
                                        the address of a stack variable
 src/rxkad/test/stress_c.c
                      : deprecated    : hcrypto single-DES
+auth/authcon.c       : deprecated    : hcrypto single-DES
+kauth/kaprocs.c      : deprecated    : hcrypto single-DES
+kauth/krb_udp.c      : deprecated    : hcrypto single-DES
+libafscp/afscp_util.c
+                     : deprecated    : hcrypto single-DES
+tests/common/rxkad.c : deprecated    : hcrypto single-DES

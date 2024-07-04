@@ -26,7 +26,10 @@
 
 #include <roken.h>
 
-#define HC_DEPRECATED
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wdeprecated-declarations"
+#endif
+
 #include <hcrypto/des.h>
 
 #include <rx/rxkad.h>

@@ -24,7 +24,6 @@
 
 #include "kauth.h"
 
-#define HC_DEPRECATED
 #include <hcrypto/des.h>
 
 #include <lock.h>

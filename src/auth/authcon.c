@@ -17,7 +17,6 @@
 # pragma GCC diagnostic warning "-Wdeprecated-declarations"
 #endif
 
-#define HC_DEPRECATED
 #include <hcrypto/des.h>
 #include <hcrypto/rand.h>
 

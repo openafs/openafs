@@ -26,7 +26,6 @@
 #include <afs/errmap_nt.h>
 #endif
 
-#define HC_DEPRECATED
 #include <hcrypto/des.h>
 
 #include <afs/com_err.h>

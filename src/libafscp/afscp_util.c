@@ -31,6 +31,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <roken.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wdeprecated-declarations"
+#endif
+
 #include <ctype.h>
 #include <afs/cellconfig.h>
 #ifndef AFSCONF_CLIENTNAME
@@ -47,7 +51,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "afscp.h"
 #include "afscp_internal.h"
 
-#define HC_DEPRECATED
 #include <hcrypto/des.h>
 
 #ifdef HAVE_KRB5_CREDS_KEYBLOCK_ENCTYPE
