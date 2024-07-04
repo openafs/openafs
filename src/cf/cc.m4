@@ -26,6 +26,9 @@ AC_DEFUN([OPENAFS_PATH_CC], [
   AC_PROVIDE_IFELSE([AC_PROG_CC],
    [AC_FATAL([AC_PROG_CC was called before $0])])
 
+  dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
+  AS_IF([test -z "$CFLAGS"], [CFLAGS=" "])
+
   AS_CASE([$host],
    dnl hp_ux102
    [hppa*-hp-hpux10*],

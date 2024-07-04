@@ -6,8 +6,6 @@ dnl parameters must be done like $[]1 instead of $1
 
 AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
 
-dnl If the user hasn't specified CFLAGS don't let configure pick -g -O2
-AS_IF([test -z "$CFLAGS"], [CFLAGS=" "])
 AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC
 
