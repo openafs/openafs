@@ -37,7 +37,7 @@ THLIBS= ${TOP_LIBDIR}/libcmd.a \
 	${LIB_roken} \
 	${MT_LIBS} -lpthread
 
-THRULE = ${MT_CC} $(COMMON_CFLAGS) $(MT_CFLAGS)
+THRULE = ${MT_CC} $(COMMON_CFLAGS) $(MT_CFLAGS) $(CFLAGS_$(@))
 
 fc_test_OBJS=fc_test.o
 
@@ -92,6 +92,7 @@ stress_s.o: stress_errs.h
 
 stress.o: ${HEADERS}
 stress_c.o: ${HEADERS}
+CFLAGS_stress_c.o = @CFLAGS_NODEPRECATED_DECLARATIONS@
 stress_s.o: ${HEADERS}
 fc_test.o: ${HEADERS}
 CFLAGS_fc_test.o = -I$(TOP_SRCDIR)/rxkad -I$(TOP_OBJDIR)/src/rxkad
@@ -99,6 +100,7 @@ CFLAGS_fc_test.o = -I$(TOP_SRCDIR)/rxkad -I$(TOP_OBJDIR)/src/rxkad
 th_stress.o: stress.c ${HEADERS}
 	${THRULE} -c $(srcdir)/stress.c -o th_stress.o
 
+CFLAGS_th_stress_c.o = @CFLAGS_NODEPRECATED_DECLARATIONS@
 th_stress_c.o: stress_c.c ${HEADERS}
 	${THRULE} -c $(srcdir)/stress_c.c -o th_stress_c.o
 

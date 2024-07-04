@@ -123,6 +123,7 @@ acfg_errors.c: acfg_errors.et
 cellconfig.h: acfg_errors.et cellconfig.p.h
 	${COMPILE_ET_H} -p ${srcdir} acfg_errors -h cellconfig
 
+CFLAGS_authcon.lo = @CFLAGS_NODEPRECATED_DECLARATIONS@
 authcon.lo: cellconfig.h
 cellconfig.lo: cellconfig.h
 copyauth.o: cellconfig.h

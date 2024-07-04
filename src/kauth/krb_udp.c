@@ -18,10 +18,6 @@
 
 #include <roken.h>
 
-#ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wdeprecated-declarations"
-#endif
-
 #ifdef AFS_NT40_ENV
 #include <afs/errmap_nt.h>
 #endif

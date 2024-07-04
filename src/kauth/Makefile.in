@@ -122,6 +122,8 @@ kaserver.o: kaserver.c ${INCLS} AFS_component_version_number.o
 
 kadatabase.o: kadatabase.c ${INCLS}
 
+CFLAGS_kaprocs.o = @CFLAGS_NODEPRECATED_DECLARATIONS@
+CFLAGS_kaprocs.lo = @CFLAGS_NODEPRECATED_DECLARATIONS@
 kaprocs.o: kaprocs.c ${INCLS} kaport.h
 
 kaerrors.c: kaerrors.et
@@ -239,6 +241,8 @@ kdb: kdb.o ${INCLS} ${LIBS} libkauth.a
 
 kdb.o: kdb.c AFS_component_version_number.o
 
+CFLAGS_krb_udp.o = @CFLAGS_NODEPRECATED_DECLARATIONS@
+CFLAGS_krb_udp.lo = @CFLAGS_NODEPRECATED_DECLARATIONS@
 krb_udp.o: krb_udp.c kaserver.h kautils.h kauth.h prot.h ${TOP_INCDIR}/lwp.h AFS_component_version_number.o
 
 krb_udp: krb_udp.o libkauth.a $(KLIBS)

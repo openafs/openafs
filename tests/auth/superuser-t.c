@@ -32,10 +32,6 @@
 #include <signal.h>
 #include <time.h>
 
-#ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wdeprecated-declarations"
-#endif
-
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
@@ -43,7 +39,6 @@
 #include <rx/rxkad.h>
 #include <rx/rx_identity.h>
 
-#include <hcrypto/des.h>
 #include <tests/tap/basic.h>
 
 #include "test.h"

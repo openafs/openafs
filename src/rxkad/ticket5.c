@@ -61,7 +61,6 @@
 #include <roken.h>
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wdeprecated-declarations"
 # pragma GCC diagnostic warning "-Wimplicit-function-declaration"
 #endif
 

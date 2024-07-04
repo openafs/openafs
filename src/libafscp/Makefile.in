@@ -39,6 +39,7 @@ depinstall: \
 ${TOP_INCDIR}/afs/afscp.h: afscp.h
 	${INSTALL_DATA} $? $@
 
+CFLAGS_afscp_util.o = @CFLAGS_NODEPRECATED_DECLARATIONS@
 CPPFLAGS_afscp_util.o = $(KRB5CPPFLAGS)
 CPPFLAGS_afscp_server.o = $(KRB5CPPFLAGS)
 

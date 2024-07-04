@@ -95,6 +95,8 @@ rxkad_common.o rxkad_common.lo: rxkad.h
 rxkad_server.o rxkad_server.lo: rxkad.h
 ticket5.o ticket5.lo: rxkad.h
 ticket.o ticket.lo: rxkad.h
+CFLAGS_ticket5.o = @CFLAGS_NODEPRECATED_DECLARATIONS@
+CFLAGS_ticket5.lo = @CFLAGS_NODEPRECATED_DECLARATIONS@
 
 tcrypt.o: tcrypt.c AFS_component_version_number.o
 

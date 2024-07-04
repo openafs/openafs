@@ -31,10 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <roken.h>
 
-#ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wdeprecated-declarations"
-#endif
-
 #include <ctype.h>
 #include <afs/cellconfig.h>
 #ifndef AFSCONF_CLIENTNAME

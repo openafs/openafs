@@ -18,10 +18,6 @@
 # include <sys/resource.h>
 #endif
 
-#ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wdeprecated-declarations"
-#endif
-
 #include "kauth.h"
 
 #include <hcrypto/des.h>
