@@ -37,6 +37,7 @@
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <rx/rx_globals.h>
+#include <rx/rx_atomic.h>
 #include <rx/rxkad.h>
 #include <rx/rxstat.h>
 #include <afs/keys.h>
@@ -96,8 +97,20 @@ int bozo_newKTs = 1;
 int rxBind = 0;
 int rxkadDisableDotCheck = 0;
 
-int bozo_isrestricted = 0;
-int bozo_restdisable = 0;
+static rx_atomic_t bozo_restricted;
+static rx_atomic_t bozo_restricted_disabled;
+
+int
+bozo_IsRestricted(void)
+{
+    return rx_atomic_read(&bozo_restricted);
+}
+
+void
+bozo_SetRestricted(int mode)
+{
+    rx_atomic_set(&bozo_restricted, mode);
+}
 
 void
 bozo_insecureme(int sig)
@@ -105,8 +118,8 @@ bozo_insecureme(int sig)
 #ifndef AFS_PTHREAD_ENV
     signal(SIGFPE, bozo_insecureme);
 #endif
-    bozo_isrestricted = 0;
-    bozo_restdisable = 1;
+    bozo_SetRestricted(0);
+    rx_atomic_set(&bozo_restricted_disabled, 1);
 }
 
 struct bztemp {
@@ -453,7 +466,7 @@ ReadBozoFile(char *aname)
 		code = -1;
 		goto fail;
 	    }
-	    bozo_isrestricted = rmode;
+	    bozo_SetRestricted(rmode);
 	    continue;
 	}
 
@@ -557,7 +570,7 @@ WriteBozoFile(char *aname)
     }
     btemp.file = tfile;
 
-    fprintf(tfile, "restrictmode %d\n", bozo_isrestricted);
+    fprintf(tfile, "restrictmode %d\n", bozo_IsRestricted());
     fprintf(tfile, "restarttime %d %d %d %d %d\n", bozo_nextRestartKT.mask,
 	    bozo_nextRestartKT.day, bozo_nextRestartKT.hour,
 	    bozo_nextRestartKT.min, bozo_nextRestartKT.sec);
@@ -628,9 +641,9 @@ BozoDaemon(void *unused)
 
 	now = FT_ApproxTime();
 
-	if (bozo_restdisable) {
+	if (rx_atomic_read(&bozo_restricted_disabled)) {
 	    bozo_Log("Restricted mode disabled by signal\n");
-	    bozo_restdisable = 0;
+	    rx_atomic_set(&bozo_restricted_disabled, 0);
 	}
 
 	if (bozo_newKTs) {	/* need to recompute restart times */
@@ -906,6 +919,7 @@ main(int argc, char **argv, char **envp)
     int DoProcessRPCStats = 0;
     struct stat sb;
     struct afsconf_bsso_info bsso;
+    int restricted = 0;
 #ifdef AFS_PTHREAD_ENV
     pthread_attr_t tattr;
     pthread_t bozo_pid;
@@ -1052,7 +1066,9 @@ main(int argc, char **argv, char **envp)
     /* bosserver options */
     cmd_OptionAsFlag(opts, OPT_noauth, &noAuth);
     cmd_OptionAsFlag(opts, OPT_log, &DoLogging);
-    cmd_OptionAsFlag(opts, OPT_restricted, &bozo_isrestricted);
+
+    cmd_OptionAsFlag(opts, OPT_restricted, &restricted);
+    bozo_SetRestricted(restricted);
 
     if (cmd_OptionPresent(opts, OPT_pidfiles)) {
 	if (cmd_OptionAsString(opts, OPT_pidfiles, &DoPidFiles) != 0) {
@@ -1222,7 +1238,7 @@ main(int argc, char **argv, char **envp)
 	exit(code);
     }
 
-    if (bozo_isrestricted) {
+    if (bozo_IsRestricted()) {
 	bozo_Log("NOTICE: bosserver is running in restricted mode.\n");
     } else {
 	bozo_Log("WARNING: bosserver is not running in restricted mode.\n");

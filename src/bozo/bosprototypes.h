@@ -43,6 +43,8 @@ int bozo_ReBozo(void);
 int WriteBozoFile(char *aname);
 int bozo_CreatePidFile(char *ainst, char *aname, pid_t apid);
 int bozo_DeletePidFile(char *ainst, char *aname);
+int bozo_IsRestricted(void);
+void bozo_SetRestricted(int mode);
 
 /* bosoprocs.c */
 int GetRequiredDirPerm(const char *path);

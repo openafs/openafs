@@ -38,7 +38,6 @@ extern struct ktime bozo_nextRestartKT, bozo_nextDayKT;
 extern struct afsconf_dir *bozo_confdir;
 extern int bozo_newKTs;
 extern int DoLogging;
-extern int bozo_isrestricted;
 
 afs_int32
 SBOZO_GetRestartTime(struct rx_call *acall, afs_int32 atype, struct bozo_netKTime *aktime)
@@ -121,7 +120,7 @@ SBOZO_Exec(struct rx_call *acall, char *acmd)
 	code = BZACCESS;
 	goto fail;
     }
-    if (bozo_isrestricted) {
+    if (bozo_IsRestricted()) {
 	code = BZACCESS;
 	goto fail;
     }
@@ -191,7 +190,7 @@ SBOZO_UnInstall(struct rx_call *acall, char *aname)
 	osi_auditU(acall, BOS_UnInstallEvent, code, AUD_STR, aname, AUD_END);
 	return code;
     }
-    if (bozo_isrestricted) {
+    if (bozo_IsRestricted()) {
 	code = BZACCESS;
 	osi_auditU(acall, BOS_UnInstallEvent, code, AUD_STR, aname, AUD_END);
 	return code;
@@ -305,7 +304,7 @@ SBOZO_Install(struct rx_call *acall, char *aname, afs_int32 asize, afs_int32 mod
 
     if (!afsconf_SuperUser(bozo_confdir, acall, caller))
 	return BZACCESS;
-    if (bozo_isrestricted)
+    if (bozo_IsRestricted())
 	return BZACCESS;
 
     /* construct local path from canonical (wire-format) path */
@@ -811,7 +810,7 @@ SBOZO_CreateBnode(struct rx_call *acall, char *atype, char *ainstance,
 	code = BZACCESS;
 	goto fail;
     }
-    if (bozo_isrestricted) {
+    if (bozo_IsRestricted()) {
 	const char *salvpath = AFSDIR_CANONICAL_SERVER_SALVAGER_FILEPATH;
 	/* for DAFS, 'bos salvage' will pass "salvageserver -client" instead */
 	const char *salsrvpath = AFSDIR_CANONICAL_SERVER_SALSRV_FILEPATH " -client ";
@@ -875,7 +874,7 @@ SBOZO_DeleteBnode(struct rx_call *acall, char *ainstance)
 	code = BZACCESS;
 	goto fail;
     }
-    if (bozo_isrestricted) {
+    if (bozo_IsRestricted()) {
 	code = BZACCESS;
 	goto fail;
     }
@@ -1228,7 +1227,7 @@ SBOZO_Prune(struct rx_call *acall, afs_int32 aflags)
 	code = BZACCESS;
 	goto fail;
     }
-    if (bozo_isrestricted) {
+    if (bozo_IsRestricted()) {
 	code = BZACCESS;
 	goto fail;
     }
@@ -1503,7 +1502,7 @@ SBOZO_GetLog(struct rx_call *acall, char *aname)
 	code = BZACCESS;
 	goto fail;
     }
-    if (bozo_isrestricted && strchr(aname, '/')
+    if (bozo_IsRestricted() && strchr(aname, '/') != NULL
 	&& strcmp(aname, AFSDIR_CANONICAL_SERVER_SLVGLOG_FILEPATH)) {
 	code = BZACCESS;
 	goto fail;
@@ -1588,7 +1587,7 @@ SBOZO_GetInstanceStrings(struct rx_call *acall, char *abnodeName,
 afs_int32
 SBOZO_GetRestrictedMode(struct rx_call *acall, afs_int32 *arestmode)
 {
-    *arestmode = bozo_isrestricted;
+    *arestmode = bozo_IsRestricted();
     return 0;
 }
 
@@ -1604,7 +1603,7 @@ SBOZO_SetRestrictedMode(struct rx_call *acall, afs_int32 arestmode)
 	code = BZACCESS;
 	goto done;
     }
-    if (bozo_isrestricted) {
+    if (bozo_IsRestricted()) {
 	code = BZACCESS;
 	goto done;
     }
@@ -1612,7 +1611,7 @@ SBOZO_SetRestrictedMode(struct rx_call *acall, afs_int32 arestmode)
 	code = BZDOM;
 	goto done;
     }
-    bozo_isrestricted = arestmode;
+    bozo_SetRestricted(arestmode);
     code = WriteBozoFile(0);
 
  done:
