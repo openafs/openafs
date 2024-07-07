@@ -1,0 +1,76 @@
+#!/usr/bin/env perl
+#
+# Copyright (c) 2024 Sahil Siddiq <sahilcdq@proton.me>.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR `AS IS'' AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+# IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+# NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+use strict;
+use warnings;
+use lib $ENV{C_TAP_SOURCE} . "/tests-lib/perl5";
+
+use afstest qw(obj_path);
+use Test::More tests=>4;
+use POSIX qw(:sys_wait_h :signal_h);
+
+my $port = 4000;
+my $service = 1234;
+my $server = obj_path("tests/rx/simple-server");
+my $client = obj_path("tests/rx/simple-client");
+my $server_pid;
+
+# Start up the server
+$server_pid = open(my $server_fh, '-|', $server, $port, $service);
+if (!defined($server_pid)) {
+    die("Failed to run $server: $!");
+}
+
+# Wait for the server to finish starting
+while (my $line = <$server_fh>) {
+    chomp($line);
+    diag($line);
+}
+
+# Server is now ready to receive calls
+
+pass("Started server");
+
+# Start up a client, and run a test
+my $message = 'Hello OpenAFS';
+my $expected = 'Uryyb BcraNSF';
+my $got = qx($client localhost $port $service "$message");
+chomp($got);
+
+is(0, $?, "Client ran successfully");
+is($expected, $got, "Rot13 performed successfully");
+
+# Kill the server process
+kill("TERM", $server_pid);
+
+close($server_fh);
+my $ecode = ${^CHILD_ERROR_NATIVE};
+if (WIFSIGNALED($ecode) && WTERMSIG($ecode) == SIGTERM) {
+    pass("Server died with SIGTERM");
+} elsif (WIFSIGNALED($ecode)) {
+    fail("Server died with signal ".WTERMSIG($ecode));
+} else {
+    fail("Server exited with code". WEXITSTATUS($ecode));
+}

@@ -21,6 +21,7 @@ ptserver/pts-man
 rx/atomic
 rx/event
 rx/perf
+rx/simple
 volser/vos-man
 volser/vos
 bucoord/backup-man
