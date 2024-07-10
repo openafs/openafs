@@ -955,11 +955,11 @@ pristine: distclean
 	src/cf/ltsugar.m4 \
 	src/cf/ltversion.m4 \
 	src/cf/lt~obsolete.m4 \
-	doc/xml/mobi-fixup.xsl \
-	doc/man-pages/man1 \
+	doc/xml/mobi-fixup.xsl
+	/bin/rm -rf doc/man-pages/man1 \
 	doc/man-pages/man3 \
 	doc/man-pages/man5 \
-	doc/man-pages/man8 \
+	doc/man-pages/man8
 	for i in doc/man-pages/pod*/*.pod.in; do \
 	    /bin/rm -f $${i%.in}; \
 	done
