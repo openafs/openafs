@@ -1138,7 +1138,7 @@ bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
     cpid = spawnprocve_sig(argv[0], argv, environ, -1, &set);
     osi_audit(BOSSpawnProcEvent, 0, AUD_STR, aexecString, AUD_END);
 
-    if (cpid == (pid_t) - 1) {
+    if (cpid == (pid_t)(-1)) {
 	ViceLog(0, ("Failed to spawn process for bnode '%s'\n", abnode->name));
 	bnode_FreeTokens(tlist);
 	free(tp);
