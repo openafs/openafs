@@ -127,8 +127,16 @@ SBOZO_Exec(struct rx_call *acall, char *acmd)
     if (DoLogging)
 	ViceLog(0, ("%s is executing the shell command '%s'\n", caller, acmd));
 
-    /* should copy output to acall, but don't yet cause its hard */
-    /*  hard... NOT!  Nnow _at least_ return the exit status */
+    /*
+     * The BOZO_Exec() interface does not include provision for reading
+     * data and attaching it to stdin of the exec()'d process, or for
+     * relaying stdout or stderr of the exec()'d process to the Rx reply
+     * stream, so all we can do is relay the exit status as the RPC return
+     * code.  In theory a new RPC could be defined that has such semantics
+     * but given the ubiquity of ssh and fleet automation tooling it does
+     * not seem necessary to incorporate such functionality into the OpenAFS
+     * tooling directly.
+     */
     code = system(acmd);
     osi_auditU(acall, BOS_ExecEvent, code, AUD_STR, acmd, AUD_END);
 
