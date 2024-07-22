@@ -49,6 +49,7 @@
 	[bkIPArray removeAllObjects];
 	[bkIPArray setArray:workIPArray];
 	[workIPArray release];
+	workIPArray = nil;
 }
 
 // -------------------------------------------------------------------------------
