@@ -22,10 +22,10 @@ all: sample_client sample_server
 install dest:
 
 sample_client: sample_client.o ${LIBS} sample.cs.o
-	$(AFS_LDRULE) sample_client.o sample.cs.o ${LIBS} ${LIB_hcrypto} ${LIB_roken}
+	$(AFS_LDRULE) sample_client.o sample.cs.o ${LIBS} ${LIB_hcrypto} ${LIB_roken} ${XLIBS}
 
 sample_server: sample_server.o sample.ss.o ${LIBS}
-	$(AFS_LDRULE) sample_server.o sample.ss.o ${LIBS} ${LIB_hcrypto} ${LIB_roken}
+	$(AFS_LDRULE) sample_server.o sample.ss.o ${LIBS} ${LIB_hcrypto} ${LIB_roken} ${XLIBS}
 
 sample_client.o:	sample.h
 sample_server.o:	sample.h
