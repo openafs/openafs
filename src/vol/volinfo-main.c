@@ -90,6 +90,11 @@ VolInfo(struct cmd_syndesc *as, void *arock)
     }
     if ((ti = as->parms[P_VOLUMEID].items)) {
 	volumeId = strtoul(ti->data, NULL, 10);
+	if (volumeId == 0) {
+	    fprintf(stderr, "%s: Invalid -volumeid value: %s\n", progname,
+		    ti->data);
+	    return 1;
+	}
     }
     if (as->parms[P_HEADER].items) {
 	opt->dumpHeader = 1;
