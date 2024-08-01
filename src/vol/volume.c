@@ -118,6 +118,9 @@ pthread_cond_t vol_sleep_cond;
 pthread_cond_t vol_init_attach_cond;
 pthread_cond_t vol_vinit_cond;
 int vol_attach_threads = 1;
+#else
+int VInitAttachVolumes_event = 1;
+int VPutVolume_event = 2;
 #endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -659,7 +662,7 @@ VInitAttachVolumes(ProgramType pt)
     }
     VOL_LOCK;
     VSetVInit_r(2);			/* Initialized, and all volumes have been attached */
-    LWP_NoYieldSignal((void *)VInitAttachVolumes);
+    LWP_NoYieldSignal(&VInitAttachVolumes_event);
     VOL_UNLOCK;
     return 0;
 }
@@ -1326,7 +1329,7 @@ VShutdown_r(void)
 #ifdef AFS_PTHREAD_ENV
 	    VOL_CV_WAIT(&vol_init_attach_cond);
 #else
-	    LWP_WaitProcess((void *)VInitAttachVolumes);
+	    LWP_WaitProcess(&VInitAttachVolumes_event);
 #endif /* AFS_PTHREAD_ENV */
 	}
     }
@@ -4237,7 +4240,7 @@ GetVolume(Error * ec, Error * client_ec, VolumeId volumeId, Volume * hint,
 		    /* LWP has no timed wait, so the caller better not be
 		     * expecting one */
 		    opr_Assert(!timeout);
-		    LWP_WaitProcess((void *)VPutVolume);
+		    LWP_WaitProcess(&VPutVolume_event);
 #endif /* AFS_PTHREAD_ENV */
 		    continue;
 		}
@@ -4384,7 +4387,7 @@ VForceOffline_r(Volume * vp, int flags)
 #ifdef AFS_PTHREAD_ENV
     opr_cv_broadcast(&vol_put_volume_cond);
 #else /* AFS_PTHREAD_ENV */
-    LWP_NoYieldSignal((void *)VPutVolume);
+    LWP_NoYieldSignal(&VPutVolume_event);
 #endif /* AFS_PTHREAD_ENV */
 
     VReleaseVolumeHandles_r(vp);
@@ -5070,7 +5073,7 @@ VCheckDetach(Volume * vp)
 #if defined(AFS_PTHREAD_ENV)
 	    opr_cv_broadcast(&vol_put_volume_cond);
 #else /* AFS_PTHREAD_ENV */
-	    LWP_NoYieldSignal((void *)VPutVolume);
+	    LWP_NoYieldSignal(&VPutVolume_event);
 #endif /* AFS_PTHREAD_ENV */
 	}
     }
@@ -5170,7 +5173,7 @@ VCheckOffline(Volume * vp)
 #ifdef AFS_PTHREAD_ENV
 	opr_cv_broadcast(&vol_put_volume_cond);
 #else /* AFS_PTHREAD_ENV */
-	LWP_NoYieldSignal((void *)VPutVolume);
+	LWP_NoYieldSignal(&VPutVolume_event);
 #endif /* AFS_PTHREAD_ENV */
     }
     return ret;
