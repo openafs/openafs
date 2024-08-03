@@ -63,10 +63,9 @@ sub check_prerequisites {
 
     # Check if the given keychain-profile exists
     my $output = qx(xcrun notarytool history --keychain-profile "$profile" 2>&1);
-    my $exitcode = $? >> 8;
-
-    if ($exitcode) {
-	print(STDERR "error: $exitcode\n");
+    if ($? != 0) {
+	my $exitcode = $? >> 8;
+	print(STDERR "error: exit code $exitcode (status $?)\n");
 	print(STDERR $output);
 	exit(1);
     }
@@ -86,10 +85,9 @@ sub process_package {
     # returns after submitting and processing the package, or times out if it
     # takes longer than 5 minutes
     my $output = qx(xcrun notarytool submit "$package" --keychain-profile "$profile" --wait --timeout 5m 2>&1);
-    my $exitcode = $? >> 8;
-
-    if ($exitcode) {
-	print(STDERR "error: $exitcode\n");
+    if ($? != 0) {
+	my $exitcode = $? >> 8;
+	print(STDERR "error: exit code $exitcode (status $?)\n");
 	print(STDERR $output);
 	exit(1);
     }
@@ -120,10 +118,10 @@ sub notarize_package {
     print(STDOUT "notarize.pl: notarizing package...\n");
 
     my $output = qx(xcrun stapler staple -v "$package" 2>&1);
-    my $exitcode = $? >> 8;
-
-    if ($exitcode) {
+    if ($? != 0) {
+	my $exitcode = $? >> 8;
 	print(STDERR "error: package could not be notarized (uuid: $uuid)\n");
+	print(STDERR "error: exit code $exitcode (status $?)\n");
 	print(STDERR $output);
 	exit(1);
     }

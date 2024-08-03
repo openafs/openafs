@@ -82,8 +82,7 @@ sub main {
 		    "echo @rmpkg | xargs -n 1 /usr/sbin/pkgutil --forget\" " .
 		    "with administrator privileges' | tr '\\r' '\\n'";
 	system $rmcmd;
-	my $retcode = $? >> 8;
-	if ($retcode != 0) {
+	if ($? != 0) {
 	    print_warning ("Warning:  There may have been a problem uninstalling\n");
 	}
     }
