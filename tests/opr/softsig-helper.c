@@ -32,6 +32,9 @@
 #include <roken.h>
 #include <pthread.h>
 #include <sys/mman.h>
+#ifdef HAVE_SYS_RESOURCE_H
+# include <sys/resource.h>
+#endif
 
 #include <afs/opr.h>
 #include <opr/softsig.h>
@@ -79,8 +82,27 @@ mythread(void *arg) {
     return NULL;
 }
 
+static void
+disable_core(void)
+{
+#ifdef HAVE_GETRLIMIT
+    struct rlimit rlp;
+
+    memset(&rlp, 0, sizeof(rlp));
+
+    /*
+     * Set our core limit to 0 for SIGSEGV/SIGBUS, so we don't litter core
+     * files around when running the test.
+     */
+    if (setrlimit(RLIMIT_CORE, &rlp) < 0) {
+	perror("setrlimit(RLIMIT_CORE)");
+    }
+#endif
+}
+
 static void *
 crashingThread(void *arg) {
+    disable_core();
     *(char *)1 = 'a';  /* raises SIGSEGV */
     return NULL; /* Ha! */
 }
@@ -90,6 +112,7 @@ thrownUnderTheBusThread(void *arg) {
     char *path = arg;
     int fd = open(path, O_CREAT | O_APPEND, 0660);
     char *m = mmap(NULL, 10, PROT_WRITE, MAP_PRIVATE, fd, 0);
+    disable_core();
     *(m + 11) = 'a';  /* raises SIGBUS */
     return NULL;
 }
