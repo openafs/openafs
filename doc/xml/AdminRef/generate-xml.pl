@@ -2,7 +2,7 @@
     eval 'exec /usr/bin/perl -S $0 ${1+"$@"}'
 	if $running_under_some_shell;
 
-@sections = ('1', '5', '8');
+@sections = ('1', '3', '5', '8');
 
 $TOP_SRCDIR = shift @ARGV;
 $doc_man_pages = sprintf "%s/../doc/man-pages", $TOP_SRCDIR;
