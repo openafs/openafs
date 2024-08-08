@@ -1,0 +1,19 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+*.aux
+*.chm
+*.epub
+*.html
+*.fo
+*.log
+*.mobi
+*.out
+*.pdf
+
+Makefile
+version.xml
+entities.dtd
+sect*.xml
+sect*/
