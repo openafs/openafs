@@ -4,6 +4,7 @@
 <!ENTITY version SYSTEM "version.xml">
 <!ENTITY preface SYSTEM "preface.xml">
 <!ENTITY sect1 SYSTEM "sect1.xml">
+<!ENTITY sect3 SYSTEM "sect3.xml">
 <!ENTITY sect5 SYSTEM "sect5.xml">
 <!ENTITY sect8 SYSTEM "sect8.xml">
 <!ENTITY % entities SYSTEM "entities.dtd">
@@ -59,6 +60,11 @@
   <reference>
     <title>AFS Commands</title>
     &sect1;
+  </reference>
+
+  <reference>
+    <title>AFS Library Reference</title>
+    &sect3;
   </reference>
 
   <reference>

@@ -10,7 +10,7 @@ VERSION=version
 include @TOP_OBJDIR@/src/config/Makefile.version
 
 SRCS     = $(BOOK).xml preface.xml $(VERSION).xml \
-	   entities.dtd sect1.xml sect5.xml sect8.xml
+	   entities.dtd sect1.xml sect3.xml sect5.xml sect8.xml
 DOCBOOK_STYLESHEETS = @DOCBOOK_STYLESHEETS@
 XSLTPROC = @XSLTPROC@ --stringparam variablelist.as.blocks 1 --param use.id.as.filename 1
 DOCBOOK2PDF = @DOCBOOK2PDF@
@@ -19,7 +19,7 @@ KINDLEGEN = @KINDLEGEN@
 
 XSL_FLAGS = --path '@abs_builddir@'
 
-entities.dtd sect1.xml sect5.xml sect8.xml:
+entities.dtd sect1.xml sect3.xml sect5.xml sect8.xml:
 	$(srcdir)/generate-xml.pl $(TOP_SRCDIR)
 
 $(BOOK).pdf: $(SRCS)
@@ -49,5 +49,5 @@ check:
 
 clean:
 	rm -f $(BOOK).pdf $(BOOK).mobi $(BOOK).epub $(BOOK).fo \
-		entities.dtd sect1.xml sect5.xml sect8.xml $(VERSION).xml
-	rm -rf sect1 sect5 sect8
+		entities.dtd sect1.xml sect3.xml sect5.xml sect8.xml $(VERSION).xml
+	rm -rf sect1 sect3 sect5 sect8
