@@ -713,14 +713,18 @@ make_pid_filename(char *ainst, char *aname)
 
     if (aname && *aname) {
 	r = asprintf(&buffer, "%s/%s.%s.pid", DoPidFiles, ainst, aname);
-	if (r < 0 || buffer == NULL)
+	if (r < 0 || buffer == NULL) {
 	    ViceLog(0, ("Failed to alloc pid filename buffer for %s.%s.\n",
 			ainst, aname));
+	    buffer = NULL;
+	}
     } else {
 	r = asprintf(&buffer, "%s/%s.pid", DoPidFiles, ainst);
-	if (r < 0 || buffer == NULL)
+	if (r < 0 || buffer == NULL) {
 	    ViceLog(0, ("Failed to alloc pid filename buffer for %s.\n",
 			ainst));
+	    buffer = NULL;
+	}
     }
 
     return buffer;
