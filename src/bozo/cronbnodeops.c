@@ -84,7 +84,7 @@ cron_hascore(struct bnode *abnode)
     one shot run) or when we should run again.  Sleeps until we should run again.
     Note that the computation of when we should run again is made in procexit
     and/or create procs.  This guy only schedules the sleep */
-int
+static int
 ScheduleCronBnode(struct cronbnode *abnode)
 {
     afs_int32 code;
