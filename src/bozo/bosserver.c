@@ -875,8 +875,6 @@ CreateLocalCellConfig(void)
     return tdir;
 }
 
-/* start a process and monitor it */
-
 #include "AFS_component_version_number.c"
 
 enum optionsList {
