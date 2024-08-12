@@ -28,8 +28,8 @@ AS_CASE([$CTF_TOOLS],
 CC_WRAPPER=
 LD_WRAPPER=
 AS_IF([test x"$CTFCONVERT" != x && test x"$CTFMERGE" != x],
-      [CC_WRAPPER="$TOP_SRCDIR/config/cc-wrapper cc"
-       LD_WRAPPER="$TOP_SRCDIR/config/cc-wrapper ld"])
+      [CC_WRAPPER="${TOP_OBJDIR}/src/config/cc-wrapper cc"
+       LD_WRAPPER="${TOP_OBJDIR}/src/config/cc-wrapper ld"])
 AC_SUBST([CC_WRAPPER])
 AC_SUBST([LD_WRAPPER])
 
