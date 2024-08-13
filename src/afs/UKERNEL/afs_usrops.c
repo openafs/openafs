@@ -47,13 +47,6 @@
 #define	CELLINFOFILE	"CellItems"
 #define MAXIPADDRS 64
 
-#ifndef MIN
-#define MIN(A,B)	((A)<(B)?(A):(B))
-#endif
-#ifndef MAX
-#define MAX(A,B)	((A)>(B)?(A):(B))
-#endif
-
 extern int cacheDiskType;
 
 char afs_LclCellName[64];

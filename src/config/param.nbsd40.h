@@ -97,16 +97,6 @@
 
 #if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__) && !defined(IGNORE_STDS_H)
 enum vcexcl { NONEXCL, EXCL };
-
-#ifdef KERNEL
-#ifndef MIN
-#define MIN(A,B) ((A) < (B) ? (A) : (B))
-#endif
-#ifndef MAX
-#define MAX(A,B) ((A) > (B) ? (A) : (B))
-#endif
-#endif /* KERNEL */
-
 #endif /* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ && !defined(IGNORE_STDS_H) */
 #endif /* _KERNEL_DEPRECATED */
 

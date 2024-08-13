@@ -39,16 +39,6 @@
 #define AFS_GLOBAL_SUNLOCK
 #endif /* __KERNEL__ */
 
-#ifdef KERNEL
-#ifndef MIN
-#define MIN(A,B) ((A) < (B) ? (A) : (B))
-#endif
-#ifndef MAX
-#define MAX(A,B) ((A) > (B) ? (A) : (B))
-#endif
-
-#endif /* KERNEL */
-
 #ifndef KERNEL
 #define __USE_LARGEFILE64 1
 #if !defined off64_t

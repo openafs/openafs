@@ -32,14 +32,7 @@
  */
 
 
-#if defined(AFS_NT40_ENV)
-# ifndef MIN
-#  define MIN(a,b)  ((a)<(b)?(a):(b))
-# endif
-# ifndef MAX
-#  define MAX(a,b)  ((a)>(b)?(a):(b))
-# endif
-#else /* AFS_NT40_ENV */
+#if !defined(AFS_NT40_ENV)
 # if !defined(AFS_DARWIN_ENV) && !defined(AFS_USR_DARWIN_ENV)   \
     && !defined(AFS_XBSD_ENV) && !defined(AFS_USR_FBSD_ENV)     \
     && !defined(AFS_USR_DFBSD_ENV) && !defined(AFS_LINUX_ENV)
