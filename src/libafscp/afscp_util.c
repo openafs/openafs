@@ -148,6 +148,7 @@ _GetNullSecurityObject(struct afscp_cell *cell)
     return 0;
 }
 
+#ifdef HAVE_KERBEROS
 static int
 _GetLocalSecurityObject(struct afscp_cell *cell,
                         char *aname, char *ainst)
@@ -209,6 +210,7 @@ _GetLocalSecurityObject(struct afscp_cell *cell,
     }
     return code;
 }
+#endif /* HAVE_KERBEROS */
 
 int
 _GetSecurityObject(struct afscp_cell *cell)
