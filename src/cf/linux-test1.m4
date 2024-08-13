@@ -24,8 +24,8 @@ $2
 
 MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
-    echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir $SPARSE_MAKEFLAGS modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD &&
-    make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir $SPARSE_MAKEFLAGS modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD 2>conftest.err &&
+    echo make -C $LINUX_KERNEL_BUILD M=$TOP_OBJDIR/conftest.dir $SPARSE_MAKEFLAGS modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD &&
+    make -C $LINUX_KERNEL_BUILD M=$TOP_OBJDIR/conftest.dir $SPARSE_MAKEFLAGS modules KBUILD_VERBOSE=1 >&AS_MESSAGE_LOG_FD 2>conftest.err &&
     ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then [$3]
     else

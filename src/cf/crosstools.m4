@@ -8,9 +8,9 @@ if test "x$with_crosstools_dir" != "x"; then
         AC_MSG_ERROR(Tools not found in $with_crosstools_dir)
     fi
 else
-    COMPILE_ET_PATH="${SRCDIR_PARENT}/src/comerr/compile_et"
-    CONFIGTOOL_PATH="${SRCDIR_PARENT}/src/config/config"
-    RXGEN_PATH="${SRCDIR_PARENT}/src/rxgen/rxgen"
+    COMPILE_ET_PATH="${TOP_OBJDIR}/src/comerr/compile_et"
+    CONFIGTOOL_PATH="${TOP_OBJDIR}/src/config/config"
+    RXGEN_PATH="${TOP_OBJDIR}/src/rxgen/rxgen"
 fi
 AC_SUBST(COMPILE_ET_PATH)
 AC_SUBST(CONFIGTOOL_PATH)

@@ -449,6 +449,6 @@ esac
 # Set the `make dest` target destination path.
 #
 if test "x${DEST}" = "x"; then
-    DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
+    DEST="${TOP_OBJDIR}/${AFS_SYSNAME}/dest"
 fi
 ])

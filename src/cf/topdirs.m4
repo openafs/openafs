@@ -11,7 +11,7 @@ case $TOP_SRCDIR in
                 ;;
 esac
 
-TOP_OBJDIR="${SRCDIR_PARENT}"
-TOP_INCDIR="${SRCDIR_PARENT}/include"
-TOP_LIBDIR="${SRCDIR_PARENT}/lib"
+TOP_OBJDIR=`pwd`
+TOP_INCDIR="${TOP_OBJDIR}/include"
+TOP_LIBDIR="${TOP_OBJDIR}/lib"
 ])
