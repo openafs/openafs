@@ -51,10 +51,6 @@ typedef unsigned char bool;
 #define FALSE	0
 #define TRUE	1
 
-#ifndef MIN
-#define MIN(a,b) (((a)>(b)) ? (b) : (a))
-#endif
-
 #ifndef NSIG
 #define NSIG 8*sizeof(sigset_t)
 #endif

@@ -106,10 +106,6 @@ rxi_getaddr(void)
 
 #if !defined(KERNEL) || defined(UKERNEL)
 
-#ifndef MAX
-#define MAX(A,B) (((A)<(B)) ? (B) : (A))
-#endif
-
 #ifdef UKERNEL
 #undef ioctl
 #endif /* UKERNEL */
