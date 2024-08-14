@@ -444,4 +444,11 @@ case $AFS_SYSNAME in
                 AFS_PARAM=param.${AFS_SYSNAME}.h
                 ;;
 esac
+
+#
+# Set the `make dest` target destination path.
+#
+if test "x${DEST}" = "x"; then
+    DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
+fi
 ])

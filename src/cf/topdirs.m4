@@ -14,7 +14,4 @@ esac
 TOP_OBJDIR="${SRCDIR_PARENT}"
 TOP_INCDIR="${SRCDIR_PARENT}/include"
 TOP_LIBDIR="${SRCDIR_PARENT}/lib"
-if test "${DEST}x" = "x"; then
-        DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
-fi
 ])
