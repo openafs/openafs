@@ -1,5 +1,11 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.12.1
+
+  Linux clients
+
+    * Add support for Linux 6.10 (15796, 15797, 15798, 15799, 15800)
+
 OpenAFS 1.8.12
 
   All client platforms
