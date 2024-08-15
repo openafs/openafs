@@ -24,7 +24,6 @@
 #include "bosprototypes.h"
 
 extern char *DoPidFiles;
-static int emergency = 0;
 
 /* if this file exists, then we have to salvage the file system */
 #define	SALFILE	    "SALVAGE."
@@ -915,7 +914,6 @@ NudgeProcs(struct fsbnode *abnode)
 	    if (abnode->salRunning) {
 		ViceLog(0, ("Salvager running along with file server!\n"));
 		ViceLog(0, ("Emergency shutdown\n"));
-		emergency = 1;
 		bnode_SetGoal(fsbnode2bnode(abnode), BSTAT_SHUTDOWN);
 		bnode_StopProc(abnode->salProc, SIGKILL);
 		SetNeedsClock(abnode);
