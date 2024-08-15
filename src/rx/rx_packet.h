@@ -31,20 +31,6 @@
  * and that the offsets are as well.
  */
 
-
-#if !defined(AFS_NT40_ENV)
-# if !defined(AFS_DARWIN_ENV) && !defined(AFS_USR_DARWIN_ENV)   \
-    && !defined(AFS_XBSD_ENV) && !defined(AFS_USR_FBSD_ENV)     \
-    && !defined(AFS_USR_DFBSD_ENV) && !defined(AFS_LINUX_ENV)
-#  include <sys/sysmacros.h>	/* MIN, MAX on most commercial UNIX */
-# endif
-/* Linux 3.7 doesn't have sys/param.h in kernel space, and afs/param.h ensures
- * that MIN and MAX are available for kernel builds. */
-# if !(defined(AFS_LINUX_ENV) && defined(KERNEL))
-#  include <sys/param.h>	/* MIN, MAX elsewhere */
-# endif
-#endif /* !AFS_NT40_ENV */
-
 #define	IPv6_HDR_SIZE		40	/* IPv6 Header */
 #define IPv6_FRAG_HDR_SIZE	 8	/* IPv6 Fragment Header */
 #define UDP_HDR_SIZE             8	/* UDP Header */
