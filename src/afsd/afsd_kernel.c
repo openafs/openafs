@@ -656,6 +656,9 @@ main(int argc, char **argv)
 {
     int code;
 
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+
     afsd_init_syscall_opcodes();
     afsd_init();
 
