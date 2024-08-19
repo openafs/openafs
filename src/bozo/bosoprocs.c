@@ -1360,10 +1360,13 @@ StatEachEntry(IN struct bozo_bosEntryStats *stats)
     return 1;
 }
 
-/* DirAccessOK - checks the mode bits on the AFS dir and decendents and
+/*
+ * DirAccessOK - checks the mode bits on the AFS dir and decendents and
  * returns 0 if some are not OK and 1 otherwise.  For efficiency, it doesn't do
- * this check more often than every 5 seconds. */
-
+ * this check more often than every 5 seconds.
+ *
+ * @pre BNODE_LOCK must be held
+ */
 int
 DirAccessOK(void)
 {
@@ -1372,10 +1375,12 @@ DirAccessOK(void)
     return 1;
 #else
     static afs_uint32 lastTime = 0;
-    afs_uint32 now = FT_ApproxTime();
     static int lastResult = -1;
+    afs_uint32 now = FT_ApproxTime();
     int result;
     int i;
+
+    BNODE_ASSERT_LOCK();
 
     if ((now - lastTime) < 5)
 	return lastResult;

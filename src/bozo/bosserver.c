@@ -1174,6 +1174,8 @@ main(int argc, char **argv, char **envp)
     signal(SIGFPE, bozo_insecureme);
 #endif
 
+    BNODE_LOCK();
+
     /* Write current state of directory permissions to log file */
     DirAccessOK();
 
@@ -1202,8 +1204,6 @@ main(int argc, char **argv, char **envp)
     }
     /* opened the cell databse */
     bozo_confdir = tdir;
-
-    BNODE_LOCK();
 
     code = bnode_Init();
     if (code) {
