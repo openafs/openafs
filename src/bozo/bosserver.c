@@ -90,8 +90,6 @@ char *DoPidFiles = NULL;
 int DoSyslogFacility = LOG_DAEMON;
 #endif
 int DoTransarcLogs = 0;
-static afs_int32 nextRestart;
-static afs_int32 nextDay;
 
 struct ktime bozo_nextRestartKT, bozo_nextDayKT;
 int bozo_newKTs = 1;
@@ -616,6 +614,8 @@ static void *
 BozoDaemon(void *unused)
 {
     afs_int32 now;
+    afs_int32 nextRestart = 0;
+    afs_int32 nextDay = 0;
 
     while (1) {
 #ifdef AFS_PTHREAD_ENV
