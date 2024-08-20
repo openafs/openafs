@@ -1397,7 +1397,7 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
     char *orphans;
     char * serviceName;
 
-    /* parm 0 is machine name, 1 is partition, 2 is volume, 3 is -all flag */
+    /* parm 0 is machine name, 1 is partition, 2 is volume, 4 is -all flag */
     tconn = GetConn(as, 1);
 
     /* find out whether fileserver is running demand attach fs */
@@ -1501,7 +1501,7 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
 	    return -1;
 	}
 	if (volutil_GetPartitionID(as->parms[1].items->data) < 0) {
-	    /* can't parse volume ID, so complain before shutting down
+	    /* can't parse partition ID, so complain before shutting down
 	     * file server.
 	     */
 	    fprintf(stderr, "bos: can't interpret %s as partition ID.\n",
