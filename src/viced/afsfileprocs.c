@@ -3136,7 +3136,7 @@ common_StoreACL(afs_uint64 opcode,
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct fsstats fsstats;
     char *displayACL = NULL;
-    char *rawACL = uncheckedACL->AFSOpaque_val;
+    char *rawACL = NULL;
     int newOpcode = (opcode == opcode_RXAFS_StoreACL);
 
     fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_STOREACL);
@@ -3148,6 +3148,7 @@ common_StoreACL(afs_uint64 opcode,
     if (errorCode != 0) {
 	goto Bad_StoreACL;
     }
+    rawACL = uncheckedACL->AFSOpaque_val;
 
     /* Get ptr to client data for user Id for logging */
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
