@@ -1246,12 +1246,12 @@ RXFetch_AccessList(Vnode * targetptr, Vnode * parentwhentargetnotdir,
  * the target dir's vnode storage.
  */
 static afs_int32
-RXStore_AccessList(Vnode * targetptr, struct AFSOpaque *AccessList)
+RXStore_AccessList(Vnode * targetptr, char *AccessList)
 {
     int code;
     struct acl_accessList *newACL = NULL;
 
-    if (acl_Internalize_pr(hpr_NameToId, AccessList->AFSOpaque_val, &newACL)
+    if (acl_Internalize_pr(hpr_NameToId, AccessList, &newACL)
 	!= 0) {
 	code = EINVAL;
 	goto done;
@@ -3068,20 +3068,21 @@ SRXAFS_StoreData64(struct rx_call * acall, struct AFSFid * Fid,
 }
 
 static char *
-printableACL(struct AFSOpaque *AccessList)
+printableACL(char *AccessList)
 {
     char *s;
     size_t i;
+    size_t len = strlen(AccessList);
 
-    s = calloc(1, AccessList->AFSOpaque_len + 1);
+    s = calloc(1, len + 1);
     if (s == NULL)
 	return NULL;
 
-    for (i = 0; i < AccessList->AFSOpaque_len; i++) {
-	if (AccessList->AFSOpaque_val[i] == '\n')
+    for (i = 0; i < len; i++) {
+	if (AccessList[i] == '\n')
 	    s[i] = ' ';
 	else
-	    s[i] = AccessList->AFSOpaque_val[i];
+	    s[i] = AccessList[i];
     }
     return s;
 }
@@ -3119,7 +3120,7 @@ check_acl(struct AFSOpaque *AccessList)
 static afs_int32
 common_StoreACL(afs_uint64 opcode,
 		struct rx_call * acall, struct AFSFid * Fid,
-		struct AFSOpaque * AccessList,
+		struct AFSOpaque *uncheckedACL,
 		struct AFSFetchStatus * OutStatus, struct AFSVolSync * Sync)
 {
     Vnode *targetptr = 0;	/* pointer to input fid */
@@ -3135,6 +3136,7 @@ common_StoreACL(afs_uint64 opcode,
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct fsstats fsstats;
     char *displayACL = NULL;
+    char *rawACL = uncheckedACL->AFSOpaque_val;
     int newOpcode = (opcode == opcode_RXAFS_StoreACL);
 
     fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_STOREACL);
@@ -3142,7 +3144,7 @@ common_StoreACL(afs_uint64 opcode,
     if ((errorCode = CallPreamble(acall, ACTIVECALL, Fid, &tcon, &thost)))
 	goto Bad_StoreACL;
 
-    errorCode = check_acl(AccessList);
+    errorCode = check_acl(uncheckedACL);
     if (errorCode != 0) {
 	goto Bad_StoreACL;
     }
@@ -3150,12 +3152,12 @@ common_StoreACL(afs_uint64 opcode,
     /* Get ptr to client data for user Id for logging */
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     logHostAddr.s_addr = rxr_HostOf(tcon);
-    displayACL = printableACL(AccessList);
+    displayACL = printableACL(rawACL);
     ViceLog(newOpcode ? 1 : 0,
 	    ("SAFS_StoreACL%s, Fid = %u.%u.%u, ACL=%s, Host %s:%d, Id %d\n",
 	     newOpcode ? "" : " CVE-2018-7168",
 	     Fid->Volume, Fid->Vnode, Fid->Unique,
-	     displayACL == NULL ? AccessList->AFSOpaque_val : displayACL,
+	     displayACL == NULL ? rawACL : displayACL,
 	     inet_ntoa(logHostAddr), ntohs(rxr_PortOf(tcon)), t_client->z.ViceId));
     FS_LOCK;
     AFSCallStats.StoreACL++, AFSCallStats.TotalCalls++;
@@ -3190,7 +3192,7 @@ common_StoreACL(afs_uint64 opcode,
     }
 
     /* Build and store the new Access List for the dir */
-    if ((errorCode = RXStore_AccessList(targetptr, AccessList))) {
+    if ((errorCode = RXStore_AccessList(targetptr, rawACL))) {
 	goto Bad_StoreACL;
     }
 
@@ -3222,7 +3224,7 @@ common_StoreACL(afs_uint64 opcode,
     osi_auditU(acall, StoreACLEvent, errorCode,
 	       AUD_ID, t_client ? t_client->z.ViceId : 0,
 	       AUD_FID, Fid, AUD_ACL,
-	       displayACL == NULL ? AccessList->AFSOpaque_val : displayACL,
+	       displayACL == NULL ? rawACL : displayACL,
 	       AUD_END);
     free(displayACL);
     return errorCode;
