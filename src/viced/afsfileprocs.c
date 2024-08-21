@@ -3114,7 +3114,7 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
     struct client *t_client = NULL;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct fsstats fsstats;
-    char *rawACL = uncheckedACL->AFSOpaque_val;
+    char *rawACL = NULL;
 
     fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_STOREACL);
 
@@ -3125,6 +3125,7 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
     if (errorCode != 0) {
 	goto Bad_StoreACL;
     }
+    rawACL = uncheckedACL->AFSOpaque_val;
 
     /* Get ptr to client data for user Id for logging */
     t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
