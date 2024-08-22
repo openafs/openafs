@@ -527,11 +527,7 @@ RedirectStdStreams(const char *fileName)
 	/* don't care */
     }
     if (freopen(fileName, "a", stderr) != NULL) {
-#ifdef HAVE_SETVBUF
 	setvbuf(stderr, NULL, _IONBF, 0);
-#else
-	setbuf(stderr, NULL);
-#endif
     }
 }
 

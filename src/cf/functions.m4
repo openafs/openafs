@@ -26,7 +26,6 @@ AC_CHECK_FUNCS([ \
     regerror \
     regexec \
     setitimer \
-    setvbuf \
     sigaction \
     strcasestr \
     strerror \
