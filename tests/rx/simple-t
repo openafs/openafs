@@ -28,7 +28,7 @@ use warnings;
 use lib $ENV{C_TAP_SOURCE} . "/tests-lib/perl5";
 
 use afstest qw(obj_path);
-use Test::More tests=>4;
+use Test::More tests=>6;
 use POSIX qw(:sys_wait_h :signal_h);
 
 my $port = 4000;
@@ -61,6 +61,18 @@ chomp($got);
 
 is(0, $?, "Client ran successfully");
 is($expected, $got, "Rot13 performed successfully");
+
+# Test a case where the server aborts the call
+$message = 'This exceeds the message size';
+$got = qx($client localhost $port $service "$message" 2>&1);
+$expected = "simple-client: rx_Read failed
+simple-client: call aborted with code 201
+";
+my $got_ret = ($? >> 8);
+my $expected_ret = 201;
+
+is($expected_ret, $got_ret, "Client exited with correct status");
+is($got, $expected, "Client saw an aborted call");
 
 # Kill the server process
 kill("TERM", $server_pid);
