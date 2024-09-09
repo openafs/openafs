@@ -27,18 +27,18 @@ MT_LINK = $(CC) $(MT_CFLAGS) $(COMMON_CFLAGS) $(AFS_LDFLAGS) -o $@ \
 	  $(LIB_hcrypto) $(LIB_roken) \
 	  $(MT_LIBS)
 
-TESTS = testclient testserver kstest kctest tableGen generator
+BINS = testclient testserver kstest kctest tableGen generator
 
-TH_TESTS = th_testserver th_testclient
+TH_BINS = th_testserver th_testclient
 
 
 all: test th_test
 
 install dest:
 
-test tests: ${TESTS}
+test tests: ${BINS}
 
-th_test th_tests: ${TH_TESTS}
+th_test th_tests: ${TH_BINS}
 
 testclient: ../librx.a testclient.o
 	${LINK}
@@ -76,4 +76,4 @@ th_testserver.o: testserver.c
 ${RXTESTOBJS}: ${BASICINCLS} ../rx.h
 
 clean:
-	$(RM) -f *.o *.a ${TESTS} ${TH_TESTS} core
+	$(RM) -f *.o *.a ${BINS} ${TH_BINS} core
