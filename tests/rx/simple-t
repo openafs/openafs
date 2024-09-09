@@ -82,7 +82,7 @@ my $ecode = ${^CHILD_ERROR_NATIVE};
 if (WIFSIGNALED($ecode) && WTERMSIG($ecode) == SIGTERM) {
     pass("Server died with SIGTERM");
 } elsif (WIFSIGNALED($ecode)) {
-    fail("Server died with signal ".WTERMSIG($ecode));
+    fail("Server died with signal " . WTERMSIG($ecode));
 } else {
-    fail("Server exited with code". WEXITSTATUS($ecode));
+    fail("Server exited with code " . WEXITSTATUS($ecode));
 }
