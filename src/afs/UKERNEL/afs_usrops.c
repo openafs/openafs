@@ -30,6 +30,7 @@
 #include "afs/afs_bypasscache.h"
 #include "rx/rx_globals.h"
 #include "afsd/afsd.h"
+#include "afs/opr.h"
 
 #define VFS 1
 #undef	VIRTUE
@@ -276,7 +277,7 @@ usr_uiomove(char *kbuf, int n, int rw, struct usr_uio *uio)
      */
     ptr = kbuf;
     while (nio > 0 && n > 0) {
-	len = MIN(n, iovp->iov_len);
+	len = opr_min(n, iovp->iov_len);
 	if (rw == UIO_READ) {
 	    memcpy(iovp->iov_base, ptr, len);
 	} else {

@@ -316,7 +316,7 @@ struct rx_packet {
 /* return what the actual contiguous space is: should be min(length,size) */
 /* The things that call this really want something like ...pullup MTUXXX  */
 #define rx_Contiguous(p) \
-    MIN((unsigned) (p)->length, (unsigned) ((p)->wirevec[1].iov_len))
+    opr_min((unsigned) (p)->length, (unsigned) ((p)->wirevec[1].iov_len))
 
 #ifndef TRUE
 #define TRUE 1

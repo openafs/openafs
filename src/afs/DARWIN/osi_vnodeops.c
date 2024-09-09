@@ -8,6 +8,7 @@
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
 #include <afs/afs_stats.h>	/* statistics */
+#include <afs/opr.h>
 #include <sys/malloc.h>
 #include <sys/namei.h>
 #include <sys/ubc.h>
@@ -2103,7 +2104,7 @@ afs_vop_cmap(ap)
 				 * } */ *ap;
 {
     *ap->a_bpn = (daddr_t) (ap->a_foffset / DEV_BSIZE);
-    *ap->a_run = MAX(ap->a_size, AFS_CHUNKSIZE(ap->a_foffset));
+    *ap->a_run = opr_max(ap->a_size, AFS_CHUNKSIZE(ap->a_foffset));
     return 0;
 }
 #endif

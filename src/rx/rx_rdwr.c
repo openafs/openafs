@@ -50,9 +50,9 @@
 # include "afs/lock.h"
 #else /* KERNEL */
 # include <roken.h>
-# include <afs/opr.h>
 #endif /* KERNEL */
 
+#include <afs/opr.h>
 #include "rx.h"
 #include "rx_clock.h"
 #include "rx_globals.h"
@@ -252,8 +252,8 @@ rxi_ReadProc(struct rx_call *call, char *buf,
 	     * the final portion of a received packet, it's almost certain that
 	     * call->app.nLeft will be smaller than the final buffer. */
 	    while (nbytes && call->app.currentPacket) {
-		t = MIN((int)call->app.curlen, nbytes);
-		t = MIN(t, (int)call->app.nLeft);
+		t = opr_min((int)call->app.curlen, nbytes);
+		t = opr_min(t, (int)call->app.nLeft);
 		memcpy(buf, call->app.curpos, t);
 		buf += t;
 		nbytes -= t;
@@ -428,8 +428,8 @@ rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
 	       && call->iovNext < call->iovMax
 	       && call->app.currentPacket) {
 
-	    t = MIN((int)call->app.curlen, call->iovNBytes);
-	    t = MIN(t, (int)call->app.nLeft);
+	    t = opr_min((int)call->app.curlen, call->iovNBytes);
+	    t = opr_min(t, (int)call->app.nLeft);
 	    call_iov->iov_base = call->app.curpos;
 	    call_iov->iov_len = t;
 	    call_iov++;
@@ -724,7 +724,7 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 	    mud = rx_MaxUserDataSize(call);
 	    if (mud > len) {
 		int want;
-		want = MIN(nbytes - (int)call->app.nFree, mud - len);
+		want = opr_min(nbytes - (int)call->app.nFree, mud - len);
 		rxi_AllocDataBuf(call->app.currentPacket, want,
 				 RX_PACKET_CLASS_SEND_CBUF);
 		if (call->app.currentPacket->length > (unsigned)mud)
@@ -743,8 +743,8 @@ rxi_WriteProc(struct rx_call *call, char *buf,
 
 	while (nbytes && call->app.nFree) {
 
-	    t = MIN((int)call->app.curlen, nbytes);
-	    t = MIN((int)call->app.nFree, t);
+	    t = opr_min((int)call->app.curlen, nbytes);
+	    t = opr_min((int)call->app.nFree, t);
 	    memcpy(call->app.curpos, buf, t);
 	    buf += t;
 	    nbytes -= t;
@@ -952,7 +952,7 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
 	    mud = rx_MaxUserDataSize(call);
 	    if (mud > len) {
 		int want;
-		want = MIN(nbytes - tnFree, mud - len);
+		want = opr_min(nbytes - tnFree, mud - len);
 		rxi_AllocDataBuf(cp, want, RX_PACKET_CLASS_SEND_CBUF);
 		if (cp->length > (unsigned)mud)
 		    cp->length = mud;
@@ -964,8 +964,8 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
 	}
 
 	/* fill in the next entry in the iovec */
-	t = MIN(tcurlen, nbytes);
-	t = MIN(tnFree, t);
+	t = opr_min(tcurlen, nbytes);
+	t = opr_min(tnFree, t);
 	iov[nextio].iov_base = tcurpos;
 	iov[nextio].iov_len = t;
 	nbytes -= t;

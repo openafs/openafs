@@ -21,6 +21,7 @@
 
 #include "afs/sysincludes.h"
 #include "afs/afsincludes.h"
+#include "afs/opr.h"
 #include "afs/afs_stats.h"	/* statistics */
 #include "sys/syscallargs.h"
 
@@ -106,7 +107,7 @@ osi_getgroups(afs_ucred_t *cred, int ngroups, gid_t *gidset)
 {
     AFS_STATCNT(afs_getgroups);
 
-    ngroups = MIN(kauth_cred_ngroups(cred), ngroups);
+    ngroups = opr_min(kauth_cred_ngroups(cred), ngroups);
 
     kauth_cred_getgroups(cred, gidset, ngroups, UIO_SYSSPACE);
     return ngroups;

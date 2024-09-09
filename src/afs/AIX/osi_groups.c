@@ -19,6 +19,7 @@
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
+#include "afs/opr.h"
 #include "afs/afs_stats.h"	/* statistics */
 
 
@@ -130,7 +131,7 @@ afs_getgroups(struct ucred *cred, int ngroups, gid_t * gidset)
     gidset[0] = gidset[1] = 0;
     AFS_STATCNT(afs_getgroups);
 
-    savengrps = ngrps = MIN(ngroups, cred->cr_ngrps);
+    savengrps = ngrps = opr_min(ngroups, cred->cr_ngrps);
     gp = cred->cr_groups;
     while (ngrps--)
 	*gidset++ = *gp++;

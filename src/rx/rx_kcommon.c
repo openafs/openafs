@@ -21,6 +21,7 @@
 #include "rx_internal.h"
 #include "rx_stats.h"
 #include "rx_peer.h"
+#include "afs/opr.h"
 
 #ifdef AFS_HPUX110_ENV
 # include "h/tihdr.h"
@@ -372,10 +373,10 @@ rxi_InitPeerParams(struct rx_peer *pp)
     i = rxi_Findcbi(pp->host);
     if (i == -1) {
 	rx_rto_setPeerTimeoutSecs(pp, 3);
-	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
+	pp->ifMTU = opr_min(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     } else {
 	rx_rto_setPeerTimeoutSecs(pp, 2);
-	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
+	pp->ifMTU = opr_min(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
 	mtu = ntohl(afs_cb_interface.mtu[i]);
 	/* Diminish the packet size to one based on the MTU given by
 	 * the interface. */
@@ -398,7 +399,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
     ifn = rxi_FindIfnet(pp->host, NULL);
     if (ifn) {
 	rx_rto_setPeerTimeoutSecs(pp, 2);
-	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
+	pp->ifMTU = opr_min(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
 #  ifdef IFF_POINTOPOINT
 	if (rx_ifnet_flags(ifn) & IFF_POINTOPOINT) {
 	    /* wish we knew the bit rate and the chunk size, sigh. */
@@ -415,7 +416,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	}
     } else {			/* couldn't find the interface, so assume the worst */
 	rx_rto_setPeerTimeoutSecs(pp, 3);
-	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
+	pp->ifMTU = opr_min(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     }
 
     RX_NET_EPOCH_EXIT();
@@ -428,10 +429,10 @@ rxi_InitPeerParams(struct rx_peer *pp)
 
     if (mtu <= 0) {
 	rx_rto_setPeerTimeoutSecs(pp, 3);
-	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
+	pp->ifMTU = opr_min(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     } else {
 	rx_rto_setPeerTimeoutSecs(pp, 2);
-	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
+	pp->ifMTU = opr_min(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
 
 	/* Diminish the packet size to one based on the MTU given by
 	 * the interface. */
@@ -444,14 +445,14 @@ rxi_InitPeerParams(struct rx_peer *pp)
 #endif /* AFS_SUN5_ENV */
     pp->ifMTU = rxi_AdjustIfMTU(pp->ifMTU);
     pp->maxMTU = OLD_MAX_PACKET_SIZE;	/* for compatibility with old guys */
-    pp->natMTU = MIN(pp->ifMTU, OLD_MAX_PACKET_SIZE);
+    pp->natMTU = opr_min(pp->ifMTU, OLD_MAX_PACKET_SIZE);
     pp->ifDgramPackets =
-	MIN(rxi_nDgramPackets,
+	opr_min(rxi_nDgramPackets,
 	    rxi_AdjustDgramPackets(rxi_nSendFrags, pp->ifMTU));
     pp->maxDgramPackets = 1;
 
     /* Initialize slow start parameters */
-    pp->MTU = MIN(pp->natMTU, pp->maxMTU);
+    pp->MTU = opr_min(pp->natMTU, pp->maxMTU);
     pp->cwind = 1;
     pp->nDgramPackets = 1;
     pp->congestSeq = 0;
@@ -520,15 +521,15 @@ rxi_GetcbiInfo(void)
 	maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
 	addrs[i++] = ifinaddr;
 	if (!rx_IsLoopbackAddr(ifinaddr) && (maxmtu > rx_maxReceiveSize)) {
-	    rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxmtu);
-	    rx_maxReceiveSize = MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
+	    rx_maxReceiveSize = opr_min(RX_MAX_PACKET_SIZE, maxmtu);
+	    rx_maxReceiveSize = opr_min(rx_maxReceiveSize, rx_maxReceiveSizeUser);
 	}
     }
 
     rx_maxJumboRecvSize =
 	RX_HEADER_SIZE + (rxi_nDgramPackets * RX_JUMBOBUFFERSIZE) +
 	((rxi_nDgramPackets - 1) * RX_JUMBOHEADERSIZE);
-    rx_maxJumboRecvSize = MAX(rx_maxJumboRecvSize, rx_maxReceiveSize);
+    rx_maxJumboRecvSize = opr_max(rx_maxJumboRecvSize, rx_maxReceiveSize);
 
     if (different) {
 	for (j = 0; j < i; j++) {
@@ -648,9 +649,9 @@ rxi_GetIFInfo(void)
 			if (!rx_IsLoopbackAddr(ifinaddr) &&
 			    (maxmtu > rx_maxReceiveSize)) {
 			    rx_maxReceiveSize =
-				MIN(RX_MAX_PACKET_SIZE, maxmtu);
+				opr_min(RX_MAX_PACKET_SIZE, maxmtu);
 			    rx_maxReceiveSize =
-				MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
+				opr_min(rx_maxReceiveSize, rx_maxReceiveSizeUser);
 			}
 			cnt++;
 		    }
@@ -710,9 +711,9 @@ rxi_GetIFInfo(void)
 		maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
 		addrs[i++] = ifinaddr;
 		if (!rx_IsLoopbackAddr(ifinaddr) && (maxmtu > rx_maxReceiveSize)) {
-		    rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxmtu);
+		    rx_maxReceiveSize = opr_min(RX_MAX_PACKET_SIZE, maxmtu);
 		    rx_maxReceiveSize =
-			MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
+			opr_min(rx_maxReceiveSize, rx_maxReceiveSizeUser);
 		}
 	    }
 	}
@@ -725,7 +726,7 @@ rxi_GetIFInfo(void)
     rx_maxJumboRecvSize =
 	RX_HEADER_SIZE + rxi_nDgramPackets * RX_JUMBOBUFFERSIZE +
 	(rxi_nDgramPackets - 1) * RX_JUMBOHEADERSIZE;
-    rx_maxJumboRecvSize = MAX(rx_maxJumboRecvSize, rx_maxReceiveSize);
+    rx_maxJumboRecvSize = opr_max(rx_maxJumboRecvSize, rx_maxReceiveSize);
 
     if (different) {
 	int l;
@@ -1084,7 +1085,7 @@ afs_rxevent_daemon(void)
 		   "before afs_osi_Wait()");
 #  endif
 #  ifdef RXK_TIMEDSLEEP_ENV
-	afs_osi_TimedSleep(&afs_termState, MAX(500, ((temp.sec * 1000) +
+	afs_osi_TimedSleep(&afs_termState, opr_max(500, ((temp.sec * 1000) +
 						     (temp.usec / 1000))), 0);
 #  else
 	afs_osi_Wait(500, NULL, 0);

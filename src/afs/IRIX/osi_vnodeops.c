@@ -16,6 +16,7 @@
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/opr.h"
 #include "afs/afs_stats.h"	/* statistics */
 #include "sys/flock.h"
 #include "afs/nfsclient.h"
@@ -408,7 +409,7 @@ afsrwvp(struct vcache *avc, struct uio *uio, enum uio_rw rw,
 	    /*
 	     * compute minimum of rest of block and rest of file
 	     */
-	    cnt = MIN(bsize - off, rem);
+	    cnt = opr_min(bsize - off, rem);
 	    osi_Assert((off + cnt) <= bsize);
 	    bsize = ctob(btoc(off + cnt));
 	    len = BTOBBT(bsize);
@@ -417,7 +418,7 @@ afsrwvp(struct vcache *avc, struct uio *uio, enum uio_rw rw,
 	    bmv[0].length = len;
 	    bmv[0].bsize = bsize;
 	    bmv[0].pboff = off;
-	    bmv[0].pbsize = MIN(cnt, uio->uio_resid);
+	    bmv[0].pbsize = opr_min(cnt, uio->uio_resid);
 	    bmv[0].eof = 0;
 	    bmv[0].pbdev = vp->v_rdev;
 	    bmv[0].pmp = uio->uio_pmp;
@@ -439,7 +440,7 @@ afsrwvp(struct vcache *avc, struct uio *uio, enum uio_rw rw,
 		    bsize = AFSBSIZE;
 		    bmv[1].bn = bmv[1].offset = bn + len;
 		    osi_Assert((BBTOB(bn + len) % bsize) == 0);
-		    acnt = MIN(bsize, rem);
+		    acnt = opr_min(bsize, rem);
 		    bsize = ctob(btoc(acnt));
 		    len = BTOBBT(bsize);
 		    nmaps = 2;
@@ -500,7 +501,7 @@ afsrwvp(struct vcache *avc, struct uio *uio, enum uio_rw rw,
 	    }
 	    counter++;
 
-	    cnt = MIN(bsize - off, uio->uio_resid);
+	    cnt = opr_min(bsize - off, uio->uio_resid);
 	    bsize = ctob(btoc(off + cnt));
 	    len = BTOBBT(bsize);
 	    bmv[0].bn = bn;
@@ -637,7 +638,7 @@ OSI_VC_DECL(avc);
     if (rem <= 0)
 	cnt = 0;		/* EOF */
     else
-	cnt = MIN(bsize - off, rem);
+	cnt = opr_min(bsize - off, rem);
 
     /*
      * It is benign to ignore *nbmv > 1, since it is only for requesting
@@ -650,7 +651,7 @@ OSI_VC_DECL(avc);
      */
     osi_Assert((off + cnt) <= bsize);
     bsize = ctob(btoc(off + cnt));
-    bmv->pbsize = MIN(cnt, count);
+    bmv->pbsize = opr_min(cnt, count);
     bmv->eof = 0;
     bmv->pmp = NULL;
     bmv->pbdev = avc->v.v_rdev;

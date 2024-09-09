@@ -601,7 +601,7 @@ static void SignalIO(int fds, fd_set *readfds, fd_set *writefds,
 	struct IoRequest *req;
 	PROCESS pid;
 	req = (struct IoRequest *) r -> BackPointer;
-	nfds = MIN(fds, req->nfds);
+	nfds = opr_min(fds, req->nfds);
 	if (FDSetCmp(nfds, req->readfds, readfds) ||
 	    FDSetCmp(nfds, req->writefds, writefds) ||
 	    FDSetCmp(nfds, req->exceptfds, exceptfds)) {

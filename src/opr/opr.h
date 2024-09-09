@@ -21,6 +21,9 @@ extern void opr_NTAbort(void);
 # define opr_abort() abort()
 #endif
 
+#define opr_min(a, b) ((a) < (b) ? (a) : (b))
+#define opr_max(a, b) ((a) > (b) ? (a) : (b))
+
 extern void opr_AssertionFailed(const char *, int) AFS_NORETURN;
 extern void opr_AssertFailU(const char *, const char *, int) AFS_NORETURN;
 

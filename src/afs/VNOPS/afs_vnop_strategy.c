@@ -24,6 +24,7 @@
 #include "afs/afs_cbqueue.h"
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
+#include "afs/opr.h"
 
 
 
@@ -177,7 +178,7 @@ int afs_ustrategy(struct buf *abp)
 	 * XXX It this really right? Ideally we should always write block size multiple
 	 * and not any arbitrary size, right? XXX
 	 */
-	len = MIN(len, tvc->f.m.Length - dbtob(abp->b_blkno));
+	len = opr_min(len, tvc->f.m.Length - dbtob(abp->b_blkno));
 #endif
 	tuio.afsio_resid = len;
 #if defined(AFS_NBSD40_ENV) || defined(FBSD_STRUCT_BUF_NO_SAVEADDR)

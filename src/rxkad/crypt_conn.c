@@ -27,9 +27,9 @@
 #endif /* !UKERNEL */
 #else /* !KERNEL */
 #include <roken.h>
-#include <afs/opr.h>
 #endif /* KERNEL */
 
+#include <afs/opr.h>
 #include <rx/rx.h>
 #include <rx/rx_packet.h>
 #include <rx/rxkad_stats.h>
@@ -58,7 +58,7 @@ rxkad_DecryptPacket(const struct rx_connection *conn,
 	data = rx_data(packet, i, tlen);
 	if (!data || !tlen)
 	    break;
-	tlen = MIN(len, tlen);
+	tlen = opr_min(len, tlen);
 	fc_cbc_encrypt(data, data, tlen, *schedule, xor, DECRYPT);
 	len -= tlen;
     }
@@ -99,7 +99,7 @@ rxkad_EncryptPacket(const struct rx_connection * conn,
 	data = rx_data(packet, i, tlen);
 	if (!data || !tlen)
 	    break;
-	tlen = MIN(len, tlen);
+	tlen = opr_min(len, tlen);
 	fc_cbc_encrypt(data, data, tlen, *schedule, xor, ENCRYPT);
 	len -= tlen;
     }

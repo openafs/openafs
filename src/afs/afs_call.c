@@ -18,6 +18,7 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"
 #include "rx/rx_globals.h"
+#include "afs/opr.h"
 #if !defined(UKERNEL)
 # if defined(AFS_LINUX_ENV)
 #  include "osi_compat.h"
@@ -968,9 +969,9 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    if (mvParam->reqtype == AFS_USPC_UMV) {
 		/* don't copy out random kernel memory */
 		AFS_COPYOUT(param2, AFSKPTR(parm4),
-			    MIN(namebufsz, strlen((char *)param2)+1), code);
+			    opr_min(namebufsz, strlen((char *)param2)+1), code);
 		AFS_COPYOUT(param1, AFSKPTR(parm3),
-			    MIN(namebufsz, strlen((char *)param1)+1), code);
+			    opr_min(namebufsz, strlen((char *)param1)+1), code);
 	    }
 	    AFS_COPYOUT((caddr_t)mvParam, AFSKPTR(parm2),
 		       sizeof(struct afs_uspc_param), code);
