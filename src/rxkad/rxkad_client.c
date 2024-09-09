@@ -45,10 +45,6 @@
 #include "private_data.h"
 #define XPRT_RXKAD_CLIENT
 
-#ifndef max
-#define	max(a,b)    ((a) < (b)? (b) : (a))
-#endif /* max */
-
 static struct rx_securityOps rxkad_client_ops = {
     rxkad_Close,
     rxkad_NewConnection,	/* every new connection */

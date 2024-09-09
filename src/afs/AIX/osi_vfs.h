@@ -14,7 +14,6 @@
 #define	VSGID	S_ISGID
 #define	VSVTX	S_ISVTX
 
-#define min(a, b)	(((a) < (b)) ? (a) : (b))
 #define	bcopyin	copyin		/* Aux has identical bcopyin */
 
 #define BLKDEV_IOSIZE	BSIZE

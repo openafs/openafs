@@ -808,14 +808,6 @@ extern char           traceStr2[];
 #define dsFree(a)     free(a)
 
 extern void StrUpper(char *s);
-/* Min() and Max() macros */
-#ifndef min
-#define min(a,b)  (((a) < (b)) ? (a) : (b))
-#endif
-
-#ifndef max
-#define max(a,b)  (((a) > (b)) ? (a) : (b))
-#endif
 
 /* Combined file name w/ line number */
 #define TrFL __FILE__, __LINE__

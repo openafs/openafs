@@ -66,10 +66,6 @@
 
 #define ALLOC(X, N) (X) = calloc((N), sizeof(*(X)))
 
-#ifndef max
-#define max(a,b) (((a)>(b))?(a):(b))
-#endif
-
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif

@@ -46,11 +46,6 @@
 
 #include <err.h>
 
-#undef max
-#define max(a,b) ((a) > (b) ? (a) : (b))
-#undef min
-#define min(a,b) ((a) < (b) ? (a) : (b))
-
 static int
 creat_files(int count, long startsize)
 {

@@ -176,14 +176,6 @@ typedef struct afs_hyper_t {	/* unsigned 64 bit integers */
 
 #define hadd(a,b) (hadd32(a,(b).low), (a).high += (b).high)
 
-#if !defined(KERNEL) || defined(UKERNEL)
-#ifndef AFS_NT40_ENV
-#define max(a, b)               ((a) < (b) ? (b) : (a))
-#define min(a, b)               ((a) > (b) ? (b) : (a))
-#endif
-/*#define abs(x)                  ((x) >= 0 ? (x) : -(x))*/
-#endif
-
 /* minumum length of string to pass to int_to_base64 */
 typedef char b64_string_t[8];
 #ifndef AFS_NT40_ENV
