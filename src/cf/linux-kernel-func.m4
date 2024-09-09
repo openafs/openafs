@@ -273,6 +273,33 @@ AC_CHECK_LINUX_FUNC([filemap_alloc_folio],
 		    [[static struct folio *folio;
 		      folio = filemap_alloc_folio(0, 0);]])
 
+dnl Linux 6.3 introduced filemap_splice_read(), which is a replacement for
+dnl generic_file_splice_read(). But filemap_splice_read() at this point was not
+dnl fully supported for use with all filesystems.
+dnl
+dnl Linux 6.5 removed generic_file_splice_read(), and changed
+dnl filemap_splice_read() to be supported for all filesystems.
+dnl
+dnl To decide which function to use, we cannot simply check for
+dnl filemap_splice_read(), since we need to avoid using filemap_splice_read()
+dnl until it was fixed in Linux 6.5. We cannot simply check the Linux version
+dnl number, since some downstream kernels fix filemap_splice_read() and remove
+dnl generic_file_splice_read() before Linux 6.5 (e.g., openSUSE 15.6).
+dnl
+dnl To decide what function to use, we check if generic_file_splice_read() is
+dnl missing. If generic_file_splice_read() is missing, use
+dnl filemap_splice_read(); otherwise, use generic_file_splice_read().
+dnl
+dnl To check if generic_file_splice_read() is missing, define our own
+dnl generic_file_splice_read() function with a conflicting signature. If we can
+dnl define it, the real generic_file_splice_read() must be missing.
+AC_CHECK_LINUX_FUNC([no_generic_file_splice_read],
+		    [[#include <linux/fs.h>
+		      char *generic_file_splice_read(char *p);
+		      char *generic_file_splice_read(char *p) { return p + 1; }]],
+		    [[static char buff[10], *ap;
+		      ap = generic_file_splice_read(buff); ]])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
