@@ -10,6 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include "afs/opr.h"
+
 #ifndef KERNEL
 
 # include <roken.h>
@@ -408,7 +410,7 @@ rx_getAllAddr_internal(afs_uint32 buffer[], int maxSize, int loopbacks)
 #ifdef AFS_AIX51_ENV
 	 cp = cpnext
 #else
-	 cp += sizeof(ifr->ifr_name) + MAX(a->sin_len, sizeof(*a))
+	 cp += sizeof(ifr->ifr_name) + opr_max(a->sin_len, sizeof(*a))
 #endif
 #endif
 	)
@@ -423,7 +425,7 @@ rx_getAllAddr_internal(afs_uint32 buffer[], int maxSize, int loopbacks)
 #endif
 	a = (struct sockaddr_in *)&ifr->ifr_addr;
 #ifdef AFS_AIX51_ENV
-	cpnext = cp + sizeof(ifr->ifr_name) + MAX(a->sin_len, sizeof(*a));
+	cpnext = cp + sizeof(ifr->ifr_name) + opr_max(a->sin_len, sizeof(*a));
 #endif
 	if (a->sin_family != AF_INET)
 	    continue;
@@ -506,7 +508,7 @@ rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
 	ifc.ifc_len = sizeof(ifs);
     for (cp = (char *)ifc.ifc_buf, cplim = ifc.ifc_buf + ifc.ifc_len;
 	 cp < cplim;
-	 cp += sizeof(ifr->ifr_name) + MAX(a->sin_len, sizeof(*a))) {
+	 cp += sizeof(ifr->ifr_name) + opr_max(a->sin_len, sizeof(*a))) {
 	ifr = (struct ifreq *)cp;
 #else
     for (i = 0; i < len; ++i) {

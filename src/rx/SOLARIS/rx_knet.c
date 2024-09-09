@@ -9,6 +9,7 @@
 
 #include <afsconfig.h>
 #include "afs/param.h"
+#include "afs/opr.h"
 
 
 #ifdef AFS_SUN5_ENV
@@ -121,9 +122,9 @@ rxi_GetIFInfo()
 	    addrs[i] = ifinaddr;
 
 	    if (!rx_IsLoopbackAddr(ifinaddr) && maxmtu > rx_maxReceiveSize) {
-		rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxmtu);
+		rx_maxReceiveSize = opr_min(RX_MAX_PACKET_SIZE, maxmtu);
 		rx_maxReceiveSize =
-		    MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
+		    opr_min(rx_maxReceiveSize, rx_maxReceiveSizeUser);
 	    }
             
     }
@@ -133,7 +134,7 @@ rxi_GetIFInfo()
     rx_maxJumboRecvSize =
 	RX_HEADER_SIZE + rxi_nDgramPackets * RX_JUMBOBUFFERSIZE +
 	(rxi_nDgramPackets - 1) * RX_JUMBOHEADERSIZE;
-    rx_maxJumboRecvSize = MAX(rx_maxJumboRecvSize, rx_maxReceiveSize);
+    rx_maxJumboRecvSize = opr_max(rx_maxJumboRecvSize, rx_maxReceiveSize);
 
     if (different) {
 	int j;
@@ -180,9 +181,9 @@ rxi_GetIFInfo()
 	    i++;
 
 	    if (!rx_IsLoopbackAddr(ifinaddr) && maxmtu > rx_maxReceiveSize) {
-		rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxmtu);
+		rx_maxReceiveSize = opr_min(RX_MAX_PACKET_SIZE, maxmtu);
 		rx_maxReceiveSize =
-		    MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
+		    opr_min(rx_maxReceiveSize, rx_maxReceiveSizeUser);
 	    }
 	}
     }
@@ -190,7 +191,7 @@ rxi_GetIFInfo()
     rx_maxJumboRecvSize =
 	RX_HEADER_SIZE + rxi_nDgramPackets * RX_JUMBOBUFFERSIZE +
 	(rxi_nDgramPackets - 1) * RX_JUMBOHEADERSIZE;
-    rx_maxJumboRecvSize = MAX(rx_maxJumboRecvSize, rx_maxReceiveSize);
+    rx_maxJumboRecvSize = opr_max(rx_maxJumboRecvSize, rx_maxReceiveSize);
 
     if (different) {
 	int j;

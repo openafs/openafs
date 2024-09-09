@@ -9,6 +9,7 @@
 
 #include <afsconfig.h>
 #include "afs/param.h"
+#include "afs/opr.h"
 
 #ifdef AFS_SOCKPROXY_ENV
 # include <afs/afs_args.h>
@@ -716,7 +717,7 @@ rx_upcall_common(socket_t so, struct afs_pkt_hdr *pkt)
 	noffset = 0;
 
 	for (i = 0; i < p->niovecs && resid > 0; i++) {
-	    sz = MIN(resid, p->wirevec[i].iov_len);
+	    sz = opr_min(resid, p->wirevec[i].iov_len);
 	    memcpy(p->wirevec[i].iov_base, payload, sz);
 	    resid -= sz;
 	    noffset += sz;
@@ -732,7 +733,7 @@ rx_upcall_common(socket_t so, struct afs_pkt_hdr *pkt)
 	    noffset = 0;
 	    resid = nbytes;
 	    for (i=0;i<p->niovecs && resid;i++) {
-		sz=MIN(resid, p->wirevec[i].iov_len);
+		sz=opr_min(resid, p->wirevec[i].iov_len);
 		error = mbuf_copydata(m, offset, sz, p->wirevec[i].iov_base);
 		if (error)
 		    break;
@@ -853,7 +854,7 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
         size_t offset=0,sz;
         resid = *alength;
         for (i=0;i<nvecs && resid;i++) {
-            sz=MIN(resid, iov[i].iov_len);
+            sz=opr_min(resid, iov[i].iov_len);
             code = mbuf_copydata(m, offset, sz, iov[i].iov_base);
             if (code)
                 break;

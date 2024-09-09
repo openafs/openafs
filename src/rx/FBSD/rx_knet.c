@@ -9,6 +9,7 @@
 
 #include <afsconfig.h>
 #include "afs/param.h"
+#include "afs/opr.h"
 
 
 #include <sys/malloc.h>
@@ -446,18 +447,18 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
 	    mlen = MCLBYTES;
 
 	    /* now compute usable size */
-	    len = MIN(mlen, asize);
+	    len = opr_min(mlen, asize);
 /* Should I look at MAPPED_MBUFS??? */
 	} else {
 	  nopages:
-	    len = MIN(mlen, asize);
+	    len = opr_min(mlen, asize);
 	}
 	m->m_len = 0;
 	*mp = m;		/* XXXX */
 	top->m_pkthdr.len += len;
 	tpa = mtod(m, caddr_t);
 	while (len) {
-	    rlen = MIN(len, tl);
+	    rlen = opr_min(len, tl);
 	    memcpy(tpa, tdata, rlen);
 	    asize -= rlen;
 	    len -= rlen;

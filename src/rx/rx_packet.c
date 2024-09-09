@@ -41,7 +41,6 @@
 #else /* KERNEL */
 # include <roken.h>
 # include <assert.h>
-# include <afs/opr.h>
 # if defined(AFS_NT40_ENV)
 #  ifndef EWOULDBLOCK
 #   define EWOULDBLOCK WSAEWOULDBLOCK
@@ -56,6 +55,8 @@
 # include <sys/sysmacros.h>
 #endif
 
+
+#include <afs/opr.h>
 #include <opr/queue.h>
 
 #include "rx.h"
@@ -192,7 +193,7 @@ rx_SlowReadPacket(struct rx_packet * packet, unsigned int offset, int resid,
      */
     r = resid;
     while ((r > 0) && (i < packet->niovecs)) {
-	j = MIN(r, packet->wirevec[i].iov_len - (offset - l));
+	j = opr_min(r, packet->wirevec[i].iov_len - (offset - l));
 	memcpy(out, (char *)(packet->wirevec[i].iov_base) + (offset - l), j);
 	r -= j;
         out += j;
@@ -235,7 +236,7 @@ rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
 		break;
 
 	b = (char *)(packet->wirevec[i].iov_base) + (offset - l);
-	j = MIN(r, packet->wirevec[i].iov_len - (offset - l));
+	j = opr_min(r, packet->wirevec[i].iov_len - (offset - l));
 	memcpy(b, in, j);
 	r -= j;
         in += j;
@@ -275,7 +276,7 @@ AllocPacketBufs(int class, int num_pkts, struct opr_queue * q)
     if (transfer > 0) {
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
-	transfer = MAX(transfer, rx_TSFPQGlobSize);
+	transfer = opr_max(transfer, rx_TSFPQGlobSize);
 	if (transfer > rx_nFreePackets) {
 	    /* alloc enough for us, plus a few globs for other threads */
 	    rxi_MorePacketsNoLock(transfer + 4 * rx_initSendWindow);
@@ -342,7 +343,7 @@ AllocPacketBufs(int class, int num_pkts, struct opr_queue * q)
     }
 #else /* KERNEL */
     if (rx_nFreePackets < num_pkts) {
-	rxi_MorePacketsNoLock(MAX((num_pkts-rx_nFreePackets), 4 * rx_initSendWindow));
+	rxi_MorePacketsNoLock(opr_max((num_pkts-rx_nFreePackets), 4 * rx_initSendWindow));
     }
 #endif /* KERNEL */
 
@@ -824,7 +825,7 @@ rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit)
             if ((num_keep_local > rx_TSFPQLocalMax) && !allow_overcommit)
                 xfer = rx_TSFPQLocalMax - rx_ts_info->_FPQ.len;
             if (rx_nFreePackets < xfer) {
-		rxi_MorePacketsNoLock(MAX(xfer - rx_nFreePackets, 4 * rx_initSendWindow));
+		rxi_MorePacketsNoLock(opr_max(xfer - rx_nFreePackets, 4 * rx_initSendWindow));
             }
             RX_TS_FPQ_GTOL2(rx_ts_info, xfer);
         }
@@ -920,7 +921,7 @@ rxi_FreeDataBufsToQueue(struct rx_packet *p, afs_uint32 first, struct opr_queue 
     struct rx_packet * cb;
     int count = 0;
 
-    for (first = MAX(2, first); first < p->niovecs; first++, count++) {
+    for (first = opr_max(2, first); first < p->niovecs; first++, count++) {
 	iov = &p->wirevec[first];
 	if (!iov->iov_base)
 	    osi_Panic("rxi_FreeDataBufsToQueue: unexpected NULL iov");
@@ -948,7 +949,7 @@ rxi_FreeDataBufsNoLock(struct rx_packet *p, afs_uint32 first)
 {
     struct iovec *iov;
 
-    for (first = MAX(2, first); first < p->niovecs; first++) {
+    for (first = opr_max(2, first); first < p->niovecs; first++) {
 	iov = &p->wirevec[first];
 	if (!iov->iov_base)
 	    osi_Panic("rxi_FreeDataBufsNoLock: unexpected NULL iov");
@@ -983,7 +984,7 @@ rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first, int flush_global)
 
     RX_TS_INFO_GET(rx_ts_info);
 
-    for (first = MAX(2, first); first < p->niovecs; first++) {
+    for (first = opr_max(2, first); first < p->niovecs; first++) {
 	iov = &p->wirevec[first];
 	if (!iov->iov_base)
 	    osi_Panic("rxi_FreeDataBufsTSFPQ: unexpected NULL iov");
@@ -1331,7 +1332,7 @@ rxi_AllocSendPacket(struct rx_call *call, int want)
 #ifdef RX_ENABLE_TSFPQ
     if ((p = rxi_AllocPacketTSFPQ(RX_PACKET_CLASS_SEND, 0))) {
         want += delta;
-	want = MIN(want, mud);
+	want = opr_min(want, mud);
 
 	if ((unsigned)want > p->length)
 	    (void)rxi_AllocDataBuf(p, (want - p->length),
@@ -1357,7 +1358,7 @@ rxi_AllocSendPacket(struct rx_call *call, int want)
 	    MUTEX_EXIT(&rx_freePktQ_lock);
 
 	    want += delta;
-	    want = MIN(want, mud);
+	    want = opr_min(want, mud);
 
 	    if ((unsigned)want > p->length)
 		(void)rxi_AllocDataBuf(p, (want - p->length),
@@ -1643,7 +1644,7 @@ cpytoc(mblk_t * mp, int off, int len, char *cp)
 	if (mp->b_datap->db_type != M_DATA) {
 	    return -1;
 	}
-	n = MIN(len, (mp->b_wptr - mp->b_rptr));
+	n = opr_min(len, (mp->b_wptr - mp->b_rptr));
 	memcpy(cp, (char *)mp->b_rptr, n);
 	cp += n;
 	len -= n;
@@ -1666,7 +1667,7 @@ cpytoiovec(mblk_t * mp, int off, int len, struct iovec *iovs,
 	if (mp->b_datap->db_type != M_DATA) {
 	    return -1;
 	}
-	n = MIN(len, (mp->b_wptr - mp->b_rptr));
+	n = opr_min(len, (mp->b_wptr - mp->b_rptr));
 	len -= n;
 	while (n) {
 	    if (!t) {
@@ -1674,7 +1675,7 @@ cpytoiovec(mblk_t * mp, int off, int len, struct iovec *iovs,
 		i++;
 		t = iovs[i].iov_len;
 	    }
-	    m = MIN(n, t);
+	    m = opr_min(n, t);
 	    memcpy(iovs[i].iov_base + o, (char *)mp->b_rptr, m);
 	    mp->b_rptr += m;
 	    o += m;
@@ -1716,7 +1717,7 @@ m_cpytoiovec(struct mbuf *m, int off, int len, struct iovec iovs[], int niovs)
     l2 = iovs[0].iov_len;
 
     while (len) {
-	t = MIN(l1, MIN(l2, (unsigned int)len));
+	t = opr_min(l1, opr_min(l2, (unsigned int)len));
 	memcpy(p2, p1, t);
 	p1 += t;
 	p2 += t;
@@ -2857,7 +2858,7 @@ int
 rxi_AdjustMaxMTU(int mtu, int peerMaxMTU)
 {
     int maxMTU = mtu * rxi_nSendFrags;
-    maxMTU = MIN(maxMTU, peerMaxMTU);
+    maxMTU = opr_min(maxMTU, peerMaxMTU);
     return rxi_AdjustIfMTU(maxMTU);
 }
 
@@ -2873,7 +2874,7 @@ rxi_AdjustDgramPackets(int frags, int mtu)
 	return 1;
     }
     maxMTU = (frags * (mtu + UDP_HDR_SIZE)) - UDP_HDR_SIZE;
-    maxMTU = MIN(maxMTU, RX_MAX_PACKET_SIZE);
+    maxMTU = opr_min(maxMTU, RX_MAX_PACKET_SIZE);
     /* subtract the size of the first and last packets */
     maxMTU -= RX_HEADER_SIZE + (2 * RX_JUMBOBUFFERSIZE) + RX_JUMBOHEADERSIZE;
     if (maxMTU < 0) {

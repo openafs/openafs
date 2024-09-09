@@ -1126,15 +1126,15 @@ rxi_CheckConnTimeouts(struct rx_connection *conn)
     /* this logic is slightly complicated by the fact that
      * idleDeadTime/hardDeadTime may not be set at all, but it's not too bad.
      */
-    conn->secondsUntilDead = MAX(conn->secondsUntilDead, RX_MINDEADTIME);
+    conn->secondsUntilDead = opr_max(conn->secondsUntilDead, RX_MINDEADTIME);
     if (conn->idleDeadTime) {
-	conn->idleDeadTime = MAX(conn->idleDeadTime, conn->secondsUntilDead);
+	conn->idleDeadTime = opr_max(conn->idleDeadTime, conn->secondsUntilDead);
     }
     if (conn->hardDeadTime) {
 	if (conn->idleDeadTime) {
-	    conn->hardDeadTime = MAX(conn->idleDeadTime, conn->hardDeadTime);
+	    conn->hardDeadTime = opr_max(conn->idleDeadTime, conn->hardDeadTime);
 	} else {
-	    conn->hardDeadTime = MAX(conn->secondsUntilDead, conn->hardDeadTime);
+	    conn->hardDeadTime = opr_max(conn->secondsUntilDead, conn->hardDeadTime);
 	}
     }
 }
@@ -2927,11 +2927,11 @@ rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host, afs_uint32 port, int mtu)
 
         MUTEX_ENTER(&peer->peer_lock);
 	/* We don't handle dropping below min, so don't */
-	mtu = MAX(mtu, RX_MIN_PACKET_SIZE);
-        peer->ifMTU=MIN(mtu, peer->ifMTU);
+	mtu = opr_max(mtu, RX_MIN_PACKET_SIZE);
+        peer->ifMTU=opr_min(mtu, peer->ifMTU);
         peer->natMTU = rxi_AdjustIfMTU(peer->ifMTU);
 	/* if we tweaked this down, need to tune our peer MTU too */
-	peer->MTU = MIN(peer->MTU, peer->natMTU);
+	peer->MTU = opr_min(peer->MTU, peer->natMTU);
 	/* if we discovered a sub-1500 mtu, degrade */
 	if (peer->ifMTU < OLD_MAX_PACKET_SIZE)
 	    peer->maxDgramPackets = 1;
@@ -4394,7 +4394,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	return np;		/* truncated ack packet */
 
     /* depends on ack packet struct */
-    nAcks = MIN((unsigned)nbytes, (unsigned)ap->nAcks);
+    nAcks = opr_min((unsigned)nbytes, (unsigned)ap->nAcks);
     first = ntohl(ap->firstPacket);
     prev = ntohl(ap->previousPacket);
     serial = ntohl(ap->serial);
@@ -4624,7 +4624,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	    tSize = RX_MAX_PACKET_SIZE;
 	if (tSize < RX_MIN_PACKET_SIZE)
 	    tSize = RX_MIN_PACKET_SIZE;
-	peer->natMTU = rxi_AdjustIfMTU(MIN(tSize, peer->ifMTU));
+	peer->natMTU = rxi_AdjustIfMTU(opr_min(tSize, peer->ifMTU));
 
 	/* Get the maximum packet size to send to this peer */
 	rx_packetread(np, rx_AckDataSize(ap->nAcks), (int)sizeof(afs_int32),
@@ -4634,7 +4634,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	    tSize = RX_MAX_PACKET_SIZE;
 	if (tSize < RX_MIN_PACKET_SIZE)
 	    tSize = RX_MIN_PACKET_SIZE;
-	tSize = (afs_uint32) MIN(tSize, rx_MyMaxSendSize);
+	tSize = (afs_uint32) opr_min(tSize, rx_MyMaxSendSize);
 	tSize = rxi_AdjustMaxMTU(peer->natMTU, tSize);
 
 	/* sanity check - peer might have restarted with different params.
@@ -4645,8 +4645,8 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	    if (peer->maxMTU > tSize) /* possible cong., maxMTU decreased */
 		peer->congestSeq++;
 	    peer->maxMTU = tSize;
-	    peer->MTU = MIN(tSize, peer->MTU);
-	    call->MTU = MIN(call->MTU, tSize);
+	    peer->MTU = opr_min(tSize, peer->MTU);
+	    call->MTU = opr_min(call->MTU, tSize);
 	}
 
 	if (np->length == rx_AckDataSize(ap->nAcks) + 3 * sizeof(afs_int32)) {
@@ -4661,7 +4661,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 		tSize = rx_maxSendWindow;
 	    if (tSize < call->twind) {	/* smaller than our send */
 		call->twind = tSize;	/* window, we must send less... */
-		call->ssthresh = MIN(call->twind, call->ssthresh);
+		call->ssthresh = opr_min(call->twind, call->ssthresh);
 		call->conn->twind[call->channel] = call->twind;
 	    }
 
@@ -4690,7 +4690,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	    if (tSize < call->twind) {
 		call->twind = tSize;
 		call->conn->twind[call->channel] = call->twind;
-		call->ssthresh = MIN(call->twind, call->ssthresh);
+		call->ssthresh = opr_min(call->twind, call->ssthresh);
 	    } else if (tSize > call->twind) {
 		call->twind = tSize;
 		call->conn->twind[call->channel] = call->twind;
@@ -4706,9 +4706,9 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 			  rx_AckDataSize(ap->nAcks) + 3 * (int)sizeof(afs_int32),
 			  (int)sizeof(afs_int32), &tSize);
 	    maxDgramPackets = (afs_uint32) ntohl(tSize);
-	    maxDgramPackets = MIN(maxDgramPackets, rxi_nDgramPackets);
+	    maxDgramPackets = opr_min(maxDgramPackets, rxi_nDgramPackets);
 	    maxDgramPackets =
-		MIN(maxDgramPackets, (int)(peer->ifDgramPackets));
+		opr_min(maxDgramPackets, (int)(peer->ifDgramPackets));
 	    if (maxDgramPackets > 1) {
 		peer->maxDgramPackets = maxDgramPackets;
 		call->MTU = RX_JUMBOBUFFERSIZE + RX_HEADER_SIZE;
@@ -4776,7 +4776,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 
     if (call->flags & RX_CALL_FAST_RECOVER) {
 	if (newAckCount == 0) {
-	    call->cwind = MIN((int)(call->cwind + 1), rx_maxSendWindow);
+	    call->cwind = opr_min((int)(call->cwind + 1), rx_maxSendWindow);
 	} else {
 	    call->flags &= ~RX_CALL_FAST_RECOVER;
 	    call->cwind = call->nextCwind;
@@ -4787,10 +4787,10 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
     } else if (nNacked && call->nNacks >= (u_short) rx_nackThreshold) {
 	/* Three negative acks in a row trigger congestion recovery */
 	call->flags |= RX_CALL_FAST_RECOVER;
-	call->ssthresh = MAX(4, MIN((int)call->cwind, (int)call->twind)) >> 1;
+	call->ssthresh = opr_max(4, opr_min((int)call->cwind, (int)call->twind)) >> 1;
 	call->cwind =
-	    MIN((int)(call->ssthresh + rx_nackThreshold), rx_maxSendWindow);
-	call->nDgramPackets = MAX(2, (int)call->nDgramPackets) >> 1;
+	    opr_min((int)(call->ssthresh + rx_nackThreshold), rx_maxSendWindow);
+	call->nDgramPackets = opr_max(2, (int)call->nDgramPackets) >> 1;
 	call->nextCwind = call->ssthresh;
 	call->nAcks = 0;
 	call->nNacks = 0;
@@ -4825,13 +4825,13 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 	 * receive (linear growth).  */
 	if (call->cwind < call->ssthresh) {
 	    call->cwind =
-		MIN((int)call->ssthresh, (int)(call->cwind + newAckCount));
+		opr_min((int)call->ssthresh, (int)(call->cwind + newAckCount));
 	    call->nCwindAcks = 0;
 	} else {
 	    call->nCwindAcks += newAckCount;
 	    if (call->nCwindAcks >= call->cwind) {
 		call->nCwindAcks = 0;
-		call->cwind = MIN((int)(call->cwind + 1), rx_maxSendWindow);
+		call->cwind = opr_min((int)(call->cwind + 1), rx_maxSendWindow);
 	    }
 	}
 	/*
@@ -4850,7 +4850,7 @@ rxi_ReceiveAckPacket(struct rx_call *call, struct rx_packet *np,
 		    call->MTU = peer->ifMTU;
 		else {
 		    call->MTU += peer->natMTU;
-		    call->MTU = MIN(call->MTU, peer->maxMTU);
+		    call->MTU = opr_min(call->MTU, peer->maxMTU);
 		}
 	    }
 	    call->nAcks = 0;
@@ -5478,10 +5478,10 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     MUTEX_ENTER(&peer->peer_lock);
     if (!newcall) {
 	if (call->congestSeq == peer->congestSeq) {
-	    peer->cwind = MAX(peer->cwind, call->cwind);
-	    peer->MTU = MAX(peer->MTU, call->MTU);
+	    peer->cwind = opr_max(peer->cwind, call->cwind);
+	    peer->MTU = opr_max(peer->MTU, call->MTU);
 	    peer->nDgramPackets =
-		MAX(peer->nDgramPackets, call->nDgramPackets);
+		opr_max(peer->nDgramPackets, call->nDgramPackets);
 	}
     } else {
 	call->abortCode = 0;
@@ -5492,7 +5492,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     } else {
 	call->MTU = peer->MTU;
     }
-    call->cwind = MIN((int)peer->cwind, (int)peer->nDgramPackets);
+    call->cwind = opr_min((int)peer->cwind, (int)peer->nDgramPackets);
     call->ssthresh = rx_maxSendWindow;
     call->nDgramPackets = peer->nDgramPackets;
     call->congestSeq = peer->congestSeq;
@@ -5500,7 +5500,7 @@ rxi_ResetCall(struct rx_call *call, int newcall)
     call->rtt_dev = peer->rtt_dev;
     clock_Zero(&call->rto);
     clock_Addmsec(&call->rto,
-		  MAX(((call->rtt >> 3) + call->rtt_dev), rx_minPeerTimeout) + 200);
+		  opr_max(((call->rtt >> 3) + call->rtt_dev), rx_minPeerTimeout) + 200);
     MUTEX_EXIT(&peer->peer_lock);
 
     flags = call->flags;
@@ -5646,7 +5646,7 @@ rxi_SendAck(struct rx_call *call,
 	    padbytes = call->conn->peer->maxMTU + 128;
 
 	/* do always try a minimum size ping */
-	padbytes = MAX(padbytes, RX_MIN_PACKET_SIZE+RX_IPUDP_SIZE+4);
+	padbytes = opr_max(padbytes, RX_MIN_PACKET_SIZE+RX_IPUDP_SIZE+4);
 
 	/* subtract the ack payload */
 	padbytes -= (rx_AckDataSize(call->rwind) + 4 * sizeof(afs_int32));
@@ -6192,9 +6192,9 @@ rxi_Resend(struct rxevent *event, void *arg0, void *arg1, int istack)
      * and start again from the beginning */
     if (peer->maxDgramPackets >1) {
 	call->MTU = RX_JUMBOBUFFERSIZE + RX_HEADER_SIZE;
-        call->MTU = MIN(peer->natMTU, peer->maxMTU);
+        call->MTU = opr_min(peer->natMTU, peer->maxMTU);
     }
-    call->ssthresh = MAX(4, MIN((int)call->cwind, (int)call->twind)) >> 1;
+    call->ssthresh = opr_max(4, opr_min((int)call->cwind, (int)call->twind)) >> 1;
     call->nDgramPackets = 1;
     call->cwind = 1;
     call->nextCwind = 1;
@@ -6264,7 +6264,7 @@ rxi_Start(struct rx_call *call, int istack)
 		call->flags &= ~RX_CALL_NEED_START;
 #endif /* RX_ENABLE_LOCKS */
 		nXmitPackets = 0;
-		maxXmitPackets = MIN(call->twind, call->cwind);
+		maxXmitPackets = opr_min(call->twind, call->cwind);
 		for (opr_queue_Scan(&call->tq, cursor)) {
 		    struct rx_packet *p
 			= opr_queue_Entry(cursor, struct rx_packet, entry);
@@ -6281,7 +6281,7 @@ rxi_Start(struct rx_call *call, int istack)
 		    p->header.flags &= RX_PRESET_FLAGS;
 
 		    if (p->header.seq >=
-			call->tfirst + MIN((int)call->twind,
+			call->tfirst + opr_min((int)call->twind,
 					   (int)(call->nSoftAcked +
 						 call->cwind))) {
 			call->flags |= RX_CALL_WAIT_WINDOW_SEND;	/* Wait for transmit window */
@@ -6457,9 +6457,9 @@ rxi_CheckCall(struct rx_call *call, int haveCTLock)
     if (now < call->lastSendTime)
         clock_diff = call->lastSendTime - now;
     if (now < call->startWait)
-        clock_diff = MAX(clock_diff, call->startWait - now);
+        clock_diff = opr_max(clock_diff, call->startWait - now);
     if (now < call->lastReceiveTime)
-        clock_diff = MAX(clock_diff, call->lastReceiveTime - now);
+        clock_diff = opr_max(clock_diff, call->lastReceiveTime - now);
     if (clock_diff > 5 * 60)
     {
 	if (call->state == RX_STATE_ACTIVE)
@@ -6549,7 +6549,7 @@ mtuout:
 	 * Shrink by 128 bytes and try again. */
 	if (conn->peer->maxPacketSize < conn->lastPacketSize)
 	    /* maxPacketSize will be cleared in rxi_SetPeerMtu */
-	    newmtu = MAX(conn->peer->maxPacketSize + RX_HEADER_SIZE,
+	    newmtu = opr_max(conn->peer->maxPacketSize + RX_HEADER_SIZE,
 			 conn->lastPacketSize - 128 + RX_HEADER_SIZE);
 	else
 	    newmtu = conn->lastPacketSize - 128 + RX_HEADER_SIZE;
@@ -6785,7 +6785,7 @@ rxi_ScheduleGrowMTUEvent(struct rx_call *call, int secs)
 		secs = (RX_PINGS_LOST_BEFORE_DEAD * call->conn->secondsUntilPing)-1;
 
 	    if (call->conn->secondsUntilDead)
-		secs = MIN(secs, (call->conn->secondsUntilDead-1));
+		secs = opr_min(secs, (call->conn->secondsUntilDead-1));
 	}
 
 	when.sec += secs;
@@ -7160,7 +7160,7 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
      * add on a fixed 200ms to account for that timer expiring.
      */
 
-    rtt_timeout = MAX(((call->rtt >> 3) + call->rtt_dev),
+    rtt_timeout = opr_max(((call->rtt >> 3) + call->rtt_dev),
 		      rx_minPeerTimeout) + 200;
     clock_Zero(&call->rto);
     clock_Addmsec(&call->rto, rtt_timeout);

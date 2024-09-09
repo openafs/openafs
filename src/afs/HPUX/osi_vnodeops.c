@@ -15,6 +15,7 @@
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/opr.h"
 #include "afs/afs_stats.h"	/* statistics stuff */
 
 #include <sys/uio.h>
@@ -87,7 +88,7 @@ m_cpytoc(m, off, len, cp)
     if (m == NULL)
 	return (len);
 
-    ml = MIN(len, m->m_len - off);
+    ml = opr_min(len, m->m_len - off);
     memcpy(cp, mtod(m, caddr_t) + off, (u_int) ml);
     cp += ml;
     len -= ml;
@@ -720,8 +721,8 @@ afspgin_setup_io_ranges(vfspage_t * vm_info, pgcnt_t bpages, k_off_t isize,
 
     maxpage = startindex + (bpages - (startindex + file_offset) % bpages);
     maxpage = vm_reset_maxpage(vm_info, maxpage);
-    maxpage = MIN(maxpage, (pgcnt_t) btorp(isize) - file_offset);
-    maxpage = MIN(maxpage, startindex + maxpagein);
+    maxpage = opr_min(maxpage, (pgcnt_t) btorp(isize) - file_offset);
+    maxpage = opr_min(maxpage, startindex + maxpagein);
     multio_maxpage = maxpage = vm_maxpage(vm_info, maxpage);
 
     if (!maxpage)
@@ -753,7 +754,7 @@ afspgin_setup_io_ranges(vfspage_t * vm_info, pgcnt_t bpages, k_off_t isize,
 	maxpage = startindex + count;
 	VASSERT(maxpage <= startindex + maxpagein);
 	minpage = startindex - (startindex + file_offset) % bpages;
-	minpage = MAX(minpage, maxpage - maxpagein);
+	minpage = opr_max(minpage, maxpage - maxpagein);
 	VASSERT(startindex >= VM_BASE_OFFSET(vm_info));
 	minpage = vm_minpage(vm_info, minpage);
 	VASSERT(minpage <= startindex);

@@ -9,7 +9,7 @@
 
 #include <afsconfig.h>
 #include "afs/param.h"
-
+#include "afs/opr.h"
 
 #include "rx/rx_kcommon.h"
 #include "rx/rx_packet.h"
@@ -366,8 +366,8 @@ rxi_EnumGetIfInfo(struct hashbucket *h, caddr_t key, caddr_t arg1,
     }
     rxmtu = rxmtu * rxi_nRecvFrags + ((rxi_nRecvFrags - 1) * UDP_HDR_SIZE);
     if (!rx_IsLoopbackAddr(ifinaddr) && (rxmtu > rx_maxReceiveSize)) {
-	rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, rxmtu);
-	rx_maxReceiveSize = MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
+	rx_maxReceiveSize = opr_min(RX_MAX_PACKET_SIZE, rxmtu);
+	rx_maxReceiveSize = opr_min(rx_maxReceiveSize, rx_maxReceiveSizeUser);
     }
 
     *(int *)arg2 = i + 1;
@@ -390,7 +390,7 @@ rxi_GetIFInfo()
     rx_maxJumboRecvSize =
 	RX_HEADER_SIZE + rxi_nDgramPackets * RX_JUMBOBUFFERSIZE +
 	(rxi_nDgramPackets - 1) * RX_JUMBOHEADERSIZE;
-    rx_maxJumboRecvSize = MAX(rx_maxJumboRecvSize, rx_maxReceiveSize);
+    rx_maxJumboRecvSize = opr_max(rx_maxJumboRecvSize, rx_maxReceiveSize);
 
     return different;
 }

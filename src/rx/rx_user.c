@@ -404,12 +404,12 @@ rx_GetIFInfo(void)
             rxi_nRecvFrags * rxsize + (rxi_nRecvFrags - 1) * UDP_HDR_SIZE;
         maxsize = rxi_AdjustMaxMTU(rxsize, maxsize);
         if (rx_maxReceiveSize > maxsize) {
-            rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxsize);
+            rx_maxReceiveSize = opr_min(RX_MAX_PACKET_SIZE, maxsize);
             rx_maxReceiveSize =
-                MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
+                opr_min(rx_maxReceiveSize, rx_maxReceiveSizeUser);
         }
         if (rx_MyMaxSendSize > maxsize) {
-            rx_MyMaxSendSize = MIN(RX_MAX_PACKET_SIZE, maxsize);
+            rx_MyMaxSendSize = opr_min(RX_MAX_PACKET_SIZE, maxsize);
         }
     }
     UNLOCK_IF;
@@ -517,10 +517,10 @@ rx_GetIFInfo(void)
 
     LOCK_IF;
 #ifdef	AFS_AIX41_ENV
-#define size(p) MAX((p).sa_len, sizeof(p))
+#define size(p) opr_max((p).sa_len, sizeof(p))
     cplim = buf + ifc.ifc_len;	/*skip over if's with big ifr_addr's */
     for (cp = buf; cp < cplim;
-	 cp += sizeof(ifr->ifr_name) + MAX(a->sin_len, sizeof(*a))) {
+	 cp += sizeof(ifr->ifr_name) + opr_max(a->sin_len, sizeof(*a))) {
 	if (rxi_numNetAddrs >= ADDRSPERSITE)
 	    break;
 
@@ -642,7 +642,7 @@ rx_GetIFInfo(void)
 		rxi_nRecvFrags * (myNetMTUs[rxi_numNetAddrs] - RX_IP_SIZE);
 	    maxsize -= UDP_HDR_SIZE;	/* only the first frag has a UDP hdr */
 	    if (rx_maxReceiveSize < maxsize)
-		rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxsize);
+		rx_maxReceiveSize = opr_min(RX_MAX_PACKET_SIZE, maxsize);
 	    ++rxi_numNetAddrs;
 	}
     }
@@ -658,7 +658,7 @@ rx_GetIFInfo(void)
 	rx_maxJumboRecvSize =
 	    RX_HEADER_SIZE + rxi_nDgramPackets * RX_JUMBOBUFFERSIZE +
 	    (rxi_nDgramPackets - 1) * RX_JUMBOHEADERSIZE;
-	rx_maxJumboRecvSize = MAX(rx_maxJumboRecvSize, rx_maxReceiveSize);
+	rx_maxJumboRecvSize = opr_max(rx_maxJumboRecvSize, rx_maxReceiveSize);
 	ncbufs = (rx_maxJumboRecvSize - RX_FIRSTBUFFERSIZE);
 	if (ncbufs > 0) {
 	    ncbufs = ncbufs / RX_CBUFFERSIZE;
@@ -721,13 +721,13 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	    if (rxmtu < RX_MIN_PACKET_SIZE)
 		rxmtu = RX_MIN_PACKET_SIZE;
 	    if (pp->ifMTU < rxmtu)
-		pp->ifMTU = MIN(rx_MyMaxSendSize, rxmtu);
+		pp->ifMTU = opr_min(rx_MyMaxSendSize, rxmtu);
 	}
     }
     UNLOCK_IF;
     if (!pp->ifMTU) {		/* not local */
 	rx_rto_setPeerTimeoutSecs(pp, 3);
-	pp->ifMTU = MIN(rx_MyMaxSendSize, RX_REMOTE_PACKET_SIZE);
+	pp->ifMTU = opr_min(rx_MyMaxSendSize, RX_REMOTE_PACKET_SIZE);
     }
 #ifdef AFS_ADAPT_PMTU
     sock=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -740,7 +740,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
             int mtu=0;
             socklen_t s = sizeof(mtu);
             if (getsockopt(sock, SOL_IP, IP_MTU, &mtu, &s)== 0) {
-                pp->ifMTU = MIN(mtu - RX_IPUDP_SIZE, pp->ifMTU);
+                pp->ifMTU = opr_min(mtu - RX_IPUDP_SIZE, pp->ifMTU);
             }
         }
 # ifdef AFS_NT40_ENV
@@ -752,16 +752,16 @@ rxi_InitPeerParams(struct rx_peer *pp)
 #endif
     pp->ifMTU = rxi_AdjustIfMTU(pp->ifMTU);
     pp->maxMTU = OLD_MAX_PACKET_SIZE;	/* for compatibility with old guys */
-    pp->natMTU = MIN((int)pp->ifMTU, OLD_MAX_PACKET_SIZE);
+    pp->natMTU = opr_min((int)pp->ifMTU, OLD_MAX_PACKET_SIZE);
     pp->maxDgramPackets =
-	MIN(rxi_nDgramPackets,
+	opr_min(rxi_nDgramPackets,
 	    rxi_AdjustDgramPackets(rxi_nSendFrags, pp->ifMTU));
     pp->ifDgramPackets =
-	MIN(rxi_nDgramPackets,
+	opr_min(rxi_nDgramPackets,
 	    rxi_AdjustDgramPackets(rxi_nSendFrags, pp->ifMTU));
     pp->maxDgramPackets = 1;
     /* Initialize slow start parameters */
-    pp->MTU = MIN(pp->natMTU, pp->maxMTU);
+    pp->MTU = opr_min(pp->natMTU, pp->maxMTU);
     pp->cwind = 1;
     pp->nDgramPackets = 1;
     pp->congestSeq = 0;

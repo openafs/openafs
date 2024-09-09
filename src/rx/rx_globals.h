@@ -295,7 +295,7 @@ EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
     do { \
         int i; \
         struct rx_packet * p; \
-        int tsize = MIN((rx_ts_info_p)->_FPQ.len, (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + 3 *  rx_TSFPQGlobSize); \
+        int tsize = opr_min((rx_ts_info_p)->_FPQ.len, (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + 3 *  rx_TSFPQGlobSize); \
 	if (tsize <= 0) break; \
         for (i=0,p=opr_queue_Last(&((rx_ts_info_p)->_FPQ.queue), \
 				 struct rx_packet, entry); \

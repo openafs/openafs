@@ -100,6 +100,7 @@ NONINFRINGEMENT.
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
+#include "afs/opr.h"
 #include "afs/afs_stats.h"	/* statistics */
 
 #include <sys/malloc.h>
@@ -206,7 +207,7 @@ static void
 afs_nbsd_gop_size(struct vnode *vp, off_t size, off_t *eobp, int flags)
 {
 
-	*eobp = MAX(size, vp->v_size);
+	*eobp = opr_max(size, vp->v_size);
 }
 
 static int

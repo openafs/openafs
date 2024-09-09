@@ -9,6 +9,7 @@
 
 #include <afsconfig.h>
 #include "afs/param.h"
+#include "afs/opr.h"
 
 
 #ifdef AFS_AIX41_ENV
@@ -406,9 +407,9 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
 	}
 	/* now compute usable size */
 	if (M_HASCL(m)) {
-	    len = MIN(m->m_ext.ext_size, asize);
+	    len = opr_min(m->m_ext.ext_size, asize);
 	} else {
-	    len = MIN(mlen, asize);
+	    len = opr_min(mlen, asize);
 	}
 
 	tpa = mtod(m, caddr_t);
@@ -416,7 +417,7 @@ osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
 	mp = &m->m_next;
 	m->m_len = 0;
 	while (len) {
-	    rlen = MIN(len, tl);
+	    rlen = opr_min(len, tl);
 	    memcpy(tpa, tdata, rlen);
 	    asize -= rlen;
 	    len -= rlen;

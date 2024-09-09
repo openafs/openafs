@@ -33,10 +33,9 @@
 #endif /* !UKERNEL */
 #else /* ! KERNEL */
 #include <roken.h>
-#include <afs/opr.h>
 #endif /* KERNEL */
 
-
+#include <afs/opr.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <rx/rx_packet.h>

@@ -26,6 +26,7 @@
 #include "afs/afs_cbqueue.h"
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
+#include "afs/opr.h"
 
 
 extern unsigned char *afs_indexFlags;
@@ -250,7 +251,7 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
 	 */
 	osi_Assert(filePos <= avc->f.m.Length);
 	diff = avc->f.m.Length - filePos;
-	AFS_UIO_SETRESID(auio, MIN(totalLength, diff));
+	AFS_UIO_SETRESID(auio, opr_min(totalLength, diff));
 	totalLength = AFS_UIO_RESID(auio);
     }
 #else
