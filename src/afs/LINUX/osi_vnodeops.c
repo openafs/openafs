@@ -1013,7 +1013,7 @@ struct file_operations afs_file_fops = {
 # else
   .splice_write = generic_file_splice_write,
 # endif
-# if LINUX_VERSION_CODE >= KERNEL_VERSION(6,5,0)
+# if defined(HAVE_LINUX_NO_GENERIC_FILE_SPLICE_READ)
   .splice_read = filemap_splice_read,
 # else
   .splice_read = generic_file_splice_read,
