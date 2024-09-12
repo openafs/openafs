@@ -123,12 +123,20 @@ entry	:	DIR_TKN
 
 
 accesslist :	/* empty */
-			{strcpy($$," ");}
+			{
+				if (strlcpy($$, " ", sizeof($$)) >= sizeof($$)) {
+					uss_procs_PrintErr(line-1, "Internal error, incorrect size for accesslist buffer\n");
+					exit(1);
+				}
+			}
 	|	STRING_TKN
 		STRING_TKN
 		accesslist
-			{strcat($1," "); strcat($2," ");strcat($1,strcat($2,$3));strcpy($$,$1);}
-		
+			{
+				if (snprintf($$, sizeof($$), "%s %s %s", $1, $2, $3) >= sizeof($$)) {
+					uss_procs_PrintErr(line-1, " error in access list near \"%s\"\n", yylval.strval);
+				}
+			}
 	;
 
 %%
