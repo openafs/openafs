@@ -3988,9 +3988,17 @@ VolumeZap(struct cmd_syndesc *as, void *arock)
     if (!code) {
 	if (volid == entry.volumeId[RWVOL])
 	    backupid = entry.volumeId[BACKVOL];
-	fprintf(STDERR,
-		"Warning: Entry for volume number %lu exists in VLDB (but we're zapping it anyway!)\n",
-		(unsigned long)volid);
+	MapHostToNetwork(&entry);
+	if (Lp_AnyMatch(server, part, &entry)) {
+	    char pname[16];
+	    MapPartIdIntoName(part, pname);
+	    fprintf(STDERR,
+		    "Warning: Entry for volume %lu on server %s %s exists "
+		    "in VLDB (but we're zapping it anyway!)\n",
+		    (unsigned long)volid,
+		    hostutil_GetNameByINet(server),
+		    pname);
+	}
     }
     if (zapbackupid) {
 	volintInfo *pntr = (volintInfo *) 0;

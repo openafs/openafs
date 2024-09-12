@@ -125,6 +125,26 @@ Lp_ROMatch(afs_uint32 server, afs_int32 part, struct nvldbentry *entry)
     return (FindIndex(entry, server, part, VLSF_ROVOL) + 1);
 }
 
+/**
+ * Check if this server and partition matches any volume type.
+ *
+ * @param server server address in network byte order
+ * @param part   partition number
+ * @param entry  VLDB entry in network byte order
+ *
+ * @return whether the given server and partition is present in the VLDB entry
+ * @retval 1	The server and partition is present.
+ * @retval 0	The server and partition is not present.
+ */
+int
+Lp_AnyMatch(afs_uint32 server, afs_int32 part, struct nvldbentry *entry)
+{
+    if (FindIndex(entry, server, part, 0) == -1) {
+	return 0;
+    }
+    return 1;
+}
+
 /* Return the index of the RW entry if it exists, else return -1 */
 int
 Lp_GetRwIndex(struct nvldbentry *entry)

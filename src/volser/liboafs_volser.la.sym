@@ -7,6 +7,7 @@ AFSVolPartitionInfo64
 AFSVolTransCreate
 AFSVolXListPartitions
 EnumerateEntry
+Lp_AnyMatch
 Lp_GetRwIndex
 Lp_ROMatch
 MapHostToNetwork
