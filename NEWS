@@ -1,5 +1,13 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.12.2
+
+  Linux clients
+
+    * Add support for Linux 6.11 (15852, 15853, 15854)
+    * Fix build error on openSUSE 15.6 (15858)
+    * Fix build warning on Ubuntu 24.04 (15857)
+
 OpenAFS 1.8.12.1
 
   Linux clients
