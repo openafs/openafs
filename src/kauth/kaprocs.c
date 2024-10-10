@@ -700,7 +700,7 @@ ChangePassWord(struct rx_call *call, char *aname, char *ainstance,
     if ((code = DES_key_sched(ktc_to_cblock(&tentry.key), &user_schedule)))
 	es_Report("In KAChangePassword: key_sched returned %d\n", code);
     DES_pcbc_encrypt(arequest->SeqBody, &request,
-		     min(arequest->SeqLen, sizeof(request)), &user_schedule,
+		     opr_min(arequest->SeqLen, sizeof(request)), &user_schedule,
 		     ktc_to_cblockptr(&tentry.key), DECRYPT);
 
     /* validate the request */
@@ -1101,7 +1101,7 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
     if ((code = DES_key_sched(ktc_to_cblock(&tentry.key), &user_schedule)))
 	es_Report("In KAAuthenticate: key_sched returned %d\n", code);
     DES_pcbc_encrypt(arequest->SeqBody, &request,
-		     min(arequest->SeqLen, sizeof(request)), &user_schedule,
+		     opr_min(arequest->SeqLen, sizeof(request)), &user_schedule,
 		     ktc_to_cblockptr(&tentry.key), DECRYPT);
 
     request.time = ntohl(request.time);	/* reorder date */

@@ -229,7 +229,7 @@ handleit(struct cmd_syndesc *opts, void *arock)
 	free(optstring);
 	optstring = NULL;
     } else {
-	Parallel = min(DEFAULT_PARALLELISM, MAXPARALLEL);
+	Parallel = opr_min(DEFAULT_PARALLELISM, MAXPARALLEL);
     }
     if (cmd_OptionAsString(opts, OPT_tmpdir, &optstring) == 0) {
 	DIR *dirp;

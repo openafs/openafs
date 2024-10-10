@@ -178,7 +178,7 @@ ih_Initialize(void)
 	 */
 	fdMaxCacheSize /= 4;
 #endif
-	fdMaxCacheSize = min(fdMaxCacheSize, vol_io_params.fd_max_cachesize);
+	fdMaxCacheSize = opr_min(fdMaxCacheSize, vol_io_params.fd_max_cachesize);
 	opr_Assert(fdMaxCacheSize > 0);
     }
 #elif defined(AFS_HPUX_ENV)
@@ -186,12 +186,12 @@ ih_Initialize(void)
     fdMaxCacheSize = 0;
 #else
     {
-	long fdMax = max(sysconf(_SC_OPEN_MAX) - vol_io_params.fd_handle_setaside,
+	long fdMax = opr_max(sysconf(_SC_OPEN_MAX) - vol_io_params.fd_handle_setaside,
 					 0);
-	fdMaxCacheSize = (int)min(fdMax, vol_io_params.fd_max_cachesize);
+	fdMaxCacheSize = (int)opr_min(fdMax, vol_io_params.fd_max_cachesize);
     }
 #endif
-    fdCacheSize = min(fdMaxCacheSize, vol_io_params.fd_initial_cachesize);
+    fdCacheSize = opr_min(fdMaxCacheSize, vol_io_params.fd_initial_cachesize);
 }
 
 /* Make the file descriptor cache as big as possible. Don't this call

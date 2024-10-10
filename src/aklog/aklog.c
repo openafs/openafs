@@ -715,7 +715,7 @@ rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
 	}
     }
 #else
-    len = min(get_princ_len(context, v5cred->client, 0),
+    len = opr_min(get_princ_len(context, v5cred->client, 0),
 	      second_comp(context, v5cred->client) ?
 	      MAXKTCNAMELEN - 2 : MAXKTCNAMELEN - 1);
     strncpy(username, get_princ_str(context, v5cred->client, 0), len);
@@ -724,7 +724,7 @@ rxkad_build_native_token(krb5_context context, krb5_creds *v5cred,
     if (second_comp(context, v5cred->client)) {
 	strcat(username, ".");
 	p = username + strlen(username);
-	len = min(get_princ_len(context, v5cred->client, 1),
+	len = opr_min(get_princ_len(context, v5cred->client, 1),
 		  MAXKTCNAMELEN - strlen(username) - 1);
 	strncpy(p, get_princ_str(context, v5cred->client, 1), len);
 	p[len] = '\0';

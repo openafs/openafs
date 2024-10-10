@@ -1786,7 +1786,7 @@ save_FS_results_inCB(int a_newProbeCycle)	/* start of a new probe cycle ? */
 
     /* copy the probe data information */
     tmp_fsPR->data.AFS_CollData_len =
-	min(xstat_fs_Results.data.AFS_CollData_len,
+	opr_min(xstat_fs_Results.data.AFS_CollData_len,
 	    afsmon_fs_results_length[index]);
     memcpy(tmp_fsPR->data.AFS_CollData_val,
 	   xstat_fs_Results.data.AFS_CollData_val,
@@ -2650,7 +2650,7 @@ save_CM_results_inCB(int a_newProbeCycle)	/* start of new probe cycle ? */
 
     /* copy the probe data information */
     tmp_cmPR->data.AFSCB_CollData_len =
-	min(xstat_cm_Results.data.AFSCB_CollData_len,
+	opr_min(xstat_cm_Results.data.AFSCB_CollData_len,
 	    afsmon_cm_results_length[index]);
     memcpy(tmp_cmPR->data.AFSCB_CollData_val,
 	   xstat_cm_Results.data.AFSCB_CollData_val,

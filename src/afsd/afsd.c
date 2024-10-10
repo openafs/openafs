@@ -2482,14 +2482,14 @@ afsd_run(void)
 	if (!filesSet) {
 	    cacheFiles = cacheBlocks / 32;	/* Assume 32k avg filesize */
 
-	    cacheFiles = max(cacheFiles, 1000);
+	    cacheFiles = opr_max(cacheFiles, 1000);
 
 	    /* Always allow more files than chunks.  Presume average V-file
 	     * is ~67% of a chunk...  (another guess, perhaps Honeyman will
 	     * have a grad student write a paper).  i is KILOBYTES.
 	     */
 	    i = 1 << (chunkSize < 10 ? 0 : chunkSize - 10);
-	    cacheFiles = max(cacheFiles, 1.5 * (cacheBlocks / i));
+	    cacheFiles = opr_max(cacheFiles, 1.5 * (cacheBlocks / i));
 
 	    /* never permit more files than blocks, while leaving space for
 	     * VolumeInfo and CacheItems files.  VolumeInfo is usually 20K,

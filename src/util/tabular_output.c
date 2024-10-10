@@ -28,6 +28,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/opr.h>
 #include <roken.h>
 
 #include <afs/afsutil.h>
@@ -133,7 +134,7 @@ util_addTableBodyRow(struct util_Table *Table, char **Contents) {
     for (i=0;i<Table->numColumns;i++) {
         strncpy(Table->Body[indx]->CellContents[i],Contents[i],\
                 UTIL_T_MAX_CELLCONTENT_LEN);
-        thisRowLength += min(strlen(Contents[i]),UTIL_T_MAX_CELLCONTENT_LEN);
+        thisRowLength += opr_min(strlen(Contents[i]),UTIL_T_MAX_CELLCONTENT_LEN);
     }
     if (thisRowLength > Table->RowLength)
         Table->RowLength = thisRowLength;
@@ -179,7 +180,7 @@ do_setTableRow(struct util_Table *Table, struct util_TableRow *aRow, char **Cont
         return -1;
     for (i=0;i<Table->numColumns;i++) {
         strcpy(aRow->CellContents[i],Contents[i]);
-        thisRowLength += min(strlen(Contents[i]),UTIL_T_MAX_CELLCONTENT_LEN);
+        thisRowLength += opr_min(strlen(Contents[i]),UTIL_T_MAX_CELLCONTENT_LEN);
     }
     if (thisRowLength > Table->RowLength)
         Table->RowLength = thisRowLength;

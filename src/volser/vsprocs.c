@@ -10,6 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/opr.h>
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <roken.h>
 
@@ -685,10 +686,10 @@ UV_CreateVolume3(afs_uint32 aserver, afs_int32 apart, char *aname,
     /* If caller specified RW id, but not RO/BK ids, have them be RW+1 and RW+2 */
     lastid = *anewid;
     if (aroid && *aroid != 0) {
-	lastid = max(lastid, *aroid);
+	lastid = opr_max(lastid, *aroid);
     }
     if (abkid && *abkid != 0) {
-	lastid = max(lastid, *abkid);
+	lastid = opr_max(lastid, *abkid);
     }
     if (aroid && *aroid == 0) {
 	*aroid = ++lastid;

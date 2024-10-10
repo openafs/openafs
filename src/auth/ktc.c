@@ -593,7 +593,7 @@ GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 		    == 0)
 		&& (strcmp(local_tokens[i].server.cell, aserver->cell) == 0)) {
 		memcpy(atoken, &local_tokens[i].token,
-		       min(atokenLen, sizeof(struct ktc_token)));
+		       opr_min(atokenLen, sizeof(struct ktc_token)));
 		if (aclient)
 		    *aclient = local_tokens[i].client;
 		UNLOCK_GLOBAL_MUTEX;
@@ -624,7 +624,7 @@ GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 		    if (aclient)
 			strcpy(aclient->cell, lcell);
 		    memcpy(atoken, &ctoken,
-			   min(atokenLen, sizeof(struct ktc_token)));
+			   opr_min(atokenLen, sizeof(struct ktc_token)));
 
 		    afs_tf_close();
 		    UNLOCK_GLOBAL_MUTEX;

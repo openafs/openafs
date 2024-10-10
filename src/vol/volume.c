@@ -693,7 +693,7 @@ VInitAttachVolumes(ProgramType pt)
 	    queue_Append(&params,dpq);
 	}
 
-	threads = min(parts, vol_attach_threads);
+	threads = opr_min(parts, vol_attach_threads);
 
 	if (threads > 1) {
 	    /* spawn off a bunch of initialization threads */
@@ -819,7 +819,7 @@ VInitAttachVolumes(ProgramType pt)
 	}
 
         /* number of worker threads; at least one, not to exceed the number of partitions */
-	threads = min(parts, vol_attach_threads);
+	threads = opr_min(parts, vol_attach_threads);
 
         /* create volume work queue */
         queue_Init(&vq);

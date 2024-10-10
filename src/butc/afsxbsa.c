@@ -1538,7 +1538,7 @@ ObjectDescriptor *BSAobjDescP
      for that max len as well. For now these are the same value.
      ================================================================*/
    if (strlen(BSAqryDescP->objName.pathName) >
-       min(DSM_MAX_HL_LENGTH, BSA_MAX_PATHNAME))
+       opr_min(DSM_MAX_HL_LENGTH, BSA_MAX_PATHNAME))
    {
       sprintf(traceStr2, "BSAQueryObject: pathName too long (%" AFS_SIZET_FMT ")",
               strlen(BSAqryDescP->objName.pathName));
@@ -2423,7 +2423,7 @@ BSA_Int16 BSACreateObject(
      check for that max len as well. For now these are the same value.
      =================================================================*/
    if (strlen(BSAobjDescP->objName.pathName) >
-            min(DSM_MAX_HL_LENGTH, BSA_MAX_PATHNAME))
+            opr_min(DSM_MAX_HL_LENGTH, BSA_MAX_PATHNAME))
    {
       sprintf(traceStr2, "BSACreateObject: pathName too long (%" AFS_SIZET_FMT ")",
               strlen(BSAobjDescP->objName.pathName));
@@ -2755,7 +2755,7 @@ BSA_Int16 BSAMarkObjectInactive(
     check for that max len as well. For now these are the same value.
     =============================================================== */
    if (strlen(BSAobjNameP->pathName) >
-       min(DSM_MAX_HL_LENGTH, BSA_MAX_PATHNAME))
+       opr_min(DSM_MAX_HL_LENGTH, BSA_MAX_PATHNAME))
    {
       sprintf(traceStr2, "BSAMarkObjectInactive: pathName too long (%" AFS_SIZET_FMT ")",
                          strlen(BSAobjNameP->pathName));

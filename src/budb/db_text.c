@@ -10,6 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <afs/opr.h>
 #include <roken.h>
 
 #include <ubik.h>
@@ -110,7 +111,7 @@ GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
 
     /* compute minimum of remaining text or user buffer */
     textRemaining = ntohl(tbPtr->size) - offset;
-    transferSize = min(textRemaining, maxLength);
+    transferSize = opr_min(textRemaining, maxLength);
 
     /* allocate the transfer storage */
     if (transferSize <= 0) {
@@ -149,7 +150,7 @@ GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
 	/* compute the data size to extract */
 	blockOffset = offset % BLOCK_DATA_SIZE;
 	textRemaining = BLOCK_DATA_SIZE - blockOffset;
-	chunkSize = min(textRemaining, transferSize);
+	chunkSize = opr_min(textRemaining, transferSize);
 
 	memcpy(textPtr, &block.a[blockOffset], chunkSize);
 
@@ -365,7 +366,7 @@ SaveText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
     while (textLength) {
 	/* compute the transfer size */
 	remainingInBlock = (BLOCK_DATA_SIZE - (offset % BLOCK_DATA_SIZE));
-	chunkSize = min(remainingInBlock, textLength);
+	chunkSize = opr_min(remainingInBlock, textLength);
 
 	/* copy in the data */
 	memcpy(&diskBlock.a[offset % BLOCK_DATA_SIZE], textptr, chunkSize);
@@ -466,7 +467,7 @@ saveTextToFile(struct ubik_trans *ut, struct textBlock *tbPtr)
     totalSize = size = ntohl(tbPtr->size);
     blockAddr = ntohl(tbPtr->textAddr);
     while (size) {
-	chunkSize = min(BLOCK_DATA_SIZE, size);
+	chunkSize = opr_min(BLOCK_DATA_SIZE, size);
 	dbread(ut, blockAddr, (char *)&block, sizeof(block));
 	if (write(fid, &block.a[0], chunkSize) < 0)
 	    break;

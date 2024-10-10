@@ -2118,7 +2118,7 @@ scout_SetColumnWidths(struct cmd_item *a_width_item)
 	if (width > 0) {
 	    int min_width = strlen(scout_underline[i]);
 	    if (min_width) {
-	       width = max(width, min_width);
+	       width = opr_max(width, min_width);
 	    }
 	    scout_col_width[i] = width + 1;
 	}

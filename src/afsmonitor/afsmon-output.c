@@ -461,7 +461,7 @@ Print_fs_CallBackStats(struct xstat_fs_ProbeResults *a_fs_Results)
 	    a_fs_Results->collectionNumber, a_fs_Results->connP->hostName,
 	    a_fs_Results->probeNum, printableTime);
 
-    numInt32s = min(numInt32s, sizeof(CbCounterStrings)/sizeof(*CbCounterStrings));
+    numInt32s = opr_min(numInt32s, sizeof(CbCounterStrings)/sizeof(*CbCounterStrings));
     for (i=0; i<numInt32s; i++) {
 	fprintf(fs_outFD, "\t%10u %s\n", val[i], CbCounterStrings[i]);
     }

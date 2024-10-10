@@ -12,6 +12,7 @@
 #include <afsconfig.h>
 #include <afs/stds.h>
 
+#include <afs/opr.h>
 #include <roken.h>
 #include <afs/cmd.h>
 #include <afs/auth.h>
@@ -581,7 +582,7 @@ bcdb_SaveTextFile(udbClientTextP ctPtr)
 
     offset = 0;
     while (fileSize != 0) {
-	chunkSize = min(fileSize, bufferSize);
+	chunkSize = opr_min(fileSize, bufferSize);
 	code =
 	    fread(charList.charListT_val, sizeof(char), chunkSize,
 		  ctPtr->textStream);

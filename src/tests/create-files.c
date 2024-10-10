@@ -33,6 +33,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/opr.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -71,7 +72,7 @@ creat_files(int count, long startsize)
 	    size_t len;
 	    ssize_t ret;
 
-	    len = min(sizeof(buf), size);
+	    len = opr_min(sizeof(buf), size);
 
 	    ret = write(fd, buf, len);
 	    if (ret < 0)

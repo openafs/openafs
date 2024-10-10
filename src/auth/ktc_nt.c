@@ -984,7 +984,7 @@ GetLocalToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 		0)
 	    && (strcmp(local_tokens[i].server.cell, aserver->cell) == 0)) {
 	    memcpy(atoken, &local_tokens[i].token,
-		   min(atokenLen, sizeof(struct ktc_token)));
+		   opr_min(atokenLen, sizeof(struct ktc_token)));
 	    memcpy(aclient, &local_tokens[i].client,
 		   sizeof(struct ktc_principal));
 	    UNLOCK_GLOBAL_MUTEX;

@@ -789,7 +789,7 @@ afspgin_setup_io_ranges(vfspage_t * vm_info, pgcnt_t bpages, k_off_t isize,
 	    start_blk = dbd->dbd_data;
 	    maxpage =
 		startindex + (bpages - (startindex + file_offset) % bpages);
-	    maxpage = min(maxpage, multio_maxpage);
+	    maxpage = opr_min(maxpage, multio_maxpage);
 	    count =
 		expand_faultin_up(vm_info, dbdtype, bpages, maxpage,
 				  1 /* count */ ,
