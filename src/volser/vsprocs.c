@@ -4067,9 +4067,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	    }
 	}
 	MapNetworkToHost(&entry, &storeEntry);
-	vcode =
-	    VLDB_ReplaceEntry(afromvol, RWVOL, &storeEntry,
-			      LOCKREL_TIMESTAMP);
+	vcode = VLDB_ReplaceEntry(afromvol, RWVOL, &storeEntry, 0);
 	ONERROR(vcode, afromvol,
 		" Could not update VLDB entry for volume %u\n");
 

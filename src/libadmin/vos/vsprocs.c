@@ -1791,7 +1791,7 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     }
     if (failure) {
 	if (!VLDB_ReplaceEntry
-	    (cellHandle, afromvol, RWVOL, &entry, LOCKREL_TIMESTAMP, &tst)) {
+	    (cellHandle, afromvol, RWVOL, &entry, 0, &tst)) {
 	    goto fail_UV_ReleaseVolume;
 	}
 
