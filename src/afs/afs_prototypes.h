@@ -409,10 +409,6 @@ extern int afs_LookupInodeByPath(char *filename, afs_ufs_dcache_id_t *inode,
 extern void Lock_Init(struct afs_lock *lock);
 extern int Afs_Lock_Trace(int op, struct afs_lock *alock, int type,
 			  char *file, int line);
-extern void Afs_Lock_Obtain(struct afs_lock *lock, int how);
-extern void Afs_Lock_ReleaseR(struct afs_lock *lock);
-extern void Afs_Lock_ReleaseW(struct afs_lock *lock);
-
 
 /* afs_mariner.c */
 extern afs_int32 afs_mariner;

@@ -28,20 +28,6 @@
 #undef	LOCK_INIT
 #define	LOCK_INIT(lock, nm)	Lock_Init(lock)
 
-/* The following macros allow multi statement macros to be defined safely, i.e.
-   - the multi statement macro can be the object of an if statement;
-   - the call to the multi statement macro may be legally followed by a semi-colon.
-   BEGINMAC and ENDMAC have been tested with both the portable C compiler and
-   Hi-C.  Both compilers were from the Palo Alto 4.2BSD software releases, and
-   both optimized out the constant loop code.  For an example of the use
-   of BEGINMAC and ENDMAC, see the definition for ReleaseWriteLock, below.
-   An alternative to this, using "if(1)" for BEGINMAC is not used because it
-   may generate worse code with pcc, and may generate warning messages with hi-C.
-*/
-
-#define BEGINMAC do {
-#define ENDMAC   } while (0)
-
 #if defined(UKERNEL)
 typedef unsigned int afs_lock_tracker_t;
 # define MyPidxx (get_user_struct()->u_procp->p_pid )
@@ -149,122 +135,191 @@ extern int afs_trclock;
 #define AFS_LOCK_TRACE(op, lock, type)
 #endif
 
-#define ObtainReadLock(lock)\
-  BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, READ_LOCK);\
-	if (!((lock)->excl_locked & WRITE_LOCK)) \
-            ((lock)->readers_reading)++; \
-	else \
-	    Afs_Lock_Obtain(lock, READ_LOCK); \
-        (lock)->pid_last_reader = MyPidxx; \
-   ENDMAC
+/* afs/lock.c */
+extern void Afs_Lock_Obtain(struct afs_lock *lock, int how);
+extern void Afs_Lock_ReleaseR(struct afs_lock *lock);
+extern void Afs_Lock_ReleaseW(struct afs_lock *lock);
 
-#define NBObtainReadLock(lock) \
-	(((lock)->excl_locked & WRITE_LOCK) ? EWOULDBLOCK :  (((lock)->readers_reading++), ((lock)->pid_last_reader = MyPidxx), 0))
+static_inline void
+ObtainReadLock(struct afs_lock *lock)
+{
+    AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, READ_LOCK);
+    if (!(lock->excl_locked & WRITE_LOCK)) {
+        lock->readers_reading++;
+    } else {
+	Afs_Lock_Obtain(lock, READ_LOCK);
+    }
+    lock->pid_last_reader = MyPidxx;
+}
 
-#define ObtainWriteLock(lock, src)\
-  BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, WRITE_LOCK);\
-	if (!(lock)->excl_locked && !(lock)->readers_reading)\
-	    (lock) -> excl_locked = WRITE_LOCK;\
-	else\
-	    Afs_Lock_Obtain(lock, WRITE_LOCK); \
-	(lock)->pid_writer = MyPidxx; \
-	(lock)->src_indicator = src;\
-   ENDMAC
+static_inline int
+NBObtainReadLock(struct afs_lock *lock)
+{
+    if (lock->excl_locked & WRITE_LOCK) {
+	return EWOULDBLOCK;
+    } else {
+	lock->readers_reading++;
+	lock->pid_last_reader = MyPidxx;
+	return 0;
+    }
+}
 
-#define NBObtainWriteLock(lock, src) (((lock)->excl_locked || (lock)->readers_reading) ? EWOULDBLOCK : (((lock) -> excl_locked = WRITE_LOCK), ((lock)->pid_writer = MyPidxx), ((lock)->src_indicator = src), 0))
+static_inline void
+ObtainWriteLock(struct afs_lock *lock, unsigned int src)
+{
+    AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, WRITE_LOCK);
+    if (!lock->excl_locked && !(lock->readers_reading)) {
+	lock-> excl_locked = WRITE_LOCK;
+    } else {
+	Afs_Lock_Obtain(lock, WRITE_LOCK);
+    }
+    lock->pid_writer = MyPidxx;
+    lock->src_indicator = src;
+}
 
-#define ObtainSharedLock(lock, src)\
-  BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, SHARED_LOCK);\
-	if (!(lock)->excl_locked)\
-	    (lock) -> excl_locked = SHARED_LOCK;\
-	else\
-	    Afs_Lock_Obtain(lock, SHARED_LOCK); \
-	(lock)->pid_writer = MyPidxx; \
-	(lock)->src_indicator = src;\
-   ENDMAC
+static_inline int
+NBObtainWriteLock(struct afs_lock *lock, unsigned int src)
+{
+    if (lock->excl_locked || lock->readers_reading) {
+	return EWOULDBLOCK;
+    } else {
+        lock->excl_locked = WRITE_LOCK;
+	lock->pid_writer = MyPidxx;
+	lock->src_indicator = src;
+	return 0;
+    }
+}
 
-#define NBObtainSharedLock(lock, src) (((lock)->excl_locked) ? EWOULDBLOCK : (((lock) -> excl_locked = SHARED_LOCK), ((lock)->pid_writer = MyPidxx), ((lock)->src_indicator = src), 0))
+static_inline void
+ObtainSharedLock(struct afs_lock *lock, unsigned int src)
+{
+    AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, SHARED_LOCK);
+    if (!(lock->excl_locked)) {
+	lock->excl_locked = SHARED_LOCK;
+    } else {
+	Afs_Lock_Obtain(lock, SHARED_LOCK);
+    }
+    lock->pid_writer = MyPidxx;
+    lock->src_indicator = src;
+}
 
-#define UpgradeSToWLock(lock, src)\
-  BEGINMAC  \
-	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, BOOSTED_LOCK);\
-	if (!(lock)->readers_reading)\
-	    (lock)->excl_locked = WRITE_LOCK;\
-	else\
-	    Afs_Lock_Obtain(lock, BOOSTED_LOCK); \
-	(lock)->pid_writer = MyPidxx; \
-	(lock)->src_indicator = src;\
-   ENDMAC
+static_inline int
+NBObtainSharedLock(struct afs_lock *lock, unsigned int src)
+{
+    if (lock->excl_locked) {
+	return EWOULDBLOCK;
+    } else {
+	lock->excl_locked = SHARED_LOCK;
+	lock->pid_writer = MyPidxx;
+	lock->src_indicator = src;
+	return 0;
+    }
+}
+
+static_inline void
+UpgradeSToWLock(struct afs_lock *lock, unsigned int src)
+{
+    AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, BOOSTED_LOCK);
+    if (!(lock->readers_reading)) {
+	lock->excl_locked = WRITE_LOCK;
+    } else {
+	Afs_Lock_Obtain(lock, BOOSTED_LOCK);
+    }
+    lock->pid_writer = MyPidxx;
+    lock->src_indicator = src;
+}
 
 /* this must only be called with a WRITE or boosted SHARED lock! */
-#define ConvertWToSLock(lock)\
-	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, SHARED_LOCK);\
-	    (lock)->excl_locked = SHARED_LOCK; \
-	    if((lock)->wait_states) \
-		Afs_Lock_ReleaseR(lock); \
-	ENDMAC
+static_inline void
+ConvertWToSLock(struct afs_lock *lock)
+{
+    AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, SHARED_LOCK);
+    lock->excl_locked = SHARED_LOCK;
+    if (lock->wait_states) {
+	Afs_Lock_ReleaseR(lock);
+    }
+}
 
-#define ConvertWToRLock(lock) \
-	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);\
-	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
-	    ((lock)->readers_reading)++;\
-	    (lock)->pid_last_reader = MyPidxx ; \
-	    (lock)->pid_writer = MyPid_NULL;\
-	    Afs_Lock_ReleaseR(lock);\
-	ENDMAC
+static_inline void
+ConvertWToRLock(struct afs_lock *lock)
+{
+    AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);
+    lock->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);
+    lock->readers_reading++;
+    lock->pid_last_reader = MyPidxx;
+    lock->pid_writer = MyPid_NULL;
+    Afs_Lock_ReleaseR(lock);
+}
 
-#define ConvertSToRLock(lock) \
-	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);\
-	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
-	    ((lock)->readers_reading)++;\
-	    (lock)->pid_last_reader = MyPidxx ; \
-	    (lock)->pid_writer = MyPid_NULL;\
-	    Afs_Lock_ReleaseR(lock);\
-	ENDMAC
+static_inline void
+ConvertSToRLock(struct afs_lock *lock)
+{
+    AFS_LOCK_TRACE(CM_TRACE_LOCKDOWN, lock, READ_LOCK);
+    lock->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);
+    lock->readers_reading++;
+    lock->pid_last_reader = MyPidxx;
+    lock->pid_writer = MyPid_NULL;
+    Afs_Lock_ReleaseR(lock);
+}
 
-#define ReleaseReadLock(lock)\
-	BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, READ_LOCK);\
-	    if (!(--((lock)->readers_reading)) && (lock)->wait_states)\
-		Afs_Lock_ReleaseW(lock) ; \
-	if ( (lock)->pid_last_reader == MyPidxx ) \
-		(lock)->pid_last_reader = MyPid_NULL;\
-	ENDMAC
+static_inline void
+ReleaseReadLock(struct afs_lock *lock)
+{
+    AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, READ_LOCK);
+    if (!(--(lock->readers_reading)) && lock->wait_states) {
+	Afs_Lock_ReleaseW(lock);
+    }
+    if (lock->pid_last_reader == MyPidxx) {
+	lock->pid_last_reader = MyPid_NULL;
+    }
+}
 
-#define ReleaseWriteLock(lock)\
-        BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, WRITE_LOCK);\
-	    (lock)->excl_locked &= ~WRITE_LOCK;\
-	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
-	    (lock)->pid_writer = MyPid_NULL; \
-        ENDMAC
+static_inline void
+ReleaseWriteLock(struct afs_lock *lock)
+{
+    AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, WRITE_LOCK);
+    lock->excl_locked &= ~WRITE_LOCK;
+    if (lock->wait_states) {
+	Afs_Lock_ReleaseR(lock);
+    }
+    lock->pid_writer = MyPid_NULL;
+}
 
 /* can be used on shared or boosted (write) locks */
-#define ReleaseSharedLock(lock)\
-        BEGINMAC\
-	AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, SHARED_LOCK);\
-	    (lock)->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);\
-	    if ((lock)->wait_states) Afs_Lock_ReleaseR(lock);\
-	    (lock)->pid_writer = MyPid_NULL; \
-        ENDMAC
+static_inline void
+ReleaseSharedLock(struct afs_lock *lock)
+{
+    AFS_LOCK_TRACE(CM_TRACE_LOCKDONE, lock, SHARED_LOCK);
+    lock->excl_locked &= ~(SHARED_LOCK | WRITE_LOCK);
+    if (lock->wait_states) {
+	Afs_Lock_ReleaseR(lock);
+    }
+    lock->pid_writer = MyPid_NULL;
+}
 
+static_inline int
+LockWaiters(struct afs_lock *lock)
+{
+    return (lock->num_waiting);
+}
 
-/* I added this next macro to make sure it is safe to nuke a lock -- Mike K. */
-#define LockWaiters(lock)\
-	((int) ((lock)->num_waiting))
+static_inline int
+CheckLock(struct afs_lock *lock)
+{
+    if (lock->excl_locked) {
+	return -1;
+    } else {
+	return lock->readers_reading;
+    }
+}
 
-#define CheckLock(lock)\
-	((lock)->excl_locked? (int) -1 : (int) (lock)->readers_reading)
+static_inline int
+WriteLocked(struct afs_lock *lock)
+{
+    return (lock->excl_locked & WRITE_LOCK);
+}
 
-#define WriteLocked(lock)\
-	((lock)->excl_locked & WRITE_LOCK)
-#endif
+#endif	    /* KERNEL */
 
 /*
 
