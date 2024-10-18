@@ -896,6 +896,7 @@ CreateCacheFile(char *fname, struct stat *statp)
     if (statp != NULL) {
 	closeResult = fstat(cfd, statp);
 	if (closeResult) {
+	    close(cfd);
 	    printf
 		("%s: Can't stat newly-created AFS cache file '%s' (code %d)\n",
 		 rn, fname, errno);
@@ -1519,6 +1520,7 @@ BkgHandler(void)
     char dstName[256];
 
     uspc = calloc(1, sizeof(struct afs_uspc_param));
+    opr_Assert(uspc != NULL);
     memset(srcName, 0, sizeof(srcName));
     memset(dstName, 0, sizeof(dstName));
 
@@ -1538,7 +1540,7 @@ BkgHandler(void)
 		 * like a AFS_USPC_SHUTDOWN, in case we're running with an
 		 * older kernel module.
 		 */
-		return;
+		goto done;
 	    }
 
 	    sleep(1);
@@ -1549,7 +1551,7 @@ BkgHandler(void)
 	switch (uspc->reqtype) {
 	case AFS_USPC_SHUTDOWN:
 	    /* Client is shutting down */
-	    return;
+	    goto done;
 
 	case AFS_USPC_NOOP:
 	    /* noop */
@@ -1638,6 +1640,9 @@ BkgHandler(void)
 	    break;
 	}
     }
+
+ done:
+    free(uspc);
 }
 #endif
 
@@ -2151,9 +2156,6 @@ CheckOptions(struct cmd_syndesc *as)
     afs_int32 code;		/*Result of fork() */
 #ifdef	AFS_SUN5_ENV
     struct stat st;
-#endif
-#ifdef AFS_SGI_ENV
-    struct sched_param sp;
 #endif
 
 #ifdef AFS_SGI_VNODE_GLUE
@@ -3260,6 +3262,7 @@ fork_syscall_impl(int rx, int wait, const char *rn, int syscall, va_list ap)
     struct afsd_syscall_args *args;
 
     args = malloc(sizeof(*args));
+    opr_Assert(args != NULL);
     afsd_syscall_populate(args, syscall, ap);
     args->rxpri = rx;
     args->rn = rn;

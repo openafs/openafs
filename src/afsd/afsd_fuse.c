@@ -401,6 +401,9 @@ fuafsd_write(const char *path, const char *abuf, size_t len, off_t offset,
 {
 	int fd, code;
 	char *buf = malloc(len);
+	if (buf == NULL) {
+		return -ENOMEM;
+	}
 
 	fd = fi->fh;
 	memcpy(buf, abuf, len);

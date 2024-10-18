@@ -491,6 +491,7 @@ HandleMTab(char *cacheMountDir)
     }
 
     dir = strdup(cacheMountDir);
+    opr_Assert(dir != NULL);
 
     /* trim trailing slashes; don't look at dir[0] in case we are somehow
      * just "/" */
@@ -606,6 +607,7 @@ afsd_mount_afs(const char *rn, const char *cacheMountDir)
     }
 
     mountDir = strdup(cacheMountDir);
+    opr_Assert(mountDir != NULL);
     HandleMTab(mountDir);
     free(mountDir);
 }
