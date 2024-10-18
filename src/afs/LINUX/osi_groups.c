@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 #ifdef LINUX_KEYRING_SUPPORT
-#include <linux/seq_file.h>
+# include <linux/seq_file.h>
 #endif
 
 
@@ -29,7 +29,8 @@
 #ifdef AFS_PAG_ONEGROUP_ENV
 
 static afs_uint32
-afs_linux_pag_from_groups(struct group_info *group_info) {
+afs_linux_pag_from_groups(struct group_info *group_info)
+{
     afs_uint32 g0 = 0;
     afs_uint32 i;
 
@@ -46,7 +47,8 @@ afs_linux_pag_from_groups(struct group_info *group_info) {
 
 static inline void
 afs_linux_pag_to_groups(afs_uint32 newpag,
-			struct group_info *old, struct group_info **new) {
+			struct group_info *old, struct group_info **new)
+{
     int need_space = 0;
     int i;
     int j;
@@ -61,32 +63,35 @@ afs_linux_pag_to_groups(afs_uint32 newpag,
 	afs_kgid_t ths = GROUP_AT(old, i);
 	if ((afs_from_kgid(ths) >> 24) == 'A')
 	    continue;
-	if ((i == 0 || !gid_lt(newkgid, GROUP_AT(old, i-1))) &&
+	if ((i == 0 || !gid_lt(newkgid, GROUP_AT(old, i - 1))) &&
 	    gid_lt(newkgid, ths)) {
-	   GROUP_AT(*new, j) = newkgid;
-	   j++;
+	    GROUP_AT(*new, j) = newkgid;
+	    j++;
 	}
 	GROUP_AT(*new, j) = ths;
 	j++;
     }
     if (j != i + need_space)
-        GROUP_AT(*new, j) = newkgid;
+	GROUP_AT(*new, j) = newkgid;
 }
 
-#else
+#else /* AFS_PAG_ONEGROUP_ENV */
 
 static inline afs_uint32
-afs_linux_pag_from_groups(struct group_info *group_info) {
+afs_linux_pag_from_groups(struct group_info *group_info)
+{
 
     if (group_info->ngroups < AFS_NUMPAGGROUPS)
 	return NOPAG;
 
-    return afs_get_pag_from_groups(GROUP_AT(group_info, 0), GROUP_AT(group_info, 1));
+    return afs_get_pag_from_groups(GROUP_AT(group_info, 0),
+				   GROUP_AT(group_info, 1));
 }
 
 static inline void
 afs_linux_pag_to_groups(afs_uint32 newpag,
-			struct group_info *old, struct group_info **new) {
+			struct group_info *old, struct group_info **new)
+{
     int need_space = 0;
     int i;
     gid_t g0;
@@ -98,16 +103,17 @@ afs_linux_pag_to_groups(afs_uint32 newpag,
     *new = groups_alloc(old->ngroups + need_space);
 
     for (i = 0; i < old->ngroups; ++i)
-          GROUP_AT(new, i + need_space) = GROUP_AT(old, i);
+	GROUP_AT(new, i + need_space) = GROUP_AT(old, i);
 
     afs_get_groups_from_pag(newpag, &g0, g1);
     GROUP_AT(new, 0) = g0;
     GROUP_AT(new, 1) = g1;
 }
-#endif
+#endif /* AFS_PAG_ONEGROUP_ENV */
 
 afs_int32
-osi_get_group_pag(afs_ucred_t *cred) {
+osi_get_group_pag(afs_ucred_t *cred)
+{
     return afs_linux_pag_from_groups(afs_cr_group_info(cred));
 }
 
@@ -140,7 +146,7 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 
 int
 __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
-         int change_parent, struct group_info **old_groups)
+	 int change_parent, struct group_info **old_groups)
 {
     struct group_info *group_info;
     struct group_info *tmp;
@@ -220,7 +226,7 @@ install_session_keyring(struct key *keyring)
     if (old)
 	key_put(old);
 
-out:
+  out:
     return code;
 }
 #endif /* LINUX_KEYRING_SUPPORT */
@@ -252,11 +258,13 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 	    perm = KEY_POS_VIEW | KEY_POS_SEARCH;
 	    perm |= KEY_USR_VIEW | KEY_USR_SEARCH;
 
-	    key = afs_linux_key_alloc(&key_type_afs_pag, "_pag", GLOBAL_ROOT_UID, GLOBAL_ROOT_GID, perm, KEY_ALLOC_NOT_IN_QUOTA);
+	    key = afs_linux_key_alloc(&key_type_afs_pag, "_pag",
+				      GLOBAL_ROOT_UID, GLOBAL_ROOT_GID, perm,
+				      KEY_ALLOC_NOT_IN_QUOTA);
 
 	    if (!IS_ERR(key)) {
 		code = key_instantiate_and_link(key, (void *) newpag, sizeof(afs_uint32),
-					 current_session_keyring(), NULL);
+						current_session_keyring(), NULL);
 		key_put(key);
 	    } else {
 		code = PTR_ERR(key);
@@ -284,9 +292,10 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 
 #ifndef LINUX_KEYRING_SUPPORT
 /* Intercept the standard system call. */
-extern asmlinkage long (*sys_setgroupsp) (int gidsetsize, gid_t * grouplist);
+extern asmlinkage long (*sys_setgroupsp)(int gidsetsize, gid_t *grouplist);
+
 asmlinkage long
-afs_xsetgroups(int gidsetsize, gid_t * grouplist)
+afs_xsetgroups(int gidsetsize, gid_t *grouplist)
 {
     long code;
     cred_t *cr = crref();
@@ -313,10 +322,11 @@ afs_xsetgroups(int gidsetsize, gid_t * grouplist)
 }
 
 /* Intercept the standard uid32 system call. */
-extern asmlinkage int (*sys_setgroups32p) (int gidsetsize,
-					   __kernel_gid32_t * grouplist);
+extern asmlinkage int (*sys_setgroups32p)(int gidsetsize,
+					  __kernel_gid32_t *grouplist);
+
 asmlinkage long
-afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
+afs_xsetgroups32(int gidsetsize, gid_t *grouplist)
 {
     long code;
     cred_t *cr = crref();
@@ -346,79 +356,84 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
 # if defined(AFS_PPC64_LINUX_ENV)
 /* Intercept the uid16 system call as used by 32bit programs. */
 extern asmlinkage long (*sys32_setgroupsp)(int gidsetsize, gid_t *grouplist);
-asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
+
+asmlinkage long
+afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
 {
     long code;
     cred_t *cr = crref();
     afs_uint32 junk;
     int old_pag;
-    
+
     old_pag = PagInCred(cr);
     crfree(cr);
-    
+
     code = (*sys32_setgroupsp)(gidsetsize, grouplist);
     if (code) {
 	return code;
     }
-    
+
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
 	code = __setpag(&cr, old_pag, &junk, 0, NULL);
     }
     crfree(cr);
-    
+
     /* Linux syscall ABI returns errno as negative */
     return (-code);
 }
-# endif
+# endif /* AFS_PPC64_LINUX_ENV */
 
 # if defined(AFS_SPARC64_LINUX_ENV) || defined(AFS_AMD64_LINUX_ENV)
 /* Intercept the uid16 system call as used by 32bit programs. */
 #  ifdef AFS_AMD64_LINUX_ENV
-extern asmlinkage long (*sys32_setgroupsp) (int gidsetsize, u16 * grouplist);
+extern asmlinkage long (*sys32_setgroupsp)(int gidsetsize, u16 *grouplist);
 #  endif /* AFS_AMD64_LINUX_ENV */
 #  ifdef AFS_SPARC64_LINUX_ENV
-extern asmlinkage int (*sys32_setgroupsp) (int gidsetsize,
-					   __kernel_gid32_t * grouplist);
+extern asmlinkage int (*sys32_setgroupsp)(int gidsetsize,
+					  __kernel_gid32_t *grouplist);
 #  endif /* AFS_SPARC64_LINUX_ENV */
+
 asmlinkage long
-afs32_xsetgroups(int gidsetsize, u16 * grouplist)
+afs32_xsetgroups(int gidsetsize, u16 *grouplist)
 {
     long code;
     cred_t *cr = crref();
     afs_uint32 junk;
     int old_pag;
-    
+
     old_pag = PagInCred(cr);
     crfree(cr);
-    
+
     code = (*sys32_setgroupsp) (gidsetsize, grouplist);
     if (code) {
 	return code;
     }
-    
+
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
 	/* re-install old pag if there's room. */
 	code = __setpag(&cr, old_pag, &junk, 0, NULL);
     }
     crfree(cr);
-    
+
     /* Linux syscall ABI returns errno as negative */
     return (-code);
 }
 
 /* Intercept the uid32 system call as used by 32bit programs. */
 #  ifdef AFS_AMD64_LINUX_ENV
-extern asmlinkage long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
+extern asmlinkage long (*sys32_setgroups32p)(int gidsetsize,
+					     gid_t *grouplist);
 #  endif /* AFS_AMD64_LINUX_ENV */
 #  ifdef AFS_SPARC64_LINUX_ENV
-extern asmlinkage int (*sys32_setgroups32p) (int gidsetsize,
-					     __kernel_gid32_t * grouplist);
+extern asmlinkage int (*sys32_setgroups32p)(int gidsetsize,
+					    __kernel_gid32_t *grouplist);
 #  endif /* AFS_SPARC64_LINUX_ENV */
+
 asmlinkage long
-afs32_xsetgroups32(int gidsetsize, gid_t * grouplist)
+afs32_xsetgroups32(int gidsetsize, gid_t *grouplist)
 {
     long code;
     cred_t *cr = crref();
@@ -443,37 +458,41 @@ afs32_xsetgroups32(int gidsetsize, gid_t * grouplist)
     /* Linux syscall ABI returns errno as negative */
     return (-code);
 }
-# endif
+# endif /* AFS_SPARC64_LINUX_ENV || AFS_AMD64_LINUX_ENV */
 #endif /* !LINUX_KEYRING_SUPPORT */
 
 #ifdef LINUX_KEYRING_SUPPORT
-static void afs_pag_describe(const struct key *key, struct seq_file *m)
+static void
+afs_pag_describe(const struct key *key, struct seq_file *m)
 {
     seq_puts(m, key->description);
 
     seq_printf(m, ": %u", key->datalen);
 }
 
-#if defined(STRUCT_KEY_TYPE_HAS_PREPARSE)
-static int afs_pag_instantiate(struct key *key, struct key_preparsed_payload *prep)
-#else
-static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen)
-#endif
+# if defined(STRUCT_KEY_TYPE_HAS_PREPARSE)
+static int
+afs_pag_instantiate(struct key *key, struct key_preparsed_payload *prep)
+# else
+static int
+afs_pag_instantiate(struct key *key, const void *data, size_t datalen)
+# endif
 {
     int code;
     afs_uint32 *userpag, pag = NOPAG;
 
-    if (!uid_eq(key->uid, GLOBAL_ROOT_UID) || !gid_eq(key->gid, GLOBAL_ROOT_GID))
+    if (!uid_eq(key->uid, GLOBAL_ROOT_UID)
+	|| !gid_eq(key->gid, GLOBAL_ROOT_GID))
 	return -EPERM;
 
     code = -EINVAL;
     get_group_info(current_group_info());
 
-#if defined(STRUCT_KEY_TYPE_HAS_PREPARSE)
+# if defined(STRUCT_KEY_TYPE_HAS_PREPARSE)
     if (prep->datalen != sizeof(afs_uint32) || !prep->data)
-#else
+# else
     if (datalen != sizeof(afs_uint32) || !data)
-#endif
+# endif
 	goto error;
 
     /* ensure key being set matches current pag */
@@ -482,50 +501,52 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
     if (pag == NOPAG)
 	goto error;
 
-#if defined(STRUCT_KEY_TYPE_HAS_PREPARSE)
-    userpag = (afs_uint32 *)prep->data;
-#else
-    userpag = (afs_uint32 *)data;
-#endif
+# if defined(STRUCT_KEY_TYPE_HAS_PREPARSE)
+    userpag = (afs_uint32 *) prep->data;
+# else
+    userpag = (afs_uint32 *) data;
+# endif
     if (*userpag != pag)
 	goto error;
 
-#if defined(STRUCT_KEY_HAS_PAYLOAD_VALUE)
-    key->payload.value = (unsigned long) *userpag;
-#else
+# if defined(STRUCT_KEY_HAS_PAYLOAD_VALUE)
+    key->payload.value = (unsigned long)*userpag;
+# else
     memcpy(&key->payload, userpag, sizeof(afs_uint32));
-#endif
+# endif
     key->datalen = sizeof(afs_uint32);
     code = 0;
 
-error:
+  error:
     put_group_info(current_group_info());
     return code;
 }
 
-#if !defined(STRUCT_KEY_TYPE_HAS_MATCH_PREPARSE)
+# if !defined(STRUCT_KEY_TYPE_HAS_MATCH_PREPARSE)
 /* Note that we only define a ->match function if struct
  * key_type.match_preparse does _not_ exist. If key_type.match_preparse does
  * exist, we would use that to specify an alternative comparison function; but
  * since we just rely on default behavior, we don't need to actually specify
  * one. But for kernels with no such match_preparse function, we need to
  * specify a 'match' function, since there is no default. */
-static int afs_pag_match(const struct key *key, const void *description)
+static int
+afs_pag_match(const struct key *key, const void *description)
 {
-	return strcmp(key->description, description) == 0;
+    return strcmp(key->description, description) == 0;
 }
-#endif
+# endif
 
-static void afs_pag_destroy(struct key *key)
+static void
+afs_pag_destroy(struct key *key)
 {
     afs_uint32 pag;
     int locked = ISAFS_GLOCK();
 
-#if defined(STRUCT_KEY_HAS_PAYLOAD_VALUE)
+# if defined(STRUCT_KEY_HAS_PAYLOAD_VALUE)
     pag = key->payload.value;
-#else
+# else
     memcpy(&pag, &key->payload, sizeof(afs_uint32));
-#endif
+# endif
 
     if (!locked)
 	AFS_GLOCK();
@@ -536,74 +557,75 @@ static void afs_pag_destroy(struct key *key)
 	AFS_GUNLOCK();
 }
 
-struct key_type key_type_afs_pag =
-{
-    .name        = "afs_pag",
-    .describe    = afs_pag_describe,
-#if defined(STRUCT_KEY_TYPE_HAS_INSTANTIATE_PREP)
+struct key_type key_type_afs_pag = {
+    .name = "afs_pag",
+    .describe = afs_pag_describe,
+# if defined(STRUCT_KEY_TYPE_HAS_INSTANTIATE_PREP)
     .instantiate_prep = afs_pag_instantiate,
     .instantiate = NULL,
-#else
+# else
     .instantiate = afs_pag_instantiate,
-#endif
-#if !defined(STRUCT_KEY_TYPE_HAS_MATCH_PREPARSE)
-    .match       = afs_pag_match,
-#endif
-    .destroy     = afs_pag_destroy,
+# endif
+# if !defined(STRUCT_KEY_TYPE_HAS_MATCH_PREPARSE)
+    .match = afs_pag_match,
+# endif
+    .destroy = afs_pag_destroy,
 };
 
-#ifdef EXPORTED_TASKLIST_LOCK
+# ifdef EXPORTED_TASKLIST_LOCK
 extern rwlock_t tasklist_lock __attribute__((weak));
-#endif
+# endif
 
-void osi_keyring_init(void)
+void
+osi_keyring_init(void)
 {
-#if !defined(EXPORTED_KEY_TYPE_KEYRING)
+# if !defined(EXPORTED_KEY_TYPE_KEYRING)
     struct task_struct *p;
 
     /* If we can't lock the tasklist, either with its explicit lock,
-     * or by using the RCU lock, then we can't safely work out the 
-     * type of a keyring. So, we have to rely on the weak reference. 
+     * or by using the RCU lock, then we can't safely work out the
+     * type of a keyring. So, we have to rely on the weak reference.
      * If that's not available, then keyring based PAGs won't work.
      */
-    
-#if defined(EXPORTED_TASKLIST_LOCK) || defined(HAVE_LINUX_RCU_READ_LOCK)
+
+#  if defined(EXPORTED_TASKLIST_LOCK) || defined(HAVE_LINUX_RCU_READ_LOCK)
     if (__key_type_keyring == NULL) {
-# ifdef EXPORTED_TASKLIST_LOCK
+#   ifdef EXPORTED_TASKLIST_LOCK
 	if (&tasklist_lock)
 	    read_lock(&tasklist_lock);
-# endif
-# if defined(HAVE_LINUX_RCU_READ_LOCK)
-#  ifdef EXPORTED_TASKLIST_LOCK
- 	else
-#  endif
+#   endif
+#   if defined(HAVE_LINUX_RCU_READ_LOCK)
+#    ifdef EXPORTED_TASKLIST_LOCK
+	else
+#    endif
 	    rcu_read_lock();
-# endif
-#if defined(HAVE_LINUX_FIND_TASK_BY_PID)
+#   endif
+#   if defined(HAVE_LINUX_FIND_TASK_BY_PID)
 	p = find_task_by_pid(1);
-#else
+#   else
 	p = find_task_by_vpid(1);
-#endif
+#   endif
 	if (p && task_user(p)->session_keyring)
 	    __key_type_keyring = task_user(p)->session_keyring->type;
-# ifdef EXPORTED_TASKLIST_LOCK
+#   ifdef EXPORTED_TASKLIST_LOCK
 	if (&tasklist_lock)
 	    read_unlock(&tasklist_lock);
-# endif
-# if defined(HAVE_LINUX_RCU_READ_LOCK)
-#  ifdef EXPORTED_TASKLIST_LOCK
+#   endif
+#   if defined(HAVE_LINUX_RCU_READ_LOCK)
+#    ifdef EXPORTED_TASKLIST_LOCK
 	else
-#  endif
+#    endif
 	    rcu_read_unlock();
-# endif
+#   endif
     }
-#endif
-#endif
+#  endif /* EXPORTED_TASKLIST_LOCK || HAVE_LINUX_RCU_READ_LOCK */
+# endif /* !EXPORTED_KEY_TYPE_KEYRING */
 
     register_key_type(&key_type_afs_pag);
 }
 
-void osi_keyring_shutdown(void)
+void
+osi_keyring_shutdown(void)
 {
     unregister_key_type(&key_type_afs_pag);
 }
@@ -619,18 +641,19 @@ osi_get_keyring_pag(afs_ucred_t *cred)
 	key = afs_linux_search_keyring(cred, &key_type_afs_pag);
 
 	if (!IS_ERR(key)) {
-	    if (key_validate(key) == 0 && uid_eq(key->uid, GLOBAL_ROOT_UID)) {      /* also verify in the session keyring? */
-#if defined(STRUCT_KEY_HAS_PAYLOAD_VALUE)
+	    if (key_validate(key) == 0 && uid_eq(key->uid, GLOBAL_ROOT_UID)) {	/* also verify in the session keyring? */
+# if defined(STRUCT_KEY_HAS_PAYLOAD_VALUE)
 		keyring_pag = key->payload.value;
-#else
+# else
 		memcpy(&keyring_pag, &key->payload, sizeof(afs_int32));
-#endif
+# endif
 		/* Only set PAG in groups if needed,
 		 * and the creds are from the current process */
 		if (afs_linux_cred_is_current(cred) &&
-                    ((keyring_pag >> 24) & 0xff) == 'A' &&
+		    ((keyring_pag >> 24) & 0xff) == 'A' &&
 		    keyring_pag != afs_linux_pag_from_groups(current_group_info())) {
-			__setpag(&cred, keyring_pag, &newpag, 0, NULL);
+
+		    __setpag(&cred, keyring_pag, &newpag, 0, NULL);
 		}
 	    }
 	    key_put(key);
@@ -640,13 +663,15 @@ osi_get_keyring_pag(afs_ucred_t *cred)
 }
 
 #else
-void osi_keyring_init(void)
+void
+osi_keyring_init(void)
 {
-	return;
+    return;
 }
 
-void osi_keyring_shutdown(void)
+void
+osi_keyring_shutdown(void)
 {
-	return;
+    return;
 }
-#endif
+#endif /* LINUX_KEYRING_SUPPORT */
