@@ -157,7 +157,7 @@ create_cipher(char *cipher, int *cipherLen,
 
     if ((code = DES_key_sched(ktc_to_cblock(key), &schedule)))
 	printf("In KAAuthenticate: key_sched returned %d\n", code);
-    DES_pcbc_encrypt(cipher, cipher, len, &schedule, ktc_to_cblockptr(key), ENCRYPT);
+    DES_pcbc_encrypt(cipher, cipher, len, &schedule, ktc_to_cblockptr(key), FCRYPT_ENCRYPT);
     *cipherLen = round_up_to_ebs(len);
 
     if (krb_udp_debug) {
@@ -215,7 +215,7 @@ check_auth(struct packet *pkt, char *auth, int authLen,
     int byteOrder = pkt->byteOrder;
 
     DES_key_sched(ktc_to_cblock(key), &schedule);
-    DES_pcbc_encrypt(auth, auth, authLen, &schedule, ktc_to_cblockptr(key), DECRYPT);
+    DES_pcbc_encrypt(auth, auth, authLen, &schedule, ktc_to_cblockptr(key), FCRYPT_DECRYPT);
     packet = auth;
     if (strcmp(packet, name) != 0)
 	return KABADTICKET;

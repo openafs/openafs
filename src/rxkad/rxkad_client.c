@@ -175,7 +175,7 @@ rxkad_GetResponse(struct rx_securityClass *aobj, struct rx_connection *aconn,
 	r_v2.encrypted.endpoint.cksum = rxkad_CksumChallengeResponse(&r_v2);
 	memcpy((void *)xor, (void *)tcp->ivec, 2 * sizeof(afs_int32));
 	fc_cbc_encrypt(&r_v2.encrypted, &r_v2.encrypted,
-		       sizeof(r_v2.encrypted), tcp->keysched, xor, ENCRYPT);
+		       sizeof(r_v2.encrypted), tcp->keysched, xor, FCRYPT_ENCRYPT);
 	response = (char *)&r_v2;
 	responseSize = sizeof(r_v2);
     } else {
@@ -185,7 +185,7 @@ rxkad_GetResponse(struct rx_securityClass *aobj, struct rx_connection *aconn,
 	r_old.kvno = htonl(tcp->kvno);
 	r_old.ticketLen = htonl(tcp->ticketLen);
 	fc_ecb_encrypt(&r_old.encrypted, &r_old.encrypted, tcp->keysched,
-		       ENCRYPT);
+		       FCRYPT_ENCRYPT);
 	response = (char *)&r_old;
 	responseSize = sizeof(r_old);
     }

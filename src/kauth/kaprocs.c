@@ -701,7 +701,7 @@ ChangePassWord(struct rx_call *call, char *aname, char *ainstance,
 	es_Report("In KAChangePassword: key_sched returned %d\n", code);
     DES_pcbc_encrypt(arequest->SeqBody, &request,
 		     opr_min(arequest->SeqLen, sizeof(request)), &user_schedule,
-		     ktc_to_cblockptr(&tentry.key), DECRYPT);
+		     ktc_to_cblockptr(&tentry.key), FCRYPT_DECRYPT);
 
     /* validate the request */
     request_time = ntohl(request.time);	/* reorder date */
@@ -735,7 +735,7 @@ ChangePassWord(struct rx_call *call, char *aname, char *ainstance,
     memcpy(answer, KA_CPW_ANS_LABEL, KA_LABELSIZE);
 
     DES_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, answer_len,
-		     &user_schedule, ktc_to_cblockptr(&tentry.key), ENCRYPT);
+		     &user_schedule, ktc_to_cblockptr(&tentry.key), FCRYPT_ENCRYPT);
 
     code = set_password(tt, aname, ainstance, &request.newpw, kvno, 0);
     if (code) {
@@ -1102,7 +1102,7 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
 	es_Report("In KAAuthenticate: key_sched returned %d\n", code);
     DES_pcbc_encrypt(arequest->SeqBody, &request,
 		     opr_min(arequest->SeqLen, sizeof(request)), &user_schedule,
-		     ktc_to_cblockptr(&tentry.key), DECRYPT);
+		     ktc_to_cblockptr(&tentry.key), FCRYPT_DECRYPT);
 
     request.time = ntohl(request.time);	/* reorder date */
     tgt = !strncmp(request.label, KA_GETTGT_REQ_LABEL, sizeof(request.label));
@@ -1233,7 +1233,7 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
 	goto abort;
     }
     DES_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, oanswer->SeqLen,
-		     &user_schedule, ktc_to_cblockptr(&tentry.key), ENCRYPT);
+		     &user_schedule, ktc_to_cblockptr(&tentry.key), FCRYPT_ENCRYPT);
     code = ubik_EndTrans(tt);
     KALOG(aname, ainstance, sname, sinst, NULL,
 	  rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))), LOG_AUTHENTICATE);
@@ -1812,7 +1812,7 @@ GetTicket(int version,
 	goto abort;
     }
 
-    DES_ecb_encrypt((DES_cblock *)atimes->SeqBody, (DES_cblock *)&times, &schedule, DECRYPT);
+    DES_ecb_encrypt((DES_cblock *)atimes->SeqBody, (DES_cblock *)&times, &schedule, FCRYPT_DECRYPT);
     times.start = ntohl(times.start);
     times.end = ntohl(times.end);
     code = tkt_CheckTimes(times.start, times.end, now);
@@ -1923,7 +1923,7 @@ GetTicket(int version,
 	goto abort;
     }
     DES_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, oanswer->SeqLen,
-		     &schedule, ktc_to_cblockptr(&authSessionKey), ENCRYPT);
+		     &schedule, ktc_to_cblockptr(&authSessionKey), FCRYPT_ENCRYPT);
     code = ubik_EndTrans(tt);
     KALOG(name, instance, sname, sinstance, (import ? authDomain : NULL),
 	  rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))), LOG_GETTICKET);

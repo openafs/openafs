@@ -121,7 +121,7 @@ fc_ecb_encrypt(void * clear, void * cipher,
     R = ntohl(*((afs_uint32 *)clear + 1));
 
     if (encrypt) {
-	INC_RXKAD_STATS(fc_encrypts[ENCRYPT]);
+	INC_RXKAD_STATS(fc_encrypts[FCRYPT_ENCRYPT]);
 	for (i = 0; i < (ROUNDS / 2); i++) {
 	    S = *schedule++ ^ R;	/* xor R with key bits from schedule */
 	    Pchar[Byte2] = sbox0[Schar[Byte0]];	/* do 8-bit S Box subst. */
@@ -139,7 +139,7 @@ fc_ecb_encrypt(void * clear, void * cipher,
 	    R ^= P;
 	}
     } else {
-	INC_RXKAD_STATS(fc_encrypts[DECRYPT]);
+	INC_RXKAD_STATS(fc_encrypts[FCRYPT_DECRYPT]);
 	schedule = &schedule[ROUNDS - 1];	/* start at end of key schedule */
 	for (i = 0; i < (ROUNDS / 2); i++) {
 	    S = *schedule-- ^ L;	/* xor R with key bits from schedule */

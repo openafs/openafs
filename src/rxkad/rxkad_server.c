@@ -103,7 +103,7 @@ get_random_int32(void)
     afs_int32 rc;
 
     LOCK_RM;
-    fc_ecb_encrypt(&seed, &seed, random_int32_schedule, ENCRYPT);
+    fc_ecb_encrypt(&seed, &seed, random_int32_schedule, FCRYPT_ENCRYPT);
     rc = seed.tv_sec;
     UNLOCK_RM;
     return rc;
@@ -389,7 +389,7 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
 
 	memcpy(xor, sconn->ivec, 2 * sizeof(afs_int32));
 	fc_cbc_encrypt(&v2r.encrypted, &v2r.encrypted, sizeof(v2r.encrypted),
-		       sconn->keysched, xor, DECRYPT);
+		       sconn->keysched, xor, FCRYPT_DECRYPT);
 	cksum = rxkad_CksumChallengeResponse(&v2r);
 	if (cksum != v2r.encrypted.endpoint.cksum)
 	    return RXKADSEALEDINCON;
@@ -410,7 +410,7 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
     } else {
 	/* expect old format response */
 	fc_ecb_encrypt(&oldr.encrypted, &oldr.encrypted, sconn->keysched,
-		       DECRYPT);
+		       FCRYPT_DECRYPT);
 	incChallengeID = ntohl(oldr.encrypted.incChallengeID);
 	level = ntohl(oldr.encrypted.level);
     }

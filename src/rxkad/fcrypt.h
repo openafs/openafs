@@ -29,9 +29,9 @@ typedef afs_int32 fc_InitializationVector[ENCRYPTIONBLOCKSIZE / 4];
 #define MAXROUNDS 16
 typedef afs_int32 fc_KeySchedule[MAXROUNDS];
 
-#ifndef ENCRYPT
-#define ENCRYPT 1
-#define DECRYPT 0
+#ifndef FCRYPT_ENCRYPT
+# define FCRYPT_ENCRYPT 1
+# define FCRYPT_DECRYPT 0
 #endif
 
 #endif

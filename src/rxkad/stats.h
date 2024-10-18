@@ -39,9 +39,9 @@ struct rxkad_stats {
     afs_uint32 checkPackets[6];
     afs_uint32 bytesEncrypted[2];	/* index just by type */
     afs_uint32 bytesDecrypted[2];
-    afs_uint32 fc_encrypts[2];	/* DECRYPT==0, ENCRYPT==1 */
+    afs_uint32 fc_encrypts[2];	/* FCRYPT_DECRYPT==0, FCRYPT_ENCRYPT==1 */
     afs_uint32 fc_key_scheds;	/* key schedule creations */
-    afs_uint32 des_encrypts[2];	/* DECRYPT==0, ENCRYPT==1 */
+    afs_uint32 des_encrypts[2];	/* FCRYPT_DECRYPT==0, FCRYPT_ENCRYPT==1 */
     afs_uint32 des_key_scheds;	/* key schedule creations */
     afs_uint32 des_randoms;	/* random blocks generated */
     afs_uint32 clientObjects;

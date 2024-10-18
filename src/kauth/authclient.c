@@ -519,7 +519,7 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
     arequest.SeqLen = sizeof(request);
     arequest.SeqBody = (char *)&request;
     DES_pcbc_encrypt(arequest.SeqBody, arequest.SeqBody, arequest.SeqLen,
-		     &schedule, ktc_to_cblockptr(key), ENCRYPT);
+		     &schedule, ktc_to_cblockptr(key), FCRYPT_ENCRYPT);
 
     oanswer.MaxSeqLen = sizeof(answer);
     oanswer.SeqLen = 0;
@@ -555,7 +555,7 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 	return KAUBIKCALL;
     }
     DES_pcbc_encrypt(oanswer.SeqBody, oanswer.SeqBody, oanswer.SeqLen,
-		     &schedule, ktc_to_cblockptr(key), DECRYPT);
+		     &schedule, ktc_to_cblockptr(key), FCRYPT_DECRYPT);
 
     switch (version) {
     case 1:
@@ -640,7 +640,7 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
     times.start = htonl(start);
     times.end = htonl(end);
     DES_ecb_encrypt((DES_cblock *)&times, (DES_cblock *)&times, &schedule,
-		    ENCRYPT);
+		    FCRYPT_ENCRYPT);
 
     atimes.SeqLen = sizeof(times);
     atimes.SeqBody = (char *)&times;
@@ -675,7 +675,7 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
 
     DES_pcbc_encrypt(oanswer.SeqBody, oanswer.SeqBody, oanswer.SeqLen,
 		     &schedule, ktc_to_cblockptr(&auth_token->sessionKey),
-		     DECRYPT);
+		     FCRYPT_DECRYPT);
 
     switch (version) {
     case 1:

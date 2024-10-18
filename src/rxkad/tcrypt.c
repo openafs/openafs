@@ -115,9 +115,9 @@ main(argc, argv)
 	fc_keysched(&key, schedule);
 	print_msg("Starting msg is:", msg, sizeof(msg));
 	memcpy(xor, &key, 2 * sizeof(afs_int32));
-	fc_cbc_encrypt(msg, out, sizeof(msg), schedule, &key, ENCRYPT);
+	fc_cbc_encrypt(msg, out, sizeof(msg), schedule, &key, FCRYPT_ENCRYPT);
 	memcpy(xor, &key, 2 * sizeof(afs_int32));
-	fc_cbc_encrypt(out, dec, sizeof(msg), schedule, &key, DECRYPT);
+	fc_cbc_encrypt(out, dec, sizeof(msg), schedule, &key, FCRYPT_DECRYPT);
 	if (memcmp(msg, dec, sizeof(msg)) != 0)
 	    printf("Encryption FAILED!\n");
 	print_msg("Encrypted is:", out, sizeof(out));

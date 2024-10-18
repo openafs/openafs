@@ -59,7 +59,7 @@ rxkad_DecryptPacket(const struct rx_connection *conn,
 	if (!data || !tlen)
 	    break;
 	tlen = opr_min(len, tlen);
-	fc_cbc_encrypt(data, data, tlen, *schedule, xor, DECRYPT);
+	fc_cbc_encrypt(data, data, tlen, *schedule, xor, FCRYPT_DECRYPT);
 	len -= tlen;
     }
     /* Do this if packet checksums are ever enabled (below), but
@@ -100,7 +100,7 @@ rxkad_EncryptPacket(const struct rx_connection * conn,
 	if (!data || !tlen)
 	    break;
 	tlen = opr_min(len, tlen);
-	fc_cbc_encrypt(data, data, tlen, *schedule, xor, ENCRYPT);
+	fc_cbc_encrypt(data, data, tlen, *schedule, xor, FCRYPT_ENCRYPT);
 	len -= tlen;
     }
     return 0;

@@ -114,7 +114,7 @@ tkt_DecodeTicket(char *asecret, afs_int32 ticketLen,
 	return RXKADBADKEY;
 
     ticket = clear_ticket;
-    DES_pcbc_encrypt(asecret, ticket, ticketLen, &schedule.schedule, ktc_to_cblockptr(key), DECRYPT);
+    DES_pcbc_encrypt(asecret, ticket, ticketLen, &schedule.schedule, ktc_to_cblockptr(key), FCRYPT_DECRYPT);
 
     code =
 	decode_athena_ticket(ticket, ticketLen, name, inst, cell, host,
@@ -213,7 +213,7 @@ tkt_MakeTicket(char *ticket, int *ticketLen, struct ktc_encryptionKey *key,
 	return RXKADBADKEY;
     }
     DES_pcbc_encrypt(ticket, ticket, *ticketLen, &schedule.schedule,
-		     ktc_to_cblockptr(key), ENCRYPT);
+		     ktc_to_cblockptr(key), FCRYPT_ENCRYPT);
     return 0;
 }
 

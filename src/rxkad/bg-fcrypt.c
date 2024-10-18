@@ -703,11 +703,11 @@ main()
      * Use key1 and key2 as iv */
     fc_keysched(key1, sched);
     memcpy(iv, key2, sizeof(iv));
-    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, ENCRYPT);
+    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, FCRYPT_ENCRYPT);
     if (memcmp(ciph1, ciph, sizeof(ciph1)) != 0)
 	fprintf(stderr, "encrypt FAILED\n");
     memcpy(iv, key2, sizeof(iv));
-    fc_cbc_encrypt(ciph, clear, sizeof(the_quick), sched, iv, DECRYPT);
+    fc_cbc_encrypt(ciph, clear, sizeof(the_quick), sched, iv, FCRYPT_DECRYPT);
     if (strcmp(the_quick, clear) != 0)
 	fprintf(stderr, "crypt decrypt FAILED\n");
 
@@ -716,11 +716,11 @@ main()
      */
     fc_keysched(key2, sched);
     memcpy(iv, key1, sizeof(iv));
-    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, ENCRYPT);
+    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, FCRYPT_ENCRYPT);
     if (memcmp(ciph2, ciph, sizeof(ciph2)) != 0)
 	fprintf(stderr, "encrypt FAILED\n");
     memcpy(iv, key1, sizeof(iv));
-    fc_cbc_encrypt(ciph, clear, sizeof(the_quick), sched, iv, DECRYPT);
+    fc_cbc_encrypt(ciph, clear, sizeof(the_quick), sched, iv, FCRYPT_DECRYPT);
     if (strcmp(the_quick, clear) != 0)
 	fprintf(stderr, "crypt decrypt FAILED\n");
 
@@ -757,21 +757,21 @@ main()
 	       (stop.tv_sec - start.tv_sec +
 		(stop.tv_usec - start.tv_usec) / 1e6) * 1);
 
-	fc_ecb_encrypt(data, data, sched, ENCRYPT);
+	fc_ecb_encrypt(data, data, sched, FCRYPT_ENCRYPT);
 	gettimeofday(&start, NULL);
 	for (i = 0; i < 1000000; i++)
-	    fc_ecb_encrypt(data, data, sched, ENCRYPT);
+	    fc_ecb_encrypt(data, data, sched, FCRYPT_ENCRYPT);
 	gettimeofday(&stop, 0);
 	printf("fc_ecb_encrypt = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +
 		(stop.tv_usec - start.tv_usec) / 1e6) * 1);
 
 	fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
-		       ENCRYPT);
+		       FCRYPT_ENCRYPT);
 	gettimeofday(&start, NULL);
 	for (i = 0; i < 100000; i++)
 	    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
-			   ENCRYPT);
+			   FCRYPT_ENCRYPT);
 	gettimeofday(&stop, NULL);
 	printf("fc_cbc_encrypt = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +

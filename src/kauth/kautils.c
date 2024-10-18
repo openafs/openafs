@@ -145,7 +145,7 @@ ka_KeyCheckSum(char *key, afs_uint32 * cksumP)
     code = DES_key_sched(charptr_to_cblock(key), &s);
     if (code)
 	return KABADKEY;
-    DES_ecb_encrypt(&block, &block, &s, ENCRYPT);
+    DES_ecb_encrypt(&block, &block, &s, FCRYPT_ENCRYPT);
     memcpy(&cksum, &block, sizeof(afs_int32));
     *cksumP = ntohl(cksum);
     return 0;

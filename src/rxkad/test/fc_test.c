@@ -42,8 +42,8 @@
 #include "private_data.h"
 
 #define ROUNDS 16
-#define ENCRYPT 1
-#define DECRYPT 0
+#define FCRYPT_ENCRYPT 1
+#define FCRYPT_DECRYPT 0
 
 typedef afs_int32 int32;
 typedef afs_uint32 u_int32;
@@ -118,13 +118,13 @@ main(void)
      * Use key1 and key2 as iv */
     fc_keysched((struct ktc_encryptionKey *)key1, sched);
     memcpy(iv, key2, sizeof(iv));
-    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, ENCRYPT);
+    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, FCRYPT_ENCRYPT);
     if (memcmp(ciph1, ciph, sizeof(ciph1)) != 0) {
 	fprintf(stderr, "encrypt FAILED\n");
 	fail++;
     }
     memcpy(iv, key2, sizeof(iv));
-    fc_cbc_encrypt(ciph, clear, sizeof(the_quick), sched, iv, DECRYPT);
+    fc_cbc_encrypt(ciph, clear, sizeof(the_quick), sched, iv, FCRYPT_DECRYPT);
     if (strcmp(the_quick, clear) != 0) {
 	fprintf(stderr, "crypt decrypt FAILED\n");
 	fail++;
@@ -135,13 +135,13 @@ main(void)
      */
     fc_keysched((struct ktc_encryptionKey *)key2, sched);
     memcpy(iv, key1, sizeof(iv));
-    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, ENCRYPT);
+    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, FCRYPT_ENCRYPT);
     if (memcmp(ciph2, ciph, sizeof(ciph2)) != 0) {
 	fprintf(stderr, "encrypt FAILED\n");
 	fail++;
     }
     memcpy(iv, key1, sizeof(iv));
-    fc_cbc_encrypt(ciph, clear, sizeof(the_quick), sched, iv, DECRYPT);
+    fc_cbc_encrypt(ciph, clear, sizeof(the_quick), sched, iv, FCRYPT_DECRYPT);
     if (strcmp(the_quick, clear) != 0) {
 	fprintf(stderr, "crypt decrypt FAILED\n");
 	fail++;
@@ -180,21 +180,21 @@ main(void)
 	       (stop.tv_sec - start.tv_sec +
 		(stop.tv_usec - start.tv_usec) / 1e6) * 1);
 
-	fc_ecb_encrypt(data, data, sched, ENCRYPT);
+	fc_ecb_encrypt(data, data, sched, FCRYPT_ENCRYPT);
 	gettimeofday(&start, NULL);
 	for (i = 0; i < 1000000; i++)
-	    fc_ecb_encrypt(data, data, sched, ENCRYPT);
+	    fc_ecb_encrypt(data, data, sched, FCRYPT_ENCRYPT);
 	gettimeofday(&stop, NULL);
 	printf("fc_ecb_encrypt = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +
 		(stop.tv_usec - start.tv_usec) / 1e6) * 1);
 
 	fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
-		       ENCRYPT);
+		       FCRYPT_ENCRYPT);
 	gettimeofday(&start, NULL);
 	for (i = 0; i < 100000; i++)
 	    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
-			   ENCRYPT);
+			   FCRYPT_ENCRYPT);
 	gettimeofday(&stop, NULL);
 	printf("fc_cbc_encrypt = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +
