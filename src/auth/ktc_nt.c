@@ -17,6 +17,7 @@
 
 #include <ctype.h>
 
+#include <afs/opr.h>
 #include <afs/pthread_glock.h>
 #include <rpc.h>
 #include <afs/smb_iocons.h>
