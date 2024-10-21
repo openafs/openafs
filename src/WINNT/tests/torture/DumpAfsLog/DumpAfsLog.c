@@ -1,6 +1,10 @@
 // Stress.cpp : Defines the entry point for the console application.
 //
 
+#include <afsconfig.h>
+#include <afs/param.h>
+#include <roken.h>
+
 #include <windows.h>
 #include <stdlib.h>
 #include <time.h>
@@ -37,7 +41,7 @@ int main(int argc, char* argv[])
     SecondsToRun = 30 * 60;
     memset(HostName, '\0', sizeof(HostName));
     memset(command, '\0', sizeof(command));
-    strcpy(LoggingDrive, "C");
+    strlcpy(LoggingDrive, "C", sizeof(LoggingDrive));
     MiniDump = 0;
 
     for (i = 0; i < argc; i++)
@@ -52,13 +56,23 @@ int main(int argc, char* argv[])
         }
         if (!stricmp(argv[i], "-h"))
         {
-            strcpy(HostName, argv[i+1]);
+	    if (strlcpy(HostName, argv[i+1], sizeof(HostName)) >= sizeof(HostName)) {
+		fprintf(stderr, "Local host name exceeds maximum length: %s\n", argv[i+1]);
+		exit(-1);
+	    }
         }
         if (!stricmp(argv[i], "-d"))
         {
-            strcpy(LoggingDrive, argv[i+1]);
-            if (strlen(LoggingDrive) == 1)
-                strcat(LoggingDrive,":");
+	    if (strlcpy(LoggingDrive, argv[i+1], sizeof(LoggingDrive)) >= sizeof(LoggingDrive)) {
+		fprintf(stderr, "Local drive letter exceeds maximum length: %s\n", argv[i+1]);
+		exit(-1);
+	    }
+	    if (strlen(LoggingDrive) == 1) {
+		if (strlcat(LoggingDrive,":", sizeof(LoggingDrive)) >= sizeof(LoggingDrive)) {
+		    fprintf(stderr, "Local drive letter exceeds maximum length: %s\n", argv[i+1]);
+		    exit(-1);
+		}
+	    }
         }
         if (!stricmp(argv[i], "-m"))
         {
@@ -81,18 +95,25 @@ int main(int argc, char* argv[])
 
     hStdin = GetStdHandle(STD_INPUT_HANDLE);
 
-    sprintf(command, "fs trace -on");
-    rc = system(command);
-    sprintf(command, "fs trace -reset");
-    rc = system(command);
+    rc = system("fs trace -on");
+    rc = system("fs trace -reset");
 
     GetCurrentDirectory(sizeof(WorkingDirectory), WorkingDirectory);
     if (WorkingDirectory[0] != LoggingDrive[0])
         WorkingDirectory[0] = LoggingDrive[0];
-    sprintf(command, "rmdir /Q /S %s\\DumpAfsLogDir", WorkingDirectory);
+    if (snprintf(command, sizeof(command), "rmdir /Q /S %s\\DumpAfsLogDir", WorkingDirectory) >= sizeof(command)) {
+	fprintf(stderr, "Command string exceeds maximum length: %s..\n", command);
+	exit(1);
+    }
     rc = system(command);
-    sprintf(LogName, "%s\\DumpAfsLogDir", WorkingDirectory);
-    sprintf(command, "mkdir %s\\DumpAfsLogDir", WorkingDirectory);
+    if (snprintf(LogName, sizeof(LogName), "%s\\DumpAfsLogDir", WorkingDirectory) >= sizeof(command)) {
+	fprintf(stderr, "Path to logname exceeds maximum length: %s..\n", LogName);
+	exit(1);
+    }
+    if (snprintf(command, sizeof(command), "mkdir %s\\DumpAfsLogDir", WorkingDirectory) >= sizeof(command)) {
+	fprintf(stderr, "Command string exceeds maximum length: %s..\n", command);
+	exit(1);
+    }
     rc = system(command);
 
     time(&StartTime);
@@ -102,27 +123,43 @@ int main(int argc, char* argv[])
         if (MiniDump)
         {
             printf("\n");
-            sprintf(command, "fs minidump");
-            rc = system(command);
+            rc = system("fs minidump");
             ExpandEnvironmentStrings("%windir%", EnvVariable, sizeof(EnvVariable));
-            strcat(EnvVariable, "\\TEMP\\afsd.dmp");
-            sprintf(command, "copy /Y %s %s\\DumpAfsLogDir", EnvVariable, WorkingDirectory);
+	    if (strlcat(EnvVariable, "\\TEMP\\afsd.dmp", sizeof(EnvVariable)) >= sizeof(EnvVariable)) {
+		fprintf(stderr, "Path name exceeds maximum length: %s..\n", EnvVariable);
+		exit(1);
+	    }
+	    if (snprintf(command, sizeof(command), "copy /Y %s %s\\DumpAfsLogDir", EnvVariable, WorkingDirectory) >= sizeof(command)) {
+		fprintf(stderr, "Command string exceeds maximum length: %s..\n", command);
+		exit(1);
+	    }
             printf("%s\n", command);
             rc = system(command);
-            sprintf(command, "rename %s\\DumpAfsLogDir\\afsd.dmp afsd_%05d.dmp", WorkingDirectory, Count);
+	    if (snprintf(command, sizeof(command), "rename %s\\DumpAfsLogDir\\afsd.dmp afsd_%05d.dmp", WorkingDirectory, Count) >= sizeof(command)) {
+		fprintf(stderr, "Command string exceeds maximum length: %s..\n", command);
+		exit(1);
+	    }
             printf("%s\n", command);
             rc = system(command);
         }
 
         printf("\n");
-        sprintf(command, "fs trace -dump");
-        rc = system(command);
+        rc = system("fs trace -dump");
         ExpandEnvironmentStrings("%windir%", EnvVariable, sizeof(EnvVariable));
-        strcat(EnvVariable, "\\TEMP\\afsd.log");
-        sprintf(command, "copy /Y %s %s\\DumpAfsLogDir", EnvVariable, WorkingDirectory);
+	if (strlcat(EnvVariable, "\\TEMP\\afsd.log", sizeof(EnvVariable)) >= sizeof(EnvVariable)) {
+	    fprintf(stderr, "Path name exceeds maximum length: %s..\n", EnvVariable);
+	    exit(1);
+	}
+        if (snprintf(command, sizeof(command), "copy /Y %s %s\\DumpAfsLogDir", EnvVariable, WorkingDirectory) >= sizeof(command)) {
+	    fprintf(stderr, "Command string exceeds maximum length: %s..\n", command);
+	    exit(1);
+        }
         printf("%s\n", command);
         rc = system(command);
-        sprintf(command, "rename %s\\DumpAfsLogDir\\afsd.log afsd_%05d.log", WorkingDirectory, Count);
+	if (snprintf(command, sizeof(command), "rename %s\\DumpAfsLogDir\\afsd.log afsd_%05d.log", WorkingDirectory, Count) >= sizeof(command)) {
+	    fprintf(stderr, "Command string exceeds maximum length: %s..\n", command);
+	    exit(1);
+	}
         printf("%s\n\n", command);
         rc = system(command);
         ++Count;
@@ -142,8 +179,7 @@ int main(int argc, char* argv[])
         rc = GetConsoleInput(hStdin);
     }
 
-    sprintf(command, "fs trace -off");
-    rc = system(command);
+    rc = system("fs trace -off");
 	return(0);
 
 }

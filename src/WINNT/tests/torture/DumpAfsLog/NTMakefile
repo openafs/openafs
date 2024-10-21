@@ -20,9 +20,11 @@ idirs:
 
 EXEDIR = $(DESTDIR)\bin
 
+EXELIBS = $(DESTDIR)\lib\afsroken.lib
+
 OBJS = 	$(OUT)\DumpAfsLog.obj
 
-$(EXEDIR)\DumpAfsLog.exe: $(OBJS)
+$(EXEDIR)\DumpAfsLog.exe: $(OBJS) $(EXELIBS)
         $(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(EXEPREP)
