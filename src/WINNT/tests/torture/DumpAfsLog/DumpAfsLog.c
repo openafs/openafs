@@ -27,11 +27,7 @@ int main(int argc, char* argv[])
     char    WorkingDirectory[512];
     char    LoggingDrive[512];
     char    EnvVariable[512];
-//    char    Buffer[512];
-//    char    FileName[32];
-//    char    *pPtr;
     time_t  StartTime;
-//    FILE    *fp;
     HANDLE  hStdin;
 
 
@@ -126,61 +122,9 @@ int main(int argc, char* argv[])
         sprintf(command, "copy /Y %s %s\\DumpAfsLogDir", EnvVariable, WorkingDirectory);
         printf("%s\n", command);
         rc = system(command);
-//        sprintf(command, "crlf.pl -d %s\\DumpAfsLogDir\\afsd.log", WorkingDirectory);
-//        printf("%s\n", command);
-//        rc = system(command);
         sprintf(command, "rename %s\\DumpAfsLogDir\\afsd.log afsd_%05d.log", WorkingDirectory, Count);
         printf("%s\n\n", command);
         rc = system(command);
-/*
-        if (strlen(HostName) != 0)
-        {
-            sprintf(command, "cmdebug %s -long | grep refcnt > %s\\DumpAfsLogDir\\refcnt_%05d.log",
-                    HostName, WorkingDirectory, Count);
-            printf("%s\n", command);
-            rc = system(command);
-        }
-        sprintf(FileName, "%s\\DumpAfsLogDir\\afsd_%05d.log", WorkingDirectory, Count);
-
-        if (NewSessionDeadlock)
-        {
-            fp = fopen(FileName, "r");
-            if (fp != NULL)
-            {
-                while (fgets(Buffer, 512, fp))
-                {
-//                  if (pPtr = strstr(Buffer, "RecordRacingRevoke"))
-//                  {
-//                      if (pPtr = strstr(Buffer, "activeCalls "))
-//                      {
-//                          pPtr += strlen("activeCalls ");
-//                          if (atoi(pPtr) > 0)
-//                          {
-//                              SetEvent(ShutDownEventHandle);
-//                              break;
-//                          }
-//                      }
-//                  }
-                    if (pPtr = strstr(Buffer, "New Session lsn "))
-                    {
-                        printf("%s", Buffer);
-                        pPtr += strlen("New Session lsn "   );
-                        if (atoi(pPtr) > NewSessionDeadlockCount)
-                        {
-                            break;
-                        }
-                    }
-//                  if (pPtr = strstr(Buffer, "Racing revoke scp"))
-//                  {
-//                      SetEvent(ShutDownEventHandle);
-//                      break;
-//                  }
-                }
-
-            }
-            fclose(fp);
-        }
-*/
         ++Count;
         time(&StartTime);
         if (StartTime > SecondsToRun)
@@ -213,7 +157,6 @@ void usage(void)
     printf("\t-e         Enable fs minidump\n");
     printf("\t-h <host>  Local host name.  Used to run cmdebug\n");
     printf("\t-m <min>   Number of minutes to run this program\n");
-//    printf("\t-n <num>  Stop processing on \"New Session lsn XX\" deadlock\n");
     printf("\t-s <sec>   Seconds delay between dumping AFS logs\n");
     printf("\t            15 seconds delay is the default\n");
 }
