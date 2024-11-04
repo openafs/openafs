@@ -64,7 +64,7 @@ config.log
 # Destination build directories
 /alpha_nbsd*
 /amd64_linux*
-/amd64_fsbd*
+/amd64_fbsd*
 /amd64_nbsd*
 /dest
 /hp_ux*
