@@ -1610,10 +1610,16 @@ DECL_PIOCTL(PGetAcl)
 	      SHARED_LOCK, NULL));
 
     if (code == 0) {
-	if (acl.AFSOpaque_len == 0)
+	if (acl.AFSOpaque_len == 0) {
 	    afs_pd_skip(aout, 1); /* leave the NULL */
-	else
+
+	} else if (memchr(acl.AFSOpaque_val, '\0', acl.AFSOpaque_len) == NULL) {
+	    /* Do not return an unterminated ACL string. */
+	    code = EINVAL;
+
+	} else {
 	    afs_pd_skip(aout, acl.AFSOpaque_len); /* Length of the ACL */
+	}
     }
     return code;
 }

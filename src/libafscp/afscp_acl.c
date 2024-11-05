@@ -58,6 +58,12 @@ afscp_FetchACL(const struct afscp_venusfid *dir, struct AFSOpaque *acl)
 		code = RXAFS_FetchACL(server->conns[j], &df, acl, &dfst, &vs);
 		if (code >= 0)
 		    break;
+		/* Zero-length or non-string ACLs are malformed. */
+		if (acl->AFSOpaque_len == 0 || memchr(acl->AFSOpaque_val, '\0',
+						      acl->AFSOpaque_len) == NULL) {
+		    code = EIO;
+		    break;
+		}
 	    }
 	}
 	if (code >= 0)
