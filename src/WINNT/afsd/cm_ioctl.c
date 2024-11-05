@@ -427,6 +427,10 @@ cm_IoctlGetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t 
 
         if (code)
             return code;
+	/* Ensure the ACL is a string before trying to treat it like one. */
+	if (acl.AFSOpaque_len == 0 || memchr(acl.AFSOpaque_val, '\0',
+					     acl.AFSOpaque_len) == NULL)
+	    return CM_ERROR_INVAL;
     }
     /* skip over return data */
     tlen = (int)strlen(ioctlp->outDatap) + 1;
