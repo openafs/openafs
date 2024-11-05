@@ -1545,9 +1545,13 @@ afsclient_ACLEntryAdd(const char *directory, const char *user,
 	sscanf(old_acl_string, "%d dfs:%d %1024s", &cur_acl.nplus, &cur_acl.dfs,
 	       cur_acl.cell);
     ptr = strchr(old_acl_string, '\n');
+    if (ptr == NULL)
+	goto fail_afsclient_ACLEntryAdd;
     ptr++;
     sscanf(ptr, "%d", &cur_acl.nminus);
     ptr = strchr(ptr, '\n');
+    if (ptr == NULL)
+	goto fail_afsclient_ACLEntryAdd;
     ptr++;
     if (is_dfs == 3) {
 	tst = ADMMISCNODFSACL;
@@ -1574,6 +1578,8 @@ afsclient_ACLEntryAdd(const char *directory, const char *user,
 
 	if (strcmp(cur_user, user)) {
 	    ptr = strchr(ptr, '\n');
+	    if (ptr == NULL)
+		goto fail_afsclient_ACLEntryAdd;
 	    ptr++;
 	    sprintf(tmp, "%s %d\n", cur_user, cur_user_acl);
 	    strcat(new_acl_string, tmp);

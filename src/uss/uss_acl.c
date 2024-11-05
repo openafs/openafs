@@ -343,9 +343,10 @@ static char *
 SkipLine(char *a_str)
 {				/*SkipLine */
 
-    while (*a_str != '\n')
+    while (*a_str != '\0' && *a_str != '\n')
 	a_str++;
-    a_str++;
+    if (*a_str == '\n')
+	a_str++;
     return (a_str);
 
 }				/*SkipLine */

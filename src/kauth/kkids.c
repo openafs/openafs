@@ -198,7 +198,7 @@ find_me(char *arg, char *parent_dir)
     return 1;			/* found it */
 }
 
-#define SkipLine(str) { while (*str !='\n') str++; str++; }
+#define SkipLine(str) do { while (*str != '\0' && *str !='\n') str++; if (*str == '\n') str++; } while(0)
 
 /* this function returns TRUE (1) if the file is in AFS, otherwise false (0) */
 static int

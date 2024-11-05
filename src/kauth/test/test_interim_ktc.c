@@ -386,9 +386,10 @@ char *
 SkipLine(astr)
      char *astr;
 {
-    while (*astr != '\n')
+    while (*astr != '\0' && *astr != '\n')
 	astr++;
-    astr++;
+    if (*astr == '\n')
+	astr++;
     return astr;
 }
 
