@@ -1617,6 +1617,10 @@ DECL_PIOCTL(PGetAcl)
 	    /* Do not return an unterminated ACL string. */
 	    code = EINVAL;
 
+	} else if (strlen(acl.AFSOpaque_val) + 1 != acl.AFSOpaque_len) {
+	    /* Do not return an ACL string that has data beyond the trailing NUL. */
+	    code = EINVAL;
+
 	} else {
 	    afs_pd_skip(aout, acl.AFSOpaque_len); /* Length of the ACL */
 	}
