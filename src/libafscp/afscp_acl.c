@@ -64,6 +64,10 @@ afscp_FetchACL(const struct afscp_venusfid *dir, struct AFSOpaque *acl)
 		    code = EIO;
 		    break;
 		}
+		if (strlen(acl->AFSOpaque_val) + 1 != acl->AFSOpaque_len) {
+		    code = EIO;
+		    break;
+		}
 	    }
 	}
 	if (code >= 0)
