@@ -66,7 +66,7 @@ RSkipLine(char *astr)
 struct Acl *
 RParseAcl(char *astr)
 {
-    int nplus, nminus, i, trights;
+    int nplus = 0, nminus = 0, i, trights = 0;
     char tname[MAXNAME + 1] = "";
     struct AclEntry *first, *last, *tl;
     struct Acl *ta;
@@ -75,7 +75,7 @@ RParseAcl(char *astr)
     sscanf(astr, "%d", &nminus);
     astr = RSkipLine(astr);
 
-    ta = malloc(sizeof(struct Acl));
+    ta = calloc(sizeof(*ta), 1);
     ta->nplus = nplus;
     ta->nminus = nminus;
 
@@ -84,7 +84,7 @@ RParseAcl(char *astr)
     for (i = 0; i < nplus; i++) {
 	sscanf(astr, "%" opr_stringize(MAXNAME) "s %d", tname, &trights);
 	astr = RSkipLine(astr);
-	tl = malloc(sizeof(struct AclEntry));
+	tl = calloc(sizeof(*tl), 1);
 	if (!first)
 	    first = tl;
 	strcpy(tl->name, tname);
@@ -101,7 +101,7 @@ RParseAcl(char *astr)
     for (i = 0; i < nminus; i++) {
 	sscanf(astr, "%" opr_stringize(MAXNAME) "s %d", tname, &trights);
 	astr = RSkipLine(astr);
-	tl = malloc(sizeof(struct AclEntry));
+	tl = calloc(sizeof(*tl), 1);
 	if (!first)
 	    first = tl;
 	strcpy(tl->name, tname);

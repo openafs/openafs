@@ -228,7 +228,7 @@ struct AclEntry {
 static struct Acl *
 ParseAcl(char *astr)
 {
-    int nplus, nminus, i, trights;
+    int nplus = 0, nminus = 0, i, trights = 0;
     char tname[MAXNAME + 1] = "";
     struct AclEntry *first, *last, *tl;
     struct Acl *ta;
@@ -237,7 +237,7 @@ ParseAcl(char *astr)
     sscanf(astr, "%d", &nminus);
     SkipLine(astr);
 
-    ta = malloc(sizeof(struct Acl));
+    ta = calloc(sizeof(*ta), 1);
     ta->nplus = nplus;
 
     last = 0;
