@@ -557,7 +557,7 @@ EmptyAcl(char *astr)
     struct Acl *tp;
     int junk;
 
-    tp = (struct Acl *)malloc(sizeof(struct Acl));
+    tp = calloc(sizeof(*tp), 1);
     assert(tp);
     tp->nplus = tp->nminus = 0;
     tp->pluslist = tp->minuslist = 0;
@@ -569,12 +569,12 @@ EmptyAcl(char *astr)
 static struct Acl *
 ParseAcl(char *astr)
 {
-    int nplus, nminus, i, trights;
-    char tname[MAXNAME];
+    int nplus = 0, nminus = 0, i, trights = 0;
+    char tname[MAXNAME + 1] = "";
     struct AclEntry *first, *last, *tl;
     struct Acl *ta;
 
-    ta = (struct Acl *)malloc(sizeof(struct Acl));
+    ta = calloc(sizeof(*ta), 1);
     assert(ta);
     ta->dfs = 0;
     sscanf(astr, "%d dfs:%d %1024s", &ta->nplus, &ta->dfs, ta->cell);
@@ -590,7 +590,7 @@ ParseAcl(char *astr)
     for (i = 0; i < nplus; i++) {
 	sscanf(astr, "%99s %d", tname, &trights);
 	astr = SkipLine(astr);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = calloc(sizeof(*tl), 1);
 	assert(tl);
 	if (!first)
 	    first = tl;
@@ -608,7 +608,7 @@ ParseAcl(char *astr)
     for (i = 0; i < nminus; i++) {
 	sscanf(astr, "%99s %d", tname, &trights);
 	astr = SkipLine(astr);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = calloc(sizeof(*tl), 1);
 	assert(tl);
 	if (!first)
 	    first = tl;

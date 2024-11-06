@@ -409,8 +409,8 @@ static struct Acl *
 ParseAcl(char *a_str)
 {				/*ParseAcl */
 
-    int nplus, nminus, i, trights;
-    char tname[MAXNAME];
+    int nplus = 0, nminus = 0, i, trights = 0;
+    char tname[MAXNAME + 1] = "";
     struct AclEntry *first, *last, *tl;
     struct Acl *ta;
 
@@ -426,7 +426,7 @@ ParseAcl(char *a_str)
     /*
      * Allocate and initialize the first entry.
      */
-    ta = (struct Acl *)malloc(sizeof(struct Acl));
+    ta = calloc(sizeof(*ta), 1);
     ta->nplus = nplus;
     ta->nminus = nminus;
 
@@ -438,7 +438,7 @@ ParseAcl(char *a_str)
     for (i = 0; i < nplus; i++) {
 	sscanf(a_str, "%100s %d", tname, &trights);
 	a_str = SkipLine(a_str);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = calloc(sizeof(*tl), 1);
 	if (!first)
 	    first = tl;
 	strcpy(tl->name, tname);
@@ -458,7 +458,7 @@ ParseAcl(char *a_str)
     for (i = 0; i < nminus; i++) {
 	sscanf(a_str, "%100s %d", tname, &trights);
 	a_str = SkipLine(a_str);
-	tl = (struct AclEntry *)malloc(sizeof(struct AclEntry));
+	tl = calloc(sizeof(*tl), 1);
 	if (!first)
 	    first = tl;
 	strcpy(tl->name, tname);

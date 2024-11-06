@@ -1445,6 +1445,9 @@ afsclient_ACLEntryAdd(const char *directory, const char *user,
     char tmp[64 + 35];
     int is_dfs;
 
+    memset(&cur_acl, 0, sizeof(cur_acl));
+    memset(cur_user, 0, sizeof(cur_user));
+
     if (client_init == 0) {
 	tst = ADMCLIENTNOINIT;
 	goto fail_afsclient_ACLEntryAdd;
