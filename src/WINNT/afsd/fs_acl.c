@@ -167,7 +167,7 @@ EmptyAcl(char *astr)
     struct Acl *tp;
     int junk;
 
-    tp = (struct Acl *)malloc(sizeof (struct Acl));
+    tp = (struct Acl *)calloc(sizeof(*tp), 1);
     assert(tp);
     tp->nplus = tp->nminus = 0;
     tp->pluslist = tp->minuslist = 0;
@@ -232,9 +232,9 @@ CleanAcl(struct Acl *aa, char *cellname)
 struct Acl *
 ParseAcl (char *astr, int astr_size)
 {
-    int nplus, nminus, i, trights, ret;
+    int nplus, nminus, i, trights = 0, ret;
     size_t len;
-    char tname[ACL_MAXNAME];
+    char tname[ACL_MAXNAME + 1] = "";
     struct AclEntry *first, *next, *last, *tl;
     struct Acl *ta;
 
@@ -281,7 +281,7 @@ ParseAcl (char *astr, int astr_size)
         if (ret <= 0)
             goto nplus_err;
         astr = SkipLine(astr);
-        tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
+	tl = (struct AclEntry *) calloc(sizeof(*tl), 1);
         if (tl == NULL)
             goto nplus_err;
         if (!first)
@@ -309,7 +309,7 @@ ParseAcl (char *astr, int astr_size)
         if (ret <= 0)
             goto nminus_err;
         astr = SkipLine(astr);
-        tl = (struct AclEntry *) malloc(sizeof (struct AclEntry));
+	tl = (struct AclEntry *) calloc(sizeof(*tl), 1);
         if (tl == NULL)
             goto nminus_err;
         if (!first)
