@@ -3609,13 +3609,23 @@ static int
 afs_linux_write_begin(struct file *file, struct address_space *mapping,
 		      loff_t pos, unsigned len,
 		      struct page **pagep, void **fsdata)
+# else
+static int
+afs_linux_write_begin(struct file *file, struct address_space *mapping,
+		      loff_t pos, unsigned len, unsigned flags,
+		      struct page **pagep, void **fsdata)
+# endif
 {
     struct page *page;
     pgoff_t index = pos >> PAGE_SHIFT;
     unsigned int from = pos & (PAGE_SIZE - 1);
     int code;
 
+# if defined(HAVE_LINUX_GRAB_CACHE_PAGE_WRITE_BEGIN_NOFLAGS)
     page = grab_cache_page_write_begin(mapping, index);
+# else
+    page = grab_cache_page_write_begin(mapping, index, flags);
+# endif
     if (!page) {
 	return -ENOMEM;
     }
@@ -3630,33 +3640,6 @@ afs_linux_write_begin(struct file *file, struct address_space *mapping,
 
     return code;
 }
-# else
-static int
-afs_linux_write_begin(struct file *file, struct address_space *mapping,
-                                loff_t pos, unsigned len, unsigned flags,
-                                struct page **pagep, void **fsdata)
-{
-    struct page *page;
-    pgoff_t index = pos >> PAGE_SHIFT;
-    unsigned int from = pos & (PAGE_SIZE - 1);
-    int code;
-
-    page = grab_cache_page_write_begin(mapping, index, flags);
-    if (!page) {
-        return -ENOMEM;
-    }
-
-    *pagep = page;
-
-    code = afs_linux_prepare_write(file, page, from, from + len);
-    if (code) {
-	unlock_page(page);
-	put_page(page);
-    }
-
-    return code;
-}
-# endif /* HAVE_LINUX_GRAB_CACHE_PAGE_WRITE_BEGIN_NOFLAGS */
 #endif /* STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_WRITE_BEGIN */
 
 #ifndef STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT
