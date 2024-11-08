@@ -286,15 +286,15 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
     if (code) {
 	if (old_groups) {
 	    afs_setgroups(cr, old_groups, change_parent);
-	    put_group_info(old_groups);
-	    old_groups = NULL;
 	}
 	if (*newpag > -1) {
 	    afs_MarkUserExpired(*newpag);
 	    *newpag = -1;
 	}
     }
-
+    if (old_groups) {
+	put_group_info(old_groups);
+    }
     return code;
 }
 
