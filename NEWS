@@ -1,5 +1,34 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.6.25
+
+  All client platforms
+
+    * Fix OPENAFS-SA-2024-001: theft of credentials in Unix client PAGs
+      (CVE-2024-10394)
+      Local users can bypass the PAG throttling mechanism in Unix clients and
+      create a PAG using an existing id number and thereby gain access to any
+      credentials in that PAG.
+
+    * Fix OPENAFS-SA-2024-003: buffer overflows in XDR responses
+      (CVE-2024-10397)
+      A malicious server can return more data than the preallocated buffer
+      holds and cause a buffer overflow, which can crash the OpenAFS cache
+      manager and other client utilities, and possibly result in arbitrary
+      code execution.
+
+  All platforms
+
+    * Fix OPENAFS-SA-2024-002: unsafe memory access in ACL processing
+      (CVE-2024-10396)
+      Authenticated users can provide malformed ACLs to the fileserver's
+      StoreACL RPC, causing the fileserver to crash, possibly expose the
+      contents of uninitialized memory, and possibly store garbage data
+      in the audit log.
+      Malicious servers or network MITM can provide malformed ACLs to
+      clients, possibly causing the process to crash and possibly storing
+      the contents of uninitialized memory in ACLs stored on the server.
+
 OpenAFS 1.6.24
 
 All platforms
