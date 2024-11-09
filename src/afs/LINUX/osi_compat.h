@@ -31,6 +31,19 @@
 # endif
 #endif
 
+#if defined(HAVE_LINUX_NO_SETPAGEERROR)
+static inline void
+ClearPageError(struct page *p)
+{
+    return;
+}
+static inline void
+SetPageError(struct page *p)
+{
+    return;
+}
+#endif
+
 #if !defined(HAVE_LINUX_KTHREAD_COMPLETE_AND_EXIT)
 # define kthread_complete_and_exit complete_and_exit
 #endif
