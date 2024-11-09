@@ -291,6 +291,22 @@ AC_CHECK_LINUX_FUNC([no_generic_file_splice_read],
 		    [[static char buff[10], *ap;
 		      ap = generic_file_splice_read(buff); ]])
 
+dnl Linux 6.12 removed the PG_error flag from the page flags along with the
+dnl associated functions ClearPageError() and SetPageError().  Check to see if
+dnl these functions are present in the kernel.
+dnl
+dnl To check if ClearPageError() and SetPageError() are missing, define our own
+dnl functions with the same name but with a conflicting signature. If we can
+dnl define them, the real functions must be missing.
+AC_CHECK_LINUX_FUNC([no_setpageerror],
+		    [[#include <asm/page.h>
+		      #include <linux/page-flags.h>
+		      static inline char ClearPageError(char c) { return c;}
+		      static inline char SetPageError(char c) { return c;}]],
+		    [[static char r;
+		      r = ClearPageError('x');
+		      r = SetPageError('x');]])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],

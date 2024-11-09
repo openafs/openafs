@@ -56,12 +56,16 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+
 #include <linux/pagemap.h>
 #include <linux/kthread.h>
 #include <linux/wait.h>
 #include <linux/workqueue.h>
 #include <linux/slab.h>
 #include "osi_pagecopy.h"
+#include "osi_compat.h"
 
 static DECLARE_WAIT_QUEUE_HEAD (afs_pagecopy_wq);
 static spinlock_t afs_pagecopy_lock;
