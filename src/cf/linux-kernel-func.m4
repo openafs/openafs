@@ -316,6 +316,18 @@ AC_CHECK_LINUX_FUNC([no_setpageerror],
 		      r = ClearPageError('x');
 		      r = SetPageError('x');]])
 
+dnl Linux 6.12 changed the signatgure for the address_space_operations members
+dnl write_begin and write_end to use a folio instead of a page.
+AC_CHECK_LINUX_FUNC([write_begin_end_folio],
+		    [[#include <linux/fs.h>
+		      static struct file *file;
+		      static struct address_space *mapping;
+		      static struct folio *foliop;
+		      static void *fsdata;
+		      static struct address_space_operations *aops;]],
+		    [[aops->write_begin(file, mapping, 0, 0, &foliop, fsdata);
+		      aops->write_end(file, mapping, 0, 0, 0, foliop, fsdata);]])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
