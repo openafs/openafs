@@ -17,6 +17,8 @@
 extern rx_atomic_t rx_nWaiting;
 extern rx_atomic_t rx_nWaited;
 
+extern afs_uint32 rx_host;
+
 /* How many times to retry sendmsg()-equivalent calls for AFS_RXERRQ_ENV. */
 #define RXI_SENDMSG_RETRY 8
 
