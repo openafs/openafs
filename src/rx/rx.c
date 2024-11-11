@@ -9591,3 +9591,25 @@ rxi_NetSend(osi_socket socket, void *addr, struct iovec *dvec,
     return ESHUTDOWN;
 #endif
 }
+
+/*
+ * Get our local address (the address to use to send packets to ourselves). If
+ * rx_InitHost() was given a host to bind to, we use that host address;
+ * otherwise use 127.0.0.1. The port is the port we are actually bound to.
+ *
+ * @param[out] sin  host/port populated with the address to use
+ *
+ * @pre rx_InitHost() called successfully
+ */
+void
+rxi_GetLocalAddr(struct sockaddr_in *sin)
+{
+    if (rx_host != 0) {
+	/* If we're bound to an address, use that address as localhost. */
+	sin->sin_addr.s_addr = rx_host;
+    } else {
+	/* Otherwise, use 127.0.0.1. */
+	sin->sin_addr.s_addr = htonl(0x7f000001);
+    }
+    sin->sin_port = rx_port;
+}

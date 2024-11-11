@@ -108,8 +108,7 @@ osi_StopListener(void)
     bzero(&taddr, sizeof(taddr));
     taddr.sin_len = sizeof(struct sockaddr_in);
     taddr.sin_family = AF_INET;
-    taddr.sin_port = rx_port;
-    taddr.sin_addr.s_addr = htonl(0x7f000001);	/* no place like localhost */
+    rxi_GetLocalAddr(&taddr);
     bzero(&dvec, sizeof(dvec));
     dvec.iov_base = &c;
     dvec.iov_len = 1;
