@@ -222,6 +222,9 @@ struct opr_queue rx_incomingCallQueue;
  * calls to process */
 struct opr_queue rx_idleServerQueue;
 
+/* Host address we're bound to, in NBO. */
+afs_uint32 rx_host;
+
 #if !defined(offsetof)
 #include <stddef.h>		/* for definition of offsetof() */
 #endif
@@ -591,6 +594,7 @@ rx_InitHost(u_int host, u_int port)
 #else
     osi_GetTime(&tv);
 #endif
+    rx_host = host;
     if (port) {
 	rx_port = port;
     } else {
