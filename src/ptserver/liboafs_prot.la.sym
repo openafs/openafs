@@ -54,3 +54,4 @@ ubik_PR_SetFieldsEntry
 ubik_PR_SetMax
 ubik_PR_UpdateEntry
 ubik_PR_WhereIsIt
+xdr_namelist
