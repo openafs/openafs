@@ -112,6 +112,38 @@ MyAfterProc(struct rx_call *acall, afs_int32 code)
     return;
 }
 
+#ifdef AFS_PTHREAD_ENV
+static void
+shutdown_signal(int sig)
+{
+    struct volser_trans *tt;
+    char part[16];
+
+    Log("Volserver shutting down on signal %d\n", sig);
+
+    VTRANS_LOCK;
+
+    for (tt = TransList(); tt != NULL; tt = tt->next) {
+	/*
+	 * We don't need to lock each individual 'tt', since we are only
+	 * accessing tt->tid, tt->volid and tt->partition, which never change
+	 * after the transaction is created.
+	 */
+	if (volutil_PartitionName2_r(tt->partition, part, sizeof(part)) != 0) {
+	    snprintf(part, sizeof(part), "[bad index %d]", tt->partition);
+	}
+	Log("Interrupting transaction %d for volume %u partition %s; volume may need salvage\n",
+	    tt->tid, tt->volid, part);
+    }
+
+    VTRANS_UNLOCK;
+
+    Log("Volserver shutdown complete\n");
+
+    exit(0);
+}
+#endif /* AFS_PTHREAD_ENV */
+
 /* Called every GCWAKEUP seconds to try to unlock all our partitions,
  * if we're idle and there are no active transactions
  */
@@ -570,6 +602,8 @@ main(int argc, char **argv)
 #ifdef AFS_PTHREAD_ENV
     opr_softsig_Init();
     SetupLogSoftSignals();
+    opr_softsig_Register(SIGINT, shutdown_signal);
+    opr_softsig_Register(SIGTERM, shutdown_signal);
 #else
     SetupLogSignals();
 #endif
