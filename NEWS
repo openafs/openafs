@@ -1,5 +1,16 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.13.1
+
+  AIX
+
+    * Fix build error introduced with 1.8.13 (15955)
+
+  Linux clients
+
+    * Add support for Linux 6.12 (15964, 15965, 15966)
+
+
 OpenAFS 1.8.13
 
   All client platforms
