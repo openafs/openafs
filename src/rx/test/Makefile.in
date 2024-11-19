@@ -13,7 +13,7 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 LDIRS= -L.. -L${TOP_LIBDIR}
 LIBS= ${TOP_LIBDIR}/libcmd.a  ../librx.a ${TOP_LIBDIR}/liblwp.a \
 	 ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libopr.a \
-	 ${LIB_hcrypto} ${LIB_roken} ${XLIBS}
+	 ${TOP_LIBDIR}/libafshcrypto_lwp.a ${LIB_roken} ${XLIBS}
 
 MODULE_CFLAGS=-DRXDEBUG
 

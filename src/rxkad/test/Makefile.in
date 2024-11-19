@@ -27,7 +27,6 @@ LIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libopr.a \
 	${TOP_LIBDIR}/libafsrfc3961.a \
-	${LIB_hcrypto} \
 	${LIB_roken}
 
 THLIBS= ${TOP_LIBDIR}/libcmd.a \

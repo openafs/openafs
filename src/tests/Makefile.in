@@ -23,7 +23,7 @@ INT_LIBS =	${TOP_LIBDIR}/libafsint.a \
 
 COMMON_LIBS =	${LIBS} \
 		${TOP_LIBDIR}/libopr.a \
-		${LIB_hcrypto} \
+		${TOP_LIBDIR}/libafshcrypto_lwp.a \
 		${LIB_roken}
 
 TEST_PROGRAMS = write-ro-file hello-world read-vs-mmap read-vs-mmap2	 \
