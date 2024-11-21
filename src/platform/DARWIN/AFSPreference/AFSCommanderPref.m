@@ -569,7 +569,7 @@
     
     case REMOVE_CELL_CONTROL_TAG:
     {
-	int index = 0;
+	NSUInteger index;
 	NSIndexSet *selectedIndex = [(NSTableView*)cellList selectedRowIndexes];
 	if( [selectedIndex count] > 0) {
 	    index = [selectedIndex firstIndex];
@@ -697,7 +697,7 @@
 // -------------------------------------------------------------------------------
 - (IBAction) unlog:(id) sender
 {
-    int index = -1;
+    NSUInteger index;
     NSIndexSet *selectedIndex = [tokensTable selectedRowIndexes];
     if( [selectedIndex count] > 0) {
 	index = [selectedIndex firstIndex];
@@ -941,14 +941,14 @@
 // -------------------------------------------------------------------------------
 - (IBAction) removeLink:(id) sender {
     if(!linkConfiguration) return;
-    int index = 0;
+    NSUInteger index;
     NSArray *keys = [linkConfiguration allKeys];
     NSIndexSet *linkToRemove = [tableViewLink selectedRowIndexes];
     if( [linkToRemove count] > 0) {
 	index = [linkToRemove firstIndex];
 	do {
 	    [linkConfiguration removeObjectForKey:[keys objectAtIndex:index]];
-	} while ((index = [linkToRemove indexGreaterThanIndex:index]) != -1);
+	} while ((index = [linkToRemove indexGreaterThanIndex:index]) != NSNotFound);
     }
 
     //write the new configuration
