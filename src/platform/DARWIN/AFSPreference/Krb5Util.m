@@ -143,7 +143,7 @@
 			in.times.endtime = now + inTicketLifetime;
 			in.times.renew_till = now + inTicketLifetime;
 
-			krb5_cc_default(kcontext, &id);
+			ret = krb5_cc_default(kcontext, &id);
 			if (ret == 0) {
 				ret = krb5_cc_get_principal(kcontext, id,
 							    &me);
