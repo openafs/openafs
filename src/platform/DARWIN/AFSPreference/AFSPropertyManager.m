@@ -402,7 +402,7 @@
 // -------------------------------------------------------------------------------
 //  writeCacheInfo:
 // -------------------------------------------------------------------------------
--(int) writeCacheInfo:(NSString*)filePath
+-(int) writeCacheInfo
 {
 	NSNumber *tmpNum = nil;
 	NSMutableString *cacheInfoContent = [[NSMutableString alloc] init];
@@ -427,10 +427,7 @@
 									 userInfo:nil];
 	[cacheInfoContent appendString:[tmpNum stringValue]];
 	
-	[cacheInfoContent writeToFile: [filePath stringByExpandingTildeInPath]
-					   atomically: YES 
-						 encoding: NSASCIIStringEncoding 
-							error: nil];
+	[TaskUtil executePrivTaskWrite:@"/etc/cacheinfo" data:cacheInfoContent];
 	
 	[cacheInfoContent release];
 	return noErr;
@@ -581,30 +578,9 @@
 
 
 // -------------------------------------------------------------------------------
-//  writeCacheInfo:
-// -------------------------------------------------------------------------------
--(int) writeAfsdOption:(NSString*)filePath
-{
-	int result = 0;
-	@try{
-		if(useAfsdConfVersion) {
-			result = [self writeNewAfsdOption:filePath];			
-		} else {
-			result = [self writeOldAfsdOption:filePath];
-		}
-		
-	}@catch(NSException *e){
-		@throw e;
-	}@finally{
-		
-	}
-	return result;
-}
-
-// -------------------------------------------------------------------------------
 //  writeOldAfsdOption:
 // -------------------------------------------------------------------------------
--(int) writeOldAfsdOption:(NSString*)filePath;
+-(int) writeOldAfsdOption
 {
 	NSMutableString *oldConfFileContent = [[[NSMutableString alloc] init] autorelease];
 	//add afsd param
@@ -614,12 +590,9 @@
 	[oldConfFileContent appendString:@"\n"];
 	
 	//write content on file
-	[oldConfFileContent writeToFile: [filePath stringByExpandingTildeInPath]
-						 atomically: YES 
-						   encoding: NSASCIIStringEncoding 
-							  error: nil];
+	[TaskUtil executePrivTaskWrite:AFSD_OLD_PREFERENCE_FILE data:oldConfFileContent];
+
 	return noErr;
-	
 }
 
 // -------------------------------------------------------------------------------
@@ -629,7 +602,7 @@
 //  AFS_POST_INIT=afs_server_prefs
 //  AFS_PRE_SHUTDOWN=
 // -------------------------------------------------------------------------------
--(int) writeNewAfsdOption:(NSString*)filePath
+-(int) writeNewAfsdOption
 {
 	NSMutableString *newConfFileContent = [[[NSMutableString alloc] init] autorelease];
 	
@@ -652,10 +625,8 @@
 	[newConfFileContent appendString:@"\n"];
 	
 	//Write to file
-	[newConfFileContent writeToFile: [filePath stringByExpandingTildeInPath]
-						 atomically: YES 
-						   encoding: NSASCIIStringEncoding 
-							  error: nil];
+	[TaskUtil executePrivTaskWrite:AFSD_NEW_PREFERENCE_FILE data:newConfFileContent];
+
 	return noErr;
 }
 
@@ -1108,8 +1079,6 @@
 // -------------------------------------------------------------------------------
 -(void) saveConfigurationFiles:(BOOL) makeBackup
 {
-	NSError *err;
-	NSMutableString *filePath = [[NSMutableString alloc] initWithCapacity:256];
 	NSMutableString *cellServDBString = [[NSMutableString alloc] initWithCapacity:256];
 	NSMutableString *theseCellString = [[NSMutableString alloc] initWithCapacity:256];
 	DBCellElement *cellElement = nil;
@@ -1118,14 +1087,6 @@
 	@try{
 		[self exceptionOnInvalidPath];
 
-		// ThisCell
-		[filePath setString: @"/tmp/ThisCell"];
-		[cellName writeToFile: [filePath stringByExpandingTildeInPath]
-				   atomically:YES 
-					 encoding: NSASCIIStringEncoding 
-						error:nil];
-		// CellServDB
-		
 		for(int idx = 0; idx < [cellList count]; idx++){
 			cellElement = [cellList objectAtIndex:idx];
 			[cellServDBString appendString:[cellElement description]];
@@ -1135,45 +1096,18 @@
 			}
 		}
 		
-		
-		[filePath setString: @"/tmp/CellServDB"];
-		[cellServDBString writeToFile: [filePath stringByExpandingTildeInPath]
-						   atomically:YES 
-							 encoding:  NSUTF8StringEncoding 
-								error:&err];
-		
-		[filePath setString: @"/tmp/TheseCells"];
-		[theseCellString writeToFile: [filePath stringByExpandingTildeInPath]
-						   atomically:YES 
-							 encoding:  NSUTF8StringEncoding 
-								error:&err];
-		
 		if(makeBackup) [self backupConfigurationFiles];
 
-		// install ThisCell
-		[filePath setString: installationPath];
-		[filePath appendString: @"/etc/ThisCell"];
-		[self installConfigurationFile:@"/tmp/ThisCell" 
-							  destPath:filePath];		
-		
-		// install CellServDB
-		[filePath setString: installationPath];
-		[filePath appendString: @"/etc/CellServDB"];
-		[self installConfigurationFile:@"/tmp/CellServDB" 
-							  destPath:filePath];
-		
-		// install CellServDB
-		[filePath setString: installationPath];
-		[filePath appendString: @"/etc/TheseCells"];
-		[self installConfigurationFile:@"/tmp/TheseCells" 
-							  destPath:filePath];
+		[TaskUtil executePrivTaskWrite:@"/etc/ThisCell" data:cellName];
+		[TaskUtil executePrivTaskWrite:@"/etc/CellServDB" data:cellServDBString];
+		[TaskUtil executePrivTaskWrite:@"/etc/TheseCells" data:theseCellString];
 		
 	} @catch (NSException *e) {
 		@throw e;
 	}@finally {
 		// dispose all variable used
-		if(filePath) [filePath release];
 		if(cellServDBString) [cellServDBString release];
+		if(theseCellString) [theseCellString release];
 	}
 	
 }
@@ -1188,12 +1122,6 @@
 	@try{
 		[self exceptionOnInvalidPath];
 		
-		// cacheinfo file creation
-		[self writeCacheInfo:@"/tmp/cacheinfo"];
-		
-		//afsd.option or afs.conf file creation
-		[self writeAfsdOption:useAfsdConfVersion?AFSD_TMP_NEW_PREFERENCE_FILE:AFSD_TMP_OLD_PREFERENCE_FILE];
-		
 		// backup original file
 		if(makeBackup) {
 			//cacheinfo
@@ -1206,18 +1134,17 @@
 			    [TaskUtil executePrivTaskBackup:AFSD_OLD_PREFERENCE_FILE];
 			}
 		}
+
+		// cacheinfo
+		[self writeCacheInfo];
 		
-		// install cacheinfo
-		[filePath setString:installationPath];
-		[filePath appendString: @"/etc/cacheinfo"];
-		[self installConfigurationFile:@"/tmp/cacheinfo" 
-							  destPath:filePath];		
-		
-		// install afsd.conf or afs.conf configuration file 
-		[filePath setString: installationPath];
-		[filePath appendString: useAfsdConfVersion?AFSD_NEW_PREFERENCE_FILE:AFSD_OLD_PREFERENCE_FILE];
-		[self installConfigurationFile:useAfsdConfVersion?AFSD_TMP_NEW_PREFERENCE_FILE:AFSD_TMP_OLD_PREFERENCE_FILE
-							  destPath:filePath];
+		if (useAfsdConfVersion) {
+		    // afs.conf
+		    [self writeNewAfsdOption];
+		} else {
+		    // afsd.options
+		    [self writeOldAfsdOption];
+		}
 		
 	} @catch (NSException *e) {
 		@throw e;

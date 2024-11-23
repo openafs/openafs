@@ -258,10 +258,9 @@
 /*!
  @function	 writeCacheInfo
  @abstract   Write the cache info down the file
- @param      filePath where to write the CacheInfo
  @result     return the execution error
  */
--(int) writeCacheInfo:(NSString*)filePath;
+-(int) writeCacheInfo;
 
 /*!
  @function	 readAfsdOption
@@ -293,27 +292,18 @@
  */
 -(int) readNewAfsdOption:(NSString*)filePath;
 /*!
- @function	 writeAfsdOption
- @abstract   <#(description)#>
- @discussion <#(description)#>
- @param      <#(name) (description)#>
- @result     <#(description)#>
- */
--(int) writeAfsdOption:(NSString*)filePath;
-/*!
  @function	 writeOldAfsdOption
  @abstract   Write the cache manager parameter to file
  @discussion First chech the version of afs installed then choice to save old o new file version(afsd.option or afs.conf)
  @param      filePath file path for file to write into
  @result     <#(description)#>
  */
--(int) writeOldAfsdOption:(NSString*)filePath;
+-(int) writeOldAfsdOption;
 /*!
  @function	 writeNewAfsdOption
  @abstract   Write the cache parameter to a file with the new format
- @param      filePath file path where write into
  */
--(int) writeNewAfsdOption:(NSString*)filePath;
+-(int) writeNewAfsdOption;
 /*!
  @function	 getAfsVersion
  @abstract   Return the string representing the afs version

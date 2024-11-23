@@ -85,8 +85,11 @@
  *
  * @param[in] task  The name of the task to perform (e.g. "startup_enable").
  *		    See privhelper.c:ProcessRequest for what tasks we define.
- * @param[in] filename	Used for the "backup" task. Don't specify this with
- *			executePrivTask; use executePrivTaskBackup instead.
+ * @param[in] filename	Used for the "backup"/"write" tasks. Don't specify this with
+ *			executePrivTask; use executePrivTaskBackup or
+ *			executePrivTaskWrite instead.
+ * @param[in] data	Used for the "write" task. Don't specify this with
+ *			executePrivTask; use executePrivTaskWrite instead.
  *
  * @returns Return status of the task
  * @retval 0 success
@@ -94,7 +97,7 @@
  * @retval nonzero The return value of system() of a failed command for the
  *                 task.
  */
-+(int) executePrivTask:(const char *)task filename:(char *)filename {
++(int) executePrivTask:(const char *)task filename:(char *)filename data:(char *)data {
     int status = -1;
 
     OSErr autherr = [[AuthUtil shared] autorize];
@@ -140,6 +143,9 @@
     if (filename != NULL) {
 	xpc_dictionary_set_string(msg, "filename", filename);
     }
+    if (data != NULL) {
+	xpc_dictionary_set_string(msg, "data", data);
+    }
 
     xpc_object_t reply = xpc_connection_send_message_with_reply_sync(conn, msg);
     if (reply == NULL) {
@@ -166,10 +172,14 @@
 }
 
 +(int) executePrivTask:(const char *)task {
-    return [self executePrivTask:task filename:NULL];
+    return [self executePrivTask:task filename:NULL data:NULL];
 }
 
 +(int) executePrivTaskBackup:(NSString *)filename {
-    return [self executePrivTask:"backup" filename:[filename UTF8String]];
+    return [self executePrivTask:"backup" filename:[filename UTF8String] data:NULL];
+}
+
++(int) executePrivTaskWrite:(NSString *)filename data:(NSString *)data {
+    return [self executePrivTask:"write" filename:[filename UTF8String] data:[data UTF8String]];
 }
 @end

@@ -293,6 +293,68 @@ BackupFile(const char *filename)
     return code;
 }
 
+/*
+ * Writes the given "data" into "filename".
+ */
+static int
+WriteFile(const char *filename, const char *data)
+{
+    int code;
+    char *path = NULL;
+    char *tmp_path = NULL;
+    FILE *fh = NULL;
+
+    path = GetFullPath("write", filename);
+    if (path == NULL) {
+	goto error;
+    }
+
+    code = asprintf(&tmp_path, "%s.tmp", path);
+    if (code < 0) {
+	tmp_path = NULL;
+	mem_error();
+	goto error;
+    }
+
+    fh = fopen(tmp_path, "w");
+    if (fh == NULL) {
+	code = errno;
+	syslog(LOG_WARNING, "%s: Cannot open %s for writing, errno %d",
+	       PRIVHELPER_ID, tmp_path, code);
+	goto error;
+    }
+
+    if (fputs(data, fh) == EOF) {
+	syslog(LOG_ERR, "%s: Error writing to %s", PRIVHELPER_ID, tmp_path);
+	goto error;
+    }
+
+    if (fclose(fh) == EOF) {
+	syslog(LOG_ERR, "%s: Error closing %s", PRIVHELPER_ID, tmp_path);
+	goto error;
+    }
+    fh = NULL;
+
+    code = RunCommand(1, "/usr/sbin/chown", "root:wheel", tmp_path, NULL);
+    if (code != 0) {
+	goto done;
+    }
+
+    code = RunCommand(1, "/bin/mv", "-f", tmp_path, path);
+
+ done:
+    free(path);
+    free(tmp_path);
+    if (fh != NULL) {
+	fclose(fh);
+    }
+    return code;
+
+ error:
+    code = -1;
+    goto done;
+}
+
 /**
  * Run the requested privileged task.
  *
@@ -313,6 +375,9 @@ BackupFile(const char *filename)
  *
  * - backup: Make a backup copy of the configuration file named in the argument
  *   "filename". This copies file "X" to "X.afscommander_bk".
+ *
+ * - write: Write data to a given file. The filename is given in the argument
+ *   "filename"; the data to write is in the argument "data".
  *
  * @param[in] task	The name of the requested task.
  * @param[in] event	The XPC dictionary containing other task-specific
@@ -349,6 +414,24 @@ ProcessRequest(const char *task, xpc_object_t event)
 	    return -1;
 	}
 	return BackupFile(filename);
+
+    } else if (strcmp(task, "write") == 0) {
+	const char *filename;
+	const char *data;
+
+	filename = xpc_dictionary_get_string(event, "filename");
+	if (filename == NULL) {
+	    syslog(LOG_WARNING, "%s: Task 'write' missing filename", PRIVHELPER_ID);
+	    return -1;
+	}
+
+	data = xpc_dictionary_get_string(event, "data");
+	if (data == NULL) {
+	    syslog(LOG_WARNING, "%s: Task 'write' missing data", PRIVHELPER_ID);
+	    return -1;
+	}
+
+	return WriteFile(filename, data);
     }
 
     syslog(LOG_WARNING, "%s: Received unknown task '%s'", PRIVHELPER_ID, task);
