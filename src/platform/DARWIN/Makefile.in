@@ -14,7 +14,7 @@ OSXSDK = @OSXSDK@
 
 .PHONY: all afscell
 
-all: OpenAFS.prefPane afssettings afscell growlagent aklog.bundle
+all: OpenAFS.prefPane afssettings afscell growlagent aklog.bundle PrivilegedHelper
 
 AFSPreference/build/Release/OpenAFS.prefPane: OpenAFS.prefPane
 afscell/build/Release/afscell.bundle: afscell
@@ -39,6 +39,9 @@ aklog.bundle:
 growlagent:
 	cd growlagent && $(MAKE) all
 
+PrivilegedHelper: OpenAFS.prefPane
+	cd PrivilegedHelper && $(MAKE) all
+
 afscell:
 	@case ${OSXSDK} in \
 	macosx* ) \
@@ -53,6 +56,7 @@ afssettings: afssettings.m
 install: \
 	${DESTDIR}${sbindir}/afssettings
 	cd growlagent && $(MAKE) install
+	cd PrivilegedHelper && $(MAKE) install
 
 dest: \
 	${DEST}/etc/afssettings \
@@ -61,6 +65,7 @@ dest: \
 	${DEST}/tools/OpenAFS.prefPane \
 	${DEST}/tools/aklog.bundle
 	cd growlagent && $(MAKE) dest
+	cd PrivilegedHelper && $(MAKE) dest
 
 ${DESTDIR}${sbindir}/afssettings: afssettings
 	${INSTALL} $? $@
@@ -93,3 +98,4 @@ clean:
 	$(RM) -rf afscell/build
 	$(RM) -f *.o core afssettings AFS_component_version_number.c
 	cd growlagent && $(MAKE) clean
+	cd PrivilegedHelper && $(MAKE) clean

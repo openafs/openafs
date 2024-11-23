@@ -12,7 +12,7 @@ use File::Basename;
 
 use vars qw ($do_nothing $print_donothing_removals $receipts_dir $verbose $noisy_warnings);
 use vars qw ($suppress_spin $spin_counter $spin_state $spin_slower_downer);
-use vars qw (%exception_list $gen_dirs @gen_files @rmfiles @rmdirs @rmpkg);
+use vars qw (%exception_list $gen_dirs @gen_files @rmfiles @rmdirs @rmpkg $privhelper);
 
 #----------------------------------------------------------------------------------------
 
@@ -23,6 +23,8 @@ $noisy_warnings = 0;
 
 # One of rm -rf in this script uses $receipts_dir -- change with care.
 $receipts_dir = "/Library/Receipts";
+
+$privhelper="/Library/LaunchDaemons/privhelper-launchd.plist";
 
 %exception_list = (
 );
@@ -38,6 +40,8 @@ $gen_dirs = { };
     "/var/db/openafs/etc/CellServDB.master.last",
     "/var/db/openafs/etc/CellServDB",
     "/var/db/openafs/etc/config/settings.plist",
+    "/Library/LaunchDaemons/privhelper-launchd.plist",
+    "/Library/PrivilegedHelperTools/org.openafs.privhelper",
 );
 
 #----------------------------------------------------------------------------------------
@@ -73,10 +77,10 @@ sub main {
 	# earlier output. The final 'tr' in the pipeline here turns them back
 	# into \n newlines. pkgutil --forget at least will print output like
 	# "Forgot package 'foo'".
-	my $rmcmd = "osascript -e 'do shell script \"/bin/rm -f @rmfiles; " .
-		    "/bin/rmdir @rmdirs; echo @rmpkg | xargs -n 1 " .
-		    "/usr/sbin/pkgutil --forget\" with administrator " .
-		    "privileges' | tr '\\r' '\\n'";
+	my $rmcmd = "osascript -e 'do shell script \"/bin/launchctl unload -w $privhelper; " .
+		    "/bin/rm -f @rmfiles; /bin/rmdir @rmdirs; " .
+		    "echo @rmpkg | xargs -n 1 /usr/sbin/pkgutil --forget\" " .
+		    "with administrator privileges' | tr '\\r' '\\n'";
 	system $rmcmd;
 	my $retcode = $? >> 8;
 	if ($retcode != 0) {

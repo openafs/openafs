@@ -10,6 +10,8 @@
 #include <Security/Authorization.h>
 #include <Security/AuthorizationTags.h>
 
+#define PRIVHELPER_ID	"org.openafs.privhelper"
+
 @interface TaskUtil : NSObject {
 }
 +(NSString*) searchExecutablePath:(NSString*)unixCommand;
@@ -17,4 +19,5 @@
 +(NSString*) executeTask:(NSString*) taskName arguments:(NSArray *)args;
 +(int) executeTaskWithAuth:(NSString*) taskName arguments:(NSArray *)args authExtForm:(NSData*)auth;
 +(int) executeTaskWithAuth:(NSString*) taskName arguments:(NSArray *)args helper:(NSString *)helper withAuthRef:(AuthorizationRef)authRef;
++(int) executePrivTask:(const char *)task;
 @end

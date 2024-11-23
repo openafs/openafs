@@ -12,11 +12,13 @@
 
 @interface AuthUtil : NSObject {
 	AuthorizationRef authorizationRef;
+	BOOL isAuthorizationRefOwned;
 }
 -(id) init;
 -(OSStatus) autorize;
 -(BOOL) deautorize;
 -(AuthorizationRef) authorization;
+-(void)setAuthorization:(AuthorizationRef)authRef;
 -(NSData*) extFormAuth;
 -(OSStatus) execUnixCommand:(const char*) commandPath args:(const char*[])args output:(NSMutableString*)output;
 +(AuthUtil*) shared;

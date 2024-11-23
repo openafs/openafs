@@ -6,6 +6,9 @@
 //  Copyright 2007 INFN - National Institute of Nuclear Physics. All rights reserved.
 //
 
+#import <ServiceManagement/ServiceManagement.h>
+#import <Security/Authorization.h>
+
 #import "TaskUtil.h"
 #import "AuthUtil.h"
 
@@ -145,5 +148,90 @@
 	}
 	
 	return status;
+}
+
+/**
+ * Perform a task that requires root access via privhelper.
+ *
+ * This performs a task that requires root access, like starting/stopping the
+ * client, or updating configuration files like CellServDB. This function sends
+ * the request to the privhelper daemon, which performs the actual actions for
+ * the task, and waits for a response.
+ *
+ * @param[in] task  The name of the task to perform (e.g. "startup_enable").
+ *		    See privhelper.c:ProcessRequest for what tasks we define.
+ *
+ * @returns Return status of the task
+ * @retval 0 success
+ * @retval -1 internal error
+ * @retval nonzero The return value of system() of a failed command for the
+ *                 task.
+ */
++(int) executePrivTask:(const char *)task {
+    int status = -1;
+
+    OSErr autherr = [[AuthUtil shared] autorize];
+    if (autherr != noErr) {
+	NSLog(@"executePrivTask: Could not get authorization: %d.", autherr);
+	return status;
+    }
+
+    AuthorizationExternalForm extForm;
+    AuthorizationRef authRef = [[AuthUtil shared] authorization];
+    if (authRef == NULL) {
+	NSLog(@"executePrivTask: Authorization reference is null.");
+	return status;
+    }
+
+    OSStatus code = AuthorizationMakeExternalForm(authRef, &extForm);
+    if (code != errAuthorizationSuccess) {
+	NSLog(@"executePrivTask: Could not serialize authorization: %d.", code);
+	return status;
+    }
+
+    const uint64_t flags = XPC_CONNECTION_MACH_SERVICE_PRIVILEGED;
+    xpc_connection_t conn = xpc_connection_create_mach_service(PRIVHELPER_ID, NULL, flags);
+    if (conn == NULL) {
+	NSLog(@"executePrivTask: Could not create service connection.");
+	return status;
+    }
+
+    xpc_connection_set_event_handler(conn, ^(xpc_object_t event) {
+	NSLog(@"executePrivTask: Received unexpected event.");
+    });
+    xpc_connection_resume(conn);
+
+    xpc_object_t msg = xpc_dictionary_create(NULL, NULL, 0);
+    if (msg == NULL) {
+	NSLog(@"executePrivTask: Could not create XPC message.");
+	xpc_connection_cancel(conn);
+	xpc_release(conn);
+	return status;
+    }
+    xpc_dictionary_set_string(msg, "task", task);
+    xpc_dictionary_set_data(msg, "auth", &extForm, sizeof(extForm));
+
+    xpc_object_t reply = xpc_connection_send_message_with_reply_sync(conn, msg);
+    if (reply == NULL) {
+	NSLog(@"executePrivTask: No reply received for task: %s", task);
+	xpc_release(msg);
+	xpc_connection_cancel(conn);
+	xpc_release(conn);
+	return status;
+    }
+
+    xpc_object_t status_obj = xpc_dictionary_get_value(reply, "status");
+    if (status_obj != NULL && xpc_get_type(status_obj) == XPC_TYPE_INT64) {
+	status = (int)xpc_int64_get_value(status_obj);
+    } else {
+	NSLog(@"executePrivTask: Received invalid reply status for task: %s", task);
+    }
+
+    xpc_release(msg);
+    xpc_release(reply);
+    xpc_connection_cancel(conn);
+    xpc_release(conn);
+
+    return status;
 }
 @end

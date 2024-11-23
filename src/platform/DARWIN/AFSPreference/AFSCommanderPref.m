@@ -1043,6 +1043,17 @@
     [checkButtonAfsAtBootTime setEnabled:[self isUnlocked]];
     [installKRB5AuthAtLoginButton setEnabled:[self isUnlocked]];
 }
+
+// These are called when the user clicks on the lock icon in the prefpane to
+// authenticate to make system changes. Store a reference to the authorization
+// context that we can use for privileged operations.
+- (void)authorizationViewCreatedAuthorization:(SFAuthorizationView *)view {
+    [[AuthUtil shared] setAuthorization:[[authView authorization] authorizationRef]];
+}
+
+- (void)authorizationViewReleasedAuthorization:(SFAuthorizationView *)view {
+    [[AuthUtil shared] setAuthorization:nil];
+}
 @end
 
 @implementation AFSCommanderPref (NSTableDataSource)

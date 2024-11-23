@@ -1,0 +1,29 @@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
+all: org.openafs.privhelper
+
+org.openafs.privhelper: privhelper.c
+	$(CC) -O2 -mmacosx-version-min=10.6 \
+		-Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker privhelper-info.plist \
+		-Xlinker -sectcreate -Xlinker __TEXT -Xlinker __launchd_plist -Xlinker privhelper-launchd.plist \
+		-o org.openafs.privhelper privhelper.c -framework Security -framework CoreFoundation
+
+clean:
+	$(RM) -f *.o org.openafs.privhelper
+
+PREFPANE_DIR = ${DEST}/tools/OpenAFS.prefPane
+LAUNCHSERVICES_DIR = $(PREFPANE_DIR)/Contents/Library/LaunchServices
+PRIVHELPER_TARGET = $(LAUNCHSERVICES_DIR)/org.openafs.privhelper
+
+install:
+
+dest: \
+	$(PRIVHELPER_TARGET)
+
+$(PRIVHELPER_TARGET): org.openafs.privhelper
+	-mkdir -p $(LAUNCHSERVICES_DIR)
+	${INSTALL} org.openafs.privhelper $(LAUNCHSERVICES_DIR)
+
+include ../../../config/Makefile.version
