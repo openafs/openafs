@@ -156,6 +156,43 @@ fi
 #start the new launchd daemon
 launchctl load -w /Library/LaunchDaemons/org.openafs.filesystems.afs.plist
 
+# Install and start our privileged helper
+PRIVHELPER="/Library/PreferencePanes/OpenAFS.prefPane/Contents/Library/LaunchServices/org.openafs.privhelper"
+if [[ -f "$PRIVHELPER" ]]; then
+    if [[ ! -d "/Library/PrivilegedHelperTools" ]]; then
+	mkdir -p "/Library/PrivilegedHelperTools"
+	chmod 755 "/Library/PrivilegedHelperTools"
+	chown -R root:wheel "/Library/PrivilegedHelperTools"
+    fi
+
+    cp -f "$PRIVHELPER" "/Library/PrivilegedHelperTools"
+    if [[ $? -eq 0 ]]; then
+	chmod 755 "/Library/PrivilegedHelperTools/org.openafs.privhelper"
+	PRIVDAEMON="/Library/LaunchDaemons/privhelper-launchd.plist"
+	cat > "$PRIVDAEMON" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>Label</key>
+        <string>org.openafs.privhelper</string>
+        <key>MachServices</key>
+        <dict>
+                <key>org.openafs.privhelper</key>
+                <true/>
+        </dict>
+        <key>ProgramArguments</key>
+        <array>
+                <string>/Library/PrivilegedHelperTools/org.openafs.privhelper</string>
+        </array>
+</dict>
+</plist>
+EOF
+	chmod 644 "$PRIVDAEMON"
+	launchctl load -w "$PRIVDAEMON"
+    fi
+fi
+
 if [ $majorvers -ge 19 ]; then
     # Assume that, if /afs is not present, either OpenAFS is being installed for
     # the first time or the system was not rebooted after the installation.

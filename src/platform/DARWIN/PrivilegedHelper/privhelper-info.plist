@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>org.openafs.privhelper</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>privhelper</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
+	<!-- Uncomment the following block and add your signature (XXXXXXXXXX) -->
+	<!--
+	<key>SMAuthorizedClients</key>
+	<array>
+	    <string>identifier "it.infn.lnf.network.openafs" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = XXXXXXXXXX</string>
+	</array>
+	-->
+</dict>
+</plist>

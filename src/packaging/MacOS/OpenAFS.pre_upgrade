@@ -1,6 +1,7 @@
 #!/bin/sh
 DAEMON=/private/var/db/openafs/etc/launchafs.sh
 DAEMON_LAUNCHD_SCRIPT=/Library/LaunchDaemons/org.openafs.filesystems.afs.plist
+PRIVHELPER_LAUNCHD_SCRIPT=/Library/LaunchDaemons/privhelper-launchd.plist
 DAEMON_UP=$(ps -ef | grep "$DAEMON_NAME" | grep -v grep | wc -l)
 PREFERENCE_PANE=/Library/PreferencePanes/OpenAFS.prefPane
 
@@ -40,6 +41,10 @@ else
 	fi
 
 	launchctl unload -w $DAEMON_LAUNCHD_SCRIPT
+  fi
+
+  if [ -f $PRIVHELPER_LAUNCHD_SCRIPT ]; then
+	launchctl unload -w $PRIVHELPER_LAUNCHD_SCRIPT
   fi
 fi
 

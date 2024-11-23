@@ -76,6 +76,7 @@ static AuthUtil *sharedAuthUtil = nil;
 			if (status != errAuthorizationSuccess) {
 				return status;
 			}
+			isAuthorizationRefOwned = YES;
 		}
 		
 		flags = kAuthorizationFlagDefaults | kAuthorizationFlagInteractionAllowed | kAuthorizationFlagPreAuthorize | kAuthorizationFlagExtendRights;
@@ -100,6 +101,7 @@ static AuthUtil *sharedAuthUtil = nil;
 	if(authorizationRef){
 		status = AuthorizationFree (authorizationRef, kAuthorizationFlagDefaults);
 		authorizationRef = 0L; 
+		isAuthorizationRefOwned = NO;
 	}
 	return status == noErr;
 }
@@ -111,6 +113,14 @@ static AuthUtil *sharedAuthUtil = nil;
 -(AuthorizationRef) authorization
 {
 	return authorizationRef;
+}
+
+-(void)setAuthorization:(AuthorizationRef)authRef
+{
+    if (isAuthorizationRefOwned) {
+	[self deautorize];
+    }
+    authorizationRef = authRef;
 }
 
 // -------------------------------------------------------------------------------

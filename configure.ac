@@ -111,6 +111,7 @@ AC_CONFIG_FILES([
     src/platform/Makefile
     src/platform/${MKAFS_OSTYPE}/Makefile
     src/platform/DARWIN/growlagent/Makefile
+    src/platform/DARWIN/PrivilegedHelper/Makefile
     src/procmgmt/Makefile
     src/procmgmt/test/Makefile
     src/ptserver/Makefile
