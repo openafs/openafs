@@ -315,31 +315,6 @@
 }
 
 // -------------------------------------------------------------------------------
-//  launchctlCommand:
-// -------------------------------------------------------------------------------
-+(void) launchctlStringCommandAuth:(NSString *)operation
-			    option:(NSArray *)option
-			 plistName:(NSString *)plistName
-			    helper:(NSString *)helper
-		       withAuthRef:(AuthorizationRef)authRef
-{
-	NSMutableArray *argument = [NSMutableArray array];
-
-	//set the load unload
-	[argument addObject:operation];
-
-	//if there are load the user custom option
-	if(option) [argument addObjectsFromArray:option];
-
-	//construct the path
-	[argument addObject: plistName];
-
-	//exec the command
-	[TaskUtil executeTaskWithAuth:@"/bin/launchctl"
-		  arguments:argument helper:helper withAuthRef:authRef];
-}
-
-// -------------------------------------------------------------------------------
 //  launchdJobState:
 // -------------------------------------------------------------------------------
 +(BOOL) launchdJobState:(NSString*)jobName {
