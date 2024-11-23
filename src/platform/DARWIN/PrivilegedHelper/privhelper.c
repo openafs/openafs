@@ -48,6 +48,7 @@
 #define AFS_ID		"org.openafs.filesystems.afs"
 #define AFS_PLIST	"/Library/LaunchDaemons/org.openafs.filesystems.afs.plist"
 #define AFS_RC		"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.rc"
+#define CONFIG_PREFIX	"/var/db/openafs"
 
 /*
  * This is the code signing requirement imposed on anyone that connects to our
@@ -204,6 +205,94 @@ RunCommand(int log_failure, const char *arg1, const char *arg2,
     return status;
 }
 
+/*
+ * To make extra sure we don't accidentally write to some other file on the
+ * system, check any filename we're given against a specific list of files. If
+ * the filename we're given isn't one of these, refuse to do anything.
+ */
+static int
+check_filename(const char *filename)
+{
+    const char *allowlist[] = {
+	"/etc/cacheinfo",
+	"/etc/config/afs.conf",
+	"/etc/config/afsd.options",
+	"/etc/ThisCell",
+	"/etc/CellServDB",
+	"/etc/TheseCells",
+    };
+    int allowlist_len = sizeof(allowlist) / sizeof(allowlist[0]);
+    int fname_i;
+
+    for (fname_i = 0; fname_i < allowlist_len; fname_i++) {
+	if (strcmp(filename, allowlist[fname_i]) == 0) {
+	    return 0;
+	}
+    }
+
+    return -1;
+}
+
+/*
+ * Translate the given 'filename' (e.g., "/etc/ThisCell") into the full path to
+ * the file on disk.
+ */
+static char *
+GetFullPath(const char *task, const char *filename)
+{
+    int code;
+    char *path;
+
+    code = check_filename(filename);
+    if (code != 0) {
+	syslog(LOG_WARNING, "%s: Task '%s' got invalid filename '%s'",
+	       PRIVHELPER_ID, task, filename);
+	return NULL;
+    }
+
+    code = asprintf(&path, "%s%s", CONFIG_PREFIX, filename);
+    if (code < 0) {
+	mem_error();
+	return NULL;
+    }
+
+    return path;
+}
+
+/*
+ * Copies "filename" to "filename.afscommander_bk".
+ */
+static int
+BackupFile(const char *filename)
+{
+    int code;
+    char *src_path = NULL;
+    char *dest_path = NULL;
+
+    src_path = GetFullPath("backup", filename);
+    if (src_path == NULL) {
+	code = -1;
+	goto done;
+    }
+
+    code = asprintf(&dest_path, "%s.afscommander_bk", src_path);
+    if (code < 0) {
+	dest_path = NULL;
+	mem_error();
+	goto done;
+    }
+
+    code = RunCommand(1, "/bin/cp", src_path, dest_path, NULL);
+    if (code != 0) {
+	goto done;
+    }
+
+ done:
+    free(src_path);
+    free(dest_path);
+    return code;
+}
+
 /**
  * Run the requested privileged task.
  *
@@ -221,6 +310,9 @@ RunCommand(int log_failure, const char *arg1, const char *arg2,
  * - afsd_start: Run "afs.rc start" to start the OpenAFS client.
  *
  * - afsd_stop: Run "afs.rc stop" to stop the OpenAFS client.
+ *
+ * - backup: Make a backup copy of the configuration file named in the argument
+ *   "filename". This copies file "X" to "X.afscommander_bk".
  *
  * @param[in] task	The name of the requested task.
  * @param[in] event	The XPC dictionary containing other task-specific
@@ -249,6 +341,14 @@ ProcessRequest(const char *task, xpc_object_t event)
 
     } else if (strcmp(task, "afsd_stop") == 0) {
 	return RunCommand(1, AFS_RC, "stop", NULL, NULL);
+
+    } else if (strcmp(task, "backup") == 0) {
+	const char *filename = xpc_dictionary_get_string(event, "filename");
+	if (filename == NULL) {
+	    syslog(LOG_WARNING, "%s: Task backup missing filename", PRIVHELPER_ID);
+	    return -1;
+	}
+	return BackupFile(filename);
     }
 
     syslog(LOG_WARNING, "%s: Received unknown task '%s'", PRIVHELPER_ID, task);

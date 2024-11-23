@@ -387,7 +387,6 @@
 -(void) startup;
 -(void) scanIpForCell:(DBCellElement*) cellElement allIP:(NSString*)allIP;
 -(void) backupConfigurationFiles;
--(void) backupFile:(NSString*)localAfsFilePath;
 -(void) saveConfigurationFiles:(BOOL) makeBackup;
 -(void) saveCacheConfigurationFiles:(BOOL) makeBackup;
 -(void) installConfigurationFile:(NSString*)srcConfFile destPath:(NSString*) destPath;
