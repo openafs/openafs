@@ -29,6 +29,9 @@
 #include <syslog.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
+#include <errno.h>
+#include <spawn.h>
 
 #include <xpc/xpc.h>
 #include <Security/Security.h>
@@ -39,7 +42,11 @@
 
 #include <xpc/xpc.h>
 
+#define LAUNCHCTL   "/bin/launchctl"
+
 #define PRIVHELPER_ID	"org.openafs.privhelper"
+#define AFS_ID		"org.openafs.filesystems.afs"
+#define AFS_PLIST	"/Library/LaunchDaemons/org.openafs.filesystems.afs.plist"
 
 /*
  * This is the code signing requirement imposed on anyone that connects to our
@@ -158,9 +165,80 @@ SecCodeCreateWithXPCMessage(xpc_object_t event, SecCSFlags secflags, SecCodeRef 
 #endif /* !HAVE_SECCODECREATEWITHXPCMESSAGE */
 
 static int
+RunCommand(int log_failure, const char *arg1, const char *arg2,
+	   const char *arg3, const char *arg4)
+{
+    extern char **environ;
+    pid_t pid;
+    int code;
+    int status;
+    const char *argv[] = {
+	arg1, arg2, arg3, arg4, NULL
+    };
+
+    code = posix_spawn(&pid, argv[0], NULL, NULL, argv, environ);
+    if (code != 0) {
+	syslog(LOG_ERR, "%s: Failed to execute %s, error %d", PRIVHELPER_ID,
+	       argv[0], code);
+	return -1;
+    }
+
+    code = waitpid(pid, &status, 0);
+    if (code <= 0) {
+	syslog(LOG_ERR, "%s: waitpid for %s failed, error %d/%d",
+	       PRIVHELPER_ID, argv[0], code, errno);
+	return -1;
+    }
+
+    if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+	/* Command exited successfully. */
+	return 0;
+    }
+
+    if (log_failure) {
+	syslog(LOG_WARNING, "%s: Command %s failed, status %d",
+	       PRIVHELPER_ID, argv[0], status);
+    }
+
+    return status;
+}
+
+/**
+ * Run the requested privileged task.
+ *
+ * We implement the following tasks:
+ *
+ * - startup_enable: Run "launchctl load" to configure the OpenAFS client to
+ *   run at startup.
+ *
+ * - startup_disable: Run "launchctl unload" to configure the OpenAFS client to
+ *   not run at startup.
+ *
+ * - startup_check: Run "launchctl list" to check whether OpenAFS is configured
+ *   to run at startup. If it is, return 0; otherwise, return nonzero.
+ *
+ * @param[in] task	The name of the requested task.
+ * @param[in] event	The XPC dictionary containing other task-specific
+ *			arguments.
+ *
+ * @returns Return status of the task
+ * @retval 0 success
+ * @retval -1 internal error
+ * @retval nonzero The return value of system() of a failed command for the
+ *                 task.
+ */
+static int
 ProcessRequest(const char *task, xpc_object_t event)
 {
-    /* Tasks we understand will be added here as they are implemented. */
+    if (strcmp(task, "startup_enable") == 0) {
+	return RunCommand(1, LAUNCHCTL, "load", "-w", AFS_PLIST);
+
+    } else if (strcmp(task, "startup_disable") == 0) {
+	return RunCommand(1, LAUNCHCTL, "unload", "-w", AFS_PLIST);
+
+    } else if (strcmp(task, "startup_check") == 0) {
+	return RunCommand(0, LAUNCHCTL, "list", AFS_ID, NULL);
+    }
 
     syslog(LOG_WARNING, "%s: Received unknown task '%s'", PRIVHELPER_ID, task);
 

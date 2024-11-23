@@ -750,14 +750,13 @@
 //  afsStartupSwitchEvent:
 // -------------------------------------------------------------------------------
 - (IBAction) afsStartupSwitchEvent:(id) sender {
-    NSString *rootHelperApp = [[self bundle] pathForResource:@"afshlp" ofType:@""];
     //get the new state
     startAFSAtLogin = [checkButtonAfsAtBootTime state];
-    [PListManager launchctlStringCommandAuth:startAFSAtLogin?@"load":@"unload"
-		  option:[NSArray arrayWithObjects:@"-w", nil]
-		  plistName:@AFS_DAEMON_PATH
-		  helper:rootHelperApp
-		  withAuthRef:[[authView authorization] authorizationRef]];
+    if (startAFSAtLogin) {
+	[TaskUtil executePrivTask:"startup_enable"];
+    } else {
+	[TaskUtil executePrivTask:"startup_disable"];
+    }
 }
 
 
@@ -878,16 +877,13 @@
 {
     BOOL afsIsUp = [afsProperty checkAfsStatus];
     BOOL afsEnabledAtStartup = NO;
-    NSString *rootHelperApp = [[self bundle] pathForResource:@"afshlp" ofType:@""];
 
     if ([self isUnlocked]) {
-	afsEnabledAtStartup = (
-	    [TaskUtil executeTaskWithAuth:@"/bin/launchctl"
-		      arguments:[NSArray arrayWithObjects:@"list",
-					 @"org.openafs.filesystems.afs", nil]
-		      helper:rootHelperApp
-		      withAuthRef:[[authView authorization] authorizationRef]
-	     ] == noErr)?YES:NO;
+	if ([TaskUtil executePrivTask:"startup_check"] == 0) {
+	    afsEnabledAtStartup = YES;
+	} else {
+	    afsEnabledAtStartup = NO;
+	}
 	[checkButtonAfsAtBootTime setState:afsEnabledAtStartup];
     }
 
