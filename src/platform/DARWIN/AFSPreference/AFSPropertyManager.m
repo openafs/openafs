@@ -1197,10 +1197,14 @@
 		// backup original file
 		if(makeBackup) {
 			//cacheinfo
-			[self backupFile:@"/etc/cacheinfo"];
+			[TaskUtil executePrivTaskBackup:@"/etc/cacheinfo"];
 			
 			//afsd.options
-			[self backupFile:useAfsdConfVersion?AFSD_NEW_PREFERENCE_FILE:AFSD_OLD_PREFERENCE_FILE];	
+			if (useAfsdConfVersion) {
+			    [TaskUtil executePrivTaskBackup:AFSD_NEW_PREFERENCE_FILE];
+			} else {
+			    [TaskUtil executePrivTaskBackup:AFSD_OLD_PREFERENCE_FILE];
+			}
 		}
 		
 		// install cacheinfo
@@ -1264,50 +1268,17 @@
 
 	@try{
 		//This cell
-		[self backupFile:@"/etc/ThisCell"];
+		[TaskUtil executePrivTaskBackup:@"/etc/ThisCell"];
 	
 		//CellServDB
-		[self backupFile:@"/etc/CellServDB"];
+		[TaskUtil executePrivTaskBackup:@"/etc/CellServDB"];
 		
 		//TheseCell
-		[self backupFile:@"/etc/TheseCells"];
+		[TaskUtil executePrivTaskBackup:@"/etc/TheseCells"];
 		
 	} @catch (NSException *e) {
 		@throw e;
 	} @finally {
-	}
-}
-
-// -------------------------------------------------------------------------------
-//  -(void) backupFile:(NSString*)localAfsFilePath
-// -------------------------------------------------------------------------------
--(void) backupFile:(NSString*)localAfsFilePath
-{
-	NSString *srcString = nil;
-	NSMutableString *filePath = [[NSMutableString alloc] initWithCapacity:256];
-	OSStatus err = noErr;
-	@try{
-		[filePath setString: installationPath];
-		[filePath appendString: localAfsFilePath];
-		
-		//Check if the file at path exist
-		NSFileManager *fileManager = [NSFileManager defaultManager];
-		if(![fileManager fileExistsAtPath:[filePath stringByExpandingTildeInPath]]) return;
-		
-		// store the source path
-		srcString  = [filePath stringByExpandingTildeInPath];
-		[filePath appendString: @".afscommander_bk"];
-		
-		// check for presence of bk file
-		if(![[NSFileManager defaultManager] fileExistsAtPath:[filePath stringByExpandingTildeInPath]]){
-			// backup the file
-			err = [futil autorizedCopy:srcString 
-						  toPath:[filePath stringByExpandingTildeInPath]];
-		}
-	} @catch (NSException *e) {
-		@throw e;
-	} @finally {
-		if(filePath) [filePath release];
 	}
 }
 
