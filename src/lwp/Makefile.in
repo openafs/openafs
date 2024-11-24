@@ -227,6 +227,6 @@ buildtools: ${TOP_LIBDIR}/liblwp.a depinstall
 #
 clean:
 	$(LT_CLEAN)
-	$(RM) -f *.o *.a core AFS_component_version_number.c
+	$(RM) -f *.o *.a core rw AFS_component_version_number.c
 
 include ../config/Makefile.version
