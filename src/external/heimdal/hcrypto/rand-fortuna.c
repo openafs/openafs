@@ -640,12 +640,12 @@ fortuna_status(void)
 }
 
 const RAND_METHOD hc_rand_fortuna_method = {
-    fortuna_seed,
-    fortuna_bytes,
-    fortuna_cleanup,
-    fortuna_add,
-    fortuna_pseudorand,
-    fortuna_status
+    .seed       = fortuna_seed,
+    .bytes      = fortuna_bytes,
+    .cleanup    = fortuna_cleanup,
+    .add        = fortuna_add,
+    .pseudorand = fortuna_pseudorand,
+    .status     = fortuna_status
 };
 
 const RAND_METHOD *
