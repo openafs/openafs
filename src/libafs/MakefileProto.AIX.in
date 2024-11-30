@@ -59,14 +59,14 @@ IMPORTS32 = -bI:${TOP_LIBDIR}/export.exp
 IMPORTS64 = -bI:${TOP_LIBDIR}/export64.exp
 KDEFS = -U_IBMR2 -D_POWER -D_AIX -DNLS -D_NLS -DMSG -D__STR31__ -Daiws \
 	-D_POWER_RS -D_POWER_PC -D_POWER_RS1 -D_POWER_RS2 -D_POWER_RSC \
-	 -D_POWER_601 -D_POWER_603 -D_POWER_604 -D_THREADS -M  -D_KERNEL \
+	 -D_POWER_601 -D_POWER_603 -D_POWER_604 -D_THREADS -D_KERNEL \
 	-D_POWER_MP -UKOFF -DAFSDEBUG -DVICE -DNFS -DUFS -DINET -DQUOTA \
-	 -DGETMOUNT -H8 -DAFS -DAFS_COMMON -D_VOPS -D_SUN -DKERNEL
+	 -DGETMOUNT -DAFS -DAFS_COMMON -D_VOPS -D_SUN -DKERNEL
 LDSTUFF= -b"binder:/usr/lib/bind glink:/usr/lib/glink.o" -bnoentry -b h:4 \
 	-D0 -T512
 LDSTUFF64= -b"binder:/usr/lib/bind glink:/usr/lib/glink64.o" -bnoentry -b h:4 \
 	-D0 -T512
-LDFLAGS = -m -eafs_config -bexport:${TOP_LIBDIR}/afs.exp ${IMPORTS} \
+LDFLAGS = -m -eafs_config -H8 -bexport:${TOP_LIBDIR}/afs.exp ${IMPORTS} \
 	 -lsys -lcsys  ${KLDOPTS}
 
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(KDEFS) $(KOPTS) ${DBUG}
@@ -116,7 +116,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 			KASOPTS="32" ; \
 			TARG="afs.ext.32" ; \
 		elif [ "$$m" = "64" ] ; then \
-			KOPTS="-q64 -DAFS_64BIT_KERNEL -D__64BIT_KERNEL" ; \
+			KOPTS="${XCFLAGS64} -DAFS_64BIT_KERNEL -D__64BIT_KERNEL" ; \
 			KLDOPTS="-b64" ; \
 			KASOPTS="64" ; \
 			TARG="afs.ext.64" ; \
