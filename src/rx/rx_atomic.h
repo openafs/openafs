@@ -86,7 +86,7 @@ rx_atomic_sub(rx_atomic_t *atomic, int change)
     InterlockedExchangeAdd(&atomic->var, 0 - change);
 }
 
-#elif defined(AFS_AIX61_ENV) || defined(AFS_USR_AIX61_ENV)
+#elif defined(AFS_AIX41_ENV) || defined(AFS_USR_AIX41_ENV)
 # include <sys/atomic_op.h>
 
 typedef struct {
