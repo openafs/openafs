@@ -70,6 +70,7 @@ extern void rxi_WaitforTQBusy(struct rx_call *call);
 #else
 # define rxi_WaitforTQBusy(call)
 #endif
+extern void rxi_GetLocalAddr(struct sockaddr_in *sin);
 
 /* rx_packet.h */
 
