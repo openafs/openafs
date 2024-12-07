@@ -389,7 +389,7 @@ int LWP_INTERNALSIGNAL(void *event, int yield)
 	return LWP_EINIT;
 }
 
-int LWP_TerminateProcessSupport()	/* terminate all LWP support */
+int LWP_TerminateProcessSupport(void)	/* terminate all LWP support */
 {
     int i;
 
