@@ -48,12 +48,11 @@ static char *whoami;
 static int
 StringToAuth(const char *authname)
 {
-    int nonoauth = 0;
     if (strcmp(authname, "rxkad") == 0)
 	return rxkad_clear;
     if (strcmp(authname, "rxkad_")) {
 	if (strncmp(authname, "rxkad_", 6) == 0)
-	    nonoauth++, authname += 6;
+	    authname += 6;
 	if (strcmp(authname, "clear") == 0)
 	    return rxkad_clear;
 	if (strcmp(authname, "auth") == 0)
