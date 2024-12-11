@@ -18,7 +18,14 @@ dnl libtool.
 AC_DEFUN([AFS_LT_INIT],
   [AC_REQUIRE([AFS_LT_PATH_NM])
 
-   LT_INIT
+dnl For AIX, change the --with-aix-soname default to be 'svr4' (builds a static
+dnl libfoo.a and a shared libfoo.so) instead of 'aix' (builds the static and
+dnl shared objects together in libfoo.a).
+dnl
+dnl Also specify 'shared' and 'static' to enable shared and static libraries by
+dnl default. These are already turned on by default, but we specify them
+dnl explicitly here to workaround libtool bug #111161.
+   LT_INIT([shared static aix-soname=svr4])
 
 dnl If libtool cannot figure out how to extract symbol names from 'nm', then it
 dnl will log a failure and lt_cv_sys_global_symbol_pipe will be unset, but it
