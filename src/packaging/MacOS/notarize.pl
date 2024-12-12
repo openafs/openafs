@@ -32,57 +32,60 @@
 #
 # On success, the following output can be expected:
 #
-# $ sudo notarize.pl foo@bar.com "@keychain:PASSWORD" OpenAFS.dmg
+# $ sudo notarize.pl keychain-profile OpenAFS.dmg
 #
-# notarize.pl: submitting package...
-# notarize.pl: checking status...
-# notarize.pl: checking status...
-# notarize.pl: checking status...
-# (...)
-# notarize.pl: checking status...
+# notarize.pl: processing package...
 # notarize.pl: package successfully notarized
 
 use strict;
 use File::Which;
 
 sub usage {
-    print(STDERR "usage: notarize.pl <username> <password> <package>\n");
-    print(STDERR "\tusername: apple id\n");
-    print(STDERR "\tpassword: password of your apple id account\n");
+    print(STDERR "usage: notarize.pl <profile> <package>\n");
+    print(STDERR "\tprofile: keychain-profile for the credentials to be used\n");
     print(STDERR "\tpackage: package to be notarized\n");
     print(STDERR "\tnote: must be root\n");
-    print(STDERR "\t      <password> can be a reference to a keychain item.\n");
-    print(STDERR "\t      <password> as cleartext is not recommended.\n");
-    print(STDERR "e.g.: \$ sudo notarize.pl foo\@bar.com \"\@keychain:PASSWORD\" OpenAFS.dmg\n\n");
+    print(STDERR "e.g.: \$ sudo notarize.pl keychain-profile OpenAFS.dmg\n\n");
     exit(1);
 }
 
 sub check_prerequisites {
-    my (@ARGS) = @_;
+    my ($profile, $package) = @_;
 
     if ($> != 0) {
 	print(STDERR "error: must be root\n\n");
-	usage();
-    }
-    if (scalar @ARGS != 3) {
-	print(STDERR "error: check arguments\n\n");
 	usage();
     }
     if (!which('xcrun')) {
 	print(STDERR "error: xcrun not found in \$PATH\n\n");
 	usage();
     }
-    if (not -e $ARGS[2]) {
+
+    # Check if the given keychain-profile exists
+    my $output = qx(xcrun notarytool history --keychain-profile "$profile" 2>&1);
+    my $exitcode = $? >> 8;
+
+    if ($exitcode) {
+	print(STDERR "error: $exitcode\n");
+	print(STDERR $output);
+	exit(1);
+    }
+
+    # Check if the given package exists
+    if (not -e $package) {
 	print(STDERR "error: package not found\n\n");
+	exit(1);
     }
 }
 
-sub submit_package {
-    my ($username, $password, $package) = @_;
+sub process_package {
+    my ($profile, $package) = @_;
 
-    print(STDOUT "notarize.pl: submitting package...\n");
+    print(STDOUT "notarize.pl: processing package...\n");
 
-    my $output = qx(xcrun altool -t osx -f "$package" --primary-bundle-id org.openafs.OpenAFS --notarize-app --username "$username" --password "$password" 2>&1);
+    # returns after submitting and processing the package, or times out if it
+    # takes longer than 5 minutes
+    my $output = qx(xcrun notarytool submit "$package" --keychain-profile "$profile" --wait --timeout 5m 2>&1);
     my $exitcode = $? >> 8;
 
     if ($exitcode) {
@@ -92,65 +95,23 @@ sub submit_package {
     }
     # $output looks like the following sample:
     #
-    # No errors uploading 'OpenAFS.dmg'.
-    # RequestUUID = 565a4d1b-9608-47a6-aba9-53136c991bb8
-    $output =~ m{RequestUUID = ([A-Za-z0-9\-]+)};
+    # Conducting pre-submission checks for OpenAFS.dmg and initiating connection
+    # to the Apple notary service...
+    # Submission ID received
+    #   id: fe4249d2-c3f7-428e-8bcd-8af665e57189
+    # Successfully uploaded file
+    #   id: fe4249d2-c3f7-428e-8bcd-8af665e57189
+    #   path: ./OpenAFS.dmg
+    # Waiting for processing to complete. Wait timeout is set to 300.0 second(s).
+    # Current status: In Progress... Current status: Accepted...... Processing complete
+    #   id: fe4249d2-c3f7-428e-8bcd-8af665e57189
+    #   status: Accepted
+    $output =~ m{id: ([A-Za-z0-9\-]+)};
     if (not defined $1) {
 	print(STDERR "error: uuid not found\n");
 	exit(1);
     }
     return $1;
-}
-
-sub check_status {
-    my ($username, $password, $uuid) = @_;
-    my $output;
-    my $status;
-    my $exitcode;
-
-    while (1) {
-	print(STDOUT "notarize.pl: checking status...\n");
-	$output = qx(xcrun altool --notarization-info "$uuid" --username "$username" --password "$password" 2>&1);
-	$exitcode = $? >> 8;
-
-	if ($exitcode) {
-	    print(STDERR "error: $exitcode\n");
-	    print(STDERR $output);
-	    exit(1);
-	}
-	# $output looks like the following samples:
-	#
-	# First, second, ..., (N-1)'th attempts:
-	#
-	# No errors getting notarization info.
-	#
-	# Date: 2019-11-26 21:07:46 +0000
-	# Hash: 4e10ebb01518de9eb007d4579006acda2d6ff773fe040d97786bcc686ec93gg1
-	# RequestUUID: 565a4d1b-9608-47a6-aba9-53136c991bb8
-	# Status: in progress
-	#
-	# N'th attempt:
-	#
-	# No errors getting notarization info.
-	#
-	# Date: 2019-11-26 21:07:46 +0000
-	# Hash: 4e10ebb01518de9eb007d4579006acda2d6ff773fe040d97786bcc686ec93gg1
-	# RequestUUID: 565a4d1b-9608-47a6-aba9-53136c991bb8
-	# Status: in progress
-	# Status Code: 0
-	# Status Message: Package Approved
-	$output =~ m{Status Code: (\d+)};
-	if (defined $1) {
-	    $status = $1;
-	    last;
-	}
-	sleep(5);
-    }
-    if ($status) {
-	print(STDERR "error: $status (uuid: $uuid)\n");
-	print(STDERR $output);
-	exit(1);
-    }
 }
 
 sub notarize_package {
@@ -172,13 +133,16 @@ sub notarize_package {
 sub main {
     my (@ARGS) = @_;
 
-    check_prerequisites(@ARGS);
-    my $username = $ARGS[0];
-    my $password = $ARGS[1];
-    my $package = $ARGS[2];
+    if (scalar @ARGS != 2) {
+	print(STDERR "error: check arguments\n\n");
+	usage();
+    }
+    my $profile = $ARGS[0];
+    my $package = $ARGS[1];
 
-    my $uuid = submit_package($username, $password, $package);
-    check_status($username, $password, $uuid);
+    check_prerequisites($profile, $package);
+
+    my $uuid = process_package($profile, $package);
     notarize_package($package, $uuid);
 
     exit(0);
