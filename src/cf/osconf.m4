@@ -232,8 +232,6 @@ case $AFS_SYSNAME in
 	ppc_darwin_70)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS='-D_REENTRANT'
-		KROOT=
-		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LWP_OPTMZ="-O2"
 		REGEX_OBJ="regex.lo"
 		XCFLAGS="-no-cpp-precomp"
@@ -246,8 +244,6 @@ case $AFS_SYSNAME in
 	*_darwin_80)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS="-D_REENTRANT"
-		KROOT=
-		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		KERN_OPTMZ="-Os"
 		LWP_OPTMZ="-Os"
 		OPTMZ="-Os"
@@ -262,8 +258,6 @@ case $AFS_SYSNAME in
 	*_darwin_90)
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS="-D_REENTRANT"
-		KROOT=
-		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LD="cc"
 		KERN_OPTMZ="-Os"
 		LWP_OPTMZ="-Os"
@@ -280,8 +274,6 @@ case $AFS_SYSNAME in
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS="-D_REENTRANT"
 		MT_LIBS="${LIB_AFSDB} -framework CoreFoundation"
-		KROOT=
-		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LD="cc"
 		KERN_OPTMZ="-Os"
 		LWP_OPTMZ="-Os"
@@ -300,8 +292,6 @@ case $AFS_SYSNAME in
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS="-D_REENTRANT"
 		MT_LIBS='${XLIBS}'
-		KROOT=
-		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LD="cc"
 		KERN_OPTMZ="-Os"
 		LWP_OPTMZ="-Os"
@@ -319,8 +309,6 @@ case $AFS_SYSNAME in
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		MT_CFLAGS="-D_REENTRANT"
 		MT_LIBS='${XLIBS}'
-		KROOT='/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
-		KINCLUDES='-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers'
 		LD="cc"
 		KERN_OPTMZ="-Os"
 		LWP_OPTMZ="-Os"
@@ -548,7 +536,11 @@ AS_CASE([$AFS_SYSNAME],
 	dnl the base system, but we can use the compiler (clang) as an
 	dnl assembler.
 	[AS_IF([test x"$AS" = xfalse],
-	       [AS="$CC"])])
+	       [AS="$CC"])],
+
+	[*_darwin_*],
+	  [OPENAFS_MACOS_KINCLUDES]
+)
 
 MT_CFLAGS="${MT_CFLAGS} -DAFS_PTHREAD_ENV"
 
@@ -783,8 +775,5 @@ AC_SUBST(XLDFLAGS)
 AC_SUBST(XLDFLAGS64)
 AC_SUBST(XLIBS)
 AC_SUBST(YACC)
-AC_SUBST(KROOT)
-AC_SUBST(KINCLUDES)
-
 
 ])
