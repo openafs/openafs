@@ -155,7 +155,10 @@ rxi_syscallp
 rxi_tracename
 rxnull_NewClientSecurityObject
 rxnull_NewServerSecurityObject
+rxs_DecRef
+rxs_Ref
 rxs_Release
+rxs_SetRefs
 xdr_afsUUID
 xdr_afs_int32
 xdr_afs_int64
