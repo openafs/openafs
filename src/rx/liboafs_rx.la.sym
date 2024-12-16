@@ -103,6 +103,8 @@ rx_StartServer
 rx_UdpBufSize
 rx_WriteProc
 rx_WriteProc32
+rx_WritevAlloc
+rx_WritevProc
 rx_clearPeerRPCStats
 rx_clearProcessRPCStats
 rx_connDeadTime
