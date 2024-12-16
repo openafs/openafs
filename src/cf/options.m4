@@ -250,6 +250,21 @@ AC_ARG_WITH([dot],
         [use graphviz dot to generate dependency graphs with doxygen (defaults to autodetect)]),
         [], [with_dot="maybe"])
 
+AC_ARG_WITH([macos-app-key],
+        AS_HELP_STRING([--with-macos-app-key=key],
+        [macOS: use the given app key to sign the code (optional, defaults to no key)]),
+        [AC_SUBST([MACOS_APP_KEY], [$withval])])
+
+AC_ARG_WITH([macos-inst-key],
+        AS_HELP_STRING([--with-macos-inst-key=key],
+        [macOS: use the given inst key to sign the installer (optional, defaults to no key)]),
+        [AC_SUBST([MACOS_INST_KEY], [$withval])])
+
+AC_ARG_WITH([macos-keychain-profile],
+        AS_HELP_STRING([--with-macos-keychain-profile=profile],
+        [macOS: use the given keychain profile to notarize the package (optional, defaults to no profile)]),
+        [AC_SUBST([MACOS_KEYCHAIN_PROFILE], [$withval])])
+
 enable_login="no"
 
 ])
@@ -300,6 +315,32 @@ else
                 VFSCK="vfsck"
         fi
 fi
+
+AS_IF([test "x$with_macos_app_key" != "x"], [
+    # Retrieve the Team ID (OU field) associated with a certificate. MACOS_TEAM_ID is extracted from the
+    # certificate subject using openssl and awk.
+    #
+    # Example subject string:
+    # subject=UID=SKMME9E2Y8, CN=Developer ID Application: Org (SKMME9E2Y8), OU=SKMME9E2Y8, O=org, C=US
+    macos_app_key="$with_macos_app_key"
+    AC_MSG_CHECKING([for macOS team ID])
+
+    macos_cert=$(security find-certificate -c "$macos_app_key" -p 2>/dev/null)
+    AS_IF([test x"$macos_cert" = x],
+	  [AC_MSG_ERROR([Failed to retrieve the certificate for app key: $macos_app_key])])
+
+    macos_subject=$(echo "$macos_cert" | openssl x509 -noout -subject 2>/dev/null)
+    AS_IF([test x"$macos_subject" = x],
+	  [AC_MSG_ERROR([Failed to process the certificate using openssl])])
+
+    MACOS_TEAM_ID=$(echo "$macos_subject" | awk 'BEGIN { FS="OU=" } {print $[]2}' | awk 'BEGIN { FS="," } {print$[]1}')
+    AS_IF([test x"$MACOS_TEAM_ID" = x],
+	  [AC_MSG_ERROR([Failed to extract the macOS Team ID])])
+
+    AC_MSG_RESULT([$MACOS_TEAM_ID])
+    AC_SUBST([MACOS_TEAM_ID])
+])
+
 ])
 
 AC_DEFUN([OPENAFS_MORE_OPTION_TESTS],[

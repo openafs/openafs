@@ -212,8 +212,11 @@ AC_CONFIG_FILES([
     src/pam/Makefile
     src/platform/Makefile
     src/platform/${MKAFS_OSTYPE}/Makefile
-    src/platform/DARWIN/growlagent/Makefile
+    src/platform/DARWIN/AFSPreference/Info.plist
     src/platform/DARWIN/PrivilegedHelper/Makefile
+    src/platform/DARWIN/PrivilegedHelper/privhelper-info.plist
+    src/platform/DARWIN/PrivilegedHelper/privhelper.c
+    src/platform/DARWIN/growlagent/Makefile
     src/procmgmt/Makefile
     src/procmgmt/test/Makefile
     src/ptserver/Makefile
