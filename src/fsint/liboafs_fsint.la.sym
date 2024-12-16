@@ -3,6 +3,7 @@ EndRXAFSCB_ProbeUuid
 EndRXAFS_FetchData
 EndRXAFS_StoreData
 RXAFSCB_CallBack
+RXAFSCB_GetXStats
 RXAFSCB_InitCallBackState
 RXAFSCB_InitCallBackState3
 RXAFSCB_Probe
@@ -14,6 +15,7 @@ RXAFS_FetchStatus
 RXAFS_GetTime
 RXAFS_GetStatistics
 RXAFS_GetStatistics64
+RXAFS_GetXStats
 RXAFS_GiveUpCallBacks
 RXAFS_MakeDir
 RXAFS_OpCodeIndex
