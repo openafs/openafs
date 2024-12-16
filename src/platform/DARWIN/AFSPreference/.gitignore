@@ -5,3 +5,4 @@ build/*
 *.mode2v3
 *.perspectivev3
 config
+Info.plist

@@ -3,3 +3,5 @@
 # to check that you haven't inadvertently ignored any tracked files.
 
 /org.openafs.privhelper
+/privhelper-info.plist
+/privhelper.c

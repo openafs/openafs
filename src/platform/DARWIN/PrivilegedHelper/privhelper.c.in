@@ -69,9 +69,6 @@
  *
  * "certificate leaf[subject.OU] = @MACOS_TEAM_ID@" means the code was signed
  * by us.
- *
- * Replace @MACOS_TEAM_ID@ by your team ID. For example:
- *     "certificate leaf[subject.OU] = SKMME9E2Y8"
  */
 #define CLI_SIGNATURES	"((identifier \"com.apple.systempreferences.legacyLoader.x86_64\" and anchor apple) or " \
 			 "(identifier \"com.apple.systempreferences.legacyLoader.arm64\" and anchor apple) or " \
