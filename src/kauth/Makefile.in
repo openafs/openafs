@@ -22,7 +22,7 @@ LT_deps = $(top_builddir)/src/ubik/liboafs_ubik.la \
 	  $(top_builddir)/src/ptserver/liboafs_prot.la \
 	  $(top_builddir)/src/sys/liboafs_sys.la \
 	  $(top_builddir)/src/rxkad/liboafs_rxkad.la
-LT_libs =
+LT_libs = $(LIB_crypt)
 
 INSTALL_KAUTH = @INSTALL_KAUTH@
 
