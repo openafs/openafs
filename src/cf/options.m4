@@ -106,7 +106,7 @@ AC_ARG_ENABLE([kauth],
     [AS_HELP_STRING([--enable-kauth],
         [install the deprecated kauth server, pam modules, and utilities
          (defaults to disabled)])],
-    [enable_pam="yes"],
+    [enable_pam="$enable_kauth"],
     [enable_kauth="no"
      enable_pam="no"])
 
