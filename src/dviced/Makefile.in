@@ -137,6 +137,7 @@ afsint.ss.o: ../fsint/afsint.ss.c
 state_analyzer.o: ${VICED}/state_analyzer.c
 	$(AFS_CCRULE) $(VICED)/state_analyzer.c
 
+@AIX_ONLY@LDFLAGS_dafileserver = -Wl,-bI:../sys/afsl.exp
 dafileserver: ${objects} ${LIBS}
 	$(LT_LDRULE_static) ${objects} \
 		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}

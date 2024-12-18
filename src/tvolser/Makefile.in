@@ -180,6 +180,7 @@ vos: vos.o  ${VOSOBJS} ${VLSERVEROBJS} $(LIBS_client)
 	$(LT_LDRULE_static) vos.o ${VOSOBJS} ${VLSERVEROBJS} $(LIBS_client) \
 		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
+@AIX_ONLY@LDFLAGS_volserver = -Wl,-bI:../sys/afsl.exp
 volserver: ${objects} $(LIBS_server)
 	$(LT_LDRULE_static) ${objects} $(LIBS_server) \
 		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}

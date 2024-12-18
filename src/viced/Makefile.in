@@ -126,6 +126,7 @@ namei_ops.o: ${VOL}/namei_ops.c
 afsint.ss.o: ../fsint/afsint.ss.c
 	$(AFS_CCRULE) ../fsint/afsint.ss.c
 
+@AIX_ONLY@LDFLAGS_fileserver = -Wl,-bI:../sys/afsl.exp
 fileserver: ${objects} ${LIBS}
 	$(LT_LDRULE_static) ${objects} \
 		${LIBS} $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}

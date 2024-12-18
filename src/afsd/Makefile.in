@@ -10,6 +10,9 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
+# On AIX, we need to import afsl.exp so the linker can understand that
+# syscall() is a syscall provided by libafs.
+@AIX_ONLY@AFSD_KERNEL_LDFLAGS=-Wl,-bI:../sys/afsl.exp
 
 #
 # What to make
@@ -34,7 +37,7 @@ UAFSLIBS=$(top_builddir)/src/cmd/liboafs_cmd.la \
 
 FUSE_LIBS=@FUSE_LIBS@
 
-LDFLAGS_afsd = $(AFSD_LDFLAGS)
+LDFLAGS_afsd = $(AFSD_LDFLAGS) $(AFSD_KERNEL_LDFLAGS)
 afsd: afsd.o afsd_kernel.o $(AFSLIBS) $(AFSD_LIBS)
 	$(LT_LDRULE_static) afsd.o afsd_kernel.o $(NON_SHARED) \
 		$(AFSLIBS) ${AFSD_LIBS} $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS)

@@ -708,6 +708,13 @@ else
   esac
 fi
 
+dnl For convenience for AIX-only Makefile quirks, comment out all @AIX_ONLY@
+dnl lines in our Makefiles on non-AIX.
+AIX_ONLY='#'
+AS_CASE([$AFS_SYSNAME],
+	[rs_aix*], [AIX_ONLY=])
+AC_SUBST([AIX_ONLY])
+
 dnl add additional checks if compilers support the flags
 AS_IF([test "x$enable_checking" != "xno"],
       [AX_APPEND_COMPILE_FLAGS([-Wimplicit-fallthrough], [XCFLAGS], [-Werror])
