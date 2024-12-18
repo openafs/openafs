@@ -39,12 +39,12 @@ FUSE_LIBS=@FUSE_LIBS@
 
 LDFLAGS_afsd = $(AFSD_LDFLAGS) $(AFSD_KERNEL_LDFLAGS)
 afsd: afsd.o afsd_kernel.o $(AFSLIBS) $(AFSD_LIBS)
-	$(LT_LDRULE_static) afsd.o afsd_kernel.o $(NON_SHARED) \
+	$(LT_LDRULE_static) afsd.o afsd_kernel.o \
 		$(AFSLIBS) ${AFSD_LIBS} $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS)
 
 LDFLAGS_afsd.fuse = $(AFSD_LDFLAGS)
 afsd.fuse: afsd_fuse.o $(UAFSLIBS) $(AFSD_LIBS)
-	$(LT_LDRULE_static) afsd_fuse.o $(NON_SHARED) \
+	$(LT_LDRULE_static) afsd_fuse.o \
 		$(UAFSLIBS) $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS) $(LIB_crypt) \
 		${FUSE_LIBS} ${AFSD_LIBS}
 

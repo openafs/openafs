@@ -34,7 +34,7 @@ OBJS= dir.o inode.o main.o pass1.o pass1b.o pass2.o pass3.o pass4.o \
 all: vfsck
 
 vfsck: ${OBJS}
-	$(AFS_LDRULE) ${OBJS} ${NON_SHARED} ${XLIBS}
+	$(AFS_LDRULE) ${OBJS} ${XLIBS}
 
 main.o: main.c AFS_component_version_number.c
 
