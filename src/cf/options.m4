@@ -360,11 +360,12 @@ if test "$enable_debug_locks" = yes; then
         AC_DEFINE(OPR_DEBUG_LOCKS, 1, [turn on lock debugging in opr])
 fi
 
-if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then
-        HAVE_PAM="yes"
-else
-        HAVE_PAM="no"
-fi
+dnl Only build pam if pam is enabled, we have pam headers, and we have shared
+dnl libs.
+AS_IF([test x"$enable_pam" != xyes], [HAVE_PAM=no],
+      [test x"$ac_cv_header_security_pam_modules_h" != xyes], [HAVE_PAM=no],
+      [test x"$enable_shared" != xyes], [HAVE_PAM=no],
+      [HAVE_PAM=yes])
 AC_SUBST(HAVE_PAM)
 
 if test "$enable_login" = yes; then
