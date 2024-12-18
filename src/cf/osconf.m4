@@ -345,7 +345,6 @@ case $AFS_SYSNAME in
 
 	rs_aix42)
 		DBG=""
-		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
 		SHLIB_SUFFIX="o"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
@@ -359,7 +358,6 @@ case $AFS_SYSNAME in
 
 	rs_aix51 | rs_aix52 | rs_aix53)	
 		DBG="-g"
-		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
 		SHLIB_SUFFIX="o"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
@@ -374,7 +372,6 @@ case $AFS_SYSNAME in
 
 	rs_aix61 | rs_aix71)
 		DBG="-g"
-		LIBSYS_AIX_EXP="afsl.exp"
 		MT_CC="xlc_r"
 		SHLIB_SUFFIX="o"
 		XCFLAGS="-K -D_NONSTD_TYPES -D_MBI=void"
