@@ -509,6 +509,11 @@ afscp_HandleLink(struct afscp_venusfid *in,
 	return in;
     }
     linkbuf = malloc(s->Length + 1);
+    if (linkbuf == NULL) {
+	afscp_errno = ENOMEM;
+	free(in);
+	return NULL;
+    }
     code = afscp_PRead(in, linkbuf, s->Length, 0);
     if (code < 0) {
 	free(linkbuf);
@@ -599,6 +604,7 @@ _ResolvePath(const struct afscp_venusfid *start, fidstack infids,
     if (fids == NULL)
 	fids = fidstack_alloc();
     if (fids == NULL) {
+	free(cwd);
 	return NULL;
     }
 

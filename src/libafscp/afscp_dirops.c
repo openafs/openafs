@@ -41,7 +41,7 @@ afscp_CreateFile(const struct afscp_venusfid *dir, char *name,
 		 struct AFSStoreStatus *sst, struct afscp_venusfid **ret)
 {
     int code, i, j;
-    struct AFSFid df = dir->fid;
+    struct AFSFid df;
     struct afscp_volume *vol;
     struct AFSFetchStatus dfst, fst;
     struct AFSVolSync vs;
@@ -56,6 +56,7 @@ afscp_CreateFile(const struct afscp_venusfid *dir, char *name,
 		"afscp_CreateFile called with NULL args, cannot continue\n");
 	return -1;
     }
+    df = dir->fid;
     vol = afscp_VolumeById(dir->cell, dir->fid.Volume);
     if (vol == NULL) {
 	afscp_errno = ENOENT;
