@@ -227,7 +227,7 @@ afs_gn_fid(struct vnode *vp,
     int error;
 
     AFS_STATCNT(afs_gn_fid);
-    error = afs_fid(vp, fidp);
+    error = afs_fid(vp, fidp, cred);
     afs_Trace3(afs_iclSetp, CM_TRACE_GFID, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, (afs_int32) fidp, ICL_TYPE_LONG, error);
     return (error);
