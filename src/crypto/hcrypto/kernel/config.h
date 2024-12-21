@@ -83,13 +83,19 @@ void * _afscrypto_realloc(void *, size_t);
 extern int osi_readRandom(void *, afs_size_t);
 
 #if defined(getpid)
-/* On linux, getpid() is unfortunately declared in terms of current, which
- * already gives us a namespace clash.  It was lousy entropy, anyway. */
-#undef getpid
-#define getpid()	1
-#else
-static_inline pid_t getpid(void) {return 1;};
+# undef getpid
 #endif
+#define getpid _afscrypto_getpid
+static_inline pid_t
+_afscrypto_getpid(void)
+{
+    /*
+     * The real getpid() has lousy entropy anyway, so don't bother trying to
+     * generate anything resembling a real pid.
+     */
+    return 1;
+}
+
 static_inline int open(const char *path, int flags, ...) {return -1;}
 
 #ifdef abort
