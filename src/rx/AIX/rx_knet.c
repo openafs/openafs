@@ -125,6 +125,7 @@ ip_stripoptions(struct mbuf *m, STRIP_ARG2_TYPE mopt)
 }
 
 /* rxk_RX_input -	RX pkt input process */
+static void
 rxk_RX_input(struct mbuf *am)
 {
     unsigned short *tsp;
@@ -228,7 +229,7 @@ rxk_RX_input(struct mbuf *am)
 }
 
 /* rxk_isr - RX Kluge Input Service Routine */
-static
+static int
 rxk_isr()
 {
     struct mbuf *m;
@@ -236,9 +237,10 @@ rxk_isr()
     while (1) {
 	IF_DEQUEUE(&rxk_q, m);
 	if (!m)
-	    return;
+	    return 0;
 	rxk_RX_input(m);
     }
+    return 0;
 }
 
 /* 
