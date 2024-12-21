@@ -119,8 +119,9 @@ static_inline int close(int d) {return -1;}
  * gettimeofday is only used in rand-fortuna.c, not built for Linux.
  * Linux 5.6 removes the native struct timeval, so this stub would not build.
  */
+# define gettimeofday _afscrypto_gettimeofday
 static_inline int
-gettimeofday(struct timeval *tp, void *tzp)
+_afscrypto_gettimeofday(struct timeval *tp, void *tzp)
 {
     if (tp == NULL) {
 	return -1;
