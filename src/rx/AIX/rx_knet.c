@@ -15,6 +15,17 @@
 #ifdef AFS_AIX41_ENV
 #include "rx/rx_kcommon.h"
 
+#if defined(__clang__) && defined(EYEC_MBUFA)
+/*
+ * The mbuf_base.h from AIX (included indirectly via socketvar.h) has a broken
+ * EYEC_MBUFA define, which causes build errors when using clang-based
+ * compilers whenever we call MGETHDR(). Work around it by redefining it
+ * ourselves here.
+ */
+# undef EYEC_MBUFA
+# define EYEC_MBUFA __EYEC8('m','b','u','f','A','L','L','\0') /* %mbufALL  */
+#endif
+
 static struct protosw parent_proto;	/* udp proto switch */
 
 static void
