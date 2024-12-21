@@ -58,6 +58,15 @@
 # define COMPAT_43
 #endif
 
+#if defined(__clang__)
+/*
+ * Some versions of AIX 7.2 and 7.3 have broken system headers (socketvar.h)
+ * that cannot compile with clang (APAR IJ50768). Do this to workaround the
+ * issue so we can compile with or without the fix for IJ50768.
+ */
+# define free_sock_hash_table *free_sock_hash_table
+#endif
+
 #define KERNEL_HAVE_UERROR 1
 #define KERNEL_HAVE_PIN 1
 
