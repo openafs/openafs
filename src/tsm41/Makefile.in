@@ -75,16 +75,16 @@ clean:
 	$(RM) -f *.o $(AUTHLIBS) $(AUTHFILES) so_locations
 
 aklog_dynamic_auth: ${AUTH_KRB5_OBJS} ${AFSLIBS} ${AUTHFILES}
-	$(LD) -o $@ ${AUTH_KRB5_OBJS} $(AFSLIBS) ${AUTHFILES} \
+	$(CC) -o $@ ${AUTH_KRB5_OBJS} $(AFSLIBS) ${AUTHFILES} \
 		$(LDFLAGS_krb5) $(LIB_krb5) \
 		$(LDFLAGS_roken) $(LIB_roken) ${XLIBS} ${AKLDFLAGS}
 
 afs_dynamic_auth: ${AUTH_OBJS} ${AFSLIBS} ${AUTHFILES}
-	$(LD) -o $@ ${AUTH_OBJS} $(AFSLIBS) ${AUTHFILES} \
+	$(CC) -o $@ ${AUTH_OBJS} $(AFSLIBS) ${AUTHFILES} \
 		$(LDFLAGS_roken) $(LIB_roken) ${XLIBS} ${LDFLAGS}
 
 afs_dynamic_kerbauth: ${AUTH_KRB_OBJS} ${KAFSLIBS} ${AUTHFILES}
-	$(LD) -o $@ ${AUTH_KRB_OBJS} $(KAFSLIBS) ${AUTHFILES} \
+	$(CC) -o $@ ${AUTH_KRB_OBJS} $(KAFSLIBS) ${AUTHFILES} \
 		$(LDFLAGS_roken) $(LIB_roken) ${XLIBS} ${LDFLAGS}
 
 aix_auth_common.o: ${srcdir}/aix_auth_common.c
