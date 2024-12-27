@@ -33,6 +33,12 @@ extern int sysconfig(int cmd, void *arg, int len);
 
 #include "AFS_component_version_number.c"
 
+#if defined(AFS_AIX42_ENV)
+static const char *execerror = "/usr/sbin/execerror";
+#else
+static const char *execerror = "/etc/execerror";
+#endif
+
 static void
 usage(void)
 {
@@ -105,7 +111,7 @@ main(int argc, char **argv)
 	if (res != 0) {
 	    perror("SYS_KLOAD");
 	    loadquery(L_GETMESSAGES, &buf[2], sizeof buf - 8);
-	    execvp("/etc/execerror", buf);
+	    execvp(execerror, buf);
 	    exit(1);
 	}
 

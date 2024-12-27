@@ -48,6 +48,12 @@ static void dump_ksym(sym_t *ksp, char *strings);
 static void error();
 static void sys_error();
 
+#if defined(AFS_AIX42_ENV)
+static const char *execerror = "/usr/sbin/execerror";
+#else
+static const char *execerror = "/etc/execerror";
+#endif
+
 static void
 usage(void)
 {
@@ -126,7 +132,7 @@ main(int argc, char **argv)
 	cload.path = file;
 	if (sysconfig(SYS_KLOAD, &cload, sizeof(cload)) == -1) {
 	    loadquery(L_GETMESSAGES, &buf[2], sizeof buf - 8);
-	    execvp("/etc/execerror", buf);
+	    execvp(execerror, buf);
 	    perror("SYS_KLOAD");
 	    exit(1);
 	}
