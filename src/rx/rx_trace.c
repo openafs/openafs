@@ -150,7 +150,11 @@ main(int argc, char **argv)
     argc--;
     while (argc && **argv == '-') {
 	if (strcmp(*argv, "-trace") == 0) {
-	    strcpy(rxi_tracename, *(++argv));
+	    if (strlcpy(rxi_tracename, *(++argv),
+			sizeof(rxi_tracename)) >= sizeof(rxi_tracename)) {
+		fprintf(stderr, "-trace argument too long\n");
+		exit(1);
+	    }
 	    argc--;
 	} else {
 	    err++;
