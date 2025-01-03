@@ -37,5 +37,8 @@ selsubs.o: selsubs.c seltest.h
 test_key: test_key.o
 	$(AFS_LDRULE) test_key.o ${LIBS} ${TOP_LIBDIR}/util.a
 
+rw: rw.o $(LIBS) $(TOP_LIBDIR)/libopr.a
+	$(AFS_LDRULE) rw.o $(LIBS) $(TOP_LIBDIR)/libopr.a
+
 clean:
-	-$(RM) -f *.o *.a test test_key selclient selserver core
+	-$(RM) -f *.o *.a rw test test_key selclient selserver core
