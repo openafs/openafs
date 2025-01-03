@@ -23,7 +23,7 @@ LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
 LT_libs = $(MT_LIBS)
 
 all: liboafs_lwpcompat.la liblwpcompat_pic.la \
-	${TOP_LIBDIR}/liblwp.a depinstall
+	${TOP_LIBDIR}/liblwp.a depinstall test
 
 depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/timer.h
 
@@ -192,6 +192,10 @@ threadname.o    : threadname.c
 
 exc_handling.o	: exc_handling.c
 
+.PHONY: test
+test: ${TOP_LIBDIR}/liblwp.a
+	cd test && $(MAKE) all
+
 #
 # Install targets
 #
@@ -219,5 +223,6 @@ buildtools: ${TOP_LIBDIR}/liblwp.a depinstall
 clean:
 	$(LT_CLEAN)
 	$(RM) -f *.o *.a core AFS_component_version_number.c
+	cd test && $(MAKE) clean
 
 include ../config/Makefile.version

@@ -13,14 +13,10 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 INCDIRS= -I.. -I${DESTDIR}/include
 LIBS= ../liblwp.a
 
-system noversion: test
+all: test selclient selserver test_key rw
 
-test:		test.c liblwp.a
-		${CC} -p ${CFLAGS} test.c -o test ${LIBS}
-
-testlwp.o	: testlwp.c
-		${CC} -c -p ${CFLAGS} testlwp.c ${LIBS}
-
+test: test.o ${LIBS}
+	$(AFS_LDRULE) test.o ${LIBS}
 
 selclient.o: selclient.c seltest.h
 
@@ -35,7 +31,7 @@ selserver: selserver.o selsubs.o ${LIBS}
 selsubs.o: selsubs.c seltest.h
 
 test_key: test_key.o
-	$(AFS_LDRULE) test_key.o ${LIBS} ${TOP_LIBDIR}/util.a
+	$(AFS_LDRULE) test_key.o ${LIBS}
 
 rw: rw.o $(LIBS) $(TOP_LIBDIR)/libopr.a
 	$(AFS_LDRULE) rw.o $(LIBS) $(TOP_LIBDIR)/libopr.a

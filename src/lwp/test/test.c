@@ -11,28 +11,29 @@
 #include <afs/param.h>
 
 
+#include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 #include "lwp.h"
 
-char semaphore;
+static char semaphore;
 
-int
-OtherProcess()
+static void *
+OtherProcess(void *arg)
 {
     for (;;) {
 	LWP_SignalProcess(&semaphore);
     }
+    return NULL;
 }
 
-main(argc, argv)
-     int argc;
-     char *argv[];
+int
+main(int argc, char *argv[])
 {
     struct timeval t1, t2;
     int pid, otherpid;
     int i, count, x;
-    char *waitarray[2];
     static char c[] = "OtherProcess";
 
     count = atoi(argv[1]);
@@ -42,15 +43,15 @@ main(argc, argv)
 	   (OtherProcess, 4096, 0, 0, c,
 	    (PROCESS *) & otherpid) == LWP_SUCCESS);
 
-    waitarray[0] = &semaphore;
-    waitarray[1] = 0;
     gettimeofday(&t1, NULL);
     for (i = 0; i < count; i++) {
-	LWP_MwaitProcess(1, waitarray, 1);
+	LWP_WaitProcess(&semaphore);
     }
     gettimeofday(&t2, NULL);
 
     x = (t2.tv_sec - t1.tv_sec) * 1000000 + (t2.tv_usec - t1.tv_usec);
     printf("%d milliseconds for %d MWaits (%f usec per Mwait and Signal)\n",
 	   x / 1000, count, (float)(x / count));
+
+    return 0;
 }

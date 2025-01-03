@@ -22,32 +22,18 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <sys/time.h>
+#include <time.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <signal.h>
 #include <sys/ioctl.h>
 #include <assert.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 
 #include "lwp.h"
 #include "seltest.h"
-
-#ifdef NEEDS_ALLOCFDSET
-/* Include these if testing against 32 bit fd_set IOMGR. */
-fd_set *
-IOMGR_AllocFDSet(void)
-{
-    fd_set *tmp = calloc(1, sizeof(fd_set));
-    return tmp;
-}
-
-void
-IOMGR_FreeFDSet(fd_set * fds)
-{
-    free(fds);
-}
-#endif
 
 /* The TCP spec calls for writing at least one byte of OOB data which is
  * read by the receiver using recv with the MSG_OOB flag set.
@@ -93,10 +79,8 @@ assertNullFDSet(int fd, fd_set * fds)
  *
  * Open file descriptors until file descriptor n or higher is returned.
  */
-#include <sys/stat.h>
 void
-OpenFDs(n)
-     int n;
+OpenFDs(int n)
 {
     int i;
     struct stat sbuf;
@@ -158,8 +142,8 @@ Log(char *fmt, ...)
     ltime = localtime(&tt);
 
     LWP_CurrentProcess(&pid);
-    fprintf(stderr, "%s 0x%x %02d:%02d:%02d.%d: ", program ? program : "",
-	    pid, ltime->tm_hour, ltime->tm_min, ltime->tm_sec, now.tv_usec);
+    fprintf(stderr, "%s %p %02d:%02d:%02d.%d: ", program ? program : "",
+	    pid, ltime->tm_hour, ltime->tm_min, ltime->tm_sec, (int)now.tv_usec);
 
     va_start(args, fmt);
 

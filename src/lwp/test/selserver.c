@@ -49,6 +49,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <signal.h>
 #include <sys/ioctl.h>
@@ -59,15 +60,11 @@
 #include "lwp.h"
 #include "seltest.h"
 
-extern int IOMGR_Select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
-
-
-void sendTest(int, int, int);
-void handleRequest(char *);
+static void * handleRequest(void *);
 
 /* Server Pool */
 #define MAX_THREADS 5
-int nThreads = 0;
+static int nThreads = 0;
 
 typedef struct {
 #define CH_FREE 0
@@ -79,12 +76,12 @@ typedef struct {
     PROCESS ch_pid;
 } clientHandle_t;
 
-void handleWrite(clientHandle_t *, selcmd_t *);
+static void handleWrite(clientHandle_t *, selcmd_t *);
 
-clientHandle_t clientHandles[MAX_THREADS];
+static clientHandle_t clientHandles[MAX_THREADS];
 
-clientHandle_t *
-getClientHandle()
+static clientHandle_t *
+getClientHandle(void)
 {
     int i;
     for (i = 0; i < MAX_THREADS; i++) {
@@ -99,15 +96,15 @@ getClientHandle()
     return NULL;	/* quiet compiler. */
 }
 
-int nSigIO = 0;
-void
-sigIO()
+static int nSigIO = 0;
+static void
+sigIO(int sig)
 {
     nSigIO++;
 }
 
-
-Usage()
+static void
+Usage(void)
 {
     printf("Usage: selserver [-fd n] [-syssel] port\n");
     printf("\t-fd n\tUse file descriptor n for socket.\n");
@@ -116,6 +113,7 @@ Usage()
 
 char *program;
 
+int
 main(int ac, char **av)
 {
     int i;
@@ -123,10 +121,9 @@ main(int ac, char **av)
     short port = -1;		/* host order. */
     int setFD = 0;
     struct sockaddr_in saddr;
-    int acceptFD;
     clientHandle_t *clientHandle;
     int code;
-    int addr_len;
+    socklen_t addr_len;
     PROCESS pid;
     fd_set *rfds, *wfds, *efds;
     int sockFD;
@@ -266,7 +263,7 @@ main(int ac, char **av)
 		    exit(1);
 		}
 
-		Log("Main - signalling LWP 0x%x\n", &clientHandle->ch_state);
+		Log("Main - signalling LWP %p\n", &clientHandle->ch_state);
 		LWP_NoYieldSignal(&clientHandle->ch_state);
 		assertNullFDSet(sockFD, rfds);
 		assertNullFDSet(-1, wfds);
@@ -276,19 +273,19 @@ main(int ac, char **av)
 	    Die(1, "(main) No data to read.\n");
 	}
     }
+
+    return 0;
 }
 
-void
-handleRequest(char *arg)
+static void *
+handleRequest(void *arg)
 {
-    clientHandle_t *ch = (clientHandle_t *) arg;
+    clientHandle_t *ch = arg;
     selcmd_t sc;
-    struct stat sbuf;
     int code = 0;
-    int c_errno = 0;
 
     while (1) {
-	Log("(handleRequest) going to sleep on 0x%x\n", &ch->ch_state);
+	Log("(handleRequest) going to sleep on %p\n", &ch->ch_state);
 	LWP_WaitProcess(&ch->ch_state);
 	assert(ch->ch_state == CH_INUSE);
 
@@ -340,10 +337,12 @@ handleRequest(char *arg)
 	ch->ch_fd = 0;
 	ch->ch_state = CH_FREE;
     }
+
+    return NULL;
 }
 
-int write_I = 0;
-void
+static int write_I = 0;
+static void
 handleWrite(clientHandle_t * ch, selcmd_t * sc)
 {
     int i;
@@ -351,7 +350,6 @@ handleWrite(clientHandle_t * ch, selcmd_t * sc)
     char *buf;
     int code;
     int scode;
-    char c;
     int nbytes;
 
     rfds = IOMGR_AllocFDSet();
@@ -363,7 +361,7 @@ handleWrite(clientHandle_t * ch, selcmd_t * sc)
 	IOMGR_Sleep(sc->sc_delay);
     }
 
-    Log("(handleWrite 0x%x) waking after %d second sleep.\n", ch->ch_pid,
+    Log("(handleWrite %p) waking after %d second sleep.\n", ch->ch_pid,
 	sc->sc_delay);
 
     if (sc->sc_flags & SC_WAIT_OOB)
@@ -385,10 +383,12 @@ handleWrite(clientHandle_t * ch, selcmd_t * sc)
 	assert(scode > 0);
 
 	if (FD_ISSET(ch->ch_fd, rfds)) {
+	    unsigned char c;
 
 	    assert(i < sc->sc_info);
 
-	    code = read(ch->ch_fd, &buf[i], 1);
+	    code = read(ch->ch_fd, &c, 1);
+	    buf[i] = c;
 	    i++;
 	    write_I++;
 	    if (code != 1) {

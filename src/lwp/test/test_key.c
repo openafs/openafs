@@ -22,6 +22,8 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <time.h>
@@ -32,10 +34,10 @@
 #include <lwp.h>
 
 /* prototypes */
-void interTest();
-void lineTest();
+static void interTest(void);
+static void lineTest(void);
 
-void
+static void
 Usage(void)
 {
     printf("Usage: test_key [-nobuf] [-delay seconds [-iters n]]\n");
@@ -53,10 +55,10 @@ Usage(void)
 }
 
 
-int waitingForAnswer = 0;
+static int waitingForAnswer = 0;
 
 static void
-PrintDots()
+PrintDots(void)
 {
     static struct timeval constSleepTime = { 1, 0 };
     struct timeval sleepTime;
@@ -71,17 +73,17 @@ PrintDots()
     }
 }
 
-static int
-DotWriter(char *junk)
+static void *
+DotWriter(void *junk)
 {
     while (1) {
 	LWP_WaitProcess(&waitingForAnswer);
 	PrintDots();
     }
-    return 0;
+    return NULL;
 }
 
-void
+int
 main(int ac, char **av)
 {
     int delay = 0;
@@ -155,15 +157,14 @@ main(int ac, char **av)
 	    printf("\nNo data available on this iteration.\n");
 	}
     }
-
-
+    return 0;
 }
 
 /* interTest() : wait for key press and beep to remind user every five 
  *    seconds.
 */
-void
-interTest()
+static void
+interTest(void)
 {
     char ch;
     int rc;
@@ -188,10 +189,9 @@ interTest()
 
 /* lineTest() : wait until a whole line has been entered before processing.
  */
-void
-lineTest()
+static void
+lineTest(void)
 {
-    char ch;
     int rc;
     char line[256];
 

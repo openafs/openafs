@@ -41,6 +41,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <errno.h>
 #include <sys/select.h>
 #include <sys/types.h>
@@ -58,16 +59,12 @@
 #include "lwp.h"
 #include "seltest.h"
 
-/* Put this in lwp.h? */
-extern int IOMGR_Select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
+static void sendTest(int, int, int, int);
+static void sendEnd(int);
 
-
-void sendTest(int, int, int, int);
-void sendEnd(int);
-
-int nSigIO = 0;
-void
-sigIO()
+static int nSigIO = 0;
+static void
+sigIO(int sig)
 {
     nSigIO++;
 }
@@ -75,7 +72,8 @@ sigIO()
 char *program;
 
 
-Usage()
+static void
+Usage(void)
 {
     printf
 	("Usage: selclient [-fd n] [-oob] [-soob] [-delay n] [-end] [-write n] host port\n");
@@ -88,10 +86,10 @@ Usage()
     exit(1);
 }
 
+int
 main(int ac, char **av)
 {
     int i;
-    int on = 1;
     char *hostname = 0;
     struct hostent *hostent;
     int host;			/* net order. */
@@ -103,7 +101,6 @@ main(int ac, char **av)
     int putOOB = 0;
     int delay = 5;
     int doEnd = 0;
-    int doWrite = 0;
     int writeSize = 0;
 
     program = av[0];
@@ -137,7 +134,6 @@ main(int ac, char **av)
 		Usage();
 	    }
 	} else if (!strcmp("-write", av[i])) {
-	    doWrite = 1;
 	    if (++i >= ac) {
 		printf("%s: Missing size for -write option.\n", program);
 		Usage();
@@ -227,12 +223,14 @@ main(int ac, char **av)
 	sendTest(sockFD, delay, reqOOB, writeSize);
     }
     close(sockFD);
+
+    return 0;
 }
 
 /* sendTest
  */
-int writeIndex;
-void
+static int writeIndex;
+static void
 sendTest(int sockFD, int delay, int reqOOB, int size)
 {
     char *buf, *bufTest;
@@ -292,13 +290,13 @@ sendTest(int sockFD, int delay, int reqOOB, int size)
 		(void)time(&etime);
 		if (etime - stime > 1) {
 		    Log("Waited %d seconds to write at offset %d.\n",
-			etime - stime, i);
+			(int)(etime - stime), i);
 		}
 		stime = etime;
 		nbytes = write(sockFD, &buf[i], 1);
 		(void)time(&etime);
 		if (etime - stime > 1) {
-		    Log("Waited %d seconds IN write.\n", etime - stime);
+		    Log("Waited %d seconds IN write.\n", (int)(etime - stime));
 		}
 		assert(nbytes == 1);
 		FD_CLR(sockFD, wfds);
@@ -321,7 +319,7 @@ sendTest(int sockFD, int delay, int reqOOB, int size)
     Log("Compared %d bytes.\n", size);
 }
 
-void
+static void
 sendEnd(int fd)
 {
     selcmd_t sc;
