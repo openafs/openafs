@@ -29,6 +29,7 @@
 
 #include <assert.h>
 #include <afs/afsutil.h>
+#include <afs/sys_prototypes.h>
 #include <sys/file.h>
 #include <sys/wait.h>
 

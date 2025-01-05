@@ -17,6 +17,7 @@
 #include <roken.h>
 
 #include <afs/afs_args.h>
+#include <afs/sys_prototypes.h>
 
 #include "afssyscalls.h"
 

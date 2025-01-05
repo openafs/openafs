@@ -29,6 +29,7 @@
 #include <lwp.h>
 #include <lock.h>
 #include <afs/afssyscalls.h>
+#include <afs/sys_prototypes.h>
 #include <afs/ihandle.h>
 #ifdef AFS_NT40_ENV
 #include <afs/ntops.h>
