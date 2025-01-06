@@ -44,6 +44,9 @@ as follows:
 
 The issuer must be logged in as the local superuser C<root>.
 
+In previous releases of OpenAFS (versions 1.8.x and older), no special
+privileges were required for this command.
+
 =head1 SEE ALSO
 
 L<fs_flush(1)>,
