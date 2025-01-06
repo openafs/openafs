@@ -248,31 +248,23 @@ extern int IOMGR_Initialize(void);
 extern void IOMGR_FreeFDSet(fd_set * fds);
 extern int IOMGR_SoftSig(void *(*aproc) (void *), void *arock);
 
-#ifdef AFS_NT40_ENV
 /* lwp.c */
 extern int LWP_InitializeProcessSupport(int priority, PROCESS * pid);
+extern int LWP_DestroyProcess(PROCESS pid);
+extern int LWP_DispatchProcess(void);
+extern int LWP_WaitProcess(void *event);
+extern int LWP_INTERNALSIGNAL(void *event, int yield);
+extern int LWP_QWait(void);
+extern int LWP_QSignal(PROCESS pid);
+extern int LWP_TerminateProcessSupport(void);
+#ifdef AFS_NT40_ENV
 extern int LWP_CreateProcess(int (*funP) (), int stacksize, int priority,
 			     void *argP, char *name, PROCESS * pid);
-extern int LWP_DestroyProcess(PROCESS pid);
-extern int LWP_DispatchProcess(void);
-extern int LWP_WaitProcess(void *event);
-extern int LWP_INTERNALSIGNAL(void *event, int yield);
-extern int LWP_QWait(void);
-extern int LWP_QSignal(PROCESS pid);
-extern int LWP_TerminateProcessSupport(void);
 #else
 extern int LWP_CurrentProcess(PROCESS * pid);
-extern int LWP_INTERNALSIGNAL(void *event, int yield);
-extern int LWP_InitializeProcessSupport(int priority, PROCESS * pid);
 extern int LWP_CreateProcess(void *(*ep)(void *), int stacksize, int priority,
 			     void *parm, char *name, PROCESS * pid);
-extern int LWP_DestroyProcess(PROCESS pid);
-extern int LWP_DispatchProcess(void);
-extern int LWP_WaitProcess(void *event);
 extern PROCESS LWP_ThreadId(void);
-extern int LWP_QWait(void);
-extern int LWP_QSignal(PROCESS pid);
-extern int LWP_TerminateProcessSupport(void);
 #endif
 
 #ifdef AFS_SUN5_ENV
