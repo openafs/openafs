@@ -86,6 +86,10 @@ main(int argc, char **argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+
+    memset(&cload, 0, sizeof(cload));
+    memset(&cmod, 0, sizeof(cmod));
+
     add = del = 0;
 
     while ((c = getopt(argc, argv, "a:s:Z:d:")) != EOF) {
