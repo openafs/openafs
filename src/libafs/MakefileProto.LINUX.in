@@ -149,7 +149,7 @@ LINUX_MODULE_EXT=o
 LINUX_MODULE_NAME=
 LOCAL_SMP_DEF=
 
-setup:
+setup: AFS_component_version_number.c
 	-$(RM) -f h net netinet sys rpc
 	-ln -fs rx rpc
 	for m in ${MPS} ; do \

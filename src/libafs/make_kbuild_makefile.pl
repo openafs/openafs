@@ -61,18 +61,18 @@ foreach $mf (@Makefiles) {
   $F->close();
 }
 
+# AFS_component_version_number.c is a special case. There is no single location
+# where it normally exists; usually it's generated in every subsystem, so our
+# makefiles don't specify an absolute path to the source file (they just say to
+# use the AFS_component_version_number.c from the current directory). Here, to
+# make it more like our other source files, we say we want to use
+# AFS_component_version_number.c from src/libafs.
+$deps{'AFS_component_version_number.o'} = "$vars{TOP_OBJDIR}/src/libafs/AFS_component_version_number.c";
+
 
 $KDIR = "$vars{TOP_OBJDIR}/src/libafs/$KDIR";
 @libafs_objs = (split(' ', $vars{AFSAOBJS}), split(' ', $vars{AFSNFSOBJS}));
 @afspag_objs = (split(' ', $vars{AFSPAGOBJS}));
-
-$MV = new IO::File("$vars{TOP_OBJDIR}/src/config/Makefile.version", O_RDONLY)
-        or die "$vars{TOP_OBJDIR}/src/config/Makefile.version: $!\n";
-while (<$MV>) {
-  s#AFS_component_version_number#$KDIR/AFS_component_version_number#g;
-  $MakefileVersion .= $_;
-}
-$MV->close();
 
 if (! -d $KDIR) {
   mkdir($KDIR, 0777) or die "$KDIR: $!\n";
@@ -170,6 +170,5 @@ if ($vars{LINUX_KBUILD_CFLAGS_VAR} ne "") {
 print $F "obj-m := $TARG.o afspag.o\n";
 print $F "$TARG-objs := ", join("\\\n $_", @libafs_objs), "\n";
 print $F "afspag-objs := ", join("\\\n $_", @afspag_objs), "\n";
-print $F "\n$MakefileVersion\n";
 $F->close() or die "$KDIR/Makefile: $!\n";
 
