@@ -388,6 +388,14 @@ rx_atomic_sub(rx_atomic_t *atomic, int change)
  * This won't be the quickest thing ever.
  */
 
+# if defined(KERNEL)
+#  include "rx_kmutex.h"
+# elif defined(AFS_PTHREAD_ENV)
+#  include "rx_pthread.h"
+# else
+#  include "rx_lwp.h"
+# endif
+
 # ifdef RX_ENABLE_LOCKS
 extern afs_kmutex_t rx_atomic_mutex;
 # endif
