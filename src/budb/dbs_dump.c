@@ -163,7 +163,7 @@ DumpDB(struct rx_call *call,
 					       PTHREAD_CREATE_DETACHED) == 0);
 	opr_Verify(pthread_create(&dumperPid,
 				  &dumperPid_tattr,
-				  (void *)setupDbDump, NULL) == 0);
+				  setupDbDump, NULL) == 0);
 
 #else
 	code =
@@ -185,7 +185,7 @@ DumpDB(struct rx_call *call,
 					       PTHREAD_CREATE_DETACHED) == 0);
 	opr_Verify(pthread_create(&watcherPid,
 				  &watcherPid_tattr,
-				  (void *)dumpWatcher, NULL) == 0);
+				  dumpWatcher, NULL) == 0);
 #else
 	/* now create the watcher thread */
 	code =
