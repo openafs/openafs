@@ -6,16 +6,18 @@ dnl /System/Library/Frameworks/Kernel.framework/Headers
 dnl to
 dnl /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Kernel.framework/Headers
 dnl sometime around darwin_180. Detect which path exists, and use the first one
-dnl we find, preferring the "CommandLineTools" (clt) path.
+dnl we find, preferring the "CommandLineTools" (clt) path, then the path from
+dnl 'xcrun --show-sdk-path'.
 dnl
 AC_DEFUN([OPENAFS_MACOS_KINCLUDES], [
 
   clt_kroot=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+  xcode_kroot="$(xcrun --show-sdk-path)"
   hdr_path=/System/Library/Frameworks/Kernel.framework/Headers
 
   AC_MSG_CHECKING([for path to macOS kernel extension headers])
   KINCLUDES=
-  for KROOT in "$clt_kroot" '' ; do
+  for KROOT in "$clt_kroot" "$xcode_kroot" '' ; do
     AS_IF([test -e "$KROOT$hdr_path"],
      [KINCLUDES="-I$KROOT$hdr_path"
       AC_MSG_RESULT([$KINCLUDES])
