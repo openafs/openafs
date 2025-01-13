@@ -157,8 +157,10 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
     if (!afile) {
 	if (afs_shuttingdown == AFS_RUNNING)
 	    osi_Panic("osi_Read called with null param");
-	else
-	    return -EIO;
+	else {
+	    code = EIO;
+	    goto error;
+	}
     }
 
     if (offset != -1)
@@ -191,10 +193,14 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr,
 	    afs_stats_cmperf.osiread_efaults++;
 	    goto retry_IO;
 	}
-	setuerror(code);
-	if (code > 0) {
-	    code = -code;
-	}
+	goto error;
+    }
+    return code;
+
+ error:
+    setuerror(code);
+    if (code > 0) {
+	code = -code;
     }
     return code;
 }
