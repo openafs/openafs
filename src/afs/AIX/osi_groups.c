@@ -75,6 +75,24 @@ setgroups(ngroups, gidset)
 }
 #endif
 
+#ifdef AFS_AIX51_ENV
+static int
+do_setpag(struct ucred **cred, afs_uint32 pagvalue, int change_parent)
+{
+    int code;
+    if (change_parent) {
+	code = kcred_setpag(*cred, PAG_AFS, pagvalue);
+    } else {
+	struct ucred *newcr = crdup(*cred);
+
+	crset(newcr);
+	code = kcred_setpag(newcr, PAG_AFS, pagvalue);
+	*cred = newcr;
+    }
+    return code;
+}
+#endif /* AFS_AIX51_ENV */
+
 int
 setpag(cred, pagvalue, newpag, change_parent)
      struct ucred **cred;
@@ -110,15 +128,7 @@ setpag(cred, pagvalue, newpag, change_parent)
 #endif
     *newpag = pagvalue;
 #ifdef AFS_AIX51_ENV
-    if (change_parent) {
-	code = kcred_setpag(*cred, PAG_AFS, *newpag);
-    } else {
-	struct ucred *newcr = crdup(*cred);
-
-	crset(newcr);
-	code = kcred_setpag(newcr, PAG_AFS, *newpag);
-	*cred = newcr;
-    }
+    code = do_setpag(cred, *newpag, change_parent);
 #else
     afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
     if (code = afs_setgroups(cred, ngroups, gidset, change_parent)) {
