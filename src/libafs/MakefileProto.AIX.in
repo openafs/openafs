@@ -66,7 +66,7 @@ LDSTUFF= -b"binder:/usr/lib/bind glink:/usr/lib/glink.o" -bnoentry -b h:4 \
 	-D0 -T512
 LDSTUFF64= -b"binder:/usr/lib/bind glink:/usr/lib/glink64.o" -bnoentry -b h:4 \
 	-D0 -T512
-LDFLAGS = -m -eafs_config -H8 -bexport:${TOP_LIBDIR}/afs.exp ${IMPORTS} \
+LDFLAGS = -m -eafs_config -bexport:${TOP_LIBDIR}/afs.exp ${IMPORTS} \
 	 -lsys -lcsys  ${KLDOPTS}
 
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(KDEFS) $(KOPTS) ${DBUG}
