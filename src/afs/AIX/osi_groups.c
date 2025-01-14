@@ -89,6 +89,13 @@ do_setpag(struct ucred **cred, afs_uint32 pagvalue, int change_parent)
 	code = kcred_setpag(newcr, PAG_AFS, pagvalue);
 	*cred = newcr;
     }
+    if (code != 0) {
+	code = getuerror();
+	if (code == 0) {
+	    /* Make sure we don't return success; we know there's an error. */
+	    code = EIO;
+	}
+    }
     return code;
 }
 #endif /* AFS_AIX51_ENV */
@@ -131,10 +138,11 @@ setpag(cred, pagvalue, newpag, change_parent)
     code = do_setpag(cred, *newpag, change_parent);
 #else
     afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
-    if (code = afs_setgroups(cred, ngroups, gidset, change_parent)) {
-	return (setuerror(code), code);
-    }
+    code = afs_setgroups(cred, ngroups, gidset, change_parent);
 #endif
+    if (code != 0) {
+	setuerror(code);
+    }
     return code;
 }
 
