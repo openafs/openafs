@@ -65,7 +65,7 @@ int
 afs_statfs(struct mount *mp, STATFS_TYPE *abp, CTX_TYPE ctx);
 #ifdef AFS_DARWIN80_ENV
 int
-afs_mount(struct mount *mp, vnode_t *devvp, user_addr_t data, vfs_context_t ctx)
+afs_mount(struct mount *mp, vnode_t devvp, user_addr_t data, vfs_context_t ctx)
 #else
 int
 afs_mount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp, CTX_TYPE ctx)
