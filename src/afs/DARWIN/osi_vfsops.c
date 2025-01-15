@@ -531,7 +531,7 @@ afs_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
     return ENOTSUP;
 }
 
-typedef (*PFI) ();
+typedef int (*PFI) ();
 extern int vfs_opv_numops;	/* The total number of defined vnode operations */
 extern struct vnodeopv_desc afs_vnodeop_opv_desc;
 int
