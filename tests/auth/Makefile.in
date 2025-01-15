@@ -6,7 +6,7 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 TESTS = authcon-t superuser-t keys-t realms-t
 
-MODULE_CFLAGS=-I$(srcdir)/../.. -I$(srcdir)/../common/
+MODULE_CFLAGS=-I$(TOP_OBJDIR) -I$(srcdir)/../common/
 
 all check test tests: $(TESTS)
 
