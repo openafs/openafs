@@ -25,7 +25,7 @@ PAM_DBG=-g
 PAM_OPTMZ=
 
 dnl standard programs
-AC_PROG_RANLIB
+AC_REQUIRE([AC_PROG_RANLIB])
 AC_CHECK_TOOL(AS, as, [false])
 AC_CHECK_PROGS(MV, mv, [false])
 AC_CHECK_PROGS(RM, rm, [false])
