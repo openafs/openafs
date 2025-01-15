@@ -27,6 +27,7 @@ extern struct ucred *afs_osi_credp;
 extern int afs_CacheFSType;
 
 #ifdef AFS_DARWIN80_ENV
+int
 getinode(fs, dev, inode, vpp, perror)
     mount_t fs;
     vnode_t *vpp;
@@ -56,7 +57,7 @@ getinode(fs, dev, inode, vpp, perror)
     }
 }    
     
-  
+int
 igetinode(vfsp, dev, inode, vpp, va, perror)
     vnode_t *vpp;
     mount_t vfsp;
