@@ -655,7 +655,7 @@ Afs_syscall()
 				   uap->parm4, p->td_ucred);
 #elif defined(AFS_DARWIN80_ENV)
 	    code =
-		afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3,
+		afs_syscall_pioctl((char *)uap->parm1, uap->parm2, (caddr_t)uap->parm3,
 				   uap->parm4, kauth_cred_get());
 #elif defined(AFS_NBSD40_ENV)
 	    code =
