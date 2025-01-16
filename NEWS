@@ -1,5 +1,11 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.13.2
+
+  Linux clients
+
+    * Add support for Linux 6.13 (16063)
+
 OpenAFS 1.8.13.1
 
   AIX
