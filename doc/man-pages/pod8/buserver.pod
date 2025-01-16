@@ -10,7 +10,7 @@ buserver - Initializes the Backup Server
 B<buserver> S<<< [B<-database> <I<database directory>>] >>>
     S<<< [B<-auditlog> [<I<interface>>:]<I<path>>[:<I<options>>]] >>>
     S<<< [B<-audit-interface> <I<default interface>>] >>>
-    S<<< [B<-cellservdb> <I<cell configuration directory>>] >>> [B<-resetdb>]
+    S<<< [B<-cellservdb> <I<cell configuration directory>>] >>>
     [B<-noauth>] [B<-smallht>]
     S<<< [B<-servers> <I<list of ubik database servers>>+] >>>
     [B<-rxbind>]
@@ -90,11 +90,13 @@ appropriate in any other circumstances.
 
 =item B<-resetdb>
 
-Removes all of the information in the Backup Database files in the
-F</usr/afs/db> directory, leaving zero-length versions of them.  The
-backup operator must recreate the configuration entries in the database
-(for volume sets, the dump hierarchy and so on) before performing backup
-operations.
+This option is ignored by the Backup Server in all versions of OpenAFS.
+
+This option was present in IBM AFS to remove all of the information in the
+Backup Database files in the -F</usr/afs/db> directory during startup, leaving
+zero-length versions of them.  The backup operator would need recreate the
+configuration entries in the database (for volume sets, the dump hierarchy and
+so on) before performing backup operations.
 
 =item B<-noauth>
 

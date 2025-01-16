@@ -40,7 +40,6 @@ struct ubik_dbase *BU_dbase;
 struct afsconf_dir *BU_conf;	/* for getting cell info */
 
 int argHandler(struct cmd_syndesc *, void *);
-int truncateDatabase(void);
 int parseServerList(struct cmd_item *);
 
 char lcell[MAXKTCREALMLEN];
@@ -57,6 +56,7 @@ buServerConfP globalConfPtr = &globalConf;
 char dbDir[AFSDIR_PATH_MAX], cellConfDir[AFSDIR_PATH_MAX];
 /* debugging control */
 int debugging = 0;
+static int seen_resetdb = 0;
 
 int rxBind = 0;
 int lwps   = 3;
@@ -149,8 +149,8 @@ initializeArgHandler(void)
     cmd_AddParm(cptr, "-cellservdb", CMD_SINGLE, CMD_OPTIONAL,
 		"cell configuration directory");
 
-    cmd_AddParm(cptr, "-resetdb", CMD_FLAG, CMD_OPTIONAL,
-		"truncate the database");
+    cmd_AddParm(cptr, "-resetdb", CMD_FLAG, (CMD_OPTIONAL | CMD_HIDDEN),
+		"truncate the database (ignored)");
 
     cmd_AddParm(cptr, "-noauth", CMD_FLAG, CMD_OPTIONAL,
 		"run without authentication");
@@ -204,9 +204,10 @@ argHandler(struct cmd_syndesc *as, void *arock)
 	globalConfPtr->debugFlags |= DF_RECHECKNOAUTH;
     }
 
-    /* truncate the database */
-    if (as->parms[2].items != 0)
-	truncateDatabase();
+    /* -resetdb is obsolete */
+    if (as->parms[2].items != 0) {
+	seen_resetdb = 1;
+    }
 
     /* run without authentication */
     if (as->parms[3].items != 0)
@@ -318,40 +319,6 @@ parseServerList(struct cmd_item *itemPtr)
     return (code);
 }
 
-/* truncateDatabase
- *	truncates just the database file.
- */
-
-int
-truncateDatabase(void)
-{
-    char *path;
-    afs_int32 code = 0;
-    int fd,r;
-
-    r = asprintf(&path, "%s%s%s",
-		 globalConfPtr->databaseDirectory,
-		 globalConfPtr->databaseName,
-		 globalConfPtr->databaseExtension);
-    if (r < 0 || path == NULL)
-	ERROR(-1);
-
-    fd = open(path, O_RDWR, 0755);
-    if (!fd) {
-	code = errno;
-    } else {
-	if (ftruncate(fd, 0) != 0) {
-	    code = errno;
-	} else
-	    close(fd);
-    }
-
-    free(path);
-
-  error_exit:
-    return (code);
-}
-
 
 /* --- */
 
@@ -458,6 +425,10 @@ main(int argc, char **argv)
 
     /* open the log file */
     OpenLog(&logopts);
+
+    if (seen_resetdb) {
+	Log("Ignoring -resetdb option\n");
+    }
 
     /* open the cell's configuration directory */
     LogDebug(4, "opening %s\n", globalConfPtr->cellConfigdir);
