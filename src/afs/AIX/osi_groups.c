@@ -60,7 +60,7 @@ setgroups(ngroups, gidset)
     credp0 = credp;
 
     if (PagInCred(credp) == NOPAG) {
-	if (((treq.uid >> 24) & 0xff) == 'A') {
+	if (afs_IsPagId(treq.uid)) {
 	    AFS_GLOCK();
 	    AddPag(treq.uid, &credp);
 	    AFS_GUNLOCK();
