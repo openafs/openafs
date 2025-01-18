@@ -103,7 +103,7 @@ symtab.o symtab64.o: ${srcdir}/symtab.c
 	rs_aix[67]* ) \
 		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(XCFLAGS64) -D__XCOFF64__ \
 			-DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
-			-c ${srcdir}/symtab.c ; \
+			@AIX_CC_KOPTS@ -c ${srcdir}/symtab.c ; \
 		mv symtab.o symtab64.o ;; \
 	esac
 
@@ -121,7 +121,7 @@ export.o export64.o: ${srcdir}/export.c
 	rs_aix[67]* ) \
 		$(CC) $(AFS_CPPFLAGS) $(AFS_CFLAGS) $(XCFLAGS64) \
 			-D__XCOFF64__ -DAFS_64BIT_KERNEL -DAFS_AIX51_ENV \
-			-c ${srcdir}/export.c ; \
+			@AIX_CC_KOPTS@ -c ${srcdir}/export.c ; \
 		mv export.o export64.o ;; \
 	esac
 
@@ -142,7 +142,7 @@ export.nonfs.o export64.nonfs.o: ${srcdir}/export.c
 	rs_aix[67]* ) \
 		$(CC) $(CPPFLAGS) $(CFLAGS) $(XCFLAGS64) ${INCS} -D__XCOFF64__ \
 			-DAFS_64BIT_KERNEL -DAFS_NONFSTRANS -DAFS_AIX51_ENV \
-			-c ${srcdir}/export.c ; \
+			@AIX_CC_KOPTS@ -c ${srcdir}/export.c ; \
 		mv export.o export64.nonfs.o ;; \
 	esac
 
