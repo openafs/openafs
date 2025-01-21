@@ -1723,10 +1723,14 @@ void smb_ReleaseFID(smb_fid_t *fidp)
             if (ioctlp) {
                 if (ioctlp->prefix)
                 cm_FreeSpace(ioctlp->prefix);
-                if (ioctlp->ioctl.inAllocp)
+		if (ioctlp->ioctl.inAllocp != NULL) {
+		    SecureZeroMemory(ioctlp->ioctl.inAllocp, ioctlp->ioctl.inCopied);
                     free(ioctlp->ioctl.inAllocp);
-                if (ioctlp->ioctl.outAllocp)
+		}
+		if (ioctlp->ioctl.outAllocp != NULL) {
+		    SecureZeroMemory(ioctlp->ioctl.outAllocp, ioctlp->ioctl.outCopied);
                     free(ioctlp->ioctl.outAllocp);
+		}
                 free(ioctlp);
             }
 

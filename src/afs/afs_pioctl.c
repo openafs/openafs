@@ -83,6 +83,11 @@ afs_pd_free(struct afs_pdata *apd)
     if (apd->ptr == NULL)
 	return;
 
+    /*
+     * Zero bytes before returning memory to the allocator, in case this memory
+     * contains sensitive data (e.g., keys for tokens).
+     */
+    memset(apd->ptr, 0, apd->remaining);
     if (apd->remaining >= AFS_LRALLOCSIZ)
 	osi_Free(apd->ptr, apd->remaining + 1);
     else

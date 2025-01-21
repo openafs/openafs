@@ -223,10 +223,14 @@ RDR_DestroyIoctl(RDR_ioctl_t *iop)
     if (iop->parentScp)
         cm_ReleaseSCache(iop->parentScp);
 
-    if (iop->ioctl.inAllocp)
+    if (iop->ioctl.inAllocp != NULL) {
+	SecureZeroMemory(iop->ioctl.inAllocp, iop->ioctl.inCopied);
         free(iop->ioctl.inAllocp);
-    if (iop->ioctl.outAllocp)
+    }
+    if (iop->ioctl.outAllocp != NULL) {
+	SecureZeroMemory(iop->ioctl.outAllocp, iop->ioctl.outCopied);
         free(iop->ioctl.outAllocp);
+    }
 
     if (RDR_allIoctls == RDR_allIoctlsLast)
         RDR_allIoctls = RDR_allIoctlsLast = NULL;

@@ -172,10 +172,14 @@ RDR_SetupPipe( ULONG index, cm_fid_t *parentFid, cm_fid_t *rootFid,
         if (pipep->parentScp)
             cm_ReleaseSCache(pipep->parentScp);
 
-        if (pipep->inAllocp)
+	if (pipep->inAllocp != NULL) {
+	    SecureZeroMemory(pipep->inAllocp, pipep->inCopied);
             free(pipep->inAllocp);
-        if (pipep->outAllocp)
+	}
+	if (pipep->outAllocp != NULL) {
+	    SecureZeroMemory(pipep->outAllocp, pipep->outCopied);
             free(pipep->outAllocp);
+	}
 
         if (!newpipe) {
             if (RDR_allPipes == RDR_allPipesLast)
@@ -214,10 +218,14 @@ RDR_CleanupPipe(ULONG index)
         if (pipep->parentScp)
             cm_ReleaseSCache(pipep->parentScp);
 
-        if (pipep->inAllocp)
+	if (pipep->inAllocp != NULL) {
+	    SecureZeroMemory(pipep->inAllocp, pipep->inCopied);
             free(pipep->inAllocp);
-        if (pipep->outAllocp)
+	}
+	if (pipep->outAllocp != NULL) {
+	    SecureZeroMemory(pipep->outAllocp, pipep->outCopied);
             free(pipep->outAllocp);
+	}
 
         MSRPC_FreeConn(&pipep->rpc_conn);
 
