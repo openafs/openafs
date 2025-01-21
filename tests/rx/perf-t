@@ -10,6 +10,7 @@ use POSIX qw(:sys_wait_h :signal_h);
 
 my $port = 4000;
 my $rxperf = obj_path("src/tools/rxperf/rxperf");
+my $rc;
 
 
 # Wait for the server to finish initializing.
@@ -49,13 +50,11 @@ wait_for_server($pid);
 pass("Started rxperf server");
 
 # Start up an rxperf client, and run a test
-is(0,
-   system("$rxperf client -c rpc -p $port -S 1048576 -R 1048576 -T 30 -u 1024 -H -N"),
-   "single threaded client ran successfully");
+$rc = system("$rxperf client -c rpc -p $port -S 1048576 -R 1048576 -T 30 -u 1024 -H -N");
+is($rc, 0, "single threaded client ran successfully");
 
-is (0,
-    system("$rxperf client -c rpc -p $port -S 1048576 -R 1048576 -T 1 -t 30 -u 1024 -H -N"),
-    "multi threaded client ran succesfully");
+$rc = system("$rxperf client -c rpc -p $port -S 1048576 -R 1048576 -T 1 -t 30 -u 1024 -H -N");
+is($rc, 0, "multi threaded client ran succesfully");
 
 # Kill the server, and check its exit code
 

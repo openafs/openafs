@@ -59,8 +59,8 @@ my $expected = 'Uryyb BcraNSF';
 my $got = qx($client localhost $port $service "$message");
 chomp($got);
 
-is(0, $?, "Client ran successfully");
-is($expected, $got, "Rot13 performed successfully");
+is($?, 0, "Client ran successfully");
+is($got, $expected, "Rot13 performed successfully");
 
 # Test a case where the server aborts the call
 $message = 'This exceeds the message size';
@@ -71,7 +71,7 @@ simple-client: call aborted with code 201
 my $got_ret = ($? >> 8);
 my $expected_ret = 201;
 
-is($expected_ret, $got_ret, "Client exited with correct status");
+is($got_ret, $expected_ret, "Client exited with correct status");
 is($got, $expected, "Client saw an aborted call");
 
 # Kill the server process
