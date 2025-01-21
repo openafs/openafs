@@ -212,7 +212,7 @@ token_findByType(struct ktc_setTokenData *token,
 	return EINVAL;
 
     if (output->at_type != targetType) {
-	xdr_free((xdrproc_t)xdr_ktc_tokenUnion, output);
+	token_freeTokenContents(output);
 	return EINVAL;
     }
 
@@ -387,7 +387,7 @@ token_extractRxkad(struct ktc_setTokenData *token,
     }
 
 out:
-    xdr_free((xdrproc_t) xdr_ktc_tokenUnion, &uToken);
+    token_freeTokenContents(&uToken);
     return code;
 }
 
@@ -519,10 +519,31 @@ token_setPag(struct ktc_setTokenData *jar, int setpag) {
 	jar->flags &= ~AFSTOKEN_EX_SETPAG;
 }
 
+/*
+ * Free the contents of the given token, and zero out possibly sensitive data
+ * (like keys).
+ *
+ * @see afs_free_ktc_tokenUnion().
+ */
 void
 token_freeTokenContents(struct ktc_tokenUnion *atoken)
 {
+    switch (atoken->at_type) {
+    case AFSTOKEN_UNION_KAD:
+	{
+	    struct token_rxkad *rxkad = &atoken->ktc_tokenUnion_u.at_kad;
+	    struct rk_ticket *ticket = &rxkad->rk_ticket;
+
+	    memset(rxkad->rk_key, 0, sizeof(rxkad->rk_key));
+
+	    if (ticket->rk_ticket_val != NULL) {
+		memset(ticket->rk_ticket_val, 0, ticket->rk_ticket_len);
+	    }
+	}
+    }
+
     xdr_free((xdrproc_t)xdr_ktc_tokenUnion, atoken);
+    memset(atoken, 0, sizeof(*atoken));
 }
     
 void
@@ -535,10 +556,32 @@ token_freeToken(struct ktc_tokenUnion **atoken)
     }
 }
 
+/*
+ * Free the contents of the given ktc_setTokenData, and zero out possibly
+ * sensitive data (like keys).
+ *
+ * @see afs_free_ktc_setTokenData()
+ */
+void
+token_FreeSetContents(struct ktc_setTokenData *tokenSet)
+{
+    if (tokenSet->tokens.tokens_val != NULL) {
+	int token_i;
+	for (token_i = 0; token_i < tokenSet->tokens.tokens_len; token_i++) {
+	    struct token_opaque *token = &tokenSet->tokens.tokens_val[token_i];
+	    if (token->token_opaque_val != NULL) {
+		memset(token->token_opaque_val, 0, token->token_opaque_len);
+	    }
+	}
+    }
+    xdr_free((xdrproc_t)xdr_ktc_setTokenData, tokenSet);
+    memset(tokenSet, 0, sizeof(*tokenSet));
+}
+
 void
 token_FreeSet(struct ktc_setTokenData **jar) {
     if (*jar) {
-	xdr_free((xdrproc_t)xdr_ktc_setTokenData, *jar);
+	token_FreeSetContents(*jar);
 	memset(*jar, 0, sizeof(struct ktc_setTokenData));
 	*jar = NULL;
     }

@@ -829,7 +829,7 @@ ktc_ListTokensEx(int prevIndex, int *newIndex, char **cellName) {
 	    }
 	    xdr_destroy(&xdrs);
 	    *cellName = strdup(tokenSet.cell);
-	    xdr_free((xdrproc_t)xdr_ktc_setTokenData, &tokenSet);
+	    token_FreeSetContents(&tokenSet);
 	    *newIndex = index + 1;
 	    return 0;
 	}

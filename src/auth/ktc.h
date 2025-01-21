@@ -27,6 +27,7 @@ extern int token_SetsEquivalent(struct ktc_setTokenData *,
 				struct ktc_setTokenData *);
 extern void token_setPag(struct ktc_setTokenData *, int);
 extern void token_FreeSet(struct ktc_setTokenData **);
+extern void token_FreeSetContents(struct ktc_setTokenData *);
 extern void token_freeToken(struct ktc_tokenUnion **);
 extern void token_freeTokenContents(struct ktc_tokenUnion *);
 

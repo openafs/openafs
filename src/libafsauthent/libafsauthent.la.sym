@@ -109,6 +109,7 @@ pr_SNameToId
 setpag
 string_PR_IDToName
 token_FreeSet
+token_FreeSetContents
 token_SetsEquivalent
 token_addToken
 token_buildTokenJar

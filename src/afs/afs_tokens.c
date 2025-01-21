@@ -494,8 +494,58 @@ afs_ExtractTokensForPioctl(struct tokenJar *token,
     }
 
  out:
-    if (code)
-	xdr_free((xdrproc_t) xdr_ktc_setTokenData, tokenSet);
+    if (code != 0) {
+	afs_free_ktc_setTokenData(tokenSet);
+    }
 
     return code;
+}
+
+/*
+ * Call this instead of xdr_free(xdr_ktc_tokenUnion), so we zero out possibly
+ * sensitive data (like keys) before freeing.
+ *
+ * @see token_freeTokenContents()
+ */
+void
+afs_free_ktc_tokenUnion(struct ktc_tokenUnion *token)
+{
+    switch (token->at_type) {
+    case AFSTOKEN_UNION_KAD:
+	{
+	    struct token_rxkad *rxkad = &token->ktc_tokenUnion_u.at_kad;
+	    struct rk_ticket *ticket = &rxkad->rk_ticket;
+
+	    memset(rxkad->rk_key, 0, sizeof(rxkad->rk_key));
+
+	    if (ticket->rk_ticket_val != NULL) {
+		memset(ticket->rk_ticket_val, 0, ticket->rk_ticket_len);
+	    }
+	}
+    }
+
+    xdr_free((xdrproc_t) xdr_ktc_tokenUnion, token);
+    memset(token, 0, sizeof(*token));
+}
+
+/*
+ * Call this instead of xdr_free(xdr_ktc_setTokenData), so we zero out possibly
+ * sensitive data (like keys) before freeing.
+ *
+ * @see token_FreeSetContents()
+ */
+void
+afs_free_ktc_setTokenData(struct ktc_setTokenData *tokenSet)
+{
+    if (tokenSet->tokens.tokens_val != NULL) {
+	int token_i;
+	for (token_i = 0; token_i < tokenSet->tokens.tokens_len; token_i++) {
+	    struct token_opaque *token = &tokenSet->tokens.tokens_val[token_i];
+	    if (token->token_opaque_val != NULL) {
+		memset(token->token_opaque_val, 0, token->token_opaque_len);
+	    }
+	}
+    }
+    xdr_free((xdrproc_t) xdr_ktc_setTokenData, tokenSet);
+    memset(tokenSet, 0, sizeof(*tokenSet));
 }

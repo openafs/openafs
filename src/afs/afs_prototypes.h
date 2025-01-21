@@ -918,6 +918,9 @@ extern int afs_AddTokenFromPioctl(struct tokenJar **, struct ktc_tokenUnion *);
 extern int afs_ExtractTokensForPioctl(struct tokenJar *, time_t,
 				      struct ktc_setTokenData *);
 
+void afs_free_ktc_tokenUnion(struct ktc_tokenUnion *token);
+void afs_free_ktc_setTokenData(struct ktc_setTokenData *tokenSet);
+
 /* UKERNEL/afs_usrops.c */
 #ifdef UKERNEL
 extern void uafs_Shutdown(void);

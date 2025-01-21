@@ -66,6 +66,7 @@ ktc_SetToken
 ktc_SetTokenEx
 ktc_curpag
 token_FreeSet
+token_FreeSetContents
 token_SetsEquivalent
 token_addToken
 token_buildTokenJar

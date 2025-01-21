@@ -5535,11 +5535,7 @@ DECL_PIOCTL(PSetTokens2)
 		primaryFlag = 1;
 	}
 
-	/* XXX - We should think more about destruction here. It's likely that
-	 * there is key material in what we're about to throw away, which
-	 * we really should zero out before giving back to the allocator */
-	xdr_free((xdrproc_t) xdr_ktc_tokenUnion, &decodedToken);
-	memset(&decodedToken, 0, sizeof(decodedToken));
+	afs_free_ktc_tokenUnion(&decodedToken);
     }
 
     tu->states |= UHasTokens;
@@ -5550,8 +5546,8 @@ DECL_PIOCTL(PSetTokens2)
     code = 0;
 
  done:
-    xdr_free((xdrproc_t) xdr_ktc_setTokenData, &tokenSet);
-    xdr_free((xdrproc_t) xdr_ktc_tokenUnion, &decodedToken);
+    afs_free_ktc_setTokenData(&tokenSet);
+    afs_free_ktc_tokenUnion(&decodedToken);
     if (tu != NULL) {
 	afs_ResetUserConns(tu);
 	afs_PutUser(tu, WRITE_LOCK);
@@ -5665,7 +5661,7 @@ out:
 	afs_PutUser(tu, READ_LOCK);
     if (cell)
 	afs_PutCell(cell, READ_LOCK);
-    xdr_free((xdrproc_t)xdr_ktc_setTokenData, &tokenSet);
+    afs_free_ktc_setTokenData(&tokenSet);
 
     return code;
 }
