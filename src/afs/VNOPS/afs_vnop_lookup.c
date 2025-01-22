@@ -327,6 +327,112 @@ afs_InitFakeStat(struct afs_fakestat_state *state)
     state->need_release = 0;
 }
 
+#ifdef AFS_DARWIN80_ENV
+/*
+ * Finalize a volume root vcache, after resolving a mountpoint.
+ *
+ * When we create a vcache on macOS, we need to fill in some macOS-specific
+ * info that is usually done by calling afs_darwin_finalizevnode() in the
+ * syscall that creates the vcache (e.g., creat() or a lookup). But when using
+ * fakestat, we resolve a mountpoint into the corresponding volume root vcache
+ * internally, and so we may create a vcache for the root dir, but we don't
+ * have the arguments of a syscall to provide to afs_darwin_finalizevnode().
+ *
+ * So after we have resolved a mountpoint to a root vcache, in this function we
+ * try to finalize the root vcache, and figure out the parent dir and 'name' to
+ * give to macOS for it. If we don't provide a parent for the vcache, macOS may
+ * throw bogus ENOENT errors in the future when trying to use the dir.
+ *
+ * \param a_rootvp  vcache we are finalizing (vcache for a volume root). If an
+ *		    error is returned, we free the given reference before
+ *		    returning, and set this to NULL. On success, this is
+ *		    vnode_ref()d.
+ * \param mvc   vcache of the mtpt pointing to root_vp
+ * \param areq	vrequest
+ * \param canblock  1 if we can hit the net, 0 otherwise
+ *
+ * \returns 0 on success, or error code otherwise
+ */
+static int
+afs_darwin_finalize_volroot(struct vcache **a_rootvp, struct vcache *mvc,
+			    struct vrequest *areq, int canblock)
+{
+    struct vcache *root_vp = *a_rootvp;
+    struct vcache *parent = NULL;
+    const char *rname = NULL;
+    int code, flags;
+
+    if (root_vp->mvstat != AFS_MVSTAT_ROOT) {
+	code = EINVAL;
+	goto done_locked;
+    }
+    root_vp->f.m.Type = VDIR;
+
+    if (root_vp->mvid.parent != NULL) {
+	if (!canblock) {
+	    ObtainReadLock(&afs_xvcache);
+	    parent = afs_FindVCache(root_vp->mvid.parent, 0);
+	    ReleaseReadLock(&afs_xvcache);
+	} else {
+	    parent = afs_GetVCache(root_vp->mvid.parent, areq);
+	}
+    }
+
+    AFS_GUNLOCK();
+
+    code = afs_darwin_finalizevnode(root_vp, NULL, NULL, 0, 0);
+    if (code != 0) {
+	/* afs_darwin_finalizevnode releases the ref to root_vp on error. */
+	root_vp = NULL;
+	goto done;
+    }
+
+    vnode_ref(AFSTOV(root_vp));
+
+    if (vnode_isvroot(AFSTOV(root_vp))) {
+	goto done;
+    }
+
+    if (parent == NULL) {
+	/* Don't let the caller use root_vp if we can't set a parent. */
+	struct vnode *vfs_parent = vnode_getparent(AFSTOV(root_vp));
+	if (vfs_parent != NULL) {
+	    /* ...but if it already has a parent, that's okay. */
+	    vnode_put(vfs_parent);
+	    goto done;
+	}
+	code = EIO;
+	goto done;
+    }
+
+    flags = VNODE_UPDATE_PARENT | VNODE_UPDATE_CACHE;
+    rname = vnode_getname(AFSTOV(mvc));
+    if (rname != NULL) {
+	flags |= VNODE_UPDATE_NAME;
+    }
+
+    vnode_update_identity(AFSTOV(root_vp), AFSTOV(parent), rname, 0, 0, flags);
+
+    if (rname != NULL) {
+	vnode_putname(rname);
+    }
+
+ done:
+    AFS_GLOCK();
+
+ done_locked:
+    if (parent != NULL) {
+	afs_PutVCache(parent);
+    }
+    if (root_vp != NULL && code != 0) {
+	afs_PutVCache(root_vp);
+	root_vp = NULL;
+    }
+    *a_rootvp = root_vp;
+    return code;
+}
+#endif /* AFS_DARWIN80_ENV */
+
 /*
  * afs_EvalFakeStat_int
  *
@@ -339,7 +445,7 @@ static int
 afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 		     struct vrequest *areq, int canblock)
 {
-    struct vcache *tvc, *root_vp;
+    struct vcache *tvc;
     struct volume *tvolp = NULL;
     int code = 0;
 
@@ -372,6 +478,7 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	}
     }
     if (tvc->mvid.target_root && (tvc->f.states & CMValid)) {
+	struct vcache *root_vp;
 	if (!canblock) {
 	    ObtainReadLock(&afs_xvcache);
 	    root_vp = afs_FindVCache(tvc->mvid.target_root, 0);
@@ -383,14 +490,6 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	    code = canblock ? EIO : 0;
 	    goto done;
 	}
-#ifdef AFS_DARWIN80_ENV
-        root_vp->f.m.Type = VDIR;
-        AFS_GUNLOCK();
-        code = afs_darwin_finalizevnode(root_vp, NULL, NULL, 0, 0);
-        AFS_GLOCK();
-        if (code) goto done;
-        vnode_ref(AFSTOV(root_vp));
-#endif
 	if (tvolp && !afs_InReadDir(root_vp)) {
 	    /* Is this always kosher?  Perhaps we should instead use
 	     * NBObtainWriteLock to avoid potential deadlock.
@@ -401,6 +500,13 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	    *root_vp->mvid.parent = tvolp->dotdot;
 	    ReleaseWriteLock(&root_vp->lock);
 	}
+#ifdef AFS_DARWIN80_ENV
+	code = afs_darwin_finalize_volroot(&root_vp, tvc, areq, canblock);
+	if (code != 0) {
+	    code = canblock ? code : 0;
+	    goto done;
+	}
+#endif
 	state->need_release = 1;
 	state->root_vp = root_vp;
 	*avcp = root_vp;
