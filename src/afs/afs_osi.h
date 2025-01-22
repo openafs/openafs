@@ -273,11 +273,27 @@ typedef struct {
  * and kernel space. Call these to avoid taking page faults while
  * holding the global lock.
  */
-#if defined(CAST_USER_ADDR_T) && !defined(UKERNEL) && !defined(AFS_DARWIN100_ENV)
-#define __U(X) CAST_USER_ADDR_T((X))
-#else
-#define __U(X) (X)
+
+#if defined(AFS_DARWIN_ENV)
+/*
+ * Don't use CAST_USER_ADDR_T for [10.6, 10.15), due to issues with mixing
+ * 32/64-bit userspace and kernelspace. All other versions are okay.
+ */
+# if defined(AFS_DARWIN190_ENV) || !defined(AFS_DARWIN100_ENV)
+#  define USE_CAST_USER_ADDR_T
+# endif
 #endif
+
+#if defined(CAST_USER_ADDR_T) && !defined(UKERNEL) && defined(USE_CAST_USER_ADDR_T)
+/*
+ * CAST_USER_ADDR_T is a Darwin-provided macro. Only use it for copyin/copyout
+ * for certain ranges of Darwin versions specified above.
+ */
+# define __U(X) CAST_USER_ADDR_T((X))
+#else
+# define __U(X) (X)
+#endif
+
 #ifdef AFS_GLOBAL_SUNLOCK
 
 #define AFS_COPYIN(SRC,DST,LEN,CODE)				\
