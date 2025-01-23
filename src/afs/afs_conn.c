@@ -292,7 +292,7 @@ afs_Conn(struct VenusFid *afid, struct vrequest *areq,
     if (!tv) {
 	if (areq) {
 	    afs_FinalizeReq(areq);
-	    areq->volumeError = 1;
+	    areq->volumeError = VOLMISSING;
 	}
 	return NULL;
     }

@@ -229,7 +229,7 @@ afs_CopyError(struct vrequest *afrom, struct vrequest *ato)
     if (afrom->accessError)
 	ato->accessError = 1;
     if (afrom->volumeError)
-	ato->volumeError = 1;
+	ato->volumeError = afrom->volumeError;
     if (afrom->networkError)
 	ato->networkError = 1;
     if (afrom->permWriteError)

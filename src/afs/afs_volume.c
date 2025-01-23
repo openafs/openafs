@@ -1225,7 +1225,7 @@ LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 			 (tconn, rxconn, code, NULL, areq, -1, SHARED_LOCK, tcell));
 		if (code) {
 		    /* Better handing of such failures; for now we'll simply retry this call */
-		    areq->volumeError = 1;
+		    areq->volumeError = VOLMISSING;
 		    return;
 		}
 
