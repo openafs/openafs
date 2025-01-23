@@ -2005,6 +2005,7 @@ DECL_PIOCTL(PSetTokens)
 
  done:
     afs_DestroyReq(treq);
+    memset(&clear, 0, sizeof(clear));
     return code;
 }
 
