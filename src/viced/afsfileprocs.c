@@ -5695,6 +5695,12 @@ SRXAFS_NGetVolumeInfo(struct rx_call * acall, char *avolid,
 
 }				/*SRXAFS_NGetVolumeInfo */
 
+afs_int32
+SRXAFS_GetVolumeInfo(struct rx_call * acall, char *avolid,
+		     struct VolumeInfo * avolinfo)
+{
+    return VNOVOL;
+}				/*SRXAFS_GetVolumeInfo */
 
 /*
  * Dummy routine. Should never be called (the cache manager should only
@@ -5811,165 +5817,6 @@ SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
     ViceLog(2, ("SAFS_FlushCPS	returns	%d\n", errorCode));
     return errorCode;
 }				/*SRXAFS_FlushCPS */
-
-/* worthless hack to let CS keep running ancient software */
-static int
-afs_vtoi(char *aname)
-{
-    afs_int32 temp;
-    int tc;
-
-    temp = 0;
-    while ((tc = *aname++)) {
-	if (tc > '9' || tc < '0')
-	    return 0;		/* invalid name */
-	temp *= 10;
-	temp += tc - '0';
-    }
-    return temp;
-}
-
-/*
- * may get name or #, but must handle all weird cases (recognize readonly
- * or backup volumes by name or #
- */
-static afs_int32
-CopyVolumeEntry(char *aname, struct vldbentry *ave,
-		struct VolumeInfo *av)
-{
-    int i, j, vol;
-    afs_int32 mask, whichType;
-    afs_uint32 *serverHost, *typePtr;
-
-    /* figure out what type we want if by name */
-    i = strlen(aname);
-    if (i >= 8 && strcmp(aname + i - 7, ".backup") == 0)
-	whichType = BACKVOL;
-    else if (i >= 10 && strcmp(aname + i - 9, ".readonly") == 0)
-	whichType = ROVOL;
-    else
-	whichType = RWVOL;
-
-    vol = afs_vtoi(aname);
-    if (vol == 0)
-	vol = ave->volumeId[whichType];
-
-    /*
-     * Now vol has volume # we're interested in.  Next, figure out the type
-     * of the volume by looking finding it in the vldb entry
-     */
-    if ((ave->flags & VLF_RWEXISTS) && vol == ave->volumeId[RWVOL]) {
-	mask = VLSF_RWVOL;
-	whichType = RWVOL;
-    } else if ((ave->flags & VLF_ROEXISTS) && vol == ave->volumeId[ROVOL]) {
-	mask = VLSF_ROVOL;
-	whichType = ROVOL;
-    } else if ((ave->flags & VLF_BACKEXISTS) && vol == ave->volumeId[BACKVOL]) {
-	mask = VLSF_RWVOL;	/* backup always is on the same volume as parent */
-	whichType = BACKVOL;
-    } else
-	return EINVAL;		/* error: can't find volume in vldb entry */
-
-    typePtr = &av->Type0;
-    serverHost = &av->Server0;
-    av->Vid = vol;
-    av->Type = whichType;
-    av->Type0 = av->Type1 = av->Type2 = av->Type3 = av->Type4 = 0;
-    if (ave->flags & VLF_RWEXISTS)
-	typePtr[RWVOL] = ave->volumeId[RWVOL];
-    if (ave->flags & VLF_ROEXISTS)
-	typePtr[ROVOL] = ave->volumeId[ROVOL];
-    if (ave->flags & VLF_BACKEXISTS)
-	typePtr[BACKVOL] = ave->volumeId[BACKVOL];
-
-    for (i = 0, j = 0; i < ave->nServers; i++) {
-	if ((ave->serverFlags[i] & mask) == 0)
-	    continue;		/* wrong volume */
-	serverHost[j] = ave->serverNumber[i];
-	j++;
-    }
-    av->ServerCount = j;
-    if (j < 8)
-	serverHost[j++] = 0;	/* bogus 8, but compat only now */
-    return 0;
-}
-
-static afs_int32
-TryLocalVLServer(char *avolid, struct VolumeInfo *avolinfo)
-{
-    static struct rx_connection *vlConn = 0;
-    static int down = 0;
-    static afs_int32 lastDownTime = 0;
-    struct vldbentry tve;
-    struct rx_securityClass *vlSec;
-    afs_int32 code;
-
-    FS_LOCK;
-    if (!vlConn) {
-	vlSec = rxnull_NewClientSecurityObject();
-	vlConn =
-	    rx_NewConnection(htonl(0x7f000001), htons(7003), 52, vlSec, 0);
-	rx_SetConnDeadTime(vlConn, 15);	/* don't wait long */
-    }
-    FS_UNLOCK;
-    if (down && (time(NULL) < lastDownTime + 180)) {
-	return 1;		/* failure */
-    }
-
-    code = VL_GetEntryByNameO(vlConn, avolid, &tve);
-    if (code >= 0)
-	down = 0;		/* call worked */
-    if (code) {
-	if (code < 0) {
-	    lastDownTime = time(NULL);	/* last time we tried an RPC */
-	    down = 1;
-	}
-	return code;
-    }
-
-    /* otherwise convert to old format vldb entry */
-    code = CopyVolumeEntry(avolid, &tve, avolinfo);
-    return code;
-}
-
-
-
-
-
-
-afs_int32
-SRXAFS_GetVolumeInfo(struct rx_call * acall, char *avolid,
-		     struct VolumeInfo * avolinfo)
-{
-    afs_int32 code;
-    struct rx_connection *tcon;
-    struct host *thost;
-    struct fsstats fsstats;
-
-    fsstats_StartOp(&fsstats, FS_STATS_RPCIDX_GETVOLUMEINFO);
-
-    if ((code = CallPreamble(acall, ACTIVECALL, NULL, &tcon, &thost)))
-	goto Bad_GetVolumeInfo;
-
-    FS_LOCK;
-    AFSCallStats.GetVolumeInfo++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK;
-    code = TryLocalVLServer(avolid, avolinfo);
-    ViceLog(1,
-	    ("SAFS_GetVolumeInfo returns %d, Volume %u, type %x, servers %x %x %x %x...\n",
-	     code, avolinfo->Vid, avolinfo->Type, avolinfo->Server0,
-	     avolinfo->Server1, avolinfo->Server2, avolinfo->Server3));
-    avolinfo->Type4 = 0xabcd9999;	/* tell us to try new vldb */
-
-  Bad_GetVolumeInfo:
-    code = CallPostamble(tcon, code, thost);
-
-    fsstats_FinishOp(&fsstats, code);
-
-    return code;
-
-}				/*SRXAFS_GetVolumeInfo */
-
 
 afs_int32
 SRXAFS_GetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
