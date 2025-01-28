@@ -24,13 +24,9 @@
 /* We should be doing something better anyway */
 #ifdef AFS_DARWIN80_ENV
 int
-setpag(proc, cred, pagvalue, newpag, change_parent)
-     struct proc *proc;
-     struct ucred **cred;
-     afs_uint32 pagvalue;
-     afs_uint32 *newpag;
-     afs_uint32 change_parent;
-{ 
+setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
+       afs_uint32 *newpag, afs_uint32 change_parent)
+{
     return EINVAL;
 }
 #else
@@ -43,10 +39,7 @@ static int
 		gid_t * gidset, int change_parent);
 
 int
-Afs_xsetgroups(p, args, retval)
-     struct proc *p;
-     void *args;
-     int *retval;
+Afs_xsetgroups(struct proc *p, void *args, int *retval)
 {
     int code = 0;
     struct vrequest treq;
@@ -86,12 +79,8 @@ Afs_xsetgroups(p, args, retval)
 }
 
 int
-setpag(proc, cred, pagvalue, newpag, change_parent)
-     struct proc *proc;
-     struct ucred **cred;
-     afs_uint32 pagvalue;
-     afs_uint32 *newpag;
-     afs_uint32 change_parent;
+setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
+       afs_uint32 *newpag, afs_uint32 change_parent)
 {
     gid_t gidset[NGROUPS];
     int ngroups, code;
@@ -125,7 +114,6 @@ setpag(proc, cred, pagvalue, newpag, change_parent)
     return code;
 }
 
-
 static int
 afs_getgroups(struct ucred *cred, int ngroups, gid_t * gidset)
 {
@@ -139,8 +127,6 @@ afs_getgroups(struct ucred *cred, int ngroups, gid_t * gidset)
 	*gidset++ = *gp++;
     return savengrps;
 }
-
-
 
 static int
 afs_setgroups(struct proc *proc, struct ucred **cred, int ngroups,
