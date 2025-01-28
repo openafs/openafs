@@ -222,6 +222,15 @@ else
 		aarch64-apple-darwin23.*)
 			AFS_SYSNAME="arm_darwin_230"
 			;;
+		x86_64-apple-darwin24.*)
+			AFS_SYSNAME="x86_darwin_240"
+			;;
+		arm-apple-darwin24.*)
+			AFS_SYSNAME="arm_darwin_240"
+			;;
+		aarch64-apple-darwin24.*)
+			AFS_SYSNAME="arm_darwin_240"
+			;;
                 sparc-sun-solaris2.8)
                         AFS_SYSNAME="sun4x_58"
                         ;;
@@ -424,6 +433,9 @@ case $AFS_SYSNAME in
                 ;;
         *_darwin_230)
                 AFS_PARAM=param.darwin_230.h
+                ;;
+        *_darwin_240)
+                AFS_PARAM=param.darwin_240.h
                 ;;
         *)
                 AFS_PARAM=param.${AFS_SYSNAME}.h
