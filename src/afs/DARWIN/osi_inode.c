@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -28,19 +28,14 @@ extern int afs_CacheFSType;
 
 #ifdef AFS_DARWIN80_ENV
 int
-getinode(fs, dev, inode, vpp, perror)
-    mount_t fs;
-    vnode_t *vpp;
-    dev_t dev;
-    ino_t inode;
-    int *perror;
+getinode(mount_t fs, dev_t dev, ino_t inode, vnode_t *vpp, int *perror)
 {
     struct vnode *vp;
     int code;
     vfs_context_t ctx;
     char volfspath[64];
     size_t len = sizeof(volfspath);
-    
+
     *vpp = 0;
     *perror = 0;
     if (snprintf(volfspath, len, "/.vol/%d/%d", dev, inode) >= len) {
@@ -55,23 +50,18 @@ getinode(fs, dev, inode, vpp, perror)
 	*vpp = vp;
 	return (0);
     }
-}    
-    
+}
+
 int
-igetinode(vfsp, dev, inode, vpp, va, perror)
-    vnode_t *vpp;
-    mount_t vfsp;
-    dev_t dev;
-    ino_t inode;
-    struct vattr *va;
-    int *perror;
+igetinode(mount_t vfsp, dev_t dev, ino_t inode, vnode_t *vpp, struct vattr *va,
+	  int *perror)
 {
     vnode_t pvp, vp;
     extern struct osi_dev cacheDev;
     int code = 0;
-    
+
     *perror = 0;
-    
+
     AFS_STATCNT(igetinode);
     if ((code = getinode(vfsp, dev, inode, &vp, perror)) != 0) {
 	return (code);
@@ -88,11 +78,11 @@ igetinode(vfsp, dev, inode, vpp, va, perror)
     code = vnode_getattr(vp, va, afs_osi_ctxtp);
     if (code) {
 	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
-        return code;
+	return code;
     }
     if (!VATTR_ALL_SUPPORTED(va)) {
 	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
-        return ENOENT;
+	return ENOENT;
     }
     if (va->va_mode == 0) {
 	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
@@ -103,17 +93,13 @@ igetinode(vfsp, dev, inode, vpp, va, perror)
 	vnode_close(vp, O_RDWR, afs_osi_ctxtp);
 	return (ENOENT);
     }
-    
+
     *vpp = vp;
     return (0);
 }
 #else
-getinode(fs, dev, inode, vpp, perror)
-     struct mount *fs;
-     struct vnode **vpp;
-     dev_t dev;
-     ino_t inode;
-     int *perror;
+int
+getinode(struct mount *fs, dev_t dev, ino_t inode, struct vnode **vpp, int *perror)
 {
     struct vnode *vp;
     int code;
@@ -131,7 +117,7 @@ getinode(fs, dev, inode, vpp, perror)
 	if (mp = rootfs)
 	    do {
 		/*
-		 * XXX Also do the test for MFS 
+		 * XXX Also do the test for MFS
 		 */
 		if (!strcmp(mp->mnt_vfc->vfc_name, "ufs")) {
 		    ump = VFSTOUFS(mp);
@@ -165,13 +151,9 @@ getinode(fs, dev, inode, vpp, perror)
     }
 }
 
-igetinode(vfsp, dev, inode, vpp, va, perror)
-     struct vnode **vpp;
-     struct mount *vfsp;
-     dev_t dev;
-     ino_t inode;
-     struct vattr *va;
-     int *perror;
+int
+igetinode(struct mount *vfsp, dev_t dev, ino_t inode, struct vnode **vpp,
+	  struct vattr *va, int *perror)
 {
     struct vnode *pvp, *vp;
     extern struct osi_dev cacheDev;
@@ -207,10 +189,9 @@ igetinode(vfsp, dev, inode, vpp, va, perror)
     return (0);
 }
 
-iforget(vp)
-     struct vnode *vp;
+int
+iforget(struct vnode *vp)
 {
-
     AFS_STATCNT(iforget);
     /* XXX could sleep */
     vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, current_proc());
@@ -226,7 +207,7 @@ iforget(vp)
 #endif
 
 int
-afs_syscall_icreate(long dev, long near_inode, long param1, long param2, 
+afs_syscall_icreate(long dev, long near_inode, long param1, long param2,
 		    long param3, long param4, long *retval)
 {
     return ENOTSUP;

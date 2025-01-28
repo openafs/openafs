@@ -218,10 +218,10 @@ struct vnodeopv_desc afs_dead_vnodeop_opv_desc =
 
 #define DROPNAME() FREE(name, M_TEMP)
 
-void 
+void
 darwin_vn_hold(struct vnode *vp)
 {
-    int haveGlock=ISAFS_GLOCK(); 
+    int haveGlock=ISAFS_GLOCK();
     struct vcache *tvc = VTOAFS(vp);
 
 #ifndef AFS_DARWIN80_ENV
@@ -232,18 +232,18 @@ darwin_vn_hold(struct vnode *vp)
     if (tvc->f.states & CDeadVnode)
        osi_Assert(!vnode_isinuse(vp, 1));
 #endif
-    if (haveGlock) AFS_GUNLOCK(); 
+    if (haveGlock) AFS_GUNLOCK();
 
 #ifdef AFS_DARWIN80_ENV
 	if (vnode_get(vp)) {
            /* being terminated. kernel won't give us a ref. Now what? our
               callers don't expect us to fail */
-           if (haveGlock) AFS_GLOCK(); 
+           if (haveGlock) AFS_GLOCK();
            return;
         }
 	if (vnode_ref(vp)) {
 	    vnode_put(vp);
-	    if (haveGlock) AFS_GLOCK(); 
+	    if (haveGlock) AFS_GLOCK();
 	    return;
 	}
 	vnode_put(vp);
@@ -254,30 +254,31 @@ darwin_vn_hold(struct vnode *vp)
        the ubc... so we just call VREF there now anyway. */
 
     if (VREFCOUNT_GT(tvc, 0))
-	VREF(((struct vnode *)(vp))); 
-     else 
+	VREF(((struct vnode *)(vp)));
+     else
 	afs_vget(afs_globalVFS, 0, (vp));
 #endif
 
 #ifndef AFS_DARWIN80_ENV
     if (UBCINFOMISSING(vp) || UBCINFORECLAIMED(vp)) {
-	ubc_info_init(vp); 
+	ubc_info_init(vp);
     }
 #endif
 
-    if (haveGlock) AFS_GLOCK(); 
+    if (haveGlock) AFS_GLOCK();
 #ifndef AFS_DARWIN80_ENV
     tvc->f.states &= ~CUBCinit;
 #endif
 }
+
 int
-afs_vop_lookup(ap)
-     struct VOPPROT(lookup_args)/* {
+afs_vop_lookup(struct VOPPROT(lookup_args) *ap)
+				/* {
 				 * struct vnodeop_desc * a_desc;
 				 * struct vnode *a_dvp;
 				 * struct vnode **a_vpp;
 				 * struct componentname *a_cnp;
-				 * } */ *ap;
+				 * } */
 {
     int error;
     struct vcache *vcp;
@@ -297,9 +298,9 @@ afs_vop_lookup(ap)
 	return ENOENT;
     if (vcp->mvstat != AFS_MVSTAT_MTPT) {
 	error = cache_lookup(ap->a_dvp, ap->a_vpp, ap->a_cnp);
-	if (error == -1) 
+	if (error == -1)
 	    return 0;
-	if (error == ENOENT) 
+	if (error == ENOENT)
 	    return error;
     }
 #endif
@@ -393,13 +394,13 @@ afs_vop_lookup(ap)
 }
 
 int
-afs_vop_create(ap)
-     struct VOPPROT(create_args)	/* {
+afs_vop_create(struct VOPPROT(create_args) *ap)
+				/* {
 				 * struct vnode *a_dvp;
 				 * struct vnode **a_vpp;
 				 * struct componentname *a_cnp;
 				 * struct vattr *a_vap;
-				 * } */ *ap;
+				 * } */
 {
     int error = 0;
     struct vcache *vcp;
@@ -454,13 +455,13 @@ afs_vop_create(ap)
 }
 
 int
-afs_vop_mknod(ap)
-     struct VOPPROT(mknod_args)	/* {
+afs_vop_mknod(struct VOPPROT(mknod_args) *ap)
+				/* {
 				 * struct vnode *a_dvp;
 				 * struct vnode **a_vpp;
 				 * struct componentname *a_cnp;
 				 * struct vattr *a_vap;
-				 * } */ *ap;
+				 * } */
 {
 #ifndef AFS_DARWIN80_ENV
     FREE_ZONE(ap->a_cnp->cn_pnbuf, ap->a_cnp->cn_pnlen, M_NAMEI);
@@ -470,13 +471,13 @@ afs_vop_mknod(ap)
 }
 
 int
-afs_vop_open(ap)
-     struct VOPPROT(open_args)	/* {
+afs_vop_open(struct VOPPROT(open_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * int  a_mode;
 				 * struct ucred *a_cred;
 				 * struct proc *a_p;
-				 * } */ *ap;
+				 * } */
 {
     int error;
     struct vnode *vp = ap->a_vp;
@@ -512,13 +513,13 @@ afs_vop_open(ap)
 }
 
 int
-afs_vop_close(ap)
-     struct VOPPROT(close_args)	/* {
+afs_vop_close(struct VOPPROT(close_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * int  a_fflag;
 				 * struct ucred *a_cred;
 				 * struct proc *a_p;
-				 * } */ *ap;
+				 * } */
 {
     int code;
     struct vnode *vp = ap->a_vp;
@@ -543,12 +544,12 @@ afs_vop_close(ap)
 extern int afs_fakestat_enable;
 
 int
-afs_vop_access(ap)
-     struct VOPPROT(access_args)        /* {
-                                 * struct vnode *a_vp;
-                                 * int  a_action;
-                                 * vfs_context_t a_context;
-                                 * } */ *ap;
+afs_vop_access(struct VOPPROT(access_args) *ap)
+				/* {
+				 * struct vnode *a_vp;
+				 * int  a_action;
+				 * vfs_context_t a_context;
+				 * } */
 {
     int code;
     struct vrequest treq;
@@ -620,7 +621,7 @@ afs_vop_access(ap)
     if (ap->a_action & KAUTH_VNODE_WRITE_SECURITY)
        bits |= PRSFS_WRITE;
     /* we can't check for KAUTH_VNODE_TAKE_OWNERSHIP, so we always permit it */
-    
+
     code = afs_AccessOK(tvc, bits, &treq, cmb);
     /*
      * Special cased dropbox handling:
@@ -651,13 +652,13 @@ out2:
 }
 #else
 int
-afs_vop_access(ap)
-     struct VOPPROT(access_args)	/* {
+afs_vop_access(struct VOPPROT(access_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * int  a_mode;
 				 * struct ucred *a_cred;
 				 * struct proc *a_p;
-				 * } */ *ap;
+				 * } */
 {
     int code;
     AFS_GLOCK();
@@ -668,13 +669,13 @@ afs_vop_access(ap)
 #endif
 
 int
-afs_vop_getattr(ap)
-     struct VOPPROT(getattr_args)	/* {
+afs_vop_getattr(struct VOPPROT(getattr_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * struct vattr *a_vap;
 				 * struct ucred *a_cred;
 				 * struct proc *a_p;
-				 * } */ *ap;
+				 * } */
 {
     int code;
 
@@ -747,13 +748,13 @@ afs_vop_getattr(ap)
 }
 
 int
-afs_vop_setattr(ap)
-     struct VOPPROT(setattr_args)	/* {
+afs_vop_setattr(struct VOPPROT(setattr_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * struct vattr *a_vap;
 				 * struct ucred *a_cred;
 				 * struct proc *a_p;
-				 * } */ *ap;
+				 * } */
 {
     int code, pass = 0;
     struct vcache *avc = VTOAFS(ap->a_vp);
@@ -778,19 +779,19 @@ retry:
 }
 
 int
-afs_vop_read(ap)
-     struct VOPPROT(read_args)	/* {
+afs_vop_read(struct VOPPROT(read_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * struct uio *a_uio;
 				 * int a_ioflag;
 				 * struct ucred *a_cred;
-				 * } */ *ap;
+				 * } */
 {
     int code;
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
 
-    if (vnode_isdir(ap->a_vp)) 
+    if (vnode_isdir(ap->a_vp))
 	return EISDIR;
 #ifdef AFS_DARWIN80_ENV
     ubc_msync_range(ap->a_vp, AFS_UIO_OFFSET(ap->a_uio), AFS_UIO_OFFSET(ap->a_uio) + AFS_UIO_RESID(ap->a_uio), UBC_PUSHDIRTY);
@@ -807,8 +808,8 @@ afs_vop_read(ap)
 }
 
 int
-afs_vop_pagein(ap)
-     struct VOPPROT(pagein_args)	/* {
+afs_vop_pagein(struct VOPPROT(pagein_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * upl_t a_pl;
 				 * vm_offset_t a_pl_offset;
@@ -816,7 +817,7 @@ afs_vop_pagein(ap)
 				 * size_t a_size;
 				 * struct ucred *a_cred;
 				 * int a_flags;
-				 * } */ *ap;
+				 * } */
 {
     struct vnode *vp = ap->a_vp;
     upl_t pl = ap->a_pl;
@@ -925,13 +926,13 @@ afs_vop_pagein(ap)
 }
 
 int
-afs_vop_write(ap)
-     struct VOPPROT(write_args)	/* {
+afs_vop_write(struct VOPPROT(write_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * struct uio *a_uio;
 				 * int a_ioflag;
 				 * struct ucred *a_cred;
-				 * } */ *ap;
+				 * } */
 {
     int code;
     struct vcache *avc = VTOAFS(ap->a_vp);
@@ -955,8 +956,8 @@ afs_vop_write(ap)
 }
 
 int
-afs_vop_pageout(ap)
-     struct VOPPROT(pageout_args)	/* {
+afs_vop_pageout(struct VOPPROT(pageout_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * upl_t   a_pl,
 				 * vm_offset_t   a_pl_offset,
@@ -964,7 +965,7 @@ afs_vop_pageout(ap)
 				 * size_t        a_size,
 				 * struct ucred *a_cred,
 				 * int           a_flags
-				 * } */ *ap;
+				 * } */
 {
     struct vnode *vp = ap->a_vp;
     upl_t pl = ap->a_pl;
@@ -1058,7 +1059,7 @@ afs_vop_pageout(ap)
 
     /* size will always be a multiple of PAGE_SIZE */
     /* pageout isn't supposed to extend files */
-    if (f_offset + size > tvc->f.m.Length) 
+    if (f_offset + size > tvc->f.m.Length)
         iosize = tvc->f.m.Length - f_offset;
     else
         iosize = size;
@@ -1127,15 +1128,15 @@ afs_vop_pageout(ap)
 }
 
 int
-afs_vop_ioctl(ap)
-     struct VOPPROT(ioctl_args)	/* {
+afs_vop_ioctl(struct VOPPROT(ioctl_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * int  a_command;
 				 * caddr_t  a_data;
 				 * int  a_fflag;
 				 * struct ucred *a_cred;
 				 * struct proc *a_p;
-				 * } */ *ap;
+				 * } */
 {
     struct vcache *tvc = VTOAFS(ap->a_vp);
     struct afs_ioctl data;
@@ -1158,14 +1159,14 @@ afs_vop_ioctl(ap)
 
 /* ARGSUSED */
 int
-afs_vop_select(ap)
-     struct VOPPROT(select_args)	/* {
+afs_vop_select(struct VOPPROT(select_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * int  a_which;
 				 * int  a_fflags;
 				 * struct ucred *a_cred;
 				 * struct proc *a_p;
-				 * } */ *ap;
+				 * } */
 {
     /*
      * We should really check to see if I/O is possible.
@@ -1180,25 +1181,25 @@ afs_vop_select(ap)
  */
 /* ARGSUSED */
 int
-afs_vop_mmap(ap)
-     struct VOPPROT(mmap_args)	/* {
+afs_vop_mmap(struct VOPPROT(mmap_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * int  a_fflags;
 				 * struct ucred *a_cred;
 				 * struct proc *a_p;
-				 * } */ *ap;
+				 * } */
 {
     return (EINVAL);
 }
 
 int
-afs_vop_fsync(ap)
-     struct VOPPROT(fsync_args)	/* {
+afs_vop_fsync(struct VOPPROT(fsync_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * struct ucred *a_cred;
 				 * int a_waitfor;
 				 * struct proc *a_p;
-				 * } */ *ap;
+				 * } */
 {
     int wait = ap->a_waitfor == MNT_WAIT;
     int error;
@@ -1221,13 +1222,13 @@ afs_vop_fsync(ap)
 
 #ifndef AFS_DARWIN80_ENV
 int
-afs_vop_seek(ap)
-     struct VOPPROT(seek_args)	/* {
+afs_vop_seek(struct VOPPROT(seek_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * off_t  a_oldoff;
 				 * off_t  a_newoff;
 				 * struct ucred *a_cred;
-				 * } */ *ap;
+				 * } */
 {
     if (ap->a_newoff > ULONG_MAX)	/* AFS doesn't support 64-bit offsets */
 	return EINVAL;
@@ -1236,12 +1237,12 @@ afs_vop_seek(ap)
 #endif
 
 int
-afs_vop_remove(ap)
-     struct VOPPROT(remove_args)	/* {
+afs_vop_remove(struct VOPPROT(remove_args) *ap)
+				/* {
 				 * struct vnode *a_dvp;
 				 * struct vnode *a_vp;
 				 * struct componentname *a_cnp;
-				 * } */ *ap;
+				 * } */
 {
     int error = 0;
     struct vnode *vp = ap->a_vp;
@@ -1265,7 +1266,7 @@ afs_vop_remove(ap)
     if (!error) {
 #ifdef AFS_DARWIN80_ENV
 	struct vcache *tvc = VTOAFS(vp);
-	
+
 	if (!(tvc->f.states & CUnlinked)) {
             ubc_setsize(vp, (off_t)0);
             vnode_recycle(vp);
@@ -1281,7 +1282,7 @@ afs_vop_remove(ap)
 	/* should check for PRSFS_INSERT and not PRSFS_DELETE, but the
 	   goal here is to deal with Finder's unhappiness with resource
 	   forks that have no resources in a dropbox setting */
-	if (name[0] == '.' && name[1] == '_' && error == EACCES) 
+	if (name[0] == '.' && name[1] == '_' && error == EACCES)
 	    error = 0;
     }
 
@@ -1301,12 +1302,12 @@ afs_vop_remove(ap)
 }
 
 int
-afs_vop_link(ap)
-     struct VOPPROT(link_args)	/* {
+afs_vop_link(struct VOPPROT(link_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * struct vnode *a_tdvp;
 				 * struct componentname *a_cnp;
-				 * } */ *ap;
+				 * } */
 {
     int error = 0;
     struct vnode *dvp = ap->a_tdvp;
@@ -1345,15 +1346,15 @@ afs_vop_link(ap)
 }
 
 int
-afs_vop_rename(ap)
-     struct VOPPROT(rename_args)	/* {
+afs_vop_rename(struct VOPPROT(rename_args) *ap)
+				/* {
 				 * struct vnode *a_fdvp;
 				 * struct vnode *a_fvp;
 				 * struct componentname *a_fcnp;
 				 * struct vnode *a_tdvp;
 				 * struct vnode *a_tvp;
 				 * struct componentname *a_tcnp;
-				 * } */ *ap;
+				 * } */
 {
     int error = 0;
     struct componentname *fcnp = ap->a_fcnp;
@@ -1364,7 +1365,7 @@ afs_vop_rename(ap)
     struct vnode *tdvp = ap->a_tdvp;
     struct vnode *fvp = ap->a_fvp;
     struct vnode *fdvp = ap->a_fdvp;
-    struct proc *p; 
+    struct proc *p;
 
     p = cn_proc(fcnp);
 
@@ -1420,7 +1421,7 @@ afs_vop_rename(ap)
 	    panic("afs_rename: lost from startdir");
 	fcnp->cn_nameiop = DELETE;
 
-        VREF(fdvp); 
+        VREF(fdvp);
         error=relookup(fdvp, &fvp, fcnp);
         if (error == 0)
 	    vrele(fdvp);
@@ -1428,7 +1429,7 @@ afs_vop_rename(ap)
 	    return (ENOENT);
         }
         error=VOP_REMOVE(fdvp, fvp, fcnp);
-        
+
         if (fdvp == fvp)
             vrele(fdvp);
         else
@@ -1453,7 +1454,7 @@ afs_vop_rename(ap)
     error =
 	afs_rename(VTOAFS(fdvp), fname, VTOAFS(tdvp), tname, cn_cred(tcnp));
 
-#if !defined(AFS_DARWIN80_ENV) 
+#if !defined(AFS_DARWIN80_ENV)
     AFS_GUNLOCK();
     VOP_UNLOCK(fvp, 0, p);
     if (error)
@@ -1553,13 +1554,13 @@ afs_vop_rename(ap)
 }
 
 int
-afs_vop_mkdir(ap)
-     struct VOPPROT(mkdir_args)	/* {
+afs_vop_mkdir(struct VOPPROT(mkdir_args) *ap)
+				/* {
 				 * struct vnode *a_dvp;
 				 * struct vnode **a_vpp;
 				 * struct componentname *a_cnp;
 				 * struct vattr *a_vap;
-				 * } */ *ap;
+				 * } */
 {
     struct vnode *dvp = ap->a_dvp;
     struct vattr *vap = ap->a_vap;
@@ -1604,12 +1605,12 @@ afs_vop_mkdir(ap)
 }
 
 int
-afs_vop_rmdir(ap)
-     struct VOPPROT(rmdir_args)	/* {
+afs_vop_rmdir(struct VOPPROT(rmdir_args) *ap)
+				/* {
 				 * struct vnode *a_dvp;
 				 * struct vnode *a_vp;
 				 * struct componentname *a_cnp;
-				 * } */ *ap;
+				 * } */
 {
     int error = 0;
     struct vnode *vp = ap->a_vp;
@@ -1640,14 +1641,14 @@ afs_vop_rmdir(ap)
 }
 
 int
-afs_vop_symlink(ap)
-     struct VOPPROT(symlink_args)	/* {
+afs_vop_symlink(struct VOPPROT(symlink_args) *ap)
+				/* {
 				 * struct vnode *a_dvp;
 				 * struct vnode **a_vpp;
 				 * struct componentname *a_cnp;
 				 * struct vattr *a_vap;
 				 * char *a_target;
-				 * } */ *ap;
+				 * } */
 {
     struct vnode *dvp = ap->a_dvp;
     struct vcache *pvc = NULL;
@@ -1673,15 +1674,15 @@ afs_vop_symlink(ap)
 }
 
 int
-afs_vop_readdir(ap)
-     struct VOPPROT(readdir_args)	/* {
+afs_vop_readdir(struct VOPPROT(readdir_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * struct uio *a_uio;
 				 * struct ucred *a_cred;
 				 * int *a_eofflag;
 				 * u_long *a_cookies;
 				 * int ncookies;
-				 * } */ *ap;
+				 * } */
 {
     int error;
     off_t off;
@@ -1731,12 +1732,12 @@ afs_vop_readdir(ap)
 }
 
 int
-afs_vop_readlink(ap)
-     struct VOPPROT(readlink_args)	/* {
+afs_vop_readlink(struct VOPPROT(readlink_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * struct uio *a_uio;
 				 * struct ucred *a_cred;
-				 * } */ *ap;
+				 * } */
 {
     int error;
 /*    printf("readlink %x\n", ap->a_vp);*/
@@ -1749,11 +1750,11 @@ afs_vop_readlink(ap)
 extern int prtactive;
 
 int
-afs_vop_inactive(ap)
-     struct VOPPROT(inactive_args)	/* {
+afs_vop_inactive(struct VOPPROT(inactive_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * struct proc *a_p;
-				 * } */ *ap;
+				 * } */
 {
     struct vnode *vp = ap->a_vp;
     struct vcache *tvc = VTOAFS(vp);
@@ -1782,10 +1783,10 @@ afs_vop_inactive(ap)
 }
 
 int
-afs_vop_reclaim(ap)
-     struct VOPPROT(reclaim_args)	/* {
+afs_vop_reclaim(struct VOPPROT(reclaim_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
-				 * } */ *ap;
+				 * } */
 {
     int error = 0;
     int sl, writelocked;
@@ -1826,7 +1827,7 @@ afs_vop_reclaim(ap)
 	   }
 	   if (!error && vnode_fsnode(vp))
 	       panic("afs_reclaim: vnode not cleaned");
-	   if (!error && (tvc->v != NULL)) 
+	   if (!error && (tvc->v != NULL))
 	       panic("afs_reclaim: vcache not cleaned");
 	   ReleaseWriteLock(&afs_xvcache);
        }
@@ -1839,12 +1840,12 @@ afs_vop_reclaim(ap)
  * Return POSIX pathconf information applicable to ufs filesystems.
  */
 int
-afs_vop_pathconf(ap)
-     struct VOPPROT(pathconf_args)	/* {
+afs_vop_pathconf(struct VOPPROT(pathconf_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * int a_name;
 				 * int *a_retval;
-				 * } */ *ap;
+				 * } */
 {
     AFS_STATCNT(afs_cntl);
     switch (ap->a_name) {
@@ -1885,14 +1886,14 @@ afs_vop_pathconf(ap)
  * Advisory record locking support (fcntl() POSIX style)
  */
 int
-afs_vop_advlock(ap)
-     struct VOPPROT(advlock_args)	/* {
+afs_vop_advlock(struct VOPPROT(advlock_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * caddr_t  a_id;
 				 * int  a_op;
 				 * struct flock *a_fl;
 				 * int  a_flags;
-				 * } */ *ap;
+				 * } */
 {
     int error;
     struct ucred *tcr;
@@ -1934,24 +1935,24 @@ afs_vop_advlock(ap)
 }
 
 int
-afs_vop_blktooff(ap)
-     struct VOPPROT(blktooff_args)	/* {
+afs_vop_blktooff(struct VOPPROT(blktooff_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * daddr_t a_lblkno;
-				 * off_t *a_offset;    
-				 * } */ *ap;
+				 * off_t *a_offset;
+				 * } */
 {
     *ap->a_offset = (off_t) (ap->a_lblkno * DEV_BSIZE);
     return 0;
 }
 
 int
-afs_vop_offtoblk(ap)
-     struct VOPPROT(offtoblk_args)	/* {
+afs_vop_offtoblk(struct VOPPROT(offtoblk_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
-				 * off_t a_offset;    
+				 * off_t a_offset;
 				 * daddr_t *a_lblkno;
-				 * } */ *ap;
+				 * } */
 {
     *ap->a_lblkno = (daddr_t) (ap->a_offset / DEV_BSIZE);
 
@@ -1960,10 +1961,10 @@ afs_vop_offtoblk(ap)
 
 #ifndef AFS_DARWIN80_ENV
 int
-afs_vop_lock(ap)
-     struct VOPPROT(lock_args)	/* {
+afs_vop_lock(struct VOPPROT(lock_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
-				 * } */ *ap;
+				 * } */
 {
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
@@ -1975,10 +1976,10 @@ afs_vop_lock(ap)
 }
 
 int
-afs_vop_unlock(ap)
-     struct VOPPROT(unlock_args)	/* {
+afs_vop_unlock(struct VOPPROT(unlock_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
-				 * } */ *ap;
+				 * } */
 {
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
@@ -1990,42 +1991,42 @@ afs_vop_unlock(ap)
 }
 
 int
-afs_vop_truncate(ap)
-     struct VOPPROT(truncate_args)	/* {
+afs_vop_truncate(struct VOPPROT(truncate_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * off_t a_length;
 				 * int a_flags;
 				 * struct ucred *a_cred;
 				 * struct proc *a_p;
-				 * } */ *ap;
+				 * } */
 {
     /* printf("stray afs_vop_truncate\n"); */
     return ENOTSUP;
 }
 
 int
-afs_vop_update(ap)
-     struct VOPPROT(update_args)	/* {
+afs_vop_update(struct VOPPROT(update_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * struct timeval *a_access;
 				 * struct timeval *a_modify;
 				 * int a_waitfor;
-				 * } */ *ap;
+				 * } */
 {
     /* printf("stray afs_vop_update\n"); */
     return ENOTSUP;
 }
 
 int
-afs_vop_bmap(ap)
-     struct VOPPROT(bmap_args)	/* {
+afs_vop_bmap(struct VOPPROT(bmap_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
 				 * daddr_t  a_bn;
 				 * struct vnode **a_vpp;
 				 * daddr_t *a_bnp;
 				 * int *a_runp;
 				 * int *a_runb;
-				 * } */ *ap;
+				 * } */
 {
     int error;
     if (ap->a_bnp) {
@@ -2041,10 +2042,10 @@ afs_vop_bmap(ap)
 }
 
 int
-afs_vop_strategy(ap)
-     struct VOPPROT(strategy_args)	/* {
+afs_vop_strategy(struct VOPPROT(strategy_args) *ap)
+				/* {
 				 * struct buf *a_bp;
-				 * } */ *ap;
+				 * } */
 {
     int error;
     AFS_GLOCK();
@@ -2054,10 +2055,10 @@ afs_vop_strategy(ap)
 }
 
 int
-afs_vop_print(ap)
-     struct VOPPROT(print_args)	/* {
+afs_vop_print(struct VOPPROT(print_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
-				 * } */ *ap;
+				 * } */
 {
     struct vnode *vp = ap->a_vp;
     struct vcache *vc = VTOAFS(ap->a_vp);
@@ -2084,25 +2085,25 @@ afs_vop_print(ap)
 }
 
 int
-afs_vop_islocked(ap)
-     struct VOPPROT(islocked_args)	/* {
+afs_vop_islocked(struct VOPPROT(islocked_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
-				 * } */ *ap;
+				 * } */
 {
     struct vcache *vc = VTOAFS(ap->a_vp);
     return lockstatus(&vc->rwlock);
 }
 
 int
-afs_vop_cmap(ap)
-     struct VOPPROT(cmap_args)	/* {
+afs_vop_cmap(struct VOPPROT(cmap_args) *ap)
+				/* {
 				 * struct vnode *a_vp;
-				 * off_t a_foffset;    
+				 * off_t a_foffset;
 				 * size_t a_size;
 				 * daddr_t *a_bpn;
 				 * size_t *a_run;
 				 * void *a_poff;
-				 * } */ *ap;
+				 * } */
 {
     *ap->a_bpn = (daddr_t) (ap->a_foffset / DEV_BSIZE);
     *ap->a_run = opr_max(ap->a_size, AFS_CHUNKSIZE(ap->a_foffset));
@@ -2144,7 +2145,7 @@ afs_darwin_getnewvnode(struct vcache *avc)
 #endif
 }
 #ifdef AFS_DARWIN80_ENV
-/* if this fails, then tvc has been unrefed and may have been freed. 
+/* if this fails, then tvc has been unrefed and may have been freed.
    Don't touch! */
 int
 afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp,
