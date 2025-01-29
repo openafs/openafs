@@ -81,10 +81,11 @@ afs_mount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp, CTX
     /* new api will be needed to initialize this information (nfs needs to
        set mntfromname too) */
 #endif
-    STATFS_TYPE *mnt_stat = vfs_statfs(mp); 
+    STATFS_TYPE *mnt_stat = vfs_statfs(mp);
 
-    if (vfs_isupdate(mp))
+    if (vfs_isupdate(mp)) {
 	return EINVAL;
+    }
 
     AFS_GLOCK();
     AFS_STATCNT(afs_mount);
@@ -188,18 +189,18 @@ afs_unmount(struct mount *mp, int flags, CTX_TYPE ctx)
 	    FREE(mdata, M_UFSMNT);
 	} else {
 	    if (flags & MNT_FORCE) {
-                if (afs_globalVp) {
+		if (afs_globalVp) {
 #ifdef AFS_DARWIN80_ENV
-                    afs_PutVCache(afs_globalVp);
+		    afs_PutVCache(afs_globalVp);
 #else
-                    AFS_GUNLOCK();
-                    vrele(AFSTOV(afs_globalVp));
-                    AFS_GLOCK();
+		    AFS_GUNLOCK();
+		    vrele(AFSTOV(afs_globalVp));
+		    AFS_GLOCK();
 #endif
-                }
+		}
 		afs_globalVp = NULL;
 		AFS_GUNLOCK();
-	        vflush(mp, NULLVP, FORCECLOSE/*0*/);
+		vflush(mp, NULLVP, FORCECLOSE/*0*/);
 		AFS_GLOCK();
 		afs_globalVFS = 0;
 		afs_shutdown(AFS_WARM);
@@ -249,7 +250,7 @@ again:
 	&& (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
 	error = 0;
-        needref=1;
+	needref=1;
     } else if (mdata == (qaddr_t) - 1) {
 	error = ENOENT;
     } else {
@@ -259,16 +260,17 @@ again:
 	if (!(error = afs_InitReq(&treq, cr)) && !(error = afs_CheckInit())) {
 	    tvp = afs_GetVCache(rootFid, &treq);
 #ifdef AFS_DARWIN80_ENV
-            if (tvp) {
-	        AFS_GUNLOCK();
-                error = afs_darwin_finalizevnode(tvp, NULL, NULL, 1, 0);
-	        AFS_GLOCK();
-                if (error)
-                   tvp = NULL;
-                else
-                   /* re-acquire the usecount that finalizevnode disposed of */
-                   vnode_ref(AFSTOV(tvp));
-            }
+	    if (tvp) {
+		AFS_GUNLOCK();
+		error = afs_darwin_finalizevnode(tvp, NULL, NULL, 1, 0);
+		AFS_GLOCK();
+		if (error) {
+		    tvp = NULL;
+		} else {
+		    /* re-acquire the usecount that finalizevnode disposed of */
+		    vnode_ref(AFSTOV(tvp));
+		}
+	    }
 #endif
 	    /* we really want this to stay around */
 	    if (tvp) {
@@ -284,10 +286,11 @@ again:
 			    goto again;
 			}
 		    }
-                    needref=1;
-                }
-	    } else
+		    needref=1;
+		}
+	    } else {
 		error = EIO;
+	    }
 	}
     }
     if (tvp) {
@@ -298,7 +301,7 @@ again:
 	AFS_GLOCK();
 #endif
 
-        if (needref)
+	if (needref) {
 #ifdef AFS_DARWIN80_ENV
 	    /* This iocount is for the caller. the initial iocount
 	     * is for the eventual afs_PutVCache. for mdata != null,
@@ -306,15 +309,15 @@ again:
 	     * initial (from GetVCache or finalizevnode) iocount
 	     */
 	    vnode_get(AFSTOV(tvp));
-#else
-	    ;
 #endif
+	}
 
-	if (mdata == NULL)
+	if (mdata == NULL) {
 	    afs_globalVFS = mp;
+	}
 
 	*vpp = AFSTOV(tvp);
-#ifndef AFS_DARWIN80_ENV 
+#ifndef AFS_DARWIN80_ENV
 	AFSTOV(tvp)->v_flag |= VROOT;
 	AFSTOV(tvp)->v_vfsp = mp;
 #endif
@@ -337,12 +340,14 @@ afs_vget(struct mount *mp, int lfl, struct vnode *vp)
 	panic("afs_vget");
     }
     error = vget(vp, lfl, current_proc());
-    if (!error)
+    if (!error) {
 	insmntque(vp, mp);	/* take off free list */
+    }
     return error;
 }
 
-int afs_vfs_vget(struct mount *mp, void *ino, struct vnode **vpp)
+int
+afs_vfs_vget(struct mount *mp, void *ino, struct vnode **vpp)
 {
    return ENOENT; /* cannot implement */
 }
@@ -368,8 +373,8 @@ afs_statfs(struct mount *mp, STATFS_TYPE *abp, CTX_TYPE ctx)
       abp->f_ffree = AFS_VFS_FAKEFREE;
 
     if (abp != sysstat) {
-        abp->f_fsid.val[0] = sysstat->f_fsid.val[0];
-        abp->f_fsid.val[1] = sysstat->f_fsid.val[1];
+	abp->f_fsid.val[0] = sysstat->f_fsid.val[0];
+	abp->f_fsid.val[1] = sysstat->f_fsid.val[1];
 #ifndef AFS_DARWIN80_ENV
 	abp->f_type = vfs_typenum(mp);
 #endif
@@ -386,7 +391,7 @@ afs_statfs(struct mount *mp, STATFS_TYPE *abp, CTX_TYPE ctx)
 #ifdef AFS_DARWIN80_ENV
 int
 afs_vfs_getattr(struct mount *mp, struct vfs_attr *outattrs,
-                vfs_context_t context)
+		vfs_context_t context)
 {
     VFSATTR_RETURN(outattrs, f_bsize, vfs_devblocksize(mp));
     VFSATTR_RETURN(outattrs, f_iosize, vfs_devblocksize(mp));
@@ -395,55 +400,54 @@ afs_vfs_getattr(struct mount *mp, struct vfs_attr *outattrs,
     VFSATTR_RETURN(outattrs, f_bavail, 2000000);
     VFSATTR_RETURN(outattrs, f_files, 2000000);
     VFSATTR_RETURN(outattrs, f_ffree, 2000000);
-    if ( VFSATTR_IS_ACTIVE(outattrs, f_capabilities) )
-    {
-         vol_capabilities_attr_t *vcapattrptr;
-         vcapattrptr = &outattrs->f_capabilities;
-         vcapattrptr->capabilities[VOL_CAPABILITIES_FORMAT] =
-                   VOL_CAP_FMT_SYMBOLICLINKS |
-                   VOL_CAP_FMT_HARDLINKS |
-                   VOL_CAP_FMT_ZERO_RUNS |
-                   VOL_CAP_FMT_CASE_SENSITIVE |
-                   VOL_CAP_FMT_CASE_PRESERVING |
-		   VOL_CAP_FMT_PERSISTENTOBJECTIDS |
-		   VOL_CAP_FMT_2TB_FILESIZE |
-                   VOL_CAP_FMT_FAST_STATFS;
-         vcapattrptr->capabilities[VOL_CAPABILITIES_INTERFACES] = 
-                   VOL_CAP_INT_ADVLOCK | 
-                   VOL_CAP_INT_FLOCK;
-         vcapattrptr->capabilities[VOL_CAPABILITIES_RESERVED1] = 0;
-         vcapattrptr->capabilities[VOL_CAPABILITIES_RESERVED2] = 0;
+    if ( VFSATTR_IS_ACTIVE(outattrs, f_capabilities) ) {
+	vol_capabilities_attr_t *vcapattrptr;
+	vcapattrptr = &outattrs->f_capabilities;
+	vcapattrptr->capabilities[VOL_CAPABILITIES_FORMAT] =
+	    VOL_CAP_FMT_SYMBOLICLINKS |
+	    VOL_CAP_FMT_HARDLINKS |
+	    VOL_CAP_FMT_ZERO_RUNS |
+	    VOL_CAP_FMT_CASE_SENSITIVE |
+	    VOL_CAP_FMT_CASE_PRESERVING |
+	    VOL_CAP_FMT_PERSISTENTOBJECTIDS |
+	    VOL_CAP_FMT_2TB_FILESIZE |
+	    VOL_CAP_FMT_FAST_STATFS;
+	vcapattrptr->capabilities[VOL_CAPABILITIES_INTERFACES] =
+	    VOL_CAP_INT_ADVLOCK |
+	    VOL_CAP_INT_FLOCK;
+	vcapattrptr->capabilities[VOL_CAPABILITIES_RESERVED1] = 0;
+	vcapattrptr->capabilities[VOL_CAPABILITIES_RESERVED2] = 0;
 
-         /* Capabilities we know about: */
-         vcapattrptr->valid[VOL_CAPABILITIES_FORMAT] =
-                 VOL_CAP_FMT_PERSISTENTOBJECTIDS |
-                 VOL_CAP_FMT_SYMBOLICLINKS |
-                 VOL_CAP_FMT_HARDLINKS |
-                 VOL_CAP_FMT_JOURNAL |
-                 VOL_CAP_FMT_JOURNAL_ACTIVE |
-                 VOL_CAP_FMT_NO_ROOT_TIMES |
-                 VOL_CAP_FMT_SPARSE_FILES |
-                 VOL_CAP_FMT_ZERO_RUNS |
-                 VOL_CAP_FMT_CASE_SENSITIVE |
-                 VOL_CAP_FMT_CASE_PRESERVING |
-		 VOL_CAP_FMT_PERSISTENTOBJECTIDS |
-		 VOL_CAP_FMT_2TB_FILESIZE |
-                 VOL_CAP_FMT_FAST_STATFS;
-         vcapattrptr->valid[VOL_CAPABILITIES_INTERFACES] =
-                 VOL_CAP_INT_SEARCHFS |
-                 VOL_CAP_INT_ATTRLIST |
-                 VOL_CAP_INT_NFSEXPORT |
-                 VOL_CAP_INT_READDIRATTR |
-                 VOL_CAP_INT_EXCHANGEDATA |
-                 VOL_CAP_INT_COPYFILE |
-                 VOL_CAP_INT_ALLOCATE |
-                 VOL_CAP_INT_VOL_RENAME |
-                 VOL_CAP_INT_ADVLOCK |
-                 VOL_CAP_INT_FLOCK;
-         vcapattrptr->valid[VOL_CAPABILITIES_RESERVED1] = 0;
-         vcapattrptr->valid[VOL_CAPABILITIES_RESERVED2] = 0;
-             
-         VFSATTR_SET_SUPPORTED(outattrs, f_capabilities);
+	/* Capabilities we know about: */
+	vcapattrptr->valid[VOL_CAPABILITIES_FORMAT] =
+	    VOL_CAP_FMT_PERSISTENTOBJECTIDS |
+	    VOL_CAP_FMT_SYMBOLICLINKS |
+	    VOL_CAP_FMT_HARDLINKS |
+	    VOL_CAP_FMT_JOURNAL |
+	    VOL_CAP_FMT_JOURNAL_ACTIVE |
+	    VOL_CAP_FMT_NO_ROOT_TIMES |
+	    VOL_CAP_FMT_SPARSE_FILES |
+	    VOL_CAP_FMT_ZERO_RUNS |
+	    VOL_CAP_FMT_CASE_SENSITIVE |
+	    VOL_CAP_FMT_CASE_PRESERVING |
+	    VOL_CAP_FMT_PERSISTENTOBJECTIDS |
+	    VOL_CAP_FMT_2TB_FILESIZE |
+	    VOL_CAP_FMT_FAST_STATFS;
+	vcapattrptr->valid[VOL_CAPABILITIES_INTERFACES] =
+	    VOL_CAP_INT_SEARCHFS |
+	    VOL_CAP_INT_ATTRLIST |
+	    VOL_CAP_INT_NFSEXPORT |
+	    VOL_CAP_INT_READDIRATTR |
+	    VOL_CAP_INT_EXCHANGEDATA |
+	    VOL_CAP_INT_COPYFILE |
+	    VOL_CAP_INT_ALLOCATE |
+	    VOL_CAP_INT_VOL_RENAME |
+	    VOL_CAP_INT_ADVLOCK |
+	    VOL_CAP_INT_FLOCK;
+	vcapattrptr->valid[VOL_CAPABILITIES_RESERVED1] = 0;
+	vcapattrptr->valid[VOL_CAPABILITIES_RESERVED2] = 0;
+
+	VFSATTR_SET_SUPPORTED(outattrs, f_capabilities);
     }
     return 0;
 }
@@ -471,12 +475,15 @@ afs_sysctl_int(int *name, u_int namelen, user_addr_t oldp, size_t *oldlenp,
 #ifdef AFS_DARWIN80_ENV
     int error;
 
-    if (oldp != USER_ADDR_NULL && oldlenp == NULL)
+    if (oldp != USER_ADDR_NULL && oldlenp == NULL) {
 	return (EFAULT);
-    if (oldp && *oldlenp < sizeof(u_int32_t))
+    }
+    if (oldp && *oldlenp < sizeof(u_int32_t)) {
 	return (ENOMEM);
-    if (newp && newlen != sizeof(u_int32_t))
+    }
+    if (newp && newlen != sizeof(u_int32_t)) {
 	return (EINVAL);
+    }
     *oldlenp = sizeof(u_int32_t);
     if (oldp) {
 	if ((error = copyout(object,
@@ -484,8 +491,9 @@ afs_sysctl_int(int *name, u_int namelen, user_addr_t oldp, size_t *oldlenp,
 	    return error;
 	}
     }
-    if (newp)
+    if (newp) {
 	return copyin(newp, object, sizeof(u_int32_t));
+    }
     return 0;
 #else
     return sysctl_int(oldp, oldlenp, newp, newlen,
@@ -505,11 +513,12 @@ afs_sysctl(int *name, u_int namelen, void *oldp, size_t *oldlenp,
 {
     switch (name[0]) {
     case AFS_SC_ALL:
-        /* nothing defined */
-        break;
+	/* nothing defined */
+	break;
     case AFS_SC_DARWIN:
-        if (namelen < 3)
+	if (namelen < 3) {
 	    return ENOENT;
+	}
 	switch (name[1]) {
 	case AFS_SC_DARWIN_ALL:
 	    switch (name[2]) {
@@ -541,8 +550,6 @@ afs_init(struct vfsconf *vfc)
     int j;
     int (**opv_desc_vector) ();
     struct vnodeopv_entry_desc *opve_descp;
-
-
 
     MALLOC(afs_vnodeop_p, PFI *, vfs_opv_numops * sizeof(PFI), M_TEMP,
 	   M_WAITOK);
@@ -596,37 +603,39 @@ afs_init(struct vfsconf *vfc)
     if (opv_desc_vector[VOFFSET(vop_default)] == NULL) {
 	panic("afs_init: operation vector without default routine.");
     }
-    for (j = 0; j < vfs_opv_numops; j++)
-	if (opv_desc_vector[j] == NULL)
+    for (j = 0; j < vfs_opv_numops; j++) {
+	if (opv_desc_vector[j] == NULL) {
 	    opv_desc_vector[j] = opv_desc_vector[VOFFSET(vop_default)];
+	}
+    }
 #endif
     return 0;
 }
 
 struct vfsops afs_vfsops = {
-   afs_mount,
-   afs_start,
-   afs_unmount,
-   afs_root,
+    afs_mount,
+    afs_start,
+    afs_unmount,
+    afs_root,
 #ifdef AFS_DARWIN80_ENV
-   0,
-   afs_vfs_getattr,
+    0,
+    afs_vfs_getattr,
 #else
-   afs_quotactl,
-   afs_statfs,
+    afs_quotactl,
+    afs_statfs,
 #endif
-   afs_sync,
+    afs_sync,
 #ifdef AFS_DARWIN80_ENV
-   0,0,0,
+    0,0,0,
 #else
-   afs_vfs_vget,
-   afs_fhtovp,
-   afs_vptofh,
+    afs_vfs_vget,
+    afs_fhtovp,
+    afs_vptofh,
 #endif
-   afs_init,
-   afs_sysctl, 
+    afs_init,
+    afs_sysctl,
 #ifdef AFS_DARWIN80_ENV
-   0 /*setattr */,
-   {0}
+    0 /*setattr */,
+    {0}
 #endif
 };

@@ -55,8 +55,9 @@ Afs_xsetgroups(struct proc *p, void *args, int *retval)
     code = afs_InitReq(&treq, cr);
     AFS_GUNLOCK();
     crfree(cr);
-    if (code)
+    if (code) {
 	return setgroups(p, args, retval);	/* afs has shut down */
+    }
 
     code = setgroups(p, args, retval);
     /* Note that if there is a pag already in the new groups we don't
@@ -123,8 +124,9 @@ afs_getgroups(struct ucred *cred, int ngroups, gid_t * gidset)
     AFS_STATCNT(afs_getgroups);
     savengrps = ngrps = opr_min(ngroups, cred->cr_ngroups);
     gp = cred->cr_groups;
-    while (ngrps--)
+    while (ngrps--) {
 	*gidset++ = *gp++;
+    }
     return savengrps;
 }
 
@@ -142,13 +144,15 @@ afs_setgroups(struct proc *proc, struct ucred **cred, int ngroups,
      * The real setgroups() call does this, so maybe we should too.
      *
      */
-    if (ngroups > NGROUPS)
+    if (ngroups > NGROUPS) {
 	return EINVAL;
+    }
     cr = *cred;
     cr->cr_ngroups = ngroups;
     gp = cr->cr_groups;
-    while (ngroups--)
+    while (ngroups--) {
 	*gp++ = *gidset++;
+    }
     if (change_parent) {
 	crhold(cr);
 	pcred_writelock(proc->p_pptr);

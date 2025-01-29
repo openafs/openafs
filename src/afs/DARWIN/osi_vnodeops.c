@@ -35,8 +35,8 @@
   kernel_upl_abort_range((pl), (offset), (size), (flags))
 #define OSI_UPL_COMMIT_RANGE(pl, offset, size, flags) \
   kernel_upl_commit_range((pl), (offset), (size), (flags), \
-                          UPL_GET_INTERNAL_PAGE_LIST((pl)),\
-                                    MAX_UPL_TRANSFER)
+			  UPL_GET_INTERNAL_PAGE_LIST((pl)),\
+			  MAX_UPL_TRANSFER)
 #define OSI_UPL_MAP(upl, offset) kernel_upl_map(kernel_map, (upl), (offset))
 #define OSI_UPL_UNMAP(upl) kernel_upl_unmap(kernel_map, (upl))
 #endif
@@ -229,34 +229,41 @@ darwin_vn_hold(struct vnode *vp)
 #endif
 #ifdef AFS_DARWIN80_ENV
     osi_Assert((tvc->f.states & CVInit) == 0);
-    if (tvc->f.states & CDeadVnode)
+    if (tvc->f.states & CDeadVnode) {
        osi_Assert(!vnode_isinuse(vp, 1));
+    }
 #endif
-    if (haveGlock) AFS_GUNLOCK();
-
+    if (haveGlock) {
+	AFS_GUNLOCK();
+    }
 #ifdef AFS_DARWIN80_ENV
-	if (vnode_get(vp)) {
-           /* being terminated. kernel won't give us a ref. Now what? our
-              callers don't expect us to fail */
-           if (haveGlock) AFS_GLOCK();
-           return;
-        }
-	if (vnode_ref(vp)) {
-	    vnode_put(vp);
-	    if (haveGlock) AFS_GLOCK();
-	    return;
+    if (vnode_get(vp)) {
+	/* being terminated. kernel won't give us a ref. Now what? our
+	   callers don't expect us to fail */
+	if (haveGlock) {
+	    AFS_GLOCK();
 	}
+	return;
+    }
+    if (vnode_ref(vp)) {
 	vnode_put(vp);
+	if (haveGlock) {
+	    AFS_GLOCK();
+	}
+	return;
+    }
+    vnode_put(vp);
 #else
     /* vget needed for 0 ref'd vnode in GetVCache to not panic in vref.
        vref needed for multiref'd vnode in vnop_remove not to deadlock
        ourselves during vop_inactive, except we also need to not reinst
        the ubc... so we just call VREF there now anyway. */
 
-    if (VREFCOUNT_GT(tvc, 0))
+    if (VREFCOUNT_GT(tvc, 0)) {
 	VREF(((struct vnode *)(vp)));
-     else
+    } else {
 	afs_vget(afs_globalVFS, 0, (vp));
+    }
 #endif
 
 #ifndef AFS_DARWIN80_ENV
@@ -265,7 +272,9 @@ darwin_vn_hold(struct vnode *vp)
     }
 #endif
 
-    if (haveGlock) AFS_GLOCK();
+    if (haveGlock) {
+	AFS_GLOCK();
+    }
 #ifndef AFS_DARWIN80_ENV
     tvc->f.states &= ~CUBCinit;
 #endif
@@ -294,14 +303,17 @@ afs_vop_lookup(struct VOPPROT(lookup_args) *ap)
      * we can't flag the vcache as there is none, so fail here.
      * needed for fsevents support.
      */
-    if (ap->a_context == afs_osi_ctxtp)
+    if (ap->a_context == afs_osi_ctxtp) {
 	return ENOENT;
+    }
     if (vcp->mvstat != AFS_MVSTAT_MTPT) {
 	error = cache_lookup(ap->a_dvp, ap->a_vpp, ap->a_cnp);
-	if (error == -1)
+	if (error == -1) {
 	    return 0;
-	if (error == ENOENT)
+	}
+	if (error == ENOENT) {
 	    return error;
+	}
     }
 #endif
 
@@ -318,23 +330,27 @@ afs_vop_lookup(struct VOPPROT(lookup_args) *ap)
     }
     dvp = ap->a_dvp;
 #ifndef AFS_DARWIN80_ENV
-    if (flags & ISDOTDOT)
+    if (flags & ISDOTDOT) {
 	VOP_UNLOCK(dvp, 0, p);
+    }
 #endif
     AFS_GLOCK();
     error = afs_lookup(VTOAFS(dvp), name, &vcp, vop_cn_cred);
     AFS_GUNLOCK();
     if (error) {
 #ifndef AFS_DARWIN80_ENV
-	if (flags & ISDOTDOT)
+	if (flags & ISDOTDOT) {
 	    VOP_LOCK(dvp, LK_EXCLUSIVE | LK_RETRY, p);
+	}
 #endif
 	if ((cnp->cn_nameiop == CREATE || cnp->cn_nameiop == RENAME)
-	    && (flags & ISLASTCN) && error == ENOENT)
+	    && (flags & ISLASTCN) && error == ENOENT) {
 	    error = EJUSTRETURN;
+	}
 #ifndef AFS_DARWIN80_ENV
-	if (cnp->cn_nameiop != LOOKUP && (flags & ISLASTCN))
+	if (cnp->cn_nameiop != LOOKUP && (flags & ISLASTCN)) {
 	    cnp->cn_flags |= SAVENAME;
+	}
 #endif
 	DROPNAME();
 	*ap->a_vpp = 0;
@@ -351,9 +367,8 @@ afs_vop_lookup(struct VOPPROT(lookup_args) *ap)
 #ifndef AFS_DARWIN80_ENV /* XXX needed for multi-mount thing, but can't have it yet */
     vp->v_vfsp = dvp->v_vfsp;
 
-    if (UBCINFOMISSING(vp) ||
-	UBCINFORECLAIMED(vp)) {
-	    ubc_info_init(vp);
+    if (UBCINFOMISSING(vp) || UBCINFORECLAIMED(vp)) {
+	ubc_info_init(vp);
     }
 #endif
 
@@ -375,8 +390,9 @@ afs_vop_lookup(struct VOPPROT(lookup_args) *ap)
 	/* they're the same; afs_lookup() already ref'ed the leaf.
 	 * It came in locked, so we don't need to ref OR lock it */
     } else {
-	if (!lockparent || !(flags & ISLASTCN))
+	if (!lockparent || !(flags & ISLASTCN)) {
 	    VOP_UNLOCK(dvp, 0, p);	/* done with parent. */
+	}
 	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 	/* always return the child locked */
     }
@@ -385,8 +401,9 @@ afs_vop_lookup(struct VOPPROT(lookup_args) *ap)
 
 #ifndef AFS_DARWIN80_ENV
     if ((cnp->cn_nameiop == RENAME && wantparent && (flags & ISLASTCN)
-	 || (cnp->cn_nameiop != LOOKUP && (flags & ISLASTCN))))
+	 || (cnp->cn_nameiop != LOOKUP && (flags & ISLASTCN)))) {
 	cnp->cn_flags |= SAVENAME;
+    }
 #endif
 
     DROPNAME();
@@ -426,11 +443,11 @@ afs_vop_create(struct VOPPROT(create_args) *ap)
 
     if (vcp) {
 #ifdef AFS_DARWIN80_ENV
-      if ((error=afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0, 0))) {
+	if ((error=afs_darwin_finalizevnode(vcp, ap->a_dvp, ap->a_cnp, 0, 0))) {
 	    DROPNAME();
 	    *ap->a_vpp=0;
 	    return error;
-        }
+	}
 #endif
 	*ap->a_vpp = AFSTOV(vcp);
 #ifndef AFS_DARWIN80_ENV /* XXX needed for multi-mount thing, but can't have it yet */
@@ -442,12 +459,14 @@ afs_vop_create(struct VOPPROT(create_args) *ap)
 	    vcp->f.states &= ~CUBCinit;
 	}
 #endif
-    } else
+    } else {
 	*ap->a_vpp = 0;
+    }
 
 #ifndef AFS_DARWIN80_ENV
-    if ((cnp->cn_flags & SAVESTART) == 0)
+    if ((cnp->cn_flags & SAVESTART) == 0) {
 	FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
+    }
     vput(dvp);
 #endif
     DROPNAME();
@@ -494,20 +513,23 @@ afs_vop_open(struct VOPPROT(open_args) *ap)
      * was able to call ubc_hold() in the first place.
      *----------------------------------------------------------------*/
     if (vp->v_type == VREG && !(vp->v_flag & VSYSTEM)
-      && vp->v_ubcinfo->ui_refcount < 2)
+	&& vp->v_ubcinfo->ui_refcount < 2) {
 	didhold = ubc_hold(vp);
+    }
 #endif /* !AFS_DARWIN80_ENV */
     AFS_GLOCK();
     error = afs_open(&vc, ap->a_mode, vop_cred);
 #ifdef DIAGNOSTIC
-    if (AFSTOV(vc) != vp)
+    if (AFSTOV(vc) != vp) {
 	panic("AFS open changed vnode!");
+    }
 #endif
     osi_FlushPages(vc, vop_cred);
     AFS_GUNLOCK();
 #if !defined(AFS_DARWIN80_ENV)
-    if (error && didhold)
+    if (error && didhold) {
 	ubc_rele(vp);
+    }
 #endif /* !AFS_DARWIN80_ENV */
     return error;
 }
@@ -525,13 +547,15 @@ afs_vop_close(struct VOPPROT(close_args) *ap)
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
     /* allows faking FSE_CONTENT_MODIFIED */
-    if (afs_osi_ctxtp == ap->a_context)
+    if (afs_osi_ctxtp == ap->a_context) {
 	return 0;
+    }
     AFS_GLOCK();
-    if (vop_cred)
+    if (vop_cred) {
 	code = afs_close(avc, ap->a_fflag, vop_cred);
-    else
+    } else {
 	code = afs_close(avc, ap->a_fflag, afs_osi_credp);
+    }
     osi_FlushPages(avc, vop_cred);	/* hold GLOCK, but not basic vnode lock */
     /* This is legit; it just forces the fstrace event to happen */
     code = afs_CheckCode(code, NULL, 60);
@@ -562,64 +586,80 @@ afs_vop_access(struct VOPPROT(access_args) *ap)
      * needed for fsevents. ._ file attribute mirroring touches this.
      * we can't flag the vcache, as there is none, so fail here.
      */
-    if (ap->a_context == afs_osi_ctxtp)
+    if (ap->a_context == afs_osi_ctxtp) {
 	return ENOENT;
+    }
 #endif
     AFS_GLOCK();
     afs_InitFakeStat(&fakestate);
-    if ((code = afs_InitReq(&treq, vop_cred)))
-        goto out2;
+    if ((code = afs_InitReq(&treq, vop_cred))) {
+	goto out2;
+    }
 
     code = afs_TryEvalFakeStat(&tvc, &fakestate, &treq);
     if (code) {
-        code = afs_CheckCode(code, &treq, 55);
-        goto out;
+	code = afs_CheckCode(code, &treq, 55);
+	goto out;
     }
 
     code = afs_VerifyVCache(tvc, &treq);
     if (code) {
-        code = afs_CheckCode(code, &treq, 56);
-        goto out;
+	code = afs_CheckCode(code, &treq, 56);
+	goto out;
     }
     if (afs_fakestat_enable && tvc->mvstat != AFS_MVSTAT_FILE && !(tvc->f.states & CStatd)) {
-        code = 0;
-        goto out;
+	code = 0;
+	goto out;
     }
     if (vnode_isdir(ap->a_vp)) {
-       if (ap->a_action & KAUTH_VNODE_LIST_DIRECTORY)
-          bits |= PRSFS_LOOKUP;
-       if (ap->a_action & KAUTH_VNODE_ADD_FILE)
-          bits |= PRSFS_INSERT;
-       if (ap->a_action & KAUTH_VNODE_SEARCH)
-          bits |= PRSFS_LOOKUP;
-       if (ap->a_action & KAUTH_VNODE_DELETE)
-          bits |= PRSFS_DELETE;
-       if (ap->a_action & KAUTH_VNODE_ADD_SUBDIRECTORY)
-          bits |= PRSFS_INSERT;
-       if (ap->a_action & KAUTH_VNODE_DELETE_CHILD)
-          bits |= PRSFS_DELETE;
+	if (ap->a_action & KAUTH_VNODE_LIST_DIRECTORY) {
+	    bits |= PRSFS_LOOKUP;
+	}
+	if (ap->a_action & KAUTH_VNODE_ADD_FILE) {
+	    bits |= PRSFS_INSERT;
+	}
+	if (ap->a_action & KAUTH_VNODE_SEARCH) {
+	    bits |= PRSFS_LOOKUP;
+	}
+	if (ap->a_action & KAUTH_VNODE_DELETE) {
+	    bits |= PRSFS_DELETE;
+	}
+	if (ap->a_action & KAUTH_VNODE_ADD_SUBDIRECTORY) {
+	    bits |= PRSFS_INSERT;
+	}
+	if (ap->a_action & KAUTH_VNODE_DELETE_CHILD) {
+	    bits |= PRSFS_DELETE;
+	}
     } else {
-       if (ap->a_action & KAUTH_VNODE_READ_DATA)
-          bits |= PRSFS_READ;
-       if (ap->a_action & KAUTH_VNODE_WRITE_DATA)
-          bits |= PRSFS_WRITE;
-       if (ap->a_action & KAUTH_VNODE_EXECUTE)
-          bits |= PRSFS_READ; /* and mode bits.... */
-       if (ap->a_action & KAUTH_VNODE_READ_ATTRIBUTES)
-          bits |= PRSFS_LOOKUP;
-       if (ap->a_action & KAUTH_VNODE_READ_SECURITY) /* mode bits/gid, not afs acl */
-          bits |= PRSFS_LOOKUP;
-       if ((ap->a_action & ((1 << 25) - 1)) == KAUTH_VNODE_EXECUTE)
-          /* if only exec, don't check for read mode bit */
-          /* high bits of ap->a_action are not for 'generic rights bits', and
-             so should not be checked (KAUTH_VNODE_ACCESS is often present
-             and needs to be masked off) */
-	  cmb |= CMB_ALLOW_EXEC_AS_READ;
+	if (ap->a_action & KAUTH_VNODE_READ_DATA) {
+	    bits |= PRSFS_READ;
+	}
+	if (ap->a_action & KAUTH_VNODE_WRITE_DATA) {
+	    bits |= PRSFS_WRITE;
+	}
+	if (ap->a_action & KAUTH_VNODE_EXECUTE) {
+	    bits |= PRSFS_READ; /* and mode bits.... */
+	}
+	if (ap->a_action & KAUTH_VNODE_READ_ATTRIBUTES) {
+	    bits |= PRSFS_LOOKUP;
+	}
+	if (ap->a_action & KAUTH_VNODE_READ_SECURITY) { /* mode bits/gid, not afs acl */
+	    bits |= PRSFS_LOOKUP;
+	}
+	if ((ap->a_action & ((1 << 25) - 1)) == KAUTH_VNODE_EXECUTE) {
+	    /* if only exec, don't check for read mode bit */
+	    /* high bits of ap->a_action are not for 'generic rights bits', and
+	       so should not be checked (KAUTH_VNODE_ACCESS is often present
+	       and needs to be masked off) */
+	    cmb |= CMB_ALLOW_EXEC_AS_READ;
+	}
     }
-    if (ap->a_action & KAUTH_VNODE_WRITE_ATTRIBUTES)
-       bits |= PRSFS_WRITE;
-    if (ap->a_action & KAUTH_VNODE_WRITE_SECURITY)
-       bits |= PRSFS_WRITE;
+    if (ap->a_action & KAUTH_VNODE_WRITE_ATTRIBUTES) {
+	bits |= PRSFS_WRITE;
+    }
+    if (ap->a_action & KAUTH_VNODE_WRITE_SECURITY) {
+	bits |= PRSFS_WRITE;
+    }
     /* we can't check for KAUTH_VNODE_TAKE_OWNERSHIP, so we always permit it */
 
     code = afs_AccessOK(tvc, bits, &treq, cmb);
@@ -628,24 +668,26 @@ afs_vop_access(struct VOPPROT(access_args) *ap)
      * cp on 10.4 behaves badly, looping on EACCES
      * Finder may reopen the file. Let it.
      */
-    if (code == 0 && ((bits &~(PRSFS_READ|PRSFS_WRITE)) == 0))
+    if (code == 0 && ((bits &~(PRSFS_READ|PRSFS_WRITE)) == 0)) {
 	code = afs_AccessOK(tvc, PRSFS_ADMINISTER|PRSFS_INSERT|bits, &treq, cmb);
+    }
     /* Finder also treats dropboxes as insert+delete. fake it out. */
-    if (code == 0 && (bits == (PRSFS_INSERT|PRSFS_DELETE)))
+    if (code == 0 && (bits == (PRSFS_INSERT|PRSFS_DELETE))) {
 	code = afs_AccessOK(tvc, PRSFS_INSERT, &treq, cmb);
+    }
 
     if (code == 1 && vnode_vtype(ap->a_vp) == VREG &&
-        ap->a_action & KAUTH_VNODE_EXECUTE &&
-        (tvc->f.m.Mode & 0100) != 0100) {
-        code = 0;
+	ap->a_action & KAUTH_VNODE_EXECUTE &&
+	(tvc->f.m.Mode & 0100) != 0100) {
+	code = 0;
     }
     if (code) {
-        code= 0;               /* if access is ok */
+	code = 0;               /* if access is ok */
     } else {
-	    code = afs_CheckCode(EACCES, &treq, 57);        /* failure code */
+	code = afs_CheckCode(EACCES, &treq, 57);        /* failure code */
     }
 out:
-     afs_PutFakeStat(&fakestate);
+    afs_PutFakeStat(&fakestate);
 out2:
     AFS_GUNLOCK();
     return code;
@@ -687,8 +729,9 @@ afs_vop_getattr(struct VOPPROT(getattr_args) *ap)
 	int isglock = ISAFS_GLOCK();
 
 	/* this is needed because of how and when we re-enter */
-	if (!isglock)
-	  AFS_GLOCK();
+	if (!isglock) {
+	    AFS_GLOCK();
+	}
 	/* do minimal work to return fake result for fsevents */
 	if (afs_fakestat_enable && VTOAFS(ap->a_vp)->mvstat == AFS_MVSTAT_MTPT) {
 	    struct afs_fakestat_state fakestat;
@@ -696,23 +739,26 @@ afs_vop_getattr(struct VOPPROT(getattr_args) *ap)
 
 	    code = afs_InitReq(&treq, vop_cred);
 	    if (code) {
-		if (!isglock)
+		if (!isglock) {
 		    AFS_GUNLOCK();
+		}
 		return code;
 	    }
 	    afs_InitFakeStat(&fakestat);
 	    /* expects GLOCK */
 	    code = afs_TryEvalFakeStat(&avc, &fakestat, &treq);
 	    if (code) {
-		if (!isglock)
+		if (!isglock) {
 		    AFS_GUNLOCK();
+		}
 		afs_PutFakeStat(&fakestat);
 		return code;
 	    }
 	}
 	code = afs_CopyOutAttrs(avc, ap->a_vap);
-	if (!isglock)
+	if (!isglock) {
 	    AFS_GUNLOCK();
+	}
 	if (0 && !code) {
 	    /* tweak things so finder will recheck */
 	    (ap->a_vap)->va_gid = ((ap->a_vap)->va_gid == 1) ? 2 : 1;
@@ -760,8 +806,9 @@ afs_vop_setattr(struct VOPPROT(setattr_args) *ap)
     struct vcache *avc = VTOAFS(ap->a_vp);
 #ifdef AFS_DARWIN80_ENV
     /* fsevents tries to set attributes. drop it. */
-    if (ap->a_context == afs_osi_ctxtp)
+    if (ap->a_context == afs_osi_ctxtp) {
 	return 0;
+    }
 #endif
     AFS_GLOCK();
 retry:
@@ -791,8 +838,9 @@ afs_vop_read(struct VOPPROT(read_args) *ap)
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
 
-    if (vnode_isdir(ap->a_vp))
+    if (vnode_isdir(ap->a_vp)) {
 	return EISDIR;
+    }
 #ifdef AFS_DARWIN80_ENV
     ubc_msync_range(ap->a_vp, AFS_UIO_OFFSET(ap->a_uio), AFS_UIO_OFFSET(ap->a_uio) + AFS_UIO_RESID(ap->a_uio), UBC_PUSHDIRTY);
 #else
@@ -856,23 +904,27 @@ afs_vop_pagein(struct VOPPROT(pagein_args) *ap)
     }
 
     cred = ubc_getcred(vp);
-    if (cred == NOCRED)
+    if (cred == NOCRED) {
 	cred = vop_cred;
+    }
 
     if (size == 0) {
-	if (!nocommit)
+	if (!nocommit) {
 	    OSI_UPL_ABORT_RANGE(pl, pl_offset, size,
-				   UPL_ABORT_ERROR | UPL_ABORT_FREE_ON_EMPTY);
+				UPL_ABORT_ERROR | UPL_ABORT_FREE_ON_EMPTY);
+	}
 	return (0);
     }
     if (f_offset < 0) {
-	if (!nocommit)
+	if (!nocommit) {
 	    OSI_UPL_ABORT_RANGE(pl, pl_offset, size,
-				   UPL_ABORT_ERROR | UPL_ABORT_FREE_ON_EMPTY);
+				UPL_ABORT_ERROR | UPL_ABORT_FREE_ON_EMPTY);
+	}
 	return (EINVAL);
     }
-    if (f_offset & PAGE_MASK)
+    if (f_offset & PAGE_MASK) {
 	panic("afs_vop_pagein: offset not page aligned");
+    }
 
     OSI_UPL_MAP(pl, &ioaddr);
     ioaddr += pl_offset;
@@ -903,7 +955,7 @@ afs_vop_pagein(struct VOPPROT(pagein_args) *ap)
     if (code == 0 && AFS_UIO_RESID(uio) > 0) {
 #ifdef AFS_DARWIN80_ENV
 	memset(((caddr_t)ioaddr) + (size - AFS_UIO_RESID(uio)), 0,
-               AFS_UIO_RESID(uio));
+	       AFS_UIO_RESID(uio));
 #else
 	memset(aiov.iov_base, 0, auio.uio_resid);
 #endif
@@ -911,13 +963,14 @@ afs_vop_pagein(struct VOPPROT(pagein_args) *ap)
 
     OSI_UPL_UNMAP(pl);
     if (!nocommit) {
-	if (code)
+	if (code) {
 	    OSI_UPL_ABORT_RANGE(pl, pl_offset, size,
-				   UPL_ABORT_ERROR | UPL_ABORT_FREE_ON_EMPTY);
-	else
+				UPL_ABORT_ERROR | UPL_ABORT_FREE_ON_EMPTY);
+	} else {
 	    OSI_UPL_COMMIT_RANGE(pl, pl_offset, size,
-				    UPL_COMMIT_CLEAR_DIRTY |
-				    UPL_COMMIT_FREE_ON_EMPTY);
+				 UPL_COMMIT_CLEAR_DIRTY |
+				 UPL_COMMIT_FREE_ON_EMPTY);
+	}
     }
 #ifdef AFS_DARWIN80_ENV
     uio_free(uio);
@@ -943,9 +996,10 @@ afs_vop_write(struct VOPPROT(write_args) *ap)
     if (UBCINFOEXISTS(ap->a_vp)) {
 	ubc_clean(ap->a_vp, 1);
     }
-    if (UBCINFOEXISTS(ap->a_vp))
+    if (UBCINFOEXISTS(ap->a_vp)) {
 	osi_VM_NukePages(ap->a_vp, AFS_UIO_OFFSET(ap->a_uio),
 			 AFS_UIO_RESID(ap->a_uio));
+    }
 #endif
     AFS_GLOCK();
     osi_FlushPages(avc, vop_cred);	/* hold GLOCK, but not basic vnode lock */
@@ -1018,8 +1072,9 @@ afs_vop_pageout(struct VOPPROT(pageout_args) *ap)
 
 	    s = splbio();
 	    if (bp = incore(vp, lbn)) {
-		if (ISSET(bp->b_flags, B_BUSY))
+		if (ISSET(bp->b_flags, B_BUSY)) {
 		    panic("nfs_pageout: found BUSY buffer incore\n");
+		}
 
 		bremfree(bp);
 		SET(bp->b_flags, (B_BUSY | B_INVAL));
@@ -1030,45 +1085,52 @@ afs_vop_pageout(struct VOPPROT(pageout_args) *ap)
     }
 #endif
     cred = ubc_getcred(vp);
-    if (cred == NOCRED)
+    if (cred == NOCRED) {
 	cred = vop_cred;
+    }
 
     if (size == 0) {
-	if (!nocommit)
+	if (!nocommit) {
 	    OSI_UPL_ABORT_RANGE(pl, pl_offset, size,
-				   UPL_ABORT_FREE_ON_EMPTY);
+				UPL_ABORT_FREE_ON_EMPTY);
+	}
 	return (0);
     }
-    if (flags & (IO_APPEND | IO_SYNC))
+    if (flags & (IO_APPEND | IO_SYNC)) {
 	panic("nfs_pageout: (IO_APPEND | IO_SYNC)");
+    }
     if (f_offset < 0) {
-	if (!nocommit)
+	if (!nocommit) {
 	    OSI_UPL_ABORT_RANGE(pl, pl_offset, size,
-				   UPL_ABORT_FREE_ON_EMPTY);
+				UPL_ABORT_FREE_ON_EMPTY);
+	}
 	return (EINVAL);
     }
     if (f_offset >= tvc->f.m.Length) {
-	if (!nocommit)
+	if (!nocommit) {
 	    OSI_UPL_ABORT_RANGE(pl, pl_offset, size,
-				   UPL_ABORT_FREE_ON_EMPTY);
+				UPL_ABORT_FREE_ON_EMPTY);
+	}
 	return (EINVAL);
     }
 
-    if (f_offset & PAGE_MASK)
+    if (f_offset & PAGE_MASK) {
 	panic("afs_vop_pageout: offset not page aligned");
+    }
 
     /* size will always be a multiple of PAGE_SIZE */
     /* pageout isn't supposed to extend files */
-    if (f_offset + size > tvc->f.m.Length)
-        iosize = tvc->f.m.Length - f_offset;
-    else
-        iosize = size;
+    if (f_offset + size > tvc->f.m.Length) {
+	iosize = tvc->f.m.Length - f_offset;
+    } else {
+	iosize = size;
+    }
 
     if (size > (iosize + (PAGE_SIZE - 1)) & ~PAGE_MASK && !nocommit)  {
-            int iosize_rnd=(iosize + (PAGE_SIZE - 1)) & ~PAGE_MASK;
-	    OSI_UPL_ABORT_RANGE(pl, pl_offset + iosize_rnd,
-                                   size - iosize_rnd,
-				   UPL_ABORT_FREE_ON_EMPTY);
+	int iosize_rnd=(iosize + (PAGE_SIZE - 1)) & ~PAGE_MASK;
+	OSI_UPL_ABORT_RANGE(pl, pl_offset + iosize_rnd,
+			    size - iosize_rnd,
+			    UPL_ABORT_FREE_ON_EMPTY);
     }
     OSI_UPL_MAP(pl, &ioaddr);
     ioaddr += pl_offset;
@@ -1112,13 +1174,14 @@ afs_vop_pageout(struct VOPPROT(pageout_args) *ap)
     AFS_GUNLOCK();
     OSI_UPL_UNMAP(pl);
     if (!nocommit) {
-	if (code)
+	if (code) {
 	    OSI_UPL_ABORT_RANGE(pl, pl_offset, size,
 				   UPL_ABORT_FREE_ON_EMPTY);
-	else
+	} else {
 	    OSI_UPL_COMMIT_RANGE(pl, pl_offset, size,
 				    UPL_COMMIT_CLEAR_DIRTY |
 				    UPL_COMMIT_FREE_ON_EMPTY);
+	}
     }
 
 #ifdef AFS_DARWIN80_ENV
@@ -1207,16 +1270,22 @@ afs_vop_fsync(struct VOPPROT(fsync_args) *ap)
     int haveGlock = ISAFS_GLOCK();
 
     /* in order to recycle faked vnodes for bulkstat */
-    if (VTOAFS(vp) == NULL)
+    if (VTOAFS(vp) == NULL) {
 	return ENOTSUP;
+    }
 
     /* afs_vop_lookup glocks, can call us through vinvalbuf from GetVCache */
-    if (!haveGlock) AFS_GLOCK();
-    if (vop_cred)
+    if (!haveGlock) {
+	AFS_GLOCK();
+    }
+    if (vop_cred) {
 	error = afs_fsync(VTOAFS(vp), vop_cred);
-    else
+    } else {
 	error = afs_fsync(VTOAFS(vp), afs_osi_credp);
-    if (!haveGlock) AFS_GUNLOCK();
+    }
+    if (!haveGlock) {
+	AFS_GUNLOCK();
+    }
     return error;
 }
 
@@ -1230,8 +1299,9 @@ afs_vop_seek(struct VOPPROT(seek_args) *ap)
 				 * struct ucred *a_cred;
 				 * } */
 {
-    if (ap->a_newoff > ULONG_MAX)	/* AFS doesn't support 64-bit offsets */
+    if (ap->a_newoff > ULONG_MAX) {  /* AFS doesn't support 64-bit offsets */
 	return EINVAL;
+    }
     return (0);
 }
 #endif
@@ -1250,10 +1320,10 @@ afs_vop_remove(struct VOPPROT(remove_args) *ap)
 
 #ifdef AFS_DARWIN80_ENV
     if (ap->a_flags & VNODE_REMOVE_NODELETEBUSY) {
-            /* Caller requested Carbon delete semantics */
-            if (vnode_isinuse(vp, 0)) {
-                    return EBUSY;
-            }
+	/* Caller requested Carbon delete semantics */
+	if (vnode_isinuse(vp, 0)) {
+	    return EBUSY;
+	}
     }
 #endif
 
@@ -1268,30 +1338,32 @@ afs_vop_remove(struct VOPPROT(remove_args) *ap)
 	struct vcache *tvc = VTOAFS(vp);
 
 	if (!(tvc->f.states & CUnlinked)) {
-            ubc_setsize(vp, (off_t)0);
-            vnode_recycle(vp);
+	    ubc_setsize(vp, (off_t)0);
+	    vnode_recycle(vp);
 	}
 #else
-        /* necessary so we don't deadlock ourselves in vclean */
-        VOP_UNLOCK(vp, 0, cnp->cn_proc);
+	/* necessary so we don't deadlock ourselves in vclean */
+	VOP_UNLOCK(vp, 0, cnp->cn_proc);
 
 	/* If crashes continue in ubc_hold, comment this out */
-        (void)ubc_uncache(vp);
+	(void)ubc_uncache(vp);
 #endif
     } else {
 	/* should check for PRSFS_INSERT and not PRSFS_DELETE, but the
 	   goal here is to deal with Finder's unhappiness with resource
 	   forks that have no resources in a dropbox setting */
-	if (name[0] == '.' && name[1] == '_' && error == EACCES)
+	if (name[0] == '.' && name[1] == '_' && error == EACCES) {
 	    error = 0;
+	}
     }
 
 #ifndef AFS_DARWIN80_ENV
     vput(dvp);
-    if (dvp == vp)
+    if (dvp == vp) {
 	vrele(vp);
-    else
+    } else {
 	vput(vp);
+    }
 #endif
 
 #ifndef AFS_DARWIN80_ENV
@@ -1334,8 +1406,9 @@ afs_vop_link(struct VOPPROT(link_args) *ap)
     FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
 #endif
 #ifndef AFS_DARWIN80_ENV
-    if (dvp != vp)
+    if (dvp != vp) {
 	VOP_UNLOCK(vp, 0, p);
+    }
 #endif
   out:
 #ifndef AFS_DARWIN80_ENV
@@ -1396,12 +1469,14 @@ afs_vop_rename(struct VOPPROT(rename_args) *ap)
 	    error = EINVAL;
 	  abortit:
 	    VOP_ABORTOP(tdvp, tcnp);	/* XXX, why not in NFS? */
-	    if (tdvp == tvp)
+	    if (tdvp == tvp) {
 		vrele(tdvp);
-	    else
+	    } else {
 		vput(tdvp);
-	    if (tvp)
+	    }
+	    if (tvp) {
 		vput(tvp);
+	    }
 	    VOP_ABORTOP(fdvp, fcnp);	/* XXX, why not in NFS? */
 	    vrele(fdvp);
 	    vrele(fvp);
@@ -1417,28 +1492,32 @@ afs_vop_rename(struct VOPPROT(rename_args) *ap)
 	vrele(fvp);
 	fcnp->cn_flags &= ~MODMASK;
 	fcnp->cn_flags |= LOCKPARENT | LOCKLEAF;
-	if ((fcnp->cn_flags & SAVESTART) == 0)
+	if ((fcnp->cn_flags & SAVESTART) == 0) {
 	    panic("afs_rename: lost from startdir");
+	}
 	fcnp->cn_nameiop = DELETE;
 
-        VREF(fdvp);
-        error=relookup(fdvp, &fvp, fcnp);
-        if (error == 0)
+	VREF(fdvp);
+	error=relookup(fdvp, &fvp, fcnp);
+	if (error == 0) {
 	    vrele(fdvp);
-        if (fvp == NULL) {
+	}
+	if (fvp == NULL) {
 	    return (ENOENT);
-        }
-        error=VOP_REMOVE(fdvp, fvp, fcnp);
+	}
+	error=VOP_REMOVE(fdvp, fvp, fcnp);
 
-        if (fdvp == fvp)
-            vrele(fdvp);
-        else
-            vput(fdvp);
-        vput(fvp);
-        return (error);
+	if (fdvp == fvp) {
+	    vrele(fdvp);
+	} else {
+	    vput(fdvp);
+	}
+	vput(fvp);
+	return (error);
     }
-    if (error = vn_lock(fvp, LK_EXCLUSIVE, p))
+    if (error = vn_lock(fvp, LK_EXCLUSIVE, p)) {
 	goto abortit;
+    }
 #endif
 
     MALLOC(fname, char *, fcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
@@ -1457,56 +1536,60 @@ afs_vop_rename(struct VOPPROT(rename_args) *ap)
 #if !defined(AFS_DARWIN80_ENV)
     AFS_GUNLOCK();
     VOP_UNLOCK(fvp, 0, p);
-    if (error)
+    if (error) {
 	goto abortit;		/* XXX */
-    if (tdvp == tvp)
+    }
+    if (tdvp == tvp) {
 	vrele(tdvp);
-    else
+    } else {
 	vput(tdvp);
-    if (tvp)
+    }
+    if (tvp) {
 	vput(tvp);
+    }
     vrele(fdvp);
     vrele(fvp);
 #else
     if (error == EXDEV) {
-        struct brequest *tb;
-        struct afs_uspc_param mvReq;
-        struct vcache *tvc;
-        struct vcache *fvc = VTOAFS(fdvp);
-        int code = 0;
-        struct afs_fakestat_state fakestate;
-        int fakestatdone = 0;
+	struct brequest *tb;
+	struct afs_uspc_param mvReq;
+	struct vcache *tvc;
+	struct vcache *fvc = VTOAFS(fdvp);
+	int code = 0;
+	struct afs_fakestat_state fakestate;
+	int fakestatdone = 0;
 
 	tvc = VTOAFS(tdvp);
 
-        /* unrewritten mount point? */
-        if (tvc->mvstat == AFS_MVSTAT_MTPT) {
-            if (tvc->mvid.target_root && (tvc->f.states & CMValid)) {
-                struct vrequest treq;
+	/* unrewritten mount point? */
+	if (tvc->mvstat == AFS_MVSTAT_MTPT) {
+	    if (tvc->mvid.target_root && (tvc->f.states & CMValid)) {
+		struct vrequest treq;
 
-                afs_InitFakeStat(&fakestate);
-                code = afs_InitReq(&treq, vop_cred);
-                if (!code) {
-                    fakestatdone = 1;
-                    code = afs_EvalFakeStat(&tvc, &fakestate, &treq);
-                } else
-                    afs_PutFakeStat(&fakestate);
-            }
-        }
+		afs_InitFakeStat(&fakestate);
+		code = afs_InitReq(&treq, vop_cred);
+		if (!code) {
+		    fakestatdone = 1;
+		    code = afs_EvalFakeStat(&tvc, &fakestate, &treq);
+		} else {
+		    afs_PutFakeStat(&fakestate);
+		}
+	    }
+	}
 
-        if (!code) {
+	if (!code) {
 	    /* at some point in the future we should allow other types */
 	    mvReq.reqtype = AFS_USPC_UMV;
-            mvReq.req.umv.id = afs_cr_uid(cn_cred(tcnp));
-            mvReq.req.umv.idtype = IDTYPE_UID;
-            mvReq.req.umv.sCell = fvc->f.fid.Cell;
-            mvReq.req.umv.sVolume = fvc->f.fid.Fid.Volume;
-            mvReq.req.umv.sVnode = fvc->f.fid.Fid.Vnode;
-            mvReq.req.umv.sUnique = fvc->f.fid.Fid.Unique;
-            mvReq.req.umv.dCell = tvc->f.fid.Cell;
-            mvReq.req.umv.dVolume = tvc->f.fid.Fid.Volume;
-            mvReq.req.umv.dVnode = tvc->f.fid.Fid.Vnode;
-            mvReq.req.umv.dUnique = tvc->f.fid.Fid.Unique;
+	    mvReq.req.umv.id = afs_cr_uid(cn_cred(tcnp));
+	    mvReq.req.umv.idtype = IDTYPE_UID;
+	    mvReq.req.umv.sCell = fvc->f.fid.Cell;
+	    mvReq.req.umv.sVolume = fvc->f.fid.Fid.Volume;
+	    mvReq.req.umv.sVnode = fvc->f.fid.Fid.Vnode;
+	    mvReq.req.umv.sUnique = fvc->f.fid.Fid.Unique;
+	    mvReq.req.umv.dCell = tvc->f.fid.Cell;
+	    mvReq.req.umv.dVolume = tvc->f.fid.Fid.Volume;
+	    mvReq.req.umv.dVnode = tvc->f.fid.Fid.Vnode;
+	    mvReq.req.umv.dUnique = tvc->f.fid.Fid.Unique;
 
 	    /*
 	     * su %d -c mv /afs/.:mount/%d:%d:%d:%d/%s
@@ -1517,22 +1600,24 @@ afs_vop_rename(struct VOPPROT(rename_args) *ap)
 	     * tvc->f.fid.Fid.Unique, tname
 	     */
 
-            tb = afs_BQueue(BOP_MOVE, NULL, 0, 1, cn_cred(tcnp),
-                            0L, 0L, &mvReq, fname, tname);
+	    tb = afs_BQueue(BOP_MOVE, NULL, 0, 1, cn_cred(tcnp),
+			    0L, 0L, &mvReq, fname, tname);
 	    /* wait to collect result */
-            while ((tb->flags & BUVALID) == 0) {
-                tb->flags |= BUWAIT;
-                afs_osi_Sleep(tb);
-            }
-            /* if we succeeded, clear the error. otherwise, EXDEV */
-            if (tb->code_raw == 0)
-                error = 0;
+	    while ((tb->flags & BUVALID) == 0) {
+		tb->flags |= BUWAIT;
+		afs_osi_Sleep(tb);
+	    }
+	    /* if we succeeded, clear the error. otherwise, EXDEV */
+	    if (tb->code_raw == 0) {
+		error = 0;
+	    }
 
-            afs_BRelease(tb);
-        }
+	    afs_BRelease(tb);
+	}
 
-        if (fakestatdone)
-            afs_PutFakeStat(&fakestate);
+	if (fakestatdone) {
+	    afs_PutFakeStat(&fakestate);
+	}
     }
     AFS_GUNLOCK();
 
@@ -1545,8 +1630,9 @@ afs_vop_rename(struct VOPPROT(rename_args) *ap)
 	    vnode_recycle(tvp);
 	}
     }
-    if (!error)
+    if (!error) {
 	cache_enter(tdvp, fvp, tcnp);
+    }
 #endif
     FREE(fname, M_TEMP);
     FREE(tname, M_TEMP);
@@ -1571,8 +1657,9 @@ afs_vop_mkdir(struct VOPPROT(mkdir_args) *ap)
     GETNAME();
     p = vop_cn_proc;
 #if defined(DIAGNOSTIC) && !defined(AFS_DARWIN80_ENV)
-    if ((cnp->cn_flags & HASBUF) == 0)
+    if ((cnp->cn_flags & HASBUF) == 0) {
 	panic("afs_vop_mkdir: no name");
+    }
 #endif
     AFS_GLOCK();
     error = afs_mkdir(VTOAFS(dvp), name, vap, &vcp, vop_cn_cred);
@@ -1594,8 +1681,9 @@ afs_vop_mkdir(struct VOPPROT(mkdir_args) *ap)
 	(*ap->a_vpp)->v_vfsp = dvp->v_vfsp;
 	vn_lock(*ap->a_vpp, LK_EXCLUSIVE | LK_RETRY, p);
 #endif
-    } else
+    } else {
 	*ap->a_vpp = 0;
+    }
     DROPNAME();
 #ifndef AFS_DARWIN80_ENV
     FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
@@ -1666,8 +1754,9 @@ afs_vop_symlink(struct VOPPROT(symlink_args) *ap)
     *ap->a_vpp = NULL;
     if (!error) {
 	error = afs_darwin_finalizevnode(pvc, dvp, ap->a_cnp, 0, 0);
-	if (!error)
+	if (!error) {
 	    *ap->a_vpp = AFSTOV(pvc);
+	}
     }
     DROPNAME();
     return error;
@@ -1691,8 +1780,9 @@ afs_vop_readdir(struct VOPPROT(readdir_args) *ap)
 #ifdef AFS_DARWIN80_ENV
     /* too much work for now */
     /* should only break nfs exports */
-    if (ap->a_flags & (VNODE_READDIR_EXTENDED | VNODE_READDIR_REQSEEKOFF))
-         return (EINVAL);
+    if (ap->a_flags & (VNODE_READDIR_EXTENDED | VNODE_READDIR_REQSEEKOFF)) {
+	return (EINVAL);
+    }
 #endif
     off = AFS_UIO_OFFSET(ap->a_uio);
     AFS_GLOCK();
@@ -1706,15 +1796,17 @@ afs_vop_readdir(struct VOPPROT(readdir_args) *ap)
 	int ncookies;
 	u_long *cookies, *cookiep;
 
-	if (uio->uio_segflg != UIO_SYSSPACE || uio->uio_iovcnt != 1)
+	if (uio->uio_segflg != UIO_SYSSPACE || uio->uio_iovcnt != 1) {
 	    panic("afs_readdir: burned cookies");
+	}
 	dp = (const struct dirent *)
 	    ((const char *)uio->uio_iov->iov_base - (uio->uio_offset - off));
 
 	dp_end = (const struct dirent *)uio->uio_iov->iov_base;
 	for (dp_start = dp, ncookies = 0; dp < dp_end;
-	     dp = (const struct dirent *)((const char *)dp + dp->d_reclen))
+	     dp = (const struct dirent *)((const char *)dp + dp->d_reclen)) {
 	    ncookies++;
+	}
 
 	MALLOC(cookies, u_long *, ncookies * sizeof(u_long), M_TEMP,
 	       M_WAITOK);
@@ -1759,12 +1851,13 @@ afs_vop_inactive(struct VOPPROT(inactive_args) *ap)
     struct vnode *vp = ap->a_vp;
     struct vcache *tvc = VTOAFS(vp);
 #ifndef AFS_DARWIN80_ENV
-    if (prtactive && vp->v_usecount != 0)
+    if (prtactive && vp->v_usecount != 0) {
 	vprint("afs_vop_inactive(): pushing active", vp);
+    }
 #endif
     if (tvc) {
 #ifdef AFS_DARWIN80_ENV
-        int unlinked = tvc->f.states & CUnlinked;
+	int unlinked = tvc->f.states & CUnlinked;
 #endif
 	AFS_GLOCK();
 	afs_InactiveVCache(tvc, 0);     /* decrs ref counts */
@@ -1796,24 +1889,24 @@ afs_vop_reclaim(struct VOPPROT(reclaim_args) *ap)
     osi_Assert(!ISAFS_GLOCK());
     cache_purge(vp);		/* just in case... */
     if (tvc) {
-       AFS_GLOCK();
-       writelocked = (0 == NBObtainWriteLock(&afs_xvcache, 335));
-       if (!writelocked) {
-	   ObtainWriteLock(&afs_xvreclaim, 176);
+	AFS_GLOCK();
+	writelocked = (0 == NBObtainWriteLock(&afs_xvcache, 335));
+	if (!writelocked) {
+	    ObtainWriteLock(&afs_xvreclaim, 176);
 #ifdef AFS_DARWIN80_ENV
-	   vnode_clearfsnode(AFSTOV(tvc));
-	   vnode_removefsref(AFSTOV(tvc));
+	    vnode_clearfsnode(AFSTOV(tvc));
+	    vnode_removefsref(AFSTOV(tvc));
 #else
-	   tvc->v->v_data = NULL;  /* remove from vnode */
+	    tvc->v->v_data = NULL;  /* remove from vnode */
 #endif
-	   AFSTOV(tvc) = NULL;             /* also drop the ptr to vnode */
-	   tvc->f.states |= CVInit; /* also CDeadVnode? */
-	   tvc->nextfree = ReclaimedVCList;
-	   ReclaimedVCList = tvc;
-	   ReleaseWriteLock(&afs_xvreclaim);
-       } else {
-	   error = afs_FlushVCache(tvc, &sl);	/* toss our stuff from vnode */
-	   if (tvc->f.states & (CVInit
+	    AFSTOV(tvc) = NULL;             /* also drop the ptr to vnode */
+	    tvc->f.states |= CVInit; /* also CDeadVnode? */
+	    tvc->nextfree = ReclaimedVCList;
+	    ReclaimedVCList = tvc;
+	    ReleaseWriteLock(&afs_xvreclaim);
+	} else {
+	    error = afs_FlushVCache(tvc, &sl);	/* toss our stuff from vnode */
+	    if (tvc->f.states & (CVInit
 #ifdef AFS_DARWIN80_ENV
 			      | CDeadVnode
 #endif
@@ -1823,15 +1916,17 @@ afs_vop_reclaim(struct VOPPROT(reclaim_args) *ap)
 				| CDeadVnode
 #endif
 		   );
-	       afs_osi_Wakeup(&tvc->f.states);
-	   }
-	   if (!error && vnode_fsnode(vp))
-	       panic("afs_reclaim: vnode not cleaned");
-	   if (!error && (tvc->v != NULL))
-	       panic("afs_reclaim: vcache not cleaned");
-	   ReleaseWriteLock(&afs_xvcache);
-       }
-       AFS_GUNLOCK();
+		afs_osi_Wakeup(&tvc->f.states);
+	    }
+	    if (!error && vnode_fsnode(vp)) {
+		panic("afs_reclaim: vnode not cleaned");
+	    }
+	    if (!error && (tvc->v != NULL)) {
+		panic("afs_reclaim: vcache not cleaned");
+	    }
+	    ReleaseWriteLock(&afs_xvcache);
+	}
+	AFS_GUNLOCK();
     }
     return error;
 }
@@ -1868,13 +1963,13 @@ afs_vop_pathconf(struct VOPPROT(pathconf_args) *ap)
 	return EINVAL;
 	break;
     case _PC_NAME_CHARS_MAX:
-        *ap->a_retval = NAME_MAX;
+	*ap->a_retval = NAME_MAX;
 	break;
     case _PC_CASE_SENSITIVE:
-        *ap->a_retval = 1;
+	*ap->a_retval = 1;
 	break;
     case _PC_CASE_PRESERVING:
-        *ap->a_retval = 1;
+	*ap->a_retval = 1;
 	break;
     default:
 	return EINVAL;
@@ -1969,8 +2064,9 @@ afs_vop_lock(struct VOPPROT(lock_args) *ap)
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
 
-    if (vp->v_tag == VT_NON)
+    if (vp->v_tag == VT_NON) {
 	return (ENOENT);
+    }
 
     return (lockmgr(&avc->rwlock, ap->a_flags, &vp->v_interlock, ap->a_p));
 }
@@ -2035,8 +2131,9 @@ afs_vop_bmap(struct VOPPROT(bmap_args) *ap)
     if (ap->a_vpp) {
 	*ap->a_vpp = ap->a_vp;
     }
-    if (ap->a_runp != NULL)
+    if (ap->a_runp != NULL) {
 	*ap->a_runp = 0;
+    }
 
     return 0;
 }
@@ -2077,8 +2174,9 @@ afs_vop_print(struct VOPPROT(print_args) *ap)
 	    printf("refs %d%s%s", vp->v_ubcinfo->ui_refcount,
 		   ubc_issetflags(vp, UI_HASOBJREF) ? " HASOBJREF" : "",
 		   ubc_issetflags(vp, UI_WASMAPPED) ? " WASMAPPED" : "");
-	} else
+	} else {
 	    printf("does not exist");
+	}
     }
     printf("\n");
     return 0;
@@ -2128,16 +2226,16 @@ afs_darwin_getnewvnode(struct vcache *avc)
 
     error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &vp);
     if (!error) {
-      vnode_addfsref(vp);
-      vnode_ref(vp);
-      avc->v = vp;
-      vnode_recycle(vp); /* terminate as soon as iocount drops */
-      avc->f.states |= CDeadVnode;
+	vnode_addfsref(vp);
+	vnode_ref(vp);
+	avc->v = vp;
+	vnode_recycle(vp); /* terminate as soon as iocount drops */
+	avc->f.states |= CDeadVnode;
     }
     return error;
 #else
     while (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &avc->v)) {
-        /* no vnodes available, force an alloc (limits be damned)! */
+	/* no vnodes available, force an alloc (limits be damned)! */
 	printf("failed to get vnode\n");
     }
     avc->v->v_data = (void *)avc;
@@ -2174,8 +2272,9 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp,
 	return 0;
     }
 
-    if ((avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON)
+    if ((avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON) {
 	panic("vcache %p should not be CDeadVnode", avc);
+    }
     AFS_GUNLOCK();
     memset(&par, 0, sizeof(struct vnode_fsparam));
     par.vnfs_mp = afs_globalVFS;
@@ -2184,25 +2283,30 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp,
     par.vnfs_filesize = avc->f.m.Length;
     par.vnfs_fsnode = avc;
     par.vnfs_dvp = dvp;
-    if (cnp && (cnp->cn_flags & ISDOTDOT) == 0)
+    if (cnp && (cnp->cn_flags & ISDOTDOT) == 0) {
 	par.vnfs_cnp = cnp;
-    if (!dvp || !cnp || (cnp->cn_flags & MAKEENTRY) == 0)
+    }
+    if (!dvp || !cnp || (cnp->cn_flags & MAKEENTRY) == 0) {
 	par.vnfs_flags = VNFS_NOCACHE;
-    if (isroot)
+    }
+    if (isroot) {
 	par.vnfs_markroot = 1;
+    }
     error = vnode_create(VNCREATE_FLAVOR, VCREATESIZE, &par, &nvp);
     if (!error) {
 	vnode_addfsref(nvp);
-	if ((avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON)
+	if ((avc->f.states & CDeadVnode) && vnode_vtype(ovp) != VNON) {
 	    printf("vcache %p should not be CDeadVnode", avc);
+	}
 	if (avc->v == ovp) {
 	    if (!(avc->f.states & CVInit)) {
 		vnode_clearfsnode(ovp);
 		vnode_removefsref(ovp);
 	    }
 	    /* we're discarding on a fixup. mark for recycle */
-	    if (!(avc->f.states & CDeadVnode))
+	    if (!(avc->f.states & CDeadVnode)) {
 		vnode_recycle(ovp);
+	    }
 	}
 	avc->v = nvp;
 	avc->f.states &=~ CDeadVnode;
@@ -2228,18 +2332,22 @@ afs_darwin_finalizevnode(struct vcache *avc, struct vnode *dvp,
 	vnode_rele(ovp);
     }
     /* If it's ref'd still, unmark stat'd to force new lookup */
-    if ((vnode_vtype(ovp) != avc->f.m.Type) && VREFCOUNT_GT(avc, 1))
+    if ((vnode_vtype(ovp) != avc->f.m.Type) && VREFCOUNT_GT(avc, 1)) {
 	avc->f.states &= ~CStatd;
+    }
 
     vnode_put(ovp);
     vnode_rele(ovp);
     AFS_GLOCK();
-    if (!locked)
+    if (!locked) {
 	ReleaseWriteLock(&avc->lock);
-    if (!error)
+    }
+    if (!error) {
 	afs_osi_Wakeup(&avc->f.states);
-    if (!locked)
+    }
+    if (!locked) {
 	AFS_GUNLOCK();
+    }
     return error;
 }
 #endif

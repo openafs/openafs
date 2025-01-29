@@ -12,17 +12,17 @@ static vfstable_t afs_vfstable;
 extern struct vnodeopv_desc afs_vnodeop_opv_desc;
 extern struct vnodeopv_desc afs_dead_vnodeop_opv_desc;
 static struct vnodeopv_desc *afs_vnodeop_opv_desc_list[2] =
-   { &afs_vnodeop_opv_desc, &afs_dead_vnodeop_opv_desc };
+    { &afs_vnodeop_opv_desc, &afs_dead_vnodeop_opv_desc };
 
 struct vfs_fsentry afs_vfsentry = {
-  &afs_vfsops,
-  2,
-  afs_vnodeop_opv_desc_list,
-  0,
-  "afs",
-  VFS_TBLNOTYPENUM|VFS_TBLTHREADSAFE|VFS_TBL64BITREADY,
-  NULL,
-  NULL,
+    &afs_vfsops,
+    2,
+    afs_vnodeop_opv_desc_list,
+    0,
+    "afs",
+    VFS_TBLNOTYPENUM|VFS_TBLTHREADSAFE|VFS_TBL64BITREADY,
+    NULL,
+    NULL,
 };
 
 #include <sys/conf.h>
@@ -69,14 +69,14 @@ afs_modload(struct kmod_info *kmod_info, void *data)
 	goto cdevsw_out;
     }
     afs_cdev_devfs_handle = devfs_make_node(makedev(afs_cdev_major, 0),
-                                            DEVFS_CHAR, UID_ROOT, GID_WHEEL,
-                                            0666, "openafs_ioctl", 0);
+					    DEVFS_CHAR, UID_ROOT, GID_WHEEL,
+					    0666, "openafs_ioctl", 0);
     if (!afs_cdev_devfs_handle) {
 	afs_warn("AFS: devfs_make_node failed. aborting\n");
 	cdevsw_remove(afs_cdev_major, &afs_cdev);
-    cdevsw_out:
+ cdevsw_out:
 	vfs_fsremove(afs_vfstable);
-    fsadd_out:
+ fsadd_out:
 	MUTEX_FINISH();
 	lck_mtx_free(afs_global_lock, openafs_lck_grp);
 	return KERN_FAILURE;
@@ -105,8 +105,8 @@ afs_modload(struct kmod_info *kmod_info, void *data)
 #endif
 #endif
     afs_warn("%s kext loaded; %u pages at 0x%lx (load tag %u).\n",
-	   kmod_info->name, (unsigned)kmod_info->size / PAGE_SIZE,
-	   (unsigned long)kmod_info->address, (unsigned)kmod_info->id);
+	     kmod_info->name, (unsigned)kmod_info->size / PAGE_SIZE,
+	     (unsigned long)kmod_info->address, (unsigned)kmod_info->id);
 
     return KERN_SUCCESS;
 }
@@ -114,18 +114,22 @@ afs_modload(struct kmod_info *kmod_info, void *data)
 kern_return_t
 afs_modunload(struct kmod_info * kmod_info, void *data)
 {
-    if (afs_globalVFS)
+    if (afs_globalVFS) {
 	return KERN_FAILURE;
-    if ((afs_initState != 0) || (afs_shuttingdown != AFS_RUNNING))
+    }
+    if ((afs_initState != 0) || (afs_shuttingdown != AFS_RUNNING)) {
 	return KERN_FAILURE;
+    }
 #ifdef AFS_DARWIN80_ENV
-    if (vfs_fsremove(afs_vfstable))
+    if (vfs_fsremove(afs_vfstable)) {
 	return KERN_FAILURE;
+    }
     devfs_remove(afs_cdev_devfs_handle);
     cdevsw_remove(afs_cdev_major, &afs_cdev);
 #else
-    if (vfsconf_del("afs"))
+    if (vfsconf_del("afs")) {
 	return KERN_FAILURE;
+    }
     /* give up syscall entries for ioctl & setgroups, which we've stolen */
     sysent[SYS_setgroups].sy_call = setgroups;
     /* give up the stolen syscall entry */
@@ -137,7 +141,7 @@ afs_modunload(struct kmod_info * kmod_info, void *data)
     lck_mtx_free(afs_global_lock, openafs_lck_grp);
 #endif
     afs_warn("%s kext unloaded; (load tag %u).\n",
-	   kmod_info->name, (unsigned)kmod_info->id);
+	     kmod_info->name, (unsigned)kmod_info->id);
     return KERN_SUCCESS;
 }
 

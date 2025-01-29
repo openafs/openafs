@@ -114,15 +114,16 @@ getinode(struct mount *fs, dev_t dev, ino_t inode, struct vnode **vpp, int *perr
 	struct vnode *vp;
 	struct mount *mp;
 	extern struct mount *rootfs;
-	if (mp = rootfs)
+	if (mp = rootfs) {
 	    do {
 		/*
 		 * XXX Also do the test for MFS
 		 */
 		if (!strcmp(mp->mnt_vfc->vfc_name, "ufs")) {
 		    ump = VFSTOUFS(mp);
-		    if (ump->um_fs == NULL)
+		    if (ump->um_fs == NULL) {
 			break;
+		    }
 		    if (ump->um_dev == dev) {
 			fs = ump->um_mountp;
 		    }
@@ -138,8 +139,10 @@ getinode(struct mount *fs, dev_t dev, ino_t inode, struct vnode **vpp, int *perr
 
 		mp = CIRCLEQ_NEXT(mp, mnt_list);
 	    } while (mp != rootfs);
-	if (!fs)
+	}
+	if (!fs) {
 	    return (ENXIO);
+	}
     }
     code = VFS_VGET(fs, (void *)inode, &vp);
     if (code) {

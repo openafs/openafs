@@ -28,12 +28,15 @@ afs_osi_TraverseProcTable(void)
 {
     afs_proc_t *p;
     LIST_FOREACH(p, &allproc, p_list) {
-	if (p->p_stat == SIDL)
+	if (p->p_stat == SIDL) {
 	    continue;
-	if (p->p_stat == SZOMB)
+	}
+	if (p->p_stat == SZOMB) {
 	    continue;
-	if (p->p_flag & P_SYSTEM)
+	}
+	if (p->p_flag & P_SYSTEM) {
 	    continue;
+	}
 	afs_GCPAGs_perproc_func(p);
     }
 }
@@ -60,8 +63,7 @@ afs_osi_proc2cred(afs_proc_t * pr)
     cr.cr_ref = 1;
     afs_set_cr_uid(&cr, afs_cr_uid(pcred));
     cr.cr_ngroups = pcred->cr_ngroups;
-    memcpy(cr.cr_groups, pcred->cr_groups,
-           NGROUPS * sizeof(gid_t));
+    memcpy(cr.cr_groups, pcred->cr_groups, NGROUPS * sizeof(gid_t));
     return &cr;
 }
 #else

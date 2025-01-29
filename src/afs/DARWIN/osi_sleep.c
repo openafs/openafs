@@ -32,8 +32,9 @@ afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
 
     AFS_STATCNT(osi_CancelWait);
     proc = achandle->proc;
-    if (proc == 0)
+    if (proc == 0) {
 	return;
+    }
     achandle->proc = (caddr_t) 0;	/* so dude can figure out he was signalled */
     afs_osi_Wakeup(&waitV);
 }
@@ -51,15 +52,17 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 
     AFS_STATCNT(osi_Wait);
     endTime = osi_Time() + (ams / 1000);
-    if (ahandle)
+    if (ahandle) {
 	ahandle->proc = (caddr_t) p;
+    }
     do {
 	AFS_ASSERT_GLOCK();
 	code = 0;
 	code = afs_osi_TimedSleep(&waitV, ams, aintok);
 
-	if (code)
+	if (code) {
 	    break;		/* if something happened, quit now */
+	}
 	/* if we we're cancelled, quit now */
 	if (ahandle && (ahandle->proc == (caddr_t) 0)) {
 	    /* we've been signalled */
@@ -68,8 +71,6 @@ afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     } while (osi_Time() < endTime);
     return code;
 }
-
-
 
 #ifdef AFS_DARWIN80_ENV
 #define EVTLOCK_INIT(e) \
@@ -118,8 +119,9 @@ afs_getevent(char *event)
 	    evp->refcount++;
 	    return evp;
 	}
-	if (evp->refcount == 0)
+	if (evp->refcount == 0) {
 	    newp = evp;
+	}
 	EVTLOCK_UNLOCK(evp);
 	evp = evp->next;
     }
@@ -142,7 +144,7 @@ afs_getevent(char *event)
 #define relevent(evp) \
     do { \
 	osi_Assert((evp)->owner == current_thread()); \
-        (evp)->refcount--; \
+	(evp)->refcount--; \
 	(evp)->owner = 0; \
 	lck_mtx_unlock((evp)->lck); \
     } while (0)
@@ -159,8 +161,8 @@ afs_osi_Sleep(void *event)
 
     evp = afs_getevent(event);
 #ifdef AFS_DARWIN80_ENV
-     AFS_ASSERT_GLOCK();
-     AFS_GUNLOCK();
+    AFS_ASSERT_GLOCK();
+    AFS_GUNLOCK();
 #endif
     seq = evp->seq;
     while (seq == evp->seq) {
@@ -182,12 +184,12 @@ afs_osi_Sleep(void *event)
 #endif
 }
 
-void 
+void
 afs_osi_fullSigMask()
 {
 #ifndef AFS_DARWIN80_ENV
     struct uthread *user_thread = (struct uthread *)get_bsdthread_info(current_act());
-       
+
     /* Protect original sigmask */
     if (!user_thread->uu_oldmask) {
 	/* Back up current sigmask */
@@ -198,12 +200,12 @@ afs_osi_fullSigMask()
 #endif
 }
 
-void 
+void
 afs_osi_fullSigRestore()
 {
 #ifndef AFS_DARWIN80_ENV
     struct uthread *user_thread = (struct uthread *)get_bsdthread_info(current_act());
-       
+
     /* Protect original sigmask */
     if (user_thread->uu_oldmask) {
 	/* Restore original sigmask */
@@ -222,7 +224,7 @@ afs_osi_SleepSig(void *event)
 }
 
 /* afs_osi_TimedSleep
- * 
+ *
  * Arguments:
  * event - event to sleep on
  * ams --- max sleep time in milliseconds
@@ -243,16 +245,15 @@ afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
     int ticks;
 #endif
 
-
-
     evp = afs_getevent(event);
     seq = evp->seq;
     AFS_GUNLOCK();
 #ifdef AFS_DARWIN80_ENV
-    if (aintok)
-        prio = PCATCH | PPAUSE;
-    else
-        prio = PVFS;
+    if (aintok) {
+	prio = PCATCH | PPAUSE;
+    } else {
+	prio = PVFS;
+    }
     ts.tv_sec = ams / 1000;
     ts.tv_nsec = (ams % 1000) * 1000000;
     evp->owner = 0;
@@ -263,20 +264,22 @@ afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
     /* this is probably safe for all versions, but testing is hard. */
     /* using tsleep instead of assert_wait/thread_set_timer/thread_block
      * allows shutdown to work in 1.4 */
-    /* lack of PCATCH does *not* prevent signal delivery, neither does 
-     * a low priority. We would need to deal with ERESTART here if we 
+    /* lack of PCATCH does *not* prevent signal delivery, neither does
+     * a low priority. We would need to deal with ERESTART here if we
      * wanted to mess with p->p_sigmask, and messing with p_sigignore is
      * not the way to go.... (someone correct me if I'm wrong)
      */
-    if (aintok)
+    if (aintok) {
 	prio = PCATCH | PPAUSE;
-    else
+    } else {
 	prio = PVFS;
+    }
     code = tsleep(event, prio, "afs_osi_TimedSleep", ticks);
     AFS_GLOCK();
 #endif
-    if (seq == evp->seq)
+    if (seq == evp->seq) {
 	code = EINTR;
+    }
 
     relevent(evp);
 #ifdef AFS_DARWIN80_ENV
@@ -284,7 +287,6 @@ afs_osi_TimedSleep(void *event, afs_int32 ams, int aintok)
 #endif
     return code;
 }
-
 
 int
 afs_osi_Wakeup(void *event)
@@ -304,9 +306,11 @@ afs_osi_Wakeup(void *event)
 }
 
 void
-shutdown_osisleep(void) {
+shutdown_osisleep(void)
+{
     struct afs_event *evp, *nevp, **pevpp;
     int i;
+
     for (i=0; i < AFS_EVHASHSIZE; i++) {
 	evp = afs_evhasht[i];
 	pevpp = &afs_evhasht[i];
@@ -328,4 +332,3 @@ shutdown_osisleep(void) {
 	}
     }
 }
-

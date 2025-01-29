@@ -59,8 +59,9 @@ osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
 	if (AFSTOV(avc) == tvp) {
 	    /* Caller will move this vcache to the head of the VLRU. */
 	    return 0;
-	} else
+	} else {
 	    return 1;
+	}
     }
     return 0;
 }
@@ -69,18 +70,18 @@ int
 osi_TryEvictVCache(struct vcache *avc, int *slept, int defersleep)
 {
     if (!VREFCOUNT_GT(avc,0)
-        || ((VREFCOUNT(avc) == 1) && (UBCINFOEXISTS(AFSTOV(avc))))
-        && avc->opens == 0 && (avc->f.states & CUnlinkedDel) == 0)
+	|| ((VREFCOUNT(avc) == 1) && (UBCINFOEXISTS(AFSTOV(avc))))
+	&& avc->opens == 0 && (avc->f.states & CUnlinkedDel) == 0)
     {
 	/*
-         * vgone() reclaims the vnode, which calls afs_FlushVCache(),
-         * then it puts the vnode on the free list.
-         * If we don't do this we end up with a cleaned vnode that's
-         * not on the free list.
-         */
-        AFS_GUNLOCK();
-        vgone(AFSTOV(avc));
-        AFS_GLOCK();
+	 * vgone() reclaims the vnode, which calls afs_FlushVCache(),
+	 * then it puts the vnode on the free list.
+	 * If we don't do this we end up with a cleaned vnode that's
+	 * not on the free list.
+	 */
+	AFS_GUNLOCK();
+	vgone(AFSTOV(avc));
+	AFS_GLOCK();
 	return 1;
     }
     return 0;

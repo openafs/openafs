@@ -34,15 +34,15 @@ osi_VM_FlushVCache(struct vcache *avc)
     kern_return_t kret;
     off_t size;
 
-    if (!vp)
+    if (!vp) {
 	return 0;
+    }
     AFS_GUNLOCK();
     cache_purge(vp);
     AFS_GLOCK();
 
     return 0;
 }
-
 
 /* Try to store pages to cache, in order to store a file back to the server.
  *
@@ -69,7 +69,7 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 /* Try to invalidate pages, for "fs flush" or "fs flushv"; or
  * try to free pages, when deleting a file.
  *
- * Locking:  the vcache entry's lock is held.  It may be dropped and 
+ * Locking:  the vcache entry's lock is held.  It may be dropped and
  * re-obtained.
  *
  * Since we drop and re-obtain the lock, we can't guarantee that there won't
@@ -91,8 +91,9 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
     if (UBCINFOEXISTS(vp)) {
 	size = ubc_getsize(vp);
 	kret = ubc_invalidate(vp, 0, size);
-	if (kret != 1)		/* should be KERN_SUCCESS */
+	if (kret != 1) {		/* should be KERN_SUCCESS */
 	    printf("TryToSmush: invalidate failed (error = %d)\n", kret);
+	}
     }
 #endif
     AFS_GLOCK();
@@ -117,18 +118,22 @@ osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
     size = ubc_getsize(vp);
     ubc_msync_range(vp, 0, size, UBC_INVALIDATE);
 	/* XXX what about when not CStatd */
-    if (avc->f.states & CStatd && size != avc->f.m.Length)
+    if (avc->f.states & CStatd && size != avc->f.m.Length) {
        ubc_setsize(vp, avc->f.m.Length);
+    }
 #else
     if (UBCINFOEXISTS(vp)) {
 	size = ubc_getsize(vp);
 	kret = ubc_invalidate(vp, 0, size);
-	if (kret != 1)		/* Should be KERN_SUCCESS */
+	if (kret != 1) {		/* Should be KERN_SUCCESS */
 	    printf("VMFlushPages: invalidate failed (error = %d)\n", kret);
+	}
 	/* XXX what about when not CStatd */
-	if (avc->f.states & CStatd && size != avc->f.m.Length)
-	  if (UBCISVALID(vp))
-	    ubc_setsize(vp, avc->f.m.Length);
+	if (avc->f.states & CStatd && size != avc->f.m.Length) {
+	    if (UBCISVALID(vp)) {
+		ubc_setsize(vp, avc->f.m.Length);
+	    }
+	}
     }
 #endif
 }
