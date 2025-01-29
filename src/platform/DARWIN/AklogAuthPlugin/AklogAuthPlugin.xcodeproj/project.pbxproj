@@ -164,7 +164,6 @@
 				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				ONLY_ACTIVE_ARCH = NO;
 				PREBINDING = NO;
-				SDKROOT = macosx10.6;
 			};
 			name = Debug;
 		};
@@ -181,7 +180,6 @@
 				"OTHER_CFLAGS[arch=*]" = "-Werror=objc-method-access";
 				ONLY_ACTIVE_ARCH = NO;
 				PREBINDING = NO;
-				SDKROOT = macosx10.6;
 			};
 			name = Release;
 		};
