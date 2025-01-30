@@ -2091,7 +2091,7 @@ main(int argc, char *argv[])
     }
 
     code = InitPR();
-    if (code && code != -1) {
+    if (code != 0) {
 	ViceLog(0, ("Fatal error in protection initialization, exiting!!\n"));
 	exit(1);
     }
