@@ -792,8 +792,8 @@ ShutDownAndCore(int dopanic)
     exit(0);
 }
 
-static afs_int32
-ParseRights(char *arights)
+static int
+ParseRights(char *arights, afs_int32 *a_mode)
 {
     afs_int32 mode = 0;
     int i, len;
@@ -855,7 +855,8 @@ ParseRights(char *arights)
 	    }
 	}
     }
-    return mode;
+    *a_mode = mode;
+    return 0;
 }
 
 /*
@@ -1183,11 +1184,12 @@ ParseArgs(int argc, char *argv[])
     cmd_OptionAsFlag(opts, OPT_banner, &printBanner);
 
     if (cmd_OptionAsString(opts, OPT_implicit, &optstring) == 0) {
-	implicitAdminRights = ParseRights(optstring);
+	code = ParseRights(optstring, &implicitAdminRights);
 	free(optstring);
 	optstring = NULL;
-	if (implicitAdminRights < 0)
-	    return implicitAdminRights;
+	if (code != 0) {
+	    return code;
+	}
     }
 
 #if defined(AFS_SGI_ENV)
