@@ -236,6 +236,10 @@
 
       <para>To continue, proceed to the section for this system type: <itemizedlist>
           <listitem>
+            <para><link linkend="HDRWQ101">Getting Started on AIX Systems</link></para>
+          </listitem>
+
+          <listitem>
             <para><link linkend="HDRWQ106">Getting Started on Linux Systems</link></para>
           </listitem>
 
@@ -243,6 +247,202 @@
             <para><link linkend="HDRWQ107">Getting Started on Solaris Systems</link></para>
           </listitem>
         </itemizedlist></para>
+
+      <sect3 id="HDRWQ101">
+        <title>Getting Started on AIX Systems</title>
+
+        <para>Begin by running the AFS initialization script to call the AIX kernel extension facility, which dynamically loads AFS
+        modifications into the kernel. Then configure partitions and replace the AIX <emphasis role="bold">fsck</emphasis> program
+        with a version that correctly handles AFS volumes. <orderedlist>
+            <indexterm>
+              <primary>incorporating AFS kernel extensions</primary>
+
+              <secondary>server machine after first</secondary>
+
+              <tertiary>AIX</tertiary>
+            </indexterm>
+
+            <indexterm>
+              <primary>AFS kernel extensions</primary>
+
+              <secondary>on server machine after first</secondary>
+
+              <tertiary>AIX</tertiary>
+            </indexterm>
+
+            <indexterm>
+              <primary>file server machine, additional</primary>
+
+              <secondary>AFS kernel extensions</secondary>
+
+              <tertiary>on AIX</tertiary>
+            </indexterm>
+
+            <indexterm>
+              <primary>AIX</primary>
+
+              <secondary>AFS kernel extensions</secondary>
+
+              <tertiary>on add'l server machine</tertiary>
+            </indexterm>
+
+            <listitem>
+              <para>Unpack the distribution tarball. The examples below assume 
+              that you have unpacked the files into the 
+              <emphasis role="bold">/tmp/afsdist</emphasis> directory. If you 
+              pick a different location, substitute this in all of the following 
+              examples. Once you have unpacked the distribution, 
+              change directory as indicated.
+<programlisting>
+   # <emphasis role="bold">cd /tmp/afsdist/rs_aix42/dest/root.client/usr/vice/etc</emphasis>
+</programlisting></para>
+            </listitem>
+
+            <listitem>
+              <para>Copy the AFS kernel library files to the local <emphasis role="bold">/usr/vice/etc/dkload</emphasis> directory,
+              and the AFS initialization script to the <emphasis role="bold">/etc</emphasis> directory. <programlisting>
+   # <emphasis role="bold">cp -rp  dkload  /usr/vice/etc</emphasis>
+   # <emphasis role="bold">cp -p  rc.afs  /etc/rc.afs</emphasis>
+</programlisting></para>
+            </listitem>
+
+            <listitem>
+              <para>Edit the <emphasis role="bold">/etc/rc.afs</emphasis> script, setting the <computeroutput>NFS</computeroutput>
+              variable as indicated.</para>
+
+              <para>If the machine is not to function as an NFS/AFS Translator, set the <computeroutput>NFS</computeroutput>
+              variable as follows.</para>
+
+              <programlisting>
+   NFS=$NFS_NONE
+</programlisting>
+
+              <para>If the machine is to function as an NFS/AFS Translator and is running AIX 4.2.1 or higher, set the
+              <computeroutput>NFS</computeroutput> variable as follows. Note that NFS must already be loaded into the kernel, which
+              happens automatically on systems running AIX 4.1.1 and later, as long as the file <emphasis
+              role="bold">/etc/exports</emphasis> exists.</para>
+
+              <programlisting>
+   NFS=$NFS_IAUTH
+</programlisting>
+            </listitem>
+
+            <listitem>
+              <para>Invoke the <emphasis role="bold">/etc/rc.afs</emphasis> script to load AFS modifications into the kernel. You
+              can ignore any error messages about the inability to start the BOS Server or the Cache Manager or AFS client.
+              <programlisting>
+   # <emphasis role="bold">/etc/rc.afs</emphasis>
+</programlisting> <indexterm>
+                  <primary>configuring</primary>
+
+                  <secondary>AFS server partition on server machine after first</secondary>
+
+                  <tertiary>AIX</tertiary>
+                </indexterm> <indexterm>
+                  <primary>AFS server partition</primary>
+
+                  <secondary>configuring on server machine after first</secondary>
+
+                  <tertiary>AIX</tertiary>
+                </indexterm> <indexterm>
+                  <primary>file server machine, additional</primary>
+
+                  <secondary>AFS server partition</secondary>
+
+                  <tertiary>on AIX</tertiary>
+                </indexterm> <indexterm>
+                  <primary>AIX</primary>
+
+                  <secondary>AFS server partition</secondary>
+
+                  <tertiary>on add'l server machine</tertiary>
+                </indexterm></para>
+            </listitem>
+
+            <listitem>
+              <para>Create a directory called <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable> for each AFS
+              server partition you are configuring (there must be at least one). Repeat the command for each partition.
+              <programlisting>
+   # <emphasis role="bold">mkdir /vicep</emphasis><replaceable>xx</replaceable>
+</programlisting></para>
+            </listitem>
+
+            <listitem>
+              <para>Use the <emphasis role="bold">SMIT</emphasis> program to create a journaling file system on each partition to be
+              configured as an AFS server partition.</para>
+            </listitem>
+
+            <listitem>
+              <para>Mount each partition at one of the <emphasis role="bold">/vicep</emphasis><replaceable>xx</replaceable>
+              directories. Choose one of the following three methods: <itemizedlist>
+                  <listitem>
+                    <para>Use the <emphasis role="bold">SMIT</emphasis> program</para>
+                  </listitem>
+
+                  <listitem>
+                    <para>Use the <emphasis role="bold">mount -a</emphasis> command to mount all partitions at once</para>
+                  </listitem>
+
+                  <listitem>
+                    <para>Use the <emphasis role="bold">mount</emphasis> command on each partition in turn</para>
+                  </listitem>
+                </itemizedlist></para>
+
+              <para>Also configure the partitions so that they are mounted automatically at each reboot. For more information, refer
+              to the AIX documentation. <indexterm>
+                  <primary>replacing fsck program</primary>
+
+                  <secondary>server machine after first</secondary>
+
+                  <tertiary>AIX</tertiary>
+                </indexterm> <indexterm>
+                  <primary>fsck program</primary>
+
+                  <secondary>on server machine after first</secondary>
+
+                  <tertiary>AIX</tertiary>
+                </indexterm> <indexterm>
+                  <primary>file server machine, additional</primary>
+
+                  <secondary>fsck program</secondary>
+
+                  <tertiary>on AIX</tertiary>
+                </indexterm> <indexterm>
+                  <primary>AIX</primary>
+
+                  <secondary>fsck program</secondary>
+
+                  <tertiary>on add'l server machine</tertiary>
+                </indexterm></para>
+            </listitem>
+
+            <listitem>
+              <para>On systems prior to AIX 5.1, move the AIX 
+              <emphasis role="bold">fsck</emphasis> program helper to a safe 
+              location and install the version from the AFS distribution in 
+              its place. Note that on AIX 5.1, and later, systems this step is
+              not required, and the <emphasis role="bold">v3fshelper</emphasis>
+              program is not shipped for these systems.</para>
+              
+              <para>The AFS binary distribution must still be available in the
+              <emphasis role="bold">/tmp/afsdist</emphasis> directory. 
+<programlisting>
+   # <emphasis role="bold">cd /sbin/helpers</emphasis>
+   # <emphasis role="bold">mv v3fshelper v3fshelper.noafs</emphasis>
+   # <emphasis role="bold">cp -p /tmp/afsdist/rs_aix42/dest/root.server/etc/v3fshelper v3fshelper</emphasis>
+</programlisting></para>
+            </listitem>
+
+            <listitem>
+              <para>If the machine is to remain an AFS client, incorporate AFS into its authentication system, following the
+              instructions in <link linkend="HDRWQ25">Enabling AFS Login on AIX Systems</link>.</para>
+            </listitem>
+
+            <listitem>
+              <para>Proceed to <link linkend="HDRWQ108">Starting Server Programs</link>.</para>
+            </listitem>
+          </orderedlist></para>
+      </sect3>
 
       <sect3 id="HDRWQ106">
         <title>Getting Started on Linux Systems</title>
@@ -1525,6 +1725,13 @@
           </listitem>
 
           <listitem>
+            <para>On AIX systems, add the following line to the <emphasis role="bold">/etc/vfs</emphasis> file. It enables AIX to
+            unmount AFS correctly during shutdown. <programlisting>
+   afs     4     none     none
+</programlisting></para>
+          </listitem>
+
+          <listitem>
             <para>On non-packaged Linux systems, copy the <emphasis role="bold">afsd</emphasis> options file from the <emphasis
             role="bold">/usr/vice/etc</emphasis> directory to the <emphasis role="bold">/etc/sysconfig</emphasis> directory,
             removing the <emphasis role="bold">.conf</emphasis> extension as you do so. <programlisting>
@@ -1536,6 +1743,10 @@
             <para>Edit the machine's AFS initialization script or <emphasis role="bold">afsd</emphasis> options file to set
             appropriate values for <emphasis role="bold">afsd</emphasis> command parameters. The script resides in the indicated
             location on each system type: <itemizedlist>
+                <listitem>
+                  <para>On AIX systems, <emphasis role="bold">/etc/rc.afs</emphasis></para>
+                </listitem>
+
                 <listitem>
                   <para>On Fedora and RHEL systems, 
                   <emphasis role="bold">/etc/sysconfig/openafs</emphasis>. 
@@ -1642,7 +1853,58 @@
                 <secondary>AFS initialization script</secondary>
 
                 <tertiary>server machine after first</tertiary>
-              </indexterm>
+              </indexterm> <indexterm>
+                <primary>AIX</primary>
+
+                <secondary>AFS initialization script</secondary>
+
+                <tertiary>on add'l server machine</tertiary>
+              </indexterm></para>
+          </listitem>
+
+          <listitem>
+            <para>Run the AFS initialization script by issuing the appropriate commands for this system type.</para>
+
+            <para><emphasis role="bold">On AIX systems:</emphasis> <orderedlist>
+                <listitem>
+                  <para>Reboot the machine and log in again as the local superuser <emphasis role="bold">root</emphasis>.
+                  <programlisting>
+   # <emphasis role="bold">cd /</emphasis>
+   # <emphasis role="bold">shutdown -r now</emphasis>
+   login: <emphasis role="bold">root</emphasis>
+   Password: <replaceable>root_password</replaceable>
+</programlisting></para>
+                </listitem>
+
+                <listitem>
+                  <para>Run the AFS initialization script. <programlisting>
+   # <emphasis role="bold">/etc/rc.afs</emphasis>
+</programlisting></para>
+                </listitem>
+
+                <listitem>
+                  <para>Edit the AIX initialization file, <emphasis role="bold">/etc/inittab</emphasis>, adding the following line
+                  to invoke the AFS initialization script. Place it just after the line that starts NFS daemons. <programlisting>
+   rcafs:2:wait:/etc/rc.afs &gt; /dev/console 2&gt;&amp;1 # Start AFS services
+</programlisting></para>
+                </listitem>
+
+                <listitem>
+                  <para><emphasis role="bold">(Optional)</emphasis> There are now copies of the AFS initialization file in both the
+                  <emphasis role="bold">/usr/vice/etc</emphasis> and <emphasis role="bold">/etc</emphasis> directories. If you want
+                  to avoid potential confusion by guaranteeing that they are always the same, create a link between them. You can
+                  always retrieve the original script from the AFS CD-ROM if necessary. <programlisting>
+   # <emphasis role="bold">cd  /usr/vice/etc</emphasis>
+   # <emphasis role="bold">rm  rc.afs</emphasis>
+   # <emphasis role="bold">ln -s  /etc/rc.afs</emphasis>
+</programlisting></para>
+                </listitem>
+
+                <listitem>
+                  <para>Proceed to Step <link linkend="LIWQ113">4</link>.</para>
+                </listitem>
+              </orderedlist></para>
+
             <indexterm>
               <primary>Linux</primary>
 
@@ -1650,11 +1912,6 @@
 
               <tertiary>on add'l server machine</tertiary>
             </indexterm>
-              </para>
-          </listitem>
-
-          <listitem>
-            <para>Run the AFS initialization script by issuing the appropriate commands for this system type.</para>
 
             <para><emphasis role="bold">On Fedora or RHEL Linux systems:</emphasis> 
               <orderedlist>
