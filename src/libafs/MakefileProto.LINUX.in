@@ -73,52 +73,12 @@ LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
 LINUX_KERNEL_BUILD=@LINUX_KERNEL_BUILD@
 LINUX_KBUILD_CFLAGS_VAR=@LINUX_KBUILD_CFLAGS_VAR@
 
-CFLAGS_fcrypt.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
-CFLAGS_crypt_conn.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
-CFLAGS_rxkad_client.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
-CFLAGS_rxkad_common.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
-CFLAGS_opr_rbtree.o = -I${TOP_SRCDIR}/opr
-
-CFLAGS_evp.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto \
-	       -DHAVE_CONFIG_H @CFLAGS_NOCAST_FUNCTION_TYPE@
-CFLAGS_evp-algs.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto \
-	       @CFLAGS_NOCAST_FUNCTION_TYPE@
-CFLAGS_evp-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
-CFLAGS_rand-timer-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
-CFLAGS_rand-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
-CFLAGS_aes.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
-CFLAGS_rijndael-alg-fst.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto \
-			    -DNO_CONFIG_H
-CFLAGS_sha.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
-CFLAGS_sha256-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
-CFLAGS_md5.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
-CFLAGS_random.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
-
-RFC3961_INCLUDES = -I$(TOP_SRCDIR)/crypto/rfc3961 \
-		   -I$(TOP_SRCDIR)/external/heimdal/krb5
-
-CFLAGS_crypto.o = $(RFC3961_INCLUDES)
-CFLAGS_crypto-aes.o = $(RFC3961_INCLUDES)
-CFLAGS_crypto-context.o = $(RFC3961_INCLUDES)
-CFLAGS_crypto-copy.o = $(RFC3961_INCLUDES)
-CFLAGS_crypto-ct.o = $(RFC3961_INCLUDES)
-CFLAGS_crypto-evp.o = $(RFC3961_INCLUDES)
-CFLAGS_crypto-data.o = $(RFC3961_INCLUDES)
-CFLAGS_crypto-keyblock.o = $(RFC3961_INCLUDES)
-CFLAGS_crypto-store-int.o = $(RFC3961_INCLUDES)
-CFLAGS_crypto-random.o = $(RFC3961_INCLUDES)
-CFLAGS_crypto-algs.o = $(RFC3961_INCLUDES)
-CFLAGS_n-fold.o = $(RFC3961_INCLUDES)
-
 # System specific build commands and flags
 <linux26 linux_26>
 # All the platform-specific and kernel-related things are provided by
 # the kernel build system.  So we should _not_ use COMMON_KERN_CFLAGS!
 CCFLAGS =
 DEFINES = $(COMMON_DEFINES)
-
-# CFLAGS_* and AFLAGS_* will be copied into the kbuild makefile
-CFLAGS_afs_pag_user.o = -DAFS_PAG_MANAGER
 
 <i386_umlinux26>
 EXTRA_CFLAGS = -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include

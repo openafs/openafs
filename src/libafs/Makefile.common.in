@@ -43,9 +43,9 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 .c.o:
-	$(RUN_CC) $(CC_WRAPPER) $(CC) $(COMMON_INCLUDE) $(CFLAGS) $(CFLAGS-$(@)) $(KERN_DBG) -c $<
-CRULE_NOOPT=	$(RUN_CC) $(CC_WRAPPER) $(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS) $(CFLAGS-$(@)) -o $@ -c
-CRULE_OPT=	$(RUN_CC) $(CC_WRAPPER) $(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS) $(CFLAGS-$(@)) -o $@ -c
+	$(RUN_CC) $(CC_WRAPPER) $(CC) $(COMMON_INCLUDE) $(CFLAGS) $(CFLAGS_$(@)) $(KERN_DBG) -c $<
+CRULE_NOOPT=	$(RUN_CC) $(CC_WRAPPER) $(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(CFLAGS) $(CFLAGS_$(@)) -o $@ -c
+CRULE_OPT=	$(RUN_CC) $(CC_WRAPPER) $(CC) $(COMMON_INCLUDE) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS) $(CFLAGS_$(@)) -o $@ -c
 
 system:	all
 
@@ -439,10 +439,10 @@ rxkad_client.o: $(TOP_SRC_RXKAD)/rxkad_client.c
 rxkad_common.o: $(TOP_SRC_RXKAD)/rxkad_common.c
 	$(CRULE_NOOPT) $(TOP_SRC_RXKAD)/rxkad_common.c
 
-CFLAGS-fcrypt.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
-CFLAGS-crypt_conn.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
-CFLAGS-rxkad_client.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
-CFLAGS-rxkad_common.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
+CFLAGS_fcrypt.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
+CFLAGS_crypt_conn.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
+CFLAGS_rxkad_client.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
+CFLAGS_rxkad_common.o = -I${TOP_SRCDIR}/rxkad -I$(TOP_OBJDIR)/src/rxkad
 
 afs_exporter.o: $(TOP_SRC_AFS)/afs_exporter.c
 	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_exporter.c
@@ -474,9 +474,9 @@ rx_packet.o: $(TOP_SRC_RX)/rx_packet.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_packet.c
 rx_stats.o: $(TOP_SRC_RX)/rx_stats.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_stats.c
+CFLAGS_opr_rbtree.o = -I$(TOP_INCDIR)/opr
 opr_rbtree.o: $(TOP_SRC_OPR)/rbtree.c
 	$(CRULE_OPT) $(TOP_SRC_OPR)/rbtree.c
-CFLAGS-opr-rbtree.o = -I$(TOP_INCDIR)/opr
 xdr_rx.o: $(TOP_SRC_RX)/xdr_rx.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr_rx.c
 Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
@@ -517,7 +517,7 @@ xdr.o: $(TOP_SRC_RX)/xdr.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/xdr.c
 Kvldbint.cs.o: ${TOP_OBJ_VLSERVER}/Kvldbint.cs.c
 	$(CRULE_NOOPT) ${TOP_OBJ_VLSERVER}/Kvldbint.cs.c
-CFLAGS-Kvldbint.xdr.o= -DAFS_UUID_XG
+CFLAGS_Kvldbint.xdr.o= -DAFS_UUID_XG
 Kvldbint.xdr.o: ${TOP_OBJ_VLSERVER}/Kvldbint.xdr.c
 	$(CRULE_NOOPT) ${TOP_OBJ_VLSERVER}/Kvldbint.xdr.c
 rx_kmutex.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_kmutex.c
@@ -528,10 +528,10 @@ rx_kcommon.o: $(TOP_SRC_RX)/rx_kcommon.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx_kcommon.c
 
 # Files which do not contain NFS translator code.
-CFLAGS-afs_call.o= -DAFS_NONFSTRANS
+CFLAGS_afs_call.o= -DAFS_NONFSTRANS
 afs_call.o: $(TOP_SRC_AFS)/afs_call.c
 	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_call.c
-CFLAGS-afs_pioctl.o= -DAFS_NONFSTRANS
+CFLAGS_afs_pioctl.o= -DAFS_NONFSTRANS
 afs_pioctl.o: $(TOP_SRC_AFS)/afs_pioctl.c
 	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_pioctl.c
 
@@ -542,8 +542,9 @@ afs_pioctl_nfs.o:	$(TOP_SRC_AFS)/afs_pioctl.c
 	$(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_pioctl.c
 
 # Special objects for the PAG module
+CFLAGS_afs_pag_user.o = -DAFS_PAG_MANAGER
 afs_pag_user.o: $(TOP_SRC_AFS)/afs_user.c
-	$(CRULE_OPT) -DAFS_PAG_MANAGER $(TOP_SRC_AFS)/afs_user.c
+	$(CRULE_OPT) $(TOP_SRC_AFS)/afs_user.c
 rx_pag.o: $(TOP_SRC_RX)/rx.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/rx.c
 rx_pag_call.o: $(TOP_SRC_RX)/rx_call.c
@@ -558,96 +559,102 @@ rx_pag_knet.o: $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
 	$(CRULE_NOOPT) $(TOP_SRC_RX)/${MKAFS_OSTYPE}/rx_knet.c
 
 # Crypto
+CFLAGS_md5.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 md5.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/md5.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/md5.c
 
+CFLAGS_evp.o= -I$(TOP_INCDIR)/hcrypto \
+	      -DHAVE_CONFIG_H \
+	      @CFLAGS_NOCAST_FUNCTION_TYPE@
 evp.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/evp.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/evp.c
-CFLAGS-evp.o= -I$(TOP_INCDIR)/hcrypto \
-	      -DHAVE_CONFIG_H
 
+CFLAGS_evp-algs.o = -I$(TOP_INCDIR)/hcrypto \
+		    @CFLAGS_NOCAST_FUNCTION_TYPE@
 evp-algs.o: $(TOP_SRCDIR)/crypto/hcrypto/kernel/evp-algs.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/hcrypto/kernel/evp-algs.c
-CFLAGS-evp-algs.o = -I$(TOP_INCDIR)/hcrypto
 
+CFLAGS_rand-kernel.o = -I$(TOP_INCDIR)/hcrypto
 rand-kernel.o: $(TOP_SRCDIR)/crypto/hcrypto/kernel/rand.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/hcrypto/kernel/rand.c
-CFLAGS-rand-kernel.o = -I$(TOP_INCDIR)/hcrypto
 
+CFLAGS_rand-fortuna-kernel.o = -I$(TOP_INCDIR)/hcrypto
 rand-fortuna-kernel.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/rand-fortuna.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/rand-fortuna.c
-CFLAGS-rand-fortuna-kernel.o = -I$(TOP_INCDIR)/hcrypto
 
+CFLAGS_rand-timer-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 rand-timer-kernel.o: $(TOP_SRCDIR)/crypto/hcrypto/kernel/rand-timer.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/hcrypto/kernel/rand-timer.c
-CFLAGS-rand-timer-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 
+CFLAGS_sha256-kernel.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 sha256-kernel.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/sha256.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/sha256.c
-CFLAGS-sha256-kernel.o = -I$(TOP_INCDIR)/hcrypto
 
 alloc-kernel.o: $(TOP_SRCDIR)/crypto/hcrypto/kernel/alloc.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/hcrypto/kernel/alloc.c
 
+CFLAGS_aes.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 aes.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/aes.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/aes.c
 
+CFLAGS_rijndael-alg-fst.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 rijndael-alg-fst.o:  $(TOP_SRCDIR)/external/heimdal/hcrypto/rijndael-alg-fst.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/rijndael-alg-fst.c
 
+CFLAGS_sha.o = -I$(TOP_SRCDIR)/external/heimdal/hcrypto
 sha.o: $(TOP_SRCDIR)/external/heimdal/hcrypto/sha.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/hcrypto/sha.c
 
 RFC3961_INCLUDES = -I$(TOP_SRCDIR)/crypto/rfc3961 \
 		   -I$(TOP_SRCDIR)/external/heimdal/krb5
 
+CFLAGS_n-fold.o = $(RFC3961_INCLUDES)
 n-fold.o: $(TOP_SRCDIR)/external/heimdal/krb5/n-fold.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/n-fold.c
-CFLAGS-n-fold.o = $(RFC3961_INCLUDES)
 
+CFLAGS_crypto.o = $(RFC3961_INCLUDES)
 crypto.o: $(TOP_SRCDIR)/external/heimdal/krb5/crypto.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/crypto.c
-CFLAGS-crypto.o = $(RFC3961_INCLUDES)
 
+CFLAGS_crypto-aes.o = $(RFC3961_INCLUDES)
 crypto-aes.o: $(TOP_SRCDIR)/external/heimdal/krb5/crypto-aes.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/crypto-aes.c
-CFLAGS-crypto-aes.o = $(RFC3961_INCLUDES)
 
+CFLAGS_crypto-evp.o = $(RFC3961_INCLUDES)
 crypto-evp.o: $(TOP_SRCDIR)/external/heimdal/krb5/crypto-evp.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/crypto-evp.c
-CFLAGS-crypto-evp.o = $(RFC3961_INCLUDES)
 
+CFLAGS_crypto-data.o = $(RFC3961_INCLUDES)
 crypto-data.o: $(TOP_SRCDIR)/external/heimdal/krb5/data.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/data.c
-CFLAGS-crypto-data.o = $(RFC3961_INCLUDES)
 
+CFLAGS_crypto-keyblock.o = $(RFC3961_INCLUDES)
 crypto-keyblock.o: $(TOP_SRCDIR)/external/heimdal/krb5/keyblock.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/keyblock.c
-CFLAGS-crypto-keyblock.o = $(RFC3961_INCLUDES)
 
+CFLAGS_crypto-store-int.o = $(RFC3961_INCLUDES)
 crypto-store-int.o: $(TOP_SRCDIR)/external/heimdal/krb5/store-int.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/krb5/store-int.c
-CFLAGS-crypto-store-int.o = $(RFC3961_INCLUDES)
 
+CFLAGS_crypto-random.o = $(RFC3961_INCLUDES)
 crypto-random.o: $(TOP_SRCDIR)/crypto/rfc3961/kernel/random.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/rfc3961/kernel/random.c
-CFLAGS-crypto-random.o = -I$(TOP_SRCDIR)/crypto/kernel
 
+CFLAGS_crypto-algs.o = $(RFC3961_INCLUDES)
 crypto-algs.o: $(TOP_SRCDIR)/crypto/rfc3961/kernel/algs.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/rfc3961/kernel/algs.c
-CFLAGS-crypto-algs.o = $(RFC3961_INCLUDES)
 
+CFLAGS_crypto-copy.o = $(RFC3961_INCLUDES)
 crypto-copy.o: $(TOP_SRCDIR)/crypto/rfc3961/copy.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/rfc3961/copy.c
-CFLAGS-crypto-copy.o = $(RFC3961_INCLUDES)
 
+CFLAGS_crypto-context.o = $(RFC3961_INCLUDES)
 crypto-context.o: $(TOP_SRCDIR)/crypto/rfc3961/context.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/crypto/rfc3961/context.c
-CFLAGS-crypto-context.o = $(RFC3961_INCLUDES)
 
+CFLAGS_crypto-ct.o = $(RFC3961_INCLUDES)
 crypto-ct.o: $(TOP_SRCDIR)/external/heimdal/roken/ct.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/external/heimdal/roken/ct.c
-CFLAGS-crypto-ct.o = $(RFC3961_INCLUDES)
 
 # Files which are specific to particular architectures/targets
 # but have common build rules. Place here instead of duplicating
@@ -664,17 +671,17 @@ osi_sleep.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sleep.c
 	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sleep.c
 osi_misc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_misc.c
 	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_misc.c
-CFLAGS-osi_vfsops_nfs.o= -DAFS_WRAPPER=${LIBAFS}_wrapper -DAFS_CONF_DATA=${LIBAFS}_conf_data
+CFLAGS_osi_vfsops_nfs.o= -DAFS_WRAPPER=${LIBAFS}_wrapper -DAFS_CONF_DATA=${LIBAFS}_conf_data
 osi_vfsops_nfs.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
 	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
-CFLAGS-osi_vfsops.o= -DAFS_NONFSTRANS -DAFS_WRAPPER=${LIBAFSNONFS}_wrapper -DAFS_CONF_DATA=${LIBAFSNONFS}_conf_data
+CFLAGS_osi_vfsops.o= -DAFS_NONFSTRANS -DAFS_WRAPPER=${LIBAFSNONFS}_wrapper -DAFS_CONF_DATA=${LIBAFSNONFS}_conf_data
 osi_vfsops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
 	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vfsops.c
 osi_vm.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vm.c
 	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vm.c
 osi_vnodeops.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c
 	$(CRULE_NOOPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c
-CFLAGS-osi_debug.o = -I${TOP_SRCDIR}/rxkad
+CFLAGS_osi_debug.o = -I${TOP_SRCDIR}/rxkad
 osi_debug.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_debug.c
 	$(CRULE_OPT) $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_debug.c
 osi_ioctl.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_ioctl.c
