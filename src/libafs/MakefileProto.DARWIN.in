@@ -98,21 +98,14 @@ include Makefile.common
 
 <all -ppc_darwin_70>
 ALL_COMMON_INCLUDES=$(KINCLUDES) $(COMMON_INCLUDE)
-# override suffix rule; unfortunately, this causes a warning message
+
+# libafs shouldn't use this pattern rule for building anything; all objects
+# should be built with CRULE_NOOPT or CRULE_OPT. But make sure nothing uses
+# this .c.o rule to build anything, to avoid accidentally building something
+# differently than CRULE_NOOPT/CRULE_OPT.
 .c.o:
-	if [ "$(ARCH_ppc)" = "yes" ]; then \
-	    $(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_ppc) $(CFLAGS_$@) -o $(patsubst %.o,%.o.ppc,$@) -c $< || exit(1) \
-	fi \
-	if [ "$(ARCH_x86)" = "yes" ]; then \
-	    $(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_x86) $(CFLAGS_$@) -o $(patsubst %.o,%.o.x86,$@) -c $< || exit(1) \
-	fi
-	if [ "$(ARCH_amd64)" = "yes" ]; then \
-	    $(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_amd64) $(CFLAGS_$@) -o $(patsubst %.o,%.o.amd64,$@) -c $< || exit(1) \
-	fi \
-	if [ "$(ARCH_arm64)" = "yes" ]; then \
-	    $(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_arm64) $(CFLAGS_$@) -o $(patsubst %.o,%.o.arm64,$@) -c $< || exit(1) \
-	fi \
-	lipo -create ${OBJ_ppc} ${OBJ_x86} ${OBJ_amd64} ${OBJ_arm64} -output $@;
+	# Use CRULE_NOOPT instead.
+	false
 
 CRULE_NOOPT_ppc=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_ppc) $(CFLAGS_$@) -o $(patsubst %.o,%.o.ppc,$@) -c $?
 CRULE_NOOPT_x86=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_x86) $(CFLAGS_$@) -o $(patsubst %.o,%.o.x86,$@) -c $?
