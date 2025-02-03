@@ -95,10 +95,49 @@ KOPTS_arm64 = $(KOPTS_common) \
 	      -mkernel \
 	      -mno-red-zone
 
-OBJ_ppc=$(shell echo "${ARCH_ppc}" | grep -q -w yes && echo "$@.ppc")
-OBJ_x86=$(shell echo "${ARCH_i386}" | grep -q -w yes && echo "$@.x86")
-OBJ_amd64=$(shell echo "${ARCH_x86_64}" | grep -q -w yes && echo "$@.amd64")
-OBJ_arm64=$(shell echo "${ARCH_arm64}" | grep -q -w yes && echo "$@.arm64")
+CFLAGS_common = $(DEFINES) \
+		$(KOPTS_DBUG) \
+		$(KINCLUDES) $(COMMON_INCLUDE) \
+		$(KERN_DBG)
+CRULE_NOOPT_common = $(CC) $(CFLAGS_common) $(CFLAGS_$@)
+CRULE_OPT_common = $(CRULE_NOOPT_common) $(KERN_OPTMZ)
+
+# Default values; overridden by the ARCH_foo sections below.
+OBJ_ppc =
+OBJ_x86 =
+OBJ_amd64 =
+OBJ_arm64 =
+
+# Default to ':', so the default command is to do nothing and return success.
+CRULE_NOOPT_ppc = :
+CRULE_NOOPT_x86 = :
+CRULE_NOOPT_amd64 = :
+CRULE_NOOPT_arm64 = :
+CRULE_OPT_ppc = :
+CRULE_OPT_x86 = :
+CRULE_OPT_amd64 = :
+CRULE_OPT_arm64 = :
+
+ifeq ($(ARCH_ppc),yes)
+    OBJ_ppc = $@.ppc
+    CRULE_NOOPT_ppc = $(CRULE_NOOPT_common) $(KOPTS_ppc) -o $(OBJ_ppc) -c
+    CRULE_OPT_ppc =   $(CRULE_OPT_common)   $(KOPTS_ppc) -o $(OBJ_ppc) -c
+endif
+ifeq ($(ARCH_i386),yes)
+    OBJ_x86 = $@.x86
+    CRULE_NOOPT_x86 = $(CRULE_NOOPT_common) $(KOPTS_x86) -o $(OBJ_x86) -c
+    CRULE_OPT_x86 =   $(CRULE_OPT_common)   $(KOPTS_x86) -o $(OBJ_x86) -c
+endif
+ifeq ($(ARCH_x86_64),yes)
+    OBJ_amd64 = $@.amd64
+    CRULE_NOOPT_amd64 = $(CRULE_NOOPT_common) $(KOPTS_amd64) -o $(OBJ_amd64) -c
+    CRULE_OPT_amd64 =   $(CRULE_OPT_common)   $(KOPTS_amd64) -o $(OBJ_amd64) -c
+endif
+ifeq ($(ARCH_arm64),yes)
+    OBJ_arm64 = $@.arm64
+    CRULE_NOOPT_arm64 = $(CRULE_NOOPT_common) $(KOPTS_arm64) -o $(OBJ_arm64) -c
+    CRULE_OPT_arm64 =   $(CRULE_OPT_common)   $(KOPTS_arm64) -o $(OBJ_arm64) -c
+endif
 
 <all -ppc_darwin_70 -ppc_darwin_80 -x86_darwin_80 -ppc_darwin_90 -x86_darwin_90>
 KLINKER=-Xlinker -kext
@@ -117,14 +156,6 @@ ifeq ($(KERN_ARCHFLAGS),)
 endif
 MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib $(KERN_ARCHFLAGS)
 
-<all>
-
-CFLAGS_ppc=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KOPTS_ppc) $(KOPTS_DBUG)
-CFLAGS_x86=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KOPTS_x86) $(KOPTS_DBUG)
-CFLAGS_amd64=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KOPTS_amd64) $(KOPTS_DBUG)
-CFLAGS_arm64=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KOPTS_arm64) $(KOPTS_DBUG)
-
-<all>
 # Name of directory to hold object files and libraries.
 KOBJ = MODLOAD
 
@@ -136,7 +167,6 @@ DESTDIRS = single_destdir
 include Makefile.common
 
 <all -ppc_darwin_70>
-ALL_COMMON_INCLUDES=$(KINCLUDES) $(COMMON_INCLUDE)
 
 # libafs shouldn't use this pattern rule for building anything; all objects
 # should be built with CRULE_NOOPT or CRULE_OPT. But make sure nothing uses
@@ -146,17 +176,28 @@ ALL_COMMON_INCLUDES=$(KINCLUDES) $(COMMON_INCLUDE)
 	# Use CRULE_NOOPT instead.
 	false
 
-CRULE_NOOPT_ppc=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_ppc) $(CFLAGS_$@) -o $(patsubst %.o,%.o.ppc,$@) -c $?
-CRULE_NOOPT_x86=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_x86) $(CFLAGS_$@) -o $(patsubst %.o,%.o.x86,$@) -c $?
-CRULE_NOOPT_amd64=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_amd64) $(CFLAGS_$@) -o $(patsubst %.o,%.o.amd64,$@) -c $?
-CRULE_NOOPT_arm64=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(CFLAGS_arm64) $(CFLAGS_$@) -o $(patsubst %.o,%.o.arm64,$@) -c $?
-CRULE_NOOPT=$(shell echo "${ARCH_ppc}" | grep -q -w yes && echo "${CRULE_NOOPT_ppc} && "; echo "${ARCH_i386}" | grep -q -w yes && echo "${CRULE_NOOPT_x86} && "; echo "${ARCH_x86_64}" | grep -q -w yes && echo "${CRULE_NOOPT_amd64} && "; echo "${ARCH_arm64}" | grep -q -w yes && echo "${CRULE_NOOPT_arm64} && "; echo " lipo -create ${OBJ_ppc} ${OBJ_x86} ${OBJ_amd64} ${OBJ_arm64} -output $@ && true")
+OBJ_allarch = $(OBJ_ppc) $(OBJ_x86) $(OBJ_amd64) $(OBJ_arm64)
 
-CRULE_OPT_ppc=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS_ppc) $(CFLAGS_$@) -o $(patsubst %.o,%.o.ppc,$@) -c $?
-CRULE_OPT_x86=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS_x86) $(CFLAGS_$@) -o $(patsubst %.o,%.o.x86,$@) -c $?
-CRULE_OPT_amd64=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS_amd64) $(CFLAGS_$@) -o $(patsubst %.o,%.o.amd64,$@) -c $?
-CRULE_OPT_arm64=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS_arm64) $(CFLAGS_$@) -o $(patsubst %.o,%.o.arm64,$@) -c $?
-CRULE_OPT=$(shell echo "${ARCH_ppc}" | grep -q -w yes && echo "${CRULE_OPT_ppc} && "; echo "${ARCH_i386}" | grep -q -w yes && echo "${CRULE_OPT_x86} && "; echo "${ARCH_x86_64}" | grep -q -w yes && echo "${CRULE_OPT_amd64} && "; echo "${ARCH_arm64}" | grep -q -w yes && echo "${CRULE_OPT_arm64} && "; echo "lipo -create ${OBJ_ppc} ${OBJ_x86} ${OBJ_amd64} ${OBJ_arm64} -output $@ && true")
+# The trailing ':' in these commands is there to ignore the filename we are
+# given. We are normally invoked like this:
+#     $(CRULE_NOOPT) $(TOP_SRC_AFS)/afs_cell.c
+#
+# but our rules are too complex to use a single source filename argument. We
+# use $< internally as the source file to build, so just ignore the filename
+# given to us.
+CRULE_NOOPT = $(CRULE_NOOPT_ppc)   $< && \
+	      $(CRULE_NOOPT_x86)   $< && \
+	      $(CRULE_NOOPT_amd64) $< && \
+	      $(CRULE_NOOPT_arm64) $< && \
+	      lipo -output $@ -create $(OBJ_allarch) && \
+	      :
+
+CRULE_OPT = $(CRULE_OPT_ppc)   $< && \
+	    $(CRULE_OPT_x86)   $< && \
+	    $(CRULE_OPT_amd64) $< && \
+	    $(CRULE_OPT_arm64) $< && \
+	    lipo -output $@ -create $(OBJ_allarch) && \
+	    :
 
 <ppc_darwin_70>
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KOPTS)
