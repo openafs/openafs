@@ -37,8 +37,6 @@ AFS_OS_NONFSOBJS = osi_vfsops.o
 
 
 # System specific build commands and flags
-KDEFS=
-DBUG = 
 DEFINES= -D_KERNEL -DKERNEL -DKERNEL_PRIVATE -DDIAGNOSTIC -DUSE_SELECT -DMACH_USER_API -DMACH_KERNEL
 
 <ppc_darwin_70 ppc_darwin_80 x86_darwin_80>
@@ -48,10 +46,55 @@ KOPTS_DBUG=-ggdb
 <all -ppc_darwin_70 -ppc_darwin_80 -x86_darwin_80 -ppc_darwin_90 -x86_darwin_90>
 KOPTS_DBUG=-gdwarf-2
 <all -ppc_darwin_70>
-KOPTS_ppc=-static -nostdinc -fno-builtin -finline -fno-keep-inline-functions -msoft-float -mlong-branch -fsigned-bitfields -arch ppc -Dppc -DPPC -D__PPC__ -DPAGE_SIZE_FIXED -mcpu=750 -mmultiple -fschedule-insns -force_cpusubtype_ALL
-KOPTS_x86=-static -nostdinc -fmessage-length=0 -pipe -nostdinc -fno-builtin -Wno-trigraphs -force_cpusubtype_ALL -msoft-float -O0 -fno-common -mkernel -finline -fno-keep-inline-functions -fasm-blocks -arch i386 -Di386 -DI386 -D__I386__ -DPAGE_SIZE_FIXED
-KOPTS_amd64=-static -nostdinc -fno-builtin -finline -fno-keep-inline-functions -msoft-float -fsigned-bitfields -arch x86_64 -Damd64 -DAMD64 -D__AMD64__ -DPAGE_SIZE_FIXED -march=x86-64 -falign-functions=4 -m64 -mkernel -mno-red-zone
-KOPTS_arm64=-static -nostdinc -fno-builtin -finline -fsigned-bitfields -arch arm64e -Darm64e -DARM64E -D__ARM64E__ -DPAGE_SIZE_FIXED -falign-functions=4 -m64 -mkernel -mno-red-zone
+KOPTS_common = -static \
+	       -nostdinc \
+	       -fno-builtin \
+	       -finline \
+	       -DPAGE_SIZE_FIXED
+KOPTS_ppc = $(KOPTS_common) \
+	    -fno-keep-inline-functions \
+	    -msoft-float \
+	    -mlong-branch \
+	    -fsigned-bitfields \
+	    -arch ppc \
+	    -Dppc -DPPC -D__PPC__ \
+	    -mcpu=750 \
+	    -mmultiple \
+	    -fschedule-insns \
+	    -force_cpusubtype_ALL
+KOPTS_x86 = $(KOPTS_common) \
+	    -fmessage-length=0 \
+	    -pipe \
+	    -Wno-trigraphs \
+	    -force_cpusubtype_ALL \
+	    -msoft-float \
+	    -O0 \
+	    -fno-common \
+	    -mkernel \
+	    -fno-keep-inline-functions \
+	    -fasm-blocks \
+	    -arch i386 \
+	    -Di386 -DI386 -D__I386__
+KOPTS_amd64 = $(KOPTS_common) \
+	      -fno-keep-inline-functions \
+	      -msoft-float \
+	      -fsigned-bitfields \
+	      -arch x86_64 \
+	      -Damd64 -DAMD64 -D__AMD64__ \
+	      -march=x86-64 \
+	      -falign-functions=4 \
+	      -m64 \
+	      -mkernel \
+	      -mno-red-zone
+KOPTS_arm64 = $(KOPTS_common) \
+	      -fsigned-bitfields \
+	      -arch arm64e \
+	      -Darm64e -DARM64E -D__ARM64E__ \
+	      -falign-functions=4 \
+	      -m64 \
+	      -mkernel \
+	      -mno-red-zone
+
 ARCH_ppc=$(shell echo "${ARCHFLAGS}" | grep -q -w ppc && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64' && uname -m | grep -q -w ppc && echo yes)
 ARCH_x86=$(shell echo "${ARCHFLAGS}" | grep -q -w i386 && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64' && uname -m | grep -q -w i386 && echo yes)
 ARCH_amd64=$(shell echo "${ARCHFLAGS}" | grep -q -w x86_64 && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64|arm64' && uname -m | grep -q -w x86_64 && echo yes)
@@ -80,10 +123,10 @@ MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib $(KERN_ARCHFLAGS)
 
 <all>
 
-CFLAGS_ppc=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_ppc) $(KOPTS_DBUG)
-CFLAGS_x86=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_x86) $(KOPTS_DBUG)
-CFLAGS_amd64=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_amd64) $(KOPTS_DBUG)
-CFLAGS_arm64=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS_arm64) $(KOPTS_DBUG)
+CFLAGS_ppc=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KOPTS_ppc) $(KOPTS_DBUG)
+CFLAGS_x86=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KOPTS_x86) $(KOPTS_DBUG)
+CFLAGS_amd64=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KOPTS_amd64) $(KOPTS_DBUG)
+CFLAGS_arm64=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KOPTS_arm64) $(KOPTS_DBUG)
 
 <all>
 # Name of directory to hold object files and libraries.
@@ -120,7 +163,7 @@ CRULE_OPT_arm64=$(CC) $(ALL_COMMON_INCLUDES) $(KERN_DBG) $(KERN_OPTMZ) $(CFLAGS_
 CRULE_OPT=$(shell echo "${ARCH_ppc}" | grep -q -w yes && echo "${CRULE_OPT_ppc} && "; echo "${ARCH_x86}" | grep -q -w yes && echo "${CRULE_OPT_x86} && "; echo "${ARCH_amd64}" | grep -q -w yes && echo "${CRULE_OPT_amd64} && "; echo "${ARCH_arm64}" | grep -q -w yes && echo "${CRULE_OPT_arm64} && "; echo "lipo -create ${OBJ_ppc} ${OBJ_x86} ${OBJ_amd64} ${OBJ_arm64} -output $@ && true")
 
 <ppc_darwin_70>
-CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS)
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KOPTS)
 KOPTS=-static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
 
 <all>
