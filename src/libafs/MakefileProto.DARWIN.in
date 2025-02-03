@@ -52,10 +52,10 @@ KOPTS_ppc=-static -nostdinc -fno-builtin -finline -fno-keep-inline-functions -ms
 KOPTS_x86=-static -nostdinc -fmessage-length=0 -pipe -nostdinc -fno-builtin -Wno-trigraphs -force_cpusubtype_ALL -msoft-float -O0 -fno-common -mkernel -finline -fno-keep-inline-functions -fasm-blocks -arch i386 -Di386 -DI386 -D__I386__ -DPAGE_SIZE_FIXED
 KOPTS_amd64=-static -nostdinc -fno-builtin -finline -fno-keep-inline-functions -msoft-float -fsigned-bitfields -arch x86_64 -Damd64 -DAMD64 -D__AMD64__ -DPAGE_SIZE_FIXED -march=x86-64 -falign-functions=4 -m64 -mkernel -mno-red-zone
 KOPTS_arm64=-static -nostdinc -fno-builtin -finline -fsigned-bitfields -arch arm64e -Darm64e -DARM64E -D__ARM64E__ -DPAGE_SIZE_FIXED -falign-functions=4 -m64 -mkernel -mno-red-zone
-ARCH_ppc=$(shell echo "${ARCHFLAGS}" | grep -q -w ppc && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64' && arch | grep -q -w ppc && echo yes)
-ARCH_x86=$(shell echo "${ARCHFLAGS}" | grep -q -w i386 && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64' && arch | grep -q -w i386 && echo yes)
-ARCH_amd64=$(shell echo "${ARCHFLAGS}" | grep -q -w x86_64 && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64|arm64' && arch | grep -q -w x86_64 && echo yes)
-ARCH_arm64=$(shell echo "${ARCHFLAGS}" | grep -q -w arm64 && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64|arm64' && arch | grep -q -w arm64 && echo yes)
+ARCH_ppc=$(shell echo "${ARCHFLAGS}" | grep -q -w ppc && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64' && uname -m | grep -q -w ppc && echo yes)
+ARCH_x86=$(shell echo "${ARCHFLAGS}" | grep -q -w i386 && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64' && uname -m | grep -q -w i386 && echo yes)
+ARCH_amd64=$(shell echo "${ARCHFLAGS}" | grep -q -w x86_64 && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64|arm64' && uname -m | grep -q -w x86_64 && echo yes)
+ARCH_arm64=$(shell echo "${ARCHFLAGS}" | grep -q -w arm64 && echo yes || echo ${ARCHFLAGS} | egrep -q -w -v 'ppc|i386|x86_64|arm64' && uname -m | grep -q -w arm64 && echo yes)
 OBJ_ppc=$(shell echo "${ARCH_ppc}" | grep -q -w yes && echo "$@.ppc")
 OBJ_x86=$(shell echo "${ARCH_x86}" | grep -q -w yes && echo "$@.x86")
 OBJ_amd64=$(shell echo "${ARCH_amd64}" | grep -q -w yes && echo "$@.amd64")
