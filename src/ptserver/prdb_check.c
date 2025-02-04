@@ -53,7 +53,7 @@
 struct prheader cheader;
 int fd;
 const char *pr_dbaseName;
-char *whoami = "db_verify";
+char *whoami = "prdb_check";
 #define UBIK_HEADERSIZE 64
 
 afs_int32

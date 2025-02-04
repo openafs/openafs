@@ -193,7 +193,7 @@ pterror.h pterror.c: pterror.et
 # install pts, ptserver and afsprot.lib
 
 install: $(INCFILES) ptint.ss.c ptint.cs.c ptint.xdr.c $(LIBFILE) $(PTSERVER) $(PTS) $(PTCLIENT) $(PT_UTIL) $(OUT)\readgroup.exe \
-	$(OUT)\readpwd.exe  $(OUT)\testpt.exe $(OUT)\db_verify.exe  \
+	$(OUT)\readpwd.exe  $(OUT)\testpt.exe $(OUT)\prdb_check.exe  \
 	$(DESTDIR)\root.server\usr\afs\bin\pts.exe \
 	$(DESTDIR)\root.server\usr\afs\bin\ptclient.exe \
 	$(DESTDIR)\root.server\usr\afs\bin\pt_util.exe \
@@ -235,7 +235,7 @@ $(INCFILEDIR)\afs\prclient.h: $(INCFILEDIR)\afs\ptclient.h
 
 clean::
 	$(DEL) ptint.cs.c ptint.ss.c ptint.xdr.c ptint.h
-	$(DEL) $(OUT)\readgroup.exe $(OUT)\readpwd.exe $(OUT)\db_verify.exe $(OUT)\testpt.exe
+	$(DEL) $(OUT)\readgroup.exe $(OUT)\readpwd.exe $(OUT)\prdb_check.exe $(OUT)\testpt.exe
 	$(DEL) pterror.h pterror.c
 	$(DEL) $(PTS) $(PTCLIENT) $(PT_UTIL)
 
@@ -261,7 +261,7 @@ $(OUT)\testpt.exe: $(OUT)\testpt.obj $(LIBFILE) $(TEST_LIBS)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
-$(OUT)\db_verify.exe: $(OUT)\db_verify.obj $(OUT)\pterror.obj $(OUT)\display.obj $(LIBFILE) $(TEST_LIBS)
+$(OUT)\prdb_check.exe: $(OUT)\prdb_check.obj $(OUT)\pterror.obj $(OUT)\display.obj $(LIBFILE) $(TEST_LIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)

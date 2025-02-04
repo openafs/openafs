@@ -42,7 +42,7 @@ LIBS_client= \
 	$(top_builddir)/src/ptserver/liboafs_prot.la \
 	$(LIBS_common)
 
-all: ptserver pts pt_util db_verify \
+all: ptserver pts pt_util prdb_check \
 	depinstall readgroup readpwd testpt
 
 generated: \
@@ -93,11 +93,11 @@ ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o \
 		$(LIBS_server) \
 		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
-db_verify.o: ${PTSERVER}/db_verify.c ${INCLS}
-	$(AFS_CCRULE) $(PTSERVER)/db_verify.c
+prdb_check.o: ${PTSERVER}/prdb_check.c ${INCLS}
+	$(AFS_CCRULE) $(PTSERVER)/prdb_check.c
 
-db_verify: db_verify.o $(LIBS_client)
-	$(LT_LDRULE_static) db_verify.o \
+prdb_check: prdb_check.o $(LIBS_client)
+	$(LT_LDRULE_static) prdb_check.o \
 		$(LIBS_client) $(LIB_hcrypto) $(LIB_roken) ${MT_LIBS}
 
 ptclient: ptclient.o AFS_component_version_number.o $(LIBS_client)
@@ -151,7 +151,7 @@ pterror.c: ${PTSERVER}/pterror.et
 pterror.h: ${PTSERVER}/pterror.et
 	${COMPILE_ET_H} -p ${PTSERVER} pterror
 
-db_verify.o db_verify.lo: pterror.h
+prdb_check.o prdb_check.lo: pterror.h
 ptclient.o ptclient.lo: pterror.h
 ptprocs.o ptprocs.lo: pterror.h
 pts.o pts.lo: pterror.h
@@ -169,24 +169,24 @@ prerror.h: pterror.h
 #
 # Installation targets
 #
-install: ptserver pts pt_util db_verify
+install: ptserver pts pt_util prdb_check
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
 		${LT_INSTALL_PROGRAM} ptserver \
 			${DESTDIR}${afssrvlibexecdir}/ptserver; \
 		${LT_INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts; \
 		${LT_INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts; \
 		${LT_INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util; \
-		${LT_INSTALL_PROGRAM} db_verify \
+		${LT_INSTALL_PROGRAM} prdb_check \
 			${DESTDIR}${afssrvsbindir}/prdb_check; \
 	fi
 
-dest: ptserver pts pt_util db_verify
+dest: ptserver pts pt_util prdb_check
 	if [ "x$(ENABLE_PTHREADED_UBIK)" = "xyes" ] ; then \
 		${INSTALL_PROGRAM} ptserver ${DEST}/root.server/usr/afs/bin/ptserver; \
 		${INSTALL_PROGRAM} pts ${DEST}/root.server/usr/afs/bin/pts; \
 		${INSTALL_PROGRAM} pts ${DEST}/bin/pts; \
 		${INSTALL_PROGRAM} pt_util ${DEST}/root.server/usr/afs/bin/pt_util; \
-		${INSTALL_PROGRAM} db_verify ${DEST}/etc/prdb_check; \
+		${INSTALL_PROGRAM} prdb_check ${DEST}/etc/prdb_check; \
 	fi
 
 #
@@ -195,7 +195,7 @@ dest: ptserver pts pt_util db_verify
 clean:
 	$(LT_CLEAN)
 	$(RM) -f *.a *.o ptserver ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h \
-	pts readgroup readpwd db_verify testpt pt_util pterror.h pterror.c \
+	pts readgroup readpwd prdb_check testpt pt_util pterror.h pterror.c \
 	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c
 
 include ../config/Makefile.version

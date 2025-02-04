@@ -52,7 +52,7 @@ LT_deps = $(top_builddir)/src/opr/liboafs_opr.la \
 	  $(top_builddir)/src/auth/liboafs_auth.la
 LT_libs =
 
-all: ptserver pts pt_util db_verify liboafs_prot.la libprot_pic.la \
+all: ptserver pts pt_util prdb_check liboafs_prot.la libprot_pic.la \
      ${TOP_LIBDIR}/libprot.a depinstall readgroup readpwd testpt ptclient
 
 generated: \
@@ -148,10 +148,10 @@ Kptint.xdr.c: ptint.xg
 Kptint.h: ptint.xg
 	${RXGEN} -A -x -k -h -o Kptint.h ${srcdir}/ptint.xg
 
-db_verify.o: db_verify.c ${INCLS} AFS_component_version_number.c
+prdb_check.o: prdb_check.c ${INCLS} AFS_component_version_number.c
 
-db_verify: db_verify.o libprot.a $(LIBS)
-	$(AFS_LDRULE) db_verify.o libprot.a \
+prdb_check: prdb_check.o libprot.a $(LIBS)
+	$(AFS_LDRULE) prdb_check.o libprot.a \
 		$(LIBS) $(LIB_roken) ${XLIBS}
 
 ptclient: ptclient.o libprot.a $(LIBS)
@@ -166,7 +166,7 @@ pterror.c: pterror.et
 pterror.h: pterror.et
 	${COMPILE_ET_H} -p ${srcdir} pterror
 
-db_verify.o db_verify.lo: pterror.h
+prdb_check.o prdb_check.lo: pterror.h
 ptclient.o ptclient.lo: pterror.h
 ptprocs.o ptprocs.lo: pterror.h
 pts.o pts.lo: pterror.h
@@ -232,7 +232,7 @@ prerror.h: pterror.h
 #
 # Installation targets
 #
-install: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
+install: ptserver pts pt_util prdb_check libprot.a ptclient.h pterror.h \
 		ptint.h ptserver.h
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
 	${INSTALL} -d ${DESTDIR}${afssrvbindir}
@@ -245,7 +245,7 @@ install: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 		${INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts; \
 		${INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts; \
 		${INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util; \
-		${INSTALL_PROGRAM} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check; \
+		${INSTALL_PROGRAM} prdb_check ${DESTDIR}${afssrvsbindir}/prdb_check; \
 	fi
 	${INSTALL_DATA} libprot.a ${DESTDIR}${libdir}/afs/libprot.a
 	${INSTALL_DATA} ${srcdir}/ptclient.h ${DESTDIR}${includedir}/afs/prclient.h
@@ -258,7 +258,7 @@ install: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 	${INSTALL_DATA} ptint.h ${DESTDIR}${includedir}/afs/ptint.h
 	${INSTALL_DATA} ${srcdir}/ptserver.h ${DESTDIR}${includedir}/afs/ptserver.h
 
-dest: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
+dest: ptserver pts pt_util prdb_check libprot.a ptclient.h pterror.h \
 		ptint.h ptserver.h
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
 	${INSTALL} -d ${DEST}/bin
@@ -270,7 +270,7 @@ dest: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 		${INSTALL_PROGRAM} pts ${DEST}/root.server/usr/afs/bin/pts; \
 		${INSTALL_PROGRAM} pts ${DEST}/bin/pts; \
 		${INSTALL_PROGRAM} pt_util ${DEST}/root.server/usr/afs/bin/pt_util; \
-		${INSTALL_PROGRAM} db_verify ${DEST}/etc/prdb_check; \
+		${INSTALL_PROGRAM} prdb_check ${DEST}/etc/prdb_check; \
 	fi;
 	${INSTALL_DATA} libprot.a ${DEST}/lib/afs/libprot.a
 	${INSTALL_DATA} ${srcdir}/ptclient.h ${DEST}/include/afs/prclient.h
@@ -289,7 +289,7 @@ dest: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
 clean:
 	$(LT_CLEAN)
 	$(RM) -f *.a *.o ptserver ptint.cs.c ptint.ss.c ptclient ptint.xdr.c ptint.h \
-	libprot.a pts readgroup readpwd db_verify testpt pt_util pterror.h pterror.c \
+	libprot.a pts readgroup readpwd prdb_check testpt pt_util pterror.h pterror.c \
 	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c
 
 include ../config/Makefile.version

@@ -3,7 +3,7 @@
 # to check that you haven't inadvertently ignored any tracked files.
 
 /Kptint.h
-/db_verify
+/prdb_check
 /pt_util
 /pterror.c
 /pterror.h

@@ -2,7 +2,7 @@
 #     git ls-files -i --exclude-standard
 # to check that you haven't inadvertently ignored any tracked files.
 
-/db_verify
+/prdb_check
 /pt_util
 /ptclient
 /pterror.c
