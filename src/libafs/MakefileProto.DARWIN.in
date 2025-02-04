@@ -63,8 +63,20 @@ OBJ_arm64=$(shell echo "${ARCH_arm64}" | grep -q -w yes && echo "$@.arm64")
 
 <all -ppc_darwin_70 -ppc_darwin_80 -x86_darwin_80 -ppc_darwin_90 -x86_darwin_90>
 KLINKER=-Xlinker -kext
+
 <all>
-MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib $(patsubst arm64,arm64e,$(ARCHFLAGS))
+
+# On arm64, we must link the kernel module with '-arch arm64e', even though
+# '-arch arm64' is the default on arm64. So, if '-arch arm64' is in our
+# ARCHFLAGS, translate it into '-arch arm64e'. And if no ARCHFLAGS are set at
+# all, we must set '-arch arm64e'.
+KERN_ARCHFLAGS = $(patsubst arm64,arm64e,$(ARCHFLAGS))
+ifeq ($(KERN_ARCHFLAGS),)
+  ifeq ($(ARCH_arm64),yes)
+    KERN_ARCHFLAGS=-arch arm64e
+  endif
+endif
+MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib $(KERN_ARCHFLAGS)
 
 <all>
 
