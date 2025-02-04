@@ -123,6 +123,17 @@ KROOT = @KROOT@
 KINCLUDES = @KINCLUDES@
 
 #
+# Arch-related defines
+#
+ARCHFLAGS = @ARCHFLAGS@
+ARCH_ppc = @ARCH_ppc@
+ARCH_i386 = @ARCH_i386@
+ARCH_x86_64 = @ARCH_x86_64@
+ARCH_armv6 = @ARCH_armv6@
+ARCH_armv7 = @ARCH_armv7@
+ARCH_arm64 = @ARCH_arm64@
+
+#
 # Install targets
 #
 

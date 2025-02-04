@@ -39,3 +39,46 @@ AC_DEFUN([OPENAFS_MACOS_KINCLUDES], [
   AC_SUBST([KROOT])
   AC_SUBST([KINCLUDES])
 ])
+
+dnl
+dnl Set ARCH_foo=yes for each arch we are building for (that is, ARCHFLAGS
+dnl contains '-arch foo'). If ARCHFLAGS is not set, define the arch we are on as
+dnl the default. See $possible_arches for the arches we understand.
+dnl
+AC_DEFUN([OPENAFS_MACOS_ARCH], [
+  possible_arches="ppc i386 x86_64 armv6 armv7 arm64"
+
+  set_arch=
+  AS_IF([test x"$ARCHFLAGS" != x],
+   [for arch in $possible_arches ; do
+      AS_CASE(["$ARCHFLAGS"],
+       [*"$arch"*],
+	[set_arch=1
+	 eval ARCH_"$arch"=yes])
+    done])
+
+  dnl If we didn't set any known ARCH_foo vars, figure out a default.
+  AS_IF([test x"$set_arch" = x],
+   [AS_CASE(["$host"],
+     [powerpc-*],
+       [ARCH_ppc=yes],
+     [i?86-*],
+       [ARCH_i386=yes],
+     [x86_64-*],
+       [ARCH_x86_64=yes],
+     [arm-* | aarch64-*],
+       [ARCH_arm64=yes],
+     [AC_MSG_ERROR(m4_normalize([
+	Cannot determine default arch (host $host), try building with, e.g.,
+	ARCHFLAGS='-arch x86_64'])
+      )])])
+
+  AC_SUBST([ARCH_ppc])
+  AC_SUBST([ARCH_i386])
+  AC_SUBST([ARCH_x86_64])
+  AC_SUBST([ARCH_armv6])
+  AC_SUBST([ARCH_armv7])
+  AC_SUBST([ARCH_arm64])
+
+  AC_SUBST([ARCHFLAGS])
+])

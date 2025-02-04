@@ -57,6 +57,13 @@ liblwpcompat_pic.la: $(LT_objs)
 process.default.s:
 	@echo Nothing to be done for process.default.s
 
+CC_PROCESS_armv6 = $(CC) -x assembler-with-cpp -c -arch armv6 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.default.s
+CC_PROCESS_armv7 = $(CC) -x assembler-with-cpp -c -arch armv7 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.default.s
+CC_PROCESS_ppc =   $(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -arch ppc -I${TOP_INCDIR} ${srcdir}/process.default.s
+CC_PROCESS_i386 =  $(CC) -x assembler-with-cpp -c -arch i386 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s
+CC_PROCESS_amd64 = $(CC) -x assembler-with-cpp -c -arch x86_64 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.amd64.s
+CC_PROCESS_arm64 = $(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -arch arm64 -I${TOP_INCDIR} -I${srcdir} -I. -I${TOP_OBJDIR}/src/config ${srcdir}/process.c
+
 # Making process.o for $(SYS_NAME)
 # The files "process.s" and "process.S" may be used internally,
 # but will be removed after building the .o
@@ -76,63 +83,34 @@ process.o	: process.default.s process.i386.s process.amd64.s process.c lwp.o
 		${AS} process.s -o process.o; \
 			$(RM) process.s ;; \
 	*_darwin* ) \
-		$(RM) -f process.o ; \
-		CURRENTBUILDARCH="${ARCHFLAGS}"; \
-		if [ -z "$${CURRENTBUILDARCH}" ] ; then \
-		    CURRENTBUILDARCH=`$(CC) -dM -E -xc /dev/null | grep 'ppc\|i386\|x86_64\|arm'`; \
-		fi; \
-		ppc=`echo $${CURRENTBUILDARCH} | grep -q ppc && echo process.ppc.o` ; \
-		i386=`echo $${CURRENTBUILDARCH} | grep -q i386 && echo process.i386.o` ; \
-		amd64=`echo $${CURRENTBUILDARCH} | grep -q x86_64 && echo process.amd64.o` ; \
-		armv6=`echo $${CURRENTBUILDARCH} | grep -q armv6 && echo process.armv6.o` ; \
-		armv7=`echo $${CURRENTBUILDARCH} | grep -q armv7 && echo process.armv7.o` ; \
-		arm64=`echo $${CURRENTBUILDARCH} | grep -q arm64 && echo process.arm64.o` ; \
-		if [ -z "$${ppc}" -a -z "$${i386}" -a -z "$${amd64}" -a -z "$${armv6}" -a -z "$${armv7}" -a -z "$${arm64}" ] ; then \
-			if [ `arch` = ppc ] ; then \
-				ppc=yes ; \
-			else \
-				i386=yes ; \
-			fi ; \
-		fi ; \
-		if [ -n "$${armv6}" ] ; then \
-			$(CC) -x assembler-with-cpp -c -arch armv6 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.default.s -o "$${armv6}" ; \
-			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${ppc}" -a -z "$${armv7}" -a -z "$${arm64}" ] ; then \
-				${MV} "$${armv6}" process.o ; \
-			fi ; \
-		fi ; \
-		if [ -n "$${armv7}" ] ; then \
-			$(CC) -x assembler-with-cpp -c -arch armv7 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.default.s -o "$${armv7}" ; \
-			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${ppc}" -a -z "$${armv6}" -a -z "$${arm64}" ] ; then \
-				${MV} "$${armv7}" process.o ; \
-			fi ; \
-		fi ; \
-		if [ -n "$${ppc}" ] ; then \
-			$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -arch ppc -I${TOP_INCDIR} ${srcdir}/process.default.s -o "$${ppc}" ; \
-			if [ -z "$${i386}" -a -z "$${amd64}" -a -z "$${armv6}" -a -z "$${armv7}" -a -z "$${arm64}" ] ; then \
-				${MV} "$${ppc}" process.o ; \
-			fi ; \
-		fi ; \
-		if [ -n "$${i386}" ] ; then \
-			$(CC) -x assembler-with-cpp -c -arch i386 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s -o "$${i386}" ; \
-			if [ -z "$${ppc}" -a -z "$${amd64}" -a -z "$${armv6}" -a -z "$${armv7}" -a -z "$${arm64}" ] ; then \
-				${MV} "$${i386}" process.o ; \
-			fi ; \
-		fi ; \
-		if [ -n "$${amd64}" ] ; then \
-			$(CC) -x assembler-with-cpp -c -arch x86_64 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.amd64.s -o "$${amd64}" ; \
-			if [ -z "$${ppc}" -a -z "$${i386}" -a -z "$${armv6}" -a -z "$${armv7}" -a -z "$${arm64}" ] ; then \
-				${MV} "$${amd64}" process.o ; \
-			fi ; \
-		fi ; \
-		if [ -n "$${arm64}" ] ; then \
-			$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -arch arm64 -I${TOP_INCDIR} -I${srcdir} -I. -I${TOP_OBJDIR}/src/config ${srcdir}/process.c -o "$${arm64}" ; \
-			if [ -z "$${ppc}" -a -z "$${i386}" -a -z "$${armv6}" -a -z "$${armv7}" -a -z "$${amd64}" ] ; then \
-				${MV} "$${arm64}" process.o ; \
-			fi ; \
-		fi ; \
-		if [ ! -f process.o ] ; then \
-			lipo -create $${amd64} $${i386} $${ppc} $${armv6} $${armv7} $${arm64} -output process.o ;\
-		fi ;; \
+		$(RM) -f process.o && \
+		if [ x$(ARCH_armv6) = xyes ] ; then \
+		    objs="$${objs} process.armv6.o" && \
+		    $(CC_PROCESS_armv6) -o process.armv6.o ; \
+		fi && \
+		if [ x$(ARCH_armv7) = xyes ] ; then \
+		    objs="$${objs} process.armv7.o" && \
+		    $(CC_PROCESS_armv7) -o process.armv7.o ; \
+		fi && \
+		if [ x$(ARCH_ppc) = xyes ] ; then \
+		    objs="$${objs} process.ppc.o" && \
+		    $(CC_PROCESS_ppc) -o process.ppc.o ; \
+		fi && \
+		if [ x$(ARCH_i386) = xyes ] ; then \
+		    objs="$${objs} process.i386.o" && \
+		    $(CC_PROCESS_i386) -o process.i386.o ; \
+		fi && \
+		if [ x$(ARCH_x86_64) = xyes ] ; then \
+		    objs="$${objs} process.amd64.o" && \
+		    $(CC_PROCESS_amd64) -o process.amd64.o ; \
+		fi && \
+		if [ x$(ARCH_arm64) = xyes ] ; then \
+		    objs="$${objs} process.arm64.o" && \
+		    $(CC_PROCESS_arm64) -o process.arm64.o ; \
+		fi && \
+		echo + lipo -create $${objs} -output process.o && \
+		lipo -create $${objs} -output process.o ; \
+		;; \
 	i386_*bsd*) \
 		cp ${srcdir}/process.i386.s process.S ; \
 		${CCOBJ} -DIGNORE_STDS_H -E -I${srcdir} -I${TOP_INCDIR} process.S > process.s ; \
