@@ -1601,32 +1601,43 @@ dentry_revalidate_common(struct vcache *pvcp, const char *name, struct dentry *d
 #endif
 }
 
-#if defined(DOP_REVALIDATE_TAKES_UNSIGNED)
+#if defined(DOP_REVALIDATE_TAKES_PARENT_INODE)
+static int
+afs_linux_dentry_revalidate(struct inode *parent_inode, const struct qstr *name,
+			    struct dentry *dp, unsigned int flags)
+{
+    if ((flags & LOOKUP_RCU) != 0) {
+	return -ECHILD;
+    }
+    return dentry_revalidate_common(VTOAFS(parent_inode), name->name, dp);
+}
+#else
+# if defined(DOP_REVALIDATE_TAKES_UNSIGNED)
 static int
 afs_linux_dentry_revalidate(struct dentry *dp, unsigned int flags)
-#elif defined(DOP_REVALIDATE_TAKES_NAMEIDATA)
+# elif defined(DOP_REVALIDATE_TAKES_NAMEIDATA)
 static int
 afs_linux_dentry_revalidate(struct dentry *dp, struct nameidata *nd)
-#else
+# else
 static int
 afs_linux_dentry_revalidate(struct dentry *dp, int flags)
-#endif
+# endif
 {
     int code;
     struct dentry *parent;
 
-#ifdef LOOKUP_RCU
+# ifdef LOOKUP_RCU
     /* We don't support RCU path walking */
-# if defined(DOP_REVALIDATE_TAKES_UNSIGNED)
+#  if defined(DOP_REVALIDATE_TAKES_UNSIGNED)
     if ((flags & LOOKUP_RCU) != 0) {
        return -ECHILD;
     }
-# else
+#  else
     if ((nd->flags & LOOKUP_RCU) != 0) {
        return -ECHILD;
     }
+#  endif
 # endif
-#endif
 
     parent = dget_parent(dp);
     code = dentry_revalidate_common(VTOAFS(parent->d_inode),
@@ -1635,6 +1646,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 
     return code;
 }
+#endif /* DOP_REVALIDATE_TAKES_PARENT_INODE */
 
 static void
 afs_dentry_iput(struct dentry *dp, struct inode *ip)

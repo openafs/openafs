@@ -885,3 +885,21 @@ AC_DEFUN([LINUX_FILE_LOCK_CORE], [
                        [define if file_lock_core exists],
                        [])
 ])
+
+dnl linux 6.14 updated dentry_operations.d_revalidate with 2 additional
+dnl parameters, the inode of the parent directory and the name the dentry
+dnl is expected to have.  Using these are optional.  Both parameters are
+dnl stable.
+AC_DEFUN([LINUX_DOP_D_REVALIDATE_TAKES_PARENT_INODE], [
+  AC_CHECK_LINUX_BUILD([whether dop.d_revalidate takes inode and qstr],
+                       [ac_cv_linux_func_d_revalidate_takes_parent_inode],
+                       [#include <linux/fs.h>
+                       #include <linux/namei.h>
+                       static int reval(struct inode  *parent_inode, const struct qstr *name,
+			                struct dentry *d, unsigned int flags) { return 0; }
+                       struct dentry_operations dops;],
+                       [dops.d_revalidate = reval;],
+                       [DOP_REVALIDATE_TAKES_PARENT_INODE],
+                       [define if your dops.d_revalidate takes a parent inode],
+                       [-Werror])
+])
