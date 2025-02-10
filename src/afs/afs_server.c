@@ -581,29 +581,32 @@ CkSrv_GetCaps(int nconns, struct rx_connection **rxconns,
     osi_Assert(results != NULL);
 
     AFS_GUNLOCK();
-    multi_Rx(rxconns,nconns)
-      {
+
+    multi_Rx(rxconns, nconns) {
 	multi_RXAFS_GetCapabilities(&caps[multi_i]);
 	results[multi_i] = multi_error;
-      } multi_End;
+    } multi_End;
+
     AFS_GLOCK();
 
-    for ( i = 0 ; i < nconns ; i++ ) {
+    for (i = 0 ; i < nconns ; i++) {
 	ts = conns[i]->parent->srvr->server;
-	if ( !ts )
+	if (ts == NULL) {
 	    continue;
+	}
 	ts->capabilities = 0;
 	ts->flags |= SCAPS_KNOWN;
-	if ( results[i] == RXGEN_OPCODE ) {
+	if (results[i] == RXGEN_OPCODE) {
 	    /* Mark server as up - it responded */
 	    results[i] = 0;
 	    continue;
 	}
-	if ( results[i] >= 0 )
+	if (results[i] >= 0) {
 	    /* we currently handle 32-bits of capabilities */
 	    if (caps[i].Capabilities_len > 0) {
 		ts->capabilities = caps[i].Capabilities_val[0];
 	    }
+	}
     }
     CkSrv_MarkUpDown(conns, rxconns, nconns, results);
 
@@ -1521,13 +1524,17 @@ afs_GetCapabilities(struct server *ts)
     struct rx_connection *rxconn;
     afs_int32 code;
 
-    if ( !ts || !ts->cell )
+    if (ts == NULL || ts->cell == NULL) {
 	return;
-    if ( !afs_osi_credp )
+    }
+    if (afs_osi_credp == NULL) {
 	return;
+    }
 
-    if ((code = afs_CreateReq(&treq, afs_osi_credp)))
+    code = afs_CreateReq(&treq, afs_osi_credp);
+    if (code != 0) {
 	return;
+    }
     code = afs_GetUser(&tu, treq->uid, ts->cell->cellNum, SHARED_LOCK);
     if (code != 0) {
 	afs_DestroyReq(treq);
@@ -1536,7 +1543,7 @@ afs_GetCapabilities(struct server *ts)
     tc = afs_ConnBySA(ts->addr, ts->cell->fsport, ts->cell->cellNum, tu, 0, 1,
 		      SHARED_LOCK, 0, &rxconn);
     afs_PutUser(tu, SHARED_LOCK);
-    if ( !tc ) {
+    if (tc == NULL) {
 	afs_DestroyReq(treq);
 	return;
     }
@@ -1547,12 +1554,12 @@ afs_GetCapabilities(struct server *ts)
     AFS_GLOCK();
     ObtainWriteLock(&afs_xserver, 723);
     /* we forced a conn above; important we mark it down if needed */
-    if ((code < 0) && (code != RXGEN_OPCODE)) {
+    if (code < 0 && code != RXGEN_OPCODE) {
 	afs_ServerDown(tc->parent->srvr, code, rxconn);
 	ForceNewConnections(tc->parent->srvr); /* multi homed clients */
     }
     afs_PutConn(tc, rxconn, SHARED_LOCK);
-    if ( code && code != RXGEN_OPCODE ) {
+    if (code != 0 && code != RXGEN_OPCODE) {
 	afs_warn("RXAFS_GetCapabilities failed with code %d\n", code);
 	xdr_free((xdrproc_t)xdr_Capabilities, &caps);
 	afs_DestroyReq(treq);
@@ -1561,7 +1568,7 @@ afs_GetCapabilities(struct server *ts)
 
     ts->flags |= SCAPS_KNOWN;
 
-    if ( caps.Capabilities_len > 0 ) {
+    if (caps.Capabilities_len > 0) {
 	ts->capabilities = caps.Capabilities_val[0];
 	xdr_free((xdrproc_t)xdr_Capabilities, &caps);
 	caps.Capabilities_len = 0;
