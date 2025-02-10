@@ -1560,7 +1560,16 @@ afs_GetCapabilities(struct server *ts)
     }
     afs_PutConn(tc, rxconn, SHARED_LOCK);
     if (code != 0 && code != RXGEN_OPCODE) {
-	afs_warn("RXAFS_GetCapabilities failed with code %d\n", code);
+	struct srvAddr *sa = ts->addr;
+	afs_uint32 addr = ntohl(sa->sa_ip);
+	afs_warn("afs: RXAFS_GetCapabilities failed for %d.%d.%d.%d:%d with "
+		 "code %d\n",
+		 (addr >> 24) & 0xff,
+		 (addr >> 16) & 0xff,
+		 (addr >>  8) & 0xff,
+		 addr & 0xff,
+		 (int)ntohs(sa->sa_portal),
+		 code);
 	xdr_free((xdrproc_t)xdr_Capabilities, &caps);
 	afs_DestroyReq(treq);
 	return;
