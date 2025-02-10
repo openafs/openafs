@@ -564,6 +564,34 @@ CkSrv_MarkUpDown(struct afs_conn **conns, struct rx_connection **rxconns,
     }
 }
 
+/*
+ * Set ts->capabilities and ts->flags (SCAPS_KNOWN) according to the results of
+ * an RXAFS_GetCapabilities call.
+ *
+ * @param[in] ts    The server in question
+ * @param[in] code  The result from RXAFS_GetCapabilities
+ * @param[in] caps  The caps output argument from RXAFS_GetCapabilities
+ */
+static void
+afs_InstallCaps(struct server *ts, afs_int32 code, struct Capabilities *caps)
+{
+    ts->capabilities = 0;
+
+    if (code == 0 || code == RXGEN_OPCODE) {
+	/*
+	 * If we get RXGEN_OPCODE, we know the server doesn't support any
+	 * capabilities, since it doesn't support the RXAFS_GetCapabilities
+	 * call at all.
+	 */
+	ts->flags |= SCAPS_KNOWN;
+    }
+
+    if (code == 0 && caps->Capabilities_len > 0) {
+	/* we currently handle 32-bits of capabilities */
+	ts->capabilities = caps->Capabilities_val[0];
+    }
+}
+
 static void
 CkSrv_GetCaps(int nconns, struct rx_connection **rxconns,
 	      struct afs_conn **conns)
@@ -594,18 +622,10 @@ CkSrv_GetCaps(int nconns, struct rx_connection **rxconns,
 	if (ts == NULL) {
 	    continue;
 	}
-	ts->capabilities = 0;
-	ts->flags |= SCAPS_KNOWN;
+	afs_InstallCaps(ts, results[i], &caps[i]);
 	if (results[i] == RXGEN_OPCODE) {
 	    /* Mark server as up - it responded */
 	    results[i] = 0;
-	    continue;
-	}
-	if (results[i] >= 0) {
-	    /* we currently handle 32-bits of capabilities */
-	    if (caps[i].Capabilities_len > 0) {
-		ts->capabilities = caps[i].Capabilities_val[0];
-	    }
 	}
     }
     CkSrv_MarkUpDown(conns, rxconns, nconns, results);
@@ -1559,6 +1579,9 @@ afs_GetCapabilities(struct server *ts)
 	ForceNewConnections(tc->parent->srvr); /* multi homed clients */
     }
     afs_PutConn(tc, rxconn, SHARED_LOCK);
+
+    afs_InstallCaps(ts, code, &caps);
+
     if (code != 0 && code != RXGEN_OPCODE) {
 	struct srvAddr *sa = ts->addr;
 	afs_uint32 addr = ntohl(sa->sa_ip);
@@ -1570,20 +1593,9 @@ afs_GetCapabilities(struct server *ts)
 		 addr & 0xff,
 		 (int)ntohs(sa->sa_portal),
 		 code);
-	xdr_free((xdrproc_t)xdr_Capabilities, &caps);
-	afs_DestroyReq(treq);
-	return;
     }
 
-    ts->flags |= SCAPS_KNOWN;
-
-    if (caps.Capabilities_len > 0) {
-	ts->capabilities = caps.Capabilities_val[0];
-	xdr_free((xdrproc_t)xdr_Capabilities, &caps);
-	caps.Capabilities_len = 0;
-	caps.Capabilities_val = NULL;
-    }
-
+    xdr_free((xdrproc_t)xdr_Capabilities, &caps);
     afs_DestroyReq(treq);
 }
 
