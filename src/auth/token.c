@@ -34,7 +34,8 @@
 #include "token.h"
 
 
-/* Routines for processing tokens in the new XDR format
+/*
+ * Routines for processing tokens in the new XDR format
  *
  * The code here is inspired by work done by Jeffrey Hutzelman et al
  * at the AFSSIG.se hackathon and further refined by Matt
@@ -42,19 +43,22 @@
  * otherwise noted, the implementation is new
  */
 
-/* Take a peak at the enumerator in a given encoded token, in order to
+/*
+ * Take a peek at the enumerator in a given encoded token, in order to
  * return its type
  */
 static int
-tokenType(struct token_opaque *opaque) {
+tokenType(struct token_opaque *opaque)
+{
     XDR xdrs;
     int type;
 
     xdrmem_create(&xdrs, opaque->token_opaque_val, opaque->token_opaque_len,
 		  XDR_DECODE);
 
-    if (!xdr_enum(&xdrs, &type))
+    if (!xdr_enum(&xdrs, &type)) {
 	type = -1;
+    }
 
     xdr_destroy(&xdrs);
 
@@ -62,55 +66,58 @@ tokenType(struct token_opaque *opaque) {
 }
 
 static int
-decodeToken(struct token_opaque *opaque, struct ktc_tokenUnion *token) {
+decodeToken(struct token_opaque *opaque, struct ktc_tokenUnion *token)
+{
     XDR xdrs;
-    int code;
+    int success;
 
     memset(token, 0, sizeof(struct ktc_tokenUnion));
     xdrmem_create(&xdrs, opaque->token_opaque_val, opaque->token_opaque_len,
 		  XDR_DECODE);
-    code = xdr_ktc_tokenUnion(&xdrs, token);
+    success = xdr_ktc_tokenUnion(&xdrs, token);
     xdr_destroy(&xdrs);
 
-    if (!code) {
+    if (!success) {
 	token_freeTokenContents(token);
     }
 
-    return code;
+    return success;
 }
 
 static int
-rxkadTokenEqual(struct ktc_tokenUnion *tokenA, struct ktc_tokenUnion *tokenB) {
+rxkadTokenEqual(struct ktc_tokenUnion *tokenA, struct ktc_tokenUnion *tokenB)
+{
     return (tokenA->ktc_tokenUnion_u.at_kad.rk_kvno ==
 	    tokenB->ktc_tokenUnion_u.at_kad.rk_kvno
 	 && tokenA->ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_len ==
 	    tokenB->ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_len
-	 && !memcmp(tokenA->ktc_tokenUnion_u.at_kad.rk_key,
-		    tokenB->ktc_tokenUnion_u.at_kad.rk_key, 8)
-	 && !memcmp(tokenA->ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_val,
-		    tokenB->ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_val,
-		    tokenA->ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_len));
+	 && memcmp(tokenA->ktc_tokenUnion_u.at_kad.rk_key,
+		   tokenB->ktc_tokenUnion_u.at_kad.rk_key, 8) == 0
+	 && memcmp(tokenA->ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_val,
+		   tokenB->ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_val,
+		   tokenA->ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_len) == 0);
 }
 
 static int
 tokenEqual(struct ktc_tokenUnion *tokenA,
-	   struct ktc_tokenUnion *tokenB) {
+	   struct ktc_tokenUnion *tokenB)
+{
     switch (tokenA->at_type) {
-      case AFSTOKEN_UNION_KAD:
+    case AFSTOKEN_UNION_KAD:
 	return rxkadTokenEqual(tokenA, tokenB);
     }
     return 0;
 }
 
 static int
-rawTokenEqual(struct token_opaque *tokenA, struct token_opaque *tokenB) {
+rawTokenEqual(struct token_opaque *tokenA, struct token_opaque *tokenB)
+{
     return (tokenA->token_opaque_len == tokenB->token_opaque_len &&
-	    !memcmp(tokenA->token_opaque_val, tokenB->token_opaque_val,
-		    tokenA->token_opaque_len));
+	    memcmp(tokenA->token_opaque_val, tokenB->token_opaque_val,
+		   tokenA->token_opaque_len) == 0);
 }
 
-/* Given a token type, return the entry number of the first token of that
- * type */
+/* Given a token type, return the entry number of the first token of that type */
 static int
 findTokenEntry(struct ktc_setTokenData *token,
 	       int targetType)
@@ -118,18 +125,21 @@ findTokenEntry(struct ktc_setTokenData *token,
     int i;
 
     for (i = 0; i < token->tokens.tokens_len; i++) {
-	if (tokenType(&token->tokens.tokens_val[i]) == targetType)
+	if (tokenType(&token->tokens.tokens_val[i]) == targetType) {
 	    return i;
+	}
     }
     return -1;
 }
 
-/* XDR encode a token union structure, and return data and length information
+/*
+ * XDR encode a token union structure, and return data and length information
  * suitable for stuffing into a token_opaque structure
  */
 static int
 encodeTokenUnion(struct ktc_tokenUnion *token,
-		 char **dataPtr, size_t *lenPtr) {
+		 char **dataPtr, size_t *lenPtr)
+{
     char *data = NULL;
     size_t len;
     XDR xdrs;
@@ -155,18 +165,16 @@ encodeTokenUnion(struct ktc_tokenUnion *token,
     xdrmem_create(&xdrs, data, len, XDR_ENCODE);
     if (!xdr_ktc_tokenUnion(&xdrs, token)) {
 	code = EINVAL;
-        goto out;
+	goto out;
     }
 
     *dataPtr = data;
     *lenPtr = len;
+    data = NULL;
 
-out:
+ out:
     xdr_destroy(&xdrs);
-    if (code) {
-	if (data)
-	    free(data);
-    }
+    free(data);
 
     return code;
 }
@@ -209,11 +217,13 @@ token_findByType(struct ktc_setTokenData *token,
 
     memset(output, 0, sizeof *output);
     entry = findTokenEntry(token, targetType);
-    if (entry == -1)
+    if (entry == -1) {
 	return EINVAL;
+    }
 
-    if (!decodeToken(&token->tokens.tokens_val[entry], output))
+    if (!decodeToken(&token->tokens.tokens_val[entry], output)) {
 	return EINVAL;
+    }
 
     if (output->at_type != targetType) {
 	token_freeTokenContents(output);
@@ -261,8 +271,9 @@ token_importRxkadViceId(struct ktc_tokenUnion **atoken,
     struct token_rxkad *rxkadToken;
 
     token = malloc(sizeof(struct ktc_tokenUnion));
-    if (!token)
+    if (token == NULL) {
 	return ENOMEM;
+    }
 
     token->at_type = AFSTOKEN_UNION_KAD;
     rxkadToken = &token->ktc_tokenUnion_u.at_kad;
@@ -271,11 +282,11 @@ token_importRxkadViceId(struct ktc_tokenUnion **atoken,
     rxkadToken->rk_begintime = oldToken->startTime;
     rxkadToken->rk_endtime = oldToken->endTime;
     memcpy(&rxkadToken->rk_key, &oldToken->sessionKey,
-           sizeof(oldToken->sessionKey));
+	   sizeof(oldToken->sessionKey));
     rxkadToken->rk_ticket.rk_ticket_len = oldToken->ticketLen;
 
     rxkadToken->rk_ticket.rk_ticket_val = xdr_alloc(oldToken->ticketLen);
-    if (!rxkadToken->rk_ticket.rk_ticket_val) {
+    if (rxkadToken->rk_ticket.rk_ticket_val == NULL) {
 	free(token);
 	return ENOMEM;
     }
@@ -302,7 +313,7 @@ token_importRxkadViceId(struct ktc_tokenUnion **atoken,
  */
 int
 token_setRxkadViceId(struct ktc_tokenUnion *token,
-                     afs_int32 viceId)
+		     afs_int32 viceId)
 {
     struct token_rxkad *rxkadToken;
 
@@ -345,12 +356,14 @@ token_extractRxkad(struct ktc_setTokenData *token,
     int code;
 
     memset(&uToken, 0, sizeof(uToken));
-    if (aclient)
-        memset(aclient, 0, sizeof(*aclient));
+    if (aclient != NULL) {
+	memset(aclient, 0, sizeof(*aclient));
+    }
 
     code = token_findByType(token, AFSTOKEN_UNION_KAD, &uToken);
-    if (code)
+    if (code != 0) {
 	return code;
+    }
 
     rxkadToken->kvno = uToken.ktc_tokenUnion_u.at_kad.rk_kvno;
     memcpy(rxkadToken->sessionKey.data,
@@ -368,20 +381,20 @@ token_extractRxkad(struct ktc_setTokenData *token,
 	   uToken.ktc_tokenUnion_u.at_kad.rk_ticket.rk_ticket_val,
 	   rxkadToken->ticketLen);
 
-    if (flags) {
+    if (flags != NULL) {
 	*flags = 0;
-	if ((token->flags & AFSTOKEN_EX_SETPAG)) {
+	if ((token->flags & AFSTOKEN_EX_SETPAG) != 0) {
 	    *flags |= AFS_SETTOK_SETPAG;
 	}
     }
 
-    if (aclient) {
-	strncpy(aclient->cell, token->cell, MAXKTCREALMLEN-1);
-	aclient->cell[MAXKTCREALMLEN-1] = '\0';
+    if (aclient != NULL) {
+	strncpy(aclient->cell, token->cell, MAXKTCREALMLEN - 1);
+	aclient->cell[MAXKTCREALMLEN - 1] = '\0';
 
-        if ((rxkadToken->kvno == 999) ||        /* old style bcrypt ticket */
-            (rxkadToken->startTime &&   /* new w/ prserver lookup */
-             (((rxkadToken->endTime - rxkadToken->startTime) & 1) == 1))) {
+	if ((rxkadToken->kvno == 999) ||        /* old style bcrypt ticket */
+	    (rxkadToken->startTime &&   /* new w/ prserver lookup */
+	     (((rxkadToken->endTime - rxkadToken->startTime) & 1) == 1))) {
 	    sprintf(aclient->name, "AFS ID %d",
 		    uToken.ktc_tokenUnion_u.at_kad.rk_viceid);
 	} else {
@@ -390,18 +403,20 @@ token_extractRxkad(struct ktc_setTokenData *token,
 	}
     }
 
-out:
+ out:
     token_freeTokenContents(&uToken);
     return code;
 }
 
 struct ktc_setTokenData *
-token_buildTokenJar(char * cellname) {
+token_buildTokenJar(char * cellname)
+{
     struct ktc_setTokenData *jar;
 
     jar = calloc(1, sizeof(struct ktc_setTokenData));
-    if (jar == NULL)
+    if (jar == NULL) {
 	return NULL;
+    }
 
     jar->cell = strdup(cellname);
 
@@ -413,18 +428,20 @@ token_buildTokenJar(char * cellname) {
  * regardless of whether an entry for the security class already exists
  */
 int
-token_addToken(struct ktc_setTokenData *jar, struct ktc_tokenUnion *token) {
+token_addToken(struct ktc_setTokenData *jar, struct ktc_tokenUnion *token)
+{
     int code;
     char *data;
     size_t len;
 
     code = encodeTokenUnion(token, &data, &len);
-    if (code)
+    if (code != 0) {
 	goto out;
+    }
 
     addOpaque(jar, data, len);
 
-out:
+ out:
     return code;
 }
 
@@ -435,25 +452,28 @@ out:
  */
 int
 token_replaceToken(struct ktc_setTokenData *jar,
-		   struct ktc_tokenUnion *token) {
+		   struct ktc_tokenUnion *token)
+{
     int entry;
     char *data;
     size_t len;
     int code;
 
     entry = findTokenEntry(jar, token->at_type);
-    if (entry == -1)
+    if (entry == -1) {
 	return token_addToken(jar, token);
+    }
 
     code = encodeTokenUnion(token, &data, &len);
-    if (code)
+    if (code != 0) {
 	goto out;
+    }
 
     free(jar->tokens.tokens_val[entry].token_opaque_val);
     jar->tokens.tokens_val[entry].token_opaque_val = data;
     jar->tokens.tokens_val[entry].token_opaque_len = len;
 
-out:
+ out:
     return code;
 }
 
@@ -473,20 +493,22 @@ out:
  */
 int
 token_SetsEquivalent(struct ktc_setTokenData *tokenSetA,
-		     struct ktc_setTokenData *tokenSetB) {
+		     struct ktc_setTokenData *tokenSetB)
+{
     int i, j;
     int decodedOK, found;
     struct ktc_tokenUnion tokenA, tokenB;
 
-    if (tokenSetA->tokens.tokens_len != tokenSetB->tokens.tokens_len)
+    if (tokenSetA->tokens.tokens_len != tokenSetB->tokens.tokens_len) {
 	return 0;
+    }
 
-    for (i=0; i<tokenSetA->tokens.tokens_len; i++) {
+    for (i = 0; i < tokenSetA->tokens.tokens_len; i++) {
 	found = 0;
 
 	decodedOK = decodeToken(&tokenSetA->tokens.tokens_val[i], &tokenA);
 
-	for (j=0; j<tokenSetB->tokens.tokens_len && !found; j++) {
+	for (j = 0; j < tokenSetB->tokens.tokens_len && !found; j++) {
 	    if (rawTokenEqual(&tokenSetA->tokens.tokens_val[i],
 			      &tokenSetB->tokens.tokens_val[j])) {
 		found = 1;
@@ -503,23 +525,29 @@ token_SetsEquivalent(struct ktc_setTokenData *tokenSetA,
 		token_freeTokenContents(&tokenB);
 	    }
 	}
-	if (decodedOK)
+	if (decodedOK) {
 	    token_freeTokenContents(&tokenA);
+	}
 
-	if (!found)
+	if (!found) {
 	    return 0;
+	}
     }
-    /* If we made it this far without exiting, we must have found equivalents
-     * for all of our tokens */
+    /*
+     * If we made it this far without exiting, we must have found equivalents
+     * for all of our tokens
+     */
     return 1;
 }
 
 void
-token_setPag(struct ktc_setTokenData *jar, int setpag) {
-    if (setpag)
+token_setPag(struct ktc_setTokenData *jar, int setpag)
+{
+    if (setpag) {
 	jar->flags |= AFSTOKEN_EX_SETPAG;
-    else
+    } else {
 	jar->flags &= ~AFSTOKEN_EX_SETPAG;
+    }
 }
 
 /*
@@ -548,14 +576,14 @@ token_freeTokenContents(struct ktc_tokenUnion *atoken)
     xdr_free((xdrproc_t)xdr_ktc_tokenUnion, atoken);
     memset(atoken, 0, sizeof(*atoken));
 }
-    
+
 void
 token_freeToken(struct ktc_tokenUnion **atoken)
 {
     if (*atoken) {
 	token_freeTokenContents(*atoken);
 	free(*atoken);
-        *atoken = NULL;
+	*atoken = NULL;
     }
 }
 
@@ -582,8 +610,9 @@ token_FreeSetContents(struct ktc_setTokenData *tokenSet)
 }
 
 void
-token_FreeSet(struct ktc_setTokenData **jar) {
-    if (*jar) {
+token_FreeSet(struct ktc_setTokenData **jar)
+{
+    if (*jar != NULL) {
 	token_FreeSetContents(*jar);
 	memset(*jar, 0, sizeof(struct ktc_setTokenData));
 	*jar = NULL;
