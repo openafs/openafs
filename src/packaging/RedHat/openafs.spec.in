@@ -72,9 +72,6 @@
 # Define the location of your init.d directory
 %define initdir /etc/rc.d/init.d
 
-#determine if the kernel provides an arch-specific Provides
-%define kprovidesarch %(%{kversis} provideskernelarch %{ksrcdir} %{_target_cpu})
-
 # Define the location of the PAM security module directory
 %define pamdir /%{_lib}/security
 
@@ -116,7 +113,6 @@ Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
 Source20: https://www.central.org/dl/cellservdb/CellServDB.2023-10-31
 
-Source996: openafs-kvers-is.sh
 Source997: openafs-buildfedora.pl
 Source998: openafs-buildall.sh
 Source999: openafs-kmodtool

@@ -132,9 +132,6 @@ while (defined($file = $pkgdirh->read)) {
 }
 undef $dirh;
 
-# This file needs particular modes.
-chmod 0755, $tmpdir."/rpmdir/SOURCES/openafs-kvers-is.sh";
-
 my $spec_template = "$srcdir/src/packaging/RedHat/openafs.spec.in";
 my $cellservdb_substitute = "";
 if ($cellservdb_url) {
