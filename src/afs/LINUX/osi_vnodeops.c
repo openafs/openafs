@@ -1373,42 +1373,23 @@ check_dentry_race(struct dentry *dp)
 }
 #endif /* D_SPLICE_ALIAS_RACE */
 
-/* Validate a dentry. Return 1 if unchanged, 0 if VFS layer should re-evaluate.
- * In kernels 2.2.10 and above, we are passed an additional flags var which
- * may have either the LOOKUP_FOLLOW OR LOOKUP_DIRECTORY set in which case
- * we are advised to follow the entry if it is a link or to make sure that
- * it is a directory. But since the kernel itself checks these possibilities
- * later on, we shouldn't have to do it until later. Perhaps in the future..
+/*
+ * Validate a dentry. Return 1 if unchanged, 0 if VFS layer should re-evaluate.
  *
- * The code here assumes that on entry the global lock is not held
+ * @param[in] pvcp  vcache for the parent directory containing 'dp'
+ * @param[in] name  the name of the directory entry for 'dp'
+ * @param[in] dp    the dentry we are checking
  */
 static int
-#if defined(DOP_REVALIDATE_TAKES_UNSIGNED)
-afs_linux_dentry_revalidate(struct dentry *dp, unsigned int flags)
-#elif defined(DOP_REVALIDATE_TAKES_NAMEIDATA)
-afs_linux_dentry_revalidate(struct dentry *dp, struct nameidata *nd)
-#else
-afs_linux_dentry_revalidate(struct dentry *dp, int flags)
-#endif
+dentry_revalidate_common(struct vcache *pvcp, const char *name, struct dentry *dp)
 {
     cred_t *credp = NULL;
-    struct vcache *vcp, *pvcp, *tvc = NULL;
-    struct dentry *parent;
+    struct vcache *vcp, *tvc = NULL;
     int valid;
     struct afs_fakestat_state fakestate;
     int force_drop = 0;
     afs_uint32 parent_dv;
     int code = 0;
-
-#ifdef LOOKUP_RCU
-    /* We don't support RCU path walking */
-# if defined(DOP_REVALIDATE_TAKES_UNSIGNED)
-    if (flags & LOOKUP_RCU)
-# else
-    if (nd->flags & LOOKUP_RCU)
-# endif
-       return -ECHILD;
-#endif
 
 #ifdef D_SPLICE_ALIAS_RACE
     if (check_dentry_race(dp)) {
@@ -1437,7 +1418,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 		if (code) {
 		    goto error;
 		}
-		if ((strcmp(dp->d_name.name, ".directory") == 0)) {
+		if ((strcmp(name, ".directory") == 0)) {
 		    tryEvalOnly = 1;
 		}
 		if (tryEvalOnly)
@@ -1453,13 +1434,11 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 		    goto bad_dentry;
 		}
 	    }
-	} else if (vcp->mvstat == AFS_MVSTAT_ROOT && *dp->d_name.name != '/') {
+	} else if (vcp->mvstat == AFS_MVSTAT_ROOT && name[0] != '/') {
 	    osi_Assert(vcp->mvid.parent != NULL);
 	}
 
-	parent = dget_parent(dp);
-	pvcp = VTOAFS(parent->d_inode);
-	parent_dv = parent_vcache_dv(parent->d_inode, credp);
+	parent_dv = parent_vcache_dv(AFSTOV(pvcp), credp);
 
 	/* If the parent's DataVersion has changed or the vnode
 	 * is longer valid, we need to do a full lookup.  VerifyVCache
@@ -1472,7 +1451,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	    if (credp == NULL) {
 		credp = crref();
 	    }
-	    code = afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
+	    code = afs_lookup(pvcp, (char *)name, &tvc, credp);
             code = filter_enoent(code);
 	    if (code == ENOENT) {
 		/* ENOENT is not an error here. */
@@ -1483,7 +1462,6 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	    if (code) {
 		/* We couldn't perform the lookup, so we don't know if the
 		 * dentry is valid or not. */
-		dput(parent);
 		goto error;
 	    }
 
@@ -1506,19 +1484,16 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 		 * _not_ okay. Force it to be unhashed, since the given name
 		 * doesn't point to this file anymore.
 		 */
-		dput(parent);
 		force_drop = 1;
 		goto bad_dentry;
 	    }
 
 	    code = afs_CreateAttr(&vattr);
 	    if (code) {
-		dput(parent);
 		goto error;
 	    }
 
 	    if (afs_getattr(vcp, vattr, credp)) {
-		dput(parent);
 		afs_DestroyAttr(vattr);
 		code = EIO;
 		goto error;
@@ -1533,23 +1508,15 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	/* should we always update the attributes at this point? */
 	/* unlikely--the vcache entry hasn't changed */
 
-	dput(parent);
-
     } else {
-
 	/* 'dp' represents a cached negative lookup. */
 
-	parent = dget_parent(dp);
-	pvcp = VTOAFS(parent->d_inode);
-	parent_dv = parent_vcache_dv(parent->d_inode, credp);
+	parent_dv = parent_vcache_dv(AFSTOV(pvcp), credp);
 
 	if (parent_dv > dp->d_time || !(pvcp->f.states & CStatd)
 	    || afs_IsDynroot(pvcp)) {
-	    dput(parent);
 	    goto bad_dentry;
 	}
-
-	dput(parent);
     }
 
   good_dentry:
@@ -1623,6 +1590,41 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     /* We can't return an error, so default to saying the dentry is invalid. */
     goto bad_dentry;
 #endif
+}
+
+#if defined(DOP_REVALIDATE_TAKES_UNSIGNED)
+static int
+afs_linux_dentry_revalidate(struct dentry *dp, unsigned int flags)
+#elif defined(DOP_REVALIDATE_TAKES_NAMEIDATA)
+static int
+afs_linux_dentry_revalidate(struct dentry *dp, struct nameidata *nd)
+#else
+static int
+afs_linux_dentry_revalidate(struct dentry *dp, int flags)
+#endif
+{
+    int code;
+    struct dentry *parent;
+
+#ifdef LOOKUP_RCU
+    /* We don't support RCU path walking */
+# if defined(DOP_REVALIDATE_TAKES_UNSIGNED)
+    if ((flags & LOOKUP_RCU) != 0) {
+       return -ECHILD;
+    }
+# else
+    if ((nd->flags & LOOKUP_RCU) != 0) {
+       return -ECHILD;
+    }
+# endif
+#endif
+
+    parent = dget_parent(dp);
+    code = dentry_revalidate_common(VTOAFS(parent->d_inode),
+				    dp->d_name.name, dp);
+    dput(parent);
+
+    return code;
 }
 
 static void
