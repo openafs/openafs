@@ -2872,8 +2872,8 @@ afsclient_RXDebugOpenPort(const char *serverName, int serverPort,
     }
 
     handle->sock = sock;
-    handle->ipAddr = serverAddr;
-    handle->udpPort = serverPort;
+    handle->ipAddr = htonl(serverAddr);
+    handle->udpPort = htons(serverPort);
     handle->firstFlag = 1;
     handle->supportedStats = 0;
     *rxdebugHandleP = handle;
