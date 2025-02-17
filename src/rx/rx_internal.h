@@ -72,12 +72,7 @@ extern void rxi_WaitforTQBusy(struct rx_call *call);
 #endif
 extern void rxi_GetLocalAddr(struct sockaddr_in *sin);
 
-/* rx_packet.h */
-
-extern int rxi_SendIovecs(struct rx_connection *conn, struct iovec *iov,
-			  int iovcnt, size_t length, int istack);
-extern void rxi_SendRaw(struct rx_call *call, struct rx_connection *conn,
-			int type, char *data, int bytes, int istack);
+/* rx_packet.c */
 extern struct rx_packet *rxi_SplitJumboPacket(struct rx_packet *p);
 
 #if !defined(AFS_AIX_ENV) || (defined(AFS_AIX_ENV) && (!defined(KERNEL) || defined(UKERNEL)))
