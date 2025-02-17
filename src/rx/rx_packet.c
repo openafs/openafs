@@ -268,18 +268,15 @@ rxi_AllocPackets(int class, int num_pkts, struct opr_queue * q)
 }
 
 #ifdef RX_ENABLE_TSFPQ
-# define RX_TS_INFO_GET(ts_info_p) \
-    do { \
-	ts_info_p = (struct rx_ts_info_t*)pthread_getspecific(rx_ts_info_key); \
-	if (ts_info_p == NULL) { \
-	    opr_Verify((ts_info_p = rx_ts_info_init()) != NULL); \
-	} \
-    } while(0)
-
 static struct rx_ts_info_t *
-rx_ts_info_init(void)
+rx_ts_info_get(void)
 {
     rx_ts_info_t *rx_ts_info;
+
+    rx_ts_info = pthread_getspecific(rx_ts_info_key);
+    if (rx_ts_info != NULL) {
+	return rx_ts_info;
+    }
 
     rx_ts_info = calloc(1, sizeof(*rx_ts_info));
     opr_Assert(rx_ts_info != NULL);
@@ -300,11 +297,9 @@ rx_ts_info_init(void)
 static int
 AllocPacketBufs(int class, int num_pkts, struct opr_queue * q)
 {
-    struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info = rx_ts_info_get();
     int transfer;
     SPLVAR;
-
-    RX_TS_INFO_GET(rx_ts_info);
 
     transfer = num_pkts - rx_ts_info->_FPQ.len;
     if (transfer > 0) {
@@ -428,12 +423,11 @@ rxi_ts_fpq_overquota(struct rx_ts_info_t *rx_ts_info)
 int
 rxi_FreePackets(int num_pkts, struct opr_queue * q)
 {
-    struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info = rx_ts_info_get();
     struct opr_queue *cursor, *store;
     SPLVAR;
 
     osi_Assert(num_pkts >= 0);
-    RX_TS_INFO_GET(rx_ts_info);
 
     if (!num_pkts) {
 	for (opr_queue_ScanSafe(q, cursor, store)) {
@@ -641,7 +635,7 @@ rxi_MorePackets(int apackets)
 
     PIN(p, getme);		/* XXXXX */
     memset(p, 0, getme);
-    RX_TS_INFO_GET(rx_ts_info);
+    rx_ts_info = rx_ts_info_get();
 
     RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info,apackets);
     /* TSFPQ patch also needs to keep track of total packets */
@@ -741,7 +735,7 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 
     PIN(p, getme);		/* XXXXX */
     memset(p, 0, getme);
-    RX_TS_INFO_GET(rx_ts_info);
+    rx_ts_info = rx_ts_info_get();
 
     RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info,apackets);
     /* TSFPQ patch also needs to keep track of total packets */
@@ -809,7 +803,7 @@ rxi_MorePacketsNoLock(int apackets)
     registerPackets(p, apackets);
 
 #ifdef RX_ENABLE_TSFPQ
-    RX_TS_INFO_GET(rx_ts_info);
+    rx_ts_info = rx_ts_info_get();
     RX_TS_FPQ_GLOBAL_ALLOC(rx_ts_info,apackets);
 #endif /* RX_ENABLE_TSFPQ */
 
@@ -862,11 +856,9 @@ rxi_FreeAllPackets(void)
 static void
 rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit)
 {
-    struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info = rx_ts_info_get();
     int xfer;
     SPLVAR;
-
-    RX_TS_INFO_GET(rx_ts_info);
 
     if (num_keep_local != rx_ts_info->_FPQ.len) {
         NETPRI;
@@ -947,10 +939,9 @@ rxi_FreePacketNoLock(struct rx_packet *p)
 static void
 rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
 {
-    struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info = rx_ts_info_get();
     dpf(("Free %p\n", p));
 
-    RX_TS_INFO_GET(rx_ts_info);
     RX_TS_FPQ_CHECKIN(rx_ts_info,p);
 
     if (flush_global && rxi_ts_fpq_overquota(rx_ts_info)) {
@@ -1045,9 +1036,7 @@ static int
 rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first, int flush_global)
 {
     struct iovec *iov;
-    struct rx_ts_info_t * rx_ts_info;
-
-    RX_TS_INFO_GET(rx_ts_info);
+    struct rx_ts_info_t * rx_ts_info = rx_ts_info_get();
 
     for (first = opr_max(2, first); first < p->niovecs; first++) {
 	iov = &p->wirevec[first];
@@ -1125,7 +1114,7 @@ rxi_TrimDataBufs(struct rx_packet *p, int first)
     if (iov >= end)
 	return 0;
 
-    RX_TS_INFO_GET(rx_ts_info);
+    rx_ts_info = rx_ts_info_get();
     for (; iov < end; iov++) {
 	if (!iov->iov_base)
 	    osi_Panic("TrimDataBufs 4: vecs 2-niovecs must not be NULL");
@@ -1225,9 +1214,7 @@ static struct rx_packet *
 rxi_AllocPacketNoLock(int class)
 {
     struct rx_packet *p;
-    struct rx_ts_info_t * rx_ts_info;
-
-    RX_TS_INFO_GET(rx_ts_info);
+    struct rx_ts_info_t * rx_ts_info = rx_ts_info_get();
 
     if (rx_stats_active)
         rx_atomic_inc(&rx_stats.packetRequests);
@@ -1322,9 +1309,7 @@ static struct rx_packet *
 rxi_AllocPacketTSFPQ(int class, int pull_global)
 {
     struct rx_packet *p;
-    struct rx_ts_info_t * rx_ts_info;
-
-    RX_TS_INFO_GET(rx_ts_info);
+    struct rx_ts_info_t * rx_ts_info = rx_ts_info_get();
 
     if (rx_stats_active)
         rx_atomic_inc(&rx_stats.packetRequests);
@@ -3017,9 +3002,7 @@ struct rx_packet *
 rxi_GetLocalSpecialPacket(void)
 {
     struct rx_packet *p;
-    struct rx_ts_info_t *rx_ts_info;
-
-    RX_TS_INFO_GET(rx_ts_info);
+    struct rx_ts_info_t *rx_ts_info = rx_ts_info_get();
 
     p = rx_ts_info->local_special_packet;
     if (p != NULL) {
