@@ -3048,7 +3048,6 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 {
     int i, j;
     struct rx_connection **conns;
-    struct rx_connection *connSuccess = 0;
     afs_int32 success_i = -1;
     struct AddrPort *interfaces;
     static struct rx_securityClass *sc = 0;
@@ -3101,19 +3100,19 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 	if (multi_error == 0) {
 	    /* first success */
 	    success_i = multi_i;
-	    connSuccess = conns[multi_i];
 	    multi_Abort;
 	}
     }
     multi_End;
     H_LOCK;
 
-    if (connSuccess != NULL) {
-	opr_Assert(success_i >= 0);
+    if (success_i >= 0) {
 	if (host->z.callback_rxcon != NULL) {
 	    rx_DestroyConnection(host->z.callback_rxcon);
 	}
-	host->z.callback_rxcon = connSuccess;
+	host->z.callback_rxcon = conns[success_i];
+	conns[success_i] = NULL;
+
 	/* add then remove */
 	addInterfaceAddr_r(host, interfaces[success_i].addr,
 				 interfaces[success_i].port);
@@ -3128,18 +3127,20 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 		 ntohs(interfaces[success_i].port)));
     }
 
-    /* Destroy all connections except the one on which we succeeded */
-    for (i = 0; i < j; i++)
-	if (conns[i] != connSuccess)
+    for (i = 0; i < j; i++) {
+	if (conns[i] != NULL) {
 	    rx_DestroyConnection(conns[i]);
+	}
+    }
 
     free(interfaces);
     free(conns);
 
-    if (connSuccess)
+    if (success_i >= 0) {
 	return 0;		/* success */
-    else
+    } else {
 	return 1;		/* failure */
+    }
 }
 
 
@@ -3154,7 +3155,7 @@ MultiProbeAlternateAddress_r(struct host *host)
 {
     int i, j;
     struct rx_connection **conns;
-    struct rx_connection *connSuccess = 0;
+    afs_int32 success_i = -1;
     afs_int32 *results;
     struct AddrPort *interfaces;
     static struct rx_securityClass *sc = 0;
@@ -3208,7 +3209,7 @@ MultiProbeAlternateAddress_r(struct host *host)
 	results[multi_i] = multi_error;
 	if (multi_error == 0) {
 	    /* first success */
-	    connSuccess = conns[multi_i];
+	    success_i = multi_i;
 	    multi_Abort;
 	}
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -3224,28 +3225,30 @@ MultiProbeAlternateAddress_r(struct host *host)
     multi_End;
     H_LOCK;
 
-    for (i = 0; i < j; i++) {
-	if (conns[i] == connSuccess) {
-	    if (host->z.callback_rxcon != NULL) {
-		rx_DestroyConnection(host->z.callback_rxcon);
-	    }
-	    host->z.callback_rxcon = connSuccess;
-	    /* add then remove */
-	    addInterfaceAddr_r(host, interfaces[i].addr,
-				     interfaces[i].port);
-	    removeInterfaceAddr_r(host, host->z.host, host->z.port);
-	    host->z.host = interfaces[i].addr;
-	    host->z.port = interfaces[i].port;
-
-	    rx_SetConnDeadTime(host->z.callback_rxcon, 50);
-	    rx_SetConnHardDeadTime(host->z.callback_rxcon, AFS_HARDDEADTIME);
-	    ViceLog(125,
-		    ("multiprobe success with addr %s:%d\n",
-		     afs_inet_ntoa_r(interfaces[i].addr, hoststr),
-		     ntohs(interfaces[i].port)));
-	    continue;
+    if (success_i >= 0) {
+	if (host->z.callback_rxcon != NULL) {
+	    rx_DestroyConnection(host->z.callback_rxcon);
 	}
+	host->z.callback_rxcon = conns[success_i];
+	conns[success_i] = NULL;
 
+	/* add then remove */
+	addInterfaceAddr_r(host, interfaces[success_i].addr,
+				 interfaces[success_i].port);
+	removeInterfaceAddr_r(host, host->z.host, host->z.port);
+	host->z.host = interfaces[success_i].addr;
+	host->z.port = interfaces[success_i].port;
+
+	rx_SetConnDeadTime(host->z.callback_rxcon, 50);
+	rx_SetConnHardDeadTime(host->z.callback_rxcon, AFS_HARDDEADTIME);
+	ViceLog(125,
+		("multiprobe success with addr %s:%d\n",
+		 afs_inet_ntoa_r(interfaces[success_i].addr, hoststr),
+		 ntohs(interfaces[success_i].port)));
+    }
+
+    /* Process failures. */
+    for (i = 0; i < j; i++) {
 	if (results[i] != 0) {
 	    ViceLog(125,
 		    ("multiprobe failure with addr %s:%d\n",
@@ -3267,19 +3270,21 @@ MultiProbeAlternateAddress_r(struct host *host)
 	}
     }
 
-    /* Destroy all connections except the one on which we succeeded */
-    for (i = 0; i < j; i++)
-	if (conns[i] != connSuccess)
+    for (i = 0; i < j; i++) {
+	if (conns[i] != NULL) {
 	    rx_DestroyConnection(conns[i]);
+	}
+    }
 
     free(interfaces);
     free(conns);
     free(results);
 
-    if (connSuccess)
+    if (success_i >= 0) {
 	return 0;		/* success */
-    else
+    } else {
 	return 1;		/* failure */
+    }
 }
 
 #endif /* !defined(INTERPRET_DUMP) */
