@@ -40,6 +40,9 @@ sub lookup_sub_commands {
 	foreach (@lines) {
 	    diag($_);
 	}
+	if ($^O eq 'aix' && grep(/Symbol lpioctl .* is not exported/, @lines)) {
+	    plan skip_all => 'Cannot run manpage tests on AIX without loaded kernel module';
+	}
 	BAIL_OUT("failed to run '$cmd_help'");
     }
 
