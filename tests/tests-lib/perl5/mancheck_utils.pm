@@ -31,12 +31,21 @@ sub lookup_sub_commands {
     my $fullpathcommand = "$srcdir/$command";
     check_command_binary($fullpathcommand);
 
+    my $cmd_help = "$cmd_wrapper $fullpathcommand help";
+
     # build up our list of available commands from the help output
-    open(HELPOUT, "$cmd_wrapper $fullpathcommand help 2>&1 |")
-	or BAIL_OUT("can't fork: $!");
+    my @lines = qx($cmd_help 2>&1);
+    if ($? != 0) {
+	diag("running '$cmd_help' failed with status $?, output:");
+	foreach (@lines) {
+	    diag($_);
+	}
+	BAIL_OUT("failed to run '$cmd_help'");
+    }
+
     my @subcommlist;
     my @comm;
-    while (<HELPOUT>) {
+    foreach (@lines) {
         # Skip the header thingy
         next if /Commands are/;
         # Skip the version subcommand, it's always present but not interesting
@@ -44,7 +53,6 @@ sub lookup_sub_commands {
         @comm = split();
         push(@subcommlist, $comm[0]);
     }
-    close HELPOUT;
     @subcommlist = sort(@subcommlist);
     return @subcommlist;
 }
