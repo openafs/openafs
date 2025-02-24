@@ -62,7 +62,7 @@ KOPTS_ppc = $(KOPTS_common) \
 	    -mmultiple \
 	    -fschedule-insns \
 	    -force_cpusubtype_ALL
-KOPTS_x86 = $(KOPTS_common) \
+KOPTS_i386 = $(KOPTS_common) \
 	    -fmessage-length=0 \
 	    -pipe \
 	    -Wno-trigraphs \
@@ -75,7 +75,7 @@ KOPTS_x86 = $(KOPTS_common) \
 	    -fasm-blocks \
 	    -arch i386 \
 	    -Di386 -DI386 -D__I386__
-KOPTS_amd64 = $(KOPTS_common) \
+KOPTS_x86_64 = $(KOPTS_common) \
 	      -fno-keep-inline-functions \
 	      -msoft-float \
 	      -fsigned-bitfields \
@@ -104,18 +104,18 @@ CRULE_OPT_common = $(CRULE_NOOPT_common) $(KERN_OPTMZ)
 
 # Default values; overridden by the ARCH_foo sections below.
 OBJ_ppc =
-OBJ_x86 =
-OBJ_amd64 =
+OBJ_i386 =
+OBJ_x86_64 =
 OBJ_arm64 =
 
 # Default to ':', so the default command is to do nothing and return success.
 CRULE_NOOPT_ppc = :
-CRULE_NOOPT_x86 = :
-CRULE_NOOPT_amd64 = :
+CRULE_NOOPT_i386 = :
+CRULE_NOOPT_x86_64 = :
 CRULE_NOOPT_arm64 = :
 CRULE_OPT_ppc = :
-CRULE_OPT_x86 = :
-CRULE_OPT_amd64 = :
+CRULE_OPT_i386 = :
+CRULE_OPT_x86_64 = :
 CRULE_OPT_arm64 = :
 
 ifeq ($(ARCH_ppc),yes)
@@ -124,14 +124,14 @@ ifeq ($(ARCH_ppc),yes)
     CRULE_OPT_ppc =   $(CRULE_OPT_common)   $(KOPTS_ppc) -o $(OBJ_ppc) -c
 endif
 ifeq ($(ARCH_i386),yes)
-    OBJ_x86 = $@.x86
-    CRULE_NOOPT_x86 = $(CRULE_NOOPT_common) $(KOPTS_x86) -o $(OBJ_x86) -c
-    CRULE_OPT_x86 =   $(CRULE_OPT_common)   $(KOPTS_x86) -o $(OBJ_x86) -c
+    OBJ_i386 = $@.i386
+    CRULE_NOOPT_i386 = $(CRULE_NOOPT_common) $(KOPTS_i386) -o $(OBJ_i386) -c
+    CRULE_OPT_i386 =   $(CRULE_OPT_common)   $(KOPTS_i386) -o $(OBJ_i386) -c
 endif
 ifeq ($(ARCH_x86_64),yes)
-    OBJ_amd64 = $@.amd64
-    CRULE_NOOPT_amd64 = $(CRULE_NOOPT_common) $(KOPTS_amd64) -o $(OBJ_amd64) -c
-    CRULE_OPT_amd64 =   $(CRULE_OPT_common)   $(KOPTS_amd64) -o $(OBJ_amd64) -c
+    OBJ_x86_64 = $@.x86_64
+    CRULE_NOOPT_x86_64 = $(CRULE_NOOPT_common) $(KOPTS_x86_64) -o $(OBJ_x86_64) -c
+    CRULE_OPT_x86_64 =   $(CRULE_OPT_common)   $(KOPTS_x86_64) -o $(OBJ_x86_64) -c
 endif
 ifeq ($(ARCH_arm64),yes)
     OBJ_arm64 = $@.arm64
@@ -176,7 +176,7 @@ include Makefile.common
 	# Use CRULE_NOOPT instead.
 	false
 
-OBJ_allarch = $(OBJ_ppc) $(OBJ_x86) $(OBJ_amd64) $(OBJ_arm64)
+OBJ_allarch = $(OBJ_ppc) $(OBJ_i386) $(OBJ_x86_64) $(OBJ_arm64)
 
 # The trailing ':' in these commands is there to ignore the filename we are
 # given. We are normally invoked like this:
@@ -185,17 +185,17 @@ OBJ_allarch = $(OBJ_ppc) $(OBJ_x86) $(OBJ_amd64) $(OBJ_arm64)
 # but our rules are too complex to use a single source filename argument. We
 # use $< internally as the source file to build, so just ignore the filename
 # given to us.
-CRULE_NOOPT = $(CRULE_NOOPT_ppc)   $< && \
-	      $(CRULE_NOOPT_x86)   $< && \
-	      $(CRULE_NOOPT_amd64) $< && \
-	      $(CRULE_NOOPT_arm64) $< && \
+CRULE_NOOPT = $(CRULE_NOOPT_ppc)    $< && \
+	      $(CRULE_NOOPT_i386)   $< && \
+	      $(CRULE_NOOPT_x86_64) $< && \
+	      $(CRULE_NOOPT_arm64)  $< && \
 	      lipo -output $@ -create $(OBJ_allarch) && \
 	      :
 
-CRULE_OPT = $(CRULE_OPT_ppc)   $< && \
-	    $(CRULE_OPT_x86)   $< && \
-	    $(CRULE_OPT_amd64) $< && \
-	    $(CRULE_OPT_arm64) $< && \
+CRULE_OPT = $(CRULE_OPT_ppc)    $< && \
+	    $(CRULE_OPT_i386)   $< && \
+	    $(CRULE_OPT_x86_64) $< && \
+	    $(CRULE_OPT_arm64)  $< && \
 	    lipo -output $@ -create $(OBJ_allarch) && \
 	    :
 
