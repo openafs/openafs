@@ -16,6 +16,15 @@
 
 #include "common.h"
 
+#ifdef AFS_AIX_ENV
+int
+main(int argc, char **argv)
+{
+    skip_all("Test not runnable on AIX without kernel module");
+    return 1;
+}
+#else
+
 static char *argv0;
 
 /* This checks for a bug in vos where it would fail to allocate additional
@@ -166,3 +175,4 @@ main(int argc, char **argv)
     return 0;
 }
 
+#endif /* AFS_AIX_ENV */

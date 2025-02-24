@@ -40,6 +40,14 @@
 #include <tests/tap/basic.h>
 #include "common.h"
 
+#ifdef AFS_AIX_ENV
+int
+main(int argc, char **argv)
+{
+    skip_all("Test not runnable on AIX without kernel module");
+    return -1;
+}
+#else
 int
 main(int argc, char **argv)
 {
@@ -99,3 +107,4 @@ out:
     afstest_rmdtemp(dirname);
     return code;
 }
+#endif /* AFS_AIX_ENV */

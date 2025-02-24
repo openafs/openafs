@@ -46,6 +46,15 @@
 
 #define TEST_PORT 1234
 
+#ifdef AFS_AIX_ENV
+int
+main(int argc, char **argv)
+{
+    skip_all("Test not runnable on AIX without kernel module");
+    return -1;
+}
+#else
+
 static void
 testOriginalIterator(struct afsconf_dir *dir, int num, char *user) {
     char buffer[256];
@@ -481,3 +490,4 @@ out:
 
     return ret;
 }
+#endif /* AFS_AIX_ENV */
