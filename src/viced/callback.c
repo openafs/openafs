@@ -533,17 +533,18 @@ AddCallBack1(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
 	     int locked)
 {
     int retVal = 0;
-    H_LOCK;
     if (!locked) {
-	h_Lock_r(host);
+	h_Lock(host);
     }
+    H_LOCK;
+
     if (!(host->z.hostFlags & HOSTDELETED))
         retVal = AddCallBack1_r(host, fid, thead, type, 1);
 
-    if (!locked) {
-	h_Unlock_r(host);
-    }
     H_UNLOCK;
+    if (!locked) {
+	h_Unlock(host);
+    }
     return retVal;
 }
 
@@ -786,8 +787,8 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 				     ntohs(hp->z.port)));
 			}
 
+			h_Lock(hp);
 			H_LOCK;
-			h_Lock_r(hp);
 			if (!(hp->z.hostFlags & HOSTDELETED)) {
 			    hp->z.hostFlags |= VENUSDOWN;
                             /**
@@ -796,8 +797,8 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
                             AddCallBack1_r(hp, afidp->AFSCBFids_val, itot(idx),
                                            CB_DELAYED, 1);
                         }
-			h_Unlock_r(hp);
 			H_UNLOCK;
+			h_Unlock(hp);
 		    }
 		}
 	    }
@@ -950,15 +951,16 @@ DeleteCallBack(struct host *host, AFSFid * fid)
     afs_uint32 *pcb;
     char hoststr[16];
 
+    h_Lock(host);
     H_LOCK;
+
     cbstuff.DeleteCallBacks++;
 
-    h_Lock_r(host);
     /* do not care if the host has been HOSTDELETED */
     fe = FindFE(fid);
     if (!fe) {
-	h_Unlock_r(host);
 	H_UNLOCK;
+	h_Unlock(host);
 	ViceLog(8,
 		("DCB: No call backs for fid (%u, %u, %u)\n", fid->Volume,
 		 fid->Vnode, fid->Unique));
@@ -970,15 +972,15 @@ DeleteCallBack(struct host *host, AFSFid * fid)
 		("DCB: No call back for host %p (%s:%d), (%u, %u, %u)\n",
 		 host, afs_inet_ntoa_r(host->z.host, hoststr), ntohs(host->z.port),
 		 fid->Volume, fid->Vnode, fid->Unique));
-	h_Unlock_r(host);
 	H_UNLOCK;
+	h_Unlock(host);
 	return 0;
     }
     HDel(itocb(*pcb));
     TDel(itocb(*pcb));
     CDelPtr(fe, pcb, 1);
-    h_Unlock_r(host);
     H_UNLOCK;
+    h_Unlock(host);
     return 0;
 }
 
