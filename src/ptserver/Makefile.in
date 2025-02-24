@@ -69,7 +69,8 @@ depinstall: \
 	${TOP_INCDIR}/afs/ptuser.h \
 	${TOP_INCDIR}/afs/pterror.h \
 	${TOP_INCDIR}/afs/ptint.h \
-	${TOP_INCDIR}/afs/ptserver.h
+	${TOP_INCDIR}/afs/ptserver.h \
+	AFS_component_version_number.c
 
 ${TOP_LIBDIR}/libprot.a: libprot.a
 	${INSTALL_DATA} $? $@

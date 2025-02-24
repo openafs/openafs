@@ -50,7 +50,8 @@ depinstall: ${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/token.h \
 	token.h \
 	Ktoken.xdr.c \
-	token.xdr.c
+	token.xdr.c \
+	AFS_component_version_number.c
 
 ${TOP_INCDIR}/afs/token.h: token.h
 	${INSTALL_DATA} $? $@

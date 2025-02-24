@@ -25,7 +25,8 @@ LT_libs = $(MT_LIBS)
 all: liboafs_lwpcompat.la liblwpcompat_pic.la \
 	${TOP_LIBDIR}/liblwp.a depinstall test
 
-depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/timer.h
+depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/timer.h \
+	AFS_component_version_number.c
 
 ${TOP_LIBDIR}/liblwp.a: liblwp.a
 	${INSTALL_DATA} $? $@

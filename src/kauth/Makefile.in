@@ -79,7 +79,8 @@ depinstall: \
 	kaerrors.c kauth.cs.c kauth.xdr.c \
 	${TOP_INCDIR}/afs/kautils.h \
 	${TOP_INCDIR}/afs/kauth.h \
-	${TOP_INCDIR}/afs/kaport.h
+	${TOP_INCDIR}/afs/kaport.h \
+	AFS_component_version_number.c
 
 generated: \
 	kaerrors.c kautils.h \

@@ -63,7 +63,8 @@ libafsrpc_util.la: $(LT_rpc_objs)
 buildtools: ${TOP_LIBDIR}/libafsutil.a ${TOP_INCDIR}/afs/afsutil.h
 buildtools_clean: clean
 
-depinstall: ${includes}
+depinstall: ${includes} \
+	AFS_component_version_number.c
 
 ${TOP_INCDIR}/afs/dirpath.h: dirpath.h
 	${INSTALL_DATA} $? $@

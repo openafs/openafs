@@ -29,7 +29,8 @@ all: \
 	liboafs_rx.la \
 	librx_pic.la
 
-depinstall: includes
+depinstall: includes \
+	AFS_component_version_number.c
 
 rx_user.lo: rx.h rx_user.h rx_prototypes.h
 rx_packet.lo: rx_packet.c rx_packet.h rx.h

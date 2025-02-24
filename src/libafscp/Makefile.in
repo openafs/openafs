@@ -34,7 +34,8 @@ libafscp.a: ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
 depinstall: \
-	${TOP_INCDIR}/afs/afscp.h
+	${TOP_INCDIR}/afs/afscp.h \
+	AFS_component_version_number.c
 
 ${TOP_INCDIR}/afs/afscp.h: afscp.h
 	${INSTALL_DATA} $? $@

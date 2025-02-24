@@ -46,7 +46,7 @@ LIBS_client= \
 all: \
 	vlserver vlclient vlserver cnvldb vldb_check vldbint.h
 
-depinstall:
+depinstall: AFS_component_version_number.c
 
 #
 # Other stuff

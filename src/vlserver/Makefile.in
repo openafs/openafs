@@ -60,7 +60,8 @@ depinstall: \
 	${TOP_INCDIR}/afs/vl_opcodes.h \
 	${TOP_INCDIR}/afs/vlserver.h \
 	${TOP_INCDIR}/afs/vldbint.h \
-	${TOP_INCDIR}/afs/cnvldb.h
+	${TOP_INCDIR}/afs/cnvldb.h \
+	AFS_component_version_number.c
 
 ${TOP_LIBDIR}/libvldb.a: libvldb.a
 	${INSTALL_DATA} $? $@

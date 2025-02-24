@@ -92,7 +92,8 @@ depinstall: \
 	${TOP_LIBDIR}/afs.exp \
 	${KERNELDIR}/afs/xfsattrs.h \
 	${UKERNELDIR}/afs/afsl.exp \
-	Krmtsys.cs.c Krmtsys.h Krmtsys.xdr.c rmtsys.h
+	Krmtsys.cs.c Krmtsys.h Krmtsys.xdr.c rmtsys.h \
+	AFS_component_version_number.c
 
 libsys.a: $(LT_objs) afsl.exp syscall.lo
 	@set -e; set -x; case "$(SYS_NAME)" in \

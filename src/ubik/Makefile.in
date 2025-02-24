@@ -47,7 +47,8 @@ generated: \
 depinstall: \
 	ubik_int.cs.c ubik_int.xdr.c \
 	${TOP_INCDIR}/ubik.h \
-	${TOP_INCDIR}/ubik_int.h
+	${TOP_INCDIR}/ubik_int.h \
+	AFS_component_version_number.c
 
 ${TOP_LIBDIR}/libubik.a: libubik.a
 	${INSTALL_DATA} $? $@

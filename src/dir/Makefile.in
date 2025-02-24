@@ -16,7 +16,8 @@ all: \
 	test
 
 depinstall: \
-	${TOP_INCDIR}/afs/dir.h
+	${TOP_INCDIR}/afs/dir.h \
+	AFS_component_version_number.c
 
 ${TOP_INCDIR}/afs/dir.h: dir.h
 	${INSTALL_DATA} $? $@

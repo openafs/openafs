@@ -43,12 +43,10 @@ LIBS_client= \
 	$(LIBS_common)
 
 all: ptserver pts pt_util prdb_check \
-	depinstall readgroup readpwd testpt
+	readgroup readpwd testpt
 
 generated: \
 	pterror.h pterror.c
-
-depinstall:
 
 # When supergroups is enabled, some parts of ptserver cast between
 # incompatible structs.

@@ -24,7 +24,8 @@ all: \
 
 depinstall: \
 	${TOP_INCDIR}/afs/acl.h \
-	${TOP_INCDIR}/afs/prs_fs.h
+	${TOP_INCDIR}/afs/prs_fs.h \
+	AFS_component_version_number.c
 
 ${TOP_LIBDIR}/libacl.a: libacl.a
 	${INSTALL_DATA} $? $@
