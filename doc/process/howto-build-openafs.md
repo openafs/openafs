@@ -16,10 +16,13 @@ The following tools are needed to build OpenAFS:
 - lex
 - yacc
 - install
-- perl (only to build the documentation)
+- perl and core modules
 
 The C compiler used must be capable of building kernel modules for the target
 platform.
+
+Perl and the perl core modules are required to generate documentation and run
+the post build unit tests.
 
 In addition to the above, the following tools are needed to build OpenAFS from
 a Git checkout:
@@ -28,7 +31,6 @@ a Git checkout:
 - autoconf (version 2.64 or later)
 - automake
 - libtool
-
 
 ### RedHat/Fedora/CentOS/AlmaLinux/Rocky
 
@@ -49,6 +51,7 @@ distributions.
 * ncurses-devel
 * openssl-devel
 * pam-devel
+* perl-core
 * perl-devel
 * perl-ExtUtils-Embed
 * swig
