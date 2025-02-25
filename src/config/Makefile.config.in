@@ -280,7 +280,7 @@ LT_LDLIB_shlib_missing=$(LT_LDLIB_shlib_internal) -shared -export-symbols-regex 
 	tr -d '\n'))"
 
 # Link a static convenience library (contains no PIC code)
-LT_LDLIB_static=$(LIBTOOL) --quiet --mode=link --tag=CC \
+LT_LDLIB_static=$(RM) -f $@ && $(LIBTOOL) --quiet --mode=link --tag=CC \
 		 $(LD_WRAPPER) $(MT_CC) -static $(LDFLAGS) $(DBG) $(OPTMZ) \
 		 $(LDFLAGS_$(@)) -o $@
 
