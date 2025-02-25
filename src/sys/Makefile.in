@@ -108,10 +108,10 @@ libsys.a: $(LT_objs) afsl.exp syscall.lo
 liboafs_sys.la: liboafs_sys.la.sym $(LT_objs) $(LT_deps) afsl.exp
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	rs_aix*) \
-	    $(LT_LDLIB_shlib) -Wl,-bI:afsl.exp $(LT_objs) $(LT_deps) ;\
+	    $(LT_LDLIB_shlib_NOQ) -Wl,-bI:afsl.exp $(LT_objs) $(LT_deps) ;\
 	    $(AR) $(ARFLAGS) .libs/liboafs_sys.a ../sys/afsl.exp ;; \
 	*) \
-	    $(LT_LDLIB_shlib) $(LT_objs) $(LT_deps) ;; \
+	    $(LT_LDLIB_shlib_NOQ) $(LT_objs) $(LT_deps) ;; \
 	esac
 
 libafsrpc_sys.la: syscall.lo

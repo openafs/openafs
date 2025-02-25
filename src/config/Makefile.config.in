@@ -271,21 +271,24 @@ LT_LDLIB_shlib_internal=$(LIBTOOL) --quiet --mode=link --tag=CC \
 		      -o $@ \
 		      -version-info $(LT_current):$(LT_revision):$(LT_age)
 
-LT_LDLIB_shlib=$(LT_LDLIB_shlib_internal) -export-symbols $(srcdir)/$@.sym
+LT_LDLIB_shlib=$(RUN_LD) $(LT_LDLIB_shlib_internal) -export-symbols $(srcdir)/$@.sym
+LT_LDLIB_shlib_NOQ=$(LT_LDLIB_shlib_internal) -export-symbols $(srcdir)/$@.sym
 
-LT_LDLIB_shlib_only=$(LT_LDLIB_shlib_internal) -shared -export-symbols $(srcdir)/$@.sym
+LT_LDLIB_shlib_only=$(RUN_LD) $(LT_LDLIB_shlib_internal) -shared -export-symbols $(srcdir)/$@.sym
+LT_LDLIB_shlib_only_NOQ=$(LT_LDLIB_shlib_internal) -shared -export-symbols $(srcdir)/$@.sym
 
-LT_LDLIB_shlib_missing=$(LT_LDLIB_shlib_internal) -shared -export-symbols-regex \
+LT_LDLIB_shlib_missing=$(RUN_LD) $(LT_LDLIB_shlib_internal) -shared -export-symbols-regex \
 	"($$(sed -e 's/^/^/' -e 's/$$/$$|/' -e '$$ s/|$$//' $(srcdir)/$@.sym | \
 	tr -d '\n'))"
 
 # Link a static convenience library (contains no PIC code)
-LT_LDLIB_static=$(RM) -f $@ && $(LIBTOOL) --quiet --mode=link --tag=CC \
+LT_LDLIB_static=$(Q)$(RM) -f $@ && \
+		 $(RUN_LD_NOQ) $(LIBTOOL) --quiet --mode=link --tag=CC \
 		 $(LD_WRAPPER) $(MT_CC) -static $(LDFLAGS) $(DBG) $(OPTMZ) \
 		 $(LDFLAGS_$(@)) -o $@
 
 # Link a convenience library for use in other libs (contains PIC code)
-LT_LDLIB_pic= $(LIBTOOL) --quiet --mode=link --tag=CC \
+LT_LDLIB_pic=$(RUN_LD) $(LIBTOOL) --quiet --mode=link --tag=CC \
 	       $(LD_WRAPPER) $(MT_CC) $(LDFLAGS) $(DBG) $(OPTMZ) \
 	       $(LDFLAGS_$(@)) -o $@
 

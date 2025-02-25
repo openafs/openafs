@@ -43,10 +43,10 @@ all: $(SHARED_LIBS) libafsrpc.a libafsrpc_pic.la \
 libafsrpc.la: libafsrpc.la.sym $(LT_objs) $(LT_deps) libafsrpc_pic.la libafsrpc.a
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	rs_aix*) \
-	    $(LT_LDLIB_shlib_only) -Wl,-bI:../sys/afsl.exp \
+	    $(LT_LDLIB_shlib_only_NOQ) -Wl,-bI:../sys/afsl.exp \
 		$(LT_objs) $(LT_deps) $(LT_libs) ;; \
 	*) \
-	    $(LT_LDLIB_shlib_only) $(LT_objs) $(LT_deps) $(LT_libs);; \
+	    $(LT_LDLIB_shlib_only_NOQ) $(LT_objs) $(LT_deps) $(LT_libs);; \
 	esac
 
 libafsrpc_pic.la: $(LT_objs)
