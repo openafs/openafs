@@ -59,26 +59,14 @@ static afs_int32 *xdrmem_inline(XDR *, u_int);
 static void xdrmem_destroy(XDR *);
 
 static struct xdr_ops xdrmem_ops = {
-#ifndef HAVE_STRUCT_LABEL_SUPPORT
-    /* Windows does not support labeled assigments */
-    xdrmem_getint32,    /* deserialize an afs_int32 */
-    xdrmem_putint32,    /* serialize an afs_int32 */
-    xdrmem_getbytes,    /* deserialize counted bytes */
-    xdrmem_putbytes,    /* serialize counted bytes */
-    xdrmem_getpos,      /* get offset in the stream: not supported. */
-    xdrmem_setpos,      /* set offset in the stream: not supported. */
-    xdrmem_inline,      /* prime stream for inline macros */
-    xdrmem_destroy,     /* destroy stream */
-#else
-    .x_getint32 = xdrmem_getint32,
-    .x_putint32 = xdrmem_putint32,
-    .x_getbytes = xdrmem_getbytes,
-    .x_putbytes = xdrmem_putbytes,
-    .x_getpostn = xdrmem_getpos,
-    .x_setpostn = xdrmem_setpos,
-    .x_inline = xdrmem_inline,
-    .x_destroy = xdrmem_destroy
-#endif
+    AFS_STRUCT_INIT(.x_getint32, xdrmem_getint32), /* deserialize an afs_int32 */
+    AFS_STRUCT_INIT(.x_putint32, xdrmem_putint32), /* serialize an afs_int32 */
+    AFS_STRUCT_INIT(.x_getbytes, xdrmem_getbytes), /* deserialize counted bytes */
+    AFS_STRUCT_INIT(.x_putbytes, xdrmem_putbytes), /* serialize counted bytes */
+    AFS_STRUCT_INIT(.x_getpostn, xdrmem_getpos),   /* get offset in the stream: not supported. */
+    AFS_STRUCT_INIT(.x_setpostn, xdrmem_setpos),   /* set offset in the stream: not supported. */
+    AFS_STRUCT_INIT(.x_inline,	 xdrmem_inline),   /* prime stream for inline macros */
+    AFS_STRUCT_INIT(.x_destroy,	 xdrmem_destroy),  /* destroy stream */
 };
 
 /*

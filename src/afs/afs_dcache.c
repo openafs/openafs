@@ -104,55 +104,29 @@ afs_int32 afs_dcentries;	/*!< In-memory dcache entries */
 int dcacheDisabled = 0;
 
 struct afs_cacheOps afs_UfsCacheOps = {
-#ifndef HAVE_STRUCT_LABEL_SUPPORT
-    osi_UFSOpen,
-    osi_UFSTruncate,
-    afs_osi_Read,
-    afs_osi_Write,
-    osi_UFSClose,
-    afs_UFSReadUIO,
-    afs_UFSWriteUIO,
-    afs_UFSGetDSlot,
-    afs_UFSGetVolSlot,
-    afs_UFSHandleLink,
-#else
-    .open 	= osi_UFSOpen,
-    .truncate	= osi_UFSTruncate,
-    .fread	= afs_osi_Read,
-    .fwrite	= afs_osi_Write,
-    .close	= osi_UFSClose,
-    .vreadUIO	= afs_UFSReadUIO,
-    .vwriteUIO	= afs_UFSWriteUIO,
-    .GetDSlot	= afs_UFSGetDSlot,
-    .GetVolSlot = afs_UFSGetVolSlot,
-    .HandleLink	= afs_UFSHandleLink,
-#endif
+    AFS_STRUCT_INIT(.open,	osi_UFSOpen),
+    AFS_STRUCT_INIT(.truncate,	osi_UFSTruncate),
+    AFS_STRUCT_INIT(.fread,	afs_osi_Read),
+    AFS_STRUCT_INIT(.fwrite,	afs_osi_Write),
+    AFS_STRUCT_INIT(.close,	osi_UFSClose),
+    AFS_STRUCT_INIT(.vreadUIO,	afs_UFSReadUIO),
+    AFS_STRUCT_INIT(.vwriteUIO,	afs_UFSWriteUIO),
+    AFS_STRUCT_INIT(.GetDSlot,	afs_UFSGetDSlot),
+    AFS_STRUCT_INIT(.GetVolSlot, afs_UFSGetVolSlot),
+    AFS_STRUCT_INIT(.HandleLink, afs_UFSHandleLink),
 };
 
 struct afs_cacheOps afs_MemCacheOps = {
-#ifndef HAVE_STRUCT_LABEL_SUPPORT
-    afs_MemCacheOpen,
-    afs_MemCacheTruncate,
-    afs_MemReadBlk,
-    afs_MemWriteBlk,
-    afs_MemCacheClose,
-    afs_MemReadUIO,
-    afs_MemWriteUIO,
-    afs_MemGetDSlot,
-    afs_MemGetVolSlot,
-    afs_MemHandleLink,
-#else
-    .open	= afs_MemCacheOpen,
-    .truncate	= afs_MemCacheTruncate,
-    .fread	= afs_MemReadBlk,
-    .fwrite	= afs_MemWriteBlk,
-    .close	= afs_MemCacheClose,
-    .vreadUIO	= afs_MemReadUIO,
-    .vwriteUIO	= afs_MemWriteUIO,
-    .GetDSlot	= afs_MemGetDSlot,
-    .GetVolSlot	= afs_MemGetVolSlot,
-    .HandleLink	= afs_MemHandleLink,
-#endif
+    AFS_STRUCT_INIT(.open,	afs_MemCacheOpen),
+    AFS_STRUCT_INIT(.truncate,	afs_MemCacheTruncate),
+    AFS_STRUCT_INIT(.fread,	afs_MemReadBlk),
+    AFS_STRUCT_INIT(.fwrite,	afs_MemWriteBlk),
+    AFS_STRUCT_INIT(.close,	afs_MemCacheClose),
+    AFS_STRUCT_INIT(.vreadUIO,	afs_MemReadUIO),
+    AFS_STRUCT_INIT(.vwriteUIO,	afs_MemWriteUIO),
+    AFS_STRUCT_INIT(.GetDSlot,	afs_MemGetDSlot),
+    AFS_STRUCT_INIT(.GetVolSlot, afs_MemGetVolSlot),
+    AFS_STRUCT_INIT(.HandleLink, afs_MemHandleLink),
 };
 
 int cacheDiskType;		/*Type of backing disk for cache */

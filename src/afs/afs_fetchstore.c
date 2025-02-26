@@ -309,48 +309,26 @@ afs_GenericStoreProc(struct storeOps *ops, void *rock,
 
 static
 struct storeOps rxfs_storeUfsOps = {
-#ifndef HAVE_STRUCT_LABEL_SUPPORT
-    rxfs_storeUfsPrepare,
-    rxfs_storeUfsRead,
-    rxfs_storeUfsWrite,
-    rxfs_storeStatus,
-    rxfs_storePadd,
-    rxfs_storeClose,
-    rxfs_storeDestroy,
-    afs_GenericStoreProc
-#else
-    .prepare = 	rxfs_storeUfsPrepare,
-    .read =	rxfs_storeUfsRead,
-    .write =	rxfs_storeUfsWrite,
-    .status =	rxfs_storeStatus,
-    .padd =	rxfs_storePadd,
-    .close =	rxfs_storeClose,
-    .destroy =	rxfs_storeDestroy,
-    .storeproc = afs_GenericStoreProc
-#endif
+    AFS_STRUCT_INIT(.prepare,	rxfs_storeUfsPrepare),
+    AFS_STRUCT_INIT(.read,	rxfs_storeUfsRead),
+    AFS_STRUCT_INIT(.write,	rxfs_storeUfsWrite),
+    AFS_STRUCT_INIT(.status,	rxfs_storeStatus),
+    AFS_STRUCT_INIT(.padd,	rxfs_storePadd),
+    AFS_STRUCT_INIT(.close,	rxfs_storeClose),
+    AFS_STRUCT_INIT(.destroy,	rxfs_storeDestroy),
+    AFS_STRUCT_INIT(.storeproc,	afs_GenericStoreProc),
 };
 
 static
 struct storeOps rxfs_storeMemOps = {
-#ifndef HAVE_STRUCT_LABEL_SUPPORT
-    rxfs_storeMemPrepare,
-    rxfs_storeMemRead,
-    rxfs_storeMemWrite,
-    rxfs_storeStatus,
-    rxfs_storePadd,
-    rxfs_storeClose,
-    rxfs_storeDestroy,
-    afs_GenericStoreProc
-#else
-    .prepare =	rxfs_storeMemPrepare,
-    .read = 	rxfs_storeMemRead,
-    .write = 	rxfs_storeMemWrite,
-    .status =	rxfs_storeStatus,
-    .padd =	rxfs_storePadd,
-    .close = 	rxfs_storeClose,
-    .destroy =	rxfs_storeDestroy,
-    .storeproc = afs_GenericStoreProc
-#endif
+    AFS_STRUCT_INIT(.prepare,	rxfs_storeMemPrepare),
+    AFS_STRUCT_INIT(.read,	rxfs_storeMemRead),
+    AFS_STRUCT_INIT(.write,	rxfs_storeMemWrite),
+    AFS_STRUCT_INIT(.status,	rxfs_storeStatus),
+    AFS_STRUCT_INIT(.padd,	rxfs_storePadd),
+    AFS_STRUCT_INIT(.close,	rxfs_storeClose),
+    AFS_STRUCT_INIT(.destroy,	rxfs_storeDestroy),
+    AFS_STRUCT_INIT(.storeproc,	afs_GenericStoreProc),
 };
 
 static afs_int32
