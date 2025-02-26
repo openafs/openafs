@@ -305,6 +305,12 @@ hdr_static_inline(unsigned long long) afs_printable_uint64_lu(afs_uint64 d) { re
 # define AFS_FALLTHROUGH do {} while(0)
 #endif
 
+#if defined(HAVE_STRUCT_LABEL_SUPPORT)
+# define AFS_STRUCT_INIT(member, value) member = (value)
+#else
+# define AFS_STRUCT_INIT(member, value) (value)
+#endif
+
 /*
  * Conditionally remove unreached statements under Solaris Studio.
  */

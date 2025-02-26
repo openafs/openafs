@@ -84,26 +84,14 @@ xdrlen_inline(XDR *xdrs, u_int len)
 }
 
 static struct xdr_ops xdrlen_ops = {
-#ifndef HAVE_STRUCT_LABEL_SUPPORT
-    /* Windows does not support labeled assigments */
-    xdrlen_getint32,    /* not supported */
-    xdrlen_putint32,    /* serialize an afs_int32 */
-    xdrlen_getbytes,    /* not supported */
-    xdrlen_putbytes,    /* serialize counted bytes */
-    xdrlen_getpos,      /* get offset in the stream */
-    xdrlen_setpos,      /* set offset in the stream */
-    xdrlen_inline,      /* not supported */
-    xdrlen_destroy,     /* destroy stream */
-#else
-    .x_getint32 = xdrlen_getint32,
-    .x_putint32 = xdrlen_putint32,
-    .x_getbytes = xdrlen_getbytes,
-    .x_putbytes = xdrlen_putbytes,
-    .x_getpostn = xdrlen_getpos,
-    .x_setpostn = xdrlen_setpos,
-    .x_inline = xdrlen_inline,
-    .x_destroy = xdrlen_destroy
-#endif
+    AFS_STRUCT_INIT(.x_getint32, xdrlen_getint32), /* not supported */
+    AFS_STRUCT_INIT(.x_putint32, xdrlen_putint32), /* serialize an afs_int32 */
+    AFS_STRUCT_INIT(.x_getbytes, xdrlen_getbytes), /* not supported */
+    AFS_STRUCT_INIT(.x_putbytes, xdrlen_putbytes), /* serialize counted bytes */
+    AFS_STRUCT_INIT(.x_getpostn, xdrlen_getpos),   /* get offset in the stream */
+    AFS_STRUCT_INIT(.x_setpostn, xdrlen_setpos),   /* set offset in the stream */
+    AFS_STRUCT_INIT(.x_inline,	 xdrlen_inline),   /* not supported */
+    AFS_STRUCT_INIT(.x_destroy,	 xdrlen_destroy),  /* destroy stream */
 };
 
 /**

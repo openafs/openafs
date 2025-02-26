@@ -49,26 +49,14 @@ static afs_int32 *xdrrx_inline(XDR *axdrs, u_int len);
  * Ops vector for stdio type XDR
  */
 static struct xdr_ops xdrrx_ops = {
-#ifndef HAVE_STRUCT_LABEL_SUPPORT
-    /* Windows does not support labeled assigments */
-    xdrrx_getint32,	/* deserialize an afs_int32 */
-    xdrrx_putint32,	/* serialize an afs_int32 */
-    xdrrx_getbytes,	/* deserialize counted bytes */
-    xdrrx_putbytes,	/* serialize counted bytes */
-    NULL,		/* get offset in the stream: not supported. */
-    NULL,		/* set offset in the stream: not supported. */
-    xdrrx_inline,	/* prime stream for inline macros */
-    NULL,		/* destroy stream */
-#else
-    .x_getint32 = xdrrx_getint32,	/* deserialize an afs_int32 */
-    .x_putint32 = xdrrx_putint32,	/* serialize an afs_int32 */
-    .x_getbytes = xdrrx_getbytes,	/* deserialize counted bytes */
-    .x_putbytes = xdrrx_putbytes,	/* serialize counted bytes */
-    .x_getpostn = NULL,		/* get offset in the stream: not supported. */
-    .x_setpostn = NULL,		/* set offset in the stream: not supported. */
-    .x_inline = xdrrx_inline,		/* prime stream for inline macros */
-    .x_destroy = NULL,			/* destroy stream */
-#endif
+    AFS_STRUCT_INIT(.x_getint32, xdrrx_getint32),	/* deserialize an afs_int32 */
+    AFS_STRUCT_INIT(.x_putint32, xdrrx_putint32),	/* serialize an afs_int32 */
+    AFS_STRUCT_INIT(.x_getbytes, xdrrx_getbytes),	/* deserialize counted bytes */
+    AFS_STRUCT_INIT(.x_putbytes, xdrrx_putbytes),	/* serialize counted bytes */
+    AFS_STRUCT_INIT(.x_getpostn, NULL),			/* get offset in the stream: not supported. */
+    AFS_STRUCT_INIT(.x_setpostn, NULL),			/* set offset in the stream: not supported. */
+    AFS_STRUCT_INIT(.x_inline,	 xdrrx_inline),		/* prime stream for inline macros */
+    AFS_STRUCT_INIT(.x_destroy,	 NULL),			/* destroy stream */
 };
 
 /*
