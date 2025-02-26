@@ -50,21 +50,21 @@
 #endif /* max */
 
 static struct rx_securityOps rxkad_client_ops = {
-    rxkad_Close,
-    rxkad_NewConnection,	/* every new connection */
-    rxkad_PreparePacket,	/* once per packet creation */
-    0,				/* send packet (once per retrans.) */
-    0,
-    0,
-    0,
-    rxkad_GetResponse,		/* respond to challenge packet */
-    0,
-    rxkad_CheckPacket,		/* check data packet */
-    rxkad_DestroyConnection,
-    rxkad_GetStats,
-    0,
-    0,
-    0,
+    AFS_STRUCT_INIT(.op_Close,		   rxkad_Close),
+    AFS_STRUCT_INIT(.op_NewConnection,	   rxkad_NewConnection), /* every new connection */
+    AFS_STRUCT_INIT(.op_PreparePacket,	   rxkad_PreparePacket), /* once per packet creation */
+    AFS_STRUCT_INIT(.op_SendPacket,	   NULL),		 /* send packet (once per retrans.) */
+    AFS_STRUCT_INIT(.op_CheckAuthentication, NULL),
+    AFS_STRUCT_INIT(.op_CreateChallenge,   NULL),
+    AFS_STRUCT_INIT(.op_GetChallenge,	   NULL),
+    AFS_STRUCT_INIT(.op_GetResponse,	   rxkad_GetResponse),	 /* respond to challenge packet */
+    AFS_STRUCT_INIT(.op_CheckResponse,	   NULL),
+    AFS_STRUCT_INIT(.op_CheckPacket,	   rxkad_CheckPacket),	 /* check data packet */
+    AFS_STRUCT_INIT(.op_DestroyConnection, rxkad_DestroyConnection),
+    AFS_STRUCT_INIT(.op_GetStats,	   rxkad_GetStats),
+    AFS_STRUCT_INIT(.op_SetConfiguration,  NULL),
+    AFS_STRUCT_INIT(.op_Spare2,		   NULL),
+    AFS_STRUCT_INIT(.op_Spare3,		   NULL),
 };
 
 /* Allocate a new client security object.  Called with the encryption level,

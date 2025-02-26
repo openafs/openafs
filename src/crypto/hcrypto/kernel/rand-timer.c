@@ -5,7 +5,7 @@
  * Contains no copyrightable content.
  */
 #include <config.h>
-
+#include <stds.h>
 #include <rand.h>
 #include "randi.h"
 
@@ -43,12 +43,12 @@ timer_status(void)
 }
 
 const RAND_METHOD hc_rand_timer_method = {
-    timer_seed,
-    timer_bytes,
-    timer_cleanup,
-    timer_add,
-    timer_pseudorand,
-    timer_status
+    AFS_STRUCT_INIT(.seed,	timer_seed),
+    AFS_STRUCT_INIT(.bytes,	timer_bytes),
+    AFS_STRUCT_INIT(.cleanup,	timer_cleanup),
+    AFS_STRUCT_INIT(.add,	timer_add),
+    AFS_STRUCT_INIT(.pseudorand, timer_pseudorand),
+    AFS_STRUCT_INIT(.status,	timer_status),
 };
 
 const RAND_METHOD *
