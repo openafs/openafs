@@ -702,21 +702,21 @@ rxgk_GetServerInfo(struct rx_connection *conn, RXGK_Level *level,
 }
 
 static struct rx_securityOps rxgk_server_ops = {
-    rxgk_ServerClose,
-    rxgk_NewServerConnection,
-    rxgk_ServerPreparePacket,		/* once per packet creation */
-    0,					/* send packet (once per retrans) */
-    rxgk_CheckAuthentication,
-    rxgk_CreateChallenge,
-    rxgk_GetChallenge,
-    0,
-    rxgk_CheckResponse,
-    rxgk_ServerCheckPacket,		/* check data packet */
-    rxgk_DestroyServerConnection,
-    rxgk_ServerGetStats,
-    0,
-    0,				/* spare 1 */
-    0,				/* spare 2 */
+    AFS_STRUCT_INIT(.op_Close,		rxgk_ServerClose),
+    AFS_STRUCT_INIT(.op_NewConnection,	rxgk_NewServerConnection),
+    AFS_STRUCT_INIT(.op_PreparePacket,	rxgk_ServerPreparePacket), /* once per packet creation */
+    AFS_STRUCT_INIT(.op_SendPacket,	NULL),			   /* send packet (once per retrans) */
+    AFS_STRUCT_INIT(.op_CheckAuthentication, rxgk_CheckAuthentication),
+    AFS_STRUCT_INIT(.op_CreateChallenge, rxgk_CreateChallenge),
+    AFS_STRUCT_INIT(.op_GetChallenge,	rxgk_GetChallenge),
+    AFS_STRUCT_INIT(.op_GetResponse,	NULL),
+    AFS_STRUCT_INIT(.op_CheckResponse,	rxgk_CheckResponse),
+    AFS_STRUCT_INIT(.op_CheckPacket,	rxgk_ServerCheckPacket),   /* check data packet */
+    AFS_STRUCT_INIT(.op_DestroyConnection, rxgk_DestroyServerConnection),
+    AFS_STRUCT_INIT(.op_GetStats,	rxgk_ServerGetStats),
+    AFS_STRUCT_INIT(.op_SetConfiguration, NULL),
+    AFS_STRUCT_INIT(.op_Spare2,		NULL),			   /* spare 2 */
+    AFS_STRUCT_INIT(.op_Spare3,		NULL),			   /* spare 3 */
 };
 
 /**

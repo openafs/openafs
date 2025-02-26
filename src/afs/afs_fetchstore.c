@@ -844,20 +844,20 @@ rxfs_fetchMore(void *r, afs_int32 *length, afs_uint32 *moredata)
 
 static
 struct fetchOps rxfs_fetchUfsOps = {
-    rxfs_fetchMore,
-    rxfs_fetchUfsRead,
-    rxfs_fetchUfsWrite,
-    rxfs_fetchClose,
-    rxfs_fetchDestroy
+    AFS_STRUCT_INIT(.more,	rxfs_fetchMore),
+    AFS_STRUCT_INIT(.read,	rxfs_fetchUfsRead),
+    AFS_STRUCT_INIT(.write,	rxfs_fetchUfsWrite),
+    AFS_STRUCT_INIT(.close,	rxfs_fetchClose),
+    AFS_STRUCT_INIT(.destroy,	rxfs_fetchDestroy),
 };
 
 static
 struct fetchOps rxfs_fetchMemOps = {
-    rxfs_fetchMore,
-    rxfs_fetchMemRead,
-    rxfs_fetchMemWrite,
-    rxfs_fetchClose,
-    rxfs_fetchDestroy
+    AFS_STRUCT_INIT(.more,	rxfs_fetchMore),
+    AFS_STRUCT_INIT(.read,	rxfs_fetchMemRead),
+    AFS_STRUCT_INIT(.write,	rxfs_fetchMemWrite),
+    AFS_STRUCT_INIT(.close,	rxfs_fetchClose),
+    AFS_STRUCT_INIT(.destroy,	rxfs_fetchDestroy),
 };
 
 static afs_int32

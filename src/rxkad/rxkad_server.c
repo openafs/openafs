@@ -43,21 +43,21 @@ afs_int32(*rxkad_AlternateTicketDecoder) (afs_int32, char *, afs_int32,
 					  afs_uint32 *);
 
 static struct rx_securityOps rxkad_server_ops = {
-    rxkad_Close,
-    rxkad_NewConnection,
-    rxkad_PreparePacket,	/* once per packet creation */
-    0,				/* send packet (once per retrans) */
-    rxkad_CheckAuthentication,
-    rxkad_CreateChallenge,
-    rxkad_GetChallenge,
-    0,
-    rxkad_CheckResponse,
-    rxkad_CheckPacket,		/* check data packet */
-    rxkad_DestroyConnection,
-    rxkad_GetStats,
-    rxkad_SetConfiguration,
-    0,				/* spare 2 */
-    0,				/* spare 3 */
+    AFS_STRUCT_INIT(.op_Close,		rxkad_Close),
+    AFS_STRUCT_INIT(.op_NewConnection,	rxkad_NewConnection),
+    AFS_STRUCT_INIT(.op_PreparePacket,	rxkad_PreparePacket),	/* once per packet creation */
+    AFS_STRUCT_INIT(.op_SendPacket,	NULL),			/* send packet (once per retrans) */
+    AFS_STRUCT_INIT(.op_CheckAuthentication, rxkad_CheckAuthentication),
+    AFS_STRUCT_INIT(.op_CreateChallenge, rxkad_CreateChallenge),
+    AFS_STRUCT_INIT(.op_GetChallenge,	rxkad_GetChallenge),
+    AFS_STRUCT_INIT(.op_GetResponse,	NULL),
+    AFS_STRUCT_INIT(.op_CheckResponse,	rxkad_CheckResponse),
+    AFS_STRUCT_INIT(.op_CheckPacket,	rxkad_CheckPacket),	/* check data packet */
+    AFS_STRUCT_INIT(.op_DestroyConnection, rxkad_DestroyConnection),
+    AFS_STRUCT_INIT(.op_GetStats,	rxkad_GetStats),
+    AFS_STRUCT_INIT(.op_SetConfiguration, rxkad_SetConfiguration),
+    AFS_STRUCT_INIT(.op_Spare2,		NULL),			/* spare 2 */
+    AFS_STRUCT_INIT(.op_Spare3,		NULL),			/* spare 3 */
 };
 extern afs_uint32 rx_MyMaxSendSize;
 
