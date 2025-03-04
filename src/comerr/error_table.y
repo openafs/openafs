@@ -18,8 +18,6 @@
 #ifdef AFS_NT40_ENV
 #include <sys/types.h>
 #include <afs/afsutil.h>
-#else
-#include <sys/time.h>
 #endif
 #include "error_table.h"
 #include "mit-sipb-cr.h"
@@ -45,11 +43,9 @@
 #include "internal.h"
 
 int char_to_num(char c);
-char *gensym(const char *x);
 char *current_token = NULL;
 extern char *table_name;
 
-char *quote(const char *string);
 void set_table_1num(char *string);
 int char_to_1num(char c);
 void add_ec(const char *name, const char *description);
@@ -141,33 +137,6 @@ description	:	QUOTED_STRING
 
 extern FILE *hfile, *cfile, *msfile;
 extern int use_msf;
-
-static afs_int32 gensym_n = 0;
-
-char *gensym(const char *x)
-{
-	char *symbol;
-	if (!gensym_n) {
-		struct timeval tv;
-		gettimeofday(&tv, (void *)0);
-		gensym_n = (tv.tv_sec%10000)*100 + tv.tv_usec/10000;
-	}
-	symbol = malloc(32 * sizeof(char));
-	gensym_n++;
-	sprintf(symbol, "et%ld", (long int) gensym_n);
-	return(symbol);
-}
-
-char *
-quote(const char *string)
-{
-	char *rv;
-	rv = malloc(strlen(string)+3);
-	strcpy(rv, "\"");
-	strcat(rv, string);
-	strcat(rv, "\"");
-	return(rv);
-}
 
 afs_int32 table_number = 0;
 int current = 0;

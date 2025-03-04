@@ -37,7 +37,6 @@
 char *current_token = NULL;
 extern char *table_name;
 
-char *quote(const char *string);
 void set_table_1num(char *string);
 int char_to_1num(char c);
 void add_ec(const char *name, const char *description);
@@ -948,34 +947,6 @@ yyparse(YYPARSE_PARAM)
 
 extern FILE *hfile, *cfile, *msfile;
 extern int use_msf;
-
-static afs_int32 gensym_n = 0;
-
-char *
-gensym(const char *x)
-{
-    char *symbol;
-    if (!gensym_n) {
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	gensym_n = (tv.tv_sec % 10000) * 100 + tv.tv_usec / 10000;
-    }
-    symbol = malloc(32 * sizeof(char));
-    gensym_n++;
-    sprintf(symbol, "et%ld", gensym_n);
-    return (symbol);
-}
-
-char *
-quote(const char *string)
-{
-    char *rv;
-    rv = (char *)malloc(strlen(string) + 3);
-    strcpy(rv, "\"");
-    strcat(rv, string);
-    strcat(rv, "\"");
-    return (rv);
-}
 
 afs_int32 table_number = 0;
 int current = 0;
