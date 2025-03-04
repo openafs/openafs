@@ -281,7 +281,6 @@ struct memoryHashTable {
 };
 
 struct memoryDB {		/* in core copies of database structures */
-    Date readTime;
     struct dbHeader h;
     struct memoryHashTable volName;
     struct memoryHashTable tapeName;

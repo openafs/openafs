@@ -194,7 +194,6 @@ UpdateCache(struct ubik_trans *ut, void *rock)
 	ERROR(BUDB_IO);
     }
 
-    db.readTime = time(0);
     ht_Reset(&db.volName);
     ht_Reset(&db.tapeName);
     ht_Reset(&db.dumpName);

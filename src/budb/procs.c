@@ -99,9 +99,6 @@ typedef memTextBlockT *memTextBlockP;
    server.  If they get trashed during multi-threaded operation it doesn't
    matter. */
 
-/* This is global so COUNT_REQ in krb_udp.c can refer to it. */
-char *lastOperation;		/* name of last operation */
-static Date lastTrans;		/* time of last transaction */
 
 /* procsInited is sort of a lock: during a transaction only one process runs
    while procsInited is false. */
@@ -256,7 +253,6 @@ InitRPC(struct ubik_trans **ut,
 	    return code;
 	}
     }
-    lastTrans = time(0);
     return 0;
 }
 
