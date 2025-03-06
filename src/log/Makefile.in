@@ -42,9 +42,6 @@ all: unlog tokens tokens.krb pagsh pagsh.krb
 #
 # Build targets
 #
-kseal: kseal.o ${LIBRARIES}
-	$(AFS_LDRULE) kseal.o ${LIBRARIES} $(LIB_roken) ${XLIBS}
-
 pagsh: pagsh.o ${LIBRARIES}
 	$(AFS_LDRULE) pagsh.o ${LIBRARIES} $(LIB_roken) ${XLIBS}
 
@@ -64,7 +61,6 @@ tokens: tokens.o ${LIBRARIES}
 tokens.krb: tokens.o ${KLIBRARIES}
 	$(AFS_LDRULE) tokens.o ${KLIBRARIES} $(LIB_roken) ${XLIBS}
 
-kseal.o: kseal.c ${INCLS} AFS_component_version_number.c
 unlog.o: unlog.c AFS_component_version_number.c
 tokens.o: tokens.c ${TOP_INCDIR}/rx/xdr.h AFS_component_version_number.c
 
@@ -99,7 +95,7 @@ dest: unlog tokens tokens.krb pagsh pagsh.krb
 # Misc. targets
 #
 clean:
-	$(RM) -f *.o unlog tokens kseal pagsh pagsh.krb \
+	$(RM) -f *.o unlog tokens pagsh pagsh.krb \
 		core AFS_component_version_number.c tokens.krb
 
 .PHONY: test
