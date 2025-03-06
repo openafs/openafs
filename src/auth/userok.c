@@ -714,11 +714,10 @@ rxkadSuperUser(struct afsconf_dir *adir, struct rx_call *acall,
     char tinst[MAXKTCNAMELEN];
     char tcell[MAXKTCREALMLEN];
 
-    afs_uint32 exp;
     int code;
 
     /* get auth details from server connection */
-    code = rxkad_GetServerInfo(rx_ConnectionOf(acall), NULL, &exp, tname,
+    code = rxkad_GetServerInfo(rx_ConnectionOf(acall), NULL, NULL, tname,
 			       tinst, tcell, NULL);
     if (code)
 	return 0;		/* bogus connection/other error */

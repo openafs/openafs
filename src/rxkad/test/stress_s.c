@@ -123,7 +123,6 @@ CheckAuth(struct rx_call *call)
     char inst[MAXKTCNAMELEN];
     char cell[MAXKTCREALMLEN];
     int kvno;
-    unsigned int expiration;		/* checked by Security Module */
 
     si = rx_SecurityClassOf(rx_ConnectionOf(call));
     if (si == RX_SECIDX_VAB) {
@@ -140,7 +139,7 @@ CheckAuth(struct rx_call *call)
     }
 
     code =
-	rxkad_GetServerInfo(rx_ConnectionOf(call), &level, &expiration, name,
+	rxkad_GetServerInfo(rx_ConnectionOf(call), &level, NULL, name,
 			    inst, cell, &kvno);
     if (code)
 	return code;

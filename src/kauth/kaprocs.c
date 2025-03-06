@@ -355,7 +355,6 @@ check_auth(struct rx_call *call,
     char instance[MAXKTCNAMELEN];
     char cell[MAXKTCREALMLEN];
     afs_int32 kvno;
-    Date expiration;		/* checked by Security Module */
     struct kaentry tentry;
     int code;
     int si;
@@ -378,7 +377,7 @@ check_auth(struct rx_call *call,
     }
 
     code =
-	rxkad_GetServerInfo(rx_ConnectionOf(call), &level, &expiration, name,
+	rxkad_GetServerInfo(rx_ConnectionOf(call), &level, NULL, name,
 			    instance, cell, &kvno);
     if (code) {
 	goto no_auth;

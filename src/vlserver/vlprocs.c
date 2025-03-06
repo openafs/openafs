@@ -154,9 +154,8 @@ rxkadInfo(char *str, struct rx_connection *conn, struct in_addr hostAddr)
     char tname[64] = "";
     char tinst[64] = "";
     char tcell[64] = "";
-    afs_uint32 exp;
 
-    code = rxkad_GetServerInfo(conn, NULL, &exp, tname, tinst, tcell,
+    code = rxkad_GetServerInfo(conn, NULL, NULL, tname, tinst, tcell,
 			       NULL);
     if (!code)
 	snprintf(str, AFS_RXINFO_LEN,

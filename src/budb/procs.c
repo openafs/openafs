@@ -1371,7 +1371,6 @@ CreateDump(struct rx_call *call, struct budb_dumpEntry *dump)
 
     rxkad_level level;
     afs_int32 kvno;
-    Date expiration;		/* checked by Security Module */
     struct ktc_principal principal;
 
     if (!callPermitted(call))
@@ -1385,7 +1384,7 @@ CreateDump(struct rx_call *call, struct budb_dumpEntry *dump)
 	return eval;
 
     eval =
-	rxkad_GetServerInfo(rx_ConnectionOf(call), &level, &expiration,
+	rxkad_GetServerInfo(rx_ConnectionOf(call), &level, NULL,
 			    principal.name, principal.instance,
 			    principal.cell, &kvno);
 
@@ -1396,7 +1395,6 @@ CreateDump(struct rx_call *call, struct budb_dumpEntry *dump)
 	strcpy(principal.name, "");
 	strcpy(principal.instance, "");
 	strcpy(principal.cell, "");
-	expiration = 0;
     } else {
 	/* authenticated. Take user supplied principal information */
 	if (strcmp(dump->dumper.name, "") != 0)
