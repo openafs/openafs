@@ -46,7 +46,8 @@ all: ${includes} \
 	${TOP_LIBDIR}/libafsutil_pic.a \
 	sys \
 	liboafs_util.la \
-	libafsrpc_util.la
+	libafsrpc_util.la \
+	test
 
 util.a: $(LT_objs)
 	$(LT_LDLIB_lwp) $(LT_objs)
@@ -200,9 +201,10 @@ clean:
 	$(LT_CLEAN)
 	$(RM) -f sys dirpath.h
 	$(RM) -f util.a *.o core AFS_component_version_number.c
+	cd test && $(MAKE) clean
 
 .PHONY: test
-test:
+test: ${TOP_LIBDIR}/util.a ${includes}
 	cd test && $(MAKE)
 
 include ../config/Makefile.version

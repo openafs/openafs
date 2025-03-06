@@ -10,21 +10,23 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+#include <afs/afsutil.h>
 
 #include <stdio.h>
-#if !defined(AFS_NT40_ENV)
-main()
+
+#if !defined(AFS_SGI_XFS_IOPS_ENV)
+int
+main(int argc, char *argv[])
 {
     printf("b64 not required for this operating system.\n");
-    exit(1);
+    return 1;
 }
 #else
 
-#include "afsutil.h"
+static char *prog = "b64";
 
-char *prog = "b64";
-
-void
+static void
 Usage(void)
 {
     printf("Usage: %s -s n [n ...] (converts int to base 64 string)\n", prog);
@@ -36,13 +38,13 @@ Usage(void)
     exit(1);
 }
 
-void btoi(int ac, char **av);
-void itob(int ac, char **av);
-void check(int ac, char **av);
-void verifyRange(int ac, char **av);
+static void btoi(int ac, char **av);
+static void itob(int ac, char **av);
+static void check(int ac, char **av);
+static void verifyRange(int ac, char **av);
 
-
-main(int ac, char **av)
+int
+main(int ac, char *av[])
 {
     if (ac < 3)
 	Usage();
@@ -58,10 +60,10 @@ main(int ac, char **av)
     else
 	Usage();
 
-    exit(0);
+    return 0;
 }
 
-void
+static void
 btoi(int ac, char **av)
 {
     int i;
@@ -74,7 +76,7 @@ btoi(int ac, char **av)
     }
 }
 
-void
+static void
 itob(int ac, char **av)
 {
     int i;
@@ -88,7 +90,7 @@ itob(int ac, char **av)
     }
 }
 
-void
+static void
 check(int ac, char **av)
 {
     int i;
@@ -105,7 +107,7 @@ check(int ac, char **av)
 }
 
 #define PROGRESS 1000000
-void
+static void
 verifyRange(int ac, char **av)
 {
     unsigned int inc, low, high;
@@ -135,6 +137,4 @@ verifyRange(int ac, char **av)
     printf("\nCOMPLETE - no errors found in range %u,%u,%u\n", low, high,
 	   inc);
 }
-
-
-#endif /* !NT */
+#endif /* AFS_SGI_XFS_IOPS_ENV */

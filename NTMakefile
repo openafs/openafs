@@ -159,7 +159,14 @@ afsreg: cmd
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-eventlog: afsreg
+util_test: afsreg roken
+     @echo ***** $@
+	$(DOCD) $(SRC)\util\test
+	$(CD) $(SRC)\util\test
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+eventlog: util_test
      @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@

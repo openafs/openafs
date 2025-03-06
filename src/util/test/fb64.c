@@ -10,21 +10,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <roken.h>
+#include <afs/afsutil.h>
 
 #include <stdio.h>
-#if !defined(AFS_NAMEI_ENV)
-main()
-{
-    printf("fb64 not required for this operating system.\n");
-    exit(1);
-}
-#else
 
-#include "afsutil.h"
+static char *prog = "fb64";
 
-char *prog = "fb64";
-
-void
+static void
 Usage(void)
 {
     printf("Usage: %s -s n [n ...] (converts int to base 64 string)\n", prog);
@@ -36,13 +29,13 @@ Usage(void)
     exit(1);
 }
 
-void btoi(int ac, char **av);
-void itob(int ac, char **av);
-void check(int ac, char **av);
-void verifyRange(int ac, char **av);
+static void btoi(int ac, char **av);
+static void itob(int ac, char **av);
+static void check(int ac, char **av);
+static void verifyRange(int ac, char **av);
 
-
-main(int ac, char **av)
+int
+main(int ac, char *av[])
 {
     if (ac < 3)
 	Usage();
@@ -58,14 +51,13 @@ main(int ac, char **av)
     else
 	Usage();
 
-    exit(0);
+    return 0;
 }
 
-void
+static void
 btoi(int ac, char **av)
 {
     int i;
-    int64_t o;
 
     if (ac == 3) {
 	printf("%llu\n", flipbase64_to_int64(av[2]));
@@ -75,15 +67,15 @@ btoi(int ac, char **av)
     }
 }
 
-void
+static void
 itob(int ac, char **av)
 {
     int i;
     lb64_string_t str;
-    int64_t in;
+    afs_int64 in;
 
     if (ac == 3) {
-	sscanf(av[2], "%Ld", &in);
+	sscanf(av[2], "%lld", &in);
 	printf("%s\n", int64_to_flipbase64(str, in));
     } else {
 	for (i = 2; i < ac; i++) {
@@ -93,11 +85,11 @@ itob(int ac, char **av)
     }
 }
 
-void
+static void
 check(int ac, char **av)
 {
     int i;
-    int64_t in, out;
+    afs_int64 in, out;
     lb64_string_t str;
 
     printf("%10s %10s %10s\n", "input", "base64", "output");
@@ -110,26 +102,26 @@ check(int ac, char **av)
 }
 
 #define PROGRESS 1000000
-void
+static void
 verifyRange(int ac, char **av)
 {
-    u_int64_t inc, low, high;
-    u_int64_t n;
-    int64_t in, out;
+    afs_int64 inc, low, high;
+    afs_int64 n;
+    afs_int64 in, out;
     lb64_string_t str;
 
     if (ac != 5)
 	Usage();
 
-    sscanf(av[2], "%lu", &low);
-    sscanf(av[3], "%lu", &high);
-    sscanf(av[4], "%lu", &inc);
+    sscanf(av[2], "%llu", &low);
+    sscanf(av[3], "%llu", &high);
+    sscanf(av[4], "%llu", &inc);
 
     n = 0;
     for (in = low; in <= high; in += inc) {
 	n++;
 	if (n % PROGRESS == 0)
-	    printf(" L%d", n);
+	    printf(" L%lld", n);
 	(void)int64_to_flipbase64(str, in);
 	out = flipbase64_to_int64(str);
 	if (in != out) {
@@ -140,6 +132,3 @@ verifyRange(int ac, char **av)
     printf("\nCOMPLETE - no errors found in range %llu,%llu,%llu\n", low, high,
 	   inc);
 }
-
-
-#endif /* AFS_NAMEI_ENV */

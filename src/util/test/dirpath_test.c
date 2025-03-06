@@ -10,10 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
-#include <stdio.h>
+#include <roken.h>
 #include <afs/afsutil.h>
 
+#include <stdio.h>
+
+int
 main(int argc, char *argv[])
 {
     char *pbuf;

@@ -9,22 +9,18 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
+LIBS = ../util.a ${TOP_LIBDIR}/libopr.a
 
+all tests: dirpath_test b64 fb64
 
-CFLAGS = -I. -I.. -I${SRCDIR}/include ${XCFLAGS} ${ARCHFLAGS} ${DBG}
+dirpath_test: dirpath_test.o $(LIBS)
+	$(AFS_LDRULE) dirpath_test.o $(LIBS) $(LIB_roken)
 
-tests: ktest dirpath_test
+b64: b64.o $(LIBS)
+	$(AFS_LDRULE) b64.o $(LIBS) $(LIB_roken)
 
-ktests.o: ktests.c ../ktime.h
+fb64: fb64.o $(LIBS)
+	$(AFS_LDRULE) fb64.o $(LIBS) $(LIB_roken)
 
-ktest: ktest.o ../util.a
-	$(AFS_LDRULE) ktest.o ../util.a ${XLIBS}
-
-dirpath_test: dirpath_test.o ../util.a
-	$(AFS_LDRULE) dirpath_test.o ../util.a ${XLIBS}
-
-b64: b64.o ../util.a
-	$(AFS_LDRULE) b64.o ../util.a ${XLIBS}
-
-fb64: fb64.o ../util.a
-	$(AFS_LDRULE) fb64.o ../util.a ${XLIBS}
+clean:
+	rm -f *.o dirpath_test b64 fb64

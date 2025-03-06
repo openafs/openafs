@@ -11,7 +11,17 @@ RELDIR=util\test
 
 LIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
-	$(DESTDIR)\lib\afs\afsreg.lib
+	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(DESTDIR)\lib\opr.lib \
+	$(DESTDIR)\lib\afsroken.lib
+
+all test tests: $(OUT)\b32.exe $(OUT)\dirpath_test.exe
+
+$(OUT)\b32.exe: $(OUT)\b32.obj $(LIBS)
+	$(EXECONLINK) shell32.lib
+        $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\dirpath_test.exe: $(OUT)\dirpath_test.obj $(LIBS)
 	$(EXECONLINK) shell32.lib
@@ -19,17 +29,11 @@ $(OUT)\dirpath_test.exe: $(OUT)\dirpath_test.obj $(LIBS)
         $(CODESIGN_USERLAND)
         $(SYMSTORE_IMPORT)
 
-$(OUT)\snprintf_test.exe: $(OUT)\snprintf_test.obj $(LIBS)
-	$(EXECONLINK) shell32.lib
-        $(_VC_MANIFEST_EMBED_EXE)
-        $(CODESIGN_USERLAND)
-        $(SYMSTORE_IMPORT)
-
-test tests: $(OUT)\dirpath_test.exe  $(OUT)\snprintf_test.exe
+install: all
 
 clean::
+	$(DEL) $(OUT)\b32.*
 	$(DEL) $(OUT)\dirpath_test.*
-        $(DEL) $(OUT)\snprintf_test.*
 
 mkdir:
 
