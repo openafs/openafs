@@ -246,7 +246,6 @@ out:
     return code;
 }
 
-#define	BOZO_OLDTIME	    (7*24*3600)	/* 7 days old */
 static void
 SaveOldFiles(char *aname)
 {
@@ -254,7 +253,10 @@ SaveOldFiles(char *aname)
     char *bbuffer = NULL, *obuffer = NULL;
     struct stat tstat;
     afs_int32 now;
-    afs_int32 oldTime, bakTime;
+    int oldExists;
+    int bakExists;
+    afs_int32 bakTime;
+    const int SECONDS_PER_WEEK = 7 * 24 * 3600; /* 7 days old */
 
     now = FT_ApproxTime();
 
@@ -270,20 +272,23 @@ SaveOldFiles(char *aname)
 	goto out;
     }
 
-    code = stat(obuffer, &tstat);	/* discover old file's time */
-    if (code)
-	oldTime = 0;
-    else
-	oldTime = tstat.st_mtime;
+    code = stat(obuffer, &tstat);	/* Check if .OLD file exists. */
+    if (code != 0) {
+	oldExists = 0;
+    } else {
+	oldExists = 1;
+    }
 
-    code = stat(bbuffer, &tstat);	/* discover back file's time */
-    if (code)
-	bakTime = 0;
-    else
+    code = stat(bbuffer, &tstat);	/* Check if .BAK file exists. */
+    if (code != 0) {
+	bakExists = 0;
+    } else {
+	bakExists = 1;
 	bakTime = tstat.st_mtime;
+    }
 
-    if (bakTime && (oldTime == 0 || bakTime < now - BOZO_OLDTIME)) {
-	/* no .OLD file, or .BAK is at least a week old */
+    if (bakExists == 1 && (oldExists == 0 || bakTime < now - SECONDS_PER_WEEK)) {
+	/* No .OLD file or .BAK is at least a week old. */
 	rk_rename(bbuffer, obuffer);
     }
 
