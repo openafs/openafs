@@ -68,10 +68,10 @@ btoi(int ac, char **av)
     int64_t o;
 
     if (ac == 3) {
-	printf("%Lu\n", flipbase64_to_int64(av[2]));
+	printf("%llu\n", flipbase64_to_int64(av[2]));
     } else {
 	for (i = 2; i < ac; i++)
-	    printf("%s: %Lu\n", av[i], flipbase64_to_int64(av[i]));
+	    printf("%s: %llu\n", av[i], flipbase64_to_int64(av[i]));
     }
 }
 
@@ -87,8 +87,8 @@ itob(int ac, char **av)
 	printf("%s\n", int64_to_flipbase64(str, in));
     } else {
 	for (i = 2; i < ac; i++) {
-	    sscanf(av[i], "%Ld", &in);
-	    printf("%Ld: %s\n", in, int64_to_flipbase64(str, in));
+	    sscanf(av[i], "%lld", &in);
+	    printf("%lld: %s\n", in, int64_to_flipbase64(str, in));
 	}
     }
 }
@@ -102,10 +102,10 @@ check(int ac, char **av)
 
     printf("%10s %10s %10s\n", "input", "base64", "output");
     for (i = 2; i < ac; i++) {
-	sscanf(av[i], "%Ld", &in);
+	sscanf(av[i], "%lld", &in);
 	(void)int64_to_flipbase64(str, in);
 	out = flipbase64_to_int64(str);
-	printf("%10Ld %10s %10Ld\n", in, str, out);
+	printf("%10lld %10s %10lld\n", in, str, out);
     }
 }
 
@@ -133,11 +133,11 @@ verifyRange(int ac, char **av)
 	(void)int64_to_flipbase64(str, in);
 	out = flipbase64_to_int64(str);
 	if (in != out) {
-	    printf("\n\nERROR: in=%Lu, str='%s', out=%Lu\n", in, str, out);
+	    printf("\n\nERROR: in=%llu, str='%s', out=%llu\n", in, str, out);
 	    exit(1);
 	}
     }
-    printf("\nCOMPLETE - no errors found in range %Lu,%Lu,%Lu\n", low, high,
+    printf("\nCOMPLETE - no errors found in range %llu,%llu,%llu\n", low, high,
 	   inc);
 }
 
