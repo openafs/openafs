@@ -101,11 +101,6 @@ SaveCore(struct bnode *abnode, struct bnode_proc
     struct stat tstat;
     afs_int32 code = 0;
     char *corefile = NULL;
-#ifdef BOZO_SAVE_CORES
-    struct timeval Start;
-    struct tm *TimeFields;
-    char FileName[256];
-#endif
 
     /* Linux always appends the PID to core dumps from threaded processes, so
      * we have to scan the directory to find core files under another name. */
@@ -151,14 +146,6 @@ SaveCore(struct bnode *abnode, struct bnode_proc
 	return;
 
     bnode_CoreName(abnode, aproc->coreName, tbuffer);
-#ifdef BOZO_SAVE_CORES
-    FT_GetTimeOfDay(&Start, 0);
-    TimeFields = localtime(&Start.tv_sec);
-    sprintf(FileName, "%s.%d%02d%02d%02d%02d%02d", tbuffer,
-	    TimeFields->tm_year + 1900, TimeFields->tm_mon + 1, TimeFields->tm_mday,
-	    TimeFields->tm_hour, TimeFields->tm_min, TimeFields->tm_sec);
-    strcpy(tbuffer, FileName);
-#endif
     rk_rename(corefile, tbuffer);
     free(corefile);
 }
