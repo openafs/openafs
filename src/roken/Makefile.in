@@ -53,7 +53,7 @@ $(TOP_LIBDIR)/librokenafs.$(SHLIB_SUFFIX): librokenafs.la
 	# libtool gets confused if we leave these around
 	$(RM) $(TOP_LIBDIR)/librokenafs.la
 
-librokenafs.la: librokenafs.la.sym $(LT_objs)
+librokenafs.la: librokenafs.la.sym $(LT_objs) librokenafs.a
 	$(LT_LDLIB_shlib_missing) $(LT_objs)
 
 $(TOP_LIBDIR)/librokenafs.a: librokenafs.a
