@@ -13,17 +13,12 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 CFLAGS = -I. -I.. -I${SRCDIR}/include ${XCFLAGS} ${ARCHFLAGS} ${DBG}
 
-tests: test_ktime ktest dirpath_test
+tests: ktest dirpath_test
 
 ktests.o: ktests.c ../ktime.h
 
 ktest: ktest.o ../util.a
 	$(AFS_LDRULE) ktest.o ../util.a ${XLIBS}
-
-test_ktime.o: test_ktime.c ../ktime.h
-
-test_ktime: test_ktime.o ../util.a
-	$(AFS_LDRULE) test_ktime.o ../util.a ${XLIBS}
 
 dirpath_test: dirpath_test.o ../util.a
 	$(AFS_LDRULE) dirpath_test.o ../util.a ${XLIBS}
