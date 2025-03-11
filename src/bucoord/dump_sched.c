@@ -229,7 +229,7 @@ ListDumpSchedule(struct bc_dumpSchedule *adump, int alevel)
 	    struct ktime_date kt;
 
 	    /* expiration date relative to the time that the dump is done */
-	    LongTo_ktimeRelDate(adump->expDate, &kt);
+	    Int32To_ktimeRelDate(adump->expDate, &kt);
 	    printf(" expires in %s", RelDatetoString(&kt));
 	}
 	break;
