@@ -2247,7 +2247,7 @@ bc_ParseExpiration(struct cmd_parmdesc *paramPtr, afs_int32 *expType,
 	code = ParseRelDate(dateString, &kt);
 	if (code)
 	    ERROR(1);
-	*expDate = ktimeRelDate_ToLong(&kt);
+	*expDate = ktimeRelDate_ToInt32(&kt);
     } else {
 	dateString = concatParams(itemPtr);
 	if (!dateString)
@@ -2260,7 +2260,7 @@ bc_ParseExpiration(struct cmd_parmdesc *paramPtr, afs_int32 *expType,
 		ERROR(1);
 	} else if (ParseRelDate(dateString, &kt) == 0) {
 	    *expType = BC_REL_EXPDATE;
-	    *expDate = ktimeRelDate_ToLong(&kt);
+	    *expDate = ktimeRelDate_ToInt32(&kt);
 	} else {
 	    ERROR(1);
 	}

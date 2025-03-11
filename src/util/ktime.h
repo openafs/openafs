@@ -56,7 +56,6 @@ struct ktime {
 #define KTIME_NEVERTIME  0x7fffffff  /* never */
 #define KTIME_NOWTIME    0           /* right now */
 
-#define	ktimeRelDate_ToLong	ktimeRelDate_ToInt32	/* XXX */
 #define	LongTo_ktimeRelDate     Int32To_ktimeRelDate	/* XXX */
 
 afs_int32 ktime_InterpretDate(struct ktime_date *akdate);
