@@ -37,7 +37,7 @@ main(argc, argv)
 	exit(1);
     }
 
-    if (ktime_DateToLong(argv[1], &time)) {
+    if (ktime_DateToInt32(argv[1], &time)) {
 	fprintf(stderr, usage, progname);
 	exit(1);
     } else {

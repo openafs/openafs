@@ -1204,7 +1204,7 @@ bc_VolRestoreCmd(struct cmd_syndesc *as, void *arock)
 	if (!timeString)
 	    return (-1);
 
-	code = ktime_DateToLong(timeString, &fromDate);
+	code = ktime_DateToInt32(timeString, &fromDate);
 	free(timeString);
 	if (code) {
 	    afs_com_err(whoami, 0, "Can't parse restore date and time");
@@ -1716,7 +1716,7 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 	/*
 	 * Now parse this string for the time to start.
 	 */
-	code = ktime_DateToLong(timeString, &atTime);
+	code = ktime_DateToInt32(timeString, &atTime);
 	free(timeString);
 	if (code) {
 	    afs_com_err(whoami, 0, "Can't parse dump start date and time");
@@ -2234,7 +2234,7 @@ bc_ParseExpiration(struct cmd_parmdesc *paramPtr, afs_int32 *expType,
 	if (!dateString)
 	    ERROR(1);
 
-	code = ktime_DateToLong(dateString, expDate);
+	code = ktime_DateToInt32(dateString, expDate);
 	if (code)
 	    ERROR(1);
     } else if (strcmp(itemPtr->data, "in") == 0) {
@@ -2253,9 +2253,9 @@ bc_ParseExpiration(struct cmd_parmdesc *paramPtr, afs_int32 *expType,
 	if (!dateString)
 	    ERROR(1);
 
-	if (ktime_DateToLong(dateString, expDate) == 0) {
+	if (ktime_DateToInt32(dateString, expDate) == 0) {
 	    *expType = BC_ABS_EXPDATE;
-	    code = ktime_DateToLong(dateString, expDate);
+	    code = ktime_DateToInt32(dateString, expDate);
 	    if (code)
 		ERROR(1);
 	} else if (ParseRelDate(dateString, &kt) == 0) {
@@ -2488,7 +2488,7 @@ bc_deleteDumpCmd(struct cmd_syndesc *as, void *arock)
 	/*
 	 * Now parse this string for the time to start.
 	 */
-	code = ktime_DateToLong(timeString, &fromTime);
+	code = ktime_DateToInt32(timeString, &fromTime);
 	free(timeString);
 	if (code) {
 	    afs_com_err(whoami, 0, "Can't parse 'from' date and time");
@@ -2525,7 +2525,7 @@ bc_deleteDumpCmd(struct cmd_syndesc *as, void *arock)
 	 * Now parse this string for the time to start. Simce
 	 * times are at minute granularity, add 59 seconds.
 	 */
-	code = ktime_DateToLong(timeString, &toTime);
+	code = ktime_DateToInt32(timeString, &toTime);
 	free(timeString);
 	if (code) {
 	    afs_com_err(whoami, 0, "Can't parse 'to' date and time");
@@ -2644,7 +2644,7 @@ bc_saveDbCmd(struct cmd_syndesc *as, void *arock)
 	 * Now parse this string for the time. Since
 	 * times are at minute granularity, add 59 seconds.
 	 */
-	code = ktime_DateToLong(timeString, &toTime);
+	code = ktime_DateToInt32(timeString, &toTime);
 	free(timeString);
 	if (code) {
 	    afs_com_err(whoami, 0, "Can't parse '-archive' date and time");

@@ -77,14 +77,14 @@ main(void)
 
     for (tt = testTimes; tt->time; tt++) {
 	temp = 0;
-	code = ktime_DateToLong(tt->time, &temp);
+	code = ktime_DateToInt32(tt->time, &temp);
 	t = temp;
         if (tt->code == 1) {
-            is_int(0, code, "ktime_DateToLong return for %s", tt->time);
-            ok((time(0) - t <= 1), "ktime_DateToLong result for %s", tt->time);
+            is_int(0, code, "ktime_DateToInt32 return for %s", tt->time);
+            ok((time(0) - t <= 1), "ktime_DateToInt32 result for %s", tt->time);
         } else {
-            is_int(tt->code, code, "ktime_DateToLong return for %s", tt->time);
-            is_int(tt->sec, t, "ktime_DateToLong result for %s", tt->time);
+            is_int(tt->code, code, "ktime_DateToInt32 return for %s", tt->time);
+            is_int(tt->sec, t, "ktime_DateToInt32 result for %s", tt->time);
         }
     }
 
