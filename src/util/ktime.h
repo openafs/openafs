@@ -56,7 +56,5 @@ struct ktime {
 #define KTIME_NEVERTIME  0x7fffffff  /* never */
 #define KTIME_NOWTIME    0           /* right now */
 
-afs_int32 ktime_InterpretDate(struct ktime_date *akdate);
-
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif /* __INCL_KTIME_ */
