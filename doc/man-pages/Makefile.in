@@ -67,7 +67,7 @@ dest: prep-noinstall
 		|| ln -s afsd.8 $(DEST)/man/man8/afsd.fuse.8; \
 	fi
 
-install: prep-noinstall $(MAN1) $(MAN8)
+install: prep-noinstall
 	chmod +x install-man
 	mkdir -p $(DESTDIR)$(mandir)/man1 $(DESTDIR)$(mandir)/man3 \
 	    $(DESTDIR)$(mandir)/man5 $(DESTDIR)$(mandir)/man8
