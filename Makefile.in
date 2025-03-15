@@ -965,8 +965,6 @@ pristine: distclean
 	doc/man-pages/man3 \
 	doc/man-pages/man5 \
 	doc/man-pages/man8
-	for i in doc/man-pages/pod*/*.pod.in; do \
-	    /bin/rm -f $${i%.in}; \
-	done
+	/bin/rm -f doc/man-pages/pod*/*.pod
 
 maintainer-clean: pristine

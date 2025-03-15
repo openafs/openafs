@@ -9,16 +9,16 @@
 # Usage: generate-pod <input-file> [<input-file> ...]
 #        generate-pod
 #
-# The first form takes a list of file paths ending in .in as its arguments and
-# processes any POD directives of the form =include <file> in that file,
-# generating a file with the .in suffix removed. The output file is written to
-# the same directory as the input file.
+# The first form takes a list of file paths ending in .template as its
+# arguments and processes any POD directives of the form =include <file> in
+# that file, generating a file with the .template suffix removed. The output
+# file is written to the same directory as the input file.
 #
 # When no input files are given, generate-pod scans the pod<n> directories
 # relative to the path of the generate-pod script itself for files ending in
-# *.in. For each input file file found, generate-pod processes any POD
+# *.template. For each input file file found, generate-pod processes any POD
 # directives of the form =include <file> in that file, generating an output
-# file with the .in suffix removed in the pod<n> directory in the current
+# file with the .template suffix removed in the pod<n> directory in the current
 # working directory.  The pod<n> directories are created in the current
 # directory if not already present.
 
@@ -59,8 +59,8 @@ if (scalar(@ARGV) > 0) {
     for my $file (@ARGV) {
         $file =~ s:\\:/:g if $^O eq 'cygwin';
         my $out = $file;
-        unless ($out =~ s/\.in\z//) {
-            die "input file $file does not end in .in\n";
+        unless ($out =~ s/\.template\z//) {
+            die "input file $file does not end in .template\n";
         }
         render($file, $out);
     }
@@ -74,10 +74,10 @@ if (scalar(@ARGV) > 0) {
         my $dir = catfile($srcdir, "pod${section}");
         opendir(D, $dir) or die "Cannot open $dir: $!\n";
         for my $file (readdir(D)) {
-            if ($file =~ /\.in\z/) {
+            if ($file =~ /\.template\z/) {
                 my $input = catfile($srcdir, "pod${section}", $file);
                 my $output = catfile("pod${section}", $file);
-                $output =~ s/\.in\z//;
+                $output =~ s/\.template\z//;
                 render($input, $output);
             }
         }

@@ -4,6 +4,10 @@
 
 /Makefile.vars
 /install-man
+/pod1/*.pod
+/pod3/*.pod
+/pod5/*.pod
+/pod8/*.pod
 /html
 /man1
 /man3
