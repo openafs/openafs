@@ -402,13 +402,13 @@ clean::
 .SUFFIXES: .pod.in
 
 {pod1}.pod.in{pod1}.pod::
-        $(PERL) merge-pod $<
+	$(PERL) generate-pod $<
 
 {pod3}.pod.in{pod3}.pod::
-        $(PERL) merge-pod $<
+	$(PERL) generate-pod $<
 
 {pod5}.pod.in{pod5}.pod::
-        $(PERL) merge-pod $<
+	$(PERL) generate-pod $<
 
 {pod8}.pod.in{pod8}.pod::
-        $(PERL) merge-pod $<
+	$(PERL) generate-pod $<

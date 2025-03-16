@@ -6,17 +6,17 @@
 # statements. The include paths are taken to be relative to the directory
 # containing the file being processed.
 #
-# Usage: merge-pod <input-file> [<input-file> ...]
-#        merge-pod
+# Usage: generate-pod <input-file> [<input-file> ...]
+#        generate-pod
 #
 # The first form takes a list of file paths ending in .in as its arguments and
 # processes any POD directives of the form =include <file> in that file,
 # generating a file with the .in suffix removed. The output file is written to
 # the same directory as the input file.
 #
-# When no input files are given, merge-pod scans the pod<n> directories
-# relative to the path of the merge-pod script itself for files ending in
-# *.in. For each input file file found, merge-pod processes any POD
+# When no input files are given, generate-pod scans the pod<n> directories
+# relative to the path of the generate-pod script itself for files ending in
+# *.in. For each input file file found, generate-pod processes any POD
 # directives of the form =include <file> in that file, generating an output
 # file with the .in suffix removed in the pod<n> directory in the current
 # working directory.  The pod<n> directories are created in the current
