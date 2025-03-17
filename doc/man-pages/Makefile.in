@@ -10,7 +10,8 @@ maintclean:
 	rm -rf html man1 man3 man5 man8
 
 html:
-	perl generate-html
+	$(PERL) $(srcdir)/generate-pod
+	$(PERL) $(srcdir)/generate-html --stylesheet=$(srcdir)/style.css
 
 dest:
 	chmod +x install-man

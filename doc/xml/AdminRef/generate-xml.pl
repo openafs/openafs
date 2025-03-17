@@ -5,8 +5,9 @@
 @sections = ('1', '3', '5', '8');
 
 $TOP_SRCDIR = shift @ARGV;
+$TOP_OBJDIR = shift @ARGV;
 $srcdir = sprintf "%s/../doc/xml/AdminRef", $TOP_SRCDIR;
-$doc_man_pages = sprintf "%s/../doc/man-pages", $TOP_SRCDIR;
+$poddir = sprintf "%s/doc/xml/AdminRef", $TOP_OBJDIR;
 
 open(ENTITIES, ">entities.dtd") || die;
 
@@ -15,7 +16,7 @@ foreach $section (@sections) {
     my @entities = ();
 
     mkdir(sprintf "sect%d", $section);
-    opendir($DIR, sprintf "%s/pod%d", $doc_man_pages, $section) || die;
+    opendir($DIR, sprintf "%s/pod%d", $poddir, $section) || die;
     while ($podfile = readdir($DIR)) {
 	next unless $podfile =~ /\.pod$/;
 
@@ -25,7 +26,7 @@ foreach $section (@sections) {
 	printf "%s/pod2refentry < %s > %s\n", $srcdir, $podfile, $xmlfile;
 
 	my $rc = system(sprintf "%s/pod2refentry --section=%d < %s/pod%d/%s > sect%d/%s",
-	    $srcdir, $section, $doc_man_pages, $section, $podfile, $section, $xmlfile);
+	    $srcdir, $section, $poddir, $section, $podfile, $section, $xmlfile);
 	if ($rc != 0) {
 	    die "Failed to generate sect${section}/${xmlfile}: $rc\n";
 	}

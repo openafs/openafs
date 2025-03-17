@@ -16,11 +16,13 @@ XSLTPROC = @XSLTPROC@ --stringparam variablelist.as.blocks 1 --param use.id.as.f
 DOCBOOK2PDF = @DOCBOOK2PDF@
 DBTOEPUB = $(DOCBOOK_STYLESHEETS)/epub/bin/dbtoepub
 KINDLEGEN = @KINDLEGEN@
+DOC_MAN_PAGES = $(TOP_SRCDIR)/../doc/man-pages
 
 XSL_FLAGS = --path '@abs_builddir@'
 
 entities.dtd sect1.xml sect3.xml sect5.xml sect8.xml:
-	$(srcdir)/generate-xml.pl $(TOP_SRCDIR)
+	$(PERL) $(DOC_MAN_PAGES)/generate-pod
+	$(PERL) $(srcdir)/generate-xml.pl $(TOP_SRCDIR) $(TOP_OBJDIR)
 
 $(BOOK).pdf: $(SRCS)
 	if test "x$(DOCBOOK2PDF)" = "xfop"; then \
@@ -51,3 +53,4 @@ clean:
 	rm -f $(BOOK).pdf $(BOOK).mobi $(BOOK).epub $(BOOK).fo \
 		entities.dtd sect1.xml sect3.xml sect5.xml sect8.xml $(VERSION).xml
 	rm -rf sect1 sect3 sect5 sect8
+	rm -rf pod1 pod3 pod5 pod8

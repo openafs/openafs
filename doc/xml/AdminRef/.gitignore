@@ -17,3 +17,7 @@ version.xml
 entities.dtd
 sect*.xml
 sect*/
+/pod1
+/pod3
+/pod5
+/pod8

@@ -3,6 +3,7 @@ dnl Check whether kindlegen exists.  If not, we'll suppress that part of the
 dnl documentation build.
 AC_CHECK_PROGS([KINDLEGEN], [kindlegen])
 AC_CHECK_PROGS([DOXYGEN], [doxygen])
+AC_CHECK_PROGS([PERL], [perl])
 
 dnl Optionally generate graphs with doxygen.
 case "$with_dot" in
@@ -22,4 +23,5 @@ no)
 esac
 AC_SUBST(HAVE_DOT)
 AC_SUBST(DOT_PATH)
+AC_SUBST(PERL)
 ])
