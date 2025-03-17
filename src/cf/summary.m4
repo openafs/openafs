@@ -51,6 +51,9 @@ AC_DEFUN([OPENAFS_SUMMARY],[
   AS_IF([test "${summary_doxygen}" = "yes" -a "${HAVE_DOT}" = "yes"],
     [summary_doxygen_graphs="yes"],
     [summary_doxygen_graphs="no"])
+  AS_IF([test "x${MAN_PAGES}" = "x"],
+    [summary_man_pages="no"],
+    [summary_man_pages="yes"])
   AS_IF([test "x$CTFCONVERT" != "x" -a "x$CTFMERGE" != "x"],
     [summary_ctf_tools="yes"],
     [summary_ctf_tools="no"])
@@ -86,6 +89,7 @@ doc generation:
   docbook stylesheets    : ${summary_docbook_stylesheets}
   doxygen                : ${summary_doxygen}
   doxygen graphs         : ${summary_doxygen_graphs}
+  man pages              : ${summary_man_pages}
 libraries:
   krb5    : ${KRB5_LIBS}
   curses  : ${LIB_curses}

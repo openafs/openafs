@@ -15,6 +15,7 @@ my $tagPoint;
 my $last;
 my $outDir = ".";
 my $errorCount = 0;
+my $noDocTarball = 0;
 
 # Find a command in the PATH.
 sub which {
@@ -41,6 +42,7 @@ GetOptions(
     "tagpoint=s" => \$tagPoint,
     "last=s" => \$last,
     "dir=s" => \$outDir,
+    "no-doc-tarball" => \$noDocTarball,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -105,18 +107,22 @@ system ("cd $tempDir/$name && ./regen.sh") == 0
 # A list of files to compress
 my @toCompress;
 
-# Create the documentation tarball
-system("tar -cf $outDir/$name-doc.tar -C $tempDir $name/doc") == 0
-    or die "Unable to create documentation tarball : $!";
-push @toCompress, "$outDir/$name-doc.tar";
-
-# Remove the docs directory (we've already build a tarball for it)
-File::Path::rmtree("$tempDir/$name/doc");
-
 # Create the source tarball (both .gz and .bz2)
 system("tar -cf $outDir/$name-src.tar -C $tempDir $name") == 0
     or die "Unable to create source code tarball : $!";
 push @toCompress, "$outDir/$name-src.tar";
+
+if (!$noDocTarball) {
+    print "cd $tempDir/$name && ./configure -q --enable-transarc-paths --disable-kernel-module";
+    system ("cd $tempDir/$name && ./configure -q --enable-transarc-paths --disable-kernel-module") == 0
+        or die "$!";
+    print "cd $tempDir/$name && make man-pages";
+    system ("cd $tempDir/$name && make man-pages") == 0
+        or die "$!";
+    system("tar -cf $outDir/$name-doc.tar -C $tempDir $name/doc") == 0
+        or die "Unable to create documentation tarball : $!";
+    push @toCompress, "$outDir/$name-doc.tar";
+}
 
 # Construct the diffs, and zip them
 if ($last) {
@@ -219,6 +225,7 @@ make-release [options] <tag>
     --tagpoint <object>  create new tag
     --last <object>      generate changelog and diffs from this point
     --dir <dir>          output results into this directory
+    --no-doc-tarball     do not create a doc.tar archive
 
 =head1 DESCRIPTION
 
@@ -250,6 +257,10 @@ in <directory>, which is created if it does not already exist.
 Rather than using an existing tag, create a new one on the specified commit,
 or on the tip of the specified branch. This will GPG sign the new tag, and
 push it into gerrit.
+
+=item B<--no-doc-tarball>
+
+Do not create a doc.tar archive.
 
 =back
 

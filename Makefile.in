@@ -622,7 +622,7 @@ finale_notest: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ \
 	libuafs audit kauth log ptserver tptserver scout bu_utils ubik uss \
 	bozo @VFSCK@ volser tvolser tsalvaged dviced dvolser libafscp \
 	venus venustests update xstat afsmonitor rxdebug libafsrpc rfc3961 \
-	hcrypto libafsauthent libadmin man-pages tools platform kopenafs \
+	hcrypto libafsauthent libadmin @MAN_PAGES@ tools platform kopenafs \
 	authtools $(DIR_roken) rxgk rx_test rxkad_test srctests
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
@@ -630,7 +630,7 @@ finale_nolibafs_notest: project cmd comerr afsd butc tbutc tbudb libuafs audit k
 	log ptserver tptserver scout bu_utils ubik tubik uss bozo @VFSCK@ \
 	volser tvolser tsalvaged dviced dvolser libafscp venus venustests \
 	update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
-	libafsauthent libadmin man-pages tools platform kopenafs \
+	libafsauthent libadmin @MAN_PAGES@ tools platform kopenafs \
 	authtools $(DIR_roken) rxgk rx_test rxkad_test srctests
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
@@ -756,6 +756,7 @@ clean2:
 	-(cd src/libafs; /bin/rm -rf afs afsint config rx)
 	-(cd src/libuafs; /bin/rm -rf afs afsint config rx)
 	-(cd tests ${COMPILE_CLEAN})
+	-(cd doc/man-pages ${COMPILE_CLEAN})
 	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR}
 	-/bin/rm -rf libafs_tree ${SYS_NAME} packages
 
@@ -961,10 +962,5 @@ pristine: distclean
 	src/cf/ltversion.m4 \
 	src/cf/lt~obsolete.m4 \
 	doc/xml/mobi-fixup.xsl
-	/bin/rm -rf doc/man-pages/man1 \
-	doc/man-pages/man3 \
-	doc/man-pages/man5 \
-	doc/man-pages/man8
-	/bin/rm -f doc/man-pages/pod*/*.pod
 
 maintainer-clean: pristine

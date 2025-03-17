@@ -4,6 +4,17 @@ dnl documentation build.
 AC_CHECK_PROGS([KINDLEGEN], [kindlegen])
 AC_CHECK_PROGS([DOXYGEN], [doxygen])
 AC_CHECK_PROGS([PERL], [perl])
+AX_PROG_PERL_MODULES([
+    Cwd
+    File::Basename
+    File::Copy
+    File::Spec
+    File::Spec::Functions
+    Getopt::Long
+    Pod::Man
+    Pod::Simple::HTMLBatch
+    Pod::Simple::Search],
+    [MAN_PAGES="man-pages"], [MAN_PAGES=""])
 
 dnl Optionally generate graphs with doxygen.
 case "$with_dot" in
@@ -24,4 +35,5 @@ esac
 AC_SUBST(HAVE_DOT)
 AC_SUBST(DOT_PATH)
 AC_SUBST(PERL)
+AC_SUBST(MAN_PAGES)
 ])

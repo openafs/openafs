@@ -1,30 +1,33 @@
-# Makefile for AFS man pages
+# Makefile for OpenAFS man pages
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/doc/man-pages/Makefile.vars
 
-all:
+all: man html
 
-maintclean:
-	rm -rf html man1 man3 man5 man8
+.PHONY: man
+man:
+	$(PERL) $(srcdir)/generate-pod
+	$(PERL) $(srcdir)/generate-man
 
+.PHONY: html
 html:
 	$(PERL) $(srcdir)/generate-pod
 	$(PERL) $(srcdir)/generate-html --stylesheet=$(srcdir)/style.css
 
-dest:
+dest: man
 	chmod +x install-man
 	$(INSTALL) -d $(DEST)/man/man1
 	$(INSTALL) -d $(DEST)/man/man3
 	$(INSTALL) -d $(DEST)/man/man5
 	$(INSTALL) -d $(DEST)/man/man8
 	set -e; for M in $(MAN_PAGES); do \
-	    ./install-man $(srcdir)/$$M $(DEST)/man/$$M ; \
+	    ./install-man $$M $(DEST)/man/$$M ; \
 	done
 	set -e; if [ "x@INSTALL_KAUTH@" = "xyes" ] ; then \
 	    for M in $(MAN_PAGES_KAUTH); do \
-		./install-man $(srcdir)/$$M $(DEST)/man/$$M ; \
+		./install-man $$M $(DEST)/man/$$M ; \
 	    done; \
 	    $(LN) -fs klog.1 $(DEST)/man/man1/klog.krb.1 ; \
 	    $(LN) -fs pagsh.1 $(DEST)/man/man1/pagsh.krb.1 ; \
@@ -37,18 +40,18 @@ dest:
 	    $(LN) -fs afsd.8 $(DEST)/man/man8/afsd.fuse.8; \
 	fi
 
-install:
+install: man
 	chmod +x install-man
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man3
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man5
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
 	set -e; for M in $(MAN_PAGES); do \
-	    ./install-man $(srcdir)/$$M $(DESTDIR)$(mandir)/$$M ; \
+	    ./install-man $$M $(DESTDIR)$(mandir)/$$M ; \
 	done;
 	set -e; if [ "x@INSTALL_KAUTH@" = "xyes" ] ; then \
 	    for M in $(MAN_PAGES_KAUTH); do \
-		./install-man $(srcdir)/$$M $(DESTDIR)$(mandir)/$$M ; \
+		./install-man $$M $(DESTDIR)$(mandir)/$$M ; \
 	    done; \
 	    $(LN) -fs klog.1 $(DESTDIR)$(mandir)man1/klog.krb.1 ; \
 	    $(LN) -fs pagsh.1 $(DESTDIR)$(mandir)/man1/pagsh.krb.1 ; \
@@ -60,3 +63,8 @@ install:
 	set -e; if [ -n "@ENABLE_FUSE_CLIENT@" ] ; then \
 	    $(LN) -fs afsd.8 $(DESTDIR)$(mandir)/man8/afsd.fuse.8; \
 	fi
+
+clean:
+	rm -f pod?/*.pod
+	rm -rf man1 man3 man5 man8
+	rm -rf html
