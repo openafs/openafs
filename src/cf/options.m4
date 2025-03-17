@@ -93,12 +93,6 @@ AC_ARG_ENABLE([kernel-module],
         [AC_MSG_ERROR(
           [Invalid --enable-kernel-module value $enable_kernel_module])])],
     [enable_kernel_module="maybe"])
-AC_ARG_ENABLE([redhat-buildsys],
-    [AS_HELP_STRING([--enable-redhat-buildsys],
-        [enable compilation of the redhat build system kernel (defaults to
-         disabled)])],
-    [],
-    [enable_redhat_buildsys="no"])
 
 dnl Installation locations.
 AC_ARG_ENABLE([transarc-paths],

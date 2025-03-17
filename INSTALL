@@ -336,11 +336,6 @@ I  Other configure options
        Forces the namei fileserver on platforms (like Solaris 8 and 9)
        where the inode fileserver is the default.
 
-   --enable-redhat-buildsys
-       Enable compilation of the kernel module for the Red Hat build
-       system kernel.  Use this configure flag when building kernel
-       modules for Red Hat Linux systems.
-
    --enable-reduced-depends
        Try to minimize the shared library dependencies encoded in the
        binaries.  This omits from the link line all the libraries included

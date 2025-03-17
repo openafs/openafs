@@ -4,9 +4,6 @@ system=$host
 case $system in
         *-linux*)
                 MKAFS_OSTYPE=LINUX
-                if test "x$enable_redhat_buildsys" = "xyes"; then
-                    AC_DEFINE(ENABLE_REDHAT_BUILDSYS, 1, [define if you have redhat buildsystem])
-                fi
                 AC_MSG_RESULT(linux)
                 OPENAFS_LINUX_KERNEL_PATH
                 OPENAFS_LINUX_GUESS_VERSION

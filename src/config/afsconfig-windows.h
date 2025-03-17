@@ -188,13 +188,6 @@
 #undef STRUCT_INODE_HAS_I_BYTES
 #undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 
-/* glue for RedHat kernel bug */
-#undef ENABLE_REDHAT_BUILDSYS
-
-#if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
-#include "redhat-fix.h"
-#endif
-
 /* Define if rename() does not unlink an existing file */
 #define RENAME_DOES_NOT_UNLINK 1
 
