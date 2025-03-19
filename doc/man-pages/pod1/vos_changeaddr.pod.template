@@ -106,7 +106,7 @@ address C<192.12.107.214>.
 
 =head1 PRIVILEGE REQUIRED
 
-Issuer must be listed in the F</usr/afs/etc/UserList> file on the machine
+Issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the machine
 specified with the B<-oldaddr> argument and on each database server
 machine.
 

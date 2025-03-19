@@ -50,7 +50,7 @@ command is used to change it.
 
 The Cache Manager sets default VL Server preference ranks as it
 initializes, randomly assigning a rank from the range 10,000 to 10,126 to
-each of the machines listed in the local F</usr/vice/etc/CellServDB>
+each of the machines listed in the local F<{{ viceetcdir }}/CellServDB>
 file. If DNS is used to locate VL Servers, the Cache Manager will assign a
 rank to every server configured in an AFSDB or SRV record for that
 cell. Currently, the priority and weight information from SRV records is

@@ -30,7 +30,7 @@ ignored.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. Do not combine this flag with the B<-cell> 
+F<{{ afsconfdir }}/KeyFile> file. Do not combine this flag with the B<-cell> 
 or B<-noauth> options. For more details, see L<pts(1)>.
 
 =item B<-noauth>

@@ -8,12 +8,12 @@ The F<BackupLog> file records a trace of Backup Server (B<buserver>
 process) operations on the local machine and describes any error
 conditions it encounters.
 
-If the F<BackupLog> file does not already exist in the F</usr/afs/logs>
+If the F<BackupLog> file does not already exist in the F<{{ afslogsdir }}>
 directory when the Backup Server starts, the server process creates it and
 writes initial start-up messages to it.
 
 The file is in ASCII format. Administrators listed in the
-F</usr/afs/etc/UserList> file can use the B<bos getlog> command to display
+F<{{ afsconfdir }}/UserList> file can use the B<bos getlog> command to display
 its contents. Alternatively, log on to the machine and use a text editor
 or a file display command such as the UNIX B<cat> command. By default, the
 mode bits on the F<BackupLog> file grant the required C<r> (read)

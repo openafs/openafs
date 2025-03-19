@@ -19,7 +19,7 @@ B<bos listk> S<<< B<-se> <I<machine name>> >>> [B<-sh>] S<<< [B<-c> <I<cell name
 =head1 DESCRIPTION
 
 The B<bos listkeys> command formats and displays the list of server
-encryption keys from the F</usr/afs/etc/KeyFile> file on the server
+encryption keys from the F<{{ afsconfdir }}/KeyFile> file on the server
 machine named by the B<-server> argument.  It is equivalent to B<asetkey
 list>, but can be run remotely.
 
@@ -75,7 +75,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
@@ -134,7 +134,7 @@ the machine C<fs6.example.com>.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the
 machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.

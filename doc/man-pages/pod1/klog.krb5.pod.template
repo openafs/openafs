@@ -40,7 +40,7 @@ F</etc/passwd> file or equivalent).
 
 By default, the command interpreter obtains a token for the local cell, as
 defined by the AFSCELL environment variable set in the command shell or by
-the F</usr/vice/etc/ThisCell> file on the local machine.  To specify an
+the F<{{ viceetcdir }}/ThisCell> file on the local machine.  To specify an
 alternate cell, include the B<-cell> argument.  A user can have tokens in
 multiple cells simultaneously, but only one token per cell per connection
 to the client machine.  If the user's credential structure already
@@ -147,7 +147,7 @@ simultaneously, but can have only one token at a time for each of them
 (that is, can only authenticate under one identity per cell per session on
 a machine).  It is acceptable to abbreviate the cell name to the shortest
 form that distinguishes it from the other cells listed in the
-F</usr/vice/etc/CellServDB> file on the client machine on which the
+F<{{ viceetcdir }}/CellServDB> file on the client machine on which the
 command is issued.
 
 If this argument is omitted, the command is executed in the local cell, as
@@ -161,7 +161,7 @@ First, by the value of the environment variable AFSCELL.
 
 =item *
 
-Second, in the F</usr/vice/etc/ThisCell> file on the client machine on
+Second, in the F<{{ viceetcdir }}/ThisCell> file on the client machine on
 which the command is issued.
 
 =back

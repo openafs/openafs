@@ -21,7 +21,7 @@ B<bos sto> S<<< B<-s> <I<machine name>> >>> S<<< B<-i> <I<server process name>>+
 
 The B<bos stop> command sets the status flag for each process specified
 with the B<-instance> argument to C<NotRun> in the
-F</usr/afs/local/BosConfig> file on the server machine named by the
+F<{{ afsbosconfigdir }}/BosConfig> file on the server machine named by the
 B<-server> argument, then stops it.
 
 To stop a process without changing its F<BosConfig> status flag, use the
@@ -63,7 +63,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
@@ -85,7 +85,7 @@ processes on the machine C<fs7.example.com>.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the
 machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.

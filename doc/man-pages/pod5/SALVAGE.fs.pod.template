@@ -5,7 +5,7 @@ SALVAGE.fs - Triggers salvaging of AFS server partitions
 =head1 DESCRIPTION
 
 The F<SALVAGE.fs> file, if present in a file server machine's
-F</usr/afs/local> directory, indicates to the Basic OverSeer (BOS) Server
+F<{{ afslocaldir }}> directory, indicates to the Basic OverSeer (BOS) Server
 (B<bosserver> process) that it must invoke the Salvager (B<salvager>
 process) during recovery from a failure of the File Server (B<fileserver>
 process).
@@ -14,7 +14,7 @@ The BOS Server creates the zero-length file each time it starts or
 restarts the C<fs> process. When the File Server exits normally (for
 example, in response to the B<bos shutdown> or B<bos stop> command), the
 BOS Server removes the file. However, if the File Server exits
-unexpectedly, the file remains in the F</usr/afs/local> directory as a
+unexpectedly, the file remains in the F<{{ afslocaldir }}> directory as a
 signal that the BOS Server must invoke the Salvager process to repair any
 file system inconsistencies possibly introduced during the failure, before
 restarting the File Server and Volume Server processes.

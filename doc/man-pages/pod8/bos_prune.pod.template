@@ -1,6 +1,6 @@
 =head1 NAME
 
-bos_prune - Removes obsolete files from /usr/afs/bin and /usr/afs/logs
+bos_prune - Removes obsolete files from {{ afssrvlibexecdir }} and {{ afslogsdir }}
 
 =head1 SYNOPSIS
 
@@ -27,17 +27,17 @@ the following flags provided on the command line:
 
 =item *
 
-The B<-bak> flag removes all files from the F</usr/afs/bin> directory that
+The B<-bak> flag removes all files from the F<{{ afssrvlibexecdir }}> directory that
 have a C<.BAK> extension.
 
 =item *
 
-The B<-old> flag removes all files from the F</usr/afs/bin> directory that
+The B<-old> flag removes all files from the F<{{ afssrvlibexecdir }}> directory that
 have a C<.OLD> extension.
 
 =item *
 
-The B<-core> flag removes all files from the F</usr/afs/logs> directory
+The B<-core> flag removes all files from the F<{{ afslogsdir }}> directory
 that have a C<core.> prefix.
 
 =item *
@@ -64,17 +64,17 @@ abbreviated unambiguously). For details, see L<bos(8)>.
 
 =item B<-bak>
 
-Removes all files from the F</usr/afs/bin> directory that have a C<.BAK>
+Removes all files from the F<{{ afssrvlibexecdir }}> directory that have a C<.BAK>
 extension. Do not combine this flag and the B<-all> flag.
 
 =item B<-old>
 
-Removes all files from the F</usr/afs/bin> directory that have a C<.OLD>
+Removes all files from the F<{{ afssrvlibexecdir }}> directory that have a C<.OLD>
 extension. Do not combine this flag and the B<-all> flag.
 
 =item B<-core>
 
-Removes all files from the F</usr/afs/logs> directory that have a C<core.>
+Removes all files from the F<{{ afslogsdir }}> directory that have a C<core.>
 prefix. Do not combine this flag and the B<-all> flag.
 
 =item B<-all>
@@ -96,7 +96,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
@@ -111,21 +111,21 @@ ignored.
 
 =head1 EXAMPLES
 
-The following example removes all files from the F</usr/afs/bin> directory
+The following example removes all files from the F<{{ afssrvlibexecdir }}> directory
 on the machine C<fs3.example.com> that have a C<.BAK> or C<.OLD> extension.
 
    % bos prune -server fs3.example.com -bak -old
 
-The following example removes all files from the F</usr/afs/bin> directory
+The following example removes all files from the F<{{ afssrvlibexecdir }}> directory
 on the machine C<db2.example.com> that have a C<.BAK> or C<.OLD> extension,
-and all files from the F</usr/afs/logs> directory that have a C<core.>
+and all files from the F<{{ afslogsdir }}> directory that have a C<core.>
 prefix.
 
    % bos prune -server db2.example.com -all
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the
 machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.

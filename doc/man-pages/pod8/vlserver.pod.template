@@ -33,18 +33,18 @@ vlserver [B<-noauth>] [B<-smallmem>]
 
 The B<vlserver> command initializes the Volume Location (VL) Server, which
 runs on every database server machine. In the conventional configuration,
-its binary file is located in the F</usr/afs/bin> directory on a file
+its binary file is located in the F<{{ afssrvlibexecdir }}> directory on a file
 server machine.
 
 The B<vlserver> command is not normally issued at the command shell prompt
-but rather placed into a file server machine's F</usr/afs/local/BosConfig>
+but rather placed into a file server machine's F<{{ afsbosconfigdir }}/BosConfig>
 file with the B<bos create> command. If it is ever issued at the command
 shell prompt, the issuer must be logged onto a database server machine as
 the local superuser C<root>.
 
 As it initializes, the VL Server process creates the two files that
 constitute the Volume Location Database (VLDB), F<vldb.DB0> and
-F<vldb.DBSYS1>, in the F</usr/afs/db> directory if they do not already
+F<vldb.DBSYS1>, in the F<{{ afsdbdir }}> directory if they do not already
 exist. Use the commands in the B<vos> suite to administer the database.
 
 The VL Server maintains the record of volume locations in the Volume
@@ -55,7 +55,7 @@ The Cache Manager then requests the file from the File Server process
 running on that file server machine.
 
 The VL Server records a trace of its activity in the
-F</usr/afs/logs/VLLog> file. Use the B<bos getlog> command to display the
+F<{{ afslogsdir }}/VLLog> file. Use the B<bos getlog> command to display the
 contents of the file. By default, it records on a minimal number of
 messages. For instructions on increasing the amount of logging, see
 L<VLLog(5)>.
@@ -73,7 +73,7 @@ suites. Provide the command name and all option names in full.
 =item B<-d> <I<debug level>>
 
 Sets the detail level for the debugging trace written to the
-F</usr/afs/logs/VLLog> file. Provide one of the following values, each
+F<{{ afslogsdir }}/VLLog> file. Provide one of the following values, each
 of which produces an increasingly detailed trace: C<0>, C<1>, C<5>, C<25>,
 and C<125>. 
 
@@ -176,7 +176,7 @@ detailed tracing may cause performance issues and use up a lot of disk space.
 =item B<-logfile> <I<log file>>
 
 Sets the file to use for server logging. If logfile is not specified, and
-no other logging options are supplied, this will be F</usr/afs/logs/VLLog>.
+no other logging options are supplied, this will be F<{{ afslogsdir }}/VLLog>.
 Note that this option is intended for debugging and testing purposes.
 Changing the location of the log file from the command line may result
 in undesirable interactions with tools such as B<bos>.
@@ -184,7 +184,7 @@ in undesirable interactions with tools such as B<bos>.
 =item B<-transarc-logs>
 
 Use Transarc style logging features. Rename the log file
-F</usr/afs/logs/VLLog> to F</usr/afs/logs/VLLog.old> when the VL Server is
+F<{{ afslogsdir }}/VLLog> to F<{{ afslogsdir }}/VLLog.old> when the VL Server is
 restarted.  This option is provided for compatibility with older versions.
 
 =item B<-database> | B<-db> <I<database path>>
@@ -195,7 +195,7 @@ intended primarily for testing purposes.
 =item B<-config> <I<configuration directory>>
 
 Set the location of the configuration directory used to configure this
-service. In a typical configuration this will be F</usr/afs/etc> - this
+service. In a typical configuration this will be F<{{ afsconfdir }}> - this
 option allows the use of alternative configuration locations for testing
 purposes.
 
@@ -231,7 +231,7 @@ machine C<fs2.example.com> that uses six lightweight processes. Type the
 command on a single line:
 
    % bos create -server fs2.example.com -instance vlserver -type simple \
-                -cmd "/usr/afs/bin/vlserver -p 6"
+                -cmd "{{ afssrvlibexecdir }}/vlserver -p 6"
 
 =head1 PRIVILEGE REQUIRED
 

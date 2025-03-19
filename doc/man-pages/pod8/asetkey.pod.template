@@ -110,7 +110,7 @@ system's krb5 headers.
 
 The issuer must be able to read (for B<asetkey list>) and write (for
 B<asetkey add> and B<asetkey delete>) the KeyFileExt, normally
-F</usr/afs/etc/KeyFileExt>.  In practice, this means that the issuer must be
+F<{{ afsconfdir }}/KeyFileExt>.  In practice, this means that the issuer must be
 the local superuser C<root> on the AFS file server or database server.
 For B<asetkey add>, the issuer must also be able to read the specified
 keytab file.

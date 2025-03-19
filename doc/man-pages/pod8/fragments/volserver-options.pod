@@ -3,13 +3,13 @@
 =item B<-d> <I<debug level>>
 
 Sets the detail level for the debugging trace written to the
-F</usr/afs/logs/VolserLog> file. Provide one of the following values, each
+F<{{ afslogsdir }}/VolserLog> file. Provide one of the following values, each
 of which produces an increasingly detailed trace: C<0>, C<1>, C<5>, C<25>,
 and C<125>. 
 
 =item B<-log>
 
-Records in the /usr/afs/logs/VolserLog file the names of all users who
+Records in the {{ afslogsdir }}/VolserLog file the names of all users who
 successfully initiate a B<vos> command. The Volume Server also records any
 file removals that result from issuing the B<vos release> command with the
 B<-f> flag.
@@ -17,7 +17,7 @@ B<-f> flag.
 =item B<-transarc-logs>
 
 Use Transarc style logging features. Rename the log file
-F</usr/afs/logs/VolserLog> to F</usr/afs/logs/VolserLog.old> when the volume server is
+F<{{ afslogsdir }}/VolserLog> to F<{{ afslogsdir }}/VolserLog.old> when the volume server is
 restarted.  This option is provided for compatibility with older versions.
 
 =item B<-p> <I<number of processes>>
@@ -100,7 +100,7 @@ L<fileserver(8)>.
 =item B<-logfile> <I<log file>>
 
 Sets the file to use for server logging.  If logfile is not specified and
-no other logging options are supplied, this will be F</usr/afs/logs/VolserLog>.
+no other logging options are supplied, this will be F<{{ afslogsdir }}/VolserLog>.
 Note that this option is intended for debugging and testing purposes.
 Changing the location of the log file from the command line may result
 in undesirable interactions with tools such as B<bos>.
@@ -108,7 +108,7 @@ in undesirable interactions with tools such as B<bos>.
 =item B<-config> <I<configuration directory>>
 
 Set the location of the configuration directory used to configure this
-service.  In a typical configuration this will be F</usr/afs/etc> - this
+service.  In a typical configuration this will be F<{{ afsconfdir }}> - this
 option allows the use of alternative configuration locations for testing
 purposes.
 

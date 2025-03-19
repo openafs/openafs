@@ -16,11 +16,11 @@ fileserver - Initializes the File Server component of the fs process
 
 The B<fileserver> command initializes the File Server component of the
 C<fs> process. In the conventional configuration, its binary file is
-located in the F</usr/afs/bin> directory on a file server machine.
+located in the F<{{ afssrvlibexecdir }}> directory on a file server machine.
 
 The B<fileserver> command is not normally issued at the command shell
 prompt, but rather placed into a database server machine's
-F</usr/afs/local/BosConfig> file with the B<bos create> command. If it is
+F<{{ afsbosconfigdir }}/BosConfig> file with the B<bos create> command. If it is
 ever issued at the command shell prompt, the issuer must be logged onto a
 file server machine as the local superuser C<root>.
 
@@ -44,8 +44,8 @@ size, and allows volumes to exceed their quota by 10%. Type the command on
 a single line:
 
    % bos create -server fs2.example.com -instance fs -type fs \
-                -cmd "/usr/afs/bin/fileserver -pctspare 10 -L" \
-                /usr/afs/bin/volserver /usr/afs/bin/salvager
+                -cmd "{{ afssrvlibexecdir }}/fileserver -pctspare 10 -L" \
+                {{ afssrvlibexecdir }}/volserver {{ afssrvlibexecdir }}/salvager
 
 =head1 TROUBLESHOOTING
 

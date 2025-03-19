@@ -14,7 +14,7 @@ operation.
 When the File Server detects the presence of the file on a partition on
 which it is attaching volumes, it stops, detaches any volumes that are
 already attached, and exits after recording a message in the
-F</usr/afs/logs/FileLog> file. The Bos Server then invokes the Salvager to
+F<{{ afslogsdir }}/FileLog> file. The Bos Server then invokes the Salvager to
 salvage the partition.
 
 =head1 SEE ALSO

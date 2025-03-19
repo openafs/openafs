@@ -94,7 +94,7 @@ actually did anything with the volume:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the
 machine specified with the B<-server> argument. If the B<-localauth>
 flag is included, the issuer must instead be logged on to a server
 machine as the local superuser C<root>.

@@ -28,7 +28,7 @@ B<vos lista> [B<-u> <I<uuid of server>>] >>>
 
 The B<vos listaddrs> command displays all of the server entries from the
 Volume Location Database (VLDB). An entry is created as the File Server
-initializes and registers the contents of its F</usr/afs/local/sysid> file
+initializes and registers the contents of its F<{{ afslocaldir }}/sysid> file
 in the VLDB.
 
 =head1 OPTIONS

@@ -133,7 +133,7 @@ attempt. The Authentication Servers running on the various database server
 machines do not communicate with each other about how many times a user
 has failed to provide the correct password to them. Instead, each
 Authentication Server maintains its own separate copy of the auxiliary
-database file F<kaserverauxdb> (located in the F</usr/afs/local> directory
+database file F<kaserverauxdb> (located in the F<{{ afslocaldir }}> directory
 by default), which records the number of consecutive authentication
 failures for each user account and the time of the most recent
 failure. This implementation means that on average each Authentication

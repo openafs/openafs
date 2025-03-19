@@ -84,7 +84,7 @@ for the UUID 008f157e-bad0-157c-0ffee-357c4d1faa77
 
 =head1 PRIVILEGE REQUIRED
 
-Issuer must be listed in the F</usr/afs/etc/UserList> file on each
+Issuer must be listed in the F<{{ afsconfdir }}/UserList> file on each
 database server machine.
 
 =head1 SEE ALSO

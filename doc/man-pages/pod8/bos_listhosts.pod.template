@@ -25,7 +25,7 @@ B<bos getc> S<<< B<-s> <I<machine name>> >>> S<<< [B<-c> <I<cell name>>] >>> [B<
 =head1 DESCRIPTION
 
 The B<bos listhosts> command formats and displays the list of a cell's
-database server machines from the F</usr/afs/etc/CellServDB> file on the
+database server machines from the F<{{ afsconfdir }}/CellServDB> file on the
 server machine named by the B<-server> argument.
 
 To alter the list of machines, use the B<bos addhost> and B<bos
@@ -38,7 +38,7 @@ removehost> commands.
 =item B<-server> <I<machine name>>
 
 Indicates the server machine from which to display the
-F</usr/afs/etc/CellServDB> file. Identify the machine by IP address or its
+F<{{ afsconfdir }}/CellServDB> file. Identify the machine by IP address or its
 host name (either fully-qualified or abbreviated unambiguously). For
 details, see L<bos(8)>.
 
@@ -60,7 +60,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
@@ -87,7 +87,7 @@ performing the B<bos addhost> command.
 =head1 EXAMPLES
 
 The following command displays the database server machines listed in the
-F</usr/afs/etc/CellServDB> file on the machine C<fs7.example.com>.
+F<{{ afsconfdir }}/CellServDB> file on the machine C<fs7.example.com>.
 
    % bos listhosts fs7.example.com
    Cell name is example.com

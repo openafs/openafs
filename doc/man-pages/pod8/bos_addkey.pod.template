@@ -22,7 +22,7 @@ B<bos addk> S<<< B<-s> <I<machine name>> >>> S<<< [B<-ke> <I<key>>] >>>
 
 The B<bos addkey> command constructs a server encryption key from the text
 string provided, assigns it the key version number specified with the
-B<-kvno> argument, and adds it to the F</usr/afs/etc/KeyFile> file on the
+B<-kvno> argument, and adds it to the F<{{ afsconfdir }}/KeyFile> file on the
 machine specified with the B<-server> argument.
 
 Normally, B<asetkey add> should be used instead of this command; see
@@ -44,11 +44,11 @@ string and does not echo it visibly:
    Retype input key:
 
 The BOS Server prohibits reuse of any key version number already listed in
-the F</usr/afs/etc/KeyFile> file. This ensures that users who still have
+the F<{{ afsconfdir }}/KeyFile> file. This ensures that users who still have
 tickets sealed with the current key are not prevented from communicating
 with a server process because the current key is overwritten with a new
 key. Use the B<bos listkeys> command to display the key version numbers in
-the F</usr/afs/etc/KeyFile> file.
+the F<{{ afsconfdir }}/KeyFile> file.
 
 =head1 CAUTIONS
 
@@ -74,12 +74,12 @@ of the rxkad-k5 extension.
 =item B<-server> <I<machine name>>
 
 Indicates the server machine on which to change the
-F</usr/afs/etc/KeyFile> file. Identify the machine by IP address or its
+F<{{ afsconfdir }}/KeyFile> file. Identify the machine by IP address or its
 host name (either fully-qualified or abbreviated unambiguously). For
 details, see L<bos(8)>.
 
 In cells that use the Update Server to distribute the contents of the
-F</usr/afs/etc> directory, it is conventional to specify only the system
+F<{{ afsconfdir }}> directory, it is conventional to specify only the system
 control machine as a value for the B<-server> argument. Otherwise, repeat
 the command for each file server machine. For further discussion, see
 L<bos(8)>.
@@ -111,7 +111,7 @@ this flag with the B<-localauth> flag. For more details, see L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
@@ -145,7 +145,7 @@ recommended, and provides the password at the prompts.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the
 machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.

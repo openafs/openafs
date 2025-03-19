@@ -28,7 +28,7 @@ memory:
 =item *
 
 The database server machines for every cell listed in the local
-F</usr/vice/etc/CellServDB file>, plus any machines added to the memory
+F<{{ viceetcdir }}/CellServDB file>, plus any machines added to the memory
 list by the B<fs newcell> command since the last reboot.
 
 =item *
@@ -58,7 +58,7 @@ by having the Cache Manager probe a specified set of them:
 =item *
 
 By default, only machines that are marked inaccessible and belong to the
-local cell (the cell listed in the local F</usr/vice/etc/ThisCell>
+local cell (the cell listed in the local F<{{ viceetcdir }}/ThisCell>
 file).
 
 =item *
@@ -111,7 +111,7 @@ the AFSCELL environment variable.
 Names each cell in which to probe server machines marked as
 inaccessible. Provide the fully qualified domain name, or a shortened form
 that disambiguates it from the other cells listed in the local
-F</usr/vice/etc/CellServDB> file. Combine this argument with the B<-fast>
+F<{{ viceetcdir }}/CellServDB> file. Combine this argument with the B<-fast>
 flag if desired, but not with the B<-all> flag. Omit both this argument
 and the B<-all> flag to probe machines in the local cell only.
 

@@ -21,7 +21,7 @@ server machines that the Cache Manager stores in kernel memory for its
 home cell and foreign cells.
 
 At each reboot of the client machine, the Cache Manager copies the
-contents of F</usr/vice/etc/CellServDB> into kernel memory. To modify the
+contents of F<{{ viceetcdir }}/CellServDB> into kernel memory. To modify the
 list between reboots, use the B<fs newcell> command.
 
 =head1 OPTIONS

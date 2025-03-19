@@ -4,7 +4,7 @@ krb.excl - Lists exclusions for mapping kerberos principals to AFS identities
 
 =head1 DESCRIPTION
 
-F</usr/afs/etc/krb.excl> is an optional file that resides on an OpenAFS
+F<{{ afsconfdir }}/krb.excl> is an optional file that resides on an OpenAFS
 server and is used to list exceptions to the algorithm of mapping kerberos
 principals to AFS identities. It contains the name of one or more
 principals; each principal should be on a line by itself. If a principal

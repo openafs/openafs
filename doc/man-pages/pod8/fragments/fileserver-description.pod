@@ -1,4 +1,4 @@
-The File Server creates the F</usr/afs/logs/FileLog> log file as it
+The File Server creates the F<{{ afslogsdir }}/FileLog> log file as it
 initializes, if the file does not already exist. It does not write a
 detailed trace by default, but the B<-d> option may be used to
 increase the amount of detail. Use the B<bos getlog> command to

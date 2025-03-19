@@ -25,7 +25,7 @@ B<-servers> argument.
 
 Each time the machine reboots, the Cache Manager constructs the kernel
 list of cells and database server machines by reading the local
-F</usr/vice/etc/CellServDB> file. This command does not change the
+F<{{ viceetcdir }}/CellServDB> file. This command does not change the
 F<CellServDB> file, so any changes made with it persist only until the
 next reboot, unless the issuer also edits the file. The output of the B<fs
 listcells> command reflects changes made with this command, because that

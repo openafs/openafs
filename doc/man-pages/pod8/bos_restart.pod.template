@@ -30,7 +30,7 @@ arguments:
 
 The B<-instance> argument names each AFS server process to stop and
 restart immediately, regardless of its status flag in the
-F</usr/afs/local/BosConfig> file. Do not include B<bosserver> in the list
+F<{{ afsbosconfigdir }}/BosConfig> file. Do not include B<bosserver> in the list
 of processes; use the B<-bosserver> flag instead.
 
 =item *
@@ -98,7 +98,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
@@ -130,7 +130,7 @@ Location (VL) Server processes on the machine C<db3.example.com>:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the
 machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.

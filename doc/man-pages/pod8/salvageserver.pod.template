@@ -26,7 +26,7 @@ B<salvageserver> [I<initcmd>] S<<< [B<-partition> <I<name of partition to salvag
 In its typical mode of operation, the B<salvageserver> is a daemon process 
 responsible for salvaging volumes.  It is a component of the C<dafs> 
 process type.  In the conventional configuration, its binary file is 
-located in the F</usr/afs/bin> directory on a file server machine.
+located in the F<{{ afssrvlibexecdir }}> directory on a file server machine.
 
 The Salvageserver daemon is responsible for scheduling and executing 
 volume salvage operations on behalf of client processes.  The fileserver 
@@ -138,7 +138,7 @@ the volume's actual site.
 
 This flag should be considered deprecated.  Its primary purpose was to disable
 forking and parallelization of the Salvager so that log messages were not
-interleaved.  Due to the manner in which F</usr/afs/logs/SalsrvLog> is
+interleaved.  Due to the manner in which F<{{ afslogsdir }}/SalsrvLog> is
 written, log messages from subprocesses are never interleaved; the entire log
 for a volume group salvage is appended to the master log as one atomic 
 transaction.
@@ -150,7 +150,7 @@ damaged volumes.
 
 =item B<-inodes>
 
-Records in the F</usr/afs/logs/SalsrvLog> file a list of all AFS inodes
+Records in the F<{{ afslogsdir }}/SalsrvLog> file a list of all AFS inodes
 that the Salvageserver modified.
 
 =item B<-force>
@@ -169,7 +169,7 @@ needed.
 
 =item B<-rootinodes>
 
-Records in the F</usr/afs/logs/SalsrvLog> file a list of all AFS inodes
+Records in the F<{{ afslogsdir }}/SalsrvLog> file a list of all AFS inodes
 owned by the local superuser C<root>.
 
 =item B<-salvagedirs>
@@ -236,14 +236,14 @@ one of the following three values:
 =item ignore
 
 Leaves the orphaned objects on the disk, but prints a message to the
-F</usr/afs/logs/SalsrvLog> file reporting how many orphans were found and
+F<{{ afslogsdir }}/SalsrvLog> file reporting how many orphans were found and
 the approximate number of kilobytes they are consuming. This is the
 default if the B<-orphans> argument is omitted.
 
 =item remove
 
 Removes the orphaned objects, and prints a message to the
-F</usr/afs/logs/SalsrvLog> file reporting how many orphans were removed
+F<{{ afslogsdir }}/SalsrvLog> file reporting how many orphans were removed
 and the approximate number of kilobytes they were consuming.
 
 =item attach
@@ -284,7 +284,7 @@ partition will be scheduled for salvaging by the Salvageserver daemon.
 =item B<-logfile> <I<log file>>
 
 Sets the file to use for server logging.  If logfile is not specified and
-no other logging options are supplied, this will be F</usr/afs/logs/SalsrvLog>.
+no other logging options are supplied, this will be F<{{ afslogsdir }}/SalsrvLog>.
 Note that this option is intended for debugging and testing purposes.
 Changing the location of the log file from the command line may result
 in undesirable interactions with tools such as B<bos>.
@@ -301,7 +301,7 @@ ignored.
 The following command instructs the Salvageserver to schedule the salvage 
 of the volume with volume ID 258347486 on F</vicepg> on the local machine.
 
-   % /usr/afs/bin/salvageserver -partition /vicepg -volumeid 258347486 -client
+   % {{ afssrvlibexecdir }}/salvageserver -partition /vicepg -volumeid 258347486 -client
 
 =head1 PRIVILEGE REQUIRED
 

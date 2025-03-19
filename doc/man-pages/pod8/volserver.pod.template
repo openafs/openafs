@@ -16,11 +16,11 @@ volserver - Initializes the Volume Server component of the fs process
 
 The B<volserver> command initializes the Volume Server component of the
 C<fs> process. In the conventional configuration, its binary file is
-located in the F</usr/afs/bin> directory on a file server machine.
+located in the F<{{ afssrvlibexecdir }}> directory on a file server machine.
 
 The B<volserver> command is not normally issued at the command shell
 prompt but rather placed into a file server machine's
-F</usr/afs/local/BosConfig> file with the B<bos create> command. If it is
+F<{{ afsbosconfigdir }}/BosConfig> file with the B<bos create> command. If it is
 ever issued at the command shell prompt, the issuer must be logged onto a
 database server machine as the local superuser C<root>.
 
@@ -36,8 +36,8 @@ The following B<bos create> command creates a C<volserver> process on the
 machine C<fs2.example.com> as part of the fs process:
 
    % bos create -server fs2.example.com -instance fs -type fs \
-                -cmd "/usr/afs/bin/fileserver" \
-                /usr/afs/bin/volserver /usr/afs/bin/salvager
+                -cmd "{{ afssrvlibexecdir }}/fileserver" \
+                {{ afssrvlibexecdir }}/volserver {{ afssrvlibexecdir }}/salvager
 
 =head1 PRIVILEGE REQUIRED
 

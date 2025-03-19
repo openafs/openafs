@@ -29,7 +29,7 @@ L<fs_setcell(1)> fully describes how AFS treats setuid programs.
 
 Names each cell for which to report setuid status. Provide the fully
 qualified domain name, or a shortened form that disambiguates it from the
-other cells listed in the local F</usr/vice/etc/CellServDB> file.
+other cells listed in the local F<{{ viceetcdir }}/CellServDB> file.
 
 =item B<-help>
 

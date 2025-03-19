@@ -159,7 +159,7 @@ in this suite.
 
 B<getdate> is the operation code. It tells the BOS Server on the specified
 server machine (in this case C<fs1.example.com>) to report the modification
-dates of binary files in the local F</usr/afs/bin> directory.
+dates of binary files in the local F<{{ afssrvlibexecdir }}> directory.
 
 =item *
 
@@ -172,7 +172,7 @@ which BOS Server is to collect and report binary dates.
 C<-file ptserver kaserver> is an argument that takes multiple values. The
 switch is B<-file> and the values are C<ptserver> and C<kaserver>. This
 argument tells the BOS Server to report the modification dates on the
-files F</usr/afs/bin/kaserver> and F</usr/afs/bin/ptserver>.
+files F<{{ afssrvlibexecdir }}/kaserver> and F<{{ afssrvlibexecdir }}/ptserver>.
 
 =back
 
@@ -419,7 +419,7 @@ F</vicepiu> is the last permissible OpenAFS partition name.
 A cell's full name usually matches its Internet domain name (such as
 B<example.org> for the Example Organization or C<example.com> for Example
 Corporation). Some AFS commands accept unambiguous shortened forms,
-usually with respect to the local F</usr/vice/etc/CellServDB> file but
+usually with respect to the local F<{{ viceetcdir }}/CellServDB> file but
 sometimes depending on the ability of the local name service to resolve
 the corresponding domain name.
 

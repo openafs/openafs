@@ -13,11 +13,11 @@ automation of other aspects of the backup process.
 There is a separate configuration file for each tape device or backup data
 file. Creating the file is optional, and unnecessary if none of the
 instructions it can include pertain to a given tape device. The
-ASCII-format file must reside in the F</usr/afs/backup> directory on the
+ASCII-format file must reside in the F<{{ afsbackupdir }}> directory on the
 Tape Coordinator machine if it exists.
 
 The F<CFG_I<device_name>> file does not replace the
-F</usr/afs/backup/tapeconfig> file, a single copy of which still must
+F<{{ afsbackupdir }}/tapeconfig> file, a single copy of which still must
 exist on every Tape Coordinator machine.
 
 To enable the Tape Coordinator to locate the configuration file, construct
@@ -222,7 +222,7 @@ dump> operation.
 
 When the value is C<YES>, the backup data file's complete pathname must
 appear (instead of a tape drive device name) in the third field of the
-corresponding port offset entry in the local F</usr/afs/backup/tapeconfig>
+corresponding port offset entry in the local F<{{ afsbackupdir }}/tapeconfig>
 file. If the field instead refers to a tape device, dump operations appear
 to succeed but are inoperative. It is not possible to restore data that
 was accidently dumped to a tape device while the C<FILE> instruction was
@@ -332,7 +332,7 @@ indicated order:
 =item *
 
 The tape device or backup data file's pathname, as recorded in the
-F</usr/afs/backup/tapeconfig> file.
+F<{{ afsbackupdir }}/tapeconfig> file.
 
 =item *
 
@@ -480,7 +480,7 @@ the following parameters:
 =item *
 
 The tape device pathname (as specified in the
-F</usr/afs/backup/tapeconfig> file).
+F<{{ afsbackupdir }}/tapeconfig> file).
 
 =item *
 
@@ -491,7 +491,7 @@ The tape operation (always unmount).
 =head1 PRIVILEGE REQUIRED
 
 The file is protected by UNIX mode bits. Creating the file requires the
-C<w> (write) and C<x> (execute) permissions on the F</usr/afs/backup>
+C<w> (write) and C<x> (execute) permissions on the F<{{ afsbackupdir }}>
 directory. Editing the file requires the C<w> (write) permission on the
 file.
 
@@ -505,23 +505,23 @@ be sure to adapt them to the cell's needs and equipment.
 =head2 Example F<CFG_I<device_name>> File for Stackers
 
 In this example, the administrator creates the following entry for a tape
-stacker called C<stacker0.1> in the F</usr/afs/backup/tapeconfig> file. It
+stacker called C<stacker0.1> in the F<{{ afsbackupdir }}/tapeconfig> file. It
 has port offset 0.
 
    2G   5K   /dev/stacker0.1   0
 
 The administrator includes the following five lines in the
-F</usr/afs/backup/CFG_stacker0.1> file. To review the meaning of each
+F<{{ afsbackupdir }}/CFG_stacker0.1> file. To review the meaning of each
 instruction, see L</DESCRIPTION>.
 
-   MOUNT /usr/afs/backup/stacker0.1
-   UNMOUNT /usr/afs/backup/stacker0.1
+   MOUNT {{ afsbackupdir }}/stacker0.1
+   UNMOUNT {{ afsbackupdir }}/stacker0.1
    AUTOQUERY NO
    ASK NO
    NAME_CHECK NO
 
 Finally, the administrator writes the following executable routine in the
-F</usr/afs/backup/stacker0.1> file referenced by the C<MOUNT> and
+F<{{ afsbackupdir }}/stacker0.1> file referenced by the C<MOUNT> and
 C<UNMOUNT> instructions in the F<CFG_stacker0.1> file.
 
    #! /bin/csh -f
@@ -583,21 +583,21 @@ operation).
 =head2 Example F<CFG_I<device_name>> File for Dumping to a Data File
 
 In this example, the administrator creates the following entry for a
-backup data file called F<HSM_device> in the F</usr/afs/backup/tapeconfig>
+backup data file called F<HSM_device> in the F<{{ afsbackupdir }}/tapeconfig>
 file. It has port offset 20.
 
    1G   0K   /dev/HSM_device   20
 
 The administrator includes the following lines in the
-F</usr/afs/backup/CFG_HSM_device> file. To review the meaning of each
+F<{{ afsbackupdir }}/CFG_HSM_device> file. To review the meaning of each
 instruction, see L</DESCRIPTION>.
 
-   MOUNT /usr/afs/backup/file
+   MOUNT {{ afsbackupdir }}/file
    FILE YES
    ASK NO
 
 Finally, the administrator writes the following executable routine in the
-F</usr/afs/backup/file> file referenced by the C<MOUNT> instruction in the
+F<{{ afsbackupdir }}/file> file referenced by the C<MOUNT> instruction in the
 F<CFG_HSM_device> file, to control how the Tape Coordinator handles the
 file.
 

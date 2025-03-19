@@ -23,10 +23,10 @@ local disk a version of the Backup Database previously written to tape by
 using the B<backup savedb> command.
 
 (If the C<FILE YES> instruction appears in the
-F</usr/afs/backup/CFG_I<device_name>> file associated with the specified
+F<{{ afsbackupdir }}/CFG_I<device_name>> file associated with the specified
 port offset, then the B<backup restoredb> command restores data from the
 backup data file listed for that port offset in the Tape Coordinator's
-F</usr/afs/backup/tapeconfig> file, instead of from tape. For the sake of
+F<{{ afsbackupdir }}/tapeconfig> file, instead of from tape. For the sake of
 clarity, the following text refers to tapes only, but the Backup System
 handles backup data files in much the same way.)
 
@@ -46,7 +46,7 @@ same dump, the Backup System retains the one in the existing database.
 
 The Tape Coordinator's default response to this command is to access the
 first tape it needs by invoking the C<MOUNT> instruction in the local
-F</usr/afs/backup/CFG_I<device_name>> file, or by prompting the backup
+F<{{ afsbackupdir }}/CFG_I<device_name>> file, or by prompting the backup
 operator to insert the tape if there is no C<MOUNT> instruction. However,
 if the C<AUTOQUERY NO> instruction appears in the F<CFG_I<device_name>>
 file, or if the issuer of the B<butc> command included the B<-noautoquery>
@@ -76,7 +76,7 @@ tapes for this operation.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+F<{{ afsconfdir }}/KeyFile> file. The B<backup> command interpreter presents
 it to the Backup Server, Volume Server and VL Server during mutual
 authentication. Do not combine this flag with the B<-cell> argument. For
 more details, see L<backup(8)>.
@@ -102,7 +102,7 @@ Tape Coordinator with port offset 0:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on every
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on every
 machine where the Backup Server is running, or must be logged onto a
 server machine as the local superuser C<root> if the B<-localauth> flag is
 included.

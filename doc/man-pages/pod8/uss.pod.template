@@ -64,7 +64,7 @@ run under the effective user ID.
 
 Names the cell in which to run the command. It is acceptable to abbreviate
 the cell name to the shortest form that distinguishes it from the other
-entries in the F</usr/vice/etc/CellServDB> file on the local machine. If
+entries in the F<{{ viceetcdir }}/CellServDB> file on the local machine. If
 the B<-cell> argument is omitted, the command interpreter determines the
 name of the local cell by reading the following in order:
 
@@ -76,7 +76,7 @@ The value of the AFSCELL environment variable.
 
 =item *
 
-The local F</usr/vice/etc/ThisCell> file.
+The local F<{{ viceetcdir }}/ThisCell> file.
 
 =back
 

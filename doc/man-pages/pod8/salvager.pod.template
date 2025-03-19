@@ -16,7 +16,7 @@ salvager - Initializes the Salvager component of the fs process
 
 The B<salvager> command initializes the Salvager component of the C<fs>
 process. In the conventional configuration, its binary file is located in
-the F</usr/afs/bin> directory on a file server machine.
+the F<{{ afssrvlibexecdir }}> directory on a file server machine.
 
 =include fragments/salvager-description.pod
 
@@ -29,7 +29,7 @@ the F</usr/afs/bin> directory on a file server machine.
 The following command instructs the Salvager to attempt to salvage the
 volume with volume ID 258347486 on F</vicepg> on the local machine.
 
-   % /usr/afs/bin/salvager -partition /vicepg -volumeid 258347486
+   % {{ afssrvlibexecdir }}/salvager -partition /vicepg -volumeid 258347486
 
 =head1 PRIVILEGE REQUIRED
 

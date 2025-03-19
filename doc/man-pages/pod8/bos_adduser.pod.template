@@ -19,7 +19,7 @@ B<bos addu> S<<< B<-s> <I<machine name>> >>> S<<< B<-u> <I<user names>>+ >>>
 =head1 DESCRIPTION
 
 The bos adduser command adds each user name specified with the B<-user>
-argument to the F</usr/afs/etc/UserList> file on the machine named by the
+argument to the F<{{ afsconfdir }}/UserList> file on the machine named by the
 B<-server> argument. It is the issuer's responsibility to verify that an
 entry for the user exists in the Authentication and Protection Databases.
 
@@ -30,19 +30,19 @@ entry for the user exists in the Authentication and Protection Databases.
 =item B<-server> <I<machine name>>
 
 Indicates the server machine on which to change the
-F</usr/afs/etc/UserList> file. Identify the machine by IP address or its
+F<{{ afsconfdir }}/UserList> file. Identify the machine by IP address or its
 host name (either fully-qualified or abbreviated unambiguously). For
 details, see L<bos(8)>.
 
 In cells that use the Update Server to distribute the contents of the
-F</usr/afs/etc> directory, it is conventional to specify only the system
+F<{{ afsconfdir }}> directory, it is conventional to specify only the system
 control machine as a value for the B<-server> argument. Otherwise, repeat
 the command for each file server machine. For further discussion, see
 L<bos(8)>.
 
 =item B<-user> <I<user names>>+
 
-Specifies each user name to insert into the F</usr/afs/etc/UserList> file.
+Specifies each user name to insert into the F<{{ afsconfdir }}/UserList> file.
 
 =item B<-cell> <I<cell name>>
 
@@ -58,7 +58,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
@@ -74,14 +74,14 @@ ignored.
 =head1 EXAMPLES
 
 The following command adds the user names C<pat> and C<smith> to the
-F</usr/afs/etc/UserList> file on the machine C<fs1.example.com> (the system
+F<{{ afsconfdir }}/UserList> file on the machine C<fs1.example.com> (the system
 control machine).
 
    % bos adduser -server fs1.example.com -user pat smith
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the
 machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.

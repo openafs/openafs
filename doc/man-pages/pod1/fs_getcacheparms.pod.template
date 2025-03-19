@@ -20,7 +20,7 @@ The B<fs getcacheparms> command displays the current size of the cache
 (which can be in memory or on disk), and the amount currently in use.
 
 The reported statistics are from kernel memory, so the reported size can
-differ from the setting specified in the F</usr/vice/etc/cacheinfo> file
+differ from the setting specified in the F<{{ viceetcdir }}/cacheinfo> file
 on a machine using a disk cache, if the B<fs setcachesize> command has
 been used to alter cache size.
 

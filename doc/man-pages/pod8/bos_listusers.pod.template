@@ -19,7 +19,7 @@ B<bos listu> S<<< B<-s> <I<machine name>> >>> S<<< [B<-c> <I<cell name>>] >>> [B
 =head1 DESCRIPTION
 
 The B<bos listusers> command lists the user names from the
-F</usr/afs/etc/UserList> file on the file server machine named by the
+F<{{ afsconfdir }}/UserList> file on the file server machine named by the
 B<-server> argument. The users are authorized to issue privileged B<bos>
 and B<vos> commands.
 
@@ -54,7 +54,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see

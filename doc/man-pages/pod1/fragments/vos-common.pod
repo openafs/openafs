@@ -12,7 +12,7 @@ L<vos(1)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it
+F<{{ afsconfdir }}/KeyFile> file. The B<vos> command interpreter presents it
 to the Volume Server and Volume Location Server during mutual
 authentication. Do not combine this flag with the B<-cell> argument or
 B<-noauth> flag. For more details, see L<vos(1)>.
@@ -39,8 +39,8 @@ versions 1.4.8 or later and 1.5.35 or later.
 =item B<-config> <I<configuration directory>>
 
 Set the location of the configuration directory to be used. This defaults to
-F</usr/vice/etc>, except if B<-localauth> is specified, in which case the
-default is F</usr/afs/etc>. This option allows the use of alternative
+F<{{ viceetcdir }}>, except if B<-localauth> is specified, in which case the
+default is F<{{ afsconfdir }}>. This option allows the use of alternative
 configuration locations for testing purposes.
 
 =item B<-help>

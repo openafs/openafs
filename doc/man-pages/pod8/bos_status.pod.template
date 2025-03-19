@@ -26,7 +26,7 @@ server machine named by the B<-server> argument, either
 =item *
 
 All of the AFS server processes listed in the
-F</usr/afs/local/BosConfig> file
+F<{{ afsbosconfigdir }}/BosConfig> file
 
 =item *
 
@@ -69,7 +69,7 @@ flag. For more details, see L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file. The B<bos> command
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file. The B<bos> command
 interpreter presents the ticket to the BOS Server during mutual
 authentication. Do not combine this flag with the B<-cell> or
 B<-noauth> options. For more details, see L<bos(8)>.
@@ -130,7 +130,7 @@ indicated message appears in its entry:
 =item *
 
 C<has core file>. The process failed and created a core
-file in the F</usr/afs/logs> directory. If the BOS Server was
+file in the F<{{ afslogsdir }}> directory. If the BOS Server was
 able to restart the process after the failure, the primary status is
 C<currently running normally>.
 
@@ -247,12 +247,12 @@ B<fs1.example.com>.
       Last exit at Wed Jan 7 5:34:49 1998
       Last error exit at Wed Jan 7 5:34:49 1998, due to shutdown
           request
-      Command 1 is '/usr/afs/bin/fileserver'
-      Command 2 is '/usr/afs/bin/volserver'
-      Command 3 is '/usr/afs/bin/salvager'
+      Command 1 is '{{ afssrvlibexecdir }}/fileserver'
+      Command 2 is '{{ afssrvlibexecdir }}/volserver'
+      Command 3 is '{{ afssrvlibexecdir }}/salvager'
    Instance ptserver, (type is simple) currently running normally.
       Process last started at Tue Jan 6 8:29:19 1998 (1 proc starts)
-      Command 1 is '/usr/afs/bin/ptserver'
+      Command 1 is '{{ afssrvlibexecdir }}/ptserver'
 
 =head1 PRIVILEGE REQUIRED
 

@@ -23,7 +23,7 @@ encryption key.
 
 The B<kas> command interpreter generates the octal key by using an
 encryption algorithm on the combination of the specified string and the
-name of the local cell (as recorded in the local F</usr/vice/etc/ThisCell>
+name of the local cell (as recorded in the local F<{{ viceetcdir }}/ThisCell>
 file). Use the B<-cell> argument to convert a string into a key
 appropriate for a cell other than the local one.
 
@@ -56,7 +56,7 @@ First, the value of the environment variable AFSCELL.
 
 =item *
 
-Second, the cellname in the F</usr/vice/etc/ThisCell> file on the local
+Second, the cellname in the F<{{ viceetcdir }}/ThisCell> file on the local
 machine.
 
 =back

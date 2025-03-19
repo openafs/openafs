@@ -140,7 +140,7 @@ convention, at F</afs/I<foreign_cellname>>). The mount point enables local
 users to access the foreign cell's filespace, assuming they have the
 necessary permissions on the ACL of the volume's root directory and that
 there is an entry for the foreign cell in each local client machine's
-F</usr/vice/etc/CellServDB> file. In the output of the B<fs lsmount>
+F<{{ viceetcdir }}/CellServDB> file. In the output of the B<fs lsmount>
 command, the cell name and a colon (C<:>) appear between the initial
 number sign and the volume name in a regular cellular mount point name.
 
@@ -174,7 +174,7 @@ specify the appropriate volume ID number.
 Names the cell in which the volume resides (creates a cellular mount
 point). Provide the fully qualified domain name, or a shortened form that
 disambiguates it from the other cells listed in the local
-F</usr/vice/etc/CellServDB> file.
+F<{{ viceetcdir }}/CellServDB> file.
 
 If this argument is omitted, no cell indicator appears in the mount
 point. When the Cache Manager interprets it, it assumes that the volume

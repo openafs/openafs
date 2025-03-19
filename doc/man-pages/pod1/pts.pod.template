@@ -97,7 +97,7 @@ they are described here in greater detail.
 
 Names the cell in which to run the command. It is acceptable to abbreviate
 the cell name to the shortest form that distinguishes it from the other
-entries in the F</usr/vice/etc/CellServDB> file on the local machine. If
+entries in the F<{{ viceetcdir }}/CellServDB> file on the local machine. If
 the B<-cell> argument is omitted, the command interpreter determines the
 name of the local cell by reading the following in order:
 
@@ -109,17 +109,17 @@ The value of the AFSCELL environment variable.
 
 =item *
 
-The local F</usr/vice/etc/ThisCell> file.
+The local F<{{ viceetcdir }}/ThisCell> file.
 
 =item *
 
-The local F</usr/afs/etc/ThisCell> file.
+The local F<{{ afsconfdir }}/ThisCell> file.
 
 =back
 
 Do not combine the B<-cell> and B<-localauth> options. A command on which
 the B<-localauth> flag is included always runs in the local cell (as
-defined in the server machine's local F</usr/afs/etc/ThisCell> file),
+defined in the server machine's local F<{{ afsconfdir }}/ThisCell> file),
 whereas a command on which the B<-cell> argument is included runs in the
 specified foreign cell.
 
@@ -134,11 +134,11 @@ interpreter searches for the configuration information in the following order:
 
 =item *
 
-The F</usr/vice/etc> directory.
+The F<{{ viceetcdir }}> directory.
 
 =item *
 
-The F</usr/afs/etc> directory.
+The F<{{ afsconfdir }}> directory.
 
 =back
 
@@ -181,12 +181,12 @@ transactions being done.
 =item B<-localauth>
 
 Constructs a server ticket using the server encryption key with the
-highest key version number in the local F</usr/afs/etc/KeyFile> file. The
+highest key version number in the local F<{{ afsconfdir }}/KeyFile> file. The
 B<pts> command interpreter presents the ticket, which never expires, to
 the BOS Server during mutual authentication.
 
 Use this flag only when issuing a command on a server machine; client
-machines do not usually have a F</usr/afs/etc/KeyFile> file.  The issuer
+machines do not usually have a F<{{ afsconfdir }}/KeyFile> file.  The issuer
 of a command that includes this flag must be logged on to the server
 machine as the local superuser C<root>. The flag is useful for commands
 invoked by an unattended application program, such as a process controlled
@@ -196,7 +196,7 @@ C<root>.
 
 Do not combine the B<-cell> and B<-localauth> options. A command on which
 the B<-localauth> flag is included always runs in the local cell (as
-defined in the server machine's local F</usr/afs/etc/ThisCell> file),
+defined in the server machine's local F<{{ afsconfdir }}/ThisCell> file),
 whereas a command on which the B<-cell> argument is included runs in the
 specified foreign cell. Also, do not combine the B<-localauth> and
 B<-noauth> flags.

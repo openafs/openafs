@@ -9,7 +9,7 @@ Server monitors on its server machine, and thus defines which AFS server
 processes run on the machine. It specifies how the BOS Server reacts when
 a process fails, and also defines the times at which the BOS Server
 automatically restarts processes as part of performance maintenance.  The
-F</usr/afs/local/BosConfig> file must be present on each AFS server machine.
+F<{{ afsbosconfigdir }}/BosConfig> file must be present on each AFS server machine.
 
 A server process entry in the F<BosConfig> file records the following
 information:
@@ -123,7 +123,7 @@ flag C<Run>. The default setting is Sunday at 4:00 a.m.
 =item *
 
 The I<binary restart> time at which the BOS Server restarts any server
-process for which the time stamp on the binary file in the F</usr/afs/bin>
+process for which the time stamp on the binary file in the F<{{ afssrvlibexecdir }}>
 directory is later than the last restart time for the process. The default
 is 5:00 a.m.
 

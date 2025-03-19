@@ -18,11 +18,11 @@ B<upserver> [<I<directory>>+] S<<< [B<-crypt> <I<directory>>+] >>>
 
 The B<upserver> command initializes the server portion of the Update
 Server (the C<upserver> process). In the conventional configuration, its
-binary file is located in the F</usr/afs/bin> directory on a file server
+binary file is located in the F<{{ afssrvlibexecdir }}> directory on a file server
 machine.
 
 The B<upserver> command is not normally issued at the command shell prompt
-but rather placed into a file server machine's F</usr/afs/local/BosConfig>
+but rather placed into a file server machine's F<{{ afsbosconfigdir }}/BosConfig>
 file with the B<bos create> command. If it is ever issued at the command
 shell prompt, the issuer must be logged onto a database server machine as
 the local superuser C<root>.
@@ -41,7 +41,7 @@ process only fulfills requests for encrypted transfer.
 
 The B<upclient> and B<upserver> processes always mutually authenticate,
 whether or not the data they pass is encrypted; they use the key with the
-highest key version number in the F</usr/afs/etc/KeyFile> file to
+highest key version number in the F<{{ afsconfdir }}/KeyFile> file to
 construct a server ticket for mutual authentication.
 
 This command does not use the syntax conventions of the AFS command
@@ -50,7 +50,7 @@ suites. Provide the command name and all option names in full.
 =head1 CAUTIONS
 
 Do not use the Update Server to distribute the contents of the
-F</usr/afs/etc> directory without the B<-crypt> flag.  The contents of
+F<{{ afsconfdir }}> directory without the B<-crypt> flag.  The contents of
 this directory are sensitive.
 
 =head1 OPTIONS
@@ -102,11 +102,11 @@ ignored.
 The following example bos create command defines and starts an B<upserver>
 process on the host machine C<fs1.example.com>. The last parameter (enclosed
 in quotes) instructs the B<upserver> process to distribute the contents of
-the F</usr/afs/bin> directory in unencrypted form and the contents of the
-F</usr/afs/etc> directory in encrypted form.
+the F<{{ afssrvlibexecdir }}> directory in unencrypted form and the contents of the
+F<{{ afsconfdir }}> directory in encrypted form.
 
    % bos create  -server fs1.example.com -instance upserver -type simple \
-       -cmd "/usr/afs/bin/upserver /usr/afs/bin -crypt /usr/afs/etc"
+       -cmd "{{ afssrvlibexecdir }}/upserver {{ afssrvlibexecdir }} -crypt {{ afsconfdir }}"
 
 =head1 PRIVILEGE REQUIRED
 

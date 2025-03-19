@@ -24,12 +24,12 @@ The B<bos getdate> command displays the time stamps on the current
 version,C< .BAK> version (if any) and C<.OLD> version (if any) of each
 binary file named by the B<-file> argument. (The BOS Server automatically
 creates C<.BAK> and C<.OLD> versions when new binaries are installed with
-the B<bos install> command.) The files must reside in the F</usr/afs/bin>
+the B<bos install> command.) The files must reside in the F<{{ afssrvlibexecdir }}>
 directory on the server machine named by the B<-server> argument unless
 the B<-dir> argument indicates an alternate directory.
 
 To revert to the C<.BAK> version of a binary, use the B<bos uninstall>
-command. To remove obsolete binary files from the F</usr/afs/bin>
+command. To remove obsolete binary files from the F<{{ afssrvlibexecdir }}>
 directory, use the B<bos prune> command.
 
 =head1 OPTIONS
@@ -55,7 +55,7 @@ Names each binary file to list.
 
 Specifies the complete pathname of the local disk directory containing
 each file named by the B<-file> argument. It is necessary only if the
-files are not in the F</usr/afs/bin> directory.
+files are not in the F<{{ afssrvlibexecdir }}> directory.
 
 =item B<-cell> <I<cell name>>
 
@@ -71,7 +71,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
@@ -97,7 +97,7 @@ The following command examines the time stamps on the files with basename
 C<kaserver> on the machine C<fs2.example.com>:
 
    % bos getdate -server fs2.example.com -file kaserver
-   File /usr/afs/bin/kaserver dated Mon Jan 4 10:00:36 1999.
+   File {{ afssrvlibexecdir }}/kaserver dated Mon Jan 4 10:00:36 1999.
    .BAK file dated Wed Dec 9 18:55:04 1998, no .OLD file.
 
 =head1 PRIVILEGE REQUIRED

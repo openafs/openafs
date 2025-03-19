@@ -8,6 +8,7 @@ all: $(BOOK).pdf $(BOOK).epub $(BOOK).mobi
 include @TOP_OBJDIR@/src/config/Makefile.config
 VERSION=version
 include @TOP_OBJDIR@/src/config/Makefile.version
+include @TOP_OBJDIR@/doc/man-pages/Makefile.vars
 
 SRCS     = $(BOOK).xml preface.xml $(VERSION).xml \
 	   entities.dtd sect1.xml sect3.xml sect5.xml sect8.xml
@@ -21,7 +22,7 @@ DOC_MAN_PAGES = $(TOP_SRCDIR)/../doc/man-pages
 XSL_FLAGS = --path '@abs_builddir@'
 
 entities.dtd sect1.xml sect3.xml sect5.xml sect8.xml:
-	$(PERL) $(DOC_MAN_PAGES)/generate-pod
+	$(PERL) $(DOC_MAN_PAGES)/generate-pod $(GENERATE_POD_FLAGS)
 	$(PERL) $(srcdir)/generate-xml.pl $(TOP_SRCDIR) $(TOP_OBJDIR)
 
 $(BOOK).pdf: $(SRCS)

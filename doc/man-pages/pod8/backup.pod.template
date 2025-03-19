@@ -101,10 +101,10 @@ attached, or has sufficient disk space to accommodate one or more backup
 data files on its local disk.
 
 Each Tape Coordinator must be registered in the Backup Database and in the
-F</usr/afs/backup/tapeconfig> configuration file on the Tape Coordinator
+F<{{ afsbackupdir }}/tapeconfig> configuration file on the Tape Coordinator
 machine's local disk, and information in the two places must be consistent
 for proper Backup System performance. The optional
-F</usr/afs/backup/CFG_I<device_name>> for each Tape Coordinator records
+F<{{ afsbackupdir }}/CFG_I<device_name>> for each Tape Coordinator records
 information used to automate its operation.
 
 =back
@@ -129,7 +129,7 @@ described here in greater detail.
 
 Names the cell in which to run the command. It is acceptable to abbreviate
 the cell name to the shortest form that distinguishes it from the other
-entries in the F</usr/vice/etc/CellServDB> file on the local machine. If
+entries in the F<{{ viceetcdir }}/CellServDB> file on the local machine. If
 the B<-cell> argument is omitted, the command interpreter determines the
 name of the local cell by reading the following in order:
 
@@ -141,13 +141,13 @@ The value of the AFSCELL environment variable.
 
 =item *
 
-The local F</usr/vice/etc/ThisCell> file.
+The local F<{{ viceetcdir }}/ThisCell> file.
 
 =back
 
 Do not combine the B<-cell> and B<-localauth> options. A command on which
 the B<-localauth> flag is included always runs in the local cell (as
-defined in the server machine's local F</usr/afs/etc/ThisCell> file),
+defined in the server machine's local F<{{ afsconfdir }}/ThisCell> file),
 whereas a command on which the B<-cell> argument is included runs in the
 specified foreign cell.
 
@@ -166,26 +166,26 @@ prints the help message.
 =item B<-localauth>
 
 Constructs a server ticket using the server encryption key with the
-highest key version number in the local F</usr/afs/etc/KeyFile>
-or F</usr/afs/etc/KeyFileExt> file. The
+highest key version number in the local F<{{ afsconfdir }}/KeyFile>
+or F<{{ afsconfdir }}/KeyFileExt> file. The
 B<backup> command interpreter presents the ticket, which never expires, to
 the Backup Server, Volume Server and Volume Location (VL) Server during
 mutual authentication.
 
 Use this flag only when issuing a command on a server machine; client
-machines do not usually have a F</usr/afs/etc/KeyFile> or
-F</usr/afs/etc/KeyFileExt> file.  The issuer
+machines do not usually have a F<{{ afsconfdir }}/KeyFile> or
+F<{{ afsconfdir }}/KeyFileExt> file.  The issuer
 of a command that includes this flag must be logged on to the server
 machine as the local superuser C<root>. The flag is useful for commands
 invoked by an unattended application program, such as a process controlled
 by the UNIX B<cron> utility or by a cron entry in the machine's
-F</usr/afs/local/BosConfig> file. It is also useful if an administrator is
+F<{{ afsbosconfigdir }}/BosConfig> file. It is also useful if an administrator is
 unable to authenticate to AFS but is logged in as the local superuser
 C<root>.
 
 Do not combine the B<-cell> and B<-localauth> options. A command on which
 the B<-localauth> flag is included always runs in the local cell (as
-defined in the server machine's local F</usr/afs/etc/ThisCell> file),
+defined in the server machine's local F<{{ afsconfdir }}/ThisCell> file),
 whereas a command on which the B<-cell> argument is included runs in the
 specified foreign cell.
 
@@ -271,7 +271,7 @@ prompt:
 =head1 PRIVILEGE REQUIRED
 
 To issue any backup command that accesses the Backup Database only, the
-issuer must be listed in the F</usr/afs/etc/UserList> file on every
+issuer must be listed in the F<{{ afsconfdir }}/UserList> file on every
 machine where the Backup Server is running. To issue any B<backup> command
 that accesses volume data, the issuer must appear in the F<UserList> file
 on every Backup Server machine, every Volume Location (VL) Server machine,

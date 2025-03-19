@@ -55,7 +55,7 @@ with the addresses C<192.12.107.214> and C<10.47.11.17>.
 
 =head1 PRIVILEGE REQUIRED
 
-Issuer must be listed in the F</usr/afs/etc/UserList> file on each database
+Issuer must be listed in the F<{{ afsconfdir }}/UserList> file on each database
 server machine.
 
 =head1 SEE ALSO

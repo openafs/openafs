@@ -8,7 +8,7 @@ all: man html
 
 .PHONY: pod
 pod:
-	$(PERL) $(srcdir)/generate-pod
+	$(PERL) $(srcdir)/generate-pod $(GENERATE_POD_FLAGS)
 
 .PHONY: man
 man: pod
@@ -19,17 +19,16 @@ html: pod
 	$(PERL) $(srcdir)/generate-html --stylesheet=$(srcdir)/style.css
 
 dest: man
-	chmod +x install-man
 	$(INSTALL) -d $(DEST)/man/man1
 	$(INSTALL) -d $(DEST)/man/man3
 	$(INSTALL) -d $(DEST)/man/man5
 	$(INSTALL) -d $(DEST)/man/man8
 	set -e; for M in $(MAN_PAGES); do \
-	    ./install-man $$M $(DEST)/man/$$M ; \
+	    $(INSTALL_DATA) $$M $(DEST)/man/$$M ; \
 	done
 	set -e; if [ "x@INSTALL_KAUTH@" = "xyes" ] ; then \
 	    for M in $(MAN_PAGES_KAUTH); do \
-		./install-man $$M $(DEST)/man/$$M ; \
+		$(INSTALL_DATA) $$M $(DEST)/man/$$M ; \
 	    done; \
 	    $(LN) -fs klog.1 $(DEST)/man/man1/klog.krb.1 ; \
 	    $(LN) -fs pagsh.1 $(DEST)/man/man1/pagsh.krb.1 ; \
@@ -43,17 +42,16 @@ dest: man
 	fi
 
 install: man
-	chmod +x install-man
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man3
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man5
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
 	set -e; for M in $(MAN_PAGES); do \
-	    ./install-man $$M $(DESTDIR)$(mandir)/$$M ; \
+	    $(INSTALL_DATA) $$M $(DESTDIR)$(mandir)/$$M ; \
 	done;
 	set -e; if [ "x@INSTALL_KAUTH@" = "xyes" ] ; then \
 	    for M in $(MAN_PAGES_KAUTH); do \
-		./install-man $$M $(DESTDIR)$(mandir)/$$M ; \
+		$(INSTALL_MAN) $$M $(DESTDIR)$(mandir)/$$M ; \
 	    done; \
 	    $(LN) -fs klog.1 $(DESTDIR)$(mandir)man1/klog.krb.1 ; \
 	    $(LN) -fs pagsh.1 $(DESTDIR)$(mandir)/man1/pagsh.krb.1 ; \

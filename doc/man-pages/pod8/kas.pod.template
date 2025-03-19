@@ -84,7 +84,7 @@ machine where it runs:
 
 =item *
 
-The Authentication Database (F</usr/afs/db/kaserver.DB0>) stores the
+The Authentication Database (F<{{ afsdbdir }}/kaserver.DB0>) stores the
 information used to provide AFS authentication services to users and
 servers, including the password scrambled as an encryption key. The
 reference page for the B<kas examine> command describes the information in
@@ -92,7 +92,7 @@ a database entry.
 
 =item *
 
-An auxiliary file (F</usr/afs/local/kaauxdb> by default) that tracks how
+An auxiliary file (F<{{ afslocaldir }}/kaauxdb> by default) that tracks how
 often the user has provided an incorrect password to the local
 Authentication Server. The reference page for the B<kas setfields> command
 describes how the Authentication Server uses this file to enforce the
@@ -133,7 +133,7 @@ combine this argument with the B<-noauth> flag.
 
 Names the cell in which to run the command. It is acceptable to abbreviate
 the cell name to the shortest form that distinguishes it from the other
-entries in the F</usr/vice/etc/CellServDB> file on the local machine. If
+entries in the F<{{ viceetcdir }}/CellServDB> file on the local machine. If
 the B<-cell> argument is omitted, the command interpreter determines the
 name of the local cell by reading the following in order:
 
@@ -145,7 +145,7 @@ The value of the AFSCELL environment variable.
 
 =item *
 
-The local F</usr/vice/etc/ThisCell> file.
+The local F<{{ viceetcdir }}/ThisCell> file.
 
 =back
 
@@ -185,7 +185,7 @@ B<-noauth> flag.
 
 Establishes a connection with the Authentication Server running on each
 specified database server machine, instead of on each machine listed in
-the local F</usr/vice/etc/CellServDB> file. In either case, the B<kas>
+the local F<{{ viceetcdir }}/CellServDB> file. In either case, the B<kas>
 command interpreter then chooses one of the machines at random to contact
 for execution of each subsequent command. The issuer can abbreviate the
 machine name to the shortest form that allows the local name service to

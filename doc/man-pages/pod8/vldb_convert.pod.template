@@ -34,16 +34,16 @@ F<CellServDB> or DNS.
 
 =item 2.
 
-Backup the VLDB file F</usr/afs/db/vldb.DB0> on the sync site to a safe
+Backup the VLDB file F<{{ afsdbdir }}/vldb.DB0> on the sync site to a safe
 place. Typically, the sync site if the machine with the lowest IP address.
 
 =item 3.
 
-Remove the F</usr/afs/db/vldb.DBSYS1> file from all cell server machines.
+Remove the F<{{ afsdbdir }}/vldb.DBSYS1> file from all cell server machines.
 
 =item 4.
 
-Remove the F</usr/afs/db/vldb.DB0> file from the non-sync site server
+Remove the F<{{ afsdbdir }}/vldb.DB0> file from the non-sync site server
 machines.
 
 =item 5.
@@ -51,7 +51,7 @@ machines.
 Run the B<vldb_convert> command on the VLDB file using the following
 command:
 
-   # vldb_convert -path /usr/afs/db/vldb.DB0
+   # vldb_convert -path {{ afsdbdir }}/vldb.DB0
 
 =item 6.
 
@@ -98,7 +98,7 @@ version 3.1, 3.2, 3.3, or 3.4 respectively.
 
 =item B<-path> <I<path to VLDB file>>
 
-Specifies the path the VLDB file. This defaults to F</usr/afs/db/vldb.DB0>
+Specifies the path the VLDB file. This defaults to F<{{ afsdbdir }}/vldb.DB0>
 and only needs to be used if the VLDB file is not in the default path..
 
 =item B<-showversion>
@@ -119,7 +119,7 @@ ignored.
 =head1 PRIVILEGE REQUIRED
 
 The issuer must have read and write access to the file
-F</usr/afs/db/vldb.DB0>. This usually means that root access is required
+F<{{ afsdbdir }}/vldb.DB0>. This usually means that root access is required
 on the cell server machines.
 
 =head1 SEE ALSO

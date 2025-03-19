@@ -221,7 +221,7 @@ being created.
 If the following message appears instead of the previously listed
 information, it indicates that the File Server is unable to attach the
 volume, perhaps because it is seriously corrupted. The F<FileLog> and
-F<VolserLog> log files in the F</usr/afs/logs> directory on the file
+F<VolserLog> log files in the F<{{ afslogsdir }}> directory on the file
 server machine possibly provide additional information; use the B<bos
 getlog> command to display them.
 

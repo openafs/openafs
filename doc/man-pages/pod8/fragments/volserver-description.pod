@@ -1,5 +1,5 @@
 The Volume Server records a trace of its activity in the
-F</usr/afs/logs/VolserLog> file. Use the B<bos getlog> command to display
+F<{{ afslogsdir }}/VolserLog> file. Use the B<bos getlog> command to display
 the contents of the file.
 
 The Volume Server processes the B<vos> commands that administrators use to

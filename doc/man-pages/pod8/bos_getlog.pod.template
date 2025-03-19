@@ -20,7 +20,7 @@ B<bos getl> S<<< B<-s> <I<machine name>> >>> S<<< B<-f> <I<log file to examine>>
 
 The B<bos getlog> command displays on the standard output stream the
 specified log file from the machine named by the B<-server> argument. The
-BOS Server fetches the log file from the F</usr/afs/logs> directory unless
+BOS Server fetches the log file from the F<{{ afslogsdir }}> directory unless
 an alternate pathname is provided as part of the B<-file> argument.
 
 =head1 CAUTIONS
@@ -46,7 +46,7 @@ fully-qualified or abbreviated unambiguously). For details, see L<bos(8)>.
 =item B<-file> <I<log file to examine>>
 
 Names the log file to display. If a filename only is provided, the BOS
-Server fetches the log file from the F</usr/afs/logs> directory; the
+Server fetches the log file from the F<{{ afslogsdir }}> directory; the
 standard values are:
 
 =over 4
@@ -87,7 +87,7 @@ The Volume Server (B<volserver>) log file.
 
 If a pathname and filename are provided, the log file is retrieved from
 the indicated directory. Partial pathnames are interpreted relative to the
-F</usr/afs/logs> directory.
+F<{{ afslogsdir }}> directory.
 
 =item B<-cell> <I<cell name>>
 
@@ -103,7 +103,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<bos> command interpreter presents the
+F<{{ afsconfdir }}/KeyFile> file. The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
 L<bos(8)>.
@@ -140,7 +140,7 @@ C<fs3.example.com>:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the
 machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.

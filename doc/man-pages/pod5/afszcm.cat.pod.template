@@ -10,7 +10,7 @@ standard UNIX catalog utilities to translate Cache Manager operation codes
 into character strings as it writes traces in the B<fstrace> trace log,
 which makes the log more readable.
 
-The conventional location for the file is the F</usr/vice/etc/C/>
+The conventional location for the file is the F<{{ viceetcdir }}/C/>
 directory. It can be placed in another directory if the NLSPATH and LANG
 environment variables are set appropriately.
 

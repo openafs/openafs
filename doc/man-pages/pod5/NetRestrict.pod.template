@@ -20,14 +20,14 @@ not significant.
 
 =head2 Client NetRestrict
 
-The F<NetRestrict> file, if present in a client machine's F</usr/vice/etc>
+The F<NetRestrict> file, if present in a client machine's F<{{ viceetcdir }}>
 directory, defines the IP addresses of the interfaces that the local Cache
 Manager does not register with a File Server when first establishing a
 connection to it. For an explanation of how the File Server uses the
 registered interfaces, see L<NetInfo(5)>.
 
 As it initializes, the Cache Manager constructs a list of interfaces to
-register, from the F</usr/vice/etc/NetInfo> file if it exists, or from the
+register, from the F<{{ viceetcdir }}/NetInfo> file if it exists, or from the
 list of interfaces configured with the operating system otherwise.  The
 Cache Manager then removes from the list any addresses that appear in the
 F<NetRestrict> file, if it exists. The Cache Manager records the resulting
@@ -38,7 +38,7 @@ File Servers, use the B<fs getclientaddrs> command.
 
 =head2 Server NetRestrict
 
-The F<NetRestrict> file, if present in the F</usr/afs/local> directory,
+The F<NetRestrict> file, if present in the F<{{ afslocaldir }}> directory,
 defines the following:
 
 =over 4
@@ -58,11 +58,11 @@ server processes running on other database server machines.
 =back
 
 As it initializes, the File Server constructs a list of interfaces to
-register, from the F</usr/afs/local/NetInfo> file if it exists, or from
+register, from the F<{{ afslocaldir }}/NetInfo> file if it exists, or from
 the list of interfaces configured with the operating system otherwise. The
 File Server then removes from the list any addresses that appear in the
 F<NetRestrict> file, if it exists. The File Server records the resulting
-list in the F</usr/afs/local/sysid> file and registers the interfaces in
+list in the F<{{ afslocaldir }}/sysid> file and registers the interfaces in
 the VLDB. The database server processes use a similar procedure when
 initializing, to determine which interfaces to use for communication with
 the peer processes on other database machines in the cell.

@@ -8,7 +8,7 @@ volumes, it inspects only the volume header:
 
 If the volume header is corrupted, the Salvager removes the volume
 completely and records the removal in its log file,
-F</usr/afs/logs/SalvageLog>. Issue the B<vos release> or B<vos backup>
+F<{{ afslogsdir }}/SalvageLog>. Issue the B<vos release> or B<vos backup>
 command to create the read-only or backup volume again.
 
 =item *
@@ -24,7 +24,7 @@ release> or B<vos backup> command to create it again.
 
 Unlike other server process initialization commands, the Salvager
 command is designed to be issued at the command shell prompt, as well as
-being placed into a file server machine's F</usr/afs/local/BosConfig> file
+being placed into a file server machine's F<{{ afsbosconfigdir }}/BosConfig> file
 with the B<bos create> command. It is also possible to invoke the Salvager
 remotely by issuing the B<bos salvage> command.
 

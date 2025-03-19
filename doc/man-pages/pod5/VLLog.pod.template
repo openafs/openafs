@@ -9,11 +9,11 @@ The F<VLLog> file records a trace of Volume Location (VL) Server
 error conditions it encounters.
 
 If the F<VLLog> file does not already exist in the
-F</usr/afs/logs> directory when the VL Server starts, the server
+F<{{ afslogsdir }}> directory when the VL Server starts, the server
 process creates it and writes initial start-up messages to it.
 
 The file is in ASCII format. Administrators listed in the
-F</usr/afs/etc/UserList> file can use the B<bos getlog> command to display
+F<{{ afsconfdir }}/UserList> file can use the B<bos getlog> command to display
 its contents. Alternatively, log onto the server machine and use a text
 editor or a file display command such as the UNIX B<cat> command. By
 default, the mode bits on the F<VLLog> file grant the required C<r> (read)

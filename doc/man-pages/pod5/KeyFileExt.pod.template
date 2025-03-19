@@ -11,7 +11,7 @@ clients during the mutual authentication process. AFS server processes
 perform privileged actions only for clients that possess a ticket
 encrypted with one of the keys from the F<KeyFile> or F<KeyFileExt>.
 The file must reside in the
-F</usr/afs/etc> directory on every server machine. For more detailed
+F<{{ afsconfdir }}> directory on every server machine. For more detailed
 information on mutual authentication and server encryption keys, see the
 I<OpenAFS Administration Guide>.
 

@@ -9,7 +9,7 @@ processes running on the machine use to decrypt the tickets presented by
 clients during the mutual authentication process. AFS server processes
 perform privileged actions only for clients that possess a ticket
 encrypted with one of the keys from the file. The file must reside in the
-F</usr/afs/etc> directory on every server machine. For more detailed
+F<{{ afsconfdir }}> directory on every server machine. For more detailed
 information on mutual authentication and server encryption keys, see the
 I<OpenAFS Administration Guide>.
 
@@ -54,7 +54,7 @@ B<bos addkey> is normally only used if the Authentication Server is in use
 instead of a Kerberos v5 realm.
 
 In cells that use the Update Server to distribute the contents of the
-F</usr/afs/etc> directory, it is customary to edit only the copy of the
+F<{{ afsconfdir }}> directory, it is customary to edit only the copy of the
 file stored on the system control machine. Otherwise, edit the file on
 each server machine individually.
 

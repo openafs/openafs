@@ -6,7 +6,7 @@ kaserverauxdb - Records failed authentication attempts
 
 The file F<kaserverauxdb> records failed authentication attempts for the
 local Authentication Server. The server creates it automatically in the
-F</usr/afs/local> directory by default; use the B<-localfiles> argument to
+F<{{ afslocaldir }}> directory by default; use the B<-localfiles> argument to
 the B<kaserver> command to specify an alternate directory.
 
 The F<kaserverauxdb> file is an internal database used by the

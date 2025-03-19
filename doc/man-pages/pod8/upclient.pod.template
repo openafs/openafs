@@ -17,10 +17,10 @@ S<<< B<upclient> <I<hostname>> >>> [B<-crypt>] [B<-clear>] S<<< [B<-t> <I<retry 
 
 The upclient command initializes the client portion of the Update
 Server. In the conventional configuration, its binary file is located in
-the F</usr/afs/bin> directory on a file server machine.
+the F<{{ afssrvlibexecdir }}> directory on a file server machine.
 
 The upclient command is not normally issued at the command shell prompt
-but rather placed into a file server machine's F</usr/afs/local/BosConfig>
+but rather placed into a file server machine's F<{{ afsbosconfigdir }}/BosConfig>
 file with the B<bos create> command. If it is ever issued at the command
 shell prompt, the issuer must be logged onto a database server machine as
 the local superuser C<root>.
@@ -37,7 +37,7 @@ request unencrypted transfer if appropriate. (The B<-crypt> flag
 explicitly sets the default.)
 
 In the conventional configuration, separate instances of the B<upclient>
-process request data from the F</usr/afs/bin> and F</usr/afs/etc>
+process request data from the F<{{ afssrvlibexecdir }}> and F<{{ afsconfdir }}>
 directories, except on machines for which the system control machine is
 also the binary distribution machine for the machine's system type. The
 conventional names for the separate instances are C<upclientbin> and
@@ -45,7 +45,7 @@ C<upclientetc> respectively.
 
 The B<upclient> and B<upserver> processes always mutually authenticate,
 whether or not the data they pass is encrypted; they use the key with the
-highest key version number in the F</usr/afs/etc/KeyFile> file to
+highest key version number in the F<{{ afsconfdir }}/KeyFile> file to
 construct a server ticket for mutual authentication.
 
 This command does not use the syntax conventions of the AFS command
@@ -54,7 +54,7 @@ suites. Provide the command name and all option names in full.
 =head1 CAUTIONS
 
 Do not use the Update Server to distribute the contents of the
-F</usr/afs/etc> directory using the B<-clear> option.  The contents of
+F<{{ afsconfdir }}> directory using the B<-clear> option.  The contents of
 this directory are sensitive.
 
 =head1 OPTIONS
@@ -64,9 +64,9 @@ this directory are sensitive.
 =item <I<hostname>>
 
 Names either the cell's system control machine (if the requested directory
-is F</usr/afs/etc>), or the binary distribution machine for the local
+is F<{{ afsconfdir }}>), or the binary distribution machine for the local
 machine's CPU and operating system type (if the requested directory is
-F</usr/afs/bin>).
+F<{{ afssrvlibexecdir }}>).
 
 =item B<-crypt>
 
@@ -102,19 +102,19 @@ are the following:
 
 =item *
 
-F</usr/afs/bin>, in which case the recommended name for the process
+F<{{ afssrvlibexecdir }}>, in which case the recommended name for the process
 (assigned with the B<-instance> argument to the B<bos create> command) is
 C<upclientbin>. The I<hostname> is the binary distribution machine for the
 local machine's system type. You may wish to use the B<-clear> flag for
-the F</usr/afs/bin> directory, since binaries are not particularly
+the F<{{ afssrvlibexecdir }}> directory, since binaries are not particularly
 sensitive and encrypting them takes system resources.
 
 =item *
 
-F</usr/afs/etc>, in which case the recommended name for the process
+F<{{ afsconfdir }}>, in which case the recommended name for the process
 (assigned with the B<-instance> argument to the B<bos create> command) is
 C<upclientetc>. The I<hostname> is the cell's system control machine. Use
-the B<-crypt> flag for the F</usr/afs/etc> directory, since it contains
+the B<-crypt> flag for the F<{{ afsconfdir }}> directory, since it contains
 the F<KeyFile> file and other data vital to cell security.
 
 =back
@@ -130,14 +130,14 @@ ignored.
 
 The following bos create command creates an C<upclientbin> process on the
 machine C<fs4.example.com> that refers to the machine C<fs1.example.com> as the
-source for the F</usr/afs/bin> directory (thus C<fs1.example.com> is the
+source for the F<{{ afssrvlibexecdir }}> directory (thus C<fs1.example.com> is the
 binary distribution machine for machines of C<fs4.example.com>'s type). The
-files in the F</usr/afs/bin> directory are distributed every 120 seconds.
+files in the F<{{ afssrvlibexecdir }}> directory are distributed every 120 seconds.
 The command requests transfer in unencrypted form.
 
    % bos create  -server fs4.example.com -instance upclientbin -type simple \
-                 -cmd "/usr/afs/bin/upclient fs1.example.com -clear \
-                 -t 120 /usr/afs/bin"
+                 -cmd "{{ afssrvlibexecdir }}/upclient fs1.example.com -clear \
+                 -t 120 {{ afssrvlibexecdir }}"
 
 =head1 PRIVILEGE REQUIRED
 

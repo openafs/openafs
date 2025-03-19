@@ -25,12 +25,12 @@ B<-file> argument with its C<.BAK> version on the server machine named by
 the B<-server> argument, which is normally the binary distribution machine
 for its CPU/operating system type. It also changes the extension on the
 current C<.OLD> version (if any) to C<.BAK>. Each binary file must reside
-in the local F</usr/afs/bin> directory unless the B<-dir> argument names
+in the local F<{{ afssrvlibexecdir }}> directory unless the B<-dir> argument names
 an alternate directory.
 
 To start using the reverted binary immediately, issue the B<bos restart>
 command. Otherwise, the BOS Server automatically restarts the process at
-the time defined in the F</usr/afs/local/BosConfig> file; use the B<bos
+the time defined in the F<{{ afsbosconfigdir }}/BosConfig> file; use the B<bos
 getrestart> command to display the time and the B<bos setrestart> time to
 set it.
 
@@ -58,7 +58,7 @@ Names each binary file to replace with its C<.BAK> version.
 
 Provides the complete pathname of the local disk directory containing each
 file named by the B<-file> argument. It is necessary only if the binaries
-are not in the F</usr/afs/bin> directory.
+are not in the F<{{ afssrvlibexecdir }}> directory.
 
 =item B<-cell> <I<cell name>>
 
@@ -74,7 +74,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
@@ -89,7 +89,7 @@ ignored.
 
 =head1 EXAMPLES
 
-The following example command overwrites the F</usr/afs/bin/kaserver> file
+The following example command overwrites the F<{{ afssrvlibexecdir }}/kaserver> file
 on the machine C<fs4.example.com> with its C<.BAK> version, and the current
 C<.BAK> version by the C<.OLD> version.
 
@@ -97,7 +97,7 @@ C<.BAK> version by the C<.OLD> version.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the
 machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.

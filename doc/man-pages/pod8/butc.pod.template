@@ -27,8 +27,8 @@ The B<butc> command initializes a Tape Coordinator process on a Tape
 Coordinator machine, enabling an operator to direct Backup System requests
 to the associated tape device or backup data file. (The Tape Coordinator
 controls a backup data file if the C<FILE YES> instruction appears in the
-F</usr/afs/backup/CFG_I<device_name>> file that corresponds to the Tape
-Coordinator's entry in the F</usr/afs/backup/tapeconfig> file. For the
+F<{{ afsbackupdir }}/CFG_I<device_name>> file that corresponds to the Tape
+Coordinator's entry in the F<{{ afsbackupdir }}/tapeconfig> file. For the
 sake of simplicity, the following discusses tape devices only.)
 
 It is conventional to start and run the Tape Coordinator in the
@@ -43,7 +43,7 @@ foreground and background, the Tape Coordinator writes operation traces
 and other output to the standard output stream on the connection over
 which it was started. Use the B<-debuglevel> argument to control the
 amount of information that appears. The Tape Coordinator also writes
-traces and error messages to two files in the local F</usr/afs/backup>
+traces and error messages to two files in the local F<{{ afsbackupdir }}>
 directory:
 
 =over 4
@@ -72,10 +72,10 @@ By default, at the beginning of each operation the Tape Coordinator
 prompts for the operator to insert the first tape into the drive and press
 Return.  To suppress this prompt, include the B<-noautoquery> flag on the
 command line or the instruction C<AUTOQUERY NO> in the
-F</usr/afs/backup/CFG_I<device_name>> file. When the prompt is suppressed,
+F<{{ afsbackupdir }}/CFG_I<device_name>> file. When the prompt is suppressed,
 the first required tape must be in the drive before a B<backup> command is
 issued. For subsequent tapes, the Tape Coordinator uses its normal tape
-acquisition routine: if the F</usr/afs/backup/CFG_I<device_name>> file
+acquisition routine: if the F<{{ afsbackupdir }}/CFG_I<device_name>> file
 includes a C<MOUNT> instruction, the Tape Coordinator invokes the
 indicated command; otherwise, it prompts the operator for the next tape.
 
@@ -94,7 +94,7 @@ files, as described in the following list:
 
 =item *
 
-The local F</usr/afs/backup/tapeconfig> file must include an entry for the
+The local F<{{ afsbackupdir }}/tapeconfig> file must include an entry for the
 Tape Coordinator that specifies its device name and port offset number,
 among other information; for details, L<tapeconfig(5)>.
 
@@ -106,7 +106,7 @@ Backup Database entry by using the B<backup addhost> command.
 
 =item *
 
-The optional F</usr/afs/backup/CFG_I<device_name>> file can contain
+The optional F<{{ afsbackupdir }}/CFG_I<device_name>> file can contain
 instructions for mounting and unmounting tapes automatically (when using a
 tape stacker or jukebox, for instance) or automating other aspects of the
 backup process. The I<device_name> part of the name is derived as
@@ -163,7 +163,7 @@ F<TL_I<device_name>> log file.
 Names the cell in which the Tape Coordinator operates (the cell to which
 the file server machines that house affected volumes belong). If this
 argument is omitted, the Tape Coordinator runs in the local cell as
-defined in the local F</usr/vice/etc/ThisCell> file. Do not combine this
+defined in the local F<{{ viceetcdir }}/ThisCell> file. Do not combine this
 flag with the B<-localauth> argument.
 
 =item B<-noautoquery>
@@ -180,15 +180,15 @@ socket will listen on all interfaces.
 =item B<-localauth>
 
 Constructs a server ticket using the server encryption key with the
-highest key version number in the local F</usr/afs/etc/KeyFile> or
-F</usr/afs/etc/KeyFileExt>. The
+highest key version number in the local F<{{ afsconfdir }}/KeyFile> or
+F<{{ afsconfdir }}/KeyFileExt>. The
 B<butc> command interpreter presents the ticket, which never expires, to
 the Volume Server and Volume Location Server to use in mutual
 authentication.
 
 Do not combine this argument with the B<-cell> flag, and use it only when
 logged on to a server machine as the local superuser C<root>; client
-machines do not have F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt>
+machines do not have F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt>
 files.
 
 =item B<-auditlog> [<I<interface>>:]<I<path>>[:<I<options>>]
@@ -233,13 +233,13 @@ volumes it is dumping or restoring.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on every
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on every
 machine where the Backup Server or Volume Location (VL) Server is running,
 and on every file server machine that houses a volume to be backed up. If
 the B<-localauth> flag is included, the issuer must instead be logged on
 to the Tape Coordinator machine as the local superuser C<root>. In
 addition, the issuer must be able to read and write to the log and
-configuration files in the local F</usr/afs/backup> directory.
+configuration files in the local F<{{ afsbackupdir }}> directory.
 
 =head1 SEE ALSO
 

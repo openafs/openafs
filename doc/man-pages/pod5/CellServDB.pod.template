@@ -73,11 +73,11 @@ client machine must either be listed in F<CellServDB> or added with the
 B<fs newcell> command.
 
 The F<CellServDB> file is in ASCII format and must reside in the
-F</usr/vice/etc> directory on each AFS client machine. Use a text editor
+F<{{ viceetcdir }}> directory on each AFS client machine. Use a text editor
 to create and maintain it.
 
 The client version of the F<CellServDB> file is distinct from the server
-version, which resides in the F</usr/afs/etc> directory on each AFS server
+version, which resides in the F<{{ afsconfdir }}> directory on each AFS server
 machine. The client version lists the database server machines in every
 AFS cell that the cell administrator wants the machine's users to be able
 to access, whereas the server version lists only the local cell's database
@@ -94,7 +94,7 @@ databases. The initial version of the file is created with the B<bos
 setcellname> command during the installation of the cell's server machine,
 which is automatically recorded as the cell's first database server
 machine. When adding or removing database server machines, be sure to
-update this file appropriately. It must reside in the F</usr/afs/etc>
+update this file appropriately. It must reside in the F<{{ afsconfdir }}>
 directory on each AFS server machine. The database server processes,
 in addition to the usual configuration allowing each to be elected
 synchronization site and coordinate updates, can be set up as readonly
@@ -130,7 +130,7 @@ The B<bos removehost> command to remove a machine from the file.
 =back
 
 In cells that use the Update Server to distribute the contents of the
-F</usr/afs/etc> directory, it is customary to edit only the copy of the
+F<{{ afsconfdir }}> directory, it is customary to edit only the copy of the
 file stored on the system control machine. Otherwise, edit the file on
 each server machine individually. For instructions on adding and removing
 database server machine, see the I<OpenAFS Quick Start> chapter on

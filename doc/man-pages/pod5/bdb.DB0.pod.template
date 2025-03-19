@@ -14,7 +14,7 @@ The F<bdb.DBSYS1> file is a log file in which the Backup Server
 it. When an operation is interrupted, the Backup Server replays the log to
 complete the operation.
 
-Both files are in binary format and reside in the F</usr/afs/db> directory
+Both files are in binary format and reside in the F<{{ afsdbdir }}> directory
 on each database server machine that runs the Backup Server.  When the
 Backup Server starts or restarts on a given machine, it establishes a
 connection with its peers and verifies that its copy of the F<bdb.DB0>

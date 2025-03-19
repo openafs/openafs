@@ -60,7 +60,7 @@ configuration and log files:
 
 =item *
 
-The F</usr/afs/etc/CellServDB> file lists the local cell's database server
+The F<{{ afsconfdir }}/CellServDB> file lists the local cell's database server
 machines. These machines run the Authentication, Backup, Protection and
 Volume Location (VL) Server processes, which maintain databases of
 administrative information. The database server processes consult the file
@@ -71,14 +71,14 @@ listhosts>, B<bos removehost>, and B<bos setcellname>.
 
 =item *
 
-The F</usr/afs/etc/KeyFile> file lists the server encryption keys that the
+The F<{{ afsconfdir }}/KeyFile> file lists the server encryption keys that the
 server processes use to decrypt tickets presented by client processes and
 one another. To administer the F<KeyFile> file, use the following
 commands: B<bos addkey>, B<bos listkeys>, and B<bos removekey>.
 
 =item *
 
-The F</usr/afs/etc/KeyFileExt> file lists additional server encryption
+The F<{{ afsconfdir }}/KeyFileExt> file lists additional server encryption
 keys that the server processes can use to decrypt tickets presented by
 client processes and one another. These keys are strong encryption
 keys used by the rxkad-k5 extension; use L<asetkey(8)> to manage the
@@ -86,23 +86,23 @@ F<KeyFileExt>.
 
 =item *
 
-The F</usr/afs/etc/ThisCell> file defines the cell to which the server
+The F<{{ afsconfdir }}/ThisCell> file defines the cell to which the server
 machine belongs for the purposes of server-to-server communication.
 Administer it with the B<bos setcellname> command. There is also a
-F</usr/vice/etc/ThisCell> file that defines the machine's cell membership
+F<{{ viceetcdir }}/ThisCell> file that defines the machine's cell membership
 with respect to the AFS command suites and Cache Manager access to AFS
 data.
 
 =item *
 
-The F</usr/afs/etc/UserList> file lists the user name of each
+The F<{{ afsconfdir }}/UserList> file lists the user name of each
 administrator authorized to issue privileged B<bos> and B<vos>
 commands. To administer the F<UserList> file, use the following commands:
 B<bos adduser>, B<bos listusers>, and B<bos removeuser>.
 
 =item *
 
-The F</usr/afs/local/BosConfig> file defines which AFS server processes
+The F<{{ afsbosconfigdir }}/BosConfig> file defines which AFS server processes
 run on the server machine, and whether the BOS Server restarts them
 automatically if they fail. It also defines when all processes restart
 automatically (by default once per week), when the BOS Server restarts
@@ -114,7 +114,7 @@ setrestart>, B<bos setrestricted>, B<bos start>, and B<bos stop>.
 
 =item *
 
-The F</usr/afs/logs/BosLog> file records important operations the BOS
+The F<{{ afslogsdir }}/BosLog> file records important operations the BOS
 Server performs and error conditions it encounters.
 
 =back
@@ -133,7 +133,7 @@ they are described here in greater detail.
 
 Names the cell in which to run the command. It is acceptable to abbreviate
 the cell name to the shortest form that distinguishes it from the other
-entries in the F</usr/vice/etc/CellServDB> file on the local machine. If
+entries in the F<{{ viceetcdir }}/CellServDB> file on the local machine. If
 the B<-cell> argument is omitted, the command interpreter determines the
 name of the local cell by reading the following in order:
 
@@ -145,17 +145,17 @@ The value of the AFSCELL environment variable.
 
 =item *
 
-The local F</usr/vice/etc/ThisCell> file.
+The local F<{{ viceetcdir }}/ThisCell> file.
 
 =item *
 
-The local F</usr/afs/etc/ThisCell> file.
+The local F<{{ afsconfdir }}/ThisCell> file.
 
 =back
 
 Do not combine the B<-cell> and B<-localauth> options. A command on which
 the B<-localauth> flag is included always runs in the local cell (as
-defined in the server machine's local F</usr/afs/etc/ThisCell> file),
+defined in the server machine's local F<{{ afsconfdir }}/ThisCell> file),
 whereas a command on which the B<-cell> argument is included runs in the
 specified foreign cell.
 
@@ -169,25 +169,25 @@ prints the help message.
 =item B<-localauth>
 
 Constructs a server ticket using the server encryption key with the
-highest key version number in the local F</usr/afs/etc/KeyFile> or
-F</usr/afs/etc/KeyFileExt> file. The
+highest key version number in the local F<{{ afsconfdir }}/KeyFile> or
+F<{{ afsconfdir }}/KeyFileExt> file. The
 B<bos> command interpreter presents the ticket, which never expires, to
 the BOS Server during mutual authentication.
 
 Use this flag only when issuing a command on a server machine; client
-machines do not usually have a F</usr/afs/etc/KeyFile> or
-F</usr/afs/etc/KeyFileExt> file.  The issuer
+machines do not usually have a F<{{ afsconfdir }}/KeyFile> or
+F<{{ afsconfdir }}/KeyFileExt> file.  The issuer
 of a command that includes this flag must be logged on to the server
 machine as the local superuser C<root>. The flag is useful for commands
 invoked by an unattended application program, such as a process controlled
 by the UNIX B<cron> utility or by a cron entry in the machine's
-F</usr/afs/local/BosConfig> file. It is also useful if an administrator is
+F<{{ afsbosconfigdir }}/BosConfig> file. It is also useful if an administrator is
 unable to authenticate to AFS but is logged in as the local superuser
 C<root>.
 
 Do not combine the B<-cell> and B<-localauth> options. A command on which
 the B<-localauth> flag is included always runs in the local cell (as
-defined in the server machine's local F</usr/afs/etc/ThisCell> file),
+defined in the server machine's local F<{{ afsconfdir }}/ThisCell> file),
 whereas a command on which the B<-cell> argument is included runs in the
 specified foreign cell. Also, do not combine the B<-localauth> and
 B<-noauth> flags.
@@ -225,7 +225,7 @@ international version of AFS:
 =item *
 
 If the cell (as recommended) uses the Update Server to distribute the
-contents of the F</usr/afs/etc> directory, provide the name of the system
+contents of the F<{{ afsconfdir }}> directory, provide the name of the system
 control machine. After issuing the command, allow up to five minutes for
 the Update Server to distribute the changed file to the other AFS server
 machines in the cell. If the specified machine is not the system control
@@ -246,7 +246,7 @@ the commands within a fairly short time.
 =head1 PRIVILEGE REQUIRED
 
 To issue any bos command that changes a configuration file or alters
-process status, the issuer must be listed in the F</usr/afs/etc/UserList>
+process status, the issuer must be listed in the F<{{ afsconfdir }}/UserList>
 file on the server machine named by the B<-server>
 argument. Alternatively, if the B<-localauth> flag is included the issuer
 must be logged on as the local superuser C<root>.

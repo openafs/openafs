@@ -103,7 +103,7 @@ be F</vicepa> on C<server1> without being verbose:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on each
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on each
 database server machine. If the B<-localauth> flag is included, the issuer
 must instead be logged on to a server machine as the local superuser
 C<root>.

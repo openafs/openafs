@@ -19,7 +19,7 @@ B<bos removeu> S<<< B<-s> <I<machine name>> >>> S<<< B<-u> <I<user names>>+ >>>
 =head1 DESCRIPTION
 
 The B<bos removeuser> command removes each user name specified with the
-B<-user> argument from the F</usr/afs/etc/UserList> file on the machine
+B<-user> argument from the F<{{ afsconfdir }}/UserList> file on the machine
 named by the B<-server> argument.
 
 =head1 OPTIONS
@@ -29,12 +29,12 @@ named by the B<-server> argument.
 =item B<-server> <I<machine name>>
 
 Indicates the server machine on which to change the
-F</usr/afs/etc/UserList> file. Identify the machine by IP address or its
+F<{{ afsconfdir }}/UserList> file. Identify the machine by IP address or its
 host name (either fully-qualified or abbreviated unambiguously). For
 details, see L<bos(8)>.
 
 In cells that use the Update Server to distribute the contents of the
-F</usr/afs/etc> directory, it is conventional to specify only the system
+F<{{ afsconfdir }}> directory, it is conventional to specify only the system
 control machine as a value for the B<-server> argument. Otherwise, repeat
 the command for each file server machine. For further discussion, see
 L<bos(8)>.
@@ -57,7 +57,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
@@ -79,7 +79,7 @@ F<UserList> file on the system control machine C<fs1.example.com>.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the
 machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.

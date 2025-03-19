@@ -27,10 +27,22 @@
 
 !INCLUDE ..\..\src\config\NTMakefile.$(SYS_NAME)
 
+#
+# Installation paths to be filled into the POD files.
+#
+GENERATE_POD_FLAGS=\
+  --define afsbackupdir="/usr/afs/backup" \
+  --define afsbosconfigdir="/usr/afs/local" \
+  --define afsconfdir="/usr/afs/etc" \
+  --define afsdbdir="/usr/afs/db" \
+  --define afslocaldir="/usr/afs/local" \
+  --define afslogsdir="/usr/afs/logs" \
+  --define afssrvlibexecdir="/usr/afs/bin" \
+  --define viceetcdir="/usr/vice/etc"
 
 html\index.html: $(PODS)
         @echo Building man pages in HTML format
-        $(PERL) generate-pod
+        $(PERL) generate-pod $(GENERATE_POD_FLAGS)
         $(PERL) generate-html
 
 

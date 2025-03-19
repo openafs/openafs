@@ -71,7 +71,7 @@ To exit an interactive session, issue the B<backup quit> command.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+F<{{ afsconfdir }}/KeyFile> file. The B<backup> command interpreter presents
 it to the Backup Server, Volume Server and VL Server during mutual
 authentication. Do not combine this flag with the B<-cell> argument. For
 more details, see L<backup(8)>.

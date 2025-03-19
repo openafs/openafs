@@ -23,7 +23,7 @@ B<bos c> S<<< B<-s> <I<machine name>> >>> S<<< B<-i> <I<server process name>> >>
 =head1 DESCRIPTION
 
 The B<bos create> command creates a server process entry in the
-F</usr/afs/local/BosConfig> file on the server machine named by the
+F<{{ afsbosconfigdir }}/BosConfig> file on the server machine named by the
 B<-server> argument, sets the process's status to C<Run> in the
 F<BosConfig> file and in memory, and starts the process.
 
@@ -87,7 +87,7 @@ The Protection Server process.
 =item upclientbin
 
 The client portion of the Update Server process that retrieves binary
-files from the F</usr/afs/bin> directory of the binary distribution
+files from the F<{{ afssrvlibexecdir }}> directory of the binary distribution
 machine for this machine's CPU/operating system type. (The name of the
 binary is B<upclient>, but the C<bin> suffix distinguishes this process
 from C<upclientetc>.)
@@ -95,7 +95,7 @@ from C<upclientetc>.)
 =item upclientetc
 
 The client portion of the Update Server process that retrieves
-configuration files from the F</usr/afs/etc> directory of the system
+configuration files from the F<{{ afsconfdir }}> directory of the system
 control machine. (The name of the binary is B<upclient>, but the C<etc>
 suffix distinguishes this process from C<upclientbin>.)
 
@@ -156,7 +156,7 @@ which case the entire string is surrounded by double quotes); any
 additional commands are ignored.
 
 For a simple process, provide the complete pathname of the process's
-binary file on the local disk (for example, F</usr/afs/bin/ptserver> for
+binary file on the local disk (for example, F<{{ afssrvlibexecdir }}/ptserver> for
 the Protection Server). If including any of the initialization command's
 options, surround the entire command in double quotes (C<"">). The
 B<upclient> process has a required argument, and the commands for all
@@ -165,13 +165,13 @@ other processes take optional arguments.
 For the B<fs> process, provide the complete pathname of the local disk
 binary file for each of the component processes: B<fileserver>,
 B<volserver>, and B<salvager>, in that order. The standard binary
-directory is F</usr/afs/bin>.  If including any of an initialization
+directory is F<{{ afssrvlibexecdir }}>.  If including any of an initialization
 command's options, surround the entire command in double quotes (C<"">).
 
 For the B<dafs> process, provide the complete pathname of the local disk
 binary file for each of the component processes: B<dafileserver>,
 B<davolserver>, B<salvageserver>, and B<dasalvager>, in that order. The
-standard binary directory is F</usr/afs/bin>.  If including any of an
+standard binary directory is F<{{ afssrvlibexecdir }}>.  If including any of an
 initialization command's options, surround the entire command in double
 quotes (C<"">).
 
@@ -242,7 +242,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
@@ -261,33 +261,33 @@ The following command defines and starts the simple process
 C<ptserver> on the machine C<fs3.example.com>:
 
    % bos create -server fs3.example.com -instance ptserver -type simple \
-                -cmd /usr/afs/bin/ptserver
+                -cmd {{ afssrvlibexecdir }}/ptserver
 
 The following command defines and starts the simple process C<upclientbin>
 on the machine C<fs4.example.com>. It references C<fs1.example.com> as the
 source for updates to binary files, checking for changes to the
-F</usr/afs/bin> directory every 120 seconds.
+F<{{ afssrvlibexecdir }}> directory every 120 seconds.
 
    % bos create -server fs4.example.com -instance upclientbin -type simple \
-                -cmd "/usr/afs/bin/upclient fs1.example.com -clear -t 120 \
-                /usr/afs/bin"
+                -cmd "{{ afssrvlibexecdir }}/upclient fs1.example.com -clear -t 120 \
+                {{ afssrvlibexecdir }}"
 
 The following command creates the B<fs> process C<fs> on the machine
 C<fs4.example.com> (a traditional File Server with associated processes). Type
 the command on a single line.
 
    % bos create -server fs4.example.com -instance fs -type fs \
-                -cmd /usr/afs/bin/fileserver /usr/afs/bin/volserver \
-                /usr/afs/bin/salvager
+                -cmd {{ afssrvlibexecdir }}/fileserver {{ afssrvlibexecdir }}/volserver \
+                {{ afssrvlibexecdir }}/salvager
 
 The following command creates the B<dafs> process C<dafs> on the machine
 C<fs4.example.com> (a demand-attach File Server with associated processes).
 Type the command on a single line.
 
    % bos create -server fs4.example.com -instance dafs -type dafs \
-                -cmd /usr/afs/bin/dafileserver \
-                /usr/afs/bin/davolserver \
-                /usr/afs/bin/salvageserver /usr/afs/bin/dasalvager
+                -cmd {{ afssrvlibexecdir }}/dafileserver \
+                {{ afssrvlibexecdir }}/davolserver \
+                {{ afssrvlibexecdir }}/salvageserver {{ afssrvlibexecdir }}/dasalvager
 
 The following command creates a cron process called C<userbackup> on the
 machine C<fs5.example.com>, so that the BOS Server issues the indicated B<vos
@@ -298,7 +298,7 @@ B<vos> command, includes the B<-localauth> flag on it, and types the
 entire B<bos create> command on one line.
 
    % bos create -server fs5.example.com -instance userbackup -type cron  \
-       -cmd "/usr/afs/bin/vos backupsys -prefix user -localauth" 03:00
+       -cmd "{{ afssrvlibexecdir }}/vos backupsys -prefix user -localauth" 03:00
 
 To switch from a traditional File Server to a demand-attach File Server,
 run:
@@ -312,9 +312,9 @@ for an existing demand-attach File Server.) Then, run:
    % bos stop localhost fs -localauth
    % bos delete localhost fs -localauth
    % bos create localhost dafs dafs \
-       "/usr/afs/bin/dafileserver <fileserver-flags>" \
-       "/usr/afs/bin/davolserver <volserver-flags>" \
-       /usr/afs/bin/salvageserver /usr/afs/bin/dasalvager
+       "{{ afssrvlibexecdir }}/dafileserver <fileserver-flags>" \
+       "{{ afssrvlibexecdir }}/davolserver <volserver-flags>" \
+       {{ afssrvlibexecdir }}/salvageserver {{ afssrvlibexecdir }}/dasalvager
 
 replacing <fileserver-flags> and <volserver-flags> with the flags from the
 previous configuration. This will stop the traditional File Server and
@@ -323,7 +323,7 @@ already be updated to binaries built with demand-attach enabled.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the
 machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.

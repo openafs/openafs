@@ -8,7 +8,7 @@ The F<salvage.lock> file guarantees that only one Salvager (B<salvager>
 process) runs at a time on a file server machine (the single process can
 fork multiple subprocesses to salvage multiple partitions in parallel). As
 the Salvager initializes, it creates the empty (zero-length) file in the
-F</usr/afs/local> directory and invokes the B<flock> system call on it. It
+F<{{ afslocaldir }}> directory and invokes the B<flock> system call on it. It
 removes the file when it completes the salvage operation. Because the
 Salvager must lock the file to run, only one Salvager can run at a time.
 

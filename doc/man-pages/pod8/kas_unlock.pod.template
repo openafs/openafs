@@ -32,7 +32,7 @@ time, and the B<kas examine> command to examine the settings.
 
 To unlock all locked user accounts at once, shutdown the B<kaserver>
 process on every database server machine, and remove the
-F</usr/afs/local/kaauxdb> file from each one. The B<kaserver> process
+F<{{ afslocaldir }}/kaauxdb> file from each one. The B<kaserver> process
 recreates the file as it restarts.
 
 =head1 OPTIONS

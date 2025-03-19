@@ -8,7 +8,7 @@ The F<SalvageLog> file records a trace of Salvager (B<salvager> process)
 operations on the local machine and describes any error conditions it
 encounters.
 
-If the F<SalvageLog> file does not already exist in the F</usr/afs/logs>
+If the F<SalvageLog> file does not already exist in the F<{{ afslogsdir }}>
 directory when the Salvager starts, the process creates it and writes
 initial start-up messages to it. If there is an existing file, the
 Salvager renames is to F<SalvageLog.old>, overwriting the existing
@@ -23,7 +23,7 @@ the Salvager will accumulate all the partition-specific log files, append
 them to F<SalvageLog>, and then remove the partition-specific files.
 
 The file is in ASCII format. Administrators listed in the
-F</usr/afs/etc/UserList> file can use the B<bos getlog> command to display
+F<{{ afsconfdir }}/UserList> file can use the B<bos getlog> command to display
 its contents. Alternatively, log onto the file server machine and use a
 text editor or a file display command such as the UNIX B<cat> command. By
 default, the mode bits on the F<SalvageLog> file grant the required C<r>

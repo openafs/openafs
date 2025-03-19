@@ -7,7 +7,7 @@ tapeconfig - Defines parameters for tape devices and backup data files
 The F<tapeconfig> file defines basic configuration parameters for all of
 the tape devices or backup data files available for backup operations on a
 Tape Coordinator machine. The file is in ASCII format and must reside in
-the local F</usr/afs/backup> directory. The instruction for each tape
+the local F<{{ afsbackupdir }}> directory. The instruction for each tape
 device or backup data file appears on its own line and each has the
 following format:
 
@@ -143,7 +143,7 @@ possible number of B<backup> commands.
 =head1 PRIVILEGE REQUIRED
 
 Creating the file requires UNIX C<w> (write) and C<x> (execute)
-permissions on the F</usr/afs/backup> directory. Editing the file requires
+permissions on the F<{{ afsbackupdir }}> directory. Editing the file requires
 UNIX C<w> (write) permission on the file.
 
 =head1 EXAMPLES

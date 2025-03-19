@@ -101,7 +101,7 @@ simultaneously, but can have only one ticket at a time for each cell (that
 is, it is possible to authenticate under only one identity per cell per
 machine). It is legal to abbreviate the cell name to the shortest form
 that distinguishes it from the other cells listed in the
-F</usr/vice/etc/CellServDB> file on the local client machine.
+F<{{ viceetcdir }}/CellServDB> file on the local client machine.
 
 If the issuer does not provide the B<-cell> argument, the B<dlog> command
 attempts to authenticate with the DCE Security Server for the cell defined
@@ -117,7 +117,7 @@ to name the desired DCE cell.
 
 =item *
 
-The cell name in the F</usr/vice/etc/ThisCell> file on the local AFS
+The cell name in the F<{{ viceetcdir }}/ThisCell> file on the local AFS
 client machine. The machine's administrator can place the desired DCE
 cell's name in the file.
 
@@ -138,7 +138,7 @@ Server through which the AFS client machine can attempt to
 authenticate. Specify each server by hostname, shortened machine name, or
 IP address. If this argument is omitted, the B<dlog> command interpreter
 randomly selects a machine from the list of DFS Fileset Location (FL)
-Servers in the F</usr/vice/etc/CellServDB> file for the DCE cell specified
+Servers in the F<{{ viceetcdir }}/CellServDB> file for the DCE cell specified
 by the B<-cell> argument. This argument is useful for testing when
 authentication seems to be failing on certain server machines.
 

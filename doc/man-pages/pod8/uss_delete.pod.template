@@ -139,7 +139,7 @@ C<ADMIN> flag turned on in his or her Authentication Database entry, and
 must have at least C<a> (administer) and C<d> (delete) permissions on the
 access control list (ACL) of the mount point's parent directory. If the
 B<-savevolume> flag is not included, the issuer must also be listed in the
-F</usr/afs/etc/UserList> file.
+F<{{ afsconfdir }}/UserList> file.
 
 =head1 SEE ALSO
 

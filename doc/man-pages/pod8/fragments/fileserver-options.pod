@@ -60,7 +60,7 @@ See B<-auditlog> for information on the different audit interfaces.
 =item B<-d> <I<debug level>>
 
 Sets the detail level for the debugging trace written to the
-F</usr/afs/logs/FileLog> file. Provide one of the following values, each
+F<{{ afslogsdir }}/FileLog> file. Provide one of the following values, each
 of which produces an increasingly detailed trace: C<0>, C<1>, C<5>, C<25>,
 and C<125>. The default value of C<0> produces only a few messages.
 
@@ -199,12 +199,12 @@ integer.
 =item B<-rxdbg>
 
 Writes a trace of the File Server's operations on Rx packets to the file
-F</usr/afs/logs/rx_dbg>.
+F<{{ afslogsdir }}/rx_dbg>.
 
 =item B<-rxdbge>
 
 Writes a trace of the File Server's operations on Rx events (such as
-retransmissions) to the file F</usr/afs/logs/rx_dbg>.
+retransmissions) to the file F<{{ afslogsdir }}/rx_dbg>.
 
 =item B<-rxmaxmtu> <I<bytes>>
 
@@ -254,7 +254,7 @@ machine.
 
 Defines the Kerberos realm name for the File Server to use. If this
 argument is not provided, it uses the realm name corresponding to the cell
-listed in the local F</usr/afs/etc/ThisCell> file.
+listed in the local F<{{ afsconfdir }}/ThisCell> file.
 
 =item B<-udpsize> <I<size of socket buffer in bytes>>
 
@@ -312,7 +312,7 @@ Use MR-AFS (Multi-Resident) style logging.  This option is deprecated.
 =item B<-transarc-logs>
 
 Use Transarc style logging features. Rename the existing log file
-F</usr/afs/logs/FileLog> to F</usr/afs/logs/FileLog.old> when the fileserver is
+F<{{ afslogsdir }}/FileLog> to F<{{ afslogsdir }}/FileLog.old> when the fileserver is
 restarted.  This option is provided for compatibility with older versions.
 
 =item B<-saneacls>
@@ -497,7 +497,7 @@ to about this topic.
 =item B<-logfile> <I<log file>>
 
 Sets the file to use for server logging.  If logfile is not specified and
-no other logging options are supplied, this will be F</usr/afs/logs/FileLog>.
+no other logging options are supplied, this will be F<{{ afslogsdir }}/FileLog>.
 Note that this option is intended for debugging and testing purposes.
 Changing the location of the log file from the command line may result
 in undesirable interactions with tools such as B<bos>.
@@ -513,6 +513,6 @@ maximum that can be specified is 28 (268435456 buckets).
 =item B<-config> <I<configuration directory>>
 
 Set the location of the configuration directory used to configure this
-service.  In a typical configuration this will be F</usr/afs/etc> - this
+service.  In a typical configuration this will be F<{{ afsconfdir }}> - this
 option allows the use of alternative configuration locations for testing
 purposes.

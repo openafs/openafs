@@ -13,7 +13,7 @@ When it initializes, the Cache Manager creates the cache files in the
 configured cache location.  The standard directory name is
 F</usr/vice/cache>, but it is acceptable to use a directory on a partition
 with more available space. To designate a different directory, change the
-value in the second field of the F</usr/vice/etc/cacheinfo> file before
+value in the second field of the F<{{ viceetcdir }}/cacheinfo> file before
 issuing the B<afsd> command, or include the B<-cachedir> argument to the
 B<afsd> command.
 
@@ -70,7 +70,7 @@ The result of dividing the cache size by 10 MB (10,240).
 
 The Cache Manager determines the cache size from the B<-blocks> argument
 to the B<afsd> command, or if the argument is not included, from the third
-field of the F</usr/vice/etc/cacheinfo> file.  The default chunk size is
+field of the F<{{ viceetcdir }}/cacheinfo> file.  The default chunk size is
 64 KB; use the B<-chunksize> argument to the B<afsd> command to override
 it. To override the default number of chunks resulting from the
 calculation, include the B<-files> argument to the B<afsd>

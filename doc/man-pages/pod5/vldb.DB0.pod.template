@@ -14,7 +14,7 @@ The file F<vldb.DBSYS1> is a log file in which the VL Server logs each
 database operation before performing it. When an operation is interrupted,
 the VL Server replays the log to complete the operation.
 
-Both files are in binary format and reside in the F</usr/afs/db> directory
+Both files are in binary format and reside in the F<{{ afsdbdir }}> directory
 on each of the cell's database server machines. When the VL Server starts
 or restarts on a given machine, it establishes a connection with its peers
 and verifies that its copy of the database matches the copy on the other

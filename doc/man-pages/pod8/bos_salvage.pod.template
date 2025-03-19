@@ -43,7 +43,7 @@ or backup volumes, it inspects only the volume header:
 
 If the volume header is corrupted, the Salvager removes the volume
 completely and records the removal in its log file,
-F</usr/afs/logs/SalvageLog>. Issue the B<vos release> or B<vos backup>
+F<{{ afslogsdir }}/SalvageLog>. Issue the B<vos release> or B<vos backup>
 command to create the read-only or backup volume again.
 
 =item *
@@ -94,12 +94,12 @@ During the salvage of an entire machine or partition, the B<bos status>
 command reports the C<fs> process's auxiliary status as C<Salvaging file
 system>.
 
-The Salvager always writes a trace to the F</usr/afs/logs/SalvageLog> file
+The Salvager always writes a trace to the F<{{ afslogsdir }}/SalvageLog> file
 on the file server machine where it runs. To record the trace in another
 file as well (either in AFS or on the local disk of the machine where the
 B<bos salvage> command is issued), name the file with the B<-file>
 argument. To display the trace on the standard output stream as it is
-written to the F</usr/afs/logs/SalvageLog> file, include the B<-showlog>
+written to the F<{{ afslogsdir }}/SalvageLog> file, include the B<-showlog>
 flag.
 
 By default, multiple Salvager subprocesses run in parallel: one for each
@@ -178,7 +178,7 @@ salvage. The B<-partition> argument must be provided along with this one.
 =item B<-file> <I<salvage log output file>>
 
 Specifies the complete pathname of a file into which to write a trace of
-the salvage operation, in addition to the F</usr/afs/logs/SalvageLog> file
+the salvage operation, in addition to the F<{{ afslogsdir }}/SalvageLog> file
 on the server machine. If the file pathname is local, the trace is written
 to the specified file on the local disk of the machine where the B<bos
 salvage> command is issued. If the B<-volume> argument is included, the
@@ -193,7 +193,7 @@ B<-server> argument.
 =item B<-showlog>
 
 Displays the trace of the salvage operation on the standard output stream,
-as well as writing it to the F</usr/afs/logs/SalvageLog> file.  Do not
+as well as writing it to the F<{{ afslogsdir }}/SalvageLog> file.  Do not
 combine this flag with the B<-file> argument.
 
 =item B<-parallel> <I<# of max parallel partition salvaging>>
@@ -245,14 +245,14 @@ one of the following three values:
 =item ignore
 
 Leaves the orphaned objects on the disk, but prints a message to the
-F</usr/afs/logs/SalvageLog> file reporting how many orphans were found and
+F<{{ afslogsdir }}/SalvageLog> file reporting how many orphans were found and
 the approximate number of kilobytes they are consuming. This is the
 default if the B<-orphans> argument is omitted.
 
 =item remove
 
 Removes the orphaned objects, and prints a message to the
-F</usr/afs/logs/SalvageLog> file reporting how many orphans were removed
+F<{{ afslogsdir }}/SalvageLog> file reporting how many orphans were removed
 and the approximate number of kilobytes they were consuming.
 
 =item attach
@@ -299,7 +299,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
@@ -332,7 +332,7 @@ default four.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the
 machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.

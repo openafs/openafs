@@ -19,7 +19,7 @@ B<bos getr> S<<< B<-s> <I<machine name>> >>> S<<< [B<-c> <I<cell name>>] >>> [B<
 =head1 DESCRIPTION
 
 The bos getrestart command displays two restart times from the
-F</usr/afs/local/BosConfig> file on the server machine named by the
+F<{{ afsbosconfigdir }}/BosConfig> file on the server machine named by the
 B<-server> argument:
 
 =over 4
@@ -34,7 +34,7 @@ F<BosConfig> file. The default is Sunday at 4:00 a.m.
 
 The I<binary restart> time at which the BOS Server automatically restarts
 any process for which the time stamp on the binary file in the
-F</usr/afs/bin> directory is later than the last restart time for the
+F<{{ afssrvlibexecdir }}> directory is later than the last restart time for the
 process. The default is 5:00 a.m. Use the B<bos getdate> command to list a
 binary file's timestamp, and the B<-long> flag to the B<bos status>
 command to display a process's most recent restart time.
@@ -67,7 +67,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see

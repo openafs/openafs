@@ -31,9 +31,9 @@ B<-principal> argument does not have to appear in the local password file
 
 By default, the command interpreter sends the password change request to
 the Authentication Server running on one of the database server machines
-listed for the local cell in the F</usr/afs/etc/CellServDB> file on the
+listed for the local cell in the F<{{ afsconfdir }}/CellServDB> file on the
 local disk; it chooses the machine at random. It consults the
-F</usr/vice/etc/ThisCell> file on the local disk to learn the local cell
+F<{{ viceetcdir }}/ThisCell> file on the local disk to learn the local cell
 name. To specify an alternate cell, include the B<-cell> argument.
 
 Unlike the UNIX B<passwd> command, the B<kpasswd> command does not
@@ -121,7 +121,7 @@ password, which does not echo visibly:
 Specifies the cell in which to change the password, by directing the
 command to that cell's Authentication Servers. The issuer can abbreviate
 the cell name to the shortest form that distinguishes it from the other
-cells listed in the local F</usr/vice/etc/CellServDB> file.
+cells listed in the local F<{{ viceetcdir }}/CellServDB> file.
 
 By default, the command is executed in the local cell, as defined
 
@@ -133,7 +133,7 @@ First, by the value of the environment variable AFSCELL.
 
 =item *
 
-Second, in the F</usr/vice/etc/ThisCell> file on the client machine on
+Second, in the F<{{ viceetcdir }}/ThisCell> file on the client machine on
 which the command is issued.
 
 =back
@@ -143,7 +143,7 @@ which the command is issued.
 Establishes a connection with the Authentication Server running on each
 specified machine, rather than with all of the database server machines
 listed for the relevant cell in the local copy of the
-F</usr/vice/etc/CellServDB> file. The B<kpasswd> command interpreter then
+F<{{ viceetcdir }}/CellServDB> file. The B<kpasswd> command interpreter then
 sends the password-changing request to one machine chosen at random from
 the set.
 

@@ -8,7 +8,7 @@ The F<cacheinfo> file defines configuration parameters for the Cache
 Manager, which reads the file as it initializes.
 
 The file contains a single line of ASCII text and must reside in the
-F</usr/vice/etc> directory. Use a text editor to create it during initial
+F<{{ viceetcdir }}> directory. Use a text editor to create it during initial
 configuration of the client machine; the required format is as follows:
 
    <mount>:<cache>:<size>

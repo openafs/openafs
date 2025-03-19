@@ -24,7 +24,7 @@ The B<bos install> command copies each binary file specified with the
 B<-file> argument to the local disk of the server machine named by the
 B<-server> argument, which is normally the binary distribution machine for
 its CPU/operating system type. The destination directory is
-F</usr/afs/bin> unless the B<-dir> argument indicates an alternate
+F<{{ afssrvlibexecdir }}> unless the B<-dir> argument indicates an alternate
 directory. The source file's UNIX mode bits are preserved in the transfer.
 
 If there is already a file of the same name in the destination directory,
@@ -37,7 +37,7 @@ the file.
 
 To start using the new binary immediately, issue the bos restart
 command. Otherwise, the BOS Server automatically restarts the process at
-the time defined in the F</usr/afs/local/BosConfig> file; use the B<bos
+the time defined in the F<{{ afsbosconfigdir }}/BosConfig> file; use the B<bos
 getrestart> command to display the time and the B<bos setrestart> time to
 set it.
 
@@ -71,7 +71,7 @@ file names.
 
 Provides the complete pathname of the local disk directory in which to
 install binary files. It is necessary only if the destination directory
-is not F</usr/afs/bin>.
+is not F<{{ afssrvlibexecdir }}>.
 
 =item B<-cell> <I<cell name>>
 
@@ -87,7 +87,7 @@ L<bos(8)>.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> or F</usr/afs/etc/KeyFileExt> file.
+F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
 The B<bos> command interpreter presents the
 ticket to the BOS Server during mutual authentication. Do not combine this
 flag with the B<-cell> or B<-noauth> options. For more details, see
@@ -103,18 +103,18 @@ ignored.
 =head1 EXAMPLES
 
 The following command copies the file
-F</afs/example.com/rs_aix42/usr/afs/bin/vlserver> to the file
-F</usr/afs/bin/vlserver> on the machine C<fs3.example.com>, which is the
+F</afs/example.com/rs_aix42{{ afssrvlibexecdir }}/vlserver> to the file
+F<{{ afssrvlibexecdir }}/vlserver> on the machine C<fs3.example.com>, which is the
 binary distribution machine for server machines running AIX 4.2 in the
-C<example.com> cell. The current version of the F</usr/afs/bin/vlserver> file
-is moved to F</usr/afs/bin/vlserver.BAK>.
+C<example.com> cell. The current version of the F<{{ afssrvlibexecdir }}/vlserver> file
+is moved to F<{{ afssrvlibexecdir }}/vlserver.BAK>.
 
    % bos install -server fs3.example.com \
-                 -file /afs/example.com/rs_aix42/usr/afs/bin/vlserver
+                 -file /afs/example.com/rs_aix42{{ afssrvlibexecdir }}/vlserver
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on the
 machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.

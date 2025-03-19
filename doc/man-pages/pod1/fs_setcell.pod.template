@@ -23,8 +23,8 @@ programs from its home cell to run with setuid permission, but not
 programs from any foreign cells. A program belongs to the same cell as the
 file server machine that houses the volume in which the program's binary
 file resides, as specified in the file server machine's
-F</usr/afs/etc/ThisCell> file. The Cache Manager determines its own home
-cell by reading the F</usr/vice/etc/ThisCell> file at initialization.
+F<{{ afsconfdir }}/ThisCell> file. The Cache Manager determines its own home
+cell by reading the F<{{ viceetcdir }}/ThisCell> file at initialization.
 
 To enable programs from each specified cell to run with setuid permission,
 include the B<-suid> flag. To prohibit programs from running with setuid
@@ -61,7 +61,7 @@ enabled for the cell in which the file resides.
 
 Names each cell for which to set setuid status. Provide the fully
 qualified domain name, or a shortened form that disambiguates it from the
-other cells listed in the local F</usr/vice/etc/CellServDB> file.
+other cells listed in the local F<{{ viceetcdir }}/CellServDB> file.
 
 =item B<-suid>
 

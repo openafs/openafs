@@ -7,7 +7,7 @@ UserList - Defines privileged administrators
 The F<UserList> file lists the AFS usernames of the system administrators
 authorized to issue privileged B<bos>, B<vos>, and B<backup> commands that
 affect the local server machine or the volumes housed on it. It must
-reside in the F</usr/afs/etc> directory on every server machine.
+reside in the F<{{ afsconfdir }}> directory on every server machine.
 
 Although the F<UserList> file is in ASCII format, do not use a text editor
 to alter it. Instead always use the appropriate commands from the B<bos>
@@ -32,7 +32,7 @@ The B<bos removeuser> command to remove a user from the file.
 Although it is theoretically possible to list different administrators in
 the F<UserList> files on different server machines, doing so can cause
 unanticipated authorization failures and is not recommended. In cells that
-use the Update Server to distribute the contents of the F</usr/afs/etc>
+use the Update Server to distribute the contents of the F<{{ afsconfdir }}>
 directory, it is customary to edit only the copy of the file stored on the
 system control machine. Otherwise, edit the file on each server machine
 individually.

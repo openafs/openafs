@@ -70,8 +70,8 @@ B<akeyconvert> is used.
 =head1 PRIVILEGE REQUIRED
 
 The issuer must be able to read the F<rxkad.keytab> and write the
-F<KeyFile> and F<KeyFileExt>, normally F</usr/afs/etc/KeyFile> and
-F</usr/afs/etc/KeyFileExt>.  In practice, this means that the issuer must be
+F<KeyFile> and F<KeyFileExt>, normally F<{{ afsconfdir }}/KeyFile> and
+F<{{ afsconfdir }}/KeyFileExt>.  In practice, this means that the issuer must be
 the local superuser C<root> on the AFS file server or database server.
 
 =head1 SEE ALSO

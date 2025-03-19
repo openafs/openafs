@@ -26,8 +26,8 @@ The B<kas interactive> command establishes an interactive session for the
 issuer of the command. By default, the command interpreter establishes an
 authenticated connection for the user logged into the local file system
 with all of the Authentication Servers listed in the local
-F</usr/vice/etc/CellServDB> file for the cell named in the local
-F</usr/vice/etc/ThisCell> file. To specify an alternate identity, cell
+F<{{ viceetcdir }}/CellServDB> file for the cell named in the local
+F<{{ viceetcdir }}/ThisCell> file. To specify an alternate identity, cell
 name, or list of Authentication Servers, include the B<-admin_username>,
 B<-cell>, or B<-servers> arguments respectively. Interactive mode lasts
 for six hours unless the maximum ticket lifetime for the issuer or the
@@ -49,7 +49,7 @@ B<-password_for_admin>, B<-cell>, and B<-servers> arguments.
 Type the kas command followed by a user name and cell name, separated by
 an C<@> sign (for example: B<kas admin@example.com>), to establish a
 connection under the specified identity with the Authentication Servers
-listed in the local F</usr/vice/etc/CellServDB> file for the indicated
+listed in the local F<{{ viceetcdir }}/CellServDB> file for the indicated
 cell. If appropriate, provide the B<-servers> argument to specify an
 alternate list of Authentication Server machines that belong to the
 indicated cell.

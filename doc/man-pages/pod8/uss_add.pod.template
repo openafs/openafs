@@ -315,7 +315,7 @@ the system:administrators group in the Protection Database and must have
 the C<ADMIN> flag turned on in his or her Authentication Database entry.
 
 If the template contains a C<V> instruction, the issuer must be listed in
-the F</usr/afs/etc/UserList> file and must have at least C<a> (administer)
+the F<{{ afsconfdir }}/UserList> file and must have at least C<a> (administer)
 and C<i> (insert) permissions on the ACL of the directory that houses the
 new mount point. If the template file includes instructions for creating
 other types of objects (directories, files or links), the issuer must have

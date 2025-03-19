@@ -30,11 +30,11 @@ name (either a I<permanent name>, or an I<AFS tape name> that reflects the
 tape's contents in a prescribed format) and its capacity.
 
 (If the C<FILE YES> instruction appears in the
-F</usr/afs/backup/CFG_I<device_name>> file on the Tape Coordinator machine
+F<{{ afsbackupdir }}/CFG_I<device_name>> file on the Tape Coordinator machine
 associated with the specified port offset, then the B<backup> command
 writes label information to the first 16 KB block in the backup data file
 listed for that port offset in the Tape Coordinator's
-F</usr/afs/backup/tapeconfig> file, rather than at the beginning of a
+F<{{ afsbackupdir }}/tapeconfig> file, rather than at the beginning of a
 tape. For the sake of clarity, the following text refers to tapes only,
 but the Backup System handles backup data files in much the same way.)
 
@@ -80,7 +80,7 @@ command:
 To record the tape's capacity on the label, specify a number of kilobytes
 as the B<-size> argument. If the argument is omitted the first time a tape
 is labeled, the Backup System records the default tape capacity recorded
-for the specified port offset in the F</usr/afs/backup/tapeconfig> file on
+for the specified port offset in the F<{{ afsbackupdir }}/tapeconfig> file on
 the Tape Coordinator machine. Subsequently, the value in the size field
 persists until the B<-size> argument is again included on the B<backup
 labeltape> command.
@@ -88,12 +88,12 @@ labeltape> command.
 To determine how much data can be written to a tape during a backup dump
 or B<backup savedb> operation, the Tape Coordinator reads the capacity
 recorded on the tape's label (or uses the value associated with its port
-offset in the F</usr/afs/backup/tapeconfig> file, if the tape was never
+offset in the F<{{ afsbackupdir }}/tapeconfig> file, if the tape was never
 labeled). For further description, see the B<backup dump> reference page.
 
 The Tape Coordinator's default response to this command is to access the
 tape by invoking the C<MOUNT> instruction in the local
-F</usr/afs/backup/CFG_I<device_name>> file, or by prompting the backup
+F<{{ afsbackupdir }}/CFG_I<device_name>> file, or by prompting the backup
 operator to insert the tape if there is no C<MOUNT> instruction. However,
 if the C<AUTOQUERY NO> instruction appears in the F<CFG_I<device_name>>
 file, or if the issuer of the B<butc> command included the B<-noautoquery>
@@ -142,7 +142,7 @@ letter is omitted, the default is kilobytes.
 
 If this argument is omitted the first time a tape is labeled, the Backup
 System records the capacity that is associated with the specified port
-offset in the F</usr/afs/backup/tapeconfig> file on the Tape Coordinator
+offset in the F<{{ afsbackupdir }}/tapeconfig> file on the Tape Coordinator
 machine. The value recorded the first time then persists until the
 B<-size> argument is provided on a future issuance of the command.
 
@@ -165,7 +165,7 @@ argument is omitted, any existing permanent name is retained.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+F<{{ afsconfdir }}/KeyFile> file. The B<backup> command interpreter presents
 it to the Backup Server, Volume Server and VL Server during mutual
 authentication. Do not combine this flag with the B<-cell> argument. For
 more details, see L<backup(8)>.
@@ -200,7 +200,7 @@ name unchanged.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on every
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on every
 machine where the Backup Server is running, or must be logged onto a
 server machine as the local superuser C<root> if the B<-localauth> flag is
 included.

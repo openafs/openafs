@@ -7,7 +7,7 @@ AuthLog.dir, AuthLog.pag - Log of Authentication Server privileged operations
 The F<AuthLog.dir> and F<AuthLog.pag> files record a trace of privileged
 operations performed by the Authentication Server (B<kaserver> process) on
 the local machine. If the files do not exist when the Authentication
-Server starts, it creates them in the F</usr/afs/logs> directory as
+Server starts, it creates them in the F<{{ afslogsdir }}> directory as
 necessary.
 
 The files are in binary format. To display their contents, use the B<kdb>

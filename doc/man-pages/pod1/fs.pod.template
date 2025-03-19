@@ -112,7 +112,7 @@ configuration files:
 
 =over 4
 
-=item F</usr/vice/etc/CellServDB>
+=item F<{{ viceetcdir }}/CellServDB>
 
 Lists the database server machines in the local cell and any foreign cell
 to which the administrator wishes to enable AFS access for users working
@@ -122,12 +122,12 @@ maintain databases of administrative information. For users to access a
 cell, its C<root.cell> volume must also be mounted in the local cell's AFS
 file tree.
 
-=item F</usr/vice/etc/ThisCell>
+=item F<{{ viceetcdir }}/ThisCell>
 
 Defines the machine's cell membership with respect to the AFS command
 suites and Cache Manager access to AFS data.
 
-=item F</usr/vice/etc/cacheinfo>
+=item F<{{ viceetcdir }}/cacheinfo>
 
 Defines configuration parameters for the cache, including its size and
 whether it is in memory or on disk.

@@ -125,7 +125,7 @@ indicated.  But do use Control-D at the end, not up-arrow D.
 You will see this:
 
     # pt_util -w
-    pt_util: /usr/afs/db/prdb.DB0: Bad UBIK_MAGIC. Is 0 should be 354545
+    pt_util: {{ afsdbdir }}/prdb.DB0: Bad UBIK_MAGIC. Is 0 should be 354545
     Ubik Version is: 2.0
     admin 128/20 1 -204 -204
     system:administrators 130/20 -204 -204 -204

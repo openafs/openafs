@@ -56,9 +56,9 @@ The B<afsd> command performs the following actions:
 Sets a field in kernel memory that defines the machine's cell
 membership. Some Cache Manager-internal operations and system calls
 consult this field to learn which cell to execute in. (The AFS command
-interpreters refer to the F</usr/vice/etc/ThisCell> file instead.) This
+interpreters refer to the F<{{ viceetcdir }}/ThisCell> file instead.) This
 information is transferred into the kernel from the
-F</usr/vice/etc/ThisCell> file and cannot be changed until the B<afsd>
+F<{{ viceetcdir }}/ThisCell> file and cannot be changed until the B<afsd>
 program runs again.
 
 =item *
@@ -71,7 +71,7 @@ a cell from this list, or incorrect information about its database server
 machines, prevents the Cache Manager from accessing files in it.
 
 By default, the list of database server machines is transferred into the
-kernel from the F</usr/vice/etc/CellServDB> file. Alternatively, when the
+kernel from the F<{{ viceetcdir }}/CellServDB> file. Alternatively, when the
 B<-afsdb> option is used, the list of database server machines is taken
 from the DNS SRV or AFSDB records for each cell. After initialization, use the
 B<fs newcell> command to change the kernel-resident list without having to
@@ -81,7 +81,7 @@ reboot.
 
 Mounts the root of the AFS filespace on a directory on the machine's local
 disk, according to either the first field in the
-F</usr/vice/etc/cacheinfo> file (the default) or the B<afsd> command's
+F<{{ viceetcdir }}/cacheinfo> file (the default) or the B<afsd> command's
 B<-mountdir> argument. The conventional value is F</afs>.
 
 =item *
@@ -108,14 +108,14 @@ creates the directory (its parent directory must already exist). It does
 not remove the directory that formerly served this function, if one
 exists.
 
-The second field in the F</usr/vice/etc/cacheinfo> file is the source for
+The second field in the F<{{ viceetcdir }}/cacheinfo> file is the source for
 this name. The standard value is F</usr/vice/cache>. Use the B<-cachedir>
 argument to override the value in the B<cacheinfo> file.
 
 =item *
 
 Sets the size of the cache. The default source for the value is the third
-field in the F</usr/vice/etc/cacheinfo> file, which specifies a number of
+field in the F<{{ viceetcdir }}/cacheinfo> file, which specifies a number of
 kilobytes.
 
 For a memory cache, the following arguments to the afsd command override
@@ -432,7 +432,7 @@ B<-daemons> argument.
 Specifies the number of kilobyte blocks to be made available for caching
 in the machine's cache directory (for a disk cache) or memory (for a
 memory cache), overriding the default defined in the third field of the
-F</usr/vice/etc/cacheinfo> file. For a disk cache, the value cannot exceed
+F<{{ viceetcdir }}/cacheinfo> file. For a disk cache, the value cannot exceed
 95% of the space available in the cache partition. If using a memory
 cache, do not combine this argument with the B<-dcache> argument, since
 doing so can possibly result in a chunk size that is not an exponent of 2.
@@ -441,7 +441,7 @@ doing so can possibly result in a chunk size that is not an exponent of 2.
 
 Names the local disk directory to be used as the cache. This value
 overrides the default defined in the second field of the
-F</usr/vice/etc/cacheinfo> file.
+F<{{ viceetcdir }}/cacheinfo> file.
 
 =item B<-chunksize> <I<chunk size>>
 
@@ -461,7 +461,7 @@ large files.
 
 =item B<-confdir> <I<configuration directory>>
 
-Names a directory other than the F</usr/vice/etc> directory from which to
+Names a directory other than the F<{{ viceetcdir }}> directory from which to
 fetch the F<cacheinfo>, F<ThisCell>, and F<CellServDB> configuration
 files.
 
@@ -637,7 +637,7 @@ flag with the B<-files> argument.
 
 Names the local disk directory on which to mount the root of the AFS
 filespace. This value overrides the default defined in the first field of
-the F</usr/vice/etc/cacheinfo> file. If a value other than the F</afs>
+the F<{{ viceetcdir }}/cacheinfo> file. If a value other than the F</afs>
 directory is used, the machine cannot access the filespace of cells that
 do use that value.
 
@@ -784,17 +784,17 @@ The B<afsd> command is normally included in the machine's AFS
 initialization file, rather than typed at the command shell prompt. For
 most disk caches, the appropriate form is
 
-   % /usr/vice/etc/afsd
+   % {{ viceetcdir }}/afsd
 
 The following command is appropriate when enabling a machine to act as an
 NFS/AFS Translator machine serving more than five users.
 
-   % /usr/vice/etc/afsd -daemons 4 -rmtsys
+   % {{ viceetcdir }}/afsd -daemons 4 -rmtsys
 
 The following command initializes a memory cache and sets chunk size to 16
 KB (2^14).
 
-   % /usr/vice/etc/afsd -memcache -chunksize 14
+   % {{ viceetcdir }}/afsd -memcache -chunksize 14
 
 =head1 PRIVILEGE REQUIRED
 

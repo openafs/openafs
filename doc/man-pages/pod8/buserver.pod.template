@@ -25,23 +25,23 @@ B<buserver> S<<< [B<-database> <I<database directory>>] >>>
 The B<buserver> command initializes the Backup Server, which runs on
 database server machines and maintains the Backup Database. In the
 conventional configuration, the binary file is located in the
-F</usr/afs/bin> directory on a file server machine.
+F<{{ afssrvlibexecdir }}> directory on a file server machine.
 
 The B<buserver> command is not normally issued at the command shell
 prompt, but rather placed into a database server machine's
-F</usr/afs/local/BosConfig> file with the B<bos create> command. If it is
+F<{{ afsbosconfigdir }}/BosConfig> file with the B<bos create> command. If it is
 ever issued at the command shell prompt, the issuer must be logged onto a
 file server machine as the local superuser C<root>.
 
 As it initializes, the Backup Server process creates the two files that
 constitute the Backup Database, F<bdb.DB0> and F<bdb.DBSYS1>, in the
-F</usr/afs/db> directory if they do not already exist. The Backup Database
+F<{{ afsdbdir }}> directory if they do not already exist. The Backup Database
 houses information about volume sets and entries, the dump hierarchy, Tape
 Coordinators, and previously performed dump sets. Use the commands in the
 B<backup> suite to administer the database.
 
 The Backup Server records a trace of its activity in the
-F</usr/afs/logs/BackupLog> file. Use the B<bos getlog> command to display
+F<{{ afslogsdir }}/BackupLog> file. Use the B<bos getlog> command to display
 the contents of the file.
 
 This command does not use the syntax conventions of the AFS command
@@ -61,7 +61,7 @@ B<buserver> process is running.
 
 Specifies the pathname of an alternate directory for the Backup Database
 files, ending in a final slash (C</>). If this argument is not provided,
-the default is the F</usr/afs/db> directory.
+the default is the F<{{ afsdbdir }}> directory.
 
 =item B<-auditlog> [<I<interface>>:]<I<path>>[:<I<options>>]
 
@@ -84,7 +84,7 @@ Specifies the pathname of the directory from which the Backup Server reads
 in an alternate version of the F<CellServDB> file. This argument is
 mandatory for correct functioning when the Backup Server is running on a
 subset of the cell's database server machines that is not a majority of
-the machines listed in the standard F</usr/afs/etc/CellServDB> file (which
+the machines listed in the standard F<{{ afsconfdir }}/CellServDB> file (which
 the Backup Server consults if this argument is not provided). It is not
 appropriate in any other circumstances.
 
@@ -93,7 +93,7 @@ appropriate in any other circumstances.
 This option is ignored by the Backup Server in all versions of OpenAFS.
 
 This option was present in IBM AFS to remove all of the information in the
-Backup Database files in the -F</usr/afs/db> directory during startup, leaving
+Backup Database files in the -F<{{ afsdbdir }}> directory during startup, leaving
 zero-length versions of them.  The backup operator would need recreate the
 configuration entries in the database (for volume sets, the dump hierarchy and
 so on) before performing backup operations.
@@ -116,7 +116,7 @@ access take longer.
 Specifies the database server machines on which to start the Backup
 Server. Use this argument if running the Backup Server on a subset of the
 database server machines that is not a majority of the machines listed in
-the F</usr/afs/etc/CellServDB> file.
+the F<{{ afsconfdir }}/CellServDB> file.
 
 =item B<-rxbind>
 
@@ -148,7 +148,7 @@ on the file server machine C<fs3.example.com>. It appears here on two lines
 only for legibility.
 
    % bos create -server fs3.example.com -instance buserver \
-                -type simple -cmd /usr/afs/bin/buserver
+                -type simple -cmd {{ afssrvlibexecdir }}/buserver
 
 =head1 PRIVILEGE REQUIRED
 

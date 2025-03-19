@@ -30,12 +30,12 @@ client machine to verify that the Cache Manager is still accessible.
 
 The list of interfaces specified with this command replaces the list that
 the Cache Manager constructs and records in kernel memory as it
-initializes. At that time, if the file F</usr/vice/etc/NetInfo> exists on
+initializes. At that time, if the file F<{{ viceetcdir }}/NetInfo> exists on
 the client machine's local disk, the Cache Manager uses its contents as
 the basis for the list of interfaces addresses. If the file does not
 exist, the Cache Manager instead uses the network interfaces configured
 with the operating system. It then removes from the list any address
-included in the local F</usr/vice/etc/NetRestrict> file. It records the
+included in the local F<{{ viceetcdir }}/NetRestrict> file. It records the
 final list in kernel memory. (An administrator must create the F<NetInfo>
 and F<NetRestrict> files; there are no default versions of them.)
 
@@ -51,7 +51,7 @@ with File Servers, use the B<fs getclientaddrs> command.
 
 The list specified with this command persists in kernel memory only until
 the client machine reboots. To preserve it across reboots, either list the
-interfaces in the local F</usr/vice/etc/NetInfo> file, or place the
+interfaces in the local F<{{ viceetcdir }}/NetInfo> file, or place the
 appropriate B<fs setclientaddrs> command in the machine's AFS
 initialization script.
 
@@ -92,7 +92,7 @@ The message
 
 confirms that each new interface was added to the Cache Manager's
 list. The address appears in hexadecimal format to match the notation used
-in the File Server log, F</usr/afs/logs/FileLog>.
+in the File Server log, F<{{ afslogsdir }}/FileLog>.
 
 =head1 EXAMPLES
 

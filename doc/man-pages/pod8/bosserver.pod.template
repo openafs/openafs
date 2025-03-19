@@ -32,7 +32,7 @@ B<bosserver>
 
 The bosserver command initializes the Basic OverSeer (BOS) Server
 (B<bosserver> process). In the conventional configuration, the binary file
-is located in the F</usr/afs/bin> directory on a file server machine.
+is located in the F<{{ afssrvlibexecdir }}> directory on a file server machine.
 
 The BOS Server must run on every file server machine and helps to automate
 file server administration by performing the following tasks:
@@ -73,15 +73,15 @@ file.
 The BOS Server will rewrite B<BosConfig> when shutting down, so changes
 made manually to it will be discarded.  Instead, to change the BOS Server
 configuration only for the next restart of B<bosserver>, create a file
-named F</usr/afs/local/BosConfig.new>.  If B<BosConfig.new> exists when
-B<bosserver> starts, it is renamed to F</usr/afs/local/BosConfig>,
+named F<{{ afsbosconfigdir }}/BosConfig.new>.  If B<BosConfig.new> exists when
+B<bosserver> starts, it is renamed to F<{{ afsbosconfigdir }}/BosConfig>,
 removing any existing file by that name, before B<bosserver> reads its
 configuration.
 
 The BOS Server logs a default set of important events in the file
-F</usr/afs/logs/BosLog>. To record the name of any user who performs a
+F<{{ afslogsdir }}/BosLog>. To record the name of any user who performs a
 privileged B<bos> command (one that requires being listed in the
-F</usr/afs/etc/UserList> file), add the B<-log> flag. To display the
+F<{{ afsconfdir }}/UserList> file), add the B<-log> flag. To display the
 contents of the B<BosLog> file, use the B<bos getlog> command.
 
 The first time that the BOS Server initializes on a server machine, it
@@ -93,14 +93,14 @@ that the BOS Server initially turns off the bit (sets it to the hyphen),
 but does not check it at restart.
 
    /usr/afs              drwxr?xr-x
-   /usr/afs/backup       drwx???---
-   /usr/afs/bin          drwxr?xr-x
-   /usr/afs/db           drwx???---
-   /usr/afs/etc          drwxr?xr-x
-   /usr/afs/etc/KeyFile  -rw????---
-   /usr/afs/etc/UserList -rw?????--
-   /usr/afs/local        drwx???---
-   /usr/afs/logs         drwxr?xr-x
+   {{ afsbackupdir }}       drwx???---
+   {{ afssrvlibexecdir }}          drwxr?xr-x
+   {{ afsdbdir }}           drwx???---
+   {{ afsconfdir }}          drwxr?xr-x
+   {{ afsconfdir }}/KeyFile  -rw????---
+   {{ afsconfdir }}/UserList -rw?????--
+   {{ afslocaldir }}        drwx???---
+   {{ afslogsdir }}         drwxr?xr-x
 
 If the mode bits do not comply, the BOS Server writes the following
 warning to the F<BosLog> file:
@@ -127,9 +127,9 @@ experimental or debug purposes. See L<NoAuth(5)>.
 
 =item B<-log>
 
-Records in the F</usr/afs/logs/BosLog> file the names of all users who
+Records in the F<{{ afslogsdir }}/BosLog> file the names of all users who
 successfully issue a privileged B<bos> command (one that requires being
-listed in the F</usr/afs/etc/UserList> file).
+listed in the F<{{ afsconfdir }}/UserList> file).
 
 =item B<-cores=>none|<I<path>>
 
@@ -203,7 +203,7 @@ the log message should be sent.
 =item B<-transarc-logs>
 
 Use Transarc style logging features. Rename the existing log file
-F</usr/afs/logs/BosLog> to F</usr/afs/logs/BosLog.old> when the bos server is
+F<{{ afslogsdir }}/BosLog> to F<{{ afslogsdir }}/BosLog.old> when the bos server is
 restarted.  This option is provided for compatibility with older versions.
 
 =item B<-pidfiles>[=<I<path>>]
@@ -211,7 +211,7 @@ restarted.  This option is provided for compatibility with older versions.
 Create a one-line file containing the process id (pid) for each non-cron
 process started by the BOS Server.  This file is removed by the BOS Server when
 the process exits.  The optional <I<path>> argument specifies the path where
-the pid files are to be created.  The default location is C</usr/afs/local>.
+the pid files are to be created.  The default location is C<{{ afslocaldir }}>.
 
 The name of the pid files for C<simple> BOS Server process types are the BOS
 Server instance name followed by C<.pid>.

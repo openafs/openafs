@@ -28,17 +28,17 @@ Authentication Server and that have not yet migrated to Kerberos version
 
 For a cell using the Authentication Server, it runs on every database
 server machine. In the conventional configuration, its binary file is
-located in the F</usr/afs/bin> directory on a file server machine.
+located in the F<{{ afssrvlibexecdir }}> directory on a file server machine.
 
 The B<kaserver> command is not normally issued at the command shell prompt
-but rather placed into a file server machine's F</usr/afs/local/BosConfig>
+but rather placed into a file server machine's F<{{ afsbosconfigdir }}/BosConfig>
 file with the B<bos create> command. If it is ever issued at the command
 shell prompt, the issuer must be logged onto a database server machine as
 the local superuser C<root>.
 
 As it initializes, the Authentication Server process creates the two files
 that constitute the Authentication Database, F<kaserver.DB0> and
-F<kaserver.DBSYS1>, in the F</usr/afs/db> directory if they do not already
+F<kaserver.DBSYS1>, in the F<{{ afsdbdir }}> directory if they do not already
 exist. Use the commands in the B<kas> suite to administer the database.
 
 The Authentication Server is responsible for several aspects of AFS
@@ -60,7 +60,7 @@ this function.
 =back
 
 The Authentication Server records a trace of its activity in the
-F</usr/afs/logs/AuthLog> file. Use the B<bos getlog> command to display
+F<{{ afslogsdir }}/AuthLog> file. Use the B<bos getlog> command to display
 the contents of the file. Use the B<kdb> command to read the protected
 files associated with the F<AuthLog> file, F<AuthLog.dir> and
 F<AuthLog.pag>.
@@ -103,7 +103,7 @@ Specifies the pathname of an alternate directory in which the
 Authentication Database files reside. Provide the complete pathname,
 ending in the base filename to which the C<.DB0> and C<.DBSYS1> extensions
 are appended. For example, the appropriate value for the default database
-files is F</usr/afs/db/kaserver>.
+files is F<{{ afsdbdir }}/kaserver>.
 
 Provide the B<-localfiles> argument along with this one; otherwise, the
 B<-localfiles> argument is also set to the value of this argument, which
@@ -132,7 +132,7 @@ Specifies the pathname of an alternate directory in which the auxiliary
 Authentication Database file resides. Provide the complete pathname,
 ending in the base filename to which the C<auxdb> suffix is appended. For
 example, the appropriate value for the default auxiliary database file is
-F</usr/afs/local/kaserver>.
+F<{{ afslocaldir }}/kaserver>.
 
 =item B<-minhours> <I<n>>
 
@@ -147,7 +147,7 @@ recommended.
 Names each database server machine running an Authentication Server with
 which the local Authentication Server is to synchronize its copy of the
 Authentication Database, rather than with the machines listed in the local
-F</usr/afs/etc/CellServDB> file.
+F<{{ afsconfdir }}/CellServDB> file.
 
 =item B<-enable_peer_stats>
 
@@ -189,7 +189,7 @@ C<fs3.example.com> (the command appears on two lines here only for
 legibility):
 
    % bos create -server fs3.example.com -instance kaserver \
-                -type simple -cmd /usr/afs/bin/kaserver
+                -type simple -cmd {{ afssrvlibexecdir }}/kaserver
 
 =head1 PRIVILEGE REQUIRED
 

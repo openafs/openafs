@@ -31,12 +31,12 @@ ptserver S<<< [B<-database> | B<-db> <I<db path>>] >>>
 
 The B<ptserver> command initializes the Protection Server, which must run
 on every database server machine. In the conventional configuration, its
-binary file is located in the F</usr/afs/bin> directory on a file server
+binary file is located in the F<{{ afssrvlibexecdir }}> directory on a file server
 machine.
 
 The ptserver command is not normally issued at the command shell prompt,
 but rather placed into a database server machine's
-F</usr/afs/local/BosConfig> file with the B<bos create> command. If it is
+F<{{ afsbosconfigdir }}/BosConfig> file with the B<bos create> command. If it is
 ever issued at the command shell prompt, the issuer must be logged onto a
 file server machine as the local superuser C<root>.
 
@@ -79,7 +79,7 @@ suites. Provide the command name and all option names in full.
 =item B<-d> <I<debug level>>
 
 Sets the detail level for the debugging trace written to the
-F</usr/afs/logs/PtLog> file. Provide one of the following values, each
+F<{{ afslogsdir }}/PtLog> file. Provide one of the following values, each
 of which produces an increasingly detailed trace: C<0>, C<1>, C<5>, C<25>,
 and C<125>. 
 
@@ -89,7 +89,7 @@ Specifies the pathname of an alternate directory in which the Protection
 Database files reside. Provide the complete pathname, ending in the base
 filename to which the C<.DB0> and C<.DBSYS1> extensions are appended. For
 example, the appropriate value for the default database files is
-F</usr/afs/db/prdb>.
+F<{{ afsdbdir }}/prdb>.
 
 =item B<-p> <I<number of threads>>
 
@@ -160,7 +160,7 @@ with the string "ptserver".
 =item B<-logfile> <I<log file>>
 
 Sets the file to use for server logging. If logfile is not specified, and
-no other logging options are supplied, this will be F</usr/afs/logs/PtLog>.
+no other logging options are supplied, this will be F<{{ afslogsdir }}/PtLog>.
 Note that this option is intended for debugging and testing purposes.
 Changing the location of the log file from the command line may result
 in undesirable interactions with tools such as B<bos>.
@@ -168,13 +168,13 @@ in undesirable interactions with tools such as B<bos>.
 =item B<-transarc-logs>
 
 Use Transarc style logging features. Rename the log file
-F</usr/afs/logs/PtLog> to F</usr/afs/logs/PtLog.old> when the PT Server is
+F<{{ afslogsdir }}/PtLog> to F<{{ afslogsdir }}/PtLog.old> when the PT Server is
 restarted.  This option is provided for compatibility with older versions.
 
 =item B<-config> <I<configuration directory>>
 
 Set the location of the configuration directory used to configure this
-service. In a typical configuration this will be F</usr/afs/etc> - this
+service. In a typical configuration this will be F<{{ afsconfdir }}> - this
 option allows the use of alternative configuration locations for testing
 purposes.
 
@@ -219,7 +219,7 @@ machine C<fs3.example.com>. The command appears here on multiple lines only
 for legibility.
 
    % bos create -server fs3.example.com -instance ptserver \
-                -type simple -cmd /usr/afs/bin/ptserver
+                -type simple -cmd {{ afssrvlibexecdir }}/ptserver
 
 =head1 PRIVILEGE REQUIRED
 

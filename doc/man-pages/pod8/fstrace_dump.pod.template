@@ -44,7 +44,7 @@ B<fstrace setset> command respectively.
 
 To make the output from this command maximally readable, the message
 catalog file called F<afszcm.cat> must reside in the local
-F</usr/vice/etc/C> directory. If necessary, copy the file to that
+F<{{ viceetcdir }}/C> directory. If necessary, copy the file to that
 directory from the AFS Binary Distribution before activating tracing.
 
 When the C<cm> event set is active, a defined amount of kernel memory (by

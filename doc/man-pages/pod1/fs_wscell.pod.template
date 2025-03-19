@@ -33,7 +33,7 @@ ignored.
 =head1 OUTPUT
 
 The output displays the client's current home cell, thus the contents of the
-local F</usr/vice/etc/ThisCell> file at the time when the client was started,
+local F<{{ viceetcdir }}/ThisCell> file at the time when the client was started,
 in the format
 
    This workstation belongs to cell '<cellname>'

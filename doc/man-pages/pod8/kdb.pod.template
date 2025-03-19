@@ -7,7 +7,7 @@ kdb - Displays log or privileged actions performed by the Authentication Server
 =for html
 <div class="synopsis">
 
-B<kdb> S<<< [B<-dbmfile> <I<dbmfile to use (default /usr/afs/logs/AuthLog)>>] >>>
+B<kdb> S<<< [B<-dbmfile> <I<dbmfile to use (default {{ afslogsdir }}/AuthLog)>>] >>>
     S<<< [B<-key> <I<extract entries that match specified key>>] >>>
     [B<-long>] [B<-numeric>] [B<-help>]
 
@@ -18,7 +18,7 @@ B<kdb> S<<< [B<-dbmfile> <I<dbmfile to use (default /usr/afs/logs/AuthLog)>>] >>
 
 The B<kdb> command displays the contents of the F<AuthLog.dir> and
 F<AuthLog.pag> files associated with the F<AuthLog> file that resides on
-the local disk, by default in the F</usr/afs/logs> directory. The files
+the local disk, by default in the F<{{ afslogsdir }}> directory. The files
 must exist in that directory, which normally implies that the
 Authentication Server is running on the machine. The files contain
 information on privileged actions performed by the obsolete Authentication
@@ -33,8 +33,8 @@ Authentication Server and supporting commands, including B<kdb>, will be
 removed in a future version of OpenAFS.
 
 It is possible that on some operating systems that AFS otherwise supports,
-the Authentication Server cannot create the F</usr/afs/logs/AuthLog.dir>
-and F</usr/afs/logs/AuthLog.pag> files, making this command inoperative.
+the Authentication Server cannot create the F<{{ afslogsdir }}/AuthLog.dir>
+and F<{{ afslogsdir }}/AuthLog.pag> files, making this command inoperative.
 
 =head1 OPTIONS
 
@@ -43,10 +43,10 @@ and F</usr/afs/logs/AuthLog.pag> files, making this command inoperative.
 =item B<-dbmfile> <I<dbmfile to use>>
 
 Specifies the pathname of the file to display. Provide either a complete
-pathname, a pathname relative to the F</usr/afs/logs> directory, or a
-filename only, in which case the file must reside in the F</usr/afs/logs>
+pathname, a pathname relative to the F<{{ afslogsdir }}> directory, or a
+filename only, in which case the file must reside in the F<{{ afslogsdir }}>
 directory. Omit this argument to display information from the
-F<AuthLog.dir> and F<AuthLog.pag> files in the F</usr/afs/logs> directory.
+F<AuthLog.dir> and F<AuthLog.pag> files in the F<{{ afslogsdir }}> directory.
 
 =item B<-key> <I<extract entries that match specified key>>
 
@@ -133,7 +133,7 @@ The following example shows the output of the B<kdb> command in the Example
 Corporation cell (C<example.com>):
 
    % kdb
-   Printing all entries found in /usr/afs/logs/AuthLog
+   Printing all entries found in {{ afslogsdir }}/AuthLog
    admin,krbtgt.EXAMPLE.COM:auth
    admin,afs:gtck
    admin:cruser

@@ -24,15 +24,15 @@ I<permanent name>, or an I<AFS tape name> that reflects the tape's
 contents in a prescribed format) and its capacity.
 
 If the C<FILE YES> instruction appears in the
-F</usr/afs/backup/CFG_I<device_name>> file associated with the specified
+F<{{ afsbackupdir }}/CFG_I<device_name>> file associated with the specified
 port offset, then the B<backup readlabel> command reads the label
 information from the first 16 KB block in the backup data file listed for
-that port offset in the Tape Coordinator's F</usr/afs/backup/tapeconfig>
+that port offset in the Tape Coordinator's F<{{ afsbackupdir }}/tapeconfig>
 file, rather than from the beginning of a tape.
 
 The Tape Coordinator's default response to this command is to access the
 tape by invoking the C<MOUNT> instruction in the local
-F</usr/afs/backup/CFG_I<device_name>> file, or by prompting the backup
+F<{{ afsbackupdir }}/CFG_I<device_name>> file, or by prompting the backup
 operator to insert the tape if there is no C<MOUNT> instruction. However,
 if the C<AUTOQUERY NO> instruction appears in the F<CFG_I<device_name>>
 file, or if the issuer of the B<butc> command included the B<-noautoquery>
@@ -52,7 +52,7 @@ tapes for this operation.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+F<{{ afsconfdir }}/KeyFile> file. The B<backup> command interpreter presents
 it to the Backup Server, Volume Server and VL Server during mutual
 authentication. Do not combine this flag with the B<-cell> argument. For
 more details, see L<backup(8)>.
@@ -153,7 +153,7 @@ Database contains a record of the dump set.
 The tape's capacity (in kilobytes) as recorded on the label, rather than
 the amount of data on the tape. The value is assigned by the B<-size>
 argument to the B<backup labeltape> command or derived from the
-F</usr/afs/backup/tapeconfig> file on the Tape Coordinator machine, not
+F<{{ afsbackupdir }}/tapeconfig> file on the Tape Coordinator machine, not
 from a measurement of the tape.
 
 =item dump path
@@ -220,7 +220,7 @@ The output in the Tape Coordinator window reads:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on every
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on every
 machine where the Backup Server is running, or must be logged onto a
 server machine as the local superuser C<root> if the B<-localauth> flag is
 included.

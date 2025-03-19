@@ -26,7 +26,7 @@ machines that use a disk cache. The command is not operative on machines
 that use a memory cache.
 
 To return the cache size to the default value specified in the third field
-of the local F</usr/vice/etc/cacheinfo> file, provide a value of C<0> to
+of the local F<{{ viceetcdir }}/cacheinfo> file, provide a value of C<0> to
 the B<-blocks> argument.
 
 To return the cache size to the value set when the machine was last

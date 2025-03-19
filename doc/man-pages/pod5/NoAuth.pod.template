@@ -4,7 +4,7 @@ NoAuth - Disables authorization checking
 
 =head1 DESCRIPTION
 
-The F<NoAuth> file, if present in a server machine's F</usr/afs/local>
+The F<NoAuth> file, if present in a server machine's F<{{ afslocaldir }}>
 directory, indicates to the AFS server processes running on the machine
 that it is not necessary to perform authorization checking. They perform
 any action for any user who logs into the machine's local file system or

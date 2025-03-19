@@ -1,4 +1,17 @@
 #
+# Installation paths to be filled into the POD files.
+#
+GENERATE_POD_FLAGS=\
+  --define afsbackupdir="@afsbackupdir@" \
+  --define afsbosconfigdir="@afsbosconfigdir@" \
+  --define afsconfdir="@afsconfdir@" \
+  --define afsdbdir="@afsdbdir@" \
+  --define afslocaldir="@afslocaldir@" \
+  --define afslogsdir="@afslogsdir@" \
+  --define afssrvlibexecdir="@afssrvlibexecdir@" \
+  --define viceetcdir="@viceetcdir@"
+
+#
 # Man pages installed unconditionally.
 #
 MAN_PAGES = \

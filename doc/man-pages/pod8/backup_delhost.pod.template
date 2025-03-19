@@ -24,7 +24,7 @@ The B<backup delhost> command deletes the indicated Tape Coordinator entry
 from the Backup Database. It is then impossible to submit backup
 operations to that Tape Coordinator, even if it is still running. To keep
 configuration information consistent, also remove the corresponding entry
-from the F</usr/afs/backup/tapeconfig> file on the Tape Coordinator
+from the F<{{ afsbackupdir }}/tapeconfig> file on the Tape Coordinator
 machine.
 
 To list the Tape Coordinator machines and port offsets defined in the
@@ -45,13 +45,13 @@ Specifies the port offset number of the Tape Coordinator to delete.  If
 omitted, it defaults to C<0>. If provided, it is an integer between C<0>
 (zero) and C<58510>, and must match the port offset number assigned to the
 same combination of Tape Coordinator and tape device or file in the
-F</usr/afs/backup/tapeconfig> file on the Tape Coordinator machine
+F<{{ afsbackupdir }}/tapeconfig> file on the Tape Coordinator machine
 indicated by the B<-tapehost> argument.
 
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+F<{{ afsconfdir }}/KeyFile> file. The B<backup> command interpreter presents
 it to the Backup Server, Volume Server and VL Server during mutual
 authentication. Do not combine this flag with the B<-cell> argument. For
 more details, see L<backup(8)>.
@@ -78,7 +78,7 @@ C<backup3.example.com>:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on every
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on every
 machine where the Backup Server is running, or must be logged onto a
 server machine as the local superuser C<root> if the B<-localauth> flag is
 included.

@@ -34,7 +34,7 @@ The host name of the Tape Coordinator machine where the Tape Coordinator
 
 The Tape Coordinator's port offset number, as specified with the
 B<-portoffset> argument. An entry for the port offset must also appear in
-the F</usr/afs/backup/tapeconfig> file on the Tape Coordinator machine,
+the F<{{ afsbackupdir }}/tapeconfig> file on the Tape Coordinator machine,
 where it is mapped to a UNIX device name (for a tape device) or pathname
 (for a backup data file).
 
@@ -63,13 +63,13 @@ Specifies the Tape Coordinator's port offset number. Provide an integer
 from the range C<0> through C<58510>, or omit this argument to use the
 default value of C<0> (zero). The value must match the port offset number
 recorded for the same combination of Tape Coordinator and tape device or
-file in the F</usr/afs/backup/tapeconfig> file on the Tape Coordinator
+file in the F<{{ afsbackupdir }}/tapeconfig> file on the Tape Coordinator
 machine named by the B<-tapehost> argument.
 
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+F<{{ afsconfdir }}/KeyFile> file. The B<backup> command interpreter presents
 it to the Backup Server, Volume Server and VL Server during mutual
 authentication. Do not combine this flag with the B<-cell> argument. For
 more details, see L<backup(8)>.
@@ -101,7 +101,7 @@ offset number 0 to a Tape Coordinator on the machine C<backup3.example.com>:
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on every
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on every
 machine where the Backup Server is running, or must be logged onto a
 server machine as the local superuser C<root> if the B<-localauth> flag is
 included.

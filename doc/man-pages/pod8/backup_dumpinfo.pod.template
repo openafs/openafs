@@ -60,7 +60,7 @@ flag with the B<-ndumps> argument.
 =item B<-localauth>
 
 Constructs a server ticket using a key from the local
-F</usr/afs/etc/KeyFile> file. The B<backup> command interpreter presents
+F<{{ afsconfdir }}/KeyFile> file. The B<backup> command interpreter presents
 it to the Backup Server, Volume Server and VL Server during mutual
 authentication. Do not combine this flag with the B<-cell> argument. For
 more details, see L<backup(8)>.
@@ -249,7 +249,7 @@ operator are:
 
 The dump's I<group ID number>, which is recorded in the dump's Backup
 Database record if the C<GROUPID> instruction appears in the Tape
-Coordinator's F</usr/afs/backup/CFG_I<tcid>> file when the dump is
+Coordinator's F<{{ afsbackupdir }}/CFG_I<tcid>> file when the dump is
 created.
 
 =item maxTapes
@@ -401,7 +401,7 @@ C<Volume>):
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be listed in the F</usr/afs/etc/UserList> file on every
+The issuer must be listed in the F<{{ afsconfdir }}/UserList> file on every
 machine where the Backup Server is running, or must be logged onto a
 server machine as the local superuser C<root> if the B<-localauth> flag is
 included.

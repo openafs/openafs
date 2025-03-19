@@ -29,7 +29,7 @@ damaged volumes.
 
 =item B<-inodes>
 
-Records in the F</usr/afs/logs/SalvageLog> file a list of all AFS inodes
+Records in the F<{{ afslogsdir }}/SalvageLog> file a list of all AFS inodes
 that the Salvager modified.
 
 =item B<-force>
@@ -48,7 +48,7 @@ needed.
 
 =item B<-rootinodes>
 
-Records in the F</usr/afs/logs/SalvageLog> file a list of all AFS inodes
+Records in the F<{{ afslogsdir }}/SalvageLog> file a list of all AFS inodes
 owned by the local superuser C<root>.
 
 =item B<-salvagedirs>
@@ -109,7 +109,7 @@ salvaged.
 =item B<-showlog>
 
 Displays on the standard output stream all log data that is being written
-to the F</usr/afs/logs/SalvageLog> file.
+to the F<{{ afslogsdir }}/SalvageLog> file.
 
 =item B<-showsuid>
 
@@ -118,7 +118,7 @@ setgid mode bit set.
 
 =item B<-showmounts>
 
-Records in the F</usr/afs/logs/SalvageLog> file all mount points found in
+Records in the F<{{ afslogsdir }}/SalvageLog> file all mount points found in
 each volume. The Salvager does not repair corruption in the volumes, if
 any exists.
 
@@ -132,14 +132,14 @@ one of the following three values:
 =item ignore
 
 Leaves the orphaned objects on the disk, but prints a message to the
-F</usr/afs/logs/SalvageLog> file reporting how many orphans were found and
+F<{{ afslogsdir }}/SalvageLog> file reporting how many orphans were found and
 the approximate number of kilobytes they are consuming. This is the
 default if the B<-orphans> argument is omitted.
 
 =item remove
 
 Removes the orphaned objects, and prints a message to the
-F</usr/afs/logs/SalvageLog> file reporting how many orphans were removed
+F<{{ afslogsdir }}/SalvageLog> file reporting how many orphans were removed
 and the approximate number of kilobytes they were consuming.
 
 =item attach

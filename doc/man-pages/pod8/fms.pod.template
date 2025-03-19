@@ -30,7 +30,7 @@ Tape Coordinator significantly to overestimate the available space.
 
 The intended use of this command is to determine tape capacity and
 filemark size values that can be specified in a tape device's entry in the
-F</usr/afs/backup/tapeconfig> file. For certain types of tape drives, the
+F<{{ afsbackupdir }}/tapeconfig> file. For certain types of tape drives, the
 Tape Coordinator operates more efficiently when the F<tapeconfig> file
 lists accurate values. For further discussion, see the I<OpenAFS
 Administration Guide> chapter on configuring the Backup System.
