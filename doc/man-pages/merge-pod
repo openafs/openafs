@@ -28,7 +28,7 @@ use Cwd qw(getcwd);
 use File::Basename qw(dirname basename);
 use File::Spec::Functions qw(catfile);
 
-sub merge_pod {
+sub render {
     my ($file, $out) = @_;
     my $start = getcwd;
     my $dir = dirname ($file);
@@ -38,15 +38,14 @@ sub merge_pod {
     binmode FILE, ':crlf' if $^O eq 'cygwin';
     open (OUT, "> $out") or die "cannot open $out: $!\n";
     chdir $dir or die "cannot chdir to $dir: $!\n";
-    local $/ = '';
     local $_;
     while (<FILE>) {
         if (/^=include\s+(\S+)/) {
             open (INCLUDE, "< $1") or die "cannot open $1: $!\n";
-            local $/;
-            print OUT <INCLUDE> or die "cannot read/write from $1: $!\n";
+            while (<INCLUDE>) {
+                print OUT $_ or die "cannot read/write from $1: $!\n";
+            }
             close INCLUDE or die "cannot read from $1: $!\n";
-            print OUT "\n" or die "cannot write to $out: $!\n";
         } else {
             print OUT $_ or die "cannot write to $out: $!\n";
         }
@@ -63,7 +62,7 @@ if (scalar(@ARGV) > 0) {
         unless ($out =~ s/\.in\z//) {
             die "input file $file does not end in .in\n";
         }
-        merge_pod($file, $out);
+        render($file, $out);
     }
 } else {
     my $srcdir = dirname(__FILE__);
@@ -79,7 +78,7 @@ if (scalar(@ARGV) > 0) {
                 my $input = catfile($srcdir, "pod${section}", $file);
                 my $output = catfile("pod${section}", $file);
                 $output =~ s/\.in\z//;
-                merge_pod($input, $output);
+                render($input, $output);
             }
         }
     }
