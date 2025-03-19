@@ -770,7 +770,6 @@ srpm: dist
 	./src/packaging/RedHat/makesrpm.pl \
 	  --dir=packages \
 	  packages/openafs-*-src.tar.bz2 \
-	  packages/openafs-*-doc.tar.bz2 \
 	  "$(RPM_RELNOTES)" \
 	  "$(RPM_CHANGELOG)" \
 	  "$(RPM_CELLSERVDB)"
