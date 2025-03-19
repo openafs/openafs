@@ -1,10 +1,8 @@
 #!/usr/bin/perl -w
 #
 # POD currently doesn't support any sort of =include directive.  This processor
-# works around that limitation.  Currently, only single include nesting is
-# supported.  The included file is not processed for additional =include
-# statements. The include paths are taken to be relative to the directory
-# containing the file being processed.
+# works around that limitation.  The include paths are taken to be relative to
+# the directory containing the file being processed.
 #
 # generate-pod scans the pod<n> directories relative to the path of the
 # generate-pod script itself for files ending in *.template. For each input
@@ -19,32 +17,30 @@ require 5.00503;
 use Cwd qw(getcwd);
 use File::Basename qw(dirname basename);
 use File::Spec::Functions qw(catfile);
+use constant MAX_INCLUDE_LEVELS => 10;
 
 sub render {
-    my ($file, $out) = @_;
-    my $start = getcwd;
-    my $dir = dirname ($file);
+    my ($input, $output, $out, $level) = @_;
+    my $dir = dirname($input);
+    my $lineno = 1;
 
-    open (FILE, "< $file") or die "cannot open $file: $!\n";
-    binmode FILE, ':crlf' if $^O eq 'MSWin32';
-    binmode FILE, ':crlf' if $^O eq 'cygwin';
-    open (OUT, "> $out") or die "cannot open $out: $!\n";
-    chdir $dir or die "cannot chdir to $dir: $!\n";
-    local $_;
-    while (<FILE>) {
-        if (/^=include\s+(\S+)/) {
-            open (INCLUDE, "< $1") or die "cannot open $1: $!\n";
-            while (<INCLUDE>) {
-                print OUT $_ or die "cannot read/write from $1: $!\n";
-            }
-            close INCLUDE or die "cannot read from $1: $!\n";
-        } else {
-            print OUT $_ or die "cannot write to $out: $!\n";
-        }
+    open(my $in, "< $input") or die "Cannot open $input: $!\n";
+    if ($^O eq 'MSWin32' or $^O eq 'cygwin') {
+        binmode $in, ':crlf';
     }
-    close OUT or die "cannot write to $out: $!\n";
-    close FILE or die "cannot read from $file\n";
-    chdir $start or die "cannot chdir to $start: $!\n";
+    while (my $line = readline($in)) {
+        if ($line =~ /^=include\s+(\S+)/) {
+            my $include = catfile($dir, $1);
+            if ($level >= MAX_INCLUDE_LEVELS) {
+                die "Too many nested includes: $input line $lineno\n";
+            }
+            render($include, $output, $out, $level + 1);
+            next;
+        }
+        print $out $line or die "Cannot write to $output: $!\n";
+        $lineno++;
+    }
+    close($in) or die "Cannot read from $input: $!\n";
 }
 
 sub main {
@@ -62,7 +58,9 @@ sub main {
                 my $input = catfile($srcdir, "pod${section}", $file);
                 my $output = catfile("pod${section}", $file);
                 $output =~ s/\.template\z//;
-                render($input, $output);
+                open(my $out, "> $output") or die "Cannot open $output: $!\n";
+                render($input, $output, $out, 0);
+                close($out) or die "Cannot write to $output: $!\n";
             }
         }
     }
