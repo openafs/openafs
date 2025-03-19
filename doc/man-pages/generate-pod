@@ -1,23 +1,34 @@
 #!/usr/bin/perl -w
-#
-# POD currently doesn't support any sort of =include directive.  This processor
-# works around that limitation.  The include paths are taken to be relative to
-# the directory containing the file being processed.
+# This processor works around POD limitations by supporting an include
+# directive and variable substitution.
 #
 # generate-pod scans the pod<n> directories relative to the path of the
-# generate-pod script itself for files ending in *.template. For each input
-# file file found, generate-pod processes any POD directives of the form
-# =include <file> in that file, generating an output file with the .template
-# suffix removed in the pod<n> directory in the current working directory.  The
-# pod<n> directories are created in the current directory if not already
-# present.
+# generate-pod script itself for files ending in *.template. A file file is
+# generated for .template file found.  The generated file is placed in the
+# pod<n> directory in the current working directory.
 
 require 5.00503;
 
+use Getopt::Long;
 use Cwd qw(getcwd);
 use File::Basename qw(dirname basename);
 use File::Spec::Functions qw(catfile);
 use constant MAX_INCLUDE_LEVELS => 10;
+
+my %variables = ();
+GetOptions(
+    "define|d=s" => \%variables,
+) or die("Usage: $0 [--define <name>=<value> [--define <name>=<value> ..]]\n");
+
+# Get the variable value by name or die with an error message.
+sub fill {
+    my ($name, $filename, $lineno) = @_;
+
+    if (!exists($variables{$name})) {
+        die "Undefined variable '$name' in '$filename' line $lineno\n";
+    }
+    return $variables{$name};
+}
 
 sub render {
     my ($input, $output, $out, $level) = @_;
@@ -37,6 +48,12 @@ sub render {
             render($include, $output, $out, $level + 1);
             next;
         }
+
+        # Fill in placeholders in the form {{ name }}, where `name` is one or
+        # more letters, digits, or underscore characters. `name` is case
+        # sensitive.
+        $line =~ s/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/fill($1, $input, $lineno)/ge;
+
         print $out $line or die "Cannot write to $output: $!\n";
         $lineno++;
     }
