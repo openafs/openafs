@@ -1,4 +1,5 @@
 m4/ax_append_compile_flags.m4	m4/ax_append_compile_flags.m4
 m4/ax_append_flag.m4		m4/ax_append_flag.m4
 m4/ax_check_compile_flag.m4	m4/ax_check_compile_flag.m4
+m4/ax_prog_perl_modules.m4	m4/ax_prog_perl_modules.m4
 m4/ax_require_defined.m4	m4/ax_require_defined.m4
