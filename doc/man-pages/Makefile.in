@@ -25,7 +25,7 @@ dest:
 	set -e; if [ "x@INSTALL_KAUTH@" = "xyes" ] ; then \
 	    for M in $(MAN_PAGES_KAUTH); do \
 		./install-man $(srcdir)/$$M $(DEST)/man/$$M ; \
-	    done;
+	    done; \
 	    $(LN) -fs klog.1 $(DEST)/man/man1/klog.krb.1 ; \
 	    $(LN) -fs pagsh.1 $(DEST)/man/man1/pagsh.krb.1 ; \
 	    $(LN) -fs tokens.1 $(DEST)/man/man1/tokens.krb.1 ; \
