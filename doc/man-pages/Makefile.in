@@ -6,14 +6,16 @@ include @TOP_OBJDIR@/doc/man-pages/Makefile.vars
 
 all: man html
 
-.PHONY: man
-man:
+.PHONY: pod
+pod:
 	$(PERL) $(srcdir)/generate-pod
+
+.PHONY: man
+man: pod
 	$(PERL) $(srcdir)/generate-man
 
 .PHONY: html
-html:
-	$(PERL) $(srcdir)/generate-pod
+html: pod
 	$(PERL) $(srcdir)/generate-html --stylesheet=$(srcdir)/style.css
 
 dest: man
