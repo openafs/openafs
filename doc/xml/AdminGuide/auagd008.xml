@@ -5124,8 +5124,8 @@ procedure, but is no longer needed.  It should not be used.</para>
     entry with a new <emphasis role="bold">sysid</emphasis> file's contents and identifier. It then refuses to allow the File Server
     to register the interfaces, which prevents the File Server from starting. This can happen if, for example, a new <emphasis
     role="bold">sysid</emphasis> file includes two interfaces that currently are registered by themselves in separate server
-    entries. In such cases, error messages in the <emphasis role="bold">/usr/afs/log/VLLog</emphasis> file on the VL Server machine
-    and in the <emphasis role="bold">/usr/afs/log/FileLog</emphasis> file on the file server machine indicate that you need to use
+    entries. In such cases, error messages in the <emphasis role="bold">/usr/afs/logs/VLLog</emphasis> file on the VL Server machine
+    and in the <emphasis role="bold">/usr/afs/logs/FileLog</emphasis> file on the file server machine indicate that you need to use
     the <emphasis role="bold">vos changeaddr</emphasis> command to resolve the problem. Contact the AFS Product Support group for
     instructions and assistance.</para>
 
