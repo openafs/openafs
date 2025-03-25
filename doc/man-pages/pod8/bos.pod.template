@@ -114,7 +114,7 @@ setrestart>, B<bos setrestricted>, B<bos start>, and B<bos stop>.
 
 =item *
 
-The F</usr/afs/log/BosLog> file records important operations the BOS
+The F</usr/afs/logs/BosLog> file records important operations the BOS
 Server performs and error conditions it encounters.
 
 =back
