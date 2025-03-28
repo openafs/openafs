@@ -61,7 +61,7 @@ sub lookup_sub_commands {
 #             subcommlist : a list of sub-commands for command
 #
 sub test_command_man_pages {
-    my ($srcdir, $command, @subcommlist) = @_;
+    my ($objdir, $command, @subcommlist) = @_;
 
     # The following is because File::Find makes no sense to me
     # for this purpose, and actually seems totally misnamed
@@ -70,7 +70,7 @@ sub test_command_man_pages {
     my $frex = "";
     # Since we don't know what man section it might be in,
     # search all existing man page files for a filename match
-    my @mandirglob = glob("$srcdir/doc/man-pages/man[1-8]/*");
+    my @mandirglob = glob("$objdir/doc/man-pages/man[1-8]/*");
     # For every subcommand, see if command_subcommand.[1-8] exists
     # in our man page source dir.
     foreach (@subcommlist) {
@@ -100,7 +100,6 @@ sub test_command_man_pages {
 sub run_manpage_tests($$) {
     my ($subdir, $command) = @_;
 
-    my $srcdir = src_path();
     my $objdir = obj_path();
 
     my @sub_commands = lookup_sub_commands("$objdir/$subdir", $command);
@@ -108,6 +107,6 @@ sub run_manpage_tests($$) {
 
     plan tests => scalar @sub_commands;
 
-    test_command_man_pages($srcdir, $command, @sub_commands);
+    test_command_man_pages($objdir, $command, @sub_commands);
 }
 1;
