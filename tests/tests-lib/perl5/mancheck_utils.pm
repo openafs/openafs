@@ -71,6 +71,11 @@ sub test_command_man_pages {
     # Since we don't know what man section it might be in,
     # search all existing man page files for a filename match
     my @mandirglob = glob("$objdir/doc/man-pages/man[1-8]/*");
+    if (!@mandirglob) {
+	plan skip_all => "man pages not built";
+    }
+    plan tests => scalar @subcommlist;
+
     # For every subcommand, see if command_subcommand.[1-8] exists
     # in our man page source dir.
     foreach (@subcommlist) {
@@ -104,8 +109,6 @@ sub run_manpage_tests($$) {
 
     my @sub_commands = lookup_sub_commands("$objdir/$subdir", $command);
     die("No subcommands found in $objdir/$subdir/$command?") unless(@sub_commands);
-
-    plan tests => scalar @sub_commands;
 
     test_command_man_pages($objdir, $command, @sub_commands);
 }
