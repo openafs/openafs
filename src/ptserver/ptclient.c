@@ -23,6 +23,7 @@
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
+#include <rx/rxgk_int.h>
 
 #include "ptclient.h"
 #include "ptuser.h"
@@ -168,7 +169,7 @@ main(int argc, char **argv)
     char *foo;
     afs_int32 over;
     char *cell;
-    afs_int32 rxgk_level = 0;
+    afs_int32 rxgk_level = RXGK_LEVEL_BOGUS;
 
 #ifdef	AFS_AIX32_ENV
     /*
