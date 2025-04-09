@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #endif
 #include <time.h>
+#include <errno.h>
 
 #include <afs/opr.h>
 #include <afs/ktime.h>
@@ -313,6 +314,7 @@ test_ktime_DisplayString(void)
 	{{KTIME_HOUR | KTIME_SEC | KTIME_DAY,   1,   2,   3,  4},  0,  "at thu 1:03 am"},
 	{{  KTIME_MIN | KTIME_SEC |KTIME_DAY,   1,   2,   3,  4},  0,  "at thu:02:03"},
 	{{            KTIME_TIME | KTIME_DAY,   1,   2,   3,  4},  0,  "at thu 1:02:03 am"},
+	{{                         KTIME_DAY,   0,   0,   0, -1},  EINVAL},
 	{{                         KTIME_DAY,   0,   0,   0,  0},  0,  "at sun"},
 	{{                         KTIME_DAY,   0,   0,   0,  1},  0,  "at mon"},
 	{{                         KTIME_DAY,   0,   0,   0,  2},  0,  "at tue"},
@@ -320,6 +322,7 @@ test_ktime_DisplayString(void)
 	{{                         KTIME_DAY,   0,   0,   0,  4},  0,  "at thu"},
 	{{                         KTIME_DAY,   0,   0,   0,  5},  0,  "at fri"},
 	{{                         KTIME_DAY,   0,   0,   0,  6},  0,  "at sat"},
+	{{                         KTIME_DAY,   0,   0,   0,  7},  EINVAL},
 	{{            KTIME_TIME | KTIME_DAY,   0,   0,   0,  1},  0,  "at mon 12:00 am"},
 	{{            KTIME_TIME | KTIME_DAY,  17,   0,   0,  5},  0,  "at fri 5:00 pm"},
 	{{            KTIME_TIME | KTIME_DAY,  17,   0,   1,  5},  0,  "at fri 5:00:01 pm"},
@@ -857,7 +860,7 @@ test_Add_RelDate_to_Time(void)
 int
 main(void)
 {
-    plan(1046);
+    plan(1048);
 
     /* Test times are in EST timezone. */
     putenv("TZ=EST+5");

@@ -358,6 +358,7 @@ out:
 int
 ktime_DisplayString(struct ktime *aparm, char *astring)
 {
+    static const size_t ndays = sizeof(day) / sizeof(*day);
     char tempString[50];
 
     if (aparm->mask & KTIME_NEVER) {
@@ -370,6 +371,9 @@ ktime_DisplayString(struct ktime *aparm, char *astring)
 	strcpy(astring, "at");
 	if (aparm->mask & KTIME_DAY) {
 	    strcat(astring, " ");
+	    if (aparm->day < 0 || aparm->day >= ndays) {
+		return EINVAL;
+	    }
 	    strcat(astring, day[aparm->day]);
 	}
 	if (aparm->mask & KTIME_HOUR) {
