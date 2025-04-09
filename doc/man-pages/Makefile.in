@@ -51,9 +51,9 @@ install: man
 	done;
 	set -e; if [ "x@INSTALL_KAUTH@" = "xyes" ] ; then \
 	    for M in $(MAN_PAGES_KAUTH); do \
-		$(INSTALL_MAN) $$M $(DESTDIR)$(mandir)/$$M ; \
+		$(INSTALL_DATA) $$M $(DESTDIR)$(mandir)/$$M ; \
 	    done; \
-	    $(LN) -fs klog.1 $(DESTDIR)$(mandir)man1/klog.krb.1 ; \
+	    $(LN) -fs klog.1 $(DESTDIR)$(mandir)/man1/klog.krb.1 ; \
 	    $(LN) -fs pagsh.1 $(DESTDIR)$(mandir)/man1/pagsh.krb.1 ; \
 	    $(LN) -fs tokens.1 $(DESTDIR)$(mandir)/man1/tokens.krb.1 ; \
 	fi
