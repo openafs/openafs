@@ -5945,6 +5945,11 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 	code = CheckVolumeRO(volumeinfo, aserver, apart, &entry,
 			     createentry, pass, rwvolid, &modified);
     }
+    else {
+	fprintf(STDERR, "Invalid volume type %d while checking volume %u.\n",
+		volumeinfo->type, volumeinfo->volid);
+	code = EINVAL;
+    }
     if (code != 0) {
 	ERROR_EXIT(code);
     }
