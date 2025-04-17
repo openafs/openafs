@@ -572,7 +572,7 @@ afs_GetDynroot(char **dynrootDir, int *dynrootLen,
 	status->DataVersion = afs_dynrootVersion;
 	status->CallerAccess = PRSFS_LOOKUP | PRSFS_READ;
 	status->AnonymousAccess = PRSFS_LOOKUP | PRSFS_READ;
-	status->UnixModeBits = 0755;
+	status->UnixModeBits = 0555;
 	status->ParentVnode = 1;
 	status->ParentUnique = 1;
 	status->dataVersionHigh = afs_dynrootVersionHigh;
