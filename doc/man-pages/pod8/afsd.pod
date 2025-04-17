@@ -538,6 +538,9 @@ feature is recommended only for temporary access to a volume.  Linux-based
 cache managers provide this dynamic mount feature even when dynamic root
 (B<-dynroot>, B<-dynroot-sparse>) is not in effect.
 
+When B<-dynroot> is provided, the permission mode bits for the dynamic F</afs>
+directory are set to C<0555>.
+
 =item B<-dynroot-sparse>
 
 In addition to operating in the manner described for dynroot above,
