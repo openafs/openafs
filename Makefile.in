@@ -415,7 +415,7 @@ tools: config audit volser vlserver
 	+${COMPILE_PART1} tools ${COMPILE_PART2}
 
 man-pages: config
-	cd doc/man-pages ${COMPILE_PART2}
+	+cd doc/man-pages ${COMPILE_PART2}
 
 #
 # _depinstall targets - only build and install headers/sources that are
