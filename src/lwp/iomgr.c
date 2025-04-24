@@ -47,7 +47,6 @@
 #include "lwp.h"
 #include "timer.h"
 
-typedef unsigned char bool;
 #define FALSE	0
 #define TRUE	1
 
@@ -356,7 +355,7 @@ static void *IOMGR(void *dummy)
 	int code;
 	struct TM_Elem *earliest;
 	struct timeval timeout, junk;
-	bool woke_someone;
+	int woke_someone;
 
 	FD_ZERO(&IOMGR_readfds);
 	FD_ZERO(&IOMGR_writefds);
@@ -651,7 +650,7 @@ static void SigHandler (int signo)
    to LWPs waiting on Unix signals. NOW ALSO CAN YIELD!! */
 static int SignalSignals (void)
 {
-    bool gotone = FALSE;
+    int gotone = FALSE;
     int i;
     void *(*p)(void *);
     afs_int32 stackSize;

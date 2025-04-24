@@ -30,7 +30,6 @@
 
 
 
-typedef unsigned char bool;
 #define FALSE	0
 #define TRUE	1
 
@@ -107,7 +106,7 @@ static bool geq(struct timeval *t1, struct timeval *t2)
 }
 */
 
-static bool
+static int
 blocking(struct TM_Elem *t)
 {
     return (t->TotalTime.tv_sec < 0 || t->TotalTime.tv_usec < 0);
