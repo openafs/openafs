@@ -16,6 +16,7 @@
 #include <afs/cmd.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
+#define UBIK_LEGACY_CALLITER 1
 #include <ubik.h>
 #include <afs/afsint.h>
 #include <afs/volser.h>
@@ -996,7 +997,7 @@ static struct ubikCallState uServer;
  */
 
 static afs_int32
-ubik_Call_SingleServer(int (*aproc) (), struct ubik_client *aclient,
+ubik_Call_SingleServer(ubik_call_func aproc, struct ubik_client *aclient,
 		       afs_int32 aflags, long p1, long p2, long p3,
 		       long p4, long p5, long p6, long p7, long p8,
 		       long p9, long p10, long p11, long p12, long p13,
@@ -1136,7 +1137,7 @@ ubik_Call_SingleServer_BUDB_GetVolumes(struct ubik_client *aclient,
 				       afs_int32 *dbUpdate,
 				       budb_volumeList *volumes)
 {
-    return ubik_Call_SingleServer(BUDB_GetVolumes, aclient, aflags,
+    return ubik_Call_SingleServer((ubik_call_func)BUDB_GetVolumes, aclient, aflags,
 				  (long)majorVersion, (long)flags, (long)name,
 				  (long)start, (long)end, (long)index,
 				  (long)nextIndex, (long)dbUpdate,
@@ -1149,7 +1150,7 @@ ubik_Call_SingleServer_BUDB_DumpDB(struct ubik_client *aclient,
 				   afs_int32 maxLength, charListT *charListPtr,
 				   afs_int32 *flags)
 {
-    return ubik_Call_SingleServer(BUDB_DumpDB, aclient, aflags, (long)firstcall,
+    return ubik_Call_SingleServer((ubik_call_func)BUDB_DumpDB, aclient, aflags, (long)firstcall,
 				  (long)maxLength, (long)charListPtr,
 				  (long)flags, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 				  0);

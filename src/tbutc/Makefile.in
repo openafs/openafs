@@ -110,7 +110,6 @@ tcstatus.o: ${BUTC}/tcstatus.c ${BUTCINCLS}
 butc_xbsa.o: ${BUTC}/butc_xbsa.c ${BUTC}/butc_xbsa.h ${BUTCINCLS}
 	$(AFS_CCRULE) ${BUTC}/butc_xbsa.c
 
-CFLAGS_ubik_db_if.o=@CFLAGS_NOSTRICT_PROTOTYPES@
 ubik_db_if.o: ${BUCOORD}/ubik_db_if.c
 	$(AFS_CCRULE) ${BUCOORD}/ubik_db_if.c
 

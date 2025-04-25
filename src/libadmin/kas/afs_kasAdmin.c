@@ -709,7 +709,7 @@ GetPrincipalLockStatus(const kas_server_p kaserver, const kas_identity_p who,
     do {
 	locked = 0;
 	tst =
-	    ubik_CallIter(KAM_LockStatus, kaserver->servers, UPUBIKONLY,
+	    ubik_CallIter((ubik_call_func)KAM_LockStatus, kaserver->servers, UPUBIKONLY,
 			  &count, (long)who->principal, (long)who->instance, (long)&locked, 0,
 			  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	if (tst == 0) {
@@ -1268,7 +1268,7 @@ kas_PrincipalUnlock(const void *cellHandle, const void *serverHandle,
 
     do {
 	tst =
-	    ubik_CallIter(KAM_Unlock, kaserver.servers, 0, &count,
+	    ubik_CallIter((ubik_call_func)KAM_Unlock, kaserver.servers, 0, &count,
 			  (long)who->principal, (long)who->instance, 0, 0, 0,
 			  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	if (tst && (tst != UNOSERVERS)) {
