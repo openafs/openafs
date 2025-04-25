@@ -91,7 +91,6 @@ volstub.o: bc.h
 # Errors
 #
 CFLAGS_commands.o=@CFLAGS_NOERROR@
-CFLAGS_ubik_db_if.o=@CFLAGS_NOSTRICT_PROTOTYPES@
 
 #
 # Install targets

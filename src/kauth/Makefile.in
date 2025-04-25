@@ -134,8 +134,6 @@ kautils.h: kaerrors.et kautils.p.h
 	${COMPILE_ET_H} -p ${srcdir} kaerrors -h kautils
 
 admin_tools.o admin_tools.lo: kautils.h
-CFLAGS_authclient.o=@CFLAGS_NOSTRICT_PROTOTYPES@
-CFLAGS_authclient.lo=@CFLAGS_NOSTRICT_PROTOTYPES@
 authclient.o authclient.lo: kautils.h
 client.o client.lo: kautils.h
 decode_ticket.o decode_ticket.lo: kautils.h
@@ -190,7 +188,6 @@ libkauth.krb.a: libkauth.a $(KRB_objs)
 
 kas.o: kas.c ${INCLS} AFS_component_version_number.o
 
-CFLAGS_admin_tools.o=@CFLAGS_NOSTRICT_PROTOTYPES@
 admin_tools.o: admin_tools.c ${INCLS} kaport.h
 
 kkids.o: kkids.c ${INCLS}

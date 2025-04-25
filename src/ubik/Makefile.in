@@ -134,8 +134,6 @@ phys.o phys.lo: ubik.h
 recovery.o recovery.lo: ubik.h
 remote.o remote.lo: ubik.h
 ubik.o ubik.lo: ubik.h
-CFLAGS_ubikclient.o=@CFLAGS_NOSTRICT_PROTOTYPES@
-CFLAGS_ubikclient.lo=@CFLAGS_NOSTRICT_PROTOTYPES@
 ubikclient.o ubikclient.lo: ubik.h
 ubikcmd.o ubikcmd.lo: ubik.h
 udebug.o udebug.lo: ubik.h

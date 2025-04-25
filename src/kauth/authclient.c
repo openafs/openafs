@@ -424,9 +424,9 @@ CheckTicketAnswer(ka_BBS * oanswer, afs_int32 challenge,
  * this doesn't handle UNOTSYNC very well, should use ubik_Call if you care
  */
 static afs_int32
-kawrap_ubik_Call(int (*aproc) (), struct ubik_client *aclient,
-                 afs_int32 aflags, void *p1, void *p2, void *p3, void *p4,
-                 void *p5, void *p6, void *p7, void *p8)
+kawrap_ubik_Call(ubik_call_func aproc, struct ubik_client *aclient,
+		 afs_int32 aflags, void *p1, void *p2, void *p3, void *p4,
+		 void *p5, void *p6, void *p7, void *p8)
 {
     afs_int32 code, lcode;
     int count;
@@ -529,7 +529,7 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 
     version = 2;
     code =
-	kawrap_ubik_Call(KAA_AuthenticateV2, conn, 0, name, instance,
+	kawrap_ubik_Call((ubik_call_func)KAA_AuthenticateV2, conn, 0, name, instance,
 			 (void*)(uintptr_t)start, (void*)(uintptr_t)end, &arequest, &oanswer, 0, 0);
     if (code == RXGEN_OPCODE) {
 	oanswer.SeqLen = 0;

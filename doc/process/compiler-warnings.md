@@ -70,19 +70,14 @@ If you add a new warning inhibition, also add it to the table below.
 | `afs/afs_syscall.c`                       | all (ukernel)      | syscall pointer issues                         |
 | `afsd/afsd_kernel.c`                      | deprecated         | `daemon()` marked as deprecated on Darwin      |
 | `bozo/bosserver.c`                        | deprecated         | `daemon()` marked as deprecated on Darwin      |
-| `bucoord/ubik_db_if.c`                    | strict-proto       | `ubik_Call_SingleServer`                       |
 | `bucoord/commands.c`                      | all                | signed vs unsigned for dates                   |
 | `external/heimdal/hcrypto/validate.c`     | all                | statement with empty body                      |
 | `external/heimdal/hcrypto/evp.c`          | cast-function-type | Linux kernel build uses `-Wcast-function-type` |
 | `external/heimdal/hcrypto/evp-algs.c`     | cast-function-type | Linux kernel build uses `-Wcast-function-type` |
 | `external/heimdal/krb5/crypto.c`          | use-after-free     | False postive on certain GCC compilers         |
-| `kauth/admin_tools.c`                     | strict-proto       | `ubik_Call`                                    |
-| `kauth/authclient.c`                      | strict-proto       | `ubik_Call` nonsense                           |
-| `libadmin/kas/afs_kasAdmin.c`             | strict-proto       | `ubik_Call` nonsense                           |
 | `libadmin/samples/rxstat_query_peer.c`    | all                | `util_RPCStatsStateGet` types                  |
 | `libadmin/samples/rxstat_query_process.c` | all                | `util_RPCStatsStateGet` types                  |
 | `libadmin/test/client.c`                  | all                | `util_RPCStatsStateGet` types                  |
-| `ubik/ubikclient.c`                       | strict-protos      | `ubik_Call`                                    |
 | `volser/vol-dump.c`                       | format             | `afs_sfsize_t`                                 |
 | `rxkad/ticket5.c`                         | format-truncation  | See Note 2.                                    |
 | `rxkad/ticket5.c`                         | deprecated         | hcrypto single-DES                             |
