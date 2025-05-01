@@ -127,7 +127,6 @@ extern int ClientMode;
 
 
 static volatile int current_workers = 0;
-static volatile struct rx_queue pending_q;
 static pthread_mutex_t worker_lock;
 static pthread_cond_t worker_cv;
 
@@ -543,7 +542,6 @@ SalvageServer(int argc, char **argv, struct logOptions *logopts)
 	Exit(1);
     }
     DInit(10);
-    queue_Init(&pending_q);
     queue_Init(&log_cleanup_queue);
     opr_mutex_init(&worker_lock);
     opr_cv_init(&worker_cv);
