@@ -167,12 +167,6 @@ struct fs_stats_FullPerfStats afs_FullPerfStats;
 extern int AnonymousID;
 static const char nullString[] = "";
 
-struct afs_FSStats {
-    afs_int32 NothingYet;
-};
-
-struct afs_FSStats afs_fsstats;
-
 afs_int32 BlocksSpare = 1024;	/* allow 1 MB overruns */
 afs_int32 PctSpare;
 extern afs_int32 implicitAdminRights;
