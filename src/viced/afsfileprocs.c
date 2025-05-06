@@ -178,8 +178,6 @@ afs_int32 PctSpare;
 extern afs_int32 implicitAdminRights;
 extern afs_int32 readonlyServer;
 extern afs_int32 adminwriteServer;
-extern int CopyOnWrite_calls, CopyOnWrite_off0, CopyOnWrite_size0;
-extern afs_fsize_t CopyOnWrite_maxsize;
 
 /*
  * Externals used by the xstat code.
