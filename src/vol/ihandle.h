@@ -306,17 +306,11 @@ typedef struct IHashBucket_s {
     IHandle_t *ihash_tail;
 } IHashBucket_t;
 
-/* Prototypes for handle support routines. */
 #ifdef AFS_NAMEI_ENV
 # ifdef AFS_NT40_ENV
 #  include "ntops.h"
 # endif
 # include "namei_ops.h"
-
-extern void ih_clear(IHandle_t * h);
-extern Inode ih_create(IHandle_t * h, int dev, char *part, Inode nI, int p1,
-		       int p2, int p3, int p4);
-extern FD_t *ih_fdopen(FdHandle_t * h, char *fdperms);
 #endif /* AFS_NAMEI_ENV */
 
 /*
