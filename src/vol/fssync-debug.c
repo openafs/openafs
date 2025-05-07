@@ -676,6 +676,21 @@ vn_flags_to_string(afs_uint32 flags)
 }
 #endif
 
+static void
+read_result(SYNC_response *res, void *buf, size_t a_len)
+{
+    size_t len;
+    if (res->payload.len != a_len) {
+	fprintf(stderr, "warning: Possible version mismatch: Expected response "
+		"payload of %d bytes, but server responded with %d bytes. "
+		"Attempting to decode response anyway...\n",
+		(int)a_len, (int)res->payload.len);
+    }
+    memset(buf, 0, a_len);
+    len = opr_min(res->payload.len, a_len);
+    memcpy(buf, res->payload.buf, len);
+}
+
 static int
 VolQuery(struct cmd_syndesc * as, void * rock)
 {
@@ -683,6 +698,8 @@ VolQuery(struct cmd_syndesc * as, void * rock)
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     Volume v;
+
+    memset(&v, 0, sizeof(v));
 
     dafs_prolog();
 
@@ -696,7 +713,7 @@ VolQuery(struct cmd_syndesc * as, void * rock)
     do_volop(&state, FSYNC_VOL_QUERY, &res);
 
     if (res.hdr.response == SYNC_OK) {
-	memcpy(&v, res.payload.buf, sizeof(Volume));
+	read_result(&res, &v, sizeof(v));
 
 	printf("volume = {\n");
 	printf("\thashid          = %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(v.hashid));
@@ -802,6 +819,8 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
     VolumeDiskData v;
     int i;
 
+    memset(&v, 0, sizeof(v));
+
     res.hdr.response_len = sizeof(res.hdr);
     res.payload.buf = res_buf;
     res.payload.len = SYNC_PROTO_MAX_LEN;
@@ -812,7 +831,7 @@ VolHdrQuery(struct cmd_syndesc * as, void * rock)
     do_volop(&state, FSYNC_VOL_QUERY_HDR, &res);
 
     if (res.hdr.response == SYNC_OK) {
-	memcpy(&v, res.payload.buf, sizeof(VolumeDiskData));
+	read_result(&res, &v, sizeof(v));
 
 	printf("VolumeDiskData = {\n");
 	printf("\tstamp = {\n");
@@ -872,6 +891,8 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
     SYNC_response res;
     FSSYNC_VolOp_info vop;
 
+    memset(&vop, 0, sizeof(vop));
+
     res.hdr.response_len = sizeof(res.hdr);
     res.payload.buf = res_buf;
     res.payload.len = SYNC_PROTO_MAX_LEN;
@@ -887,7 +908,7 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
     }
 
     if (res.hdr.response == SYNC_OK) {
-	memcpy(&vop, res.payload.buf, sizeof(FSSYNC_VolOp_info));
+	read_result(&res, &vop, sizeof(vop));
 
 	printf("pending_vol_op = {\n");
 
@@ -991,6 +1012,8 @@ VnQuery(struct cmd_syndesc * as, void * rock)
     SYNC_response res;
     Vnode v;
 
+    memset(&v, 0, sizeof(v));
+
     dafs_prolog();
 
     res.hdr.response_len = sizeof(res.hdr);
@@ -1003,7 +1026,7 @@ VnQuery(struct cmd_syndesc * as, void * rock)
     do_vnqry(&state, &res);
 
     if (res.hdr.response == SYNC_OK) {
-	memcpy(&v, res.payload.buf, sizeof(Vnode));
+	read_result(&res, &v, sizeof(v));
 
 	printf("vnode = {\n");
 
