@@ -383,8 +383,8 @@ WriteFile(const char *filename, const char *data)
  * @returns Return status of the task
  * @retval 0 success
  * @retval -1 internal error
- * @retval nonzero The return value of system() of a failed command for the
- *                 task.
+ * @retval nonzero If a command failed, the wait status for that command as
+ *		   returned by waitpid().
  */
 static int
 ProcessRequest(const char *task, xpc_object_t event)
