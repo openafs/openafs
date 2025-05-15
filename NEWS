@@ -1,5 +1,154 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.14pre1
+
+  All platforms
+
+    * Build system fixes for building shared libraries (16098, 16099,
+      16117)
+
+    * Fix crashes due to incorrect Rx security class reference
+      counting (15850, 15851)
+
+    * Display rxdebug free and allocated counters as unsigned values
+      (15801)
+
+    * Fix error handling in `vos`, `fs`, and `volinfo` command line
+      tools (15817, 16081)
+
+    * Fix build error when building static libraries when SWIG is
+      installed (16100, 16101)
+
+    * Fix handling invalid timestamps values in 'bos getrestart'
+      (16442)
+
+  All server platforms
+
+    * Fix a bug that caused vlserver to crash during startup when
+      launched with a very long -trace command line argument (16010)
+
+    * Several misleading file server log messages have been corrected
+      and more messages are issued during startup (16016, 16020,
+      16021)
+
+    * Improve file server performance and restart time on servers
+      handling a large number of callbacks (16017, 16018, 16019,
+      16022, 16023)
+
+    * The RXAFS_StoreACL() RPC op code has been renumbered from 134 to
+      164 to identify AFS3 clients which may incorrectly add negative
+      access control entries to the normal rights list.  The old 134
+      op code is still supported, but is now deprecated and will be
+      removed in a future release.  A new file server command line
+      option (`-cve-2018-7168-enforce`) disables the deprecated 134 op
+      code to store ACLs. (16228, 16230)
+
+    * Rx services now log the IP address they bind to during startup
+      to improve network diagnostics (16095)
+
+    * The volume server now logs messages about volume transactions
+      interrupted by a volume server shutdown. (16123)
+
+  All client platforms
+
+    * Updated the CellServDB to the latest version from grand.central.org
+      (16537)
+
+  All unix clients
+
+    * Fix client shutdown when the client was started with -rxbind
+      (16011, 16012, 16065)
+
+    * The output of `fs getfid -literal` is now correct when the path
+      is a broken symlink or the dynroot directory (16079)
+
+    * The `fs getfid` command now displays the FID even if it cannot
+      retrieve cell information (16080)
+
+    * Create the AFS mount point directory (usually /afs) with
+      directory permissions of 0555 instead of 0755 when the cache
+      manager is started with the --dynroot option. This fixes an
+      issue on RedHat-based systems which expect the /afs directory to
+      have 0555 permissions (16378)
+
+    * Reduce unnecessary `lstat` calls in the `fs` command to improve
+      performance (16102)
+
+    * Avoid a possible crash when a client cache size configuration is
+      greatly reduced and then the client is restarted (16103)
+
+  Linux
+
+    * Build system changes to support building on Gentoo (16130,
+      16131)
+
+    * Build system changes to support building on Fedora 42 (16379,
+      16380)
+
+    * Update RedHat-based packing to continue to build binaries
+      without link-time optimization (LTO) (16426)
+
+  Linux client
+
+    * Critical fix for a crash or hang that could occur when a process
+      received a signal while waiting for AFS3 network packets. This
+      is especially critical for Go applications which make heavy use
+      of signals (16007, 16008)
+
+    * Add support for Linux kernel 6.14 (16276, 16277, 16542, 16543)
+
+    * Add support for building kernel modules for hardened kernels
+      (16382, 16383)
+
+    * Systemd integration has been improved in the RedHat-based
+      contributed packaging files (16104, 16105, 16106, 16107)
+
+    * RPM packaging fixes (16416, 16417)
+
+    * Fix `unsupported NO_WEAK_MODULES value` error when building the
+      kernel module with recent versions of DKMS (16420, 16423)
+
+    * Update the RedHat-based RPM packaging files to support RedHat 10
+      (16422)
+
+    * Add support for Linux kernel 6.15 (16418, 16419, 16427, 16428,
+      16429, 16430, 16431)
+
+    * Add support for Linux kernel 6.16 (16498, 16499, 16500, 16501,
+      16502, 16519)
+
+  MacOS client
+
+    * Functionality of the OpenAFS Preference Pane is restored on
+      macOS 10.8 and later. This includes enabling/disabling startup,
+      starting/stopping the client, and editing OpenAFS configuration
+      files (16066, 16067, 16068, 16069, 16070, 16071, 16072, 16073,
+      16074, 16260, 16444, 16505)
+
+    * Avoid ENOENT errors on unparented vnodes (16179)
+
+    * Improve build system compatibility with recent Xcode versions
+      (16180, 16182, 16183, 16185, 16186, 16187, 16188, 16190)
+
+    * Add support for macOS 15.x (Sequoia) (16189)
+
+    * Add support for macOS 26 (Tahoe) (16433)
+
+    * Fix a kernel module build error for arm64 (16512)
+
+    * Add support for OpenAFS command line programs such as bos, fs,
+      and cmdebug on macOS arm64 platforms (16518)
+
+  Solaris
+
+    * Fix compiler detection when both GCC and Solaris Studio are
+      installed (16097)
+
+  AIX
+
+    * Add support for building with clang-based XLC 17.1 (15810,
+      15811, 15812)
+
 OpenAFS 1.8.13.2
 
   Linux clients
