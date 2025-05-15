@@ -65,6 +65,36 @@ Install the kernel development package with the command.
 
     $ yum install "kernel-devel-uname-r==$(uname -r)"
 
+### Arch Linux
+
+The following packages are required to build OpenAFS on Arch Linux.
+
+* autoconf
+* automake
+* bison
+* elfutils
+* flex
+* fuse3
+* gcc
+* glibc
+* krb5
+* libtool
+* make
+* ncurses
+* openssl
+* pam
+* perl
+* swig
+
+The `linux-[lts-]headers` package matching your current running kernel version is
+required to build the OpenAFS kernel module.  It is recommended to upgrade your
+running kernel to the most current version and reboot if needed before
+installing the relevant package.
+
+Install the kernel development package with the command.
+
+    $ pacman -S linux-headers     # For the regular kernel
+    $ pacman -S linux-lts-headers # For the LTS kernel
 
 ### Debian
 
