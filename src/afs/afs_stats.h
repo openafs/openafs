@@ -31,24 +31,32 @@ typedef struct {
 #define XSTATS_DECLS struct afs_stats_opTimingData *opP = NULL; \
     osi_timeval32_t opStartTime = { 0, 0}, opStopTime, elapsedTime
 
-#define XSTATS_START_TIME(arg) \
-  opP = &(afs_stats_cmfullperf.rpc.fsRPCTimes[arg]); \
-  osi_GetTime(&opStartTime);
+#define XSTATS_START_TIME(arg) do { \
+    opP = &(afs_stats_cmfullperf.rpc.fsRPCTimes[(arg)]); \
+    osi_GetTime(&opStartTime); \
+} while (0)
 
-#define XSTATS_START_CMTIME(arg) \
-  opP = &(afs_stats_cmfullperf.rpc.cmRPCTimes[arg]); \
-  osi_GetTime(&opStartTime);
+#define XSTATS_START_CMTIME(arg) do { \
+    opP = &(afs_stats_cmfullperf.rpc.cmRPCTimes[(arg)]); \
+    osi_GetTime(&opStartTime); \
+} while (0)
 
-#define XSTATS_END_TIME osi_GetTime(&opStopTime); \
-  (opP->numOps)++; \
-  if (!code) { (opP->numSuccesses)++; \
-     afs_stats_GetDiff(elapsedTime, opStartTime, opStopTime); \
-     afs_stats_AddTo((opP->sumTime), elapsedTime); \
-     afs_stats_SquareAddTo((opP->sqrTime), elapsedTime); \
-     if (afs_stats_TimeLessThan(elapsedTime, (opP->minTime))) { \
-        afs_stats_TimeAssign((opP->minTime), elapsedTime); \
-     } if (afs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) { \
-          afs_stats_TimeAssign((opP->maxTime), elapsedTime); } }
+#define XSTATS_END_TIME do { \
+    osi_GetTime(&opStopTime); \
+    (opP->numOps)++; \
+    if (code == 0) { \
+	(opP->numSuccesses)++; \
+	afs_stats_GetDiff(elapsedTime, opStartTime, opStopTime); \
+	afs_stats_AddTo((opP->sumTime), elapsedTime); \
+	afs_stats_SquareAddTo((opP->sqrTime), elapsedTime); \
+	if (afs_stats_TimeLessThan(elapsedTime, (opP->minTime))) { \
+	    afs_stats_TimeAssign((opP->minTime), elapsedTime); \
+	} \
+	if (afs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) { \
+	    afs_stats_TimeAssign((opP->maxTime), elapsedTime); \
+	} \
+    } \
+} while (0)
 
 struct afs_MeanStats {
     afs_int32 average;
