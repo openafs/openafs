@@ -205,10 +205,8 @@ afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 	tu->cellinfo = (void *)tcell;
     afs_FreeTokens(&tu->tokens);
     afs_AddRxkadToken(&tu->tokens, stp, stLen, &clear);
-#ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.TicketUpdates++;
     afs_ComputePAGStats();
-#endif /* AFS_NOSTATS */
     tu->states |= UHasTokens;
     tu->states &= ~UTokensBad;
     afs_SetPrimary(tu, flag);

@@ -125,14 +125,12 @@ afs_InitSetup(int preallocs)
     osi_StartNetIfPoller();
 #endif
 
-#ifndef AFS_NOSTATS
     /*
      * Set up all the AFS statistics variables.  This should be done
      * exactly once, and it should be done here, the first resource-setting
      * routine to be called by the CM/RX.
      */
     afs_InitStats();
-#endif /* AFS_NOSTATS */
 
     memset(afs_zeros, 0, AFS_ZEROS);
 

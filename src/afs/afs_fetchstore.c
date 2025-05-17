@@ -23,7 +23,6 @@
 
 extern int cacheDiskType;
 
-#ifndef AFS_NOSTATS
 static void
 FillStoreStats(int code, int idx, osi_timeval32_t xferStartTime,
 	       afs_size_t bytesToXfer, afs_size_t bytesXferred)
@@ -71,7 +70,6 @@ FillStoreStats(int code, int idx, osi_timeval32_t xferStartTime,
 	}
     }
 }
-#endif /* AFS_NOSTATS */
 
 /* rock and operations for RX_FILESERVER */
 
@@ -287,9 +285,7 @@ afs_GenericStoreProc(struct storeOps *ops, void *rock,
 	code = (*ops->write)(rock, tlen, &byteswritten);
 	if (code)
 	    break;
-#ifndef AFS_NOSTATS
 	*bytesXferred += byteswritten;
-#endif /* AFS_NOSTATS */
 
 	offset += tlen;
 	size -= tlen;
@@ -426,12 +422,10 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
     int stored = 0;
     afs_int32 code = 0;
     afs_size_t bytesXferred;
-
-#ifndef AFS_NOSTATS
     osi_timeval32_t xferStartTime;	/*FS xfer start time */
     afs_size_t bytesToXfer = 10000;	/* # bytes to xfer */
-#endif /* AFS_NOSTATS */
     XSTATS_DECLS;
+
     osi_Assert(nchunks != 0);
 
     for (i = 0; i < nchunks && !code; i++) {
@@ -465,7 +459,7 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 
 	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STOREDATA);
 	avc->f.truncPos = AFS_NOTRUNC;
-#ifndef AFS_NOSTATS
+
 	/*
 	 * In this case, size is *always* the amount of data we'll be trying
 	 * to ship here.
@@ -473,7 +467,7 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 	bytesToXfer = size;
 
 	osi_GetTime(&xferStartTime);
-#endif /* AFS_NOSTATS */
+
 	bytesXferred = 0;
 
 	code = (*ops->storeproc)(ops, rock, tdc, shouldwake,
@@ -483,10 +477,8 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 		    ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
 		    ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, size);
 
-#ifndef AFS_NOSTATS
 	FillStoreStats(code, AFS_STATS_FS_XFERIDX_STOREDATA,
 		    xferStartTime, bytesToXfer, bytesXferred);
-#endif /* AFS_NOSTATS */
 
 	if ((tdc->f.chunkBytes < afs_OtherCSize)
 		&& (i < (nchunks - 1)) && code == 0) {
@@ -1093,10 +1085,8 @@ afs_CacheFetchProc(struct afs_conn *tc, struct rx_connection *rxconn,
     int offset = 0;
 
     XSTATS_DECLS;
-#ifndef AFS_NOSTATS
     osi_timeval32_t xferStartTime;	/*FS xfer start time */
     afs_size_t bytesToXfer = 0, bytesXferred = 0;
-#endif
 
     AFS_STATCNT(CacheFetchProc);
 
@@ -1111,9 +1101,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct rx_connection *rxconn,
     code = rxfs_fetchInit(
 		tc, rxconn, avc, base, size, &length, adc, fP, &ops, &rock);
 
-#ifndef AFS_NOSTATS
     osi_GetTime(&xferStartTime);
-#endif /* AFS_NOSTATS */
 
     adc->validPos = base;
 
@@ -1127,9 +1115,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct rx_connection *rxconn,
 	    if ( code )
 		goto done;
 	}
-#ifndef AFS_NOSTATS
 	bytesToXfer += length;
-#endif /* AFS_NOSTATS */
 	while (length > 0) {
 #ifdef RX_KERNEL_TRACE
 	    afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
@@ -1140,9 +1126,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct rx_connection *rxconn,
 	    afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		       "after rx_Read");
 #endif
-#ifndef AFS_NOSTATS
 	    bytesXferred += bytesread;
-#endif /* AFS_NOSTATS */
 	    if ( code ) {
 		afs_Trace3(afs_iclSetp, CM_TRACE_FETCH64READ,
 			   ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code,
@@ -1171,10 +1155,8 @@ afs_CacheFetchProc(struct afs_conn *tc, struct rx_connection *rxconn,
     if (ops)
 	code = (*ops->destroy)(&rock, code);
 
-#ifndef AFS_NOSTATS
     FillStoreStats(code, AFS_STATS_FS_XFERIDX_FETCHDATA, xferStartTime,
 			bytesToXfer, bytesXferred);
-#endif
     XSTATS_END_TIME;
     return code;
 }

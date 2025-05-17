@@ -171,7 +171,6 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 	    }
 	}
     }
-#ifndef AFS_NOSTATS
     /*
      * Compute the current time and which overall stats record is to be
      * updated; we'll need them one way or another.
@@ -230,7 +229,6 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 	    (upDownP->downDurations[6])++;
 
     }				/*Server being marked up */
-#endif
 }				/*MarkServerUpOrDown */
 
 

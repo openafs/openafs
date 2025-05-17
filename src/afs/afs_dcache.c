@@ -1960,12 +1960,9 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
     int doReallyAdjustSize = 0;
     int overWriteWholeChunk = 0;
     struct rx_connection *rxconn;
-
-#ifndef AFS_NOSTATS
     struct afs_stats_AccessInfo *accP;	/*Ptr to access record in stats */
     int fromReplica;		/*Are we reading from a replica? */
     int numFetchLoops;		/*# times around the fetch/analyze loop */
-#endif /* AFS_NOSTATS */
 
     AFS_STATCNT(afs_GetDCache);
     if (dcacheDisabled)
@@ -2513,7 +2510,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	}
 	tsmall = osi_AllocLargeSpace(sizeof(struct afs_FetchOutput));
 	setVcacheStatus = 0;
-#ifndef AFS_NOSTATS
+
 	/*
 	 * Remember if we are doing the reading from a replicated volume,
 	 * and how many times we've zipped around the fetch/analyze loop.
@@ -2525,7 +2522,7 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	    (accP->replicatedRefs)++;
 	else
 	    (accP->unreplicatedRefs)++;
-#endif /* AFS_NOSTATS */
+
 	/* this is a cache miss */
 	afs_Trace4(afs_iclSetp, CM_TRACE_FETCHPROC, ICL_TYPE_POINTER, avc,
 		   ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
@@ -2594,12 +2591,11 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 
 		tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK, &rxconn);
 		if (tc) {
-#ifndef AFS_NOSTATS
+
 		    numFetchLoops++;
 		    if (fromReplica)
 			(accP->numReplicasAccessed)++;
 
-#endif /* AFS_NOSTATS */
 		    if (!setLocks || slowPass) {
 			avc->callback = tc->parent->srvr->server;
 		    } else {
@@ -2679,7 +2675,6 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	 * tdc->lock(W)
 	 */
 
-#ifndef AFS_NOSTATS
 	/*
 	 * In the case of replicated access, jot down info on the number of
 	 * attempts it took before we got through or gave up.
@@ -2690,7 +2685,6 @@ afs_GetDCache(struct vcache *avc, afs_size_t abyte,
 	    if (numFetchLoops > accP->maxReplicasPerRef)
 		accP->maxReplicasPerRef = numFetchLoops;
 	}
-#endif /* AFS_NOSTATS */
 
 	tdc->dflags &= ~DFFetching;
 	if (afs_osi_Wakeup(&tdc->validPos) == 0)

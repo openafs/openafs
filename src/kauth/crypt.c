@@ -61,15 +61,6 @@
 
 /* =====  Configuration ==================== */
 
-/*
- * define "MUST_ALIGN" if your compiler cannot load/store
- * long integers at arbitrary (e.g. odd) memory locations.
- * (Either that or never pass unaligned addresses to des_cipher!)
- */
-#if !defined(vax)
-#define	MUST_ALIGN
-#endif
-
 #ifdef CHAR_BITS
 #if CHAR_BITS != 8
 #error C_block structure assumes 8 bit characters
@@ -623,9 +614,6 @@ STATIC int
 des_cipher(const char *in, char *out, long salt, int num_iter)
 {
     /* variables that we want in registers, most important first */
-#if defined(pdp11)
-    int j;
-#endif
     long L0, L1, R0, R1, k;
     C_block *kp;
     int ks_inc, loop_count;
@@ -634,14 +622,6 @@ des_cipher(const char *in, char *out, long salt, int num_iter)
     L0 = salt;
     TO_SIX_BIT(salt, L0);	/* convert to 4*(6+2) format */
 
-#if defined(vax) || defined(pdp11)
-    salt = ~salt;		/* "x &~ y" is faster than "x & y". */
-#define	SALT (~salt)
-#else
-#define	SALT salt
-#endif
-
-#if defined(MUST_ALIGN)
     B.b[0] = in[0];
     B.b[1] = in[1];
     B.b[2] = in[2];
@@ -651,9 +631,7 @@ des_cipher(const char *in, char *out, long salt, int num_iter)
     B.b[6] = in[6];
     B.b[7] = in[7];
     LOAD(L, L0, L1, B);
-#else
-    LOAD(L, L0, L1, *(C_block *) in);
-#endif
+
     LOADREG(R, R0, R1, L, L0, L1);
     L0 &= 0x55555555L;
     L1 &= 0x55555555L;
@@ -679,21 +657,11 @@ des_cipher(const char *in, char *out, long salt, int num_iter)
 	do {
 
 #define	SPTAB(t, i)	(*(long *)((unsigned char *)t + i*(sizeof(long)/4)))
-#if defined(gould)
-	    /* use this if B.b[i] is evaluated just once ... */
-#define	DOXOR(x,y,i)	x^=SPTAB(SPE[0][i],B.b[i]); y^=SPTAB(SPE[1][i],B.b[i])
-#else
-#if defined(pdp11)
-	    /* use this if your "long" int indexing is slow */
-#define	DOXOR(x,y,i)	j=B.b[i]; x^=SPTAB(SPE[0][i],j); y^=SPTAB(SPE[1][i],j)
-#else
 	    /* use this if "k" is allocated to a register ... */
 #define	DOXOR(x,y,i)	k=B.b[i]; x^=SPTAB(SPE[0][i],k); y^=SPTAB(SPE[1][i],k)
-#endif
-#endif
 
 #define	CRUNCH(p0, p1, q0, q1)	\
-			k = (q0 ^ q1) & SALT;	\
+			k = (q0 ^ q1) & salt;	\
 			B.b32.i0 = k ^ q0 ^ kp->b32.i0;		\
 			B.b32.i1 = k ^ q1 ^ kp->b32.i1;		\
 			kp = (C_block *)((char *)kp+ks_inc);	\
@@ -727,7 +695,7 @@ des_cipher(const char *in, char *out, long salt, int num_iter)
     L1 = ((R0 >> 3) & 0x0f0f0f0fL) | ((R1 << 1) & 0xf0f0f0f0L);
     STORE(L, L0, L1, B);
     PERM6464(L, L0, L1, B.b, (C_block *) CF6464);
-#if defined(MUST_ALIGN)
+
     STORE(L, L0, L1, B);
     out[0] = B.b[0];
     out[1] = B.b[1];
@@ -737,9 +705,6 @@ des_cipher(const char *in, char *out, long salt, int num_iter)
     out[5] = B.b[5];
     out[6] = B.b[6];
     out[7] = B.b[7];
-#else
-    STORE(L, L0, L1, *(C_block *) out);
-#endif
     return (0);
 }
 

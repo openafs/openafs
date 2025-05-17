@@ -24,13 +24,11 @@ static char *rcsid_aklog_h = "$Id$";
 #include <afs/param.h>
 #endif
 
-#if !defined(vax)
 #ifndef WIN32
 #include <unistd.h>
 #endif
 #include <stdlib.h>
 #include <limits.h>
-#endif
 
 #ifndef WIN32
 #include <sys/types.h>

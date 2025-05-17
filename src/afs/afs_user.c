@@ -510,9 +510,7 @@ afs_GetUser(struct unixuser **a_user, afs_int32 auid, afs_int32 acell,
      */
     tu = afs_osi_Alloc(sizeof(struct unixuser));
     osi_Assert(tu != NULL);
-#ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.PAGCreations++;
-#endif /* AFS_NOSTATS */
     memset(tu, 0, sizeof(struct unixuser));
     AFS_RWLOCK_INIT(&tu->lock, "unixuser lock");
     /* insert new nu in sorted order after xu */

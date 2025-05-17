@@ -854,14 +854,6 @@ SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
      */
     code = 0;
 
-#ifdef AFS_NOSTATS
-    /*
-     * We're not keeping stats, so just return successfully with
-     * no data.
-     */
-    a_dataP->AFSCB_CollData_len = 0;
-    a_dataP->AFSCB_CollData_val = NULL;
-#else
     switch (a_collectionNumber) {
     case AFSCB_XSTATSCOLL_CALL_INFO:
 	/*
@@ -933,7 +925,6 @@ SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	a_dataP->AFSCB_CollData_val = NULL;
 	code = 1;
     }				/*Switch on collection number */
-#endif /* AFS_NOSTATS */
 
     XSTATS_END_TIME;
 

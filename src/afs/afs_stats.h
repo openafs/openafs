@@ -19,27 +19,6 @@
 
 #include "afs/param.h"
 
-/* the following is to work around a VAX compiler limitation */
-#if defined(vax)
-#undef AFS_NOSTATS
-#define AFS_NOSTATS
-#endif /* VAX environment */
-
-#ifdef AFS_NOSTATS
-
-/*
- * The data collection routines are simply no-ops
- */
-#define AFS_STATCNT(arg)
-#define AFS_MEANCNT(arg, value)
-#define AFS_STATS(arg)
-#define XSTATS_DECLS
-#define XSTATS_START_TIME(arg)
-#define XSTATS_START_CMTIME(arg)
-#define XSTATS_END_TIME
-
-#else /* AFS_NOSTATS */
-
 #define AFS_STATS(arg) arg
 #ifndef KERNEL
 /* NOTE: Ensure this is the same size in user and kernel mode. */
@@ -70,10 +49,6 @@ typedef struct {
         afs_stats_TimeAssign((opP->minTime), elapsedTime); \
      } if (afs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) { \
           afs_stats_TimeAssign((opP->maxTime), elapsedTime); } }
-
-#endif /* AFS_NOSTATS */
-
-
 
 struct afs_MeanStats {
     afs_int32 average;
@@ -1181,7 +1156,6 @@ struct afs_CTD_stats {
     int CTD_nSleeps;
 };
 
-#ifndef AFS_NOSTATS
 /*
  * We define routines to keep running counts and means.  For the
  * running count, we have to concatenate the ``C_'' prefix on to
@@ -1189,8 +1163,5 @@ struct afs_CTD_stats {
  * field name.
  */
 #define AFS_STATCNT(arg)  ((afs_cmstats.callInfo.C_ ## arg)++)
-
-#endif /* AFS_NOSTATS */
-
 
 #endif /* __OPENAFS_AFS_STATS_H__ */

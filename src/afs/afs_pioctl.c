@@ -1994,10 +1994,8 @@ DECL_PIOCTL(PSetTokens)
     /* Set tokens destroys any that are already there */
     afs_FreeTokens(&tu->tokens);
     afs_AddRxkadToken(&tu->tokens, stp, stLen, &clear);
-#ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.TicketUpdates++;
     afs_ComputePAGStats();
-#endif /* AFS_NOSTATS */
     tu->states |= UHasTokens;
     tu->states &= ~UTokensBad;
     afs_SetPrimary(tu, flag);

@@ -157,7 +157,6 @@ setblock(fs, cp, h)
     }
 }
 
-#if (!defined(vax) && !defined(tahoe)) || defined(VAX630) || defined(VAX650)
 /*
  * C definitions of special instructions.
  * Normally expanded with inline.
@@ -173,9 +172,7 @@ scanc(size, cp, table, mask)
 	cp++;
     return (end - cp);
 }
-#endif
 
-#if !defined(vax) && !defined(tahoe)
 skpc(mask, size, cp)
      u_char mask;
      u_int size;
@@ -199,4 +196,3 @@ locc(mask, size, cp)
 	cp++;
     return (end - cp);
 }
-#endif
