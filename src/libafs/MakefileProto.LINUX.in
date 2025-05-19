@@ -130,13 +130,13 @@ ${INSTDIRS} ${DESTDIRS}: ${COMPDIRS}
 		KDIR=${KOBJ}-${LINUX_VERSION}${LINUX_MODULE_NAME}-$$m ; \
 		echo Building in directory: $${KDIR} ; \
 		if [ "$$m" = "MP" ] ; then \
-			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			SMP_DEF="@RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
 			TARG="libafs.mp" ; \
 		elif [ "$$m" = "EP" ] ; then \
-			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			SMP_DEF="@RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
 			TARG="libafs.ep" ; \
 		elif [ "$$m" = "BM" ] ; then \
-			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			SMP_DEF="@RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
 			TARG="libafs.bm" ; \
 		else  \
 			SMP_DEF="@RHCONFIG_SP@ ${LOCAL_SMP_DEF}" ; \
@@ -200,13 +200,13 @@ ${COMPDIRS}: setup
 		KDIR=${KOBJ}-${LINUX_VERSION}${LINUX_MODULE_NAME}-$$m ; \
 		echo Building in directory: $${KDIR} ; \
 		if [ "$$m" = "MP" ] ; then \
-			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			SMP_DEF="@RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
 			TARG="libafs.mp" ; \
 		elif [ "$$m" = "EP" ] ; then \
-			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			SMP_DEF="@RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
 			TARG="libafs.ep" ; \
 		elif [ "$$m" = "BM" ] ; then \
-			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			SMP_DEF="@RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
 			TARG="libafs.bm" ; \
 		else  \
 			SMP_DEF="@RHCONFIG_SP@ ${LOCAL_SMP_DEF}" ; \
