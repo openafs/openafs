@@ -336,6 +336,14 @@ AC_CHECK_LINUX_FUNC([folio_wait_locked],
 		      #include <linux/fs.h>]],
 		    [[folio_wait_locked(NULL);]])
 
+dnl Linux 5.16 added __filemap_get_folio to replace grab_cache_page_write_begin
+dnl Linux 6.15 removed grab_cache_page_write_begin
+AC_CHECK_LINUX_FUNC([filemap_get_folio],
+                    [[#include <linux/pagemap.h>
+                      #include <linux/fs.h>
+                      static struct folio *folio;]],
+                    [[folio = __filemap_get_folio(NULL, 0, 0, 0);]])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],

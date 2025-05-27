@@ -161,7 +161,8 @@ hlist_unhashed(const struct hlist_node *h) {
 
 #if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_WRITE_BEGIN) && \
     !defined(HAVE_LINUX_GRAB_CACHE_PAGE_WRITE_BEGIN_WITHFLAGS) && \
-    !defined(HAVE_LINUX_GRAB_CACHE_PAGE_WRITE_BEGIN_NOFLAGS)
+    !defined(HAVE_LINUX_GRAB_CACHE_PAGE_WRITE_BEGIN_NOFLAGS) && \
+    !defined(HAVE_LINUX_FILEMAP_GET_FOLIO)
 static inline struct page *
 grab_cache_page_write_begin(struct address_space *mapping, pgoff_t index,
 			    unsigned int flags) {
