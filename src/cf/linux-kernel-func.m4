@@ -329,6 +329,13 @@ AC_CHECK_LINUX_FUNC([write_begin_end_folio],
 		    [[aops->write_begin(file, mapping, 0, 0, &foliop, fsdata);
 		      aops->write_end(file, mapping, 0, 0, 0, foliop, fsdata);]])
 
+dnl Linux 5.16 added folio_wait_locked and updated wait_on_page_locked to be
+dnl just a wrapper for folio_wait_locked.  Linux 6.15 removed wait_on_paged_locked
+AC_CHECK_LINUX_FUNC([folio_wait_locked],
+		    [[#include <linux/pagemap.h>
+		      #include <linux/fs.h>]],
+		    [[folio_wait_locked(NULL);]])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
