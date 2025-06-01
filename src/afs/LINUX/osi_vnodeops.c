@@ -2432,7 +2432,7 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 	 * even when an error is returned. */
 	code = mapping_read_page(cachemapping, cachepage);
 	if (!code && !task) {
-	    wait_on_page_locked(cachepage);
+	    afs_page_wait_locked(cachepage);
 	}
     } else {
         unlock_page(cachepage);
@@ -2458,8 +2458,9 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
         unlock_page(page);
     }
 
-    if (cachepage)
-	put_page(cachepage);
+    if (cachepage != NULL) {
+	afs_put_page(cachepage);
+    }
 
     return code;
 }

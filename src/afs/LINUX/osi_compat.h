@@ -835,4 +835,23 @@ afs_setattr_prepare(struct dentry *dp, struct iattr *newattrs)
 
 #endif /* D_ALIAS_IS_HLIST */
 
+static inline void
+afs_page_wait_locked(struct page *p)
+{
+#if defined(HAVE_LINUX_FOLIO_WAIT_LOCKED)
+    return folio_wait_locked(page_folio(p));
+#else
+    return wait_on_page_locked(p);
+#endif
+}
+static inline void
+afs_put_page(struct page *p)
+{
+#if defined(HAVE_LINUX_FOLIO_WAIT_LOCKED)
+    return folio_put(page_folio(p));
+#else
+    return put_page(p);
+#endif
+}
+
 #endif /* AFS_LINUX_OSI_COMPAT_H */

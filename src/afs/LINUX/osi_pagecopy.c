@@ -228,8 +228,8 @@ static int afs_pagecopy_thread(void *unused) {
 	for (;;) {
 	    sleeppage = afs_pagecopy_checkworkload();
 	    if (sleeppage) {
-		wait_on_page_locked(sleeppage);
-		put_page(sleeppage);
+		afs_page_wait_locked(sleeppage);
+		afs_put_page(sleeppage);
 	    } else {
 		break;
 	    }
