@@ -107,6 +107,7 @@ afspag_cleanup(void)
 }
 
 MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+MODULE_DESCRIPTION("OpenAFS standalone PAG manager");
 module_init(afspag_init);
 module_exit(afspag_cleanup);
 
