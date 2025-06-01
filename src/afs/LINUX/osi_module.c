@@ -132,6 +132,7 @@ afs_cleanup(void)
 }
 
 MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+MODULE_DESCRIPTION("OpenAFS AFS filesystem client");
 module_init(afs_init);
 module_exit(afs_cleanup);
 
