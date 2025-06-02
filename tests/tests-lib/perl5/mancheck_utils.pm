@@ -9,9 +9,10 @@
 #       of tests run if they get that far (could exit early
 #       from a BAIL_OUT())
 #
+use afstest qw(src_path obj_path);
+
 use File::Basename;
 use Test::More;
-use afstest qw(src_path obj_path);
 
 sub check_command_binary {
     my $c = shift(@_);

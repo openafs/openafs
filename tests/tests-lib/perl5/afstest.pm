@@ -25,7 +25,21 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(src_path obj_path);
 
-use Test::More;
+BEGIN {
+    eval "use Test::More;";
+    if ($@) {
+	# We can't import Test::More; it's probably not installed. Skip the
+	# whole test file by manually printing out some TAP and exiting. We
+	# can't call skip_all(), obviously, because we can't import Test::More.
+	my $err = $@;
+	print "1..0 # skip Cannot load Test::More\n";
+	for (split /^/, $err) {
+	    chomp;
+	    print "# $_\n";
+	}
+	exit 0;
+    }
+}
 
 # Make Test::More print diag() messages to stdout, instead of stderr.
 # Historically, diag() from Test::More prints to stderr, but diag() from
