@@ -2356,7 +2356,7 @@ afs_page_cache_alloc(struct address_space *cachemapping)
     if (folio == NULL) {
 	return NULL;
     }
-    return &folio->page;
+    return folio_page(folio, 0);
 #else
     return page_cache_alloc(cachemapping);
 #endif
@@ -3004,7 +3004,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 static int
 afs_linux_read_folio(struct file *fp, struct folio *folio)
 {
-    struct page *pp = &folio->page;
+    struct page *pp = folio_page(folio, 0);
 
     return afs_linux_readpage(fp, pp);
 }
@@ -3619,7 +3619,7 @@ afs_linux_write_end(struct file *file, struct address_space *mapping,
 {
     int code;
     unsigned int from = pos & (PAGE_SIZE - 1);
-    struct page *page = &folio->page;
+    struct page *page = folio_page(folio, 0);
 
     code = afs_linux_commit_write(file, page, from, from + copied);
 
@@ -3868,7 +3868,7 @@ afs_symlink_filler(struct file *file, struct page *page)
 static int
 afs_symlink_filler_folio(struct file *file, struct folio *folio)
 {
-    struct page *page = &folio->page;
+    struct page *page = folio_page(folio, 0);
     return afs_symlink_filler(file, page);
 }
 #endif
