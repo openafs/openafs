@@ -308,6 +308,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	}
     }
 
+    now = osi_Time();
+
     if (!AFS_IS_DISCONNECTED) {
 	/* If not disconnected, connect to the server.*/
 
@@ -326,7 +328,6 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 				 &CallBack, &tsync);
 	    	RX_AFS_GLOCK();
 	    	XSTATS_END_TIME;
-	    	CallBack.ExpirationTime += now;
 	    } else
 	    	code = -1;
     	} while (afs_Analyze
@@ -450,7 +451,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		tvc->f.states |= CStatd;	/* we've fake entire thing, so don't stat */
 		tvc->f.states &= ~CBulkFetching;
 		if (!AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
-		    tvc->cbExpires = CallBack.ExpirationTime;
+		    tvc->cbExpires = CallBack.ExpirationTime + now;
 		    afs_QueueCallback(tvc, CBHash(CallBack.ExpirationTime), volp);
 		}
 	    } else {
