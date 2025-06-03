@@ -45,9 +45,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     struct vcache *tvc;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus *OutFidStatus, *OutDirStatus;
-    struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
-    afs_int32 now;
     struct afs_fakestat_state fakestate;
     XSTATS_DECLS;
     OSI_VC_CONVERT(adp);
@@ -107,8 +105,9 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     	do {
 	    tc = afs_Conn(&adp->f.fid, treq, SHARED_LOCK, &rxconn);
 	    if (tc) {
+		struct AFSCallBack CallBack;
+
 	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_MAKEDIR);
-	    	now = osi_Time();
 	    	RX_AFS_GUNLOCK();
 	    	code =
 		    RXAFS_MakeDir(rxconn,
@@ -122,7 +121,6 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 				&tsync);
 	    	RX_AFS_GLOCK();
 	    	XSTATS_END_TIME;
-	    	CallBack.ExpirationTime += now;
 	    	/* DON'T forget to Set the callback value... */
 	    } else
 	    	code = -1;
