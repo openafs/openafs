@@ -33,6 +33,8 @@ libopr.a: $(LT_objs)
 libopr_pic.la: $(LT_objs)
 	$(LT_LDLIB_pic) $(LT_objs)
 
+$(LT_objs): $(HEADERS)
+
 $(TOP_LIBDIR)/libopr.a: libopr.a
 	$(INSTALL_DATA) libopr.a $@
 

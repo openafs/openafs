@@ -41,6 +41,7 @@ test.xdr.c: test.xg
 test.h: test.xg
 	$(RXGEN) -A -x -h -o $@ $(srcdir)/test.xg
 
+keys-t.o: test.h
 superuser-t.o: test.h
 
 clean:

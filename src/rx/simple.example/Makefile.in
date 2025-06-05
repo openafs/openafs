@@ -29,8 +29,10 @@ sample_server: sample_server.o sample.ss.o ${LIBS}
 
 sample_client.o:	sample.h
 sample_server.o:	sample.h
+sample.cs.o: sample.h
 sample.cs.c: sample.xg
 	$(RXGEN) -A -x -C -o $@ ${srcdir}/sample.xg
+sample.ss.o: sample.h
 sample.ss.c: sample.xg
 	$(RXGEN) -A -x -S -o $@ ${srcdir}/sample.xg
 sample.h: sample.xg
