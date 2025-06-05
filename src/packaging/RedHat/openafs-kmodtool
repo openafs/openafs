@@ -42,7 +42,11 @@ get_verrel ()
   case "$verrel" in
     *.el[6-9].elrepo*)
                    verrel="`echo ${verrel} | sed -e 's/^\(.*.el[6-9].elrepo[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
+    *.el[1-9][0-9].elrepo*)
+                   verrel="`echo ${verrel} | sed -e 's/^\(.*.el[1-9][0-9].elrepo[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
     *.el[6-9]*)    verrel="`echo ${verrel} | sed -e 's/^\(.*.el[6-9][^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
+    *.el[1-9][0-9]*)
+                   verrel="`echo ${verrel} | sed -e 's/^\(.*.el[1-9][0-9][^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
     *.fc[1-9][0-9]*)
                    verrel="`echo ${verrel} | sed -e 's/^\(.*.fc[1-9][0-9][^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
     *.fc9*)        verrel="`echo ${verrel} | sed -e 's/^\(.*.fc9[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
@@ -77,12 +81,16 @@ get_rpmtemplate ()
     case "$verrel" in
         *.el[6-9]*)
 	       kdep="kernel-%{_target_cpu} = ${verrel}${variant}"     ;;
+        *.el[1-9][0-9]*)
+	       kdep="kernel-%{_target_cpu} = ${verrel}${variant}"     ;;
         *.EL*) kdep="kernel${dashvariant}-%{_target_cpu} = ${verrel}" ;;
         *)     kdep="kernel-%{_target_cpu} = ${verrel}${variant}"     ;;
     esac
     case "$verrel" in
         *.el[6-9]*)
 	          kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
+        *.el[1-9][0-9]*)
+	          kname="${verrel}.%{_target_cpu}${variant:++${variant}}" ;;
         *.fc[2-9][0-9]*)
 	          kname="${verrel}.%{_target_cpu}${variant:++${variant}}" ;;
         *.fc1[0-9]*)
