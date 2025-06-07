@@ -10,7 +10,6 @@
 #ifndef __INCL_KTIME_
 #define __INCL_KTIME_ 1
 
-#undef min			/* redefined at end of file */
 struct ktime_date {
     afs_int32 mask;		/* mask of valid fields */
     short year;
@@ -56,5 +55,4 @@ struct ktime {
 #define KTIME_NEVERTIME  0x7fffffff  /* never */
 #define KTIME_NOWTIME    0           /* right now */
 
-#define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif /* __INCL_KTIME_ */
