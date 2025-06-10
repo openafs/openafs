@@ -82,6 +82,7 @@ extern void psignal(unsigned int sig, char *s);
 /* kreltime.c */
 struct ktime;
 struct ktime_date;
+void ktime_SetTestTime(time_t fixed_time);  /* for testing only */
 extern afs_int32 ktimeRelDate_ToInt32(struct ktime_date *kdptr);
 extern int Int32To_ktimeRelDate(afs_int32 int32Date,
 				struct ktime_date *kdptr);

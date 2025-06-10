@@ -136,6 +136,41 @@ static struct ptemp {
     0, 0,}
 };
 
+/*
+ * Unit test support functions to mock the system clock while
+ * running tests.
+ */
+static time_t ktime_fixed_time;  /* Fixed time for testing. */
+
+/**
+ * Set the current time to be used while running tests.
+ *
+ * This function can be used to set a fixed current time for
+ * testing purposes. Do not use this outside of unit tests.
+ *
+ * @param fixed_time  the current time to be used within the ktime module
+ */
+void
+ktime_SetTestTime(time_t fixed_time)
+{
+    ktime_fixed_time = fixed_time;
+}
+
+/*
+ * Return the current time.
+ *
+ * A wrapper function to return the current time, or a fixed time (testing
+ * mode only).
+ */
+static time_t
+ktime_now(void)
+{
+    if (ktime_fixed_time != 0) {
+	return ktime_fixed_time;
+    }
+    return time(NULL);
+}
+
 /* ktime_DateOf
  * entry:
  *	atime - time in seconds (Unix std)
@@ -376,7 +411,7 @@ ktime_next(struct ktime * aktime, afs_int32 afrom)
     afs_int32 tmask;
     struct ktime_date tdate;
 
-    start = afrom + time(0);	/* time to start search */
+    start = afrom + ktime_now();	/* time to start search */
     tmask = aktime->mask;
 
     /* handle some special cases */
@@ -600,7 +635,7 @@ ktime_InterpretDate(struct ktime_date * akdate)
     struct tm *tsp;
 
     if (akdate->mask & KTIMEDATE_NOW)
-	return time(0);
+	return ktime_now();
     if (akdate->mask & KTIMEDATE_NEVER)
 	return KTIMEDATE_NEVERDATE;
 

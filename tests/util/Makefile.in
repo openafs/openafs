@@ -6,7 +6,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 include @TOP_OBJDIR@/src/config/Makefile.libtool
 
-MODULE_CFLAGS = -I$(TOP_OBJDIR)
+MODULE_CFLAGS = -I$(TOP_OBJDIR) -I$(srcdir)/../common/
 
 LIBS = $(abs_top_builddir)/tests/common/libafstest_common.la \
        $(abs_top_builddir)/src/util/liboafs_util.la \

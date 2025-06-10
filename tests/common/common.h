@@ -22,6 +22,26 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * Test case iterator
+ *
+ * Iterate over an array of structs in a for loop.
+ *
+ * Example usage:
+ *
+ *     for (afstest_Scan(test_cases, tc, tc_i)) {
+ *        ...
+ *     }
+ *
+ * @param  test_cases  array of structs
+ * @param  tc          current test case struct pointer
+ * @param  tc_i        test case counter
+ */
+#define afstest_Scan(test_cases, tc, tc_i) \
+    (tc_i) = 0, (tc) = (test_cases); \
+    (tc_i) < sizeof(test_cases)/sizeof(*(test_cases)); \
+    (tc_i)++, (tc)++
+
 /* config.c */
 
 struct afstest_configinfo {
