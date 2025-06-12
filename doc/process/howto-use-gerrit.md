@@ -163,11 +163,13 @@ footer of the commit message when you run `git` commands which create commit
 objects (e.g.  `git commit`, `git commit --amend`, `git rebase`, `git
 cherry-pick`).
 
-Download the Gerrit `commit-msg` commit hook to your `.git/hooks` directory in
-your OpenAFS git repository. Run this command in the top level directory of
-your Git repository to download the hook:
+Download the [`commit-msg`](https://gerrit.openafs.org/tools/hooks/commit-msg)
+git hook to your `.git/hooks` directory and make it executable.  For example,
+run these commands in the top level directory of your local Git repository to
+download the hook:
 
-    $ scp -p -P 29418 gerrit.openafs.org:hooks/commit-msg .git/hooks/
+    $ curl -k -L -o .git/hooks/commit-msg https://gerrit.openafs.org/tools/hooks/commit-msg
+    $ chmod +x .git/hooks/commit-msg
 
 ## Submitting commits
 
