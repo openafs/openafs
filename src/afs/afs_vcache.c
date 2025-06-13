@@ -2089,7 +2089,7 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 	    afs_QueueCallback(tvc, CBHash(CallBack.ExpirationTime), tvp);
 	} else if (tvc->f.states & CRO) {
 	    /* adapt gives us an hour. */
-	    tvc->cbExpires = 3600 + osi_Time();
+	    tvc->cbExpires = 3600 + now;
 	     /*XXX*/ tvc->f.states |= CStatd | CUnique;
 	    tvc->f.states &= ~CBulkFetching;
 	    afs_QueueCallback(tvc, CBHash(3600), tvp);
@@ -2328,7 +2328,7 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 	    afs_QueueCallback(tvc, CBHash(CallBack.ExpirationTime), tvolp);
 	} else if (tvc->f.states & CRO) {
 	    /* adapt gives us an hour. */
-	    tvc->cbExpires = 3600 + osi_Time();
+	    tvc->cbExpires = 3600 + start;
 	     /*XXX*/ tvc->f.states |= CStatd;
 	    tvc->f.states &= ~CBulkFetching;
 	    afs_QueueCallback(tvc, CBHash(3600), tvolp);
