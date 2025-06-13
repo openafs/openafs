@@ -1090,8 +1090,10 @@ afs_linux_revalidate(struct dentry *dp)
     cred_t *credp;
     int code;
 
-    if (afs_shuttingdown != AFS_RUNNING)
-	return EIO;
+    if (afs_shuttingdown != AFS_RUNNING) {
+	code = EIO;
+	goto out_unlocked;
+    }
 
     AFS_GLOCK();
 
@@ -1119,9 +1121,10 @@ afs_linux_revalidate(struct dentry *dp)
 
     afs_DestroyAttr(vattr);
 
-out:
+ out:
     AFS_GUNLOCK();
 
+ out_unlocked:
     return afs_convert_code(code);
 }
 
