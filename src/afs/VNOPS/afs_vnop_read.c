@@ -30,13 +30,6 @@
 
 extern char afs_zeros[AFS_ZEROS];
 
-/* Imported variables */
-extern afs_rwlock_t afs_xdcache;
-extern unsigned char *afs_indexFlags;
-extern afs_hyper_t *afs_indexTimes;	/* Dcache entry Access times */
-extern afs_hyper_t afs_indexCounter;	/* Fake time for marking index */
-
-
 /* Forward declarations */
 void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 		       afs_ucred_t *acred, struct vrequest *areq);

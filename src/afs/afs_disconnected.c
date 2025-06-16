@@ -28,11 +28,7 @@ struct afs_q afs_disconShadow;
  *  list traversal */
 afs_rwlock_t afs_disconDirtyLock;
 
-extern afs_int32 *afs_dvhashTbl;	/*Data cache hash table */
 extern afs_int32 *afs_dchashTbl;	/*Data cache hash table */
-extern afs_int32 *afs_dvnextTbl;	/*Dcache hash table links */
-extern afs_int32 *afs_dcnextTbl;	/*Dcache hash table links */
-extern struct dcache **afs_indexTable;	/*Pointers to dcache entries */
 
 /*! Vnode number. On file creation, use the current value and increment it.
  */

@@ -36,6 +36,6 @@
 enum vcexcl { NONEXCL, EXCL };	/* (non)exclusive create */
 #endif
 
-struct buf *getblk(), *geteblk(), *breada(), *bread();
+struct buf *getblk(), *bread();
 #define	b_actf		av_forw
 #define	dbtob(db)	((unsigned)(db) << 9)	/* (db * 512) */

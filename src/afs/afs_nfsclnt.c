@@ -42,7 +42,6 @@ struct exporterops nfs_exportops = {
 
 struct nfsclientpag *afs_nfspags[NNFSCLIENTS];
 afs_lock_t afs_xnfspag /*, afs_xnfsreq */ ;
-extern struct afs_exporter *afs_nfsexporter;
 
 /* Creates an nfsclientpag structure for the (uid, host) pair if one doesn't
  * exist. RefCount is incremented and it's time stamped. */

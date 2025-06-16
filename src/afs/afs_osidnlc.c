@@ -35,7 +35,6 @@
  */
 
 struct afs_lock afs_xdnlc;
-extern struct afs_lock afs_xvcache;
 
 dnlcstats_t dnlcstats;
 

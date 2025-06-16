@@ -73,9 +73,6 @@ static int afs_max_buffers;	/* should be an integral multiple of NPB */
 static struct buffer *Buffers = 0;
 static char *BufferData;
 
-#ifdef	AFS_AIX_ENV
-extern struct buf *geteblk();
-#endif
 #ifdef AFS_FBSD_ENV
 #define timecounter afs_timecounter
 #endif

@@ -29,7 +29,6 @@
 #include "rx/rx_globals.h"
 #include "token.h"
 
-extern int afs_rmtsys_enable;
 struct VenusFid afs_rootFid;
 afs_int32 afs_waitForever = 0;
 short afs_waitForeverCount = 0;

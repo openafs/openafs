@@ -31,9 +31,6 @@
 #include "afs/afs_osidnlc.h"
 
 
-/* Imported variables */
-extern enum afs_shutdown_state afs_shuttingdown;
-
 /* Exported variables */
 afs_uint32 pag_epoch;
 #if defined(UKERNEL)
