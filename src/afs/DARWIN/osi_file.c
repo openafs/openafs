@@ -204,6 +204,10 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     afile->size = va.va_size;
 #else
     code = afs_osi_Stat(afile, &tstat);
+    if (code != 0) {
+	osi_UFSClose(afile);
+	return NULL;
+    }
     afile->size = tstat.size;
 #endif
     return (void *)afile;

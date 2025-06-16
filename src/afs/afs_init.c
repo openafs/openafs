@@ -478,7 +478,10 @@ afs_InitCacheInfo(char *afile)
     if (!tfile)
 	return ENOENT;
 
-    afs_osi_Stat(tfile, &tstat);
+    if (afs_osi_Stat(tfile, &tstat) != 0) {
+	osi_UFSClose(tfile);
+	return EIO;
+    }
     cacheInfoModTime = tstat.mtime;
     code = afs_osi_Read(tfile, -1, &theader, sizeof(theader));
     goodFile = 0;

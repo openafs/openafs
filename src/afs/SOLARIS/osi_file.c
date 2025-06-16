@@ -213,6 +213,10 @@ osi_UfsOpen(afs_dcache_id_t *ainode)
 #ifdef AFS_CACHE_VNODE_PATH
     afile->vnode = vp;
     code = afs_osi_Stat(afile, &tstat);
+    if (code != 0) {
+	osi_UFSClose(afile);
+	return NULL;
+    }
     afile->size = tstat.size;
 #else
     afile->vnode = ITOV(ip);
