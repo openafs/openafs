@@ -105,6 +105,8 @@
 #define SYS_NAME_ID_arm_darwin_230       552
 #define SYS_NAME_ID_amd64_darwin_240     553
 #define SYS_NAME_ID_arm_darwin_240       554
+#define SYS_NAME_ID_amd64_darwin_250     555
+#define SYS_NAME_ID_arm_darwin_250       556
 
 #define SYS_NAME_ID_next_mach20		 601
 #define SYS_NAME_ID_next_mach30		 602
