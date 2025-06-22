@@ -1,6 +1,6 @@
 /authcon-t
+/genkeyfiles
 /keys-t
+/realms-t
 /superuser-t
 /test.h
-/writekeyfile
-/realms-t

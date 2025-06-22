@@ -96,6 +96,22 @@ keyMatches(struct afsconf_typedKey *typedKey,
     afsconf_typedKey_values(typedKey, &keyType, &keyKvno, &keySubType,
 			    &buffer);
 
+    if (keyType != type) {
+	diag(" keyType %d != %d", keyType, type);
+    }
+    if (keyKvno != kvno) {
+	diag(" kvno %d != %d", keyKvno, kvno);
+    }
+    if (keySubType != subType) {
+	diag(" subType %d != %d", keySubType, subType);
+    }
+    if (buffer->len != keyLen) {
+	diag(" keyLen %d != %d", (int)buffer->len, (int)keyLen);
+    }
+    if (memcmp(keyMaterial, buffer->val, buffer->len) != 0) {
+	diag(" keyMaterial mismatch");
+    }
+
     return (keyType == type && keyKvno == kvno && keySubType == subType &&
 	    buffer->len == keyLen &&
 	    memcmp(keyMaterial, buffer->val, buffer->len) == 0);
@@ -111,8 +127,8 @@ int main(int argc, char **argv)
     struct afsconf_typedKeyList *typedKeyList;
     struct afstest_configinfo bct;
     char *dirname;
-    char *keyfile;
-    char *keyfilesrc;
+    char *keyfile, *keyfileext;
+    char *keyfilesrc, *keyfileextsrc;
     afs_int32 kvno;
     int code;
     int i;
@@ -121,7 +137,7 @@ int main(int argc, char **argv)
 
     afstest_SkipTestsIfBadHostname();
 
-    plan(134);
+    plan(153);
 
     /* Create a temporary afs configuration directory */
 
@@ -129,7 +145,6 @@ int main(int argc, char **argv)
     dirname = afstest_BuildTestConfig(&bct);
 
     keyfile = afstest_asprintf("%s/KeyFile", dirname);
-
     keyfilesrc = afstest_src_path("tests/auth/KeyFile");
 
     /* First, copy in a known keyfile */
@@ -137,6 +152,15 @@ int main(int argc, char **argv)
     free(keyfilesrc);
     if (code)
 	goto out;
+
+    /* ...and a KeyFileExt */
+    keyfileext = afstest_asprintf("%s/KeyFileExt", dirname);
+    keyfileextsrc = afstest_src_path("tests/auth/KeyFileExt");
+    code = copy(keyfileextsrc, keyfileext);
+    free(keyfileextsrc);
+    if (code != 0) {
+	goto out;
+    }
 
     /* Start with a blank configuration directory */
     dir = afsconf_Open(dirname);
@@ -157,6 +181,36 @@ int main(int argc, char **argv)
        " ... second key matches");
     ok(memcmp(keys.key[2].key, "\x19\x16\xfe\xe6\xba\x77\x2f\xfd", 8) == 0,
        " ... third key matches");
+
+
+    code = afsconf_GetAllKeys(dir, &typedKeyList);
+    is_int(0, code, "afsconf_GetAllKeys returns success");
+    is_int(6, typedKeyList->nkeys, "... and ->nkeys matches");
+    ok(keyMatches(typedKeyList->keys[0], afsconf_rxkad, 1, 0,
+		  "\x01\x02\x04\x08\x10\x20\x40\x80", 8),
+       "... and keys[0] matches");
+    ok(keyMatches(typedKeyList->keys[1], afsconf_rxkad, 2, 0,
+		  "\x04\x04\x04\x04\x04\x04\x04\x04", 8),
+       "... and keys[1] matches");
+    ok(keyMatches(typedKeyList->keys[2], afsconf_rxkad, 4, 0,
+		  "\x19\x16\xfe\xe6\xba\x77\x2f\xfd", 8),
+       "... and keys[2] matches");
+    ok(keyMatches(typedKeyList->keys[3], afsconf_rxkad_krb5, 5, 17,
+		  "\x4a\x75\x4f\x90\xeb\x12\xc4\x3f\xcd\x18\x67\xe1\xe4\x4d\xf4\x0c",
+		  16),
+       "... and keys[3] matches");
+    ok(keyMatches(typedKeyList->keys[4], afsconf_rxkad_krb5, 6, 17,
+		  "\x95\xc1\x9d\x84\xea\x16\x87\x14\xad\x23\x90\x7b\xe4\xfc\xc0\xe8",
+		  16),
+       "... and keys[4] matches");
+    ok(keyMatches(typedKeyList->keys[5], afsconf_rxkad_krb5, 6, 18,
+		  "\x92\xc2\x59\x58\xe4\x6e\x70\x37\x66\x05\x26\x22\x1f\xef\x31\xc5"
+		  "\x7b\xff\x5b\x73\xa9\xe2\x75\xd3\x3c\x3f\x57\x64\x14\xe5\x2f\x63",
+		  32),
+       "... and keys[5] matches");
+
+    afsconf_PutTypedKeyList(&typedKeyList);
+
 
     /* Verify that GetLatestKey returns the newest key */
     code = afsconf_GetLatestKey(dir, &kvno, &key);
@@ -318,6 +372,56 @@ int main(int argc, char **argv)
        " ... and returned key matches");
     afsconf_PutTypedKeyList(&typedKeyList);
 
+    /* and for rxkad_krb5 keys */
+    code = afsconf_GetKeyByTypes(dir, afsconf_rxkad_krb5, 5, 17, &typedKey);
+    is_int(0, code,
+	   "afsconf_GetKeyByTypes works for rxkad_krb5");
+    ok(keyMatches(typedKey, afsconf_rxkad_krb5, 5, 17,
+		  "\x4a\x75\x4f\x90\xeb\x12\xc4\x3f\xcd\x18\x67\xe1\xe4\x4d\xf4\x0c",
+		  16),
+       " ... and returned key matches");
+
+    afsconf_typedKey_put(&typedKey);
+
+    code = afsconf_GetKeysByType(dir, afsconf_rxkad_krb5, 5, &typedKeyList);
+    is_int(0, code,
+	   "afsconf_GetKeysByType works for rxkad_krb5");
+    is_int(1, typedKeyList->nkeys,
+	   " ... and ->nkeys matches");
+    ok(keyMatches(typedKeyList->keys[0], afsconf_rxkad_krb5, 5, 17,
+		  "\x4a\x75\x4f\x90\xeb\x12\xc4\x3f\xcd\x18\x67\xe1\xe4\x4d\xf4\x0c",
+		  16),
+       " ... and ->keys[0] matches");
+
+    afsconf_PutTypedKeyList(&typedKeyList);
+
+    code = afsconf_GetLatestKeyByTypes(dir, afsconf_rxkad_krb5, 17, &typedKey);
+    is_int(0, code,
+	   "afsconf_GetLatestKeyByTypes works for rxkad_krb5");
+    ok(keyMatches(typedKey, afsconf_rxkad_krb5, 6, 17,
+		  "\x95\xc1\x9d\x84\xea\x16\x87\x14\xad\x23\x90\x7b\xe4\xfc\xc0\xe8",
+		  16),
+       " ... and returned key matches");
+
+    afsconf_typedKey_put(&typedKey);
+
+    code = afsconf_GetLatestKeysByType(dir, afsconf_rxkad_krb5, &typedKeyList);
+    is_int(0, code,
+	   "afsconf_GetLatestKeysByType works for rxkad_krb5");
+    is_int(2, typedKeyList->nkeys,
+	   " ... ->nkeys matches");
+    ok(keyMatches(typedKeyList->keys[0], afsconf_rxkad_krb5, 6, 17,
+		  "\x95\xc1\x9d\x84\xea\x16\x87\x14\xad\x23\x90\x7b\xe4\xfc\xc0\xe8",
+		  16),
+       " ... and ->keys[0] matches");
+    ok(keyMatches(typedKeyList->keys[1], afsconf_rxkad_krb5, 6, 18,
+		  "\x92\xc2\x59\x58\xe4\x6e\x70\x37\x66\x05\x26\x22\x1f\xef\x31\xc5"
+		  "\x7b\xff\x5b\x73\xa9\xe2\x75\xd3\x3c\x3f\x57\x64\x14\xe5\x2f\x63",
+		  32),
+       " ... and ->keys[1] matches");
+    afsconf_PutTypedKeyList(&typedKeyList);
+
+
     /* Check that we can't delete a key that doesn't exist */
     code = afsconf_DeleteKeyByType(dir, afsconf_rxkad, 6);
     is_int(AFSCONF_NOTFOUND, code,
@@ -343,8 +447,9 @@ int main(int argc, char **argv)
     code = afsconf_GetKeyByTypes(dir, afsconf_rxkad, 14, 0, &typedKey);
     is_int(AFSCONF_NOTFOUND, code, " ... and is really gone");
 
-    /* Unlink the KeyFile */
+    /* Unlink the KeyFile/KeyFileExt */
     unlink(keyfile);
+    unlink(keyfileext);
 
     /* Force a rebuild of the directory structure, just in case */
     afsconf_Close(dir);

@@ -4,7 +4,11 @@ abs_top_builddir=@abs_top_builddir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.pthread
 
-BINS = authcon-t superuser-t keys-t realms-t writekeyfile
+BINS =	authcon-t \
+	genkeyfiles \
+	keys-t \
+	realms-t \
+	superuser-t
 
 MODULE_CFLAGS=-I$(TOP_OBJDIR) -I$(srcdir)/../common/
 
@@ -26,8 +30,8 @@ keys-t: keys-t.o $(LIBS)
 realms-t: realms-t.o $(LIBS)
 	$(LT_LDRULE_static) realms-t.o $(LIBS) $(XLIBS)
 
-writekeyfile: writekeyfile.o $(LIBS)
-	$(LT_LDRULE_static) writekeyfile.o $(LIBS) $(XLIBS)
+genkeyfiles: genkeyfiles.o $(LIBS)
+	$(LT_LDRULE_static) genkeyfiles.o $(LIBS) $(XLIBS)
 
 test.cs.c: test.xg
 	$(RXGEN) -A -x -C -o $@ $(srcdir)/test.xg
