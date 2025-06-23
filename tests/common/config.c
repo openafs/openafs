@@ -29,13 +29,17 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <roken.h>
+#include <afs/opr.h>
 
 #include <afs/cellconfig.h>
+#include <afs/rfc3961.h>
 
 #include <hcrypto/des.h>
 
 #include <tests/tap/basic.h>
 #include "common.h"
+
+#define OPAQUE(x) { (sizeof(x) - 1), (x) }
 
 static FILE *
 openConfigFile(char *dirname, char *filename) {
@@ -47,6 +51,52 @@ openConfigFile(char *dirname, char *filename) {
     file = fopen(path, "w");
     free(path);
     return file;
+}
+
+static int
+add_test_keys(struct afsconf_dir *dir, struct afstest_configinfo *info)
+{
+    static const int subtype_aes128 = ETYPE_AES128_CTS_HMAC_SHA1_96;
+    static const int subtype_aes256 = ETYPE_AES256_CTS_HMAC_SHA1_96;
+
+    struct {
+	int kvno;
+	afsconf_keyType ktype;
+	int subtype;
+	struct rx_opaque keydata;
+    } *testkey, test_key_list[] = {
+	{1, afsconf_rxkad, 0, OPAQUE("\x19\x16\xfe\xe6\xba\x76\x2f\xfd") },
+
+	{6, afsconf_rxkad_krb5, subtype_aes128,
+	 OPAQUE("\x95\xc1\x9d\x84\xea\x16\x87\x14\xad\x23\x90\x7b\xe4\xfc\xc0\xe8") },
+	{6, afsconf_rxkad_krb5, subtype_aes256,
+	 OPAQUE("\x92\xc2\x59\x58\xe4\x6e\x70\x37\x66\x05\x26\x22\x1f\xef\x31\xc5"
+		"\x7b\xff\x5b\x73\xa9\xe2\x75\xd3\x3c\x3f\x57\x64\x14\xe5\x2f\x63") },
+
+	{0}
+    };
+    int code;
+    int overwrite = 1;
+
+    for (testkey = test_key_list; testkey->kvno != 0; testkey++) {
+	struct afsconf_typedKey *key;
+
+	if (info->onlydeskeys && testkey->ktype != afsconf_rxkad) {
+	    continue;
+	}
+
+	key = afsconf_typedKey_new(testkey->ktype, testkey->kvno,
+				   testkey->subtype, &testkey->keydata);
+	opr_Assert(key != NULL);
+
+	code = afsconf_AddTypedKey(dir, key, overwrite);
+	afsconf_typedKey_put(&key);
+	if (code != 0) {
+	    return code;
+	}
+    }
+
+    return 0;
 }
 
 /*!
@@ -103,7 +153,7 @@ afstest_BuildTestConfig(struct afstest_configinfo *info)
 	    goto error;
 	}
 
-	code = afstest_AddDESKeyFile(confdir);
+	code = add_test_keys(confdir, info);
 	if (code != 0) {
 	    goto error;
 	}
@@ -123,15 +173,4 @@ afstest_BuildTestConfig(struct afstest_configinfo *info)
 	free(dir);
     }
     return NULL;
-}
-
-int
-afstest_AddDESKeyFile(struct afsconf_dir *dir)
-{
-    char keymaterial[]="\x19\x17\xff\xe6\xbb\x77\x2e\xfc";
-
-    /* Make sure that it is actually a valid key */
-    DES_set_odd_parity((DES_cblock *)keymaterial);
-
-    return afsconf_AddKey(dir, 1, keymaterial, 1);
 }

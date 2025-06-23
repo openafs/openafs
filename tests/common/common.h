@@ -27,11 +27,13 @@
 struct afstest_configinfo {
     /* Skip adding keys to the created conf dir. */
     int skipkeys;
+
+    /* Only add old single-DES keys to the conf dir. */
+    int onlydeskeys;
 };
 extern char *afstest_BuildTestConfig(struct afstest_configinfo *info);
 
 struct afsconf_dir;
-extern int afstest_AddDESKeyFile(struct afsconf_dir *dir);
 
 /* exec.c */
 

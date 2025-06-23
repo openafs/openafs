@@ -16,6 +16,8 @@
 
 #include "common.h"
 
+static char *argv0;
+
 /* This checks for a bug in vos where it would fail to allocate additional
  * space for the results of multi homed VL_GetAddrsU, and so would segfault
  * if a host with a small number of addresses was immediately followed by
@@ -73,30 +75,19 @@ TestListAddrs(struct ubik_client *client, char *dirname)
     free(cmd);
 }
 
-int
-main(int argc, char **argv)
+static void
+runtest(struct afstest_configinfo *bct)
 {
     char *dirname;
     struct afsconf_dir *dir;
-    int code, secIndex;
+    int secIndex;
     pid_t serverPid = 0;
     struct rx_securityClass *secClass;
     struct ubik_client *ubikClient = NULL;
-    int ret = 0;
-    char *argv0 = afstest_GetProgname(argv);
+    int ret;
+    int code;
 
-    /* Skip all tests if the current hostname can't be resolved */
-    afstest_SkipTestsIfBadHostname();
-    /* Skip all tests if the current hostname is on the loopback network */
-    afstest_SkipTestsIfLoopbackNetIsDefault();
-    /* Skip all tests if a vlserver is already running on this system. */
-    afstest_SkipTestsIfServerRunning("afs3-vlserver");
-
-    plan(6);
-
-    code = rx_Init(0);
-
-    dirname = afstest_BuildTestConfig(NULL);
+    dirname = afstest_BuildTestConfig(bct);
 
     dir = afsconf_Open(dirname);
 
@@ -126,12 +117,50 @@ main(int argc, char **argv)
 
     TestListAddrs(ubikClient, dirname);
 
-out:
+    ret = 0;
+
+ out:
     if (serverPid != 0) {
 	code = afstest_StopServer(serverPid);
 	is_int(0, code, "Server exited cleanly");
     }
 
     afstest_rmdtemp(dirname);
-    return ret;
+
+    if (ret != 0) {
+	exit(ret);
+    }
 }
+
+int
+main(int argc, char **argv)
+{
+    struct afstest_configinfo bct;
+    int code;
+
+    argv0 = afstest_GetProgname(argv);
+
+    memset(&bct, 0, sizeof(bct));
+
+    /* Skip all tests if the current hostname can't be resolved */
+    afstest_SkipTestsIfBadHostname();
+    /* Skip all tests if the current hostname is on the loopback network */
+    afstest_SkipTestsIfLoopbackNetIsDefault();
+    /* Skip all tests if a vlserver is already running on this system. */
+    afstest_SkipTestsIfServerRunning("afs3-vlserver");
+
+    plan(12);
+
+    code = rx_Init(0);
+    if (code != 0) {
+	errx(1, "Error initializing rx");
+    }
+
+    runtest(NULL);
+
+    bct.onlydeskeys = 1;
+    runtest(&bct);
+
+    return 0;
+}
+
