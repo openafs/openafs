@@ -554,6 +554,7 @@ extern struct uio* afsio_partialcopy(struct uio *auio, size_t size);
 extern int afsio_skip(struct uio *auio, afs_int32 asize);
 
 /* afs_osi_vget.c */
+struct fid;
 #if !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN80_ENV)
 extern int afs_osi_vget(struct vcache **avcpp, struct fid *afidp,
                         struct vrequest *areqp);
@@ -1183,7 +1184,6 @@ extern int afs_rmdir(OSI_VC_DECL(adp), char *aname, struct vnode *cdirp,
 extern int afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred);
 #endif
 
-struct fid;
 /* VNOPS/afs_vnop_fid.c */
 #ifdef AFS_AIX41_ENV
 int afs_fid(OSI_VC_DECL(avc), struct fid *fidpp, struct ucred *credp);

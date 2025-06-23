@@ -68,7 +68,6 @@ struct usr_vnodeops Afs_vnodeops = {
     afs_badop,			/* bread */
     afs_badop,			/* brelse */
     afs_lockctl,
-    afs_fid
 };
 
 struct usr_vnodeops *afs_ops = &Afs_vnodeops;

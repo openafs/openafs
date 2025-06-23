@@ -16,8 +16,14 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
+#if !defined(UKERNEL)
+# if defined(AFS_SUN5_ENV) || defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV)
+#  define AFS_VNOP_FID_ENV
+# endif
+#endif
 
-#if !defined(AFS_LINUX_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD_ENV) && !defined(AFS_NBSD_ENV)
+#ifdef AFS_VNOP_FID_ENV
+
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
@@ -150,5 +156,4 @@ afs_fid(OSI_VC_DECL(avc), struct fid **fidpp)
     return (0);
 }
 
-
-#endif /* !AFS_LINUX_ENV */
+#endif /* AFS_VNOP_FID_ENV */

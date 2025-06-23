@@ -201,7 +201,6 @@ typedef unsigned int fsblkcnt_t;
 #define statfs			usr_statfs
 #define file			usr_file
 #define dirent			usr_dirent
-#define fid			usr_fid
 #define sysent			usr_sysent
 #define ifaddr                  usr_ifaddr
 #define ifnet                   usr_ifnet
@@ -547,12 +546,6 @@ typedef int usr_vtype_t;
 #define ROOT_UNMOUNT			0x0003
 #define ROOT_FRONTMOUNT			0x0004
 #define ROOT_BACKMOUNT			0x0005
-
-#ifdef	MAXFIDSZ
-#undef	MAXFIDSZ
-#endif
-
-#define	MAXFIDSZ			64
 
 #ifdef FSTYPSZ
 #undef FSTYPSZ
@@ -1016,19 +1009,6 @@ struct usr_file {
 
 extern struct usr_file *getf(int);
 
-#ifdef	fid_len
-#undef	fid_len
-#endif
-#ifdef	fid_data
-#undef	fid_data
-#endif
-
-struct usr_fid {
-    unsigned short fid_len;
-    unsigned short fid_reserved;
-    char fid_data[MAXFIDSZ];
-};
-
 struct usr_flock {
     short l_type;
     short l_whence;
@@ -1136,7 +1116,6 @@ struct usr_vnodeops {
     int (*vn_brelse) (void);
     int (*vn_lockctl) (struct vcache *, struct usr_flock *, int,
 		       afs_ucred_t *);
-    int (*vn_fid) (struct vcache *avc, struct fid **);
 };
 
 struct usr_fs {
