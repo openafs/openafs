@@ -173,7 +173,6 @@ struct afs_FSStats {
 
 struct afs_FSStats afs_fsstats;
 
-int supported = 1;
 afs_int32 BlocksSpare = 1024;	/* allow 1 MB overruns */
 afs_int32 PctSpare;
 extern afs_int32 implicitAdminRights;
