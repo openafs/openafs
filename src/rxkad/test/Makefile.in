@@ -10,9 +10,6 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 top_builddir=@TOP_OBJDIR@
 
-
-CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} ${ARCHFLAGS}
-
 HEADERS = ../rxkad.h stress.h stress_internal.h stress_errs.h
 
 LIBS=${TOP_LIBDIR}/libauth.a \
