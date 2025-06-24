@@ -49,7 +49,6 @@
 
 pthread_mutex_t host_glock_mutex;
 
-extern int Console;
 extern int CurrentConnections;
 extern int SystemId;
 extern int AnonymousID;
@@ -900,8 +899,6 @@ h_TossStuff_r(struct host *host)
 	struct AddrPort hostAddrPort;
 	int i;
 
-	if (host->z.Console & 1)
-	    Console--;
 	if ((rxconn = host->z.callback_rxcon)) {
 	    host->z.callback_rxcon = (struct rx_connection *)0;
 	    rx_DestroyConnection(rxconn);
