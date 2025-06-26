@@ -48,7 +48,7 @@ SetPageError(struct page *p)
 # define kthread_complete_and_exit complete_and_exit
 #endif
 
-#if defined(STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT) && !defined(DCACHE_NEED_AUTOMOUNT)
+#if defined(STRUCT_DENTRY_OPERATIONS_HAS_D_AUTOMOUNT) && !defined(HAVE_DCACHE_NEED_AUTOMOUNT)
 # define DCACHE_NEED_AUTOMOUNT DMANAGED_AUTOMOUNT
 #endif
 
@@ -123,7 +123,7 @@ afs_posix_test_lock(struct file *fp, struct file_lock *flp) {
 #endif
 }
 
-#ifdef DCACHE_NFSFS_RENAMED
+#ifdef HAVE_DCACHE_NFSFS_RENAMED
 static inline void
 afs_linux_clear_nfsfs_renamed(struct dentry *dp) {
     spin_lock(&dp->d_lock);

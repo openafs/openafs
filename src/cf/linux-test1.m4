@@ -179,6 +179,19 @@ AC_DEFUN([AC_CHECK_LINUX_TYPE],
                        [Define if kernel defines $1])
  ])
 
+dnl AC_CHECK_LINUX_SYMBOL([sym], [includes])
+dnl Linux 6.15 has started converting some defines into enums
+dnl for constants that we use, a simple #ifdef no longer works
+AC_DEFUN([AC_CHECK_LINUX_SYMBOL],
+ [AC_CHECK_LINUX_BUILD([for symbol $1],
+                       [ac_cv_linux_symbol_$1_exists],
+                       [#include <linux/$2>],
+                       [static int _test_ = $1; ],
+                       AS_TR_CPP(HAVE_$1),
+                       [Define if kernel defines symbol $1])
+ ])
+
+
 dnl AC_CHECK_LINUX_STRUCT([structure], [element], [includes])
 AC_DEFUN([AC_CHECK_LINUX_STRUCT],
  [AC_CHECK_LINUX_TYPED_STRUCT([struct $1], [$2], [$3])
