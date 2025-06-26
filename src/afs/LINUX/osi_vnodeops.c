@@ -2079,8 +2079,11 @@ out:
     crfree(credp);
     return afs_convert_code(code);
 }
-
-#if defined(IOP_TAKES_MNT_IDMAP)
+#if defined(HAVE_LINUX_INODE_OPERATIONS_MKDIR_RETURN_DENTRY)
+static struct dentry *
+afs_linux_mkdir(struct mnt_idmap *idmap, struct inode *dip,
+		struct dentry *dp, umode_t mode)
+#elif defined(IOP_TAKES_MNT_IDMAP)
 static int
 afs_linux_mkdir(struct mnt_idmap *idmap, struct inode *dip,
 		struct dentry *dp, umode_t mode)
@@ -2131,7 +2134,12 @@ out:
     AFS_GUNLOCK();
 
     crfree(credp);
+
+#if defined(HAVE_LINUX_INODE_OPERATIONS_MKDIR_RETURN_DENTRY)
+    return ERR_PTR(afs_convert_code(code));
+#else
     return afs_convert_code(code);
+#endif
 }
 
 static int
