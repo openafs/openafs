@@ -41,4 +41,13 @@ dnl define.
 AS_IF([test AS_VAR_GET([ac_cv_linux_operation_inode_operations_create_mnt_idmap]) = yes],
       [AC_DEFINE([IOP_TAKES_MNT_IDMAP], 1,
                  [define if inodeops require struct mnt_idmap])])
+
+dnl Linux 6.15 changed the return value for inode_operations.mkdir to a struct dentry *
+AC_CHECK_LINUX_OPERATION([inode_operations], [mkdir], [return_dentry],
+                         [#include <linux/fs.h>],
+                         [struct dentry *],
+                         [struct mnt_idmap *idmap,
+                         struct inode *inode, struct dentry *dentry,
+                         umode_t umode])
+
 ])
