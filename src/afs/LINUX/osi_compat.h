@@ -123,30 +123,27 @@ afs_posix_test_lock(struct file *fp, struct file_lock *flp) {
 #endif
 }
 
-#ifdef HAVE_DCACHE_NFSFS_RENAMED
 static inline void
-afs_linux_clear_nfsfs_renamed(struct dentry *dp) {
+afs_linux_clear_nfsfs_renamed(struct dentry *dp)
+{
     spin_lock(&dp->d_lock);
     dp->d_flags &= ~DCACHE_NFSFS_RENAMED;
     spin_unlock(&dp->d_lock);
 }
 
 static inline void
-afs_linux_set_nfsfs_renamed(struct dentry *dp) {
+afs_linux_set_nfsfs_renamed(struct dentry *dp)
+{
     spin_lock(&dp->d_lock);
     dp->d_flags |= DCACHE_NFSFS_RENAMED;
     spin_unlock(&dp->d_lock);
 }
 
 static inline int
-afs_linux_nfsfs_renamed(struct dentry *dp) {
+afs_linux_nfsfs_renamed(struct dentry *dp)
+{
     return dp->d_flags & DCACHE_NFSFS_RENAMED;
 }
-
-#else
-static inline void afs_linux_clear_nfsfs_renamed(void) { return; }
-static inline void afs_linux_set_nfsfs_renamed(void) { return; }
-#endif
 
 #ifndef HAVE_LINUX_HLIST_UNHASHED
 static void
