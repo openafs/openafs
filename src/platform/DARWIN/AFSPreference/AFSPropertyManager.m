@@ -1211,7 +1211,7 @@
 
 // -------------------------------------------------------------------------------
 //  checkAfsStatus
-//   This is called at least once per 60s, so avoid logging normal case that afs _is_ mounted.
+//   This is called at least once per 60s.
 // -------------------------------------------------------------------------------
 -(BOOL) checkAfsStatus
 {
@@ -1231,9 +1231,6 @@
 		result = YES;
 		break;
 	    }
-	}
-	if (result == NO) {
-	    NSLog(@"checkAfsStatus: (afs) is not mounted.");
 	}
 	return result;
 }
