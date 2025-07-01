@@ -6,6 +6,9 @@
 # for real releases make pkgrel 1 (or more for extra releases)
 %define pkgrel @LINUX_PKGREL@
 
+# Disable using lto (link time optimization)
+%global _lto_cflags %{nil}
+
 %{!?build_dkmspkg: %define build_dkmspkg 1}
 
 #
