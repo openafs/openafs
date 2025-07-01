@@ -520,10 +520,344 @@ test_ktime_InterpretDate(void)
     }
 }
 
+/*
+ * ktimeRelDate_ToInt32() tests.
+ *
+ * The ktimeRelDate_ToInt32() function encodes a relative time (duration) as a
+ * combination of a number of years, months, days into an integer
+ * representation in days resolution (not seconds).
+ *
+ * The mask, hour, min, and sec fields of the struct ktime_date are ignored
+ * by ktimeRelDate_ToInt32().
+ *
+ * ktimeRelDate_ToInt32() does not validate the input value ranges.
+ */
+static void
+test_ktimeRelDate_ToInt32(void)
+{
+    int tc_i;
+    struct {
+	struct ktime_date input;
+	int out_of_range;
+	afs_int32 expected;
+    } *tc, test_cases[] = {
+	/*          mask     year    mon     day  hr  min sec  oor   expected */
+	{{          0x00,      0,      0,      0,  0,  0,  0},  0,         0},
+	{{          0x00,      0,      0,      1,  0,  0,  0},  0,         1},
+	{{          0x00,      0,      0,     30,  0,  0,  0},  0,        30},
+	{{          0x00,      0,      0,     31,  0,  0,  0},  1,        31},
+	{{          0x00,      0,      1,      0,  0,  0,  0},  0,        31},
+	{{          0x00,      0,      1,      1,  0,  0,  0},  0,        32},
+	{{          0x00,      0,      1,     30,  0,  0,  0},  0,        61},
+	{{          0x00,      0,      2,      0,  0,  0,  0},  0,        62},
+	{{          0x00,      0,     11,      0,  0,  0,  0},  0,       341},
+	{{          0x00,      0,     12,      0,  0,  0,  0},  1,       372},
+	{{          0x00,      1,      0,      0,  0,  0,  0},  0,       372},
+	{{          0x00,  32767,      0,      0,  0,  0,  0},  0,  12189324},
+	{{          0x00,     -1,      0,      0,  0,  0,  0},  1,      -372},
+	{{          0x00,      1,      1,      1,  0,  0,  0},  0,       404},
+	{{          0x00,  32767,     11,     30,  0,  0,  0},  0,  12189695},
+	{{          0x00,  32767,  32767,  32767,  0,  0,  0},  1,  13237868},
+	{{          0x00,     -1,     -1,     -1,  0,  0,  0},  1,      -404},
+	{{ MASK_DATETIME,      1,      2,      3,  0,  0,  0},  0,       437},
+	{{ MASK_DATETIME,      1,      2,      3,  4,  5,  6},  0,       437},
+    };
+
+    for (afstest_Scan(test_cases, tc, tc_i)) {
+	struct ktbuf buf;
+	afs_int32 got;
+	int code;
+
+	got = ktimeRelDate_ToInt32(&tc->input);
+	is_int(got, tc->expected, "ktimeRelDate_ToInt32(%s) returned %d",
+	       format_ktime_date(&tc->input, &buf),
+	       tc->expected);
+
+	/* Verify the inverse for cases the input is in range. */
+	if (!tc->out_of_range) {
+	    struct ktime_date unpacked;
+	    memset(&unpacked, 0, sizeof(unpacked));
+
+	    code = Int32To_ktimeRelDate(got, &unpacked);
+	    is_int(code, 0, "  Int32To_ktimeRelDate(%d) returned 0", got);
+	    is_int(unpacked.year, tc->input.year, "    year is %d", tc->input.year);
+	    is_int(unpacked.month, tc->input.month, "    month is %d", tc->input.month);
+	    is_int(unpacked.day, tc->input.day, "    day is %d", tc->input.day);
+	}
+    }
+}
+
+/*
+ * Int32To_ktimeRelDate tests
+ *
+ * The Int32To_ktimeRelDate function is the inverse of ktimeRelDate_ToInt32().
+ * It unpacks an encoded relative time integer into a struct ktime_date.
+ *
+ * The mask field is set by this function. The hour, min, sec are always zero
+ * in the output.
+ *
+ * Currently, this function always returns zero, even when the input value
+ * is out of range.
+ */
+static void
+test_Int32To_ktimeRelDate(void)
+{
+    int tc_i;
+    struct {
+	afs_int32 input;
+	int code;
+	int out_of_range;
+	struct ktime_date expected;
+    } *tc, test_cases[] = {
+	/*   input rc oor mask                                  year  mon  day */
+	{        0, 0, 0, {0x00,                                  0,   0,   0}},
+	{        1, 0, 0, {KTIMEDATE_DAY,                         0,   0,   1}},
+	{       30, 0, 0, {KTIMEDATE_DAY,                         0,   0,  30}},
+	{       31, 0, 0, {KTIMEDATE_MONTH,                       0,   1,   0}},
+	{       32, 0, 0, {KTIMEDATE_MONTH | KTIMEDATE_DAY,       0,   1,   1}},
+	{       61, 0, 0, {KTIMEDATE_MONTH | KTIMEDATE_DAY,       0,   1,  30}},
+	{       62, 0, 0, {KTIMEDATE_MONTH,                       0,   2,   0}},
+	{      341, 0, 0, {KTIMEDATE_MONTH,                       0,  11,   0}},
+	{      342, 0, 0, {KTIMEDATE_MONTH | KTIMEDATE_DAY,       0,  11,   1}},
+	{      371, 0, 0, {KTIMEDATE_MONTH | KTIMEDATE_DAY,       0,  11,  30}},
+	{      372, 0, 0, {KTIMEDATE_YEAR,                        1,   0,   0}},
+	{      373, 0, 0, {KTIMEDATE_YEAR | KTIMEDATE_DAY,        1,   0,   1}},
+	{      404, 0, 0, {MASK_DATE,                             1,   1,   1}},
+	{ 12189324, 0, 0, {KTIMEDATE_YEAR,                    32767,   0,   0}},
+	{ 12189695, 0, 0, {MASK_DATE,                         32767,  11,  30}},
+	{ 12189696, 0, 1, {KTIMEDATE_YEAR,                   -32768,   0,   0}},
+	{-12190068, 0, 1, {KTIMEDATE_YEAR,                    32767,   0,   0}},
+	{-12190067, 0, 0, {MASK_DATE,                        -32768, -11, -30}},
+	{-12190066, 0, 0, {MASK_DATE,                        -32768, -11, -29}},
+	{       -1, 0, 0, {KTIMEDATE_DAY,                         0,   0,  -1}},
+    };
+
+    for (afstest_Scan(test_cases, tc, tc_i)) {
+	int code;
+	struct ktime_date got;
+
+	memset(&got, 0, sizeof(got));
+	code = Int32To_ktimeRelDate(tc->input, &got);
+	is_int(code, tc->code, "Int32To_ktimeRelDate(%d) returned %d", tc->input, tc->code);
+	is_int(got.mask, tc->expected.mask, "  mask is 0x%02x", tc->expected.mask);
+	is_int(got.year, tc->expected.year, "  year is %d", tc->expected.year);
+	is_int(got.month, tc->expected.month, "  month is %d", tc->expected.month);
+	is_int(got.day, tc->expected.day, "  day is %d", tc->expected.day);
+
+	/* Verify the inverse if the input was in range. */
+	if (!tc->out_of_range) {
+	    struct ktbuf buf;
+	    afs_int32 encoded = ktimeRelDate_ToInt32(&got);
+	    is_int(encoded, tc->input, "  ktimeRelDate_ToInt32(%s) is %d",
+		   format_ktime_date(&got, &buf), tc->input);
+	}
+    }
+}
+
+/*
+ * ktimeDate_FromInt32() tests.
+ *
+ * The ktimeDate_FromInt32() converts an absolute time in seconds into
+ * a struct ktime_date.
+ *
+ * Note: ktimeDate_FromInt32() is not the inverse of Int32To_ktimeRelDate().
+ */
+static void
+test_ktimeDate_FromInt32(void)
+{
+    int tc_i;
+    struct {
+	afs_int32 seconds_input;
+	int code;
+	struct ktime_date expected;
+    } *tc, test_cases[] = {
+	/* intput    code   mask            year mon  day  hour min  sec */
+	{         -1,  0,  {MASK_DATETIME,   69,  12,  31,  18,  59,  59}},
+	{          0,  0,  {MASK_DATETIME,   69,  12,  31,  19,   0,   0}},
+	{          1,  0,  {MASK_DATETIME,   69,  12,  31,  19,   0,   1}},
+	{        100,  0,  {MASK_DATETIME,   69,  12,  31,  19,   1,  40}},
+	{  320734799,  0,  {MASK_DATETIME,   80,   2,  29,  23,  59,  59}},
+	{  320734800,  0,  {MASK_DATETIME,   80,   3,   1,   0,   0,   0}},
+	{  628664400,  0,  {MASK_DATETIME,   89,  12,   3,   0,   0,   0}},
+	{  946702740,  0,  {MASK_DATETIME,   99,  12,  31,  23,  59,   0}},
+	{  946702799,  0,  {MASK_DATETIME,   99,  12,  31,  23,  59,  59}},
+	{  978325200,  0,  {MASK_DATETIME,  101,   1,   1,   0,   0,   0}},
+	{ 1713070800,  0,  {MASK_DATETIME,  124,   4,  14,   0,   0,   0}},
+	{ 2147483646,  0,  {MASK_DATETIME,  138,   1,  18,  22,  14,   6}},
+	{ 2147483647,  0,  {MASK_DATETIME,  138,   1,  18,  22,  14,   7}},
+	{-2147483648,  0,  {MASK_DATETIME,    1,  12,  13,  15,  45,  52}},
+    };
+
+    for (afstest_Scan(test_cases, tc, tc_i)) {
+	int code;
+	struct ktime_date got;
+
+	memset(&got, 0, sizeof(got));
+	code = ktimeDate_FromInt32(tc->seconds_input, &got);
+	is_int(code, tc->code, "ktimeDate_FromInt32(%d [%s]) returned %d",
+	       tc->seconds_input, format_timestamp(tc->seconds_input), tc->code);
+	if (tc->code == 0) {
+	    is_int(got.mask, tc->expected.mask, "  mask is 0x%02x", tc->expected.mask);
+	    is_int(got.year, tc->expected.year, "  year is %d", tc->expected.year);
+	    is_int(got.month, tc->expected.month, "  month is %d", tc->expected.month);
+	    is_int(got.day, tc->expected.day, "  day is %d", tc->expected.day);
+	    is_int(got.hour, tc->expected.hour, "  hour is %d", tc->expected.hour);
+	    is_int(got.min, tc->expected.min, "  min is %d", tc->expected.min);
+	    is_int(got.sec, tc->expected.sec, "  sec is %d", tc->expected.sec);
+	}
+    }
+}
+
+/*
+ * ParseRelDate() tests.
+ *
+ * The ParseRelDate() function parses a string repesentation of a relative
+ * date (duration) of years, months, and days into a struct ktime_date.
+ */
+static void
+test_ParseRelDate(void)
+{
+    int tc_i;
+    struct {
+	char *input;
+	afs_int32 code;
+	struct ktime_date expected;
+    } *tc, test_cases[] = {
+	/* input        code  mask                            year mon day */
+	{           "3d", 0, {KTIMEDATE_DAY,                    0,  0,  3}},
+	{           "2m", 0, {KTIMEDATE_MONTH,                  0,  2,  0}},
+	{        "2m 3d", 0, {KTIMEDATE_MONTH | KTIMEDATE_DAY,  0,  2,  3}},
+	{     "1y 2m 3d", 0, {MASK_DATE,                        1,  2,  3}},
+	{        "1y 3d", 0, {KTIMEDATE_YEAR | KTIMEDATE_DAY,   1,  0,  3}},
+	{        "1y 2m", 0, {KTIMEDATE_YEAR | KTIMEDATE_MONTH, 1,  2,  0}},
+	{         "1y3d", 0, {KTIMEDATE_YEAR | KTIMEDATE_DAY,   1,  0,  3}},
+	{         "1y2m", 0, {KTIMEDATE_YEAR | KTIMEDATE_MONTH, 1,  2,  0}},
+	{       "1y2m3d", 0, {MASK_DATE,                        1,  2,  3}},
+	{     "  1y2m3d", 0, {MASK_DATE,                        1,  2,  3}},
+	{"9999y 11m 30d", 0, {MASK_DATE,                     9999, 11, 30}},
+	{"9999y 12m 31d", 1},
+	{             "", 1},
+	{          "32d", 1},
+	{          "13m", 1},
+	{       "10000y", 1},
+	{     "1y2m3d  ", 1},
+	{        "bogus", 1},
+    };
+
+    for (afstest_Scan(test_cases, tc, tc_i)) {
+	afs_int32 code;
+	struct ktime_date got;
+
+	memset(&got, 0, sizeof(got));
+	code = ParseRelDate(tc->input, &got);
+	is_int(code, tc->code, "ParseRelDate('%s') returned %d", tc->input, tc->code);
+	if (tc->code == 0) {
+	    is_int(got.mask, tc->expected.mask, "  mask is 0x%02x", tc->expected.mask);
+	    is_int(got.year, tc->expected.year, "  year is %d", tc->expected.year);
+	    is_int(got.month, tc->expected.month, "  month is %d", tc->expected.month);
+	    is_int(got.day, tc->expected.day, "  day is %d", tc->expected.day);
+	    is_int(got.hour, tc->expected.hour, "  hour is %d", tc->expected.hour);
+	    is_int(got.min, tc->expected.min, "  min is %d", tc->expected.min);
+	    is_int(got.sec, tc->expected.sec, "  sec is %d", tc->expected.sec);
+	}
+    }
+}
+
+/*
+ * RelDatetoString() tests.
+ *
+ * The RelDatetoString() function formats a relative time of years, months, and
+ * days stored in a struct ktime_date to a string represention.  This is the
+ * inverse of ParseRelDate().
+ *
+ * RelDatetoString() ignores the hour, min, sec bit masks and fields of
+ * the struct ktime_date.
+ */
+static void
+test_RelDatetoString(void)
+{
+    int tc_i;
+    struct {
+	struct ktime_date input;
+	char *expected;
+    } *tc, test_cases[] = {
+	/* mask                            year  mon  day  hr min sec   expected */
+	{{0x00,                              0,   0,   0,  0,  0,  0},  ""},
+	{{KTIMEDATE_YEAR,                    1,   0,   0,  0,  0,  0},  "1y"},
+	{{KTIMEDATE_MONTH,                   0,   2,   0,  0,  0,  0},  " 2m"},
+	{{KTIMEDATE_YEAR | KTIMEDATE_MONTH,  1,   2,   0,  0,  0,  0},  "1y 2m"},
+	{{KTIMEDATE_DAY,                     0,   0,   3,  0,  0,  0},  " 3d"},
+	{{KTIMEDATE_YEAR | KTIMEDATE_DAY,    1,   0,   3,  0,  0,  0},  "1y 3d"},
+	{{KTIMEDATE_MONTH | KTIMEDATE_DAY,   0,   2,   3,  0,  0,  0},  " 2m 3d"},
+	{{MASK_DATE,                         1,   2,   3,  0,  0,  0},  "1y 2m 3d"},
+	{{MASK_DATE,                        -1,  -2,  -3,  0,  0,  0},  "-1y -2m -3d"},
+	{{KTIMEDATE_HOUR,                    1,   2,   3,  4,  5,  6},  ""},
+    };
+
+    for (afstest_Scan(test_cases, tc, tc_i)) {
+	struct ktbuf buf;
+	char *got = RelDatetoString(&tc->input);
+	is_string(got, tc->expected, "RelDatetoString(%s) returned '%s'",
+		  format_ktime_date(&tc->input, &buf), tc->expected);
+    }
+}
+
+/*
+ * Add_RelDate_to_Time() tests.
+ *
+ * The Add_RelDate_to_Time() function adds a relative time (duration)
+ * of years, months, and days to an absolute time in seconds and returns
+ * the result as an absolute time in seconds.
+ */
+static void
+test_Add_RelDate_to_Time(void)
+{
+    int tc_i;
+    struct {
+	struct ktime_date duration;
+	afs_int32 time;  /* Absolute time in seconds. */
+	afs_int32 expected;
+    } *tc, test_cases[] = {
+	/* mask                            year mon day  hr min sec          time     expected */
+	{{0x00,                              0,  0,  0,  0,  0,  0},           0,           0},
+	{{KTIMEDATE_YEAR,                    1,  2,  3,  4,  5,  6},           0,    31536000},
+	{{KTIMEDATE_MONTH,                   1,  2,  3,  4,  5,  6},           0,     5115599},
+	{{KTIMEDATE_YEAR | KTIMEDATE_MONTH,  1,  2,  3,  4,  5,  6},           0,    36651599},
+	{{KTIMEDATE_DAY,                     1,  2,  3,  4,  5,  6},           0,      259200},
+	{{KTIMEDATE_YEAR | KTIMEDATE_DAY,    1,  2,  3,  4,  5,  6},           0,    31795200},
+	{{KTIMEDATE_MONTH | KTIMEDATE_DAY,   1,  2,  3,  4,  5,  6},           0,     5374799},
+	{{MASK_DATE,                         1,  2,  3,  4,  5,  6},           0,    36910799},
+	{{KTIMEDATE_YEAR,                    1,  2,  3,  4,  5,  6},  1713070800,  1744606800},
+	{{KTIMEDATE_MONTH,                   1,  2,  3,  4,  5,  6},  1713070800,  1718341200},
+	{{KTIMEDATE_YEAR | KTIMEDATE_MONTH,  1,  2,  3,  4,  5,  6},  1713070800,  1749877200},
+	{{KTIMEDATE_DAY,                     1,  2,  3,  4,  5,  6},  1713070800,  1713330000},
+	{{KTIMEDATE_YEAR | KTIMEDATE_DAY,    1,  2,  3,  4,  5,  6},  1713070800,  1744866000},
+	{{KTIMEDATE_MONTH | KTIMEDATE_DAY,   1,  2,  3,  4,  5,  6},  1713070800,  1718600400},
+	{{MASK_DATE,                         1,  2,  3,  4,  5,  6},  1713070800,  1750136400},
+	{{KTIMEDATE_YEAR,                    1,  2,  3,  4,  5,  6},  1713070800,  1744606800},
+	{{KTIMEDATE_MONTH,                   1,  2,  3,  4,  5,  6},  1713070800,  1718341200},
+	{{KTIMEDATE_YEAR | KTIMEDATE_MONTH,  1,  2,  3,  4,  5,  6},  1713070800,  1749877200},
+	{{KTIMEDATE_DAY,                     1,  2,  3,  4,  5,  6},  1713070800,  1713330000},
+	{{KTIMEDATE_YEAR | KTIMEDATE_DAY,    1,  2,  3,  4,  5,  6},  1713070800,  1744866000},
+	{{KTIMEDATE_MONTH | KTIMEDATE_DAY,   1,  2,  3,  4,  5,  6},  1713070800,  1718600400},
+	{{MASK_DATE,                         1,  2,  3,  4,  5,  6},  1713070800,  1750136400},
+    };
+
+    for (afstest_Scan(test_cases, tc, tc_i)) {
+	struct ktbuf buf;
+	afs_int32 got;
+
+	got = Add_RelDate_to_Time(&tc->duration, tc->time);
+	is_int(got, tc->expected, "Add_RelDate_to_Time(%s, %d) returned %d [%s]",
+	       format_ktime_date(&tc->duration, &buf),
+	       tc->time, tc->expected, format_timestamp(tc->expected));
+    }
+}
+
 int
 main(void)
 {
-    plan(614);
+    plan(1046);
 
     /* Test times are in EST timezone. */
     putenv("TZ=EST+5");
@@ -540,6 +874,14 @@ main(void)
     test_ktime_DateToInt32();
     test_ktime_GetDateUsage();
     test_ktime_InterpretDate();
+
+    /* kreltime.c tests */
+    test_ktimeRelDate_ToInt32();
+    test_Int32To_ktimeRelDate();
+    test_ktimeDate_FromInt32();
+    test_ParseRelDate();
+    test_RelDatetoString();
+    test_Add_RelDate_to_Time();
 
     return 0;
 }
