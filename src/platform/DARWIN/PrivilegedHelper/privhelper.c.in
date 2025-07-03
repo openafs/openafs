@@ -241,7 +241,7 @@ GetFullPath(const char *task, const char *filename)
     char *path;
 
     code = check_filename(filename);
-    if (code != 0) {
+    if (code != 0 || filename[0] != '/') {
 	syslog(LOG_WARNING, "%s: Task '%s' got invalid filename '%s'",
 	       PRIVHELPER_ID, task, filename);
 	return NULL;
