@@ -279,7 +279,7 @@ BackupFile(const char *filename)
 	goto done;
     }
 
-    code = RunCommand(1, "/bin/cp", src_path, dest_path, NULL);
+    code = RunCommand(1, "/bin/cp", "-n", src_path, dest_path);
     if (code != 0) {
 	goto done;
     }
