@@ -852,4 +852,14 @@ afs_put_page(struct page *p)
 #endif
 }
 
+static inline struct dentry *
+afs_lookup_noperm(char *name, struct dentry *dp)
+{
+#if defined(HAVE_LINUX_LOOKUP_NOPERM)
+    return lookup_noperm(&QSTR(name), dp);
+#else
+    return lookup_one_len(name, dp, strlen(name));
+#endif
+}
+
 #endif /* AFS_LINUX_OSI_COMPAT_H */

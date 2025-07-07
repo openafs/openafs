@@ -334,6 +334,13 @@ AC_CHECK_LINUX_FUNC([filemap_get_folio],
                       static struct folio *folio;]],
                     [[folio = __filemap_get_folio(NULL, 0, 0, 0);]])
 
+dnl Linux 6.16, lookup_noperm replaces lookup_one_len
+AC_CHECK_LINUX_FUNC([lookup_noperm],
+		    [[#include <linux/namei.h>
+		      #include <linux/dcache.h>
+		      static struct dentry *dp;]],
+		    [[dp = lookup_noperm(NULL, NULL);]])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
