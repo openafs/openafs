@@ -2227,6 +2227,8 @@ util_CMListCellsDone(const void *iterationId, afs_status_p st)
  * IN conn - an rx connection to the process to be queried
  *
  * OUT cellName - the name of the cache manager's local cell.
+ *       This function assumes the caller provides a
+ *       UTIL_MAX_CELL_NAME_LEN sized buffer.
  *
  * LOCKS
  *
@@ -2262,8 +2264,8 @@ util_CMLocalCell(struct rx_connection *conn, afs_CMCellName_p cellName,
 	goto fail_util_CMLocalCell;
     }
 
-    len = strlcpy(cellName, name, sizeof(cellName));
-    if (len >= sizeof(cellName)) {
+    len = strlcpy(cellName, name, UTIL_MAX_CELL_NAME_LEN);
+    if (len >= UTIL_MAX_CELL_NAME_LEN) {
 	tst = ADMRPCTOOBIG;
 	goto fail_util_CMLocalCell;
     }
