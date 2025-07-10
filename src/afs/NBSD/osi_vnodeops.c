@@ -1200,13 +1200,14 @@ afs_nbsd_reclaim(void *v)
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
     int haveGlock = ISAFS_GLOCK();
-    int haveVlock = CheckLock(&afs_xvcache);
+    int haveVlock;
 
     if (afs_debug & AFSDEB_VNLAYER)
 	printf("nbsd_reclaim: enter %p vp %p\n", ap, vp);
 
     if (!haveGlock)
 		AFS_GLOCK();
+    haveVlock = CheckLock(&afs_xvcache);
     if (!haveVlock)
 		ObtainWriteLock(&afs_xvcache, 901);
     /* reclaim the vnode and the in-memory vcache, but keep the on-disk vcache */
