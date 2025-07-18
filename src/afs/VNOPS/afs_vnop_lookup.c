@@ -1869,6 +1869,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    /* confirm it's not just hushed */
 	    tc = afs_GetCellByName(cn, WRITE_LOCK);
 	    if (tc) {
+		ObtainWriteLock(&tc->lock, 689);
 		if (tc->states & CHush) {
 		    tc->states &= ~CHush;
 		    ReleaseWriteLock(&tc->lock);
