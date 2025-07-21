@@ -18,7 +18,6 @@
 #include "afs/param.h"
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
-#include "afs/opr.h"
 #include "afs/afs_stats.h"	/* statistics */
 
 /* We should be doing something better anyway */

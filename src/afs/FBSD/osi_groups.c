@@ -22,7 +22,6 @@
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
-#include "afs/opr.h"
 #include "afs/afs_stats.h"	/* statistics */
 
 static int

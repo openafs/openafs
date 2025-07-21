@@ -12,6 +12,8 @@
 
 /* AFS based headers */
 #include "afs/stds.h"
+#include "roken.h"
+#include "afs/opr.h"
 #include "rx/rx.h"
 #include "afs/afs_osi.h"
 #include "afs/lock.h"
@@ -30,6 +32,5 @@
 #include "afs/afs_stats.h"
 #include "afs/afs_prototypes.h"
 #include "afs/discon.h"
-#include "roken.h"
 
 #endif /* OPENAFS_AFS_UKERNEL_AFSINCLUDES_H */

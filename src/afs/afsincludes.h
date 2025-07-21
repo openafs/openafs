@@ -19,6 +19,7 @@
 /* AFS based headers */
 # include "afs/stds.h"
 # include "roken.h"
+# include "afs/opr.h"
 # ifdef	AFS_AIX_ENV
 #  include "osi_vfs.h"
 # elif defined(AFS_HPUX_ENV) || defined(AFS_NBSD_ENV)

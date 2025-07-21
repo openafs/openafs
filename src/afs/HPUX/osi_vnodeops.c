@@ -15,7 +15,6 @@
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
-#include "afs/opr.h"
 #include "afs/afs_stats.h"	/* statistics stuff */
 
 #include <sys/uio.h>

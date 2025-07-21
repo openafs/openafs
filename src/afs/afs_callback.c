@@ -22,7 +22,6 @@
 #define FSINT_COMMON_XG
 #include "afs/afscbint.h"
 #include "afs/afs_stats.h"	/*Cache Manager stats */
-#include "afs/opr.h"
 #include "afs/afs_args.h"
 
 afs_int32 afs_allCBs = 0;	/*Break callbacks on all objects */

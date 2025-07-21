@@ -21,7 +21,6 @@
 
 #include "afs/sysincludes.h"
 #include "afs/afsincludes.h"
-#include "afs/opr.h"
 #include "afs/afs_stats.h"	/* statistics */
 #include "sys/syscallargs.h"
 

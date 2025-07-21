@@ -100,7 +100,6 @@ NONINFRINGEMENT.
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
-#include "afs/opr.h"
 #include "afs/afs_stats.h"	/* statistics */
 
 #include <sys/malloc.h>

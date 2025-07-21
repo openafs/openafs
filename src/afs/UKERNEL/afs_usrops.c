@@ -30,7 +30,6 @@
 #include "afs/afs_bypasscache.h"
 #include "rx/rx_globals.h"
 #include "afsd/afsd.h"
-#include "afs/opr.h"
 
 #define VFS 1
 #undef	VIRTUE

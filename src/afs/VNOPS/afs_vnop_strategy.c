@@ -24,7 +24,6 @@
 #include "afs/afs_cbqueue.h"
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
-#include "afs/opr.h"
 
 
 

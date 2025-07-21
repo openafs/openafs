@@ -18,7 +18,6 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"
 #include "rx/rx_globals.h"
-#include "afs/opr.h"
 #if !defined(UKERNEL)
 # if defined(AFS_LINUX_ENV)
 #  include "osi_compat.h"
