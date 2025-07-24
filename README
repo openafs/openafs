@@ -14,7 +14,8 @@ contains more details, thought it is not a comprehensive statement.
 See INSTALL for information about building and installing OpenAFS
 on various platforms.
 
-See CODING for developer information and guidelines.
+See doc/process/01-contributor-guide.md for developer information and
+guidelines.
 
 See NEWS for recent changes to OpenAFS.
 
