@@ -1877,6 +1877,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 		    goto redo;
 		}
 		ReleaseWriteLock(&tc->lock);
+		afs_PutCell(tc, WRITE_LOCK);
 	    }
 	    /* Allow a second dynroot retry if the cell was hushed before */
 	    dynrootRetry = 0;
