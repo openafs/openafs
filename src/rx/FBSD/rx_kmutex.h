@@ -111,12 +111,6 @@ typedef struct sx afs_kmutex_t;
     if (isGlockOwner) AFS_GLOCK();					\
   }
 
-#define CV_TIMEDWAIT(cv,lck,t)  { \
-	                        int isGlockOwner = ISAFS_GLOCK(); \
-	                        if (isGlockOwner) AFS_GUNLOCK();  \
-	                        msleep(cv, lck, PSOCK, "afs_rx_cv_timedwait", t); \
-	                        if (isGlockOwner) AFS_GLOCK();  \
-				}
 #define CV_SIGNAL(cv)           wakeup_one(cv)
 #define CV_BROADCAST(cv)        wakeup(cv)
 

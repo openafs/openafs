@@ -60,7 +60,6 @@ MUTEX_ASSERT(afs_kmutex_t * l)
 #define CV_DESTROY(cv)
 #define CV_WAIT_SIG(cv, m)	afs_cv_wait(cv, m, 1)
 #define CV_WAIT(cv, m)		afs_cv_wait(cv, m, 0)
-#define CV_TIMEDWAIT		afs_cv_timedwait
 
 #define CV_SIGNAL(cv)          do { ++(cv)->seq; wake_up(&(cv)->waitq); } while (0)
 #define CV_BROADCAST(cv)       do { ++(cv)->seq; wake_up_all(&(cv)->waitq); } while (0)

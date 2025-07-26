@@ -80,23 +80,6 @@ typedef kcondvar_t afs_kcondvar_t;
 					MUTEX_ENTER(_lck); \
 				     } \
 				 } while (0)
-#define CV_TIMEDWAIT(_cv,_lck,_t)	do { \
-				     int haveGlock = ISAFS_GLOCK(); \
-				     if (haveGlock) \
-					AFS_GUNLOCK(); \
-				     rxdb_droplock((_lck), \
-						   osi_ThreadUnique(), \
-						   rxdb_fileID, __LINE__); \
-				     cv_timedwait(_cv, _lck, t); \
-				     rxdb_grablock((_lck), \
-						   osi_ThreadUnique(), \
-						   rxdb_fileID, __LINE__); \
-				     if (haveGlock) { \
-					MUTEX_EXIT(_lck); \
-					AFS_GLOCK(); \
-					MUTEX_ENTER(_lck); \
-				     } \
-				 } while (0)
 #else /* RX_LOCKS_DB */
 #define MUTEX_ENTER(a) AFS_MUTEX_ENTER(a)
 #define MUTEX_TRYENTER(a) mutex_tryenter(a)
@@ -106,17 +89,6 @@ typedef kcondvar_t afs_kcondvar_t;
 					if (haveGlock) \
 					    AFS_GUNLOCK(); \
 					cv_wait(_cv, _lck); \
-					if (haveGlock) { \
-					    MUTEX_EXIT(_lck); \
-					    AFS_GLOCK(); \
-					    MUTEX_ENTER(_lck); \
-					} \
-				    } while (0)
-#define CV_TIMEDWAIT(cv,lck,t)	do { \
-					int haveGlock = ISAFS_GLOCK(); \
-					if (haveGlock) \
-					    AFS_GUNLOCK(); \
-					cv_timedwait(_cv, _lck, t); \
 					if (haveGlock) { \
 					    MUTEX_EXIT(_lck); \
 					    AFS_GLOCK(); \
@@ -139,7 +111,6 @@ typedef kcondvar_t afs_kcondvar_t;
 #define CV_BROADCAST(_cv)
 #define CV_DESTROY(_cv)
 #define CV_WAIT(_cv, _lck)
-#define CV_TIMEDWAIT(cv,lck,t)
 
 #endif /* MP */
 

@@ -295,8 +295,6 @@ extern void afs_mutex_enter(afs_kmutex_t * l);
 extern int afs_mutex_tryenter(afs_kmutex_t * l);
 extern void afs_mutex_exit(afs_kmutex_t * l);
 extern int afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok);
-extern void afs_cv_timedwait(afs_kcondvar_t * cv, afs_kmutex_t * l,
-			     int waittime);
 # endif
 
 

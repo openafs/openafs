@@ -27,7 +27,6 @@
 #define MUTEX_DESTROY(A)	usr_mutex_destroy(A)
 #define MUTEX_ASSERT(A)
 #define CV_INIT(A,B,C,D)	usr_cond_init(A)
-#define CV_TIMEDWAIT(A,B,C)	usr_cond_timedwait(A,B,C)
 #define CV_SIGNAL(A)		usr_cond_signal(A)
 #define CV_BROADCAST(A)		usr_cond_broadcast(A)
 #define CV_DESTROY(A)		usr_cond_destroy(A)

@@ -44,26 +44,4 @@ afs_cv_wait(afs_kcondvar_t *cv, afs_kmutex_t *m, int sigok)
     return retval;
 }
 
-int
-afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *m, int t, int sigok)
-{
-    int haveGlock = ISAFS_GLOCK();
-    int retval = 0;
-
-    if (haveGlock)
-	AFS_GUNLOCK();
-    if (sigok) {
-	if (cv_timedwait_sig(cv, m, t) == 0)
-	    retval = EINTR;
-    } else {
-	cv_timedwait(cv, m, t);
-    }
-    if (haveGlock) {
-	MUTEX_EXIT(m);
-	AFS_GLOCK();
-	MUTEX_ENTER(m);
-    }
-    return retval;
-}
-
 #endif /* AFS_NBSD50_ENV */

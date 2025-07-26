@@ -38,12 +38,8 @@ typedef kcondvar_t afs_kcondvar_t;
 #ifdef RX_LOCKS_DB
 extern int afs_cv_wait(afs_kcondvar_t *cv, afs_kmutex_t *m, int sigok,
 		       int fileid, int line);
-extern int afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *m, clock_t t,
-			    int sigok, int fileid, int line);
 #else
 extern int afs_cv_wait(afs_kcondvar_t *cv, afs_kmutex_t *m, int sigok);
-extern int afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *m, clock_t t,
-			    int sigok);
 #endif
 
 #ifdef RX_LOCKS_DB
@@ -67,9 +63,6 @@ extern int afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *m, clock_t t,
 #define CV_WAIT_SIG(cv, m)	afs_cv_wait(cv, m, 1, rxdb_fileID, __LINE__)
 #define CV_WAIT(cv, m)		afs_cv_wait(cv, m, 0, rxdb_fileID, __LINE__)
 
-#define CV_TIMEDWAIT(cv, m, t)	\
-			afs_cv_timedwait(cv, lck, t, 0, rxdb_fileID, __LINE__)
-
 #else /* RX_LOCKS_DB */
 
 #define MUTEX_ENTER(a)		mutex_enter(a)
@@ -78,8 +71,6 @@ extern int afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *m, clock_t t,
 
 #define CV_WAIT_SIG(cv, m)	afs_cv_wait(cv, m, 1)
 #define CV_WAIT(cv, m)		afs_cv_wait(cv, m, 0)
-
-#define CV_TIMEDWAIT(cv, m, t)	afs_cv_timedwait(cv, m, t, 0)
 
 #endif /* RX_LOCKS_DB */
 

@@ -57,8 +57,7 @@ afs_mutex_exit(afs_kmutex_t * l)
     mutex_unlock(&l->mutex);
 }
 
-/* CV_WAIT and CV_TIMEDWAIT sleep until the specified event occurs, or, in the
- * case of CV_TIMEDWAIT, until the specified timeout occurs.
+/* CV_WAIT sleeps until the specified event occurs.
  * - NOTE: that on Linux, there are circumstances in which TASK_INTERRUPTIBLE
  *   can wake up, even if all signals are blocked
  * - TODO: handle signals correctly by passing an indication back to the
@@ -114,37 +113,4 @@ afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
     MUTEX_ENTER(l);
 
     return (sigok && signal_pending(current)) ? EINTR : 0;
-}
-
-void
-afs_cv_timedwait(afs_kcondvar_t * cv, afs_kmutex_t * l, int waittime)
-{
-    int seq, isAFSGlocked = ISAFS_GLOCK();
-    long t = waittime * HZ / 1000;
-#ifdef DECLARE_WAITQUEUE
-    DECLARE_WAITQUEUE(wait, current);
-#else
-    struct wait_queue wait = { current, NULL };
-#endif
-    seq = cv->seq;
-
-    set_current_state(TASK_INTERRUPTIBLE);
-    add_wait_queue(&cv->waitq, &wait);
-
-    if (isAFSGlocked)
-	AFS_GUNLOCK();
-    MUTEX_EXIT(l);
-
-    while(seq == cv->seq) {
-	t = schedule_timeout(t);
-	if (!t)         /* timeout */
-	    break;
-    }
-    
-    remove_wait_queue(&cv->waitq, &wait);
-    set_current_state(TASK_RUNNING);
-
-    if (isAFSGlocked)
-	AFS_GLOCK();
-    MUTEX_ENTER(l);
 }

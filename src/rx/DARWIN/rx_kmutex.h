@@ -60,22 +60,6 @@ extern boolean_t lck_rw_try_lock(lck_rw_t *lck, lck_rw_type_t lck_rw_type);
 	                        if (isGlockOwner) AFS_GLOCK();  \
 	                        MUTEX_ENTER(lck); \
 	                    } while(0)
-
-#define CV_TIMEDWAIT(cv,lck,t)  do { \
-	                        struct timespec ts; \
-	                        int isGlockOwner = ISAFS_GLOCK(); \
-	                        ts.ts_sec = t; \
-	                        ts.ts_nsec = 0; \
-	                        if (isGlockOwner) AFS_GUNLOCK();  \
-				osi_Assert((lck)->owner == current_thread()); \
-				(lck)->owner = (thread_t)0; \
-				lck_mtx_lock((lck)->meta); \
-                                (lck)->waiters--; \
-                                lck_mtx_unlock((lck)->meta); \
-                                msleep(cv, (lck)->lock, PDROP|PVFS, "afs_CV_TIMEDWAIT", &ts); \
-	                        if (isGlockOwner) AFS_GLOCK();  \
-	                        MUTEX_ENTER(lck);       \
-                            } while(0)
 #else
 #define CV_WAIT(cv, lck)    do { \
 	                        int isGlockOwner = ISAFS_GLOCK(); \
@@ -85,15 +69,6 @@ extern boolean_t lck_rw_try_lock(lck_rw_t *lck, lck_rw_type_t lck_rw_type);
 	                        if (isGlockOwner) AFS_GLOCK();  \
 	                        MUTEX_ENTER(lck); \
 	                    } while(0)
-
-#define CV_TIMEDWAIT(cv,lck,t)  do { \
-	                        int isGlockOwner = ISAFS_GLOCK(); \
-	                        if (isGlockOwner) AFS_GUNLOCK();  \
-	                        MUTEX_EXIT(lck);        \
-	                        tsleep(cv,PVFS, "afs_CV_TIMEDWAIT",t);  \
-	                        if (isGlockOwner) AFS_GLOCK();  \
-	                        MUTEX_ENTER(lck);       \
-                            } while(0)
 #endif
 #define CV_SIGNAL(cv)           wakeup_one((void *)(cv))
 #define CV_BROADCAST(cv)        wakeup((void *)(cv))

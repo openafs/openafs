@@ -81,20 +81,6 @@ int afs_cv_wait(afs_kcondvar_t *, afs_kmutex_t *, int);
 	simple_unlock(&slock);						\
     }
 
-#define CV_TIMEDWAIT(cv, lck, t)  {					\
-	struct simplelock slock = SIMPLELOCK_INITIALIZER;		\
-	simple_lock(&slock);						\
-	int glocked = ISAFS_GLOCK();					\
-	if (glocked)							\
-	    AFS_GUNLOCK();						\
-	MUTEX_EXIT(lck);						\
-	tsleep(cv, PSOCK, "afs_rx_cv_timedwait", t, &slock);		\
-	if (glocked)							\
-	    AFS_GLOCK();						\
-	MUTEX_ENTER(lck);						\
-	simple_unlock(&slock);						\
-    }
-
 #define CV_SIGNAL(cv)           wakeup_one(cv)
 #define CV_BROADCAST(cv)        wakeup(cv)
 

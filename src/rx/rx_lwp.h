@@ -33,6 +33,5 @@ typedef int afs_kcondvar_t;
 #define CV_WAIT(cv, l)
 #define CV_SIGNAL(cv)
 #define CV_BROADCAST(cv)
-#define CV_TIMEDWAIT(cv, l, t)
 
 #endif /* _RX_LWP_H_ */

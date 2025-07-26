@@ -81,21 +81,6 @@ typedef tid_t afs_kcondvar_t;
 	} \
     } while(0)
 
-#define CV_TIMEDWAIT(_cv, _lck, _t) \
-    do { \
-	int haveGlock = ISAFS_GLOCK(); \
-	if (haveGlock) \
-	    AFS_GUNLOCK(); \
-	rxdb_droplock((void *)(_lck), thread_self(), rxdb_fileID, __LINE__); \
-	e_mpsleep((_cv), (_t), (_lck), LOCK_SIMPLE); \
-	rxdb_grablock((void *)(_lck), thread_self(), rxdb_fileID, __LINE__); \
-	if (haveGlock) { \
-	    MUTEX_EXIT(_lck); \
-	    AFS_GLOCK(); \
-	    MUTEX_ENTER(_lck); \
-	} \
-    } while(0)
-
 #else /* RX_LOCK_DB */
 
 #define MUTEX_ENTER(a) 		simple_lock((void *)(a))
@@ -108,19 +93,6 @@ typedef tid_t afs_kcondvar_t;
 	if (haveGlock) \
 	    AFS_GUNLOCK(); \
 	e_sleep_thread((_cv), (_lck), LOCK_SIMPLE); \
-	if (haveGlock) { \
-	    MUTEX_EXIT(_lck); \
-	    AFS_GLOCK(); \
-	    MUTEX_ENTER(_lck); \
-	} \
-    } while(0)
-
-#define CV_TIMEDWAIT(_cv, _lck, _t) \
-    do { \
-	int haveGlock = ISAFS_GLOCK(); \
-	if (haveGlock) \
-	    AFS_GUNLOCK(); \
-	e_mpsleep((_cv), (_t), (_lck), LOCK_SIMPLE); \
 	if (haveGlock) { \
 	    MUTEX_EXIT(_lck); \
 	    AFS_GLOCK(); \
