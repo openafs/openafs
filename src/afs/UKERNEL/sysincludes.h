@@ -12,6 +12,7 @@
 
 #include  <stdio.h>
 #include  <afs/opr.h>
+#include  <opr/lock.h>
 
 #if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) && !defined(AFS_USR_DFBSD_ENV) /* must be included after KERNEL undef'd */
 #include  <errno.h>
@@ -226,7 +227,7 @@ typedef unsigned int fsblkcnt_t;
 #define offset_t		usr_offset_t
 #define getpid()		usr_getpid()
 #define setpag(A,B,C,D)		usr_setpag((A),(B),(C),(D))
-#define osi_getpid()	        afs_pointer_to_int(usr_thread_self())
+#define osi_getpid()	        afs_pointer_to_int(pthread_self())
 #ifdef pid_t
 #undef pid_t
 #endif
@@ -812,25 +813,8 @@ static_inline void panic(const char *format, ...)
 /*
  * Mutex and condition variable used to implement sleep
  */
-extern pthread_mutex_t usr_sleep_mutex;
-extern pthread_cond_t usr_sleep_cond;
-
-#define usr_cond_t		pthread_cond_t
-#define usr_mutex_t		pthread_mutex_t
-#define usr_thread_t		pthread_t
-#define usr_key_t		pthread_key_t
-
-#define usr_mutex_init(A)	opr_Verify(pthread_mutex_init(A,NULL) == 0)
-#define usr_mutex_destroy(A)	opr_Verify(pthread_mutex_destroy(A) == 0)
-#define usr_mutex_lock(A)	opr_Verify(pthread_mutex_lock(A) == 0)
-#define usr_mutex_trylock(A)	((pthread_mutex_trylock(A)==0)?1:0)
-#define usr_mutex_unlock(A)	opr_Verify(pthread_mutex_unlock(A) == 0)
-#define usr_cond_init(A)	opr_Verify(pthread_cond_init(A,NULL) == 0)
-#define usr_cond_destroy(A)	opr_Verify(pthread_cond_destroy(A) == 0)
-#define usr_cond_signal(A)	opr_Verify(pthread_cond_signal(A) == 0)
-#define usr_cond_broadcast(A)	opr_Verify(pthread_cond_broadcast(A) == 0)
-#define usr_cond_wait(A,B)	pthread_cond_wait(A,B)
-#define usr_cond_timedwait(A,B,C)  pthread_cond_timedwait(A,B,C)
+extern opr_mutex_t usr_sleep_mutex;
+extern opr_cv_t usr_sleep_cond;
 
 #define usr_thread_create(A,B,C) \
     do { \
@@ -840,12 +824,6 @@ extern pthread_cond_t usr_sleep_cond;
 	opr_Verify(pthread_create((A), &attr, (B), (void *)(C)) == 0); \
 	opr_Verify(pthread_attr_destroy(&attr) == 0); \
     } while(0)
-#define usr_thread_join(A,B)	pthread_join(A, B)
-#define usr_thread_detach(A)	pthread_detach(A)
-#define usr_keycreate(A,B)	opr_Verify(pthread_key_create(A,B) == 0)
-#define usr_setspecific(A,B)	pthread_setspecific(A,B)
-#define usr_getspecific(A,B)	(*(B)=pthread_getspecific(A),0)
-#define usr_thread_self()	pthread_self()
 #define usr_thread_sleep(A)						   \
 {									   \
     struct timespec _sleep_ts;						   \
@@ -858,18 +836,18 @@ extern pthread_cond_t usr_sleep_cond;
 	_sleep_ts.tv_sec += 1;						   \
 	_sleep_ts.tv_nsec -= 1000000000;				   \
     }									   \
-    opr_Verify(pthread_mutex_lock(&usr_sleep_mutex) == 0);			   \
-    pthread_cond_timedwait(&usr_sleep_cond, &usr_sleep_mutex, &_sleep_ts); \
-    opr_Verify(pthread_mutex_unlock(&usr_sleep_mutex) == 0);		   \
+    opr_mutex_enter(&usr_sleep_mutex);					   \
+    opr_cv_timedwait(&usr_sleep_cond, &usr_sleep_mutex, &_sleep_ts);	   \
+    opr_mutex_exit(&usr_sleep_mutex);					   \
 }
 
 #define uprintf			printf
 
-#define usr_getpid()		(int)(usr_thread_self())
+#define usr_getpid()		(int)(pthread_self())
 #ifdef ISAFS_GLOCK
 #undef ISAFS_GLOCK
 #endif
-#define ISAFS_GLOCK() (usr_thread_self() == afs_global_owner)
+#define ISAFS_GLOCK() (pthread_self() == afs_global_owner)
 
 #define copyin(A,B,C)		(memcpy((void *)B,(void *)A,C), 0)
 #define copyout(A,B,C)		(memcpy((void *)B,(void *)A,C), 0)

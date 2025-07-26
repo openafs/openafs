@@ -62,12 +62,12 @@ int
 afsd_fork(int wait, afsd_callback_func cbf, void *rock)
 {
     int code;
-    usr_thread_t tid;
+    pthread_t tid;
     usr_thread_create(&tid, cbf, rock);
     if (wait) {
-	code = usr_thread_join(tid, NULL);
+	code = pthread_join(tid, NULL);
     } else {
-	code = usr_thread_detach(tid);
+	code = pthread_detach(tid);
     }
     return code;
 }

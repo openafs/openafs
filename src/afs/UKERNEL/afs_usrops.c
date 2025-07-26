@@ -67,20 +67,20 @@ struct afsconf_dir *afs_cdir;	/* config dir */
 
 int afs_bufferpages = 100;
 
-static usr_key_t afs_global_u_key;
+static pthread_key_t afs_global_u_key;
 
 static struct usr_proc *afs_global_procp = NULL;
 static struct usr_ucred *afs_global_ucredp = NULL;
 
 struct usr_ucred afs_osi_cred, *afs_osi_credp;
-usr_mutex_t afs_global_lock;
-usr_thread_t afs_global_owner;
-usr_mutex_t rx_global_lock;
-usr_thread_t rx_global_owner;
+opr_mutex_t afs_global_lock;
+pthread_t afs_global_owner;
+opr_mutex_t rx_global_lock;
+pthread_t rx_global_owner;
 
-static usr_mutex_t osi_dummy_lock;
-static usr_mutex_t osi_waitq_lock;
-static usr_mutex_t osi_authenticate_lock;
+static opr_mutex_t osi_dummy_lock;
+static opr_mutex_t osi_waitq_lock;
+static opr_mutex_t osi_authenticate_lock;
 afs_lock_t afs_ftf;
 afs_lock_t osi_flplock;
 afs_lock_t osi_fsplock;
@@ -100,7 +100,7 @@ int fork_syscall(long, long, long, long, long, long);
  */
 typedef struct osi_wait {
     caddr_t addr;
-    usr_cond_t cond;
+    opr_cv_t cond;
     int flag;
     struct osi_wait *next;
     struct osi_wait *prev;
@@ -367,7 +367,7 @@ uafs_InitThread(void)
     uptr->u_procp = afs_global_procp;
     uptr->u_cred = (struct usr_ucred *)(uptr + 1);
     *uptr->u_cred = *afs_global_ucredp;
-    st = usr_setspecific(afs_global_u_key, (void *)uptr);
+    st = pthread_setspecific(afs_global_u_key, uptr);
     usr_assert(st == 0);
 }
 
@@ -380,14 +380,11 @@ struct usr_user *
 get_user_struct(void)
 {
     struct usr_user *uptr;
-    int st;
 
-    st = usr_getspecific(afs_global_u_key, &uptr);
-    usr_assert(st == 0);
+    uptr = pthread_getspecific(afs_global_u_key);
     if (uptr == NULL) {
 	uafs_InitThread();
-	st = usr_getspecific(afs_global_u_key, &uptr);
-	usr_assert(st == 0);
+	uptr = pthread_getspecific(afs_global_u_key);
 	usr_assert(uptr != NULL);
     }
     return uptr;
@@ -409,14 +406,14 @@ afs_osi_Sleep(void *x)
     osi_wait_t *waitp;
     int glockOwner = ISAFS_GLOCK();
 
-    usr_mutex_lock(&osi_waitq_lock);
+    opr_mutex_enter(&osi_waitq_lock);
     if (glockOwner) {
 	AFS_GUNLOCK();
     }
     index = WAITHASH(x);
     if (osi_waithash_avail == NULL) {
 	waitp = afs_osi_Alloc(sizeof(osi_wait_t));
-	usr_cond_init(&waitp->cond);
+	opr_cv_init(&waitp->cond);
     } else {
 	waitp = osi_waithash_avail;
 	osi_waithash_avail = osi_waithash_avail->next;
@@ -429,13 +426,13 @@ afs_osi_Sleep(void *x)
     waitp->timedNext = NULL;
     waitp->timedPrev = NULL;
     while (waitp->flag == 0) {
-	usr_cond_wait(&waitp->cond, &osi_waitq_lock);
+	opr_cv_wait(&waitp->cond, &osi_waitq_lock);
     }
     DLL_DELETE(waitp, osi_waithash_table[index].head,
 	       osi_waithash_table[index].tail, next, prev);
     waitp->next = osi_waithash_avail;
     osi_waithash_avail = waitp;
-    usr_mutex_unlock(&osi_waitq_lock);
+    opr_mutex_exit(&osi_waitq_lock);
     if (glockOwner) {
 	AFS_GLOCK();
     }
@@ -455,16 +452,16 @@ afs_osi_Wakeup(void *x)
     osi_wait_t *waitp;
 
     index = WAITHASH(x);
-    usr_mutex_lock(&osi_waitq_lock);
+    opr_mutex_enter(&osi_waitq_lock);
     waitp = osi_waithash_table[index].head;
     while (waitp) {
 	if (waitp->addr == x && waitp->flag == 0) {
 	    waitp->flag = 1;
-	    usr_cond_signal(&waitp->cond);
+	    opr_cv_signal(&waitp->cond);
 	}
 	waitp = waitp->next;
     }
-    usr_mutex_unlock(&osi_waitq_lock);
+    opr_mutex_exit(&osi_waitq_lock);
     return 0;
 }
 
@@ -495,14 +492,14 @@ afs_osi_Wait(afs_int32 msec, struct afs_osi_WaitHandle *handle, int intok)
 	    AFS_GLOCK();
 	}
     } else {
-	usr_mutex_lock(&osi_waitq_lock);
+	opr_mutex_enter(&osi_waitq_lock);
 	if (glockOwner) {
 	    AFS_GUNLOCK();
 	}
 	index = WAITHASH((caddr_t) handle);
 	if (osi_waithash_avail == NULL) {
 	    waitp = afs_osi_Alloc(sizeof(osi_wait_t));
-	    usr_cond_init(&waitp->cond);
+	    opr_cv_init(&waitp->cond);
 	} else {
 	    waitp = osi_waithash_avail;
 	    osi_waithash_avail = osi_waithash_avail->next;
@@ -515,7 +512,7 @@ afs_osi_Wait(afs_int32 msec, struct afs_osi_WaitHandle *handle, int intok)
 	waitp->expiration = tv.tv_sec + ((tv.tv_nsec == 0) ? 0 : 1);
 	DLL_INSERT_TAIL(waitp, osi_timedwait_head, osi_timedwait_tail,
 			timedNext, timedPrev);
-	usr_cond_wait(&waitp->cond, &osi_waitq_lock);
+	opr_cv_wait(&waitp->cond, &osi_waitq_lock);
 	if (waitp->flag) {
 	    ret = 2;
 	} else {
@@ -527,7 +524,7 @@ afs_osi_Wait(afs_int32 msec, struct afs_osi_WaitHandle *handle, int intok)
 		   timedPrev);
 	waitp->next = osi_waithash_avail;
 	osi_waithash_avail = waitp;
-	usr_mutex_unlock(&osi_waitq_lock);
+	opr_mutex_exit(&osi_waitq_lock);
 	if (glockOwner) {
 	    AFS_GLOCK();
 	}
@@ -552,17 +549,17 @@ afs_osi_CheckTimedWaits(void)
     osi_wait_t *waitp;
 
     curTime = time(NULL);
-    usr_mutex_lock(&osi_waitq_lock);
+    opr_mutex_enter(&osi_waitq_lock);
     waitp = osi_timedwait_head;
     while (waitp != NULL) {
 	usr_assert(waitp->expiration != 0);
 	if (waitp->expiration <= curTime) {
 	    waitp->flag = 1;
-	    usr_cond_signal(&waitp->cond);
+	    opr_cv_signal(&waitp->cond);
 	}
 	waitp = waitp->timedNext;
     }
-    usr_mutex_unlock(&osi_waitq_lock);
+    opr_mutex_exit(&osi_waitq_lock);
     return 0;
 }
 
@@ -606,9 +603,9 @@ lookupname(char *fnamep, int segflg, int followlink,
      * released, etc. and some callers check for a NULL vnode anyway, so we
      * to return something. */
 
-    usr_mutex_lock(&osi_dummy_lock);
+    opr_mutex_enter(&osi_dummy_lock);
     VN_HOLD(&dummy_vnode);
-    usr_mutex_unlock(&osi_dummy_lock);
+    opr_mutex_exit(&osi_dummy_lock);
 
     *compvpp = &dummy_vnode;
 
@@ -978,7 +975,7 @@ osi_Init(void)
     /*
      * Use the thread specific data to implement the user structure
      */
-    usr_keycreate(&afs_global_u_key, free);
+    opr_Verify(pthread_key_create(&afs_global_u_key, free) == 0);
 
     /*
      * Initialize the global ucred structure
@@ -1036,11 +1033,11 @@ osi_Init(void)
     /*
      * Initialize the global locks
      */
-    usr_mutex_init(&afs_global_lock);
-    usr_mutex_init(&rx_global_lock);
-    usr_mutex_init(&osi_dummy_lock);
-    usr_mutex_init(&osi_waitq_lock);
-    usr_mutex_init(&osi_authenticate_lock);
+    opr_mutex_init(&afs_global_lock);
+    opr_mutex_init(&rx_global_lock);
+    opr_mutex_init(&osi_dummy_lock);
+    opr_mutex_init(&osi_waitq_lock);
+    opr_mutex_init(&osi_authenticate_lock);
 
     /*
      * Initialize the AFS OSI credentials
@@ -1372,7 +1369,7 @@ int
 fork_syscall(long syscall, long afscall, long param1, long param2,
 	     long param3, long param4)
 {
-    usr_thread_t tid;
+    pthread_t tid;
     struct syscallThreadArgs *sysArgsP;
 
     sysArgsP = (struct syscallThreadArgs *)
@@ -1386,7 +1383,7 @@ fork_syscall(long syscall, long afscall, long param1, long param2,
     sysArgsP->param4 = param4;
 
     usr_thread_create(&tid, syscallThread, sysArgsP);
-    usr_thread_detach(tid);
+    pthread_detach(tid);
     return 0;
 }
 
@@ -3575,9 +3572,9 @@ uafs_unlog(void)
 {
     int code;
 
-    usr_mutex_lock(&osi_authenticate_lock);
+    opr_mutex_enter(&osi_authenticate_lock);
     code = ktc_ForgetAllTokens();
-    usr_mutex_unlock(&osi_authenticate_lock);
+    opr_mutex_exit(&osi_authenticate_lock);
     return code;
 }
 

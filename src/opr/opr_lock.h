@@ -24,6 +24,8 @@
 #ifndef OPENAFS_OPR_LOCK_H
 #define OPENAFS_OPR_LOCK_H 1
 
+#include <afs/opr.h>
+
 #include <pthread.h>
 #include <errno.h>
 

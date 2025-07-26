@@ -53,26 +53,24 @@
  * Global lock support.
  */
 
-extern usr_thread_t afs_global_owner;
-extern usr_mutex_t afs_global_lock;
+extern pthread_t afs_global_owner;
+extern opr_mutex_t afs_global_lock;
 
-#define ISAFS_GLOCK() (usr_thread_self() == afs_global_owner)
+#define ISAFS_GLOCK() (pthread_self() == afs_global_owner)
 
 #define AFS_GLOCK() \
     do { \
-	usr_mutex_lock(&afs_global_lock); \
-	afs_global_owner = usr_thread_self(); \
+	opr_mutex_enter(&afs_global_lock); \
+	afs_global_owner = pthread_self(); \
     } while(0)
 #define AFS_GUNLOCK() \
     do { \
 	AFS_ASSERT_GLOCK(); \
-	memset(&afs_global_owner, 0, sizeof(usr_thread_t)); \
- 	usr_mutex_unlock(&afs_global_lock); \
+	memset(&afs_global_owner, 0, sizeof(afs_global_owner)); \
+	opr_mutex_exit(&afs_global_lock); \
     } while(0)
 #define AFS_ASSERT_GLOCK() \
     do { if (!ISAFS_GLOCK()) { osi_Panic("afs global lock not held"); } } while(0)
-#define osi_GlockInit() \
-    usr_mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL)
 
 extern int afs_bufferpages;
 
