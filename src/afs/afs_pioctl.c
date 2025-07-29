@@ -1738,20 +1738,33 @@ DECL_PIOCTL(PGetFileCell)
  */
 DECL_PIOCTL(PGetWSCell)
 {
+    afs_int32 code;
     struct cell *tcell = NULL;
 
     AFS_STATCNT(PGetWSCell);
-    if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
-	return EIO;		/* Inappropriate ioctl for device */
+    if (!afs_resourceinit_flag) { /* afs daemons haven't started yet */
+	code = EIO;		  /* Inappropriate ioctl for device */
+	goto done;
+    }
 
     tcell = afs_GetPrimaryCell(READ_LOCK);
-    if (!tcell)			/* no primary cell? */
-	return ESRCH;
+    if (tcell == NULL) {	  /* no primary cell? */
+	code = ESRCH;
+	goto done;
+    }
 
-    if (afs_pd_putString(aout, tcell->cellName) != 0)
-	return EINVAL;
-    afs_PutCell(tcell, READ_LOCK);
-    return 0;
+    if (afs_pd_putString(aout, tcell->cellName) != 0) {
+	code = EINVAL;
+	goto done;
+    }
+
+    code = 0;
+
+ done:
+    if (tcell != NULL) {
+	afs_PutCell(tcell, READ_LOCK);
+    }
+    return code;
 }
 
 /*!
