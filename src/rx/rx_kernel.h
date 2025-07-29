@@ -12,6 +12,11 @@
 #ifndef __RX_KERNEL_INCL_
 #define	__RX_KERNEL_INCL_   1
 
+#ifndef AFS_LINUX_ENV
+extern void osi_AssertFailK(const char *expr, const char *file, int line)
+			    AFS_NORETURN;
+#endif
+
 #define osi_Alloc afs_osi_Alloc
 #define osi_Free  afs_osi_Free
 

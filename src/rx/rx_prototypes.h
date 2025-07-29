@@ -278,9 +278,6 @@ extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host,
 # ifdef UKERNEL
 extern void *rx_ServerProc(void *);
 # endif
-# ifndef AFS_LINUX_ENV
-extern void osi_AssertFailK(const char *expr, const char *file, int line) AFS_NORETURN;
-# endif
 extern void rxk_Listener(void);
 # ifndef UKERNEL
 extern void afs_rxevent_daemon(void);

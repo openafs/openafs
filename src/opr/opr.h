@@ -1,6 +1,10 @@
 #ifndef OPENAFS_OPR_OPR_H
 #define OPENAFS_OPR_OPR_H 1
 
+#if defined(KERNEL) && !defined(UKERNEL)
+# include <rx/rx_kernel.h>
+#endif
+
 /* macros */
 
 /* should use offsetof() if available */
@@ -24,6 +28,10 @@ extern void opr_NTAbort(void);
 #define opr_min(a, b) ((a) < (b) ? (a) : (b))
 #define opr_max(a, b) ((a) > (b) ? (a) : (b))
 
+#if defined(KERNEL) && !defined(UKERNEL)
+# define opr_Assert osi_Assert
+# define opr_Verify osi_Assert
+#else
 extern void opr_AssertionFailed(const char *, int) AFS_NORETURN;
 
 /* opr_Assert is designed to work in a similar way to the operating
@@ -31,35 +39,36 @@ extern void opr_AssertionFailed(const char *, int) AFS_NORETURN;
  * to a no-op if NDEBUG is defined
  */
 
-#define __opr_Assert(ex) \
+# define __opr_Assert(ex) \
     do {if (!(ex)) opr_AssertionFailed(__FILE__, __LINE__);} while(0)
 
-#if defined(HAVE__PRAGMA_TAUTOLOGICAL_POINTER_COMPARE) && defined(__clang__)
-# define opr_Assert(ex) \
+# if defined(HAVE__PRAGMA_TAUTOLOGICAL_POINTER_COMPARE) && defined(__clang__)
+#  define opr_Assert(ex) \
     _Pragma("clang diagnostic push") \
     _Pragma("clang diagnostic ignored \"-Wtautological-pointer-compare\"") \
     __opr_Assert(ex) \
     _Pragma("clang diagnostic pop")
-#else
-# define opr_Assert(ex) __opr_Assert(ex)
-#endif
+# else
+#  define opr_Assert(ex) __opr_Assert(ex)
+# endif
 
 /* opr_Verify is an assertion function which is guaranteed to always
  * invoke its expression, regardless of the debugging level selected
  * at compile time */
 
-#define __opr_Verify(ex) \
+# define __opr_Verify(ex) \
     do {if (!(ex)) opr_AssertionFailed(__FILE__, __LINE__);} while(0)
 
-#if defined(HAVE__PRAGMA_TAUTOLOGICAL_POINTER_COMPARE) && defined(__clang__)
-# define opr_Verify(ex) \
+# if defined(HAVE__PRAGMA_TAUTOLOGICAL_POINTER_COMPARE) && defined(__clang__)
+#  define opr_Verify(ex) \
     _Pragma("clang diagnostic push") \
     _Pragma("clang diagnostic ignored \"-Wtautological-pointer-compare\"") \
     __opr_Verify(ex) \
     _Pragma("clang diagnostic pop")
-#else
-# define opr_Verify(ex) __opr_Verify(ex)
-#endif
+# else
+#  define opr_Verify(ex) __opr_Verify(ex)
+# endif
+#endif /* KERNEL && !UKERNEL */
 
 /* opr_StaticAssert is a static build-time assertion, to assert certain
  * static values (such as sizeof results). If the assertion fails, the
