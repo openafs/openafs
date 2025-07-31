@@ -350,6 +350,15 @@ AC_CHECK_LINUX_FUNC([lookup_noperm],
 		      #include <linux/dcache.h>
 		      static struct dentry *dp;]],
 		    [[dp = lookup_noperm(NULL, NULL);]])
+dnl Linux 5.17 introduced __readahead_folio and updated
+dnl readahead_page as a wrapper for __readahead_folio.
+dnl Linux 6.16, removed readahead_page.
+dnl Don't use readahead_folio(), because it has different behavior
+dnl (it performs a put on the folio).
+AC_CHECK_LINUX_FUNC([readahead_folio],
+		    [[#include <linux/pagemap.h>
+		      static struct folio *folio;]],
+		    [[folio = __readahead_folio(NULL);]])
 
 dnl Consequences - things which get set as a result of the
 dnl                above tests

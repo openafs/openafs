@@ -2750,15 +2750,17 @@ afs_linux_bypass_readahead(struct readahead_control *rac)
     iovecp = ancr->auio->uio_iov;
 
     for (page_ix = 0; page_ix < num_pages; ++page_ix) {
-	pp = readahead_page(rac);
-	if (pp == NULL)
+	pp = afs_readahead_folio(rac);
+	if (pp == NULL) {
 	    break;
+	}
 
 	isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_SHIFT;
 	if (pp->index > isize) {
-	    if (PageLocked(pp))
-		unlock_page(pp);
-	    put_page(pp);
+	    if (afs_FolioLocked(pp)) {
+		afs_unlock_folio(pp);
+	    }
+	    afs_put_page(pp);
 	    continue;
 	}
 
@@ -2769,9 +2771,10 @@ afs_linux_bypass_readahead(struct readahead_control *rac)
 	}
 	iovecp[page_ix].iov_len = PAGE_SIZE;
 	if (base_index != pp->index) {
-	    if (PageLocked(pp))
-		 unlock_page(pp);
-	    put_page(pp);
+	    if (afs_FolioLocked(pp)) {
+		 afs_unlock_folio(pp);
+	    }
+	    afs_put_page(pp);
 	    iovecp[page_ix].iov_base = NULL;
 	    base_index++;
 	    ancr->length -= PAGE_SIZE;
@@ -3147,25 +3150,25 @@ afs_linux_readahead(struct readahead_control *rac)
 
     afs_lru_cache_init(&lrupages);
 
-    while ((page = readahead_page(rac)) != NULL) {
+    while ((page = afs_readahead_folio(rac)) != NULL) {
 	offset = page_offset(page);
 
 	code = get_dcache_readahead(&tdc, &cacheFp, avc, offset);
 	if (code != 0) {
-	    if (PageLocked(page)) {
-		unlock_page(page);
+	    if (afs_FolioLocked(page)) {
+		afs_unlock_folio(page);
 	    }
-	    put_page(page);
+	    afs_put_page(page);
 	    goto done;
 	}
 
 	if (tdc != NULL) {
 	    /* afs_linux_read_cache will unlock the page */
 	    afs_linux_read_cache(cacheFp, page, tdc->f.chunk, &lrupages, task);
-	} else if (PageLocked(page)) {
-	    unlock_page(page);
+	} else if (afs_FolioLocked(page)) {
+	    afs_unlock_folio(page);
 	}
-	put_page(page);
+	afs_put_page(page);
     }
 
  done:
