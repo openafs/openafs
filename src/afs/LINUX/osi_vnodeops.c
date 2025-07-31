@@ -3418,6 +3418,60 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 }
 
 static int
+afs_linux_begin_writeback(struct vcache *vcp, cred_t **acredp)
+{
+    int code;
+
+    AFS_GLOCK();
+    ObtainWriteLock(&vcp->lock, 537);
+    code = afs_linux_prepare_writeback(vcp);
+    if (code == AOP_WRITEPAGE_ACTIVATE) {
+	goto done;
+    }
+
+    /* Grab the creds structure currently held in the vnode, and
+     * get a reference to it, in case it goes away ... */
+    *acredp = vcp->cred;
+    if (*acredp != NULL) {
+	crhold(*acredp);
+    } else {
+	*acredp = crref();
+    }
+
+ done:
+    ReleaseWriteLock(&vcp->lock);
+    AFS_GUNLOCK();
+    return code;
+}
+
+static int
+afs_linux_end_writeback(struct vcache *vcp, cred_t **acredp, int written_size, unsigned int requested_size)
+{
+    int code;
+
+    AFS_GLOCK();
+    ObtainWriteLock(&vcp->lock, 538);
+
+    /* As much as we might like to ignore a file server error here,
+     * and just try again when we close(), unfortunately StoreAllSegments
+     * will invalidate our chunks if the server returns a permanent error,
+     * so we need to at least try and get that error back to the user
+     */
+    if (written_size == requested_size) {
+	code = afs_linux_dopartialwrite(vcp, *acredp);
+    } else {
+	code = 0;
+    }
+
+    afs_linux_complete_writeback(vcp);
+    ReleaseWriteLock(&vcp->lock);
+    crfree(*acredp);
+    *acredp = NULL;
+    AFS_GUNLOCK();
+    return code;
+}
+
+static int
 #ifdef AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL
 afs_linux_writepage(struct page *pp, struct writeback_control *wbc)
 #else
@@ -3427,7 +3481,7 @@ afs_linux_writepage(struct page *pp)
     struct address_space *mapping = pp->mapping;
     struct inode *inode;
     struct vcache *vcp;
-    cred_t *credp;
+    cred_t *credp = NULL;
     unsigned int to = PAGE_SIZE;
     loff_t isize;
     int code = 0;
@@ -3446,26 +3500,12 @@ afs_linux_writepage(struct page *pp)
 	goto done;
     }
 
-    AFS_GLOCK();
-    ObtainWriteLock(&vcp->lock, 537);
-    code = afs_linux_prepare_writeback(vcp);
+    code = afs_linux_begin_writeback(vcp, &credp);
     if (code == AOP_WRITEPAGE_ACTIVATE) {
 	/* WRITEPAGE_ACTIVATE is the only return value that permits us
 	 * to return with the page still locked */
-	ReleaseWriteLock(&vcp->lock);
-	AFS_GUNLOCK();
 	return code;
     }
-
-    /* Grab the creds structure currently held in the vnode, and
-     * get a reference to it, in case it goes away ... */
-    credp = vcp->cred;
-    if (credp)
-	crhold(credp);
-    else
-	credp = crref();
-    ReleaseWriteLock(&vcp->lock);
-    AFS_GUNLOCK();
 
     set_page_writeback(pp);
 
@@ -3484,21 +3524,7 @@ afs_linux_writepage(struct page *pp)
 
     code = afs_linux_page_writeback(inode, pp, 0, to, credp);
 
-    AFS_GLOCK();
-    ObtainWriteLock(&vcp->lock, 538);
-
-    /* As much as we might like to ignore a file server error here,
-     * and just try again when we close(), unfortunately StoreAllSegments
-     * will invalidate our chunks if the server returns a permanent error,
-     * so we need to at least try and get that error back to the user
-     */
-    if (code == to)
-	code1 = afs_linux_dopartialwrite(vcp, credp);
-
-    afs_linux_complete_writeback(vcp);
-    ReleaseWriteLock(&vcp->lock);
-    crfree(credp);
-    AFS_GUNLOCK();
+    code1 = afs_linux_end_writeback(vcp, &credp, code, to);
 
 done:
     end_page_writeback(pp);
