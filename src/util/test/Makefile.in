@@ -14,13 +14,13 @@ LIBS = ../util.a ${TOP_LIBDIR}/libopr.a
 all tests: dirpath_test b64 fb64
 
 dirpath_test: dirpath_test.o $(LIBS)
-	$(AFS_LDRULE) dirpath_test.o $(LIBS) $(LIB_roken)
+	$(AFS_LDRULE) dirpath_test.o $(LIBS) $(LIB_roken) $(XLIBS)
 
 b64: b64.o $(LIBS)
-	$(AFS_LDRULE) b64.o $(LIBS) $(LIB_roken)
+	$(AFS_LDRULE) b64.o $(LIBS) $(LIB_roken) $(XLIBS)
 
 fb64: fb64.o $(LIBS)
-	$(AFS_LDRULE) fb64.o $(LIBS) $(LIB_roken)
+	$(AFS_LDRULE) fb64.o $(LIBS) $(LIB_roken) $(XLIBS)
 
 clean:
 	rm -f *.o dirpath_test b64 fb64
