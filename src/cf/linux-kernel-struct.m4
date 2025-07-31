@@ -60,6 +60,9 @@ AC_CHECK_LINUX_STRUCT([task_struct], [sigmask_lock], [sched.h])
 AC_CHECK_LINUX_STRUCT([task_struct], [tgid], [sched.h])
 AC_CHECK_LINUX_STRUCT([task_struct], [thread_info], [sched.h])
 AC_CHECK_LINUX_STRUCT([task_struct], [total_link_count], [sched.h])
+dnl Linux 6.16 changed page.index to page.__folio_index;
+AC_CHECK_LINUX_STRUCT([page], [__folio_index], [mm_types.h])
+
 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGNAL_RLIM
 
 dnl Check for typed structure elements
