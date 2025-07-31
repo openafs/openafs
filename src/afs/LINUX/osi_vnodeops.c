@@ -3491,12 +3491,101 @@ afs_linux_end_writeback(struct vcache *vcp, cred_t **acredp, int written_size, u
     return code;
 }
 
+#if defined(LINUX_WRITEPAGES_USES_FOLIOS)
+/*
+ * Callback function for write_cache_pages
+ */
 static int
-#ifdef AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL
+afs_linux_writefolio_cb(struct folio *folio, struct writeback_control *wbc, void *priv)
+{
+    struct inode *inode;
+    struct page *pp;
+    struct address_space *mapping;
+    struct vcache *vcp;
+    cred_t *credp;
+    loff_t isize;
+
+    unsigned int to;
+
+    int code = 0;
+    int code1 = 0;
+
+    folio_get(folio);
+
+    pp = folio_page(folio, 0);
+    mapping = folio->mapping;
+    to = folio_size(folio);
+
+    inode = mapping->host;
+    vcp = VTOAFS(inode);
+    isize = i_size_read(inode);
+
+    /* Don't defeat an earlier truncate */
+    if (folio_pos(folio) >= isize) {
+	folio_start_writeback(folio);
+	folio_unlock(folio);
+	goto done;
+    }
+    code = afs_linux_begin_writeback(vcp, &credp);
+    if (code == AOP_WRITEPAGE_ACTIVATE) {
+	/* WRITEPAGE_ACTIVATE is the only return value that permits us
+	 * to return with the folio still locked */
+	return code;
+    }
+
+    folio_start_writeback(folio);
+
+    folio_mark_uptodate(folio);
+
+    /* We can unlock the folio here, because it's protected by the
+     * folio_writeback flag. This should make us less vulnerable to
+     * deadlocking in afs_write and afs_DoPartialWrite
+     */
+    folio_unlock(folio);
+
+    /* If this is the final folio, then just write the number of bytes that
+     * are actually in it */
+    if ((isize - folio_pos(folio)) < to) {
+	to = isize - folio_pos(folio);
+    }
+
+    code = afs_linux_page_writeback(inode, pp, 0, to, credp);
+
+    code1 = afs_linux_end_writeback(vcp, &credp, code, to);
+
+ done:
+    folio_end_writeback(folio);
+    folio_put(folio);
+
+    /* code1 is either 0, or the error code from a partial write */
+    if (code1) {
+	return code1;
+    }
+
+    /* code is either 0, the negative error code from afs_write, or the size of
+     * the data that wasn't written by afs_write.
+     * "to" is the amount of data that was requested to be written.
+     */
+    if (code == to) {
+	return 0;
+    }
+
+    return code;
+}
+
+static int
+afs_linux_write_pages(struct address_space *mapping, struct writeback_control *wbc)
+{
+    return write_cache_pages(mapping, wbc, afs_linux_writefolio_cb, NULL);
+}
+
+#else /* LINUX_WRITEPAGES_USES_FOLIOS */
+static int
+# ifdef AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL
 afs_linux_writepage(struct page *pp, struct writeback_control *wbc)
-#else
+# else
 afs_linux_writepage(struct page *pp)
-#endif
+# endif
 {
     struct address_space *mapping = pp->mapping;
     struct inode *inode;
@@ -3558,6 +3647,7 @@ done:
 
     return code;
 }
+#endif /* LINUX_WRITEPAGES_USES_FOLIOS */
 
 /* afs_linux_permission
  * Check access rights - returns error if can't check or permission denied.
@@ -3848,9 +3938,13 @@ static struct address_space_operations afs_file_aops = {
 #if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_READAHEAD)
   .readahead =		afs_linux_readahead,
 #else
-  .readpages = 		afs_linux_readpages,
+  .readpages =		afs_linux_readpages,
 #endif
+#if defined(LINUX_WRITEPAGES_USES_FOLIOS)
+  .writepages =		afs_linux_write_pages,
+#else
   .writepage =		afs_linux_writepage,
+#endif
 #if defined(STRUCT_ADDRESS_SPACE_OPERATIONS_HAS_DIRTY_FOLIO) && \
     defined(HAVE_LINUX_BLOCK_DIRTY_FOLIO)
   .dirty_folio =	block_dirty_folio,

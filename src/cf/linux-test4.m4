@@ -903,3 +903,23 @@ AC_DEFUN([LINUX_DOP_D_REVALIDATE_TAKES_PARENT_INODE], [
                        [define if your dops.d_revalidate takes a parent inode],
                        [-Werror])
 ])
+
+dnl Linux 6.16 removed the address_space_operations writepage as part
+dnl of Linux's page to folio transistion. Convert from providing aop->writepage
+dnl to providing aop->writepages and use Linux's write_cache_pages with a callback.
+dnl Test to see whether write_cache_pages uses folios to determine if writepages
+dnl should be implemented.
+AC_DEFUN([LINUX_WRITEPAGES_USES_FOLIOS], [
+  AC_CHECK_LINUX_BUILD([whether aop.writepages can use folios],
+                       [ac_cv_linux_writepages_uses_folios],
+                       [[#include <linux/writeback.h>
+                         #include <linux/mm_types.h>
+                         static int writepages_cb(struct folio *folio,
+                                                  struct writeback_control *wbc,
+                                                  void *priv) { return 0; }]],
+                       [[static int code;
+                         code = write_cache_pages(NULL, NULL, writepages_cb, NULL);]],
+                       [[LINUX_WRITEPAGES_USES_FOLIOS]],
+                       [[define if aop.writepages can use folios]],
+                       [[-Werror]])
+])
