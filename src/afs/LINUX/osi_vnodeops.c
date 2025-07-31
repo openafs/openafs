@@ -2773,7 +2773,7 @@ afs_linux_bypass_readahead(struct readahead_control *rac)
 	}
 
 	isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_SHIFT;
-	if (pp->index > isize) {
+	if (afs_page_index(pp) > isize) {
 	    if (afs_FolioLocked(pp)) {
 		afs_unlock_folio(pp);
 	    }
@@ -2784,10 +2784,10 @@ afs_linux_bypass_readahead(struct readahead_control *rac)
 	if (page_ix == 0) {
 	    offset = page_offset(pp);
 	    ancr->offset = ancr->auio->uio_offset = offset;
-	    base_index = pp->index;
+	    base_index = afs_page_index(pp);
 	}
 	iovecp[page_ix].iov_len = PAGE_SIZE;
-	if (base_index != pp->index) {
+	if (base_index != afs_page_index(pp)) {
 	    if (afs_FolioLocked(pp)) {
 		 afs_unlock_folio(pp);
 	    }

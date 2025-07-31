@@ -307,6 +307,18 @@ afs_linux_cred_is_current(afs_ucred_t *cred)
 }
 #endif
 
+/* Folio / Page wrappers */
+
+static inline pgoff_t
+afs_page_index(struct page *p)
+{
+#if defined(STRUCT_PAGE_HAS___FOLIO_INDEX)
+    return p->__folio_index;
+#else
+    return p->index;
+#endif
+}
+
 #ifndef HAVE_LINUX_PAGE_OFFSET
 static inline loff_t
 page_offset(struct page *pp)
