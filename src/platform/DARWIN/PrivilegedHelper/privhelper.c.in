@@ -348,6 +348,13 @@ WriteFile(const char *filename, const char *data)
     return code;
 
  error:
+    /*
+     * Note that we deliberately clobber 'code' here. Some code paths will set
+     * 'code' to an errno error like ENOENT, but any error that is not "command
+     * x failed" is treated as an internal error (-1). So we return -1 to our
+     * XPC peer so the returned value isn't interpreted as a waitpid() status
+     * from a command, but rather as an "internal error".
+     */
     code = -1;
     goto done;
 }
@@ -382,7 +389,7 @@ WriteFile(const char *filename, const char *data)
  *
  * @returns Return status of the task
  * @retval 0 success
- * @retval -1 internal error
+ * @retval -1 internal error (any error besides a command failing)
  * @retval nonzero If a command failed, the wait status for that command as
  *		   returned by waitpid().
  */
