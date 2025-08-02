@@ -23,7 +23,6 @@
 #include <afs/bubasics.h>
 #include <afs/butc.h>
 #include <afs/com_err.h>
-#include <lock.h>		/* for checking TC_ABORTFAILED. PA */
 #include <afs/tcdata.h>		/* for checking TC_ABORTFAILED. PA */
 #include <afs/butc.h>
 
