@@ -205,7 +205,7 @@ clean:
 
 .PHONY: test
 test: ${TOP_LIBDIR}/util.a ${includes}
-	cd test && $(MAKE)
+	cd test && $(MAKE) all
 
 include ../config/Makefile.version
 
