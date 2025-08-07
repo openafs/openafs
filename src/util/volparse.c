@@ -225,10 +225,12 @@ getmeta(int ac)
 afs_int32
 util_GetInt32(char *as, afs_int32 * aval)
 {
-    afs_int32 total;
+    afs_uint32 total;
     int tc;
     int base;
     int negative;
+    afs_uint32 limit = MAX_AFS_INT32;
+    int digit;
 
     total = 0;			/* initialize things */
     negative = 0;
@@ -242,6 +244,7 @@ util_GetInt32(char *as, afs_int32 * aval)
     /* compute sign */
     if (*as == '-') {
 	negative = 1;
+	limit++;
 	as++;			/* skip over character */
     }
 
@@ -260,8 +263,15 @@ util_GetInt32(char *as, afs_int32 * aval)
     for (tc = *as; tc !='\0'; as++, tc = *as) {
 	if (!ismeta(tc, base))
 	    return -1;
+
+	digit = getmeta(tc);
+	/* Check (total * base + digit > limit), but rearranged to avoid overflow. */
+	if (total > (limit - digit) / base) {
+	    return -1;
+	}
+
 	total *= base;
-	total += getmeta(tc);
+	total += digit;
     }
 
     if (negative)
@@ -277,6 +287,8 @@ util_GetUInt32(char *as, afs_uint32 * aval)
     afs_uint32 total;
     int tc;
     int base;
+    afs_uint32 limit = MAX_AFS_UINT32;
+    int digit;
 
     total = 0;			/* initialize things */
 
@@ -301,8 +313,15 @@ util_GetUInt32(char *as, afs_uint32 * aval)
     for (tc = *as; tc !='\0'; as++, tc = *as) {
 	if (!ismeta(tc, base))
 	    return -1;
+
+	digit = getmeta(tc);
+	/* Check (total * base + digit > limit), but rearranged to avoid overflow. */
+	if (total > (limit - digit) / base) {
+	    return -1;
+	}
+
 	total *= base;
-	total += getmeta(tc);
+	total += digit;
     }
 
     *aval = total;
@@ -346,10 +365,12 @@ util_GetHumanInt32(char *as, afs_int32 * aval)
 afs_int32
 util_GetInt64(char *as, afs_int64 * aval)
 {
-    afs_int64 total;
+    afs_uint64 total;
     int tc;
     int base;
     int negative;
+    afs_uint64 limit = MAX_AFS_INT64;
+    int digit;
 
     total = 0; /* initialize things */
     negative = 0;
@@ -363,6 +384,7 @@ util_GetInt64(char *as, afs_int64 * aval)
     /* compute sign */
     if (*as == '-') {
 	negative = 1;
+	limit++;
 	as++; /* skip over character */
     }
 
@@ -381,8 +403,15 @@ util_GetInt64(char *as, afs_int64 * aval)
     for (tc = *as; tc !='\0'; as++, tc = *as) {
 	if (!ismeta(tc, base))
 	    return -1;
+
+	digit = getmeta(tc);
+	/* Check (total * base + digit > limit), but rearranged to avoid overflow. */
+	if (total > (limit - digit) / base) {
+	    return -1;
+	}
+
 	total *= base;
-	total += getmeta(tc);
+	total += digit;
     }
 
     if (negative)
@@ -398,6 +427,8 @@ util_GetUInt64(char *as, afs_uint64 * aval)
     afs_uint64 total;
     int tc;
     int base;
+    afs_uint64 limit = MAX_AFS_UINT64;
+    int digit;
 
     total = 0; /* initialize things */
 
@@ -422,8 +453,15 @@ util_GetUInt64(char *as, afs_uint64 * aval)
     for (tc = *as; tc !='\0'; as++, tc = *as) {
 	if (!ismeta(tc, base))
 	    return -1;
+
+	digit = getmeta(tc);
+	/* Check (total * base + digit > limit), but rearranged to avoid overflow. */
+	if (total > (limit - digit) / base) {
+	    return -1;
+	}
+
 	total *= base;
-	total += getmeta(tc);
+	total += digit;
     }
 
     *aval = total;
