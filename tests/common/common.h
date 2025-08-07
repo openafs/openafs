@@ -117,3 +117,11 @@ extern char *afstest_GetProgname(char **argv);
 extern char *afstest_vasprintf(const char *fmt, va_list ap);
 extern char *afstest_asprintf(const char *fmt, ...)
 	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+extern int is_int64(afs_int64 left, afs_int64 right, const char *fmt, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 3, 4);
+extern int is_uint64(afs_uint64 left, afs_uint64 right, const char *fmt, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 3, 4);
+extern int is_int64_v(afs_int64 left, afs_int64 right, const char *fmt,
+		      va_list ap);
+extern int is_uint64_v(afs_uint64 left, afs_uint64 right, const char *fmt,
+		       va_list ap);

@@ -68,3 +68,57 @@ afstest_asprintf(const char *fmt, ...)
     va_end(ap);
     return str;
 }
+
+int
+is_int64_v(afs_int64 left, afs_int64 right, const char *fmt, va_list ap)
+{
+    int success;
+
+    success = (left == right);
+    if (!success) {
+	diag(" left: %lld", left);
+	diag("right: %lld", right);
+    }
+
+    return okv(success, fmt, ap);
+}
+
+int
+is_int64(afs_int64 left, afs_int64 right, const char *fmt, ...)
+{
+    int success;
+    va_list ap;
+
+    va_start(ap, fmt);
+    success = is_int64_v(left, right, fmt, ap);
+    va_end(ap);
+
+    return success;
+}
+
+int
+is_uint64_v(afs_uint64 left, afs_uint64 right, const char *fmt, va_list ap)
+{
+    int success;
+
+    success = (left == right);
+    if (!success) {
+	diag(" left: %llu", left);
+	diag("right: %llu", right);
+    }
+
+    return okv(success, fmt, ap);
+}
+
+int
+is_uint64(afs_uint64 left, afs_uint64 right, const char *fmt, ...)
+{
+    int success;
+    va_list ap;
+
+    va_start(ap, fmt);
+    success = is_uint64_v(left, right, fmt, ap);
+    va_end(ap);
+
+    return success;
+}
