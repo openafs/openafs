@@ -12,24 +12,15 @@
 #include <afs/stds.h>
 
 #include <roken.h>
-
-#include <rx/xdr.h>
-#include <afs/vice.h>
-#include <afs/venus.h>
-#undef VIRTUE
-#undef VICE
-#include "afs/prs_fs.h"
-#include <afs/afsint.h>
-#include <afs/cellconfig.h>
-#include <afs/cmd.h>
+#include <afs/sys_prototypes.h>
+#include <afs/vioc.h>
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char *argv[])
 {
-    afs_int32 code = 0;
+    afs_int32 code;
     struct ViceIoctl blob;
 
     blob.in = 0;
@@ -37,8 +28,9 @@ main(argc, argv)
     blob.in_size = 0;
     blob.out_size = 0;
     code = pioctl(0, VIOC_GCPAGS, &blob, 1);
-    if (code)
+    if (code != 0) {
 	perror("disable gcpags failed");
+    }
 
-    exit(code);
+    return code;
 }

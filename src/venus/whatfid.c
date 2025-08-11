@@ -9,35 +9,30 @@
 
 /* file		whatfid.c */
 
-
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <afs/stds.h>
 
 #include <roken.h>
-
 #include <afs/com_err.h>
-#include <afs/vice.h>
-#include <afs/venus.h>
-#include "afs/prs_fs.h"
+#include <afs/sys_prototypes.h>
+#include <afs/vioc.h>
 #include <afs/afsint.h>
-#include <afs/cellconfig.h>
 #include <afs/cmd.h>
 
+#include "AFS_component_version_number.c"
 
 struct VenusFid {
     afs_int32 Cell;
     struct AFSFid Fid;
 };
 
+void PioctlError(int code, char *filename);
 
-char *pn;
-void PioctlError();
+static char *pn;
+static int WhatFidCmd_FileParm;
+static int WhatFidCmd_FollowLinkParm;
 
-#include "AFS_component_version_number.c"
-
-int WhatFidCmd_FileParm;
-int WhatFidCmd_FollowLinkParm;
 int
 WhatFidCmd(struct cmd_syndesc *as, void *arock)
 {
@@ -45,8 +40,6 @@ WhatFidCmd(struct cmd_syndesc *as, void *arock)
     struct ViceIoctl blob;
     struct VenusFid vFid;
     struct cmd_item *ti;
-    struct VolumeStatus *status;
-    char *name;
     int follow = 1;
 
     if (as->parms[1].items)
@@ -68,12 +61,10 @@ WhatFidCmd(struct cmd_syndesc *as, void *arock)
 }
 
 
-
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char *argv[])
 {
-    afs_int32 code;
+    int code;
     struct cmd_syndesc *ts;
 
 #ifdef	AFS_AIX32_ENV
@@ -99,15 +90,13 @@ main(argc, argv)
 	cmd_AddParm(ts, "-link", CMD_FLAG, CMD_OPTIONAL,
 		    "do not follow symlinks");
 
-    exit(cmd_Dispatch(argc, argv));
+    code = cmd_Dispatch(argc, argv);
+    return code;
 }
 
 void
-PioctlError(code, filename)
-     int code;
-     char *filename;
-{				/*Die */
-
+PioctlError(int code, char *filename)
+{
     if (errno == EINVAL) {
 	if (filename)
 	    fprintf(stderr,
@@ -139,4 +128,4 @@ PioctlError(code, filename)
 	    fprintf(stderr, "%s", pn);
 	fprintf(stderr, ": %s\n", afs_error_message(errno));
     }
-}				/*Die */
+}

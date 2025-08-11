@@ -7,6 +7,8 @@
 /cmdebug
 /fs
 /fstrace
-/up
+/gcpags
 /livesys
 /twiddle
+/up
+/whatfid

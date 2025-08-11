@@ -9,6 +9,8 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 
+PROGRAMS = afsio cacheout cmdebug fs fstrace gcpags livesys twiddle up whatfid
+
 INCLS=${TOP_INCDIR}/afs/afsint.h \
 	${TOP_INCDIR}/afs/cmd.h \
 	${TOP_INCDIR}/afs/afsutil.h
@@ -63,32 +65,11 @@ CMLIBS=${TOP_LIBDIR}/libsys.a \
 
 LIBS = ${FSLIBS}
 
-all: fs up fstrace cmdebug livesys cacheout afsio
+all: $(PROGRAMS)
 
 #
-# Build targets
+# Link targets
 #
-cacheout: cacheout.o
-	$(AFS_LDRULE) cacheout.o ${LIBS} $(LIB_roken) ${XLIBS} ${CMLIBS}
-
-cacheout.o: cacheout.c
-
-
-up.o: up.c AFS_component_version_number.c
-
-up: up.o
-	$(AFS_LDRULE) up.o ${LIBS} $(LIB_roken) ${XLIBS}
-
-fs.o: fs.c ${INCLS} AFS_component_version_number.c
-
-fs: fs.o $(LIBS)
-	$(AFS_LDRULE) fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) \
-		$(LIB_roken) ${XLIBS}
-
-afsio.o: afsio.c ${AFSIO_INCLS} AFS_component_version_number.c
-	${PTH_CCRULE} ${srcdir}/afsio.c
-afscbint.ss.o: ../fsint/afscbint.ss.c
-	${PTH_CCRULE} ../fsint/afscbint.ss.c
 
 
 AFSIO_objs = afsio.o \
@@ -100,7 +81,21 @@ afsio: ${AFSIO_objs} ${AFSIO_LIBS}
 		$(LIB_hcrypto) $(LIB_roken) ${MT_LIBS} \
 		$(LDFLAGS_krb5) $(LIB_krb5)
 
-livesys.o: livesys.c ${INCLS} AFS_component_version_number.c
+cacheout: cacheout.o
+	$(AFS_LDRULE) cacheout.o ${LIBS} $(LIB_roken) ${XLIBS} ${CMLIBS}
+
+cmdebug: cmdebug.o ${CMLIBS}
+	$(AFS_LDRULE) cmdebug.o ${CMLIBS} $(LIB_roken) ${XLIBS}
+
+fs: fs.o $(LIBS)
+	$(AFS_LDRULE) fs.o ${TOP_LIBDIR}/libprot.a $(LIBS) \
+		$(LIB_roken) ${XLIBS}
+
+fstrace: fstrace.o
+	$(AFS_LDRULE) fstrace.o $(LIBS) $(LIB_roken) ${XLIBS}
+
+gcpags: gcpags.o $(LIBS)
+	$(AFS_LDRULE) gcpags.o $(LIBS) $(LIB_roken) ${XLIBS}
 
 livesys: livesys.o $(LIBS)
 	$(AFS_LDRULE) livesys.o $(LIBS) $(LIB_roken) ${XLIBS}
@@ -108,48 +103,67 @@ livesys: livesys.o $(LIBS)
 twiddle: twiddle.o $(LIBS)
 	$(AFS_LDRULE) twiddle.o $(LIBS) $(LIB_roken) ${XLIBS}
 
-gcpags: gcpags.o $(LIBS)
-	$(AFS_LDRULE) gcpags.o $(LIBS) $(LIB_roken) ${XLIBS}
-
-whatfid.o: whatfid.c ${INCLS} AFS_component_version_number.c
+up: up.o
+	$(AFS_LDRULE) up.o ${LIBS} $(LIB_roken) ${XLIBS}
 
 whatfid: whatfid.o ${LIBS}
 	$(AFS_LDRULE) whatfid.o ${LIBS} $(LIB_roken) ${XLIBS}
 
-fstrace: fstrace.o
-	$(AFS_LDRULE) fstrace.o $(LIBS) $(LIB_roken) ${XLIBS}
+#
+# Compile targets
+#
+
+afscbint.ss.o: ../fsint/afscbint.ss.c
+	${PTH_CCRULE} ../fsint/afscbint.ss.c
+
+afsio.o: afsio.c ${AFSIO_INCLS} AFS_component_version_number.c
+	${PTH_CCRULE} ${srcdir}/afsio.c
+
+cacheout.o: cacheout.c ${INCLS} AFS_component_version_number.c
 
 cmdebug.o: cmdebug.c ${INCLS} AFS_component_version_number.c
 
-cmdebug: cmdebug.o ${CMLIBS}
-	$(AFS_LDRULE) cmdebug.o ${CMLIBS} $(LIB_roken) ${XLIBS}
+fs.o: fs.c ${INCLS} AFS_component_version_number.c
+
+fstrace.o: fstrace.c ${INCLS} AFS_component_version_number.c
+
+livesys.o: livesys.c ${INCLS} AFS_component_version_number.c
+
+twiddle.o: twiddle.c ${INCLS} AFS_component_version_number.c
+
+up.o: up.c ${INCLS} AFS_component_version_number.c
+
+whatfid.o: whatfid.c ${INCLS} AFS_component_version_number.c
+
 
 #
 # Install targets
 #
-install: fs livesys up fstrace cmdebug afsio
+# cacheout, gcpags, twiddle, and whatfid are built but not installed.
+#
+install: $(PROGRAMS)
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${afssrvbindir}
 	${INSTALL} -d ${DESTDIR}${sbindir}
-	${INSTALL_PROGRAM} fs ${DESTDIR}${bindir}/fs
-	${INSTALL_PROGRAM} livesys ${DESTDIR}${bindir}/livesys
-	${INSTALL_PROGRAM} fs ${DESTDIR}${afssrvbindir}/fs
-	${INSTALL_PROGRAM} up ${DESTDIR}${bindir}/up
-	${INSTALL_PROGRAM} fstrace ${DESTDIR}${sbindir}/fstrace
+	${INSTALL_PROGRAM} afsio ${DESTDIR}${bindir}/afsio
 	${INSTALL_PROGRAM} cmdebug ${DESTDIR}${bindir}/cmdebug
-	${INSTALL_PROGRAM} afsio ${DESTDIR}${bindir}/afsio ;
+	${INSTALL_PROGRAM} fs ${DESTDIR}${afssrvbindir}/fs
+	${INSTALL_PROGRAM} fs ${DESTDIR}${bindir}/fs
+	${INSTALL_PROGRAM} fstrace ${DESTDIR}${sbindir}/fstrace
+	${INSTALL_PROGRAM} livesys ${DESTDIR}${bindir}/livesys
+	${INSTALL_PROGRAM} up ${DESTDIR}${bindir}/up
 
-dest: fs livesys up fstrace cmdebug afsio
+dest: $(PROGRAMS)
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL} -d ${DEST}/etc
 	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
-	${INSTALL_PROGRAM} fs ${DEST}/bin/fs
-	${INSTALL_PROGRAM} livesys ${DEST}/bin/livesys
-	${INSTALL_PROGRAM} fs ${DEST}/root.server/usr/afs/bin/fs
-	${INSTALL_PROGRAM} up ${DEST}/bin/up
-	${INSTALL_PROGRAM} fstrace ${DEST}/etc/fstrace
-	${INSTALL_PROGRAM} cmdebug ${DEST}/bin/cmdebug
 	${INSTALL_PROGRAM} afsio ${DEST}/bin/afsio
+	${INSTALL_PROGRAM} cmdebug ${DEST}/bin/cmdebug
+	${INSTALL_PROGRAM} fs ${DEST}/bin/fs
+	${INSTALL_PROGRAM} fs ${DEST}/root.server/usr/afs/bin/fs
+	${INSTALL_PROGRAM} fstrace ${DEST}/etc/fstrace
+	${INSTALL_PROGRAM} livesys ${DEST}/bin/livesys
+	${INSTALL_PROGRAM} up ${DEST}/bin/up
 
 #
 # Misc targets
@@ -157,9 +171,8 @@ dest: fs livesys up fstrace cmdebug afsio
 
 clean:
 	$(LT_CLEAN)
-	$(RM) -f *.o *.a up fs core cmdebug \
-		AFS_component_version_number.c fstrace gcpags livesys \
-		cacheout afsio
+	$(RM) -f *.o *.a core AFS_component_version_number.c
+	$(RM) -f $(PROGRAMS)
 
 .PHONY: test
 test:
