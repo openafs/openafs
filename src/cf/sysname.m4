@@ -381,8 +381,6 @@ fi
 case $AFS_SYSNAME in
         *_darwin*)
                 AC_CHECK_HEADERS(crt_externs.h)
-                DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
-                DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 		AC_SUBST([XCODEBUILD_FLAGS])
                 ;;
 esac

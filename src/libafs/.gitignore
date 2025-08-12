@@ -10,7 +10,7 @@
 /MakefileProto.*
 !/MakefileProto.*.in
 /afs
-/afs.*_darwin_*.plist
+/Info.plist
 /afsint
 /asm
 /asm-generic

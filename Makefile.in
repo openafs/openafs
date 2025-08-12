@@ -867,7 +867,7 @@ distclean: clean
 	src/libadmin/vos/Makefile \
 	src/libafs/Makefile.common \
 	src/libafs/MakefileProto.${MKAFS_OSTYPE} \
-	${DARWIN_PLIST} \
+	src/libafs/Info.plist \
 	src/libafsauthent/Makefile \
 	src/libafsrpc/Makefile \
 	src/libuafs/Makefile.common \

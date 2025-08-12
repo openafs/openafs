@@ -243,7 +243,7 @@ libafs: $(LIBAFSNONFS) $(LIBAFSNONFSDSYM) ;
 install_libafs: $(LIBAFSNONFS) $(LIBAFSNONFSDSYM) ;
 	-mkdir -p ${INST_LIBAFSNONFS}
 	-mkdir -p ${INST_LIBAFSNONFS}/Contents
-	$(INSTALL) -m 644 ../${DARWIN_INFOFILE} ${INST_LIBAFSNONFS}/Contents/Info.plist
+	$(INSTALL) -m 644 ../Info.plist ${INST_LIBAFSNONFS}/Contents/Info.plist
 	-mkdir -p ${INST_LIBAFSNONFS}/Contents/MacOS
 	$(INSTALL) -m 644 ${LIBAFSNONFS} ${INST_LIBAFSNONFS}/Contents/MacOS/afs
 <all -ppc_darwin_70 -ppc_darwin_80 -x86_darwin_80>
@@ -255,7 +255,7 @@ install_libafs: $(LIBAFSNONFS) $(LIBAFSNONFSDSYM) ;
 dest_libafs: $(LIBAFSNONFS) $(LIBAFSNONFSDSYM) ;
 	-mkdir -p ${DEST_LIBAFSNONFS}
 	-mkdir -p ${DEST_LIBAFSNONFS}/Contents
-	$(INSTALL) -m 644 ../${DARWIN_INFOFILE} ${DEST_LIBAFSNONFS}/Contents/Info.plist
+	$(INSTALL) -m 644 ../Info.plist ${DEST_LIBAFSNONFS}/Contents/Info.plist
 	-mkdir -p ${DEST_LIBAFSNONFS}/Contents/MacOS
 	$(INSTALL) -m 644 ${LIBAFSNONFS} ${DEST_LIBAFSNONFS}/Contents/MacOS/afs
 <all -ppc_darwin_70 -ppc_darwin_80 -x86_darwin_80>

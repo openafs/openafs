@@ -90,7 +90,6 @@ AC_CONFIG_FILES([
     src/libadmin/vos/Makefile
     src/libafs/Makefile.common
     src/libafs/MakefileProto.${MKAFS_OSTYPE}
-    ${DARWIN_PLIST}
     src/libafsauthent/Makefile
     src/libafsrpc/Makefile
     src/libuafs/Makefile.common
@@ -100,21 +99,9 @@ AC_CONFIG_FILES([
     src/lwp/Makefile
     src/lwp/test/Makefile
     src/opr/Makefile
-    src/packaging/MacOS/OpenAFS-debug.Description.plist
-    src/packaging/MacOS/OpenAFS-debug.Info.plist
-    src/packaging/MacOS/OpenAFS.Description.plist
-    src/packaging/MacOS/OpenAFS.Info.plist
-    src/packaging/MacOS/OpenAFS.info
-    src/packaging/MacOS/buildpkg.sh
-    src/packaging/MacOS/pkgbuild.sh
     src/pam/Makefile
     src/platform/Makefile
     src/platform/${MKAFS_OSTYPE}/Makefile
-    src/platform/DARWIN/AFSPreference/Info.plist
-    src/platform/DARWIN/PrivilegedHelper/Makefile
-    src/platform/DARWIN/PrivilegedHelper/privhelper-info.plist
-    src/platform/DARWIN/PrivilegedHelper/privhelper.c
-    src/platform/DARWIN/growlagent/Makefile
     src/procmgmt/Makefile
     src/procmgmt/test/Makefile
     src/ptserver/Makefile
@@ -173,6 +160,24 @@ AC_CONFIG_FILES([
     tests/tap/Makefile
     tests/util/Makefile
     tests/volser/Makefile])
+
+AS_CASE([$AFS_SYSNAME],
+  [*_darwin_*],
+    [AC_CONFIG_FILES([
+      src/libafs/Info.plist:src/libafs/afs.${AFS_SYSNAME}.plist.in
+      src/packaging/MacOS/OpenAFS-debug.Description.plist
+      src/packaging/MacOS/OpenAFS-debug.Info.plist
+      src/packaging/MacOS/OpenAFS.Description.plist
+      src/packaging/MacOS/OpenAFS.Info.plist
+      src/packaging/MacOS/OpenAFS.info
+      src/packaging/MacOS/buildpkg.sh
+      src/packaging/MacOS/pkgbuild.sh
+      src/platform/DARWIN/AFSPreference/Info.plist
+      src/platform/DARWIN/PrivilegedHelper/Makefile
+      src/platform/DARWIN/PrivilegedHelper/privhelper-info.plist
+      src/platform/DARWIN/PrivilegedHelper/privhelper.c
+      src/platform/DARWIN/growlagent/Makefile])])
+
 AC_CONFIG_COMMANDS([default],[chmod a+x src/config/shlib-build
  chmod a+x src/config/shlib-install
  chmod a+x src/config/cc-wrapper],[])
