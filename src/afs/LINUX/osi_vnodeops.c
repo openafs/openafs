@@ -3705,6 +3705,12 @@ afs_linux_writefolio_cb(struct folio *folio, struct writeback_control *wbc, void
     int code = 0;
     int code1 = 0;
 
+    /*
+     * Ensure that huge page support wasn't slipped in without being explititly
+     * setup for the filesystem.
+     */
+    osi_Assert(!folio_test_large(folio));
+
     folio_get(folio);
 
     pp = folio_page(folio, 0);
