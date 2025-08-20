@@ -849,21 +849,22 @@
 		
 		[afsCellDBElement setUserDefaultForToken:isInCellDefaultArray||isDefaultCell];
 		[afsCellDBElement setUserDefaultCell:isDefaultCell];
-		
-		
-	
-		
-		
+
 		// get the cell comment
 		[cellDBScanner scanUpToCharactersFromSet:[NSCharacterSet alphanumericCharacterSet] intoString:nil];
 		[cellDBScanner scanUpToCharactersFromSet:returnCS intoString:&tmpString];
 		[afsCellDBElement setCellComment: tmpString];
 
 		// get all ip
+		tmpString = nil;
 		[cellDBScanner scanUpToString:@">" intoString:&tmpString];
-		// scann all ip in list
-		[self scanIpForCell:afsCellDBElement allIP:tmpString];	
-		
+		if (tmpString != nil) {
+		    // Scan all ip in list. Note that there may not be a list
+		    // of servers at all (which is perfectly valid); tmpString
+		    // will be 'nil' in that case.
+		    [self scanIpForCell:afsCellDBElement allIP:tmpString];
+		}
+
 		// add cell to list
 		[cellList addObject:afsCellDBElement];
 		// release the object becasuse NSMutableArray make a retain on object
