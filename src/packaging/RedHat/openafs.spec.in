@@ -925,22 +925,22 @@ ln -sf %{_prefix}/sbin/vsys         $RPM_BUILD_ROOT%{_prefix}/afsws/etc/vsys
 for kvariant in %{kvariants}
 do
   if [ -n "$kvariant" ] ; then
-    if [ -d _kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}${kvariant}-SP ] ; then
-      srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}${kvariant}-SP
+    if [ -d _kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}${kvariant} ] ; then
+      srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}${kvariant}
       dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}${kvariant}/extra/openafs
-    elif [ -d _kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}+${kvariant}-SP ] ; then
-      srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}+${kvariant}-SP
+    elif [ -d _kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}+${kvariant} ] ; then
+      srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}+${kvariant}
       dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}.%{_target_cpu}+${kvariant}/extra/openafs
     else
-      srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}.${kvariant}-SP
+      srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}.${kvariant}
       dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}.%{_target_cpu}.${kvariant}/extra/openafs
     fi
   else
-    if [ -d src/libafs/MODLOAD-%{kverrel}-SP ] ; then
-      srcdir=src/libafs/MODLOAD-%{kverrel}-SP
+    if [ -d src/libafs/MODLOAD-%{kverrel} ] ; then
+      srcdir=src/libafs/MODLOAD-%{kverrel}
       dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}/extra/openafs
     else
-      srcdir=src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}-SP
+      srcdir=src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}
       dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}.%{_target_cpu}/extra/openafs
     fi
   fi

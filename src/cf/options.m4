@@ -79,7 +79,7 @@ AC_ARG_WITH([bsd-kernel-build],
 AC_ARG_WITH([linux-kernel-packaging],
     [AS_HELP_STRING([--with-linux-kernel-packaging],
         [use standard naming conventions to aid Linux kernel build packaging
-         (disables MPS, sets the kernel module name to openafs.ko, and
+         (sets the kernel module name to openafs.ko, and
          installs kernel modules into the standard Linux location)])],
     [AC_SUBST([LINUX_KERNEL_PACKAGING], [yes])
      AC_SUBST([LINUX_LIBAFS_NAME], [openafs])],

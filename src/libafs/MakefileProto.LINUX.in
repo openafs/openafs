@@ -91,7 +91,6 @@ CFLAGS = $(CCFLAGS) $(KERN_DBG) $(DEFINES) $(INCLUDES) @CFLAGS_WERROR@
 
 # Name of directory to hold object files and libraries.
 KOBJ = MODLOAD
-MPS = @MPS@
 
 # COMPDIRS is called in Makefile.common to do the actual builds.
 COMPDIRS=linux_compdirs
@@ -112,40 +111,21 @@ LOCAL_SMP_DEF=
 setup: AFS_component_version_number.c
 	-$(RM) -f h net netinet sys rpc
 	-ln -fs rx rpc
-	for m in ${MPS} ; do \
-		KDIR=$(KOBJ)-${LINUX_VERSION}${LINUX_MODULE_NAME}-$$m; \
-		mkdir -p $${KDIR}; \
-		ln -fs ../Makefile $${KDIR}/Makefile.afs ; \
-		ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
-		ln -fs ../config $${KDIR}/config; \
-	done 
-
-# Compile SP and MP clients as requested
+	KDIR=$(KOBJ)-${LINUX_VERSION}${LINUX_MODULE_NAME}; \
+	mkdir -p $${KDIR}; \
+	ln -fs ../Makefile $${KDIR}/Makefile.afs ; \
+	ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
+	ln -fs ../config $${KDIR}/config;
 
 ${INSTDIRS} ${DESTDIRS}: ${COMPDIRS}
 	if [ "${LINUX_KERNEL_PACKAGING}" ] ; then \
 	    TARGPREFIX="pack_"; \
 	fi ; \
-	for m in ${MPS} ; do \
-		KDIR=${KOBJ}-${LINUX_VERSION}${LINUX_MODULE_NAME}-$$m ; \
-		echo Building in directory: $${KDIR} ; \
-		if [ "$$m" = "MP" ] ; then \
-			SMP_DEF="@RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
-			TARG="libafs.mp" ; \
-		elif [ "$$m" = "EP" ] ; then \
-			SMP_DEF="@RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
-			TARG="libafs.ep" ; \
-		elif [ "$$m" = "BM" ] ; then \
-			SMP_DEF="@RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
-			TARG="libafs.bm" ; \
-		else  \
-			SMP_DEF="@RHCONFIG_SP@ ${LOCAL_SMP_DEF}" ; \
-			TARG=libafs ; \
-		fi ; \
-		cd $${KDIR} ; \
-		$(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" $@_$${TARGPREFIX}$${TARG} CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} || exit $$?; \
-		cd ../ ; \
-	done
+	KDIR=${KOBJ}-${LINUX_VERSION}${LINUX_MODULE_NAME} ; \
+	echo Building in directory: $${KDIR} ; \
+	cd $${KDIR} ; \
+	$(MAKE) -f Makefile.afs SMP_DEF="${LOCAL_SMP_DEF}" $@_$${TARGPREFIX}libafs CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} || exit $$?; \
+	cd ../ ;
 
 ${COMPDIRS}: setup
 	$(RM) -f h 
@@ -196,40 +176,16 @@ ${COMPDIRS}: setup
 	if [ "${LINUX_KERNEL_PACKAGING}" ] ; then \
 	    TARGPREFIX="pack_"; \
 	fi ; \
-	for m in ${MPS} ; do \
-		KDIR=${KOBJ}-${LINUX_VERSION}${LINUX_MODULE_NAME}-$$m ; \
-		echo Building in directory: $${KDIR} ; \
-		if [ "$$m" = "MP" ] ; then \
-			SMP_DEF="@RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
-			TARG="libafs.mp" ; \
-		elif [ "$$m" = "EP" ] ; then \
-			SMP_DEF="@RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
-			TARG="libafs.ep" ; \
-		elif [ "$$m" = "BM" ] ; then \
-			SMP_DEF="@RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
-			TARG="libafs.bm" ; \
-		else  \
-			SMP_DEF="@RHCONFIG_SP@ ${LOCAL_SMP_DEF}" ; \
-			TARG=libafs ; \
-		fi ; \
-		cd $${KDIR} ; \
-		$(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" $@_$${TARGPREFIX}$${TARG} CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} || exit $$?; \
-		cd ../ ; \
+	KDIR=${KOBJ}-${LINUX_VERSION}${LINUX_MODULE_NAME} ; \
+	echo Building in directory: $${KDIR} ; \
+	cd $${KDIR} ; \
+	$(MAKE) -f Makefile.afs SMP_DEF="${LOCAL_SMP_DEF}" $@_$${TARGPREFIX}libafs CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} || exit $$?; \
+	cd ../ ; 
 <all>
-	done
 
 linux_compdirs_libafs: depsrcs libafs
-linux_compdirs_libafs.mp: depsrcs libafs.mp
-linux_compdirs_libafs.ep: depsrcs libafs.ep
-linux_compdirs_libafs.bm: depsrcs libafs.bm
 linux_instdirs_libafs: install_libafs
-linux_instdirs_libafs.mp: install_libafs.mp
-linux_instdirs_libafs.ep: install_libafs.ep
-linux_instdirs_libafs.bm: install_libafs.bm
 linux_destdirs_libafs: dest_libafs
-linux_destdirs_libafs.mp: dest_libafs.mp
-linux_destdirs_libafs.ep: dest_libafs.ep
-linux_destdirs_libafs.bm: dest_libafs.bm
 
 linux_compdirs_pack_libafs: depsrcs pack_libafs
 linux_instdirs_pack_libafs: install_pack_libafs
@@ -238,19 +194,10 @@ linux_destdirs_pack_libafs: dest_pack_libafs
 # Below this line are targets when in the COMMON directory:
 # For Linux there is no kernel NFS server.
 LIBAFS = ${LINUX_LIBAFS_NAME}-${CLIENT}.${LINUX_MODULE_EXT}
-LIBAFS_MP = ${LINUX_LIBAFS_NAME}-${CLIENT}.mp.${LINUX_MODULE_EXT}
-LIBAFS_EP = ${LINUX_LIBAFS_NAME}-${CLIENT}.ep.${LINUX_MODULE_EXT}
-LIBAFS_BM = ${LINUX_LIBAFS_NAME}-${CLIENT}.bm.${LINUX_MODULE_EXT}
 
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
-INST_LIBAFS_MP = ${DESTDIR}${afskerneldir}/${LIBAFS_MP}
-INST_LIBAFS_EP = ${DESTDIR}${afskerneldir}/${LIBAFS_EP}
-INST_LIBAFS_BM = ${DESTDIR}${afskerneldir}/${LIBAFS_BM}
 
 DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS}
-DEST_LIBAFS_MP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_MP}
-DEST_LIBAFS_EP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_EP}
-DEST_LIBAFS_BM = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_BM}
 
 SYSTEM_LIBAFS = /lib/modules/${CLIENT}/extra/${LINUX_LIBAFS_NAME}/${LINUX_LIBAFS_NAME}.ko
 
@@ -260,22 +207,13 @@ DEST_SYSTEM = ${DEST}/root.client${SYSTEM_LIBAFS}
 SPARSE_MAKEFLAGS = @SPARSE_MAKEFLAGS@
 
 libafs:	$(LIBAFS) 
-	echo SP Build Complete
-
-libafs.mp: $(LIBAFS_MP)
-	echo MP Build Complete
-
-libafs.ep: $(LIBAFS_EP)
-	echo EP Build Complete
-
-libafs.bm: $(LIBAFS_BM)
-	echo BM Build Complete
+	echo Build Complete
 
 <linux26 linux_26 umlinux26>
 pack_libafs: ${LINUX_LIBAFS_NAME}.ko
 	echo "Packaging Friendly Build Complete"
 
-${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: ${LINUX_LIBAFS_NAME}.ko
+${LIBAFS}: ${LINUX_LIBAFS_NAME}.ko
 	cp ${LINUX_LIBAFS_NAME}.ko $@
 
 .FORCE:
@@ -296,65 +234,24 @@ ${LIBAFS}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(RM) -f $@
 	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
 
-${LIBAFS_MP}: $(AFSAOBJS) $(AFSNONFSOBJS)
-	$(RM) -f $@
-	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
-
-${LIBAFS_EP}: $(AFSAOBJS) $(AFSNONFSOBJS)
-	$(RM) -f $@
-	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
-
-${LIBAFS_BM}: $(AFSAOBJS) $(AFSNONFSOBJS)
-	$(RM) -f $@
-	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
 <all>
 
 install_libafs:	$(LIBAFS) 
 	${INSTALL} -d ${DESTDIR}${afskerneldir}
 	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFS)
-	echo SP Install Complete
+	echo Install Complete
 
 install_pack_libafs: $(LINUX_LIBAFS_NAME).ko
 	${INSTALL} -d ${DESTDIR}/lib/modules/${CLIENT}/extra/${LINUX_LIBAFS_NAME}
 	${INSTALL} -m 644 $(LINUX_LIBAFS_NAME).ko $(INST_SYSTEM)
 	echo Packaging Friendly Install Complete
 
-install_libafs.mp: $(LIBAFS_MP)
-	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -m 644 $(LIBAFS_MP) $(INST_LIBAFS_MP)
-	echo MP Install Complete
-
-install_libafs.ep: $(LIBAFS_EP)
-	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -m 644 $(LIBAFS_EP) $(INST_LIBAFS_EP)
-	echo EP Install Complete
-
-install_libafs.bm: $(LIBAFS_BM)
-	${INSTALL} -d ${DESTDIR}${afskerneldir}
-	${INSTALL} -m 644 $(LIBAFS_BM) $(INST_LIBAFS_BM)
-	echo BM Install Complete
-
 dest_libafs:	$(LIBAFS) 
 	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
 	${INSTALL} -m 644 $(LIBAFS) $(DEST_LIBAFS)
-	echo SP Install Complete
+	echo Install Complete
 
 dest_pack_libafs: $(LINUX_LIBAFS_NAME).ko
 	${INSTALL} -d ${DEST}/root.client/lib/modules/${CLIENT}/extra/${LINUX_LIBAFS_NAME}
 	${INSTALL} -m 644 $(LINUX_LIBAFS_NAME).ko $(DEST_SYSTEM)
 	echo Packaging Friendly Install Complete
-
-dest_libafs.mp: $(LIBAFS_MP)
-	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
-	${INSTALL} -m 644 $(LIBAFS_MP) $(DEST_LIBAFS_MP)
-	echo MP Install Complete
-
-dest_libafs.ep: $(LIBAFS_EP)
-	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
-	${INSTALL} -m 644 $(LIBAFS_EP) $(DEST_LIBAFS_EP)
-	echo EP Install Complete
-
-dest_libafs.bm: $(LIBAFS_BM)
-	${INSTALL} -d ${DEST}/root.client/usr/vice/etc/modload
-	${INSTALL} -m 644 $(LIBAFS_BM) $(DEST_LIBAFS_BM)
-	echo BM Install Complete
