@@ -320,8 +320,10 @@ AS_IF([test "x$with_macos_app_key" != "x"], [
     # Retrieve the Team ID (OU field) associated with a certificate. MACOS_TEAM_ID is extracted from the
     # certificate subject using openssl and awk.
     #
-    # Example subject string:
-    # subject=UID=SKMME9E2Y8, CN=Developer ID Application: Org (SKMME9E2Y8), OU=SKMME9E2Y8, O=org, C=US
+    # The output from 'openssl x509 -noout -subject' can either look like:
+    # subject=UID=SKMME9E2Y8, CN=Developer ID Application: Org (SKMME9E2Y8), OU=SKMME9E2Y8, O=Org, C=US
+    # or:
+    # subject= /UID=SKMME9E2Y8/CN=Developer ID Application: Org (SKMME9E2Y8)/OU=SKMME9E2Y8/O=Org/C=US
     macos_app_key="$with_macos_app_key"
     AC_MSG_CHECKING([for macOS team ID])
 
@@ -333,9 +335,19 @@ AS_IF([test "x$with_macos_app_key" != "x"], [
     AS_IF([test x"$macos_subject" = x],
 	  [AC_MSG_ERROR([Failed to process the certificate using openssl])])
 
-    MACOS_TEAM_ID=$(echo "$macos_subject" | awk 'BEGIN { FS="OU=" } {print $[]2}' | awk 'BEGIN { FS="," } {print$[]1}')
+    MACOS_TEAM_ID=$(echo "$macos_subject" | \
+		    awk 'BEGIN { FS="OU=" } {print $[]2}' | \
+		    awk 'BEGIN { FS="," } {print $[]1}' | \
+		    awk 'BEGIN { FS="/" } {print $[]1}')
     AS_IF([test x"$MACOS_TEAM_ID" = x],
 	  [AC_MSG_ERROR([Failed to extract the macOS Team ID])])
+
+    # The MACOS_TEAM_ID should just be a string of alphanumeric characters; if
+    # it contains a delimeter like '/' or '=', then something has clearly gone
+    # wrong. Bail out early if so, so we don't build packages with the wrong
+    # team ID in them.
+    AS_CASE(["$MACOS_TEAM_ID"],
+     [*/*|*,*|*=*], [AC_MSG_ERROR([Failed parsing macOS Team ID: $MACOS_TEAM_ID])])
 
     AC_MSG_RESULT([$MACOS_TEAM_ID])
     AC_SUBST([MACOS_TEAM_ID])
