@@ -15,10 +15,8 @@
 
 -(id) init;
 -(void) dealloc;
--(OSStatus) startAutorization;
 -(OSStatus) autorizedMoveFile:(NSString*)srcPath toPath:(NSString*)dstPath;
 -(OSStatus) autorizedChown:(NSString*)filePath owner:(NSString*)owner group:(NSString*)group;
 -(OSStatus) autorizedCopy:(NSString*)srcPath toPath:(NSString*)dstPath;
 -(OSStatus) autorizedDelete:(NSString*)destFilePath;
--(void) endAutorization;
 @end

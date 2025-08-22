@@ -22,16 +22,6 @@
 }
 
 // -------------------------------------------------------------------------------
-//  startAutorization:
-// -------------------------------------------------------------------------------
--(OSStatus) startAutorization
-{
-	OSStatus err = noErr;
-	err = [[AuthUtil shared] autorize];
-	return err;
-}
-
-// -------------------------------------------------------------------------------
 //  autorizedMoveFile:
 // -------------------------------------------------------------------------------
 -(OSStatus) autorizedMoveFile:(NSString*)srcPath toPath:(NSString*)dstPath
@@ -78,14 +68,6 @@
 	const char *arguments[] = {[destFilePath UTF8String], 0L};
 	status = [[AuthUtil shared] execUnixCommand:"/bin/rm" args:arguments output:nil];
 	return status;
-}
-
-// -------------------------------------------------------------------------------
-//  endAutorization:
-// -------------------------------------------------------------------------------
--(void) endAutorization
-{
-	[[AuthUtil shared] deautorize];
 }
 
 @end
