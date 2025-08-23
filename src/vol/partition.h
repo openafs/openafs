@@ -32,7 +32,7 @@
 #define	AFS_RDSKDEV	"/dev/r"
 #endif
 
-#include "lock.h"
+#include <afs/afs_lock.h>
 #ifdef AFS_DEMAND_ATTACH_FS
 # include <pthread.h>
 #endif

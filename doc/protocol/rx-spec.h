@@ -457,7 +457,7 @@
  * here will be fully defined later, in Section 2.3.2. 
  * 
  * \code
- * #include <afs/lock.h> 
+ * #include <afs/afs_lock.h>
  * 
  * struct Vnode { 
  * 	... 

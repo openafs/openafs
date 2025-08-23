@@ -966,7 +966,7 @@ udbClientInit(int noAuthFlag, int localauth, char *cellName)
 
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 
 /* notes
  *	1) first call with SINGLESERVER set, record the server to be used.

@@ -17,7 +17,7 @@
 #include <rx/rx_queue.h>
 #include "nfs.h"
 #include "ihandle.h"
-#include "lock.h"
+#include <afs/afs_lock.h>
 #include "vnode.h"  /* for vSmall, vLarge */
 #include "vol-info.h"
 

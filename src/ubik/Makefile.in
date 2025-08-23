@@ -24,9 +24,9 @@ LT_deps =   $(top_builddir)/src/auth/liboafs_auth.la \
 	    $(top_builddir)/src/rx/liboafs_rx.la \
 	    $(top_builddir)/src/util/liboafs_util.la
 
-INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
+INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/afs/afs_lock.h \
 	${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
-	${TOP_INCDIR}/lock.h ubik.h ubik_int.h
+	${TOP_INCDIR}/afs/afs_lock.h ubik.h ubik_int.h
 
 LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libafshcrypto_lwp.a \
 	${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libauth.a \

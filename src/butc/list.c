@@ -14,7 +14,7 @@
 
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <lwp.h>
 #include <afs/tcdata.h>
 

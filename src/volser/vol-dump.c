@@ -31,7 +31,7 @@
 #include <afs/afsint.h>
 #include <afs/nfs.h>
 #include <afs/errors.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <lwp.h>
 #include <afs/afssyscalls.h>
 #include <afs/ihandle.h>

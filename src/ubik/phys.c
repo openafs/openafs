@@ -14,7 +14,7 @@
 
 #include <lwp.h>
 
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/afsutil.h>
 
 #define	UBIK_INTERNALS 1

@@ -28,7 +28,7 @@
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <lwp.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/afssyscalls.h>
 #include <afs/ihandle.h>
 #ifdef AFS_NT40_ENV

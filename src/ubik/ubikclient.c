@@ -20,7 +20,7 @@
 #include <afs/pthread_glock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/rxgen_consts.h>
 #define UBIK_LEGACY_CALLITER
 #include "ubik.h"

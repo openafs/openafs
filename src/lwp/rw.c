@@ -20,7 +20,7 @@ Created: 11/1/83, J. Rosenberg
 #include <roken.h>
 
 #include "lwp.h"
-#include "lock.h"
+#include "afs/afs_lock.h"
 
 #define DEFAULT_READERS	5
 

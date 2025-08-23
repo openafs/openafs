@@ -29,7 +29,7 @@
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/cmd.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <ubik.h>
 
 #include "vlserver.h"

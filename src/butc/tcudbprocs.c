@@ -19,7 +19,7 @@
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <lwp.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <ubik.h>

@@ -1466,7 +1466,6 @@
                             <File Id="filedirent_H" Name="dirent.h" LongName="dirent.h" DiskId="1" src="$(var.IncDir)dirent.h" />
                             <File Id="fileerr_H" Name="err.h" LongName="err.h" DiskId="1" src="$(var.IncDir)err.h" />
                             <File Id="filelargeint_H" Name="largeint.h" LongName="largeint.h" DiskId="1" src="$(var.IncDir)largeint.h" /> 
-                            <File Id="filelock_H" Name="lock.h" LongName="lock.h" DiskId="1" src="$(var.IncDir)lock.h" /> 
                             <File Id="filelwp_H" Name="lwp.h" LongName="lwp.h" DiskId="1" src="$(var.IncDir)lwp.h" /> 
                             <File Id="filemain_H" Name="main.h" LongName="main.h" DiskId="1" src="$(var.IncDir)main.h" /> 
                             <File Id="fileosi_H" Name="osi.h" LongName="osi.h" DiskId="1" src="$(var.IncDir)osi.h" /> 
@@ -1524,6 +1523,7 @@
                                 <File Id="fileafs_cfgAdmin_H" Name="AFS_CFG1.h" LongName="afs_cfgAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_cfgAdmin.h" />
                                 <File Id="fileafs_clientAdmin_H" Name="AFS_CLI1.h" LongName="afs_clientAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_clientAdmin.h" />
                                 <File Id="fileafs_kasAdmin_H" Name="AFS_KAS1.h" LongName="afs_kasAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_kasAdmin.h" />
+                                <File Id="fileafs_lock_H" Name="afs_lock.h" LongName="afs_lock.h" DiskId="1" src="$(var.IncDir)afs\afs_lock.h" />
                                 <File Id="fileafs_ptsAdmin_H" Name="AFS_PTS1.h" LongName="afs_ptsAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_ptsAdmin.h" />
                                 <File Id="fileafs_sysnames_H" Name="AFS_SYS1.h" LongName="afs_sysnames.h" DiskId="1" src="$(var.IncDir)afs\afs_sysnames.h" />
                                 <File Id="fileafs_utilAdmin_H" Name="AFS_UTI1.h" LongName="afs_utilAdmin.h" DiskId="1" src="$(var.IncDir)afs\afs_utilAdmin.h" />

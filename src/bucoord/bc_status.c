@@ -14,7 +14,7 @@
 
 #include <afs/com_err.h>
 #include <afs/bubasics.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/tcdata.h>
 #include <afs/cmd.h>
 

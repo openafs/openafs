@@ -14,9 +14,9 @@ ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 UBIK=$(srcdir)/../ubik
 
-INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
+INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/afs/afs_lock.h \
 	${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
-	${TOP_INCDIR}/lock.h ubik.h ubik_int.h utst_int.h
+	${TOP_INCDIR}/afs/afs_lock.h ubik.h ubik_int.h utst_int.h
 
 LTLIBS=@TOP_OBJDIR@/src/util/liboafs_util.la \
        @TOP_OBJDIR@/src/ubik/liboafs_ubik.la \

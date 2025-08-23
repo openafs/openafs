@@ -35,7 +35,7 @@
 #include "xfiles.h"
 
 #include <rx/rx_queue.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/afsint.h>
 #include <afs/nfs.h>
 #include <afs/ihandle.h>

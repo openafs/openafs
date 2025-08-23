@@ -127,7 +127,7 @@
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxstat.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <ubik.h>
 #include <afs/authcon.h>
 #include <afs/cmd.h>

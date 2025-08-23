@@ -35,7 +35,7 @@
 #include <afs/afsint.h>
 #include "nfs.h"
 #include <afs/errors.h>
-#include "lock.h"
+#include <afs/afs_lock.h>
 #include "lwp.h"
 #include <afs/afssyscalls.h>
 #include "ihandle.h"
@@ -1127,7 +1127,7 @@ VnStore(Error * ec, Volume * vp, Vnode * vnp,
  */
 Vnode *
 VGetVnode(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
-{				/* READ_LOCK or WRITE_LOCK, as defined in lock.h */
+{				/* READ_LOCK or WRITE_LOCK, as defined in afs_lock.h */
     Vnode *retVal;
     VOL_LOCK;
     retVal = VGetVnode_r(ec, vp, vnodeNumber, locktype);
@@ -1152,7 +1152,7 @@ VGetVnode(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
  */
 Vnode *
 VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
-{				/* READ_LOCK or WRITE_LOCK, as defined in lock.h */
+{				/* READ_LOCK or WRITE_LOCK, as defined in afs_lock.h */
     Vnode *vnp;
     VnodeClass class;
     struct VnodeClassInfo *vcp;

@@ -13,7 +13,7 @@
 #include <roken.h>
 #include <afs/opr.h>
 
-#include <lock.h>
+#include <afs/afs_lock.h>
 
 #include "dir.h"
 

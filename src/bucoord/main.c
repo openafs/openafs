@@ -29,7 +29,7 @@
 #include <afs/afsint.h>
 #include <afs/volser.h>		/*VLDB_MAXSERVERS */
 #include <afs/com_err.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/budb.h>
 #include <afs/kautils.h>
 #include <afs/vlserver.h>

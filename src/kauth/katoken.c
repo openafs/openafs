@@ -22,7 +22,7 @@
 #include <afs/pthread_glock.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <ubik.h>
 
 #include "kauth.h"

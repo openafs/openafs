@@ -18,7 +18,7 @@
 #include <sys/statfs.h>
 #endif
 
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>

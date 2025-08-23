@@ -25,7 +25,7 @@
 #include <rx/xdr.h>
 #include <afs/opr_assert.h>
 #include <lwp.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/opr.h>
 #include <rx/rx.h>
 #include <rx/rx_queue.h>

@@ -19,7 +19,7 @@
 #include <afs/afscbint.h>
 #include <afs/cmd.h>
 #include <rx/rx.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/afs_args.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>

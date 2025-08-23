@@ -18,7 +18,7 @@
  *
  *------------------------------------------------------------------------*/
 
-#include <lock.h>		/*AFS locks */
+#include <afs/afs_lock.h>		/*AFS locks */
 
 #define GATOR_TEXTCB_MAXINVERSIONS 10	/*Max highlight inversions */
 

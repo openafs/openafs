@@ -24,7 +24,7 @@
 #include <sys/statfs.h>
 #endif
 
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/stds.h>
 #include <rx/rx_queue.h>
 #include <rx/xdr.h>
