@@ -26,7 +26,7 @@
 #include <rx/rxkad.h>
 #include <rx/rx_globals.h>
 #include <afs/cellconfig.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
 #include <afs/audit.h>

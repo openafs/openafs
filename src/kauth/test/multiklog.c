@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <rx/xdr.h>
 
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <ubik.h>
 
 #include <stdio.h>

@@ -99,7 +99,7 @@
 #include <rx/rx_queue.h>
 #include "nfs.h"
 #include <afs/errors.h>
-#include "lock.h"
+#include <afs/afs_lock.h>
 #include "lwp.h"
 #include <afs/afssyscalls.h>
 #include "ihandle.h"

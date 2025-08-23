@@ -14,7 +14,7 @@
 #include "partition.h"
 
 #ifdef AFS_DEMAND_ATTACH_FS
-# include "lock.h"
+# include "afs/afs_lock.h"
 #endif
 
 #ifdef AFS_PTHREAD_ENV

@@ -12,7 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.lwptool
 ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 
 INCLS=${TOP_INCDIR}/ubik.h \
-	${TOP_INCDIR}/lock.h  \
+	${TOP_INCDIR}/afs/afs_lock.h  \
 	${TOP_INCDIR}/lwp.h \
 	${TOP_INCDIR}/rx/rx.h \
 	${TOP_INCDIR}/rx/xdr.h \
@@ -21,7 +21,7 @@ INCLS=${TOP_INCDIR}/ubik.h \
 	ptserver.h ptclient.h ptuser.h ptint.h pterror.h map.h ptprototypes.h
 
 LINCLS=${TOP_INCDIR}/ubik.h \
-	${TOP_INCDIR}/lock.h \
+	${TOP_INCDIR}/afs/afs_lock.h \
 	${TOP_INCDIR}/rx/rx.h \
 	${TOP_INCDIR}/rx/xdr.h  \
 	${TOP_INCDIR}/rx/rxkad.h \

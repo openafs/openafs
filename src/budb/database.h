@@ -9,7 +9,7 @@
 
 #include <afs/auth.h>
 #include <afs/bubasics.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include "budb.h"
 
 #if !defined(offsetof)

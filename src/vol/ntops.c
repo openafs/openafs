@@ -19,7 +19,7 @@
 #include <windows.h>
 #include <winnt.h>
 #include <winbase.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/afsutil.h>
 #include <rx/rx_queue.h>
 #include "nfs.h"

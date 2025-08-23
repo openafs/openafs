@@ -35,7 +35,7 @@
 #include <afs/auth.h>
 #include <afs/audit.h>
 #include <afs/com_err.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <ubik.h>
 #include <afs/afsutil.h>
 

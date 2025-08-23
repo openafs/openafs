@@ -29,7 +29,7 @@
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <rx/rxkad_convert.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #define UBIK_LEGACY_CALLITER 1
 #include <ubik.h>
 #include <afs/auth.h>

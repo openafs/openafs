@@ -16,7 +16,7 @@
 #ifdef AFS_PTHREAD_ENV
 # include <opr/lock.h>
 #endif
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/afsutil.h>
 
 #define UBIK_INTERNALS 1

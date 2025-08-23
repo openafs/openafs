@@ -18,7 +18,7 @@
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <ubik.h>
 #include <lwp.h>
 #include "kauth.h"

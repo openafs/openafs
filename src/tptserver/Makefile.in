@@ -15,7 +15,7 @@ ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 PTSERVER=$(srcdir)/../ptserver
 
 INCLS=${TOP_INCDIR}/ubik.h \
-	${TOP_INCDIR}/lock.h  \
+	${TOP_INCDIR}/afs/afs_lock.h  \
 	${TOP_INCDIR}/lwp.h \
 	${TOP_INCDIR}/rx/rx.h \
 	${TOP_INCDIR}/rx/xdr.h \

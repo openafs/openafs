@@ -35,7 +35,7 @@
 #include <afs/nfs.h>
 #include <afs/vlserver.h>
 #include <lwp.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/afsutil.h>
 #include <afs/authcon.h>
 #include <afs/cellconfig.h>

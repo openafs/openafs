@@ -22,7 +22,7 @@
 
 #include <hcrypto/des.h>
 
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <ubik.h>
 #include <lwp.h>
 #include <rx/xdr.h>

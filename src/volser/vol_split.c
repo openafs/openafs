@@ -21,7 +21,7 @@
 #include <afs/afsint.h>
 #include <afs/nfs.h>
 #include <lwp.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/afssyscalls.h>
 #include <afs/ihandle.h>
 #include <afs/vnode.h>

@@ -32,7 +32,7 @@
 #include "nfs.h"
 #include "daemon_com.h"
 #include "lwp.h"
-#include "lock.h"
+#include <afs/afs_lock.h>
 #include <afs/afssyscalls.h>
 #include "ihandle.h"
 #include "vnode.h"

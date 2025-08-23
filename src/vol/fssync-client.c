@@ -51,7 +51,7 @@
 #include "daemon_com.h"
 #include "fssync.h"
 #include "lwp.h"
-#include "lock.h"
+#include <afs/afs_lock.h>
 #include "ihandle.h"
 #include "vnode.h"
 #include "volume.h"

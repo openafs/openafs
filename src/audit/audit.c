@@ -29,7 +29,7 @@
 #include <rx/rxkad.h>
 #include "audit.h"
 #include "audit-api.h"
-#include "lock.h"
+#include "afs/afs_lock.h"
 
 #include <afs/afsutil.h>
 

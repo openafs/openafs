@@ -13,7 +13,7 @@
 #include <roken.h>
 
 #include <afs/com_err.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/bubasics.h>
 #include <afs/tcdata.h>
 #include <afs/butc.h>

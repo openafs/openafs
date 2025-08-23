@@ -125,7 +125,7 @@ struct ubik_stat {
     afs_int32 size;
 };
 
-#include <lock.h>		/* just to make sure we've got this */
+#include <afs/afs_lock.h>		/* just to make sure we've got this */
 
 /*!
  * \brief representation of a ubik database.

@@ -1300,7 +1300,7 @@ THREAD SAFETY
 
       + ulock_Debug should use LOCK_LOCK/LOCK_UNLOCK when examining the
         internals of struct Lock.  Ideally, knowledge of these internals
-        should be abstracted to src/lwp/lock.h.
+        should be abstracted to src/lwp/afs_lock.h.
 
       + ubeacon_Debug() should hold the beacon lock while accessing the
         value of 'syncSiteUntil' and, if the access is moved here from

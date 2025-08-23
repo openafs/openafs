@@ -56,7 +56,7 @@
 
 #include <ctype.h>
 
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/afsutil.h>
 #include <ubik.h>
 #include <rx/xdr.h>

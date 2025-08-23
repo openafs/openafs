@@ -59,7 +59,7 @@
 #include "fssync_inline.h"
 #include "salvsync.h"
 #include "lwp.h"
-#include "lock.h"
+#include <afs/afs_lock.h>
 #include <afs/afssyscalls.h>
 #include "ihandle.h"
 #include "vnode.h"

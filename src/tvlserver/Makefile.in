@@ -16,7 +16,7 @@ VLSERVER=$(srcdir)/../vlserver
 
 INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/lwp.h \
-             ${TOP_INCDIR}/lock.h  \
+             ${TOP_INCDIR}/afs/afs_lock.h  \
              ${TOP_INCDIR}/rx/rx.h \
              ${TOP_INCDIR}/rx/xdr.h \
              ${TOP_INCDIR}/afs/keys.h \

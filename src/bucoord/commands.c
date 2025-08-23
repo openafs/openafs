@@ -30,7 +30,7 @@
 #include <afs/vldbint.h>	/* PA */
 #include <afs/ktime.h>		/* PA */
 #include <ubik.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/tcdata.h>
 #include <afs/butx.h>
 #include <afs/vsutils_prototypes.h>

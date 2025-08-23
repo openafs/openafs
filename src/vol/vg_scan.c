@@ -27,7 +27,7 @@
 #include <afs/opr.h>
 #include <rx/rx_queue.h>
 #include <opr/lock.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/afsutil.h>
 #include "nfs.h"
 #include <afs/afsint.h>

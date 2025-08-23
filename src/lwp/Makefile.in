@@ -25,13 +25,13 @@ LT_libs = $(MT_LIBS)
 all: liboafs_lwpcompat.la liblwpcompat_pic.la \
 	${TOP_LIBDIR}/liblwp.a depinstall test
 
-depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/timer.h \
+depinstall: ${TOP_INCDIR}/afs/afs_lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/timer.h \
 	AFS_component_version_number.c
 
 ${TOP_LIBDIR}/liblwp.a: liblwp.a
 	${INSTALL_DATA} $? $@
 
-${TOP_INCDIR}/lock.h: lock.h
+${TOP_INCDIR}/afs/afs_lock.h: afs_lock.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/lwp.h: lwp.h
@@ -164,7 +164,7 @@ lwp.o		: lwp.c lwp.h
 		*)  \
 			$(AFS_CCRULE_NOQ) ${srcdir}/lwp.c;; \
 		esac
-lock.lo		: lock.c lock.h lwp.h
+lock.lo		: lock.c afs_lock.h lwp.h
 timer.o		: timer.c
 fasttime.lo	: fasttime.c
 threadname.o    : threadname.c
@@ -178,19 +178,20 @@ test: ${TOP_LIBDIR}/liblwp.a
 #
 # Install targets
 #
-install: liblwp.a lock.h lwp.h timer.h
+install: liblwp.a afs_lock.h lwp.h timer.h
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL} -d ${DESTDIR}${includedir}
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_DATA} liblwp.a ${DESTDIR}${libdir}/liblwp.a
-	${INSTALL_DATA} ${srcdir}/lock.h ${DESTDIR}${includedir}/lock.h
+	${INSTALL_DATA} ${srcdir}/afs_lock.h ${DESTDIR}${includedir}/afs/afs_lock.h
 	${INSTALL_DATA} ${srcdir}/lwp.h ${DESTDIR}${includedir}/lwp.h
 	${INSTALL_DATA} ${srcdir}/timer.h ${DESTDIR}${includedir}/timer.h
 
-dest: liblwp.a lock.h lwp.h timer.h
+dest: liblwp.a afs_lock.h lwp.h timer.h
 	${INSTALL} -d ${DEST}/lib
 	${INSTALL} -d ${DEST}/include
 	${INSTALL_DATA} liblwp.a ${DEST}/lib/liblwp.a
-	${INSTALL_DATA} ${srcdir}/lock.h ${DEST}/include/lock.h
+	${INSTALL_DATA} ${srcdir}/afs_lock.h ${DEST}/include/afs/afs_lock.h
 	${INSTALL_DATA} ${srcdir}/lwp.h ${DEST}/include/lwp.h
 	${INSTALL_DATA} ${srcdir}/timer.h ${DEST}/include/timer.h
 

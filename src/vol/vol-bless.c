@@ -18,7 +18,7 @@
 #include <rx/rx_queue.h>
 #include <afs/afsint.h>
 #include "nfs.h"
-#include "lock.h"
+#include <afs/afs_lock.h>
 #include "ihandle.h"
 #include "vnode.h"
 #include "volume.h"

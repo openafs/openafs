@@ -18,7 +18,7 @@
 #else
 # include <opr/lockstub.h>
 #endif
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <rx/rx.h>
 #include <afs/afsutil.h>
 

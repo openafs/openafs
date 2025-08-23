@@ -19,7 +19,7 @@
 #include "afs/lock.h"
 #include "afs_trace.h"
 #else
-#include <lock.h>
+#include <afs/afs_lock.h>
 typedef struct Lock afs_lock_t;
 #endif
 

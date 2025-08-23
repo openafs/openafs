@@ -20,7 +20,7 @@
 #include <afs/opr.h>
 #include <rx/rx.h>
 #include <lwp.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <afs/tcdata.h>
 #include <afs/bubasics.h>	/* PA */
 #include <afs/budb_client.h>

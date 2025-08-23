@@ -12,7 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.lwp
 
 
 INCLS=\
-	${TOP_INCDIR}/lock.h \
+	${TOP_INCDIR}/afs/afs_lock.h \
 	${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lwp.h \
 	${TOP_INCDIR}/rx/rx.h \

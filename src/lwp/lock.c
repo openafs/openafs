@@ -29,7 +29,7 @@
 #include <afs/opr.h>
 
 #include "lwp.h"
-#include "lock.h"
+#include "afs/afs_lock.h"
 
 #define FALSE	0
 #define TRUE	1

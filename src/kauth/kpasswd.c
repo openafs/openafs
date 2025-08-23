@@ -22,7 +22,7 @@
 
 #include <rx/xdr.h>
 #include <rx/rxkad_convert.h>
-#include <lock.h>
+#include <afs/afs_lock.h>
 #include <ubik.h>
 #include <afs/com_err.h>
 #include <afs/auth.h>

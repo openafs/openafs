@@ -20,11 +20,11 @@
 	Include file for using Vice locking routines.
 */
 
-#ifndef LOCK_H
-#define LOCK_H
+#ifndef OPENAFS_AFS_LOCK_H
+#define OPENAFS_AFS_LOCK_H
 
 #ifdef KERNEL
-#error Do not include lwp/lock.h for kernel code. Use afs/lock.h instead.
+#error Do not include afs/afs_lock.h for kernel code. Use afs/lock.h instead.
 #endif
 
 
@@ -217,4 +217,4 @@ void Lock_Destroy(struct Lock *lock);
 #define SharedLocked(lock)\
 	((lock)->excl_locked & SHARED_LOCK)
 
-#endif /* LOCK_H */
+#endif /* OPENAFS_AFS_LOCK_H */
