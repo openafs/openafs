@@ -84,6 +84,8 @@ static AuthUtil *sharedAuthUtil = nil;
 
 		if (status != errAuthorizationSuccess) {
 			AuthorizationFree (authorizationRef, kAuthorizationFlagDefaults);
+			authorizationRef = nil;
+			isAuthorizationRefOwned = NO;
 			return status;
 		}
 	}
