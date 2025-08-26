@@ -1609,7 +1609,7 @@ afs_linux_dentry_revalidate(struct inode *parent_inode, const struct qstr *name,
     if ((flags & LOOKUP_RCU) != 0) {
 	return -ECHILD;
     }
-    return dentry_revalidate_common(VTOAFS(parent_inode), name->name, dp);
+    return dentry_revalidate_common(VTOAFS(parent_inode), dp->d_name.name, dp);
 }
 #else
 # if defined(DOP_REVALIDATE_TAKES_UNSIGNED)
