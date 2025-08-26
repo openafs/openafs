@@ -875,7 +875,7 @@
 	}@catch(NSException *e){
 		@throw e;
 	}@finally{
-		//if(strData) [strData release];
+		[strData release];
 	}
 }
 
