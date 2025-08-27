@@ -392,7 +392,7 @@
 	}@catch(NSException *e){
 		@throw e;
 	}@finally{
-		//if(cacheInfoStrData) [cacheInfoStrData release];
+		[cacheInfoStrData release];
 		if(chunkStartCS) [chunkStartCS release];
 	}
 	return noErr;
