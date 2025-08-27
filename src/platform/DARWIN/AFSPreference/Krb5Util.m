@@ -167,9 +167,11 @@
 				if (ret == 0) {
 				    ret = krb5_cc_initialize (kcontext, id, me);
 				    ret = krb5_cc_store_cred(kcontext, id, &in);
-				    krb5_cc_close(kcontext,id);
 				}
 			    }
+			}
+			if (id != NULL) {
+			    krb5_cc_close(kcontext, id);
 			}
 			krb5_free_principal(kcontext, server);
 #else
