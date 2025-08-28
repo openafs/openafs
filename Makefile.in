@@ -13,6 +13,8 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
 DOXYGEN=@DOXYGEN@
 
+CELLSERVDB=${TOP_SRCDIR}/afsd/CellServDB
+
 # To compile AFS from scratch in the src tree run "make".
 #   This recursively calls "make install ..." and does not depend on the
 #   existence of any non-standard programs.
@@ -96,7 +98,7 @@ packages: dest
 	*_darwin_1[2-4] | *_darwin_[6-9]0 | *_darwin_1[0-3]0 ) \
 		${COMPILE_PART1} packaging/MacOS && bash ./buildpkg.sh ${DEST} ;; \
 	*_darwin_* ) \
-		${COMPILE_PART1} packaging/MacOS && bash ./pkgbuild.sh ${DEST} ;; \
+		${COMPILE_PART1} packaging/MacOS && bash ./pkgbuild.sh ${DEST} --csdb ${CELLSERVDB} ;; \
 	hp_ux110 ) \
 		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.00 ;; \
 	hp_ux11i ) \
@@ -774,14 +776,13 @@ dist:
 
 RPM_RELNOTES = NEWS
 RPM_CHANGELOG = packages/ChangeLog
-RPM_CELLSERVDB = src/afsd/CellServDB
 srpm: dist
 	./src/packaging/RedHat/makesrpm.pl \
 	  --dir=packages \
 	  packages/openafs-*-src.tar.bz2 \
 	  "$(RPM_RELNOTES)" \
 	  "$(RPM_CHANGELOG)" \
-	  "$(RPM_CELLSERVDB)"
+	  "$(CELLSERVDB)"
 
 RPM_BUILD_USERSPACE = 1
 RPM_BUILD_MODULES = 1
