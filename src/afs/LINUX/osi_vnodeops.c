@@ -1383,14 +1383,59 @@ check_dentry_race(struct dentry *dp)
 #endif /* D_SPLICE_ALIAS_RACE */
 
 /*
+ * Wrapper functions to obtain a stable dentry d_name.
+ * When d_revalidate is called, the dentry's d_dname is unstable.
+ * The function take_dentry_name_snapshot provides a stable name.
+ */
+#if defined(HAVE_LINUX_TAKE_DENTRY_NAME_SNAPSHOT)
+static inline const char *
+get_stable_dentry_name(struct name_snapshot *s, struct dentry *dp)
+{
+    take_dentry_name_snapshot(s, dp);
+# if defined(LINUX_STRUCT_NAME_SNAPSHOT_USES_QSTR)
+    return s->name.name;
+# else
+    return s->name;
+# endif
+}
+static inline void
+release_stable_dentry_name(struct name_snapshot *s)
+{
+    return release_dentry_name_snapshot(s);
+}
+#else
+# if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+#  error "Missing take_dentry_name_snapshot"
+# endif
+/*
+ * For older versions of Linux (prior to the availablity of
+ * take_dentry_name_snapshot), fall back to just using the unstable version of
+ * the dentry d_name.  Several of the filesystems within the Linux code base at
+ * this level are also using an unstable dentry d_name.
+ */
+struct name_snapshot {
+    int dummy;
+};
+static inline const char *
+get_stable_dentry_name(struct name_snapshot *s, struct dentry *dp)
+{
+    return dp->d_name.name;
+}
+static inline void
+release_stable_dentry_name(struct name_snapshot *s)
+{
+    return;
+}
+#endif /* HAVE_LINUX_TAKE_DENTRY_NAME_SNAPSHOT */
+
+/*
  * Validate a dentry. Return 1 if unchanged, 0 if VFS layer should re-evaluate.
  *
  * @param[in] pvcp  vcache for the parent directory containing 'dp'
- * @param[in] name  the name of the directory entry for 'dp'
  * @param[in] dp    the dentry we are checking
  */
 static int
-dentry_revalidate_common(struct vcache *pvcp, const char *name, struct dentry *dp)
+dentry_revalidate_common(struct vcache *pvcp, struct dentry *dp)
 {
     cred_t *credp = NULL;
     struct vcache *vcp, *tvc = NULL;
@@ -1399,6 +1444,8 @@ dentry_revalidate_common(struct vcache *pvcp, const char *name, struct dentry *d
     int force_drop = 0;
     afs_uint32 parent_dv;
     int code = 0;
+    struct name_snapshot dname;
+    const char *name;
 
 #ifdef D_SPLICE_ALIAS_RACE
     if (check_dentry_race(dp)) {
@@ -1406,6 +1453,8 @@ dentry_revalidate_common(struct vcache *pvcp, const char *name, struct dentry *d
         return valid;
     }
 #endif
+
+    name = get_stable_dentry_name(&dname, dp);
 
     AFS_GLOCK();
     afs_InitFakeStat(&fakestate);
@@ -1560,6 +1609,8 @@ dentry_revalidate_common(struct vcache *pvcp, const char *name, struct dentry *d
     if (credp)
 	crfree(credp);
 
+    release_stable_dentry_name(&dname);
+
 #ifdef ERRORS_FROM_D_REVALIDATE
     if (code != 0) {
 	/*
@@ -1609,7 +1660,7 @@ afs_linux_dentry_revalidate(struct inode *parent_inode, const struct qstr *name,
     if ((flags & LOOKUP_RCU) != 0) {
 	return -ECHILD;
     }
-    return dentry_revalidate_common(VTOAFS(parent_inode), dp->d_name.name, dp);
+    return dentry_revalidate_common(VTOAFS(parent_inode), dp);
 }
 #else
 # if defined(DOP_REVALIDATE_TAKES_UNSIGNED)
@@ -1640,8 +1691,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 # endif
 
     parent = dget_parent(dp);
-    code = dentry_revalidate_common(VTOAFS(parent->d_inode),
-				    dp->d_name.name, dp);
+    code = dentry_revalidate_common(VTOAFS(parent->d_inode), dp);
     dput(parent);
 
     return code;

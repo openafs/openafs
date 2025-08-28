@@ -62,8 +62,13 @@ LINUX_KEYRING_SEARCH_TAKES_RECURSE
 LINUX_GENERIC_FILLATTR_TAKES_REQUEST_MASK
 LINUX_FILE_LOCK_CORE
 LINUX_WRITEPAGES_USES_FOLIOS
-])
 
+dnl If take_dentry_name_snapshot isn't present
+dnl don't bother checking if name_snapshot uses qstr
+AS_IF([test "x$ac_cv_linux_func_take_dentry_name_snapshot" = "xyes"],
+ [LINUX_STRUCT_NAME_SNAPSHOT_USES_QSTR])
+
+])
 
 AC_DEFUN([OPENAFS_LINUX_KERNEL_MORE_ASSORTED_CHECKS],[
 if test -f "$LINUX_KERNEL_PATH/include/linux/in_systm.h"; then
