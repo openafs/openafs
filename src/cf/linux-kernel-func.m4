@@ -176,6 +176,13 @@ AC_CHECK_LINUX_FUNC([in_compat_syscall],
                     [#include <linux/compat.h>],
                     [in_compat_syscall();])
 
+dnl Linux 4.13 introduced take_dentry_name_snapshot
+AC_CHECK_LINUX_FUNC([take_dentry_name_snapshot],
+		    [[#include <linux/dcache.h>
+		      static struct name_snapshot dname;
+		      static struct dentry *dp;]],
+		    [[take_dentry_name_snapshot(&dname, dp);]])
+
 dnl lru_cache_add exported in Linux 5.8
 dnl    replaces lru_cache_add_file
 dnl removed in linux 6.1.  folio_add_lru is a replacement

@@ -855,6 +855,20 @@ AC_DEFUN([LINUX_KEYRING_SEARCH_TAKES_RECURSE], [
                        [])
 ])
 
+dnl Linux 5.2 changed struct name_snapshot.name from a const char* to a
+dnl struct qstr.
+AC_DEFUN([LINUX_STRUCT_NAME_SNAPSHOT_USES_QSTR],[
+    AC_CHECK_LINUX_BUILD([whether struct name_snapshot uses qstr],
+			 [ac_cv_linux_name_snapshot_uses_qstr],
+			 [[#include <linux/dcache.h>
+			   struct qstr *a;
+			   struct name_snapshot ns;]],
+			 [[if (&ns.name == a) printk("yes\n");]],
+			 [[LINUX_STRUCT_NAME_SNAPSHOT_USES_QSTR]],
+			 [[define if struct name_snapshot uses qstr]],
+			 [[-Werror]])
+])
+
 dnl Linux 6.6 added the 'request_mask' parameter to generic_fillattr.
 AC_DEFUN([LINUX_GENERIC_FILLATTR_TAKES_REQUEST_MASK], [
   AC_CHECK_LINUX_BUILD([whether generic_fillattr has the request_mask parameter],
