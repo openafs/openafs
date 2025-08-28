@@ -113,7 +113,7 @@ Source0: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-src.tar
 Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
-Source20: https://www.central.org/dl/cellservdb/CellServDB.2023-10-31
+Source20: https://www.central.org/dl/cellservdb/CellServDB.2025-08-16
 
 Source997: openafs-buildfedora.pl
 Source998: openafs-buildall.sh
