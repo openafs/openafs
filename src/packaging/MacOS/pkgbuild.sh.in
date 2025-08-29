@@ -357,10 +357,16 @@ if [ x"$PASS1" = x1 ]; then
 
     if [ x"$APP_KEY" != x ] ; then
 	# To be notarized by Apple, all files must be signed.
-	find "$PKGROOT" -type f -exec codesign --verbose --force \
-	    --timestamp --sign "$APP_KEY" $CODESIGN_OPTS {} \;
+	# The first loop signs plain files, while the second one signs bundles (which are directories).
+	# This order is important. If you sign a directory first and then later sign a file inside it,
+	# the directory's signature would become invalid because its contents have changed.
+	# This would cause subsequent notarization to fail, and notarization failures can be difficult
+	# to diagnose.
+	find "$PKGROOT" -type f | while read file ; do
+	    codesign --verbose --force --timestamp --sign "$APP_KEY" $CODESIGN_OPTS "$file"
+	done
 
-	# Sign each 'thing' that we have (commands, kexts, etc)
+	# Sign each non-file (directory) 'thing' that we have (apps, bundles, kexts, etc)
 	for obj in "$DPKGROOT"/Library/OpenAFS/Debug/afs.kext \
 		   "$PKGROOT"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext \
 		   "$PKGROOT"/private/var/db/openafs/etc/afs.kext \
