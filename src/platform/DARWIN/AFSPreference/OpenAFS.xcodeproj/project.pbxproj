@@ -46,7 +46,6 @@
 		3276592410204EE0004CA418 /* FileUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3273088C0C2A9B05008C322B /* FileUtil.m */; };
 		3276592510204EE1004CA418 /* AuthUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3213E9400C2ABFD200D3D2F6 /* AuthUtil.m */; };
 		3276592610204EE2004CA418 /* TaskUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 327756260C3053A100C15D11 /* TaskUtil.m */; };
-		3276592710204EE2004CA418 /* ViewUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 495B043F0D219A2900F1E328 /* ViewUtility.m */; };
 		3276592810204EE3004CA418 /* NSString+search.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B565730D8FAF62005255F2 /* NSString+search.m */; };
 		3276592910204EE4004CA418 /* PListManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 498DCB420DC2240B00D143C8 /* PListManager.m */; };
 		3276592E10204F8D004CA418 /* AFSBackounderMainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3276592D10204F8D004CA418 /* AFSBackounderMainMenu.xib */; };
@@ -78,9 +77,6 @@
 		4934D4170DC38958000511D2 /* PListManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 498DCB420DC2240B00D143C8 /* PListManager.m */; };
 		493564E80CE711F300699A24 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 493564E70CE711F300699A24 /* Carbon.framework */; };
 		4940075B0CE62EB500F40D0A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4940075A0CE62EB500F40D0A /* CoreServices.framework */; };
-		495B04400D219A2900F1E328 /* ViewUtility.h in Headers */ = {isa = PBXBuildFile; fileRef = 495B043E0D219A2900F1E328 /* ViewUtility.h */; };
-		495B04410D219A2900F1E328 /* ViewUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 495B043F0D219A2900F1E328 /* ViewUtility.m */; };
-		495B04420D219A2900F1E328 /* ViewUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 495B043F0D219A2900F1E328 /* ViewUtility.m */; };
 		495C39470D81EA3C003426FC /* Kerberos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 495C39460D81EA3C003426FC /* Kerberos.framework */; };
 		495C39490D81EA3C003426FC /* Kerberos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 495C39460D81EA3C003426FC /* Kerberos.framework */; };
 		495C39CC0D81F742003426FC /* Kerberos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 495C39460D81EA3C003426FC /* Kerberos.framework */; };
@@ -199,8 +195,6 @@
 		493564E70CE711F300699A24 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		4940075A0CE62EB500F40D0A /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
 		494BD47B0C43EDF900DB0A3A /* SystemUIPlugin.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = SystemUIPlugin.h; sourceTree = "<group>"; };
-		495B043E0D219A2900F1E328 /* ViewUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewUtility.h; sourceTree = "<group>"; };
-		495B043F0D219A2900F1E328 /* ViewUtility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewUtility.m; sourceTree = "<group>"; };
 		495C39460D81EA3C003426FC /* Kerberos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Kerberos.framework; path = /System/Library/Frameworks/Kerberos.framework; sourceTree = "<absolute>"; };
 		49683EE40C3446380093C7C8 /* afshlp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = afshlp; sourceTree = BUILT_PRODUCTS_DIR; };
 		49683EEB0C3446600093C7C8 /* afshlp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = afshlp.m; sourceTree = "<group>"; };
@@ -427,8 +421,6 @@
 				3213E9400C2ABFD200D3D2F6 /* AuthUtil.m */,
 				327756250C3053A100C15D11 /* TaskUtil.h */,
 				327756260C3053A100C15D11 /* TaskUtil.m */,
-				495B043E0D219A2900F1E328 /* ViewUtility.h */,
-				495B043F0D219A2900F1E328 /* ViewUtility.m */,
 				32B565720D8FAF62005255F2 /* NSString+search.h */,
 				32B565730D8FAF62005255F2 /* NSString+search.m */,
 				498DCB410DC2240B00D143C8 /* PListManager.h */,
@@ -520,7 +512,6 @@
 				322884030C3E45C800E778CC /* InfoController.h in Headers */,
 				49E43BE70C47D9EE00084436 /* global.h in Headers */,
 				492AFA860C51301D00AEDC93 /* TokenCredentialController.h in Headers */,
-				495B04400D219A2900F1E328 /* ViewUtility.h in Headers */,
 				32B565740D8FAF62005255F2 /* NSString+search.h in Headers */,
 				498DCB430DC2240B00D143C8 /* PListManager.h in Headers */,
 				32DE818C0DF573200069A05C /* LynkCreationController.h in Headers */,
@@ -684,7 +675,6 @@
 				3276592410204EE0004CA418 /* FileUtil.m in Sources */,
 				3276592510204EE1004CA418 /* AuthUtil.m in Sources */,
 				3276592610204EE2004CA418 /* TaskUtil.m in Sources */,
-				3276592710204EE2004CA418 /* ViewUtility.m in Sources */,
 				3276592810204EE3004CA418 /* NSString+search.m in Sources */,
 				3276592910204EE4004CA418 /* PListManager.m in Sources */,
 				3276593110204F9E004CA418 /* AFSBackgrounderDelegate.m in Sources */,
@@ -710,7 +700,6 @@
 				327756270C3053A100C15D11 /* TaskUtil.m in Sources */,
 				3219259D0C339DAE00B55E86 /* TokenCredentialController.m in Sources */,
 				322884050C3E45C800E778CC /* InfoController.m in Sources */,
-				495B04420D219A2900F1E328 /* ViewUtility.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -745,7 +734,6 @@
 				327756290C3053A100C15D11 /* TaskUtil.m in Sources */,
 				322884040C3E45C800E778CC /* InfoController.m in Sources */,
 				492AFA870C51301E00AEDC93 /* TokenCredentialController.m in Sources */,
-				495B04410D219A2900F1E328 /* ViewUtility.m in Sources */,
 				32B565750D8FAF62005255F2 /* NSString+search.m in Sources */,
 				498DCB440DC2240B00D143C8 /* PListManager.m in Sources */,
 				32DE818D0DF573200069A05C /* LynkCreationController.m in Sources */,

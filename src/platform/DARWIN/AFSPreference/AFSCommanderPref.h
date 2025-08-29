@@ -10,7 +10,6 @@
 #import <SecurityInterface/SFAuthorizationView.h>
 #import "AFSPropertyManager.h"
 #import "global.h"
-#import "ViewUtility.h"
 #import "LynkCreationController.h"
 
 // the way to load and unload the menuextra was inspired by MenuMeters developed by Alex Harper
