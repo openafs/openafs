@@ -922,8 +922,9 @@
 	
 	NSFileHandle *fileH = [NSFileHandle fileHandleForReadingAtPath:configFile];
 	NSData *dbCellData = [fileH readDataToEndOfFile];
-	NSString *strData = [[NSString alloc] initWithData:dbCellData
-											  encoding:NSASCIIStringEncoding];
+	NSString *strData = [[[NSString alloc] initWithData:dbCellData
+											  encoding:NSASCIIStringEncoding]
+											  autorelease ];
 	
 	return [strData componentsSeparatedByString:@"\n"];
 }
