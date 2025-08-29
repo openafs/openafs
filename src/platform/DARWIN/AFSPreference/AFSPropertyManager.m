@@ -264,14 +264,6 @@
 }
 
 // -------------------------------------------------------------------------------
-//  useAfsdConfVersion:
-// -------------------------------------------------------------------------------
--(BOOL) useAfsdConfConfigFile
-{
-	return useAfsdConfVersion;
-}
-
-// -------------------------------------------------------------------------------
 //  exceptionOnInvalidPath:
 // -------------------------------------------------------------------------------
 - (void) exceptionOnInvalidPath
@@ -719,27 +711,6 @@
 	return cellList;
 }
 
-
-
-// -------------------------------------------------------------------------------
-//  getAllCellName:
-// -------------------------------------------------------------------------------
--(NSArray*) getAllCellsName {
-	NSMutableArray *allCelListName = [[[NSMutableArray alloc] init] autorelease];
-	for(int idx = 0; idx < [cellList count]; idx++){
-		DBCellElement *elemnt = [cellList objectAtIndex:idx];
-		[allCelListName addObject:[elemnt getCellName]];
-	}
-	return allCelListName;
-}
-
-// -------------------------------------------------------------------------------
-//  getCellList:
-// -------------------------------------------------------------------------------
--(NSArray*) getUserDefaultForTokenCells {
-	return userDefaultCellArray;
-}
-
 // -------------------------------------------------------------------------------
 //  getDefaultCellName:
 // -------------------------------------------------------------------------------
@@ -1158,38 +1129,6 @@
 }
 
 // -------------------------------------------------------------------------------
-//  -(void) installConfigurationFile
-// -------------------------------------------------------------------------------
--(void) installConfigurationFile:(NSString*)srcConfFile 
-						destPath:(NSString*)destPath
-{
-	// delete the file original file
-
-	if([futil autorizedDelete:destPath] != noErr){
-		@throw [NSException exceptionWithName:@"installConfigurationFile:autorizedDelete" 
-									   reason:destPath
-									 userInfo:nil];
-	}
-	
-	// move the file
-	if([futil autorizedMoveFile:srcConfFile
-						 toPath:destPath] != noErr) {
-		@throw [NSException exceptionWithName:@"saveConfigurationFiles:autorizedMoveFile" 
-									   reason:srcConfFile
-									 userInfo:nil];
-	}
-	
-	
-	if([futil autorizedChown:destPath 
-					   owner:@"root"
-					   group:@"wheel"]!= noErr) {
-		@throw [NSException exceptionWithName:@"saveConfigurationFiles:autorizedChown" 
-									   reason:destPath
-									 userInfo:nil];
-	}
-}
-
-// -------------------------------------------------------------------------------
 //  -(void) backupConfigurationFiles
 // -------------------------------------------------------------------------------
 -(void) backupConfigurationFiles
@@ -1234,16 +1173,6 @@
 		break;
 	    }
 	}
-	return result;
-}
-
-// -------------------------------------------------------------------------------
-//  checkAfsStatusForStartup
-// -------------------------------------------------------------------------------
--(BOOL) checkAfsStatusForStartup {
-	BOOL result = NO;
-		//NSString *fsResult = [TaskUtil executeTaskSearchingPath:@"launchctl" args:[NSArray arrayWithObjects: @"list", nil]];
-		//result = (fsResult?([fsResult rangeOfString:@AFS_LAUNCHCTL_GREP_STR].location != NSNotFound):NO);
 	return result;
 }
 

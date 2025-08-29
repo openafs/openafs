@@ -485,7 +485,6 @@
     [nVolEntry setIntValue:[afsProperty nVolEntry]];
 
     //new version property
-    //[verbose setEnabled:[afsProperty useAfsdConfConfigFile]];
     [verbose setState:[afsProperty verbose]?NSOnState:NSOffState];
 
 }

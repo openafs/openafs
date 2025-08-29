@@ -76,18 +76,6 @@
  @abstract   (brief description)
  @discussion (comprehensive description)
  */
--(NSArray*) getAllCellsName;
-/*!
- @method     
- @abstract   (brief description)
- @discussion (comprehensive description)
- */
--(NSArray*) getUserDefaultForTokenCells;
-/*!
- @method     
- @abstract   (brief description)
- @discussion (comprehensive description)
- */
 -(NSArray*) getDefaultForTokenCellsName;
 /*!
  @method     
@@ -379,14 +367,11 @@
 -(void) backupConfigurationFiles;
 -(void) saveConfigurationFiles:(BOOL) makeBackup;
 -(void) saveCacheConfigurationFiles:(BOOL) makeBackup;
--(void) installConfigurationFile:(NSString*)srcConfFile destPath:(NSString*) destPath;
 -(NSArray*) getTokenList;
 -(BOOL) checkAfsStatus;
--(BOOL) checkAfsStatusForStartup;
 -(void) klog:(NSString*)uName uPwd:(NSString*)uPwd  cell:(NSString*)theCell;
 -(void) aklog:(NSString*)theCell noKerberosCall:(BOOL)krb5CallEnable;
 -(void) getTokens:(BOOL)klogAklogFlag usr:(NSString*)usr pwd:(NSString*)pwd;
 -(void) unlog:(NSString*)cell;
 -(NSString*) makeChaceParamString;
--(BOOL) useAfsdConfConfigFile;
 @end
