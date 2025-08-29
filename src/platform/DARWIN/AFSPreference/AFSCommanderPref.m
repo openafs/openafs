@@ -12,7 +12,6 @@
 #import "InfoController.h"
 #import "TaskUtil.h"
 #import "PListManager.h"
-#import "DialogUtility.h"
 #import "NSString+search.h"
 #include <sys/param.h>
 #include <sys/stat.h>

@@ -49,7 +49,6 @@
 		3276592710204EE2004CA418 /* ViewUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 495B043F0D219A2900F1E328 /* ViewUtility.m */; };
 		3276592810204EE3004CA418 /* NSString+search.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B565730D8FAF62005255F2 /* NSString+search.m */; };
 		3276592910204EE4004CA418 /* PListManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 498DCB420DC2240B00D143C8 /* PListManager.m */; };
-		3276592A10204EE5004CA418 /* DialogUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B766440DCA47A50014A80F /* DialogUtility.m */; };
 		3276592E10204F8D004CA418 /* AFSBackounderMainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3276592D10204F8D004CA418 /* AFSBackounderMainMenu.xib */; };
 		3276593110204F9E004CA418 /* AFSBackgrounderDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3276593010204F9E004CA418 /* AFSBackgrounderDelegate.m */; };
 		3276594110204FFA004CA418 /* Kerberos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 495C39460D81EA3C003426FC /* Kerberos.framework */; };
@@ -104,8 +103,6 @@
 		499716950C23E370001339E3 /* DBCellElement.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF5F0C211D220060D66D /* DBCellElement.m */; };
 		499716960C23E370001339E3 /* DBCellElement.h in Headers */ = {isa = PBXBuildFile; fileRef = 322CEF5E0C211D220060D66D /* DBCellElement.h */; };
 		49AF1F480C25B52A006A046E /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 49AF1F470C25B52A006A046E /* InfoPlist.strings */; };
-		49B766450DCA47A50014A80F /* DialogUtility.h in Headers */ = {isa = PBXBuildFile; fileRef = 49B766430DCA47A50014A80F /* DialogUtility.h */; };
-		49B766460DCA47A50014A80F /* DialogUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B766440DCA47A50014A80F /* DialogUtility.m */; };
 		49E05CAD0C2674DA002AAEF2 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8D202CF70486D31800D8A456 /* Info.plist */; };
 		49E43BE70C47D9EE00084436 /* global.h in Headers */ = {isa = PBXBuildFile; fileRef = 49E43BE60C47D9EE00084436 /* global.h */; };
 		49E43D2E0C480B8200084436 /* afshlp in Resources */ = {isa = PBXBuildFile; fileRef = 49683EE40C3446380093C7C8 /* afshlp */; };
@@ -209,8 +206,6 @@
 		49683EEB0C3446600093C7C8 /* afshlp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = afshlp.m; sourceTree = "<group>"; };
 		498DCB410DC2240B00D143C8 /* PListManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PListManager.h; sourceTree = "<group>"; };
 		498DCB420DC2240B00D143C8 /* PListManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PListManager.m; sourceTree = "<group>"; };
-		49B766430DCA47A50014A80F /* DialogUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DialogUtility.h; sourceTree = "<group>"; };
-		49B766440DCA47A50014A80F /* DialogUtility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DialogUtility.m; sourceTree = "<group>"; };
 		49E43BE60C47D9EE00084436 /* global.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = global.h; sourceTree = "<group>"; };
 		8D202CF70486D31800D8A456 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = AFSBackgrounder/resource/Info.plist; sourceTree = "<group>"; };
 		8D202CF80486D31800D8A456 /* OpenAFS.prefPane */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OpenAFS.prefPane; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -438,8 +433,6 @@
 				32B565730D8FAF62005255F2 /* NSString+search.m */,
 				498DCB410DC2240B00D143C8 /* PListManager.h */,
 				498DCB420DC2240B00D143C8 /* PListManager.m */,
-				49B766430DCA47A50014A80F /* DialogUtility.h */,
-				49B766440DCA47A50014A80F /* DialogUtility.m */,
 				324F490C115548E2001A763B /* Krb5Util.h */,
 				324F490D115548E2001A763B /* Krb5Util.m */,
 			);
@@ -530,7 +523,6 @@
 				495B04400D219A2900F1E328 /* ViewUtility.h in Headers */,
 				32B565740D8FAF62005255F2 /* NSString+search.h in Headers */,
 				498DCB430DC2240B00D143C8 /* PListManager.h in Headers */,
-				49B766450DCA47A50014A80F /* DialogUtility.h in Headers */,
 				32DE818C0DF573200069A05C /* LynkCreationController.h in Headers */,
 				324F490E115548E2001A763B /* Krb5Util.h in Headers */,
 			);
@@ -695,7 +687,6 @@
 				3276592710204EE2004CA418 /* ViewUtility.m in Sources */,
 				3276592810204EE3004CA418 /* NSString+search.m in Sources */,
 				3276592910204EE4004CA418 /* PListManager.m in Sources */,
-				3276592A10204EE5004CA418 /* DialogUtility.m in Sources */,
 				3276593110204F9E004CA418 /* AFSBackgrounderDelegate.m in Sources */,
 				3228B9B01020526900DF98DA /* main.m in Sources */,
 				3231522010243E09005901AA /* AFSMenuCredentialContoller.m in Sources */,
@@ -757,7 +748,6 @@
 				495B04410D219A2900F1E328 /* ViewUtility.m in Sources */,
 				32B565750D8FAF62005255F2 /* NSString+search.m in Sources */,
 				498DCB440DC2240B00D143C8 /* PListManager.m in Sources */,
-				49B766460DCA47A50014A80F /* DialogUtility.m in Sources */,
 				32DE818D0DF573200069A05C /* LynkCreationController.m in Sources */,
 				324F490F115548E2001A763B /* Krb5Util.m in Sources */,
 			);
