@@ -37,6 +37,12 @@ rx_GetRemoteStatus(struct rx_call *call)
     return call->remoteStatus;
 }
 
+int
+rx_GetLocalStatus(struct rx_call *call)
+{
+    return call->localStatus;
+}
+
 void
 rx_SetLocalStatus(struct rx_call *call, int status)
 {

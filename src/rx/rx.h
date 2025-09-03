@@ -79,6 +79,7 @@ extern int rx_ConnError(struct rx_connection *);
 extern struct rx_connection *rx_ConnectionOf(struct rx_call *call);
 extern int rx_Error(struct rx_call *call);
 extern int rx_GetRemoteStatus(struct rx_call *call);
+extern int rx_GetLocalStatus(struct rx_call *call);
 extern void rx_SetLocalStatus(struct rx_call *call, int status);
 extern int rx_GetCallAbortCode(struct rx_call *call);
 extern void rx_SetCallAbortCode(struct rx_call *call, int code);
@@ -204,8 +205,6 @@ int ntoh_syserr_conv(int error);
 
 #define RX_WAIT     1
 #define RX_DONTWAIT 0
-
-#define rx_GetLocalStatus(call, status) ((call)->localStatus)
 
 static_inline int
 rx_IsLoopbackAddr(afs_uint32 addr)
