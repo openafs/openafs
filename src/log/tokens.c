@@ -37,7 +37,7 @@ main(int argc, char **argv)
     time_t tokenExpireTime;	/*When token expires */
     char *expireString;		/*Char string of expiration time */
     char UserName[MAXKTCNAMELEN * 2 + 2]; /*Printable user name */
-    char *cellName;
+    char *cellName = NULL;
     struct ktc_principal clientName;	/* service name for ticket */
     struct ktc_token token;	/* the token we're printing */
     struct ktc_setTokenData *tokenSet;
@@ -71,6 +71,8 @@ main(int argc, char **argv)
     cellNum = 0;
     current_time = time(0);
     while (1) {
+	free(cellName);
+	cellName = NULL;
 	rc = ktc_ListTokensEx(cellNum, &cellNum, &cellName);
 	if (rc) {
 	    /* only error is now end of list */
