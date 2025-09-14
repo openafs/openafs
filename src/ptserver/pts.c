@@ -19,6 +19,7 @@
 #include <WINNT/afsreg.h>
 #endif
 
+#include <afs/opr.h>
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
@@ -88,29 +89,43 @@ pts_Quit(struct cmd_syndesc *as, void *arock)
 static int
 pts_Source(struct cmd_syndesc *as, void *arock)
 {
-    FILE *fd;
-    struct sourcestack *sp;
+    int code;
+    FILE *fp = NULL;
+    struct sourcestack *sp = NULL;
+
+    if (as->parms[0].items == NULL) {  /* -file */
+	code = 1;
+	goto error;
+    }
+
+    fp = fopen(as->parms[0].items->data, "r");  /* -file */
+    if (fp == NULL) {
+	code = errno;
+	perror(as->parms[0].items->data);
+	goto error;
+    }
+
+    sp = calloc(1, sizeof(*sp));
+    if (sp == NULL) {
+	code = ENOMEM;
+	goto error;
+    }
 
     finished = 0;
-    if (!as->parms[0].items) {
-/* can this happen? */
-	return 1;
-    }
-    fd = fopen(as->parms[0].items->data, "r");
-    if (!fd) {
-	perror(as->parms[0].items->data);
-	return errno;
-    }
-    sp = malloc(sizeof *sp);
-    if (!sp) {
-	return errno ? errno : ENOMEM;
-    } else {
-	sp->s_next = shead;
-	sp->s_file = source;
-	shead = sp;
-	source = fd;
-    }
+    sp->s_next = shead;
+    sp->s_file = source;
+    shead = sp;
+    source = fp;
+
     return 0;
+
+ error:
+    opr_Assert(code != 0);
+    if (fp != NULL) {
+	fclose(fp);
+    }
+    free(sp);
+    return code;
 }
 
 static int
