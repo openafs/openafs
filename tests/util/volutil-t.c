@@ -399,12 +399,10 @@ test_GetInt64(void)
 	{	    "0x",  0,  0 },
 	{	   "-0x",  0,  0 },
 	/* Whitespace */
-#if 0
-	{	   "   ",    0,  0, "<sp><sp><sp>" },  /* bug: infinite loop */
-	{	 "  123",  123,  0, "<sp><sp>123" },   /* bug: infinite loop */
-	{      "\t\t123",  123,  0, "<tab><tab>123" }, /* bug: infinite loop */
-	{       "\t 123",  123,  0, "<tab><sp>123", }, /* bug: infinite loop */
-#endif
+	{	   "   ",    0,  0, "<sp><sp><sp>" },
+	{	 "  123",  123,  0, "<sp><sp>123" },
+	{      "\t\t123",  123,  0, "<tab><tab>123" },
+	{       "\t 123",  123,  0, "<tab><sp>123", },
 	{	 "123  ",    0, -1, "123<sp><sp>" },   /* Trailing whitespace is invalid. */
 	{	 "\n123",    0, -1, "<newline>123" },  /* Newlines are invalid. */
 	{	 "\r123",    0, -1, "<return>123" },   /* Returns are invalid. */
@@ -477,12 +475,10 @@ test_GetUInt64(void)
 	{	      "",  0,  0, "<empty>" },
 	{	    "0x",  0,  0 },
 	/* Whitespace */
-#if 0
-	{	   "   ",   0,  0, "<sp><sp><sp>" },   /* bug: infinite loop */
-	{	 "  123", 123,  0, "<sp><sp>123" },    /* bug: infinite loop */
-	{      "\t\t123", 123,  0, "<tab><tab>123" },  /* bug: infinite loop */
-	{       "\t 123", 123,  0, "<tab><sp>123" },   /* bug: infinite loop */
-#endif
+	{	   "   ",   0,  0, "<sp><sp><sp>" },
+	{	 "  123", 123,  0, "<sp><sp>123" },
+	{      "\t\t123", 123,  0, "<tab><tab>123" },
+	{       "\t 123", 123,  0, "<tab><sp>123" },
 	{	 "123  ",   0, -1, "123<sp><sp>" },  /* Trailing whitespace is invalid. */
 	{	 "\n123",   0, -1, "<newline>123" }, /* Newlines are invalid. */
 	{	 "\r123",   0, -1, "<return>123" },  /* Returns are invalid. */
@@ -526,7 +522,7 @@ test_GetUInt64(void)
 int
 main(int argc, char **argv)
 {
-    plan(1607);
+    plan(1623);
 
     test_partition_name_to_id();
     test_partition_id_to_name();

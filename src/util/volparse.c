@@ -355,7 +355,7 @@ util_GetInt64(char *as, afs_int64 * aval)
     negative = 0;
 
     /* skip over leading spaces */
-    while ((tc = *as)) {
+    for (tc = *as; tc !='\0'; as++, tc = *as) {
 	if (tc != ' ' && tc != '\t')
 	    break;
     }
@@ -378,12 +378,11 @@ util_GetInt64(char *as, afs_int64 * aval)
 	base = 10;
 
     /* compute the # itself */
-    while ((tc = *as)) {
+    for (tc = *as; tc !='\0'; as++, tc = *as) {
 	if (!ismeta(tc, base))
 	    return -1;
 	total *= base;
 	total += getmeta(tc);
-	as++;
     }
 
     if (negative)
@@ -403,7 +402,7 @@ util_GetUInt64(char *as, afs_uint64 * aval)
     total = 0; /* initialize things */
 
     /* skip over leading spaces */
-    while ((tc = *as)) {
+    for (tc = *as; tc !='\0'; as++, tc = *as) {
 	if (tc != ' ' && tc != '\t')
 	    break;
     }
@@ -420,12 +419,11 @@ util_GetUInt64(char *as, afs_uint64 * aval)
 	base = 10;
 
     /* compute the # itself */
-    while ((tc = *as)) {
+    for (tc = *as; tc !='\0'; as++, tc = *as) {
 	if (!ismeta(tc, base))
 	    return -1;
 	total *= base;
 	total += getmeta(tc);
-	as++;
     }
 
     *aval = total;
