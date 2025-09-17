@@ -1765,9 +1765,15 @@ SetRestrict(struct cmd_syndesc *as, void *arock)
 {
     struct rx_connection *tconn;
     afs_int32 code, val;
+    char *mode;
 
     tconn = GetConn(as, 1);
-    util_GetInt32(as->parms[1].items->data, &val);
+    mode = as->parms[1].items->data;
+    code = util_GetInt32(mode, &val);
+    if (code != 0) {
+	fprintf(stderr, "bos: invalid -mode '%s'\n", mode);
+	return 1;
+    }
     code = BOZO_SetRestrictedMode(tconn, val);
     if (code)
 	fprintf(stderr, "bos: failed to set restricted mode (%s)\n", em(code));
