@@ -1330,6 +1330,8 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_bindir}/rxgen
 %{_includedir}/afs
 %{_includedir}/afs/afs_lock.h
+# Note lock.h is a compat header, and should be removed when possible.
+%{_includedir}/lock.h
 %{_includedir}/lwp.h
 %{_includedir}/rx
 %{_includedir}/timer.h
