@@ -16,7 +16,7 @@
 #ifdef	KERNEL
 #include "afs/param.h"
 #include "afs_osi.h"
-#include "lock.h"
+#include "afs/lock.h"
 #include "afs_trace.h"
 #else
 #include <lock.h>
