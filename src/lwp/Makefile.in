@@ -25,7 +25,8 @@ LT_libs = $(MT_LIBS)
 all: liboafs_lwpcompat.la liblwpcompat_pic.la \
 	${TOP_LIBDIR}/liblwp.a depinstall test
 
-depinstall: ${TOP_INCDIR}/afs/afs_lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/timer.h \
+depinstall: ${TOP_INCDIR}/afs/afs_lock.h ${TOP_INCDIR}/lwp.h \
+	${TOP_INCDIR}/afs/timer.h \
 	AFS_component_version_number.c
 
 ${TOP_LIBDIR}/liblwp.a: liblwp.a
@@ -37,7 +38,7 @@ ${TOP_INCDIR}/afs/afs_lock.h: afs_lock.h
 ${TOP_INCDIR}/lwp.h: lwp.h
 	${INSTALL_DATA} $? $@
 
-${TOP_INCDIR}/timer.h: timer.h
+${TOP_INCDIR}/afs/timer.h: timer.h
 	${INSTALL_DATA} $? $@
 
 #
@@ -185,7 +186,7 @@ install: liblwp.a afs_lock.h lwp.h timer.h
 	${INSTALL_DATA} liblwp.a ${DESTDIR}${libdir}/liblwp.a
 	${INSTALL_DATA} ${srcdir}/afs_lock.h ${DESTDIR}${includedir}/afs/afs_lock.h
 	${INSTALL_DATA} ${srcdir}/lwp.h ${DESTDIR}${includedir}/lwp.h
-	${INSTALL_DATA} ${srcdir}/timer.h ${DESTDIR}${includedir}/timer.h
+	${INSTALL_DATA} ${srcdir}/timer.h ${DESTDIR}${includedir}/afs/timer.h
 
 dest: liblwp.a afs_lock.h lwp.h timer.h
 	${INSTALL} -d ${DEST}/lib
@@ -193,7 +194,7 @@ dest: liblwp.a afs_lock.h lwp.h timer.h
 	${INSTALL_DATA} liblwp.a ${DEST}/lib/liblwp.a
 	${INSTALL_DATA} ${srcdir}/afs_lock.h ${DEST}/include/afs/afs_lock.h
 	${INSTALL_DATA} ${srcdir}/lwp.h ${DEST}/include/lwp.h
-	${INSTALL_DATA} ${srcdir}/timer.h ${DEST}/include/timer.h
+	${INSTALL_DATA} ${srcdir}/timer.h ${DEST}/include/afs/timer.h
 
 buildtools: ${TOP_LIBDIR}/liblwp.a depinstall
 
