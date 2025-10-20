@@ -1239,7 +1239,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_bindir}/rxgen
 %{_includedir}/afs
 %{_includedir}/afs/afs_lock.h
-%{_includedir}/afs/timer.h
 %{_includedir}/lwp.h
 %{_includedir}/rx
 %{_includedir}/ubik.h

@@ -1623,7 +1623,6 @@
                                 <File Id="filestds_H" Name="stds.h" LongName="stds.h" DiskId="1" src="$(var.IncDir)afs\stds.h" /> 
                                 <File Id="filesys_prototypes_H" Name="sysproto.h" LongName="sys_prototypes.h" DiskId="1" src="$(var.IncDir)afs\sys_prototypes.h" />
                                 <File Id="filetcdata_H" Name="tcdata.h" LongName="tcdata.h" DiskId="1" src="$(var.IncDir)afs\tcdata.h" /> 
-                                <File Id="filetimer_H" Name="timer.h" LongName="timer.h" DiskId="1" src="$(var.IncDir)afs\timer.h" />
                                 <File Id="filetoken_H" Name="token.h" LongName="token.h" DiskId="1" src="$(var.IncDir)afs\token.h" />
                                 <File Id="fileunified_afs_H" Name="UNIAFS.h" LongName="unified_afs.h" DiskId="1" src="$(var.IncDir)afs\unified_afs.h" />
                                 <File Id="fileusd_H" Name="usd.h" LongName="usd.h" DiskId="1" src="$(var.IncDir)afs\usd.h" /> 
