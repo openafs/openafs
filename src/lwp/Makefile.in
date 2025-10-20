@@ -184,7 +184,6 @@ install: liblwp.a afs_lock.h lwp.h timer.h
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_DATA} liblwp.a ${DESTDIR}${libdir}/liblwp.a
 	${INSTALL_DATA} ${srcdir}/afs_lock.h ${DESTDIR}${includedir}/afs/afs_lock.h
-	${INSTALL_DATA} ${srcdir}/old_lock_compat.h ${DESTDIR}${includedir}/lock.h
 	${INSTALL_DATA} ${srcdir}/lwp.h ${DESTDIR}${includedir}/lwp.h
 	${INSTALL_DATA} ${srcdir}/timer.h ${DESTDIR}${includedir}/timer.h
 
@@ -193,7 +192,6 @@ dest: liblwp.a afs_lock.h lwp.h timer.h
 	${INSTALL} -d ${DEST}/include
 	${INSTALL_DATA} liblwp.a ${DEST}/lib/liblwp.a
 	${INSTALL_DATA} ${srcdir}/afs_lock.h ${DEST}/include/afs/afs_lock.h
-	${INSTALL_DATA} ${srcdir}/old_lock_compat.h ${DEST}/include/lock.h
 	${INSTALL_DATA} ${srcdir}/lwp.h ${DEST}/include/lwp.h
 	${INSTALL_DATA} ${srcdir}/timer.h ${DEST}/include/timer.h
 
