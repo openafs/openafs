@@ -44,6 +44,7 @@ if (!defined(gethostbyname(hostname()))) {
 plan tests => 2;
 
 my $cmd = obj_path("tests/auth/genkeyfiles");
+my $cmd_wrapper = obj_path("tests/cmdwrap");
 $cmd = abs_path($cmd);
 
 my $keyfile = src_path("tests/auth/KeyFile.short");
@@ -56,7 +57,7 @@ my $dir = tempdir('afs_XXXXXX', CLEANUP => 1);
 chdir($dir)
     or die("chdir $dir failed: $?");
 
-system($cmd) == 0
+system($cmd_wrapper, $cmd) == 0
     or die("$cmd failed: $?");
 
 ok(compare("KeyFile", $keyfile) == 0,

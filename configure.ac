@@ -152,6 +152,7 @@ AC_CONFIG_FILES([
     src/xstat/Makefile
     src/helper-splint.sh
     tests/Makefile
+    tests/cmdwrap
     tests/auth/Makefile
     tests/cmd/Makefile
     tests/common/Makefile
@@ -180,7 +181,8 @@ AS_CASE([$AFS_SYSNAME],
 
 AC_CONFIG_COMMANDS([default],[chmod a+x src/config/shlib-build
  chmod a+x src/config/shlib-install
- chmod a+x src/config/cc-wrapper],[])
+ chmod a+x src/config/cc-wrapper
+ chmod a+x tests/cmdwrap],[])
 AC_OUTPUT
 
 # print a final summary

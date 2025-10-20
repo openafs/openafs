@@ -30,6 +30,7 @@ TestListAddrs(struct ubik_client *client, char *dirname)
     bulkaddrs addrs;
     char *vos;
     char *cmd = NULL;
+    char *cmd_wrapper;
     struct afstest_cmdinfo cmdinfo;
 
     afs_uint32 addrsA[] = {0x0a000000};
@@ -57,11 +58,12 @@ TestListAddrs(struct ubik_client *client, char *dirname)
     is_int(0, code, "Second address registration succeeds");
 
     /* Now we need to run vos ListAddrs and see what happens ... */
+    cmd_wrapper = afstest_obj_path("tests/cmdwrap");
     vos = afstest_obj_path("src/volser/vos");
 
-    cmd = afstest_asprintf("'%s' listaddrs -config '%s' "
+    cmd = afstest_asprintf("'%s' '%s' listaddrs -config '%s' "
 			   "-noauth -noresolve",
-			   vos, dirname);
+			   cmd_wrapper, vos, dirname);
 
     memset(&cmdinfo, 0, sizeof(cmdinfo));
     cmdinfo.exit_code = 0;

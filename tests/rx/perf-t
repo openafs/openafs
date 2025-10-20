@@ -9,6 +9,7 @@ use Test::More tests=>4;
 use POSIX qw(:sys_wait_h :signal_h);
 
 my $port = 4000;
+my $cmd_wrapper = obj_path("tests/cmdwrap");
 my $rxperf = obj_path("src/tools/rxperf/rxperf");
 my $rc;
 
@@ -21,9 +22,9 @@ wait_for_server {
         if ($i > 0) {
             sleep(1);
         }
-        my $rc = system($rxperf, "client", "-c", "rpc", "-p", $port, "-S",
-                        "128", "-R", "128", "-T", "1", "-H", "-N",
-                        "-o", "/dev/null");
+	my $rc = system($cmd_wrapper, $rxperf, "client", "-c", "rpc", "-p",
+			$port, "-S", "128", "-R", "128", "-T", "1", "-H", "-N",
+			"-o", "/dev/null");
         if ($rc == 0) {
             return;
         }
@@ -40,8 +41,8 @@ if ($pid == -1) {
     fail("Failed to fork rxperf server");
     exit(1);
 } elsif ($pid == 0) {
-    exec({$rxperf}
-	 "rxperf", "server", "-p", $port, "-u", "1024", "-H", "-N");
+    exec($cmd_wrapper, $rxperf,
+	 "server", "-p", $port, "-u", "1024", "-H", "-N");
     die("Kabooom ?");
 }
 # Give the server some time to initialize
@@ -50,10 +51,13 @@ wait_for_server($pid);
 pass("Started rxperf server");
 
 # Start up an rxperf client, and run a test
-$rc = system("$rxperf client -c rpc -p $port -S 1048576 -R 1048576 -T 30 -u 1024 -H -N");
+$rc = system($cmd_wrapper, $rxperf, "client", "-c", "rpc", "-p", $port, "-S",
+	     "1048576", "-R", "1048576", "-T", "30", "-u", "1024", "-H", "-N");
 is($rc, 0, "single threaded client ran successfully");
 
-$rc = system("$rxperf client -c rpc -p $port -S 1048576 -R 1048576 -T 1 -t 30 -u 1024 -H -N");
+$rc = system($cmd_wrapper, $rxperf, "client", "-c", "rpc", "-p", $port, "-S",
+	     "1048576", "-R", "1048576", "-T", "1", "-t", "30", "-u", "1024",
+	     "-H", "-N");
 is($rc, 0, "multi threaded client ran succesfully");
 
 # Kill the server, and check its exit code

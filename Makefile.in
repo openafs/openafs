@@ -942,6 +942,7 @@ distclean: clean
 	src/volser/Makefile \
 	src/xstat/Makefile  \
 	tests/Makefile \
+	tests/cmdwrap \
 	tests/tap/Makefile \
 	tests/auth/Makefile \
 	tests/cmd/Makefile \

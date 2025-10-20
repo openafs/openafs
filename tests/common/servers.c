@@ -104,12 +104,13 @@ afstest_StartVLServer(char *dirname, pid_t *serverPid)
 	/* Argggggghhhhh */
     } else if (pid == 0) {
 	char *binPath, *dbPath;
+	char *cmdWrapper = afstest_obj_path("tests/cmdwrap");
 
 	/* Child */
 	binPath = afstest_obj_path("src/tvlserver/vlserver");
 	dbPath = afstest_asprintf("%s/vldb", dirname);
 
-	execl(binPath, "vlserver",
+	execl(cmdWrapper, cmdWrapper, binPath,
 	      "-logfile", logPath, "-database", dbPath, "-config", dirname, NULL);
 	fprintf(stderr, "Running %s failed\n", binPath);
 	exit(1);

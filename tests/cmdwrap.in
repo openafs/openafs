@@ -1,16 +1,18 @@
 #!/bin/sh
-# libwrap - run a command with the specified library paths
-# Parameters: path_to_library command_to_run command_parameters
+#
+# cmdwrap - run a command with a prepared environment
+# Parameters: command_to_run command_parameters
+#
+# This script acts as a general-purpose command wrapper. Before executing the
+# given command, it sets up the necessary environment variables (such as library
+# paths and other runtime settings).
 #
 # This was written to help run the OpenAFS test suite.
 #
 # License: MIT
 
-NEWLIB_PATH="$1"
-export NEWLIB_PATH
-
-shift
 TEST_COMMAND="$1"
+NEWLIB_PATH="@TOP_OBJDIR@/lib"
 
 # Linux, HP-UX (64bit), Solaris, BSD
 if [ -z "$LD_LIBRARY_PATH" ] ; then

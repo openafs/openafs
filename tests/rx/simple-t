@@ -33,12 +33,13 @@ use POSIX qw(:sys_wait_h :signal_h);
 
 my $port = 4000;
 my $service = 1234;
+my $cmd_wrapper = obj_path("tests/cmdwrap");
 my $server = obj_path("tests/rx/simple-server");
 my $client = obj_path("tests/rx/simple-client");
 my $server_pid;
 
 # Start up the server
-$server_pid = open(my $server_fh, '-|', $server, $port, $service);
+$server_pid = open(my $server_fh, '-|', $cmd_wrapper, $server, $port, $service);
 if (!defined($server_pid)) {
     die("Failed to run $server: $!");
 }
@@ -56,7 +57,7 @@ pass("Started server");
 # Start up a client, and run a test
 my $message = 'Hello OpenAFS';
 my $expected = 'Uryyb BcraNSF';
-my $got = qx($client localhost $port $service "$message");
+my $got = qx($cmd_wrapper $client localhost $port $service "$message");
 chomp($got);
 
 is($?, 0, "Client ran successfully");
@@ -64,7 +65,7 @@ is($got, $expected, "Rot13 performed successfully");
 
 # Test a case where the server aborts the call
 $message = 'This exceeds the message size';
-$got = qx($client localhost $port $service "$message" 2>&1);
+$got = qx($cmd_wrapper $client localhost $port $service "$message" 2>&1);
 $expected = "simple-client: rx_Read failed
 simple-client: call aborted with code 201
 ";

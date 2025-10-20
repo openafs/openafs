@@ -32,8 +32,7 @@ RUNTESTS_ARGS=$(RUNTESTS_DEFAULT_$(TESTS)) $(TESTS)
 
 # To run specific tests, run e.g. 'make check TESTS="rx/foo opr/foo"'
 check test tests: all runtests
-	MAKECHECK=1 $(abs_top_srcdir)/tests/libwrap @TOP_OBJDIR@/lib \
-	    ./runtests $(RUNTESTS_ARGS)
+	MAKECHECK=1 $(abs_top_builddir)/tests/cmdwrap ./runtests $(RUNTESTS_ARGS)
 
 # To start an interactive subshell with the environment required to run
 # the test programs, run 'make shell'. Run 'exit' to end the subshell.
@@ -57,7 +56,7 @@ shell: all runtests
 	    C_TAP_BUILD=@abs_top_builddir@/tests \
 	    SOURCE=@abs_top_srcdir@/tests \
 	    BUILD=@abs_top_builddir@/tests \
-	    @abs_top_srcdir@/tests/libwrap @TOP_OBJDIR@/lib $(SHELL); \
+	    @abs_top_builddir@/tests/cmdwrap $(SHELL); \
 	fi
 
 install:

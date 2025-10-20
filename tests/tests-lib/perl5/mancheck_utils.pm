@@ -27,11 +27,13 @@ sub check_command_binary {
 sub lookup_sub_commands {
     my ($srcdir, $command) = @_;
 
+    my $cmd_wrapper = obj_path("tests/cmdwrap");
     my $fullpathcommand = "$srcdir/$command";
     check_command_binary($fullpathcommand);
 
     # build up our list of available commands from the help output
-    open(HELPOUT, "$fullpathcommand help 2>&1 |") or BAIL_OUT("can't fork: $!");
+    open(HELPOUT, "$cmd_wrapper $fullpathcommand help 2>&1 |")
+	or BAIL_OUT("can't fork: $!");
     my @subcommlist;
     my @comm;
     while (<HELPOUT>) {
