@@ -3794,15 +3794,34 @@ afs_linux_prepare_write(struct file *file, struct page *page, unsigned from,
     return 0;
 }
 
+#if defined(HAVE_LINUX_WRITE_BEGIN_END_KIOCB)
+/*
+ * When aops write_begin and write_end are passed a kiocb, it is implied that
+ * write_begin and write_end take a folio and that __filemap_get_folio is present.
+ */
+# define HAVE_LINUX_WRITE_BEGIN_END_FOLIO
+# define HAVE_LINUX_FILEMAP_GET_FOLIO
+#endif
+
 #if defined(HAVE_LINUX_WRITE_BEGIN_END_FOLIO)
+# if defined(HAVE_LINUX_WRITE_BEGIN_END_KIOCB)
+static int
+afs_linux_write_end(const struct kiocb *iocb, struct address_space *mapping,
+		    loff_t pos, unsigned len, unsigned copied,
+		    struct folio *folio, void *fsdata)
+# else
 static int
 afs_linux_write_end(struct file *file, struct address_space *mapping,
 		    loff_t pos, unsigned len, unsigned copied,
 		    struct folio *folio, void *fsdata)
+# endif
 {
     int code;
     unsigned int from = pos & (PAGE_SIZE - 1);
     struct page *page = folio_page(folio, 0);
+# if defined(HAVE_LINUX_WRITE_BEGIN_END_KIOCB)
+    struct file *file = iocb->ki_filp;
+# endif
 
     code = afs_linux_commit_write(file, page, from, from + copied);
 
@@ -3812,15 +3831,25 @@ afs_linux_write_end(struct file *file, struct address_space *mapping,
 }
 
 # if defined(HAVE_LINUX_FILEMAP_GET_FOLIO)
+#  if defined(HAVE_LINUX_WRITE_BEGIN_END_KIOCB)
+static int
+afs_linux_write_begin(const struct kiocb *iocb, struct address_space *mapping,
+		      loff_t pos, unsigned len,
+		      struct folio **foliop, void **fsdata)
+#  else
 static int
 afs_linux_write_begin(struct file *file, struct address_space *mapping,
 		      loff_t pos, unsigned len,
 		      struct folio **foliop, void **fsdata)
+#  endif
 {
     struct page *page;
     pgoff_t index = pos >> PAGE_SHIFT;
     unsigned int from = pos & (PAGE_SIZE - 1);
     int code;
+#  if defined(HAVE_LINUX_WRITE_BEGIN_END_KIOCB)
+    struct file *file = iocb->ki_filp;
+#  endif
 
     *foliop = __filemap_get_folio(mapping, index, FGP_WRITEBEGIN, mapping_gfp_mask(mapping));
     if (IS_ERR(*foliop)) {
