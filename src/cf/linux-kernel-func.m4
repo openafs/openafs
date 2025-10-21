@@ -357,6 +357,18 @@ AC_CHECK_LINUX_FUNC([readahead_folio],
 		      static struct folio *folio;]],
 		    [[folio = __readahead_folio(NULL);]])
 
+dnl Linux 6.17 changed aops->write_begin/write_end to take a struct kiocp *
+dnl instead of a struct file *.
+AC_CHECK_LINUX_FUNC([write_begin_end_kiocb],
+		    [[#include <linux/fs.h>
+		      static const struct kiocb *kiocb;
+		      static struct address_space *mapping;
+		      static struct folio *foliop;
+		      static void *fsdata;
+		      static struct address_space_operations *aops;]],
+		    [[aops->write_begin(kiocb, mapping, 0, 0, &foliop, fsdata);
+		      aops->write_end(kiocb, mapping, 0, 0, 0, foliop, fsdata);]])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
