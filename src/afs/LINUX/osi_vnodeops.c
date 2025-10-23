@@ -4011,10 +4011,9 @@ afs_linux_prepare_write(struct file *file, struct page *page, unsigned from,
 #if defined(HAVE_LINUX_WRITE_BEGIN_END_KIOCB)
 /*
  * When aops write_begin and write_end are passed a kiocb, it is implied that
- * write_begin and write_end take a folio and that __filemap_get_folio is present.
+ * write_begin and write_end take a folio.
  */
 # define HAVE_LINUX_WRITE_BEGIN_END_FOLIO
-# define HAVE_LINUX_FILEMAP_GET_FOLIO
 #endif
 
 #if defined(HAVE_LINUX_WRITE_BEGIN_END_FOLIO)
