@@ -14,7 +14,7 @@ AX_PROG_PERL_MODULES([
     Pod::Man
     Pod::Simple::HTMLBatch
     Pod::Simple::Search],
-    [MAN_PAGES="man-pages"], [MAN_PAGES=""])
+    [MAN_PAGES=yes], [MAN_PAGES=])
 
 dnl Optionally generate graphs with doxygen.
 case "$with_dot" in
@@ -32,8 +32,12 @@ no)
     HAVE_DOT="yes"
     DOT_PATH=$with_dot
 esac
+
 AC_SUBST(HAVE_DOT)
 AC_SUBST(DOT_PATH)
 AC_SUBST(PERL)
-AC_SUBST(MAN_PAGES)
+
+AS_IF([test x$MAN_PAGES = xyes],
+      [AC_SUBST([MANPAGES_ONLY], [])],
+      [AC_SUBST([MANPAGES_ONLY], ['#'])])
 ])

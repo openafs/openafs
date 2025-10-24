@@ -15,6 +15,8 @@ DOXYGEN=@DOXYGEN@
 
 CELLSERVDB=${TOP_SRCDIR}/afsd/CellServDB
 
+@MANPAGES_ONLY@DIR_manpages = man-pages
+
 # To compile AFS from scratch in the src tree run "make".
 #   This recursively calls "make install ..." and does not depend on the
 #   existence of any non-standard programs.
@@ -632,7 +634,7 @@ finale_notest: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ \
 	libuafs audit kauth log ptserver tptserver scout bu_utils ubik uss \
 	bozo tbozo @VFSCK@ volser tvolser tsalvaged dviced dvolser libafscp \
 	venus venustests update xstat afsmonitor rxdebug libafsrpc rfc3961 \
-	hcrypto libafsauthent libadmin @MAN_PAGES@ tools platform kopenafs \
+	hcrypto libafsauthent libadmin $(DIR_manpages) tools platform kopenafs \
 	authtools $(DIR_roken) rxgk rx_test rxkad_test srctests
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
@@ -640,7 +642,7 @@ finale_nolibafs_notest: project cmd comerr afsd butc tbutc tbudb libuafs audit k
 	log ptserver tptserver scout bu_utils ubik tubik uss bozo tbozo @VFSCK@ \
 	volser tvolser tsalvaged dviced dvolser libafscp venus venustests \
 	update xstat afsmonitor rxdebug libafsrpc rfc3961 hcrypto \
-	libafsauthent libadmin @MAN_PAGES@ tools platform kopenafs \
+	libafsauthent libadmin $(DIR_manpages) tools platform kopenafs \
 	authtools $(DIR_roken) rxgk rx_test rxkad_test srctests
 	+${COMPILE_PART1} finale ${COMPILE_PART2}
 
