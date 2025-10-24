@@ -11,10 +11,15 @@ AX_PROG_PERL_MODULES([
     File::Spec
     File::Spec::Functions
     Getopt::Long
-    Pod::Man
+    Pod::Man],
+    [MAN_PAGES=yes], [MAN_PAGES=])
+
+dnl These perl modules are only needed for generating the html versions of our
+dnl manpages
+AX_PROG_PERL_MODULES([
     Pod::Simple::HTMLBatch
     Pod::Simple::Search],
-    [MAN_PAGES=yes], [MAN_PAGES=])
+    [MAN_PAGES_HTML=yes], [MAN_PAGES_HTML=])
 
 dnl Optionally generate graphs with doxygen.
 case "$with_dot" in
@@ -40,4 +45,9 @@ AC_SUBST(PERL)
 AS_IF([test x$MAN_PAGES = xyes],
       [AC_SUBST([MANPAGES_ONLY], [])],
       [AC_SUBST([MANPAGES_ONLY], ['#'])])
+
+AS_IF([test x$MAN_PAGES$MAN_PAGES_HTML = xyesyes],
+      [AC_SUBST([MANPAGES_HTML_ONLY], [])],
+      [AC_SUBST([MANPAGES_HTML_ONLY], ['#'])])
+
 ])
