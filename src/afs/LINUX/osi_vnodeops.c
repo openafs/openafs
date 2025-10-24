@@ -2671,8 +2671,10 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 	    } else {
 		put_page(newpage);
 		newpage = NULL;
-		if (code != -EEXIST)
+		if (code != -EEXIST) {
 		    goto out;
+		}
+		code = 0;
 	    }
         } else {
 	    lock_page(cachepage);
