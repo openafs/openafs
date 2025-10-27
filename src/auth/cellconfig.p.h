@@ -213,6 +213,7 @@ extern int afsconf_DeleteKeyBySubType(struct afsconf_dir *dir,
 
 /* authcon.c */
 struct rx_securityClass;
+struct rx_identity;
 extern afs_int32 afsconf_ServerAuth(void *arock,
 				    struct rx_securityClass **,
 				    afs_int32 *);
@@ -247,6 +248,12 @@ extern afs_int32 afsconf_PickClientSecObj(struct afsconf_dir *dir,
 					  struct rx_securityClass **sc,
 					  afs_int32 *scIndex,
 					  time_t *expires);
+extern afs_int32 afsconf_PickClientLocalSecObj(struct afsconf_dir *dir,
+					       afsconf_secflags flags,
+					       struct rx_identity *user,
+					       struct rx_securityClass **sc,
+					       afs_int32 *scIndex,
+					       time_t *expires);
 
 extern void afsconf_SetSecurityFlags(struct afsconf_dir *dir,
 				     afsconf_secflags flags);
@@ -260,7 +267,6 @@ extern void afsconf_BuildServerSecurityObjects(void *,
 /* userok.c */
 
 struct rx_call;
-struct rx_identity;
 extern int afsconf_CheckAuth(void *arock, struct rx_call *acall);
 extern int afsconf_GetNoAuthFlag(struct afsconf_dir *adir);
 extern void afsconf_SetNoAuthFlag(struct afsconf_dir *adir, int aflag);

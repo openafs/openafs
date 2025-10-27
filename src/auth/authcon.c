@@ -494,6 +494,96 @@ afsconf_BuildServerSecurityObjects_int(struct afsconf_bsso_info *info,
 #endif
 }
 
+static afs_int32
+PickClientSecObj(struct afsconf_dir *dir, afsconf_secflags flags,
+		 struct afsconf_cell *info, char *cellName,
+		 struct rx_identity *user, struct rx_securityClass **sc,
+		 afs_int32 *scIndex, time_t *expires)
+{
+    struct afsconf_cell localInfo;
+    afs_int32 code = 0;
+
+    *sc = NULL;
+    *scIndex = RX_SECIDX_NULL;
+    if (expires)
+	*expires = 0;
+
+    if ( !(flags & AFSCONF_SECOPTS_NOAUTH) ) {
+	if (!dir)
+	    return AFSCONF_NOCELLDB;
+
+	if (flags & AFSCONF_SECOPTS_LOCALAUTH) {
+	    if ((flags & AFSCONF_SECOPTS_RXGK)) {
+		if (user != NULL && user->kind != RX_ID_SUPERUSER) {
+		    /* not supported */
+		    code = AFSCONF_NO_SECURITY_CLASS;
+		    goto out;
+		}
+		if ((flags & AFSCONF_SECOPTS_ALWAYSCLEAR))
+		    code = afsconf_ClientAuthRXGKClear(dir, sc, scIndex);
+		else if ((flags & AFSCONF_SECOPTS_NEVERENCRYPT))
+		    code = afsconf_ClientAuthRXGKAuth(dir, sc, scIndex);
+		else
+		    code = afsconf_ClientAuthRXGKCrypt(dir, sc, scIndex);
+
+	    } else {
+		rxkad_level enclevel;
+
+		if ((flags & AFSCONF_SECOPTS_ALWAYSENCRYPT) != 0) {
+		    enclevel = rxkad_crypt;
+		} else {
+		    enclevel = rxkad_clear;
+		}
+		LOCK_GLOBAL_MUTEX;
+		code = GenericAuth(dir, user, sc, scIndex, enclevel);
+		UNLOCK_GLOBAL_MUTEX;
+	    }
+
+	    if (code)
+		goto out;
+
+	    /*
+	     * The afsconf_ClientAuth/GenericAuth functions will fall back to
+	     * giving a rxnull object, which we don't want if localauth has been
+	     * explicitly requested. Check for this, and bail out if we get one.
+	     * Note that this leaks a security object at present.
+	     */
+	    if (!(flags & AFSCONF_SECOPTS_FALLBACK_NULL) &&
+		*scIndex == RX_SECIDX_NULL) {
+		sc = NULL;
+		code = AFSCONF_NOTFOUND;
+		goto out;
+	    }
+
+	    if (expires)
+		*expires = NEVERDATE;
+	} else {
+	    if (info == NULL) {
+		code = afsconf_GetCellInfo(dir, cellName, NULL, &localInfo);
+		if (code)
+		    goto out;
+		info = &localInfo;
+	    }
+
+	    code = afsconf_ClientAuthToken(info, flags, sc, scIndex, expires);
+	    if (code && !(flags & AFSCONF_SECOPTS_FALLBACK_NULL))
+		goto out;
+
+	    /* If we didn't get a token, we'll just run anonymously */
+	    code = 0;
+	}
+    }
+    if (*sc == NULL) {
+	*sc = rxnull_NewClientSecurityObject();
+	*scIndex = RX_SECIDX_NULL;
+	if (expires)
+	    *expires = NEVERDATE;
+    }
+
+ out:
+    return code;
+}
+
 /*!
  * Pick a security class to use for an outgoing connection
  *
@@ -540,75 +630,43 @@ afsconf_BuildServerSecurityObjects_int(struct afsconf_bsso_info *info,
  */
 afs_int32
 afsconf_PickClientSecObj(struct afsconf_dir *dir, afsconf_secflags flags,
-		         struct afsconf_cell *info,
-		         char *cellName, struct rx_securityClass **sc,
-			 afs_int32 *scIndex, time_t *expires) {
-    struct afsconf_cell localInfo;
-    afs_int32 code = 0;
+			 struct afsconf_cell *info,
+			 char *cellName, struct rx_securityClass **sc,
+			 afs_int32 *scIndex, time_t *expires)
+{
+    return PickClientSecObj(dir, flags, info, cellName, NULL, sc, scIndex,
+			    expires);
+}
 
-    *sc = NULL;
-    *scIndex = RX_SECIDX_NULL;
-    if (expires)
-	*expires = 0;
-
-    if ( !(flags & AFSCONF_SECOPTS_NOAUTH) ) {
-	if (!dir)
-	    return AFSCONF_NOCELLDB;
-
-	if (flags & AFSCONF_SECOPTS_LOCALAUTH) {
-	    if ((flags & AFSCONF_SECOPTS_RXGK)) {
-		if ((flags & AFSCONF_SECOPTS_ALWAYSCLEAR))
-		    code = afsconf_ClientAuthRXGKClear(dir, sc, scIndex);
-		else if ((flags & AFSCONF_SECOPTS_NEVERENCRYPT))
-		    code = afsconf_ClientAuthRXGKAuth(dir, sc, scIndex);
-		else
-		    code = afsconf_ClientAuthRXGKCrypt(dir, sc, scIndex);
-
-	    } else if (flags & AFSCONF_SECOPTS_ALWAYSENCRYPT)
-		code = afsconf_ClientAuthSecure(dir, sc, scIndex);
-	    else
-		code = afsconf_ClientAuth(dir, sc, scIndex);
-
-	    if (code)
-		goto out;
-
-	    /* The afsconf_ClientAuth functions will fall back to giving
-	     * a rxnull object, which we don't want if localauth has been
-	     * explicitly requested. Check for this, and bail out if we
-	     * get one. Note that this leaks a security object at present
-	     */
-	    if (!(flags & AFSCONF_SECOPTS_FALLBACK_NULL) &&
-		*scIndex == RX_SECIDX_NULL) {
-		sc = NULL;
-		code = AFSCONF_NOTFOUND;
-		goto out;
-	    }
-
-	    if (expires)
-		*expires = NEVERDATE;
-	} else {
-	    if (info == NULL) {
-		code = afsconf_GetCellInfo(dir, cellName, NULL, &localInfo);
-		if (code)
-		    goto out;
-		info = &localInfo;
-	    }
-
-	    code = afsconf_ClientAuthToken(info, flags, sc, scIndex, expires);
-	    if (code && !(flags & AFSCONF_SECOPTS_FALLBACK_NULL))
-		goto out;
-
-	    /* If we didn't get a token, we'll just run anonymously */
-	    code = 0;
-	}
+/*!
+ * Pick a local security class to use for an outgoing connection.
+ *
+ * This function picks a security class for an outgoing connection using classes
+ * that have local key material available. For now, this function only supports
+ * RX_ID_KRB4/RX_ID_SUPERUSER users.
+ *
+ * @param[in]   dir      conf directory structure for this cell (cannot be
+ *			 NULL)
+ * @param[in]   flags    properties of the local security class, @see
+ *			 afsconf_PickClientSecObj. The flag
+ *			 AFSCONF_SECOPTS_LOCALAUTH must be set.
+ * @param[in]   user     identity of the user (RX_ID_KRB4/RX_ID_SUPERUSER)
+ *                       (if NULL, use RX_ID_SUPERUSER)
+ * @param[out]  sc       selected security class
+ * @param[out]  scIndex  index of the selected security class
+ * @param[out]  expires  @see afsconf_PickClientSecObj
+ *
+ * @Return 0 on success, or a com_err error code on failure.
+ */
+afs_int32
+afsconf_PickClientLocalSecObj(struct afsconf_dir *dir, afsconf_secflags flags,
+			      struct rx_identity *user,
+			      struct rx_securityClass **sc, afs_int32 *scIndex,
+			      time_t *expires)
+{
+    if ((flags & AFSCONF_SECOPTS_LOCALAUTH) == 0) {
+	/* localauth-only */
+	return AFSCONF_NO_SECURITY_CLASS;
     }
-    if (*sc == NULL) {
-	*sc = rxnull_NewClientSecurityObject();
-	*scIndex = RX_SECIDX_NULL;
-	if (expires)
-	    *expires = NEVERDATE;
-    }
-
-out:
-    return code;
+    return PickClientSecObj(dir, flags, NULL, NULL, user, sc, scIndex, expires);
 }

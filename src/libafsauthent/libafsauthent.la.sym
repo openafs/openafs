@@ -40,6 +40,7 @@ afsconf_IsSuperIdentity
 afsconf_Open
 afsconf_ParseNetFiles
 afsconf_ParseNetRestrictFile
+afsconf_PickClientLocalSecObj
 afsconf_PickClientSecObj
 afsconf_PutTypedKeyList
 afsconf_ServerAuth

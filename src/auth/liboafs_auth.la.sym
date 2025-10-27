@@ -45,6 +45,7 @@ afsconf_IsLocalRealmMatch
 afsconf_IsSuperIdentity
 afsconf_Open
 afsconf_ParseNetFiles
+afsconf_PickClientLocalSecObj
 afsconf_PickClientSecObj
 afsconf_PutTypedKeyList
 afsconf_SawCell

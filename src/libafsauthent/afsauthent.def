@@ -212,3 +212,4 @@ EXPORTS
         afsconf_CountKeys				@211
         ubik_CallRock					@212
 	token_FreeSetContents				@213
+	afsconf_PickClientLocalSecObj			@214
