@@ -274,7 +274,6 @@ _GetSecurityObject(struct afscp_cell *cell)
     code = krb5_cc_default(context, &cc);
 
     memset(&match, 0, sizeof(match));
-    Z_enctype(Z_credskey(&match)) = ENCTYPE_DES_CBC_CRC;
 
     if (code == 0)
 	code = krb5_cc_get_principal(context, cc, &match.client);
@@ -311,7 +310,20 @@ _GetSecurityObject(struct afscp_cell *cell)
 	l = rxkad_clear;
     else
 	l = rxkad_crypt;
-    memcpy(&k.data, Z_keydata(Z_credskey(cred)), 8);
+
+    if (tkt_DeriveDesKey(Z_enctype(Z_credskey(cred)),
+			 Z_keydata(Z_credskey(cred)),
+			 Z_keylen(Z_credskey(cred)),
+			 &k) != 0) {
+	krb5_free_creds(context, cred);
+	krb5_free_cred_contents(context, &match);
+	if (cc != NULL) {
+	    krb5_cc_close(context, cc);
+	}
+	code = RXKADBADKEY;
+	goto try_anon;
+    }
+
     sc = (struct rx_securityClass *)rxkad_NewClientSecurityObject
 	(l, &k, RXKAD_TKT_TYPE_KERBEROS_V5,
 	 cred->ticket.length, cred->ticket.data);
