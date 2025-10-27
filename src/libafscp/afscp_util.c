@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ubik.h>
 #include <rx/rx_null.h>
 #include <rx/rxkad.h>
+#include <rx/rx_identity.h>
 #ifdef HAVE_KERBEROS
 # define KERBEROS_APPLE_DEPRECATED(x)
 # include <krb5.h>
@@ -63,8 +64,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static int insecure = 0;
 static int try_anonymous = 0;
-static char authas_name[256];
-static char authas_inst[256];
+static char authas_name[512];
 
 int
 afscp_Insecure(void)
@@ -95,24 +95,17 @@ afscp_AnonymousAuth(int state)
 int
 afscp_LocalAuthAs(const char *aname)
 {
-    const char *ainst = strchr(aname, '.');
-    size_t namelen, instlen;
+    size_t rlen;
 
-    if (ainst) {
-	namelen = ainst - aname;
-	ainst++;
-	instlen = strlen(ainst);
-    } else {
-	namelen = strlen(aname);
-	ainst = "";
-	instlen = 0;
-    }
-
-    if (namelen+1 > sizeof(authas_name) || instlen+1 > sizeof(authas_inst)) {
+    if (aname == NULL) {
 	return EINVAL;
     }
-    strncpy(authas_name, aname, namelen);
-    strncpy(authas_inst, ainst, instlen);
+
+    rlen = strlcpy(authas_name, aname, sizeof(authas_name));
+    if (rlen >= sizeof(authas_name)) {
+	return EINVAL;
+    }
+
     return 0;
 }
 
@@ -150,17 +143,13 @@ _GetNullSecurityObject(struct afscp_cell *cell)
 
 #ifdef HAVE_KERBEROS
 static int
-_GetLocalSecurityObject(struct afscp_cell *cell,
-                        char *aname, char *ainst)
+_GetLocalSecurityObject(struct afscp_cell *cell, char *aname)
 {
-    int code = 0;
-    char tbuffer[256];
-    struct ktc_encryptionKey key, session;
+    int code = 0, scindex, flags;
     struct rx_securityClass *tc;
-    afs_int32 kvno;
-    afs_int32 ticketLen;
-    rxkad_level lev;
-    struct afsconf_dir *tdir;
+
+    struct afsconf_dir *tdir = NULL;
+    struct rx_identity *user = NULL;
 
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
     if (!tdir) {
@@ -168,46 +157,30 @@ _GetLocalSecurityObject(struct afscp_cell *cell,
 	goto done;
     }
 
-    code = afsconf_GetLatestKey(tdir, &kvno, &key);
-    if (code) {
+    flags = AFSCONF_SECOPTS_LOCALAUTH;
+    if (!insecure) {
+	flags |= AFSCONF_SECOPTS_ALWAYSENCRYPT;
+    }
+
+    user = rx_identity_new(RX_ID_KRB4, aname, aname, strlen(aname));
+    if (user == NULL) {
+	code = ENOMEM;
 	goto done;
     }
 
-    DES_init_random_number_generator((DES_cblock *)&key);
-    code = DES_new_random_key((DES_cblock *)&session);
-    if (code) {
-	goto done;
-    }
-
-    ticketLen = sizeof(tbuffer);
-    memset(tbuffer, 0, sizeof(tbuffer));
-    code = tkt_MakeTicket(tbuffer, &ticketLen, &key, aname, ainst, "", 0,
-                          0xffffffff, &session, 0, "afs", "");
-    if (code) {
-	goto done;
-    }
-
-    if (insecure) {
-	lev = rxkad_clear;
-    } else {
-	lev = rxkad_crypt;
-    }
-
-    tc = (struct rx_securityClass *)
-        rxkad_NewClientSecurityObject(lev, &session, kvno, ticketLen,
-	                              tbuffer);
-    if (!tc) {
-	code = RXKADBADKEY;
+    code = afsconf_PickClientLocalSecObj(tdir, flags, user, &tc, &scindex,
+					 NULL);
+    if (code != 0) {
 	goto done;
     }
 
     cell->security = tc;
-    cell->scindex = 2;
-
+    cell->scindex = scindex;
  done:
     if (tdir) {
 	afsconf_Close(tdir);
     }
+    rx_identity_free(&user);
     return code;
 }
 #endif /* HAVE_KERBEROS */
@@ -234,7 +207,7 @@ _GetSecurityObject(struct afscp_cell *cell)
     }
 
     if (authas_name[0]) {
-	code = _GetLocalSecurityObject(cell, authas_name, authas_inst);
+	code = _GetLocalSecurityObject(cell, authas_name);
 	if (code == 0) {
 	    return 0;
 	}
