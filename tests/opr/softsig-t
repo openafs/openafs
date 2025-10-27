@@ -85,7 +85,8 @@ is($?, SIGKILL, "Helper exited on KILL signal.");
 $pid = open(HELPER, "-|", $cmd_wrapper, $softsig_helper, "-crash")
     or die "Couldn't start test helper.";
 close(HELPER);
-is($? & 0x7f, SIGSEGV, "Helper exited on SEGV signal.");
+my $ecode = $? & ~0x80; # clear WCOREDUMP bit
+is($ecode, SIGSEGV, "Helper exited on SEGV signal.");
 
 # Check that an internal bus error kills the process.
 # Skip this test when running on ancient versions of Perl
@@ -99,7 +100,8 @@ SKIP: {
     $pid = open(HELPER, "-|", $cmd_wrapper, $softsig_helper, "-buserror", $path)
         or die "Couldn't start test helper.";
     close(HELPER);
-    is($? & 0x7f, $sigbus, "Helper exited on BUS signal.");
+    my $ecode = $? & ~0x80; # clear WCOREDUMP bit
+    is($ecode, $sigbus, "Helper exited on BUS signal.");
     $fh->close;
     unlink $path;
 }

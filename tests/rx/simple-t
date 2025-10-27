@@ -69,8 +69,8 @@ $got = qx($cmd_wrapper $client localhost $port $service "$message" 2>&1);
 $expected = "simple-client: rx_Read failed
 simple-client: call aborted with code 201
 ";
-my $got_ret = ($? >> 8);
-my $expected_ret = 201;
+my $got_ret = $?;
+my $expected_ret = 201 << 8;
 
 is($got_ret, $expected_ret, "Client exited with correct status");
 is($got, $expected, "Client saw an aborted call");
@@ -79,11 +79,4 @@ is($got, $expected, "Client saw an aborted call");
 kill("TERM", $server_pid);
 
 close($server_fh);
-my $ecode = ${^CHILD_ERROR_NATIVE};
-if (WIFSIGNALED($ecode) && WTERMSIG($ecode) == SIGTERM) {
-    pass("Server died with SIGTERM");
-} elsif (WIFSIGNALED($ecode)) {
-    fail("Server died with signal " . WTERMSIG($ecode));
-} else {
-    fail("Server exited with code " . WEXITSTATUS($ecode));
-}
+is($?, SIGTERM, "Server died with SIGTERM");

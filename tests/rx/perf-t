@@ -64,11 +64,4 @@ is($rc, 0, "multi threaded client ran succesfully");
 
 kill("TERM", $pid);
 waitpid($pid, 0);
-my $ecode = ${^CHILD_ERROR_NATIVE};
-if (WIFSIGNALED($ecode) && WTERMSIG($ecode) != SIGTERM) {
-    fail("Server died with signal " . WTERMSIG($ecode));
-} elsif (WIFEXITED($ecode) && WEXITSTATUS($ecode) != 0) {
-    fail("Server exited with code " . WEXITSTATUS($ecode));
-} else {
-    pass("Server exited succesfully");
-}
+is($?, SIGTERM, "Server died with SIGTERM");
