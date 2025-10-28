@@ -10,7 +10,7 @@ use File::Temp qw(tempfile);
 use Test::More tests=>3;
 
 my $cmd_wrapper = obj_path("tests/cmdwrap");
-my $pt_util = obj_path("src/ptserver/pt_util");
+my $pt_util = obj_path("src/tptserver/pt_util");
 
 (undef, my $prdb_tmp) = tempfile("prdbtest.XXXXXX", TMPDIR => 1, UNLINK => 1);
 my $prdb_test = src_path("tests/ptserver/db.prtiny/prdb.DB0");

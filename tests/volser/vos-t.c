@@ -59,7 +59,7 @@ TestListAddrs(struct ubik_client *client, char *dirname)
 
     /* Now we need to run vos ListAddrs and see what happens ... */
     cmd_wrapper = afstest_obj_path("tests/cmdwrap");
-    vos = afstest_obj_path("src/volser/vos");
+    vos = afstest_obj_path("src/tvolser/vos");
 
     cmd = afstest_asprintf("'%s' '%s' listaddrs -config '%s' "
 			   "-noauth -noresolve",
