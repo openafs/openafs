@@ -54,6 +54,7 @@ afscp_CreateFile(const struct afscp_venusfid *dir, char *name,
     if (dir == NULL || name == NULL || sst == NULL) {
 	fprintf(stderr,
 		"afscp_CreateFile called with NULL args, cannot continue\n");
+	afscp_errno = EINVAL;
 	return -1;
     }
     df = dir->fid;

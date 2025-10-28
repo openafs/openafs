@@ -182,6 +182,7 @@ afscp_SetDefaultRealm(const char *realmname)
 
     code = krb5_init_context(&k5con);	/* see aklog.c main() */
     if (code != 0) {
+	afscp_errno = AFSCONF_FAILURE;
 	return -1;
     }
     /* k5ec = */
@@ -195,6 +196,7 @@ afscp_SetDefaultRealm(const char *realmname)
 
     newdefrealm = strdup(realmname);
     if (newdefrealm == NULL) {
+	afscp_errno = ENOMEM;
 	return -1;
     }
     if (defrealm != NULL)
@@ -217,10 +219,12 @@ afscp_SetDefaultCell(const char *cellname)
 
     this = afscp_CellByName(cellname, defrealm);
     if (this == NULL) {
+	afscp_errno = AFSCONF_NOTFOUND;
 	return -1;
     }
     newdefcell = strdup(cellname);
     if (newdefcell == NULL) {
+	afscp_errno = ENOMEM;
 	return -1;
     }
     if (defcell != NULL)
@@ -283,12 +287,14 @@ afscp_ServerById(struct afscp_cell *thecell, afsUUID * u)
 			  thecell->srvsalloced *
 			  sizeof(struct afscp_server *));
 	if (newlist == NULL) {
+	    afscp_errno = ENOMEM;
 	    return NULL;
 	}
 	thecell->fsservers = newlist;
     }
     ret = calloc(1, sizeof(struct afscp_server));
     if (ret == NULL) {
+	afscp_errno = ENOMEM;
 	return NULL;
     }
     thecell->fsservers[thecell->nservers] = ret;
@@ -303,6 +309,7 @@ afscp_ServerById(struct afscp_cell *thecell, afsUUID * u)
     code = ubik_VL_GetAddrsU(thecell->vlservers, 0, &attrs, &tmp,
 			     &uniq, &nentries, &addrs);
     if (code != 0) {
+	afscp_errno = code;
 	return NULL;
     }
     if (addrs.bulkaddrs_len < nentries) {
@@ -376,12 +383,14 @@ afscp_ServerByAddr(struct afscp_cell *thecell, afs_uint32 addr)
 			  thecell->srvsalloced
 			      * sizeof(struct afscp_server *));
 	if (newlist == NULL) {
+	    afscp_errno = ENOMEM;
 	    return NULL;
 	}
 	thecell->fsservers = newlist;
     }
     ret = calloc(1, sizeof(struct afscp_server));
     if (ret == NULL) {
+	afscp_errno = ENOMEM;
 	return NULL;
     }
     thecell->fsservers[thecell->nservers] = ret;
@@ -439,6 +448,7 @@ afscp_ServerByAddr(struct afscp_cell *thecell, afs_uint32 addr)
 	newall = realloc(allservers,
 			 afscp_srvsalloced * sizeof(struct afscp_server *));
 	if (newall == NULL) {
+	    afscp_errno = ENOMEM;
 	    return ret;
 	}
 	allservers = newall;

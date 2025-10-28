@@ -46,6 +46,7 @@ afscp_MakeFid(struct afscp_cell *cell, afs_uint32 volume,
     struct afscp_venusfid *ret;
 
     if (cell == NULL) {
+	afscp_errno = EINVAL;
 	return NULL;
     }
     ret = malloc(sizeof(struct afscp_venusfid));
@@ -229,6 +230,7 @@ afscp_Stat(const struct afscp_venusfid *fid, struct stat *s)
 
     if (s == NULL || fid == NULL) {
 	fprintf(stderr, "NULL args given to afscp_Stat, cannot continue\n");
+	afscp_errno = EINVAL;
 	return -1;
     }
 
@@ -271,6 +273,7 @@ afscp_CheckCallBack(const struct afscp_venusfid *fid, const struct afscp_server 
 
     if (expiretime == NULL || fid == NULL) {
 	fprintf(stderr, "NULL args given to afscp_CheckCallback, cannot continue\n");
+	afscp_errno = EINVAL;
 	return -1;
     }
 

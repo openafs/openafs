@@ -167,6 +167,7 @@ afscp_VolumeByName(struct afscp_cell *cell, const char *vname,
     }
     if (!ret->nservers || !ret->id) {
 	free(ret);
+	afscp_errno = EIO;
 	return NULL;
     }
 

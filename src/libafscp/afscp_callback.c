@@ -188,6 +188,7 @@ afscp_AddCallBack(const struct afscp_server *server,
             newlist = realloc(allcallbacks, afscp_cballoced *
 			      sizeof(struct afscp_callback));
 	    if (newlist == NULL) {
+		afscp_errno = ENOMEM;
 		return -1;
 	    }
 	    allcallbacks = newlist;
@@ -261,11 +262,13 @@ afscp_ReturnCallBacks(const struct afscp_server *server)
 	if (!inited) {
 	    theFids.AFSCBFids_val = calloc(AFSCBMAX, sizeof(struct AFSFid));
 	    if (!theFids.AFSCBFids_val) {
+		afscp_errno = ENOMEM;
 		return -1;
 	    }
 	    theCBs.AFSCBs_val = calloc(AFSCBMAX, sizeof(struct AFSCallBack));
 	    if (!theCBs.AFSCBs_val) {
 		free(theFids.AFSCBFids_val);
+		afscp_errno = ENOMEM;
 		return -1;
 	    }
 	    inited = 1;

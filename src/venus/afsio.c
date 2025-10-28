@@ -565,7 +565,7 @@ GetVenusFidByFid(char *fidString, char *cellName, int onlyRW,
 
     code = afscp_Stat((*avfpp), &sbuf);
     if (code != 0) {
-	afs_com_err(pnp, code, "(stat failed with code %d)", code);
+	afs_com_err(pnp, afscp_errno, "(stat failed with errno %d)", afscp_errno);
 	return code;
     }
     return 0;
@@ -734,8 +734,8 @@ retry:
     code = afscp_GetStatus(avfp, &OutStatus);
     if (code != 0) {
 	afs_inet_ntoa_r(avfp->cell->fsservers[0]->addrs[0], ipv4_addr);
-	afs_com_err(pnp, code, "(failed to get status of file %s from"
-		    "server %s, code = %d)", fname, ipv4_addr, code);
+	afs_com_err(pnp, afscp_errno, "(failed to get status of file %s from"
+		    "server %s, errno = %d)", fname, ipv4_addr, afscp_errno);
 	afscp_FreeFid(avfp);
 	return code;
     }
@@ -765,7 +765,7 @@ retry:
 	free(buf);
 
     if (code != 0)
-	afs_com_err(pnp, code, "(failed to change lock status: %d)", afscp_errno);
+	afs_com_err(pnp, afscp_errno, "(failed to change lock status: %d)", afscp_errno);
 
     return code;
 } /* lockFile */
@@ -836,8 +836,8 @@ readFile(struct cmd_syndesc *as, void *unused)
     code = afscp_GetStatus(avfp, &OutStatus);
     if (code != 0) {
 	afs_inet_ntoa_r(avfp->cell->fsservers[0]->addrs[0], ipv4_addr);
-	afs_com_err(pnp, code, "(failed to get status of file %s from"
-		    "server %s, code = %d)", fname, ipv4_addr, code);
+	afs_com_err(pnp, afscp_errno, "(failed to get status of file %s from"
+		    "server %s, errno = %d)", fname, ipv4_addr, afscp_errno);
 	afscp_FreeFid(avfp);
 	return code;
     }
@@ -999,7 +999,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
     if (newvfp == NULL) {
 	code = afscp_CreateFile(dirvfp, baseName, &InStatus, &newvfp);
 	if (code != 0) {
-	    afs_com_err(pnp, code,
+	    afs_com_err(pnp, afscp_errno,
 		        "(could not create file %s in directory %lu.%lu.%lu)",
 		        baseName, afs_printable_uint32_lu(dirvfp->fid.Volume),
 		        afs_printable_uint32_lu(dirvfp->fid.Vnode),
@@ -1010,8 +1010,8 @@ writeFile(struct cmd_syndesc *as, void *unused)
     code = afscp_GetStatus(newvfp, &OutStatus);
     if (code != 0) {
 	afs_inet_ntoa_r(newvfp->cell->fsservers[0]->addrs[0], ipv4_addr);
-	afs_com_err(pnp, code, "(failed to get status of file %s from"
-		    "server %s, code = %d)", fname, ipv4_addr, code);
+	afs_com_err(pnp, afscp_errno, "(failed to get status of file %s from"
+		    "server %s, errno = %d)", fname, ipv4_addr, afscp_errno);
 	goto cleanup;
     }
 
