@@ -462,6 +462,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 	    ids.idlist_val[nd++] = id;
 	}
 	free(tnames.namelist_val);
+	xdr_free((xdrproc_t) xdr_idlist, &tids);
     }
     names.namelist_len = nm;
     ids.idlist_len = nd;
@@ -483,6 +484,8 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 	    nd++;
 	}
     }
+    xdr_free((xdrproc_t) xdr_idlist, &tids);
+
     for (x = 0; x < ids.idlist_len; x++) {
 	lids->idlist_val[nd + x] = ids.idlist_val[x];
     }
@@ -501,6 +504,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 		lnames->namelist_len = nd + x;
 	    }
 	}
+	xdr_free((xdrproc_t) xdr_namelist, &tnames);
     }
     /* treat things as working if any of the lookups worked */
     if (goodCount == 0)
