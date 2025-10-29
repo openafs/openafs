@@ -506,12 +506,20 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 	}
 	xdr_free((xdrproc_t) xdr_namelist, &tnames);
     }
+
+    free(ids.idlist_val);
+    free(names.namelist_val);
+    ids.idlist_val = NULL;
+    names.namelist_val = NULL;
+
     /* treat things as working if any of the lookups worked */
     if (goodCount == 0)
 	code = PRNOENT;
     if (code) {
-	if (lids->idlist_val)
-	    free(lids->idlist_val);
+	free(lids->idlist_val);
+	if (lnames != NULL) {
+	    free(lnames->namelist_val);
+	}
 	return -1;
     }
     return 0;
