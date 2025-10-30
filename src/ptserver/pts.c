@@ -427,8 +427,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 
     /* Initialise our outputs */
     memset(lids, 0, sizeof(struct idlist));
-    if (lnames)
-	memset(lnames, 0, sizeof(struct namelist));
+    memset(lnames, 0, sizeof(struct namelist));
 
     for (i = as->parms[0].items; i; i = i->next)
 	n++;
@@ -443,10 +442,9 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
     ids.idlist_len = n;
     names.namelist_val = calloc(n, PR_MAXNAMELEN);
     names.namelist_len = n;
-    if (lnames) {
-	lnames->namelist_val = malloc(n * PR_MAXNAMELEN);
-	lnames->namelist_len = 0;
-    }
+    lnames->namelist_val = malloc(n * PR_MAXNAMELEN);
+    lnames->namelist_len = 0;
+
     for (i = as->parms[0].items; i; i = i->next) {
 	tnames.namelist_val = calloc(1, PR_MAXNAMELEN);
 	strncpy(tnames.namelist_val[0], i->data, PR_MAXNAMELEN);
@@ -479,8 +477,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 	    } else
 		goodCount++;
 	    lids->idlist_val[nd] = tids.idlist_val[n];
-	    if (lnames)
-		strcpy(lnames->namelist_val[nd], names.namelist_val[n]);
+	    strcpy(lnames->namelist_val[nd], names.namelist_val[n]);
 	    nd++;
 	}
     }
@@ -490,7 +487,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 	lids->idlist_val[nd + x] = ids.idlist_val[x];
     }
     lids->idlist_len = nd + x;
-    if (!code && lnames) {
+    if (code == 0) {
 	tnames.namelist_val = 0;
 	tnames.namelist_len = 0;
 	code = pr_IdToName(&ids, &tnames);
@@ -498,11 +495,10 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 	    afs_com_err(whoami, code, "translating ids");
 	else {
 	    goodCount++;
-	    if (lnames) {
-		for (x = 0; x < ids.idlist_len; x++)
-		    strcpy(lnames->namelist_val[nd + x], tnames.namelist_val[x]);
-		lnames->namelist_len = nd + x;
+	    for (x = 0; x < ids.idlist_len; x++) {
+		strcpy(lnames->namelist_val[nd + x], tnames.namelist_val[x]);
 	    }
+	    lnames->namelist_len = nd + x;
 	}
 	xdr_free((xdrproc_t) xdr_namelist, &tnames);
     }
@@ -517,9 +513,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
 	code = PRNOENT;
     if (code) {
 	free(lids->idlist_val);
-	if (lnames != NULL) {
-	    free(lnames->namelist_val);
-	}
+	free(lnames->namelist_val);
 	return -1;
     }
     return 0;
