@@ -706,7 +706,10 @@ lockFile(struct cmd_syndesc *as, void *arock)
 
     gettimeofday(&starttime, &Timezone);
 
-    CmdProlog(as, &cell, &realm, &fname, NULL);
+    if (CmdProlog(as, &cell, &realm, &fname, NULL) != 0) {
+	return -1;
+    }
+
     afscp_AnonymousAuth(1);
     if (clear)
 	afscp_Insecure();
@@ -795,7 +798,10 @@ readFile(struct cmd_syndesc *as, void *unused)
 
     gettimeofday(&starttime, &Timezone);
 
-    CmdProlog(as, &cell, &realm, &fname, NULL);
+    if (CmdProlog(as, &cell, &realm, &fname, NULL) != 0) {
+	return -1;
+    }
+
     afscp_AnonymousAuth(1);
     if (clear)
 	afscp_Insecure();
@@ -922,7 +928,10 @@ writeFile(struct cmd_syndesc *as, void *unused)
 #endif
     memset(&InStatus, 0, sizeof(InStatus));
 
-    CmdProlog(as, &cell, &realm, &fname, &sSynthLen);
+    if (CmdProlog(as, &cell, &realm, &fname, &sSynthLen) != 0) {
+	return -1;
+    }
+
     afscp_AnonymousAuth(1);
     if (clear)
 	afscp_Insecure();
