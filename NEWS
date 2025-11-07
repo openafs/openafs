@@ -1,5 +1,66 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.15pre1
+
+  All platforms
+
+    * The generically named lock.h header file has been renamed to
+      afs/afs_lock.h to avoid conflicts with other software.  For
+      backward compatibility, a wrapper lock.h is still provided, ensuring
+      that older software built against OpenAFS will continue to compile. Any
+      users of lock.h should update to using afs/afs_lock.h as soon as
+      possible; the lock.h wrapper will be removed in the future.
+      (16605, 16610, 16611)
+
+  All server platforms
+
+    * A fileserver bug has been fixed where uninitialized data from the
+      stack could be sent over the network when handling certain
+      protection-related RPCs. This change prevents a potential information
+      leak. (16207)
+
+    * A potential race condition has been fixed in the fileserver that was
+      only triggerable by the obsolete RXAFS_GetVolumeInfo RPC. (16206)
+
+    * A fileserver bug has been fixed where the SRXAFS_GetStatistics64 RPC
+      could send 4 bytes of uninitialized memory over the network. This change
+      prevents a potential information leak from the fileserver. (16205)
+
+  All UNIX clients
+
+    * A long-standing bug has been fixed in the afs_create() operation where
+      callback expiration was processed incorrectly.  This could lead
+      to processes reading stale data for newly-created files under certain
+      conditions. (16612)
+
+    * A memory leak during error conditions in the PGetVolumeStatus pioctl
+      has been fixed. (16262)
+
+    * A race condition has been fixed where the client asserts during startup
+      when the client was started with `afsd -fakestat` or `afsd -fakestat-all`
+      and a user attempts to set a token early in the startup. (16653)
+
+  Linux client
+
+    * Support for Linux kernel 6.17 has been added. (16603, 16604)
+
+    * A potential race condition on Linux clients has been fixed that could
+      cause a spurious SIGBUS error when reading memory-mapped files from AFS.
+      This bug was introduced in OpenAFS 1.6.0. (16616)
+
+  MacOS client
+
+    * A bug has been fixed where the privhelper component of the prefpane was
+      not honoring the configured compiler flags.  This caused the prefpane
+      operations to not work on x86 for universal packages built on arm. (16662)
+
+  AIX
+
+    * Build support for AIX has been improved. (16125, 16126, 16127, 16128,
+      16129, 16633, 16634)
+
+    * Installation instructions for AIX have been reinstated. (16635)
+
 OpenAFS 1.8.14
 
   All platforms
