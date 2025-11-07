@@ -1167,7 +1167,7 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 		 * return. But if our count is 0, don't bother updating the
 		 * linktable, since we're about to delete the link table,
 		 * below. */
-		if (namei_SetLinkCount(fdP, (Inode) 0, count < 0 ? 0 : count, 1) < 0) {
+		if (namei_SetLinkCount(fdP, (Inode) 0, count < 0 ? 0 : count, 1) != 0) {
 		    FDH_REALLYCLOSE(fdP);
 		    IH_RELEASE(tmp);
 		    return -1;
@@ -1217,7 +1217,7 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 
 	count--;
 	if (count >= 0) {
-	    if (namei_SetLinkCount(fdP, ino, count, 1) < 0) {
+	    if (namei_SetLinkCount(fdP, ino, count, 1) != 0) {
 		FDH_REALLYCLOSE(fdP);
 		return -1;
 	    }
@@ -1230,7 +1230,7 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 
 	    /* If we're less than 0, someone presumably unlinked;
 	       don't bother setting count to 0, but we need to drop a lock */
-	    if (namei_SetLinkCount(fdP, ino, 0, 1) < 0) {
+	    if (namei_SetLinkCount(fdP, ino, 0, 1) != 0) {
 		FDH_REALLYCLOSE(fdP);
 		return -1;
 	    }
@@ -1278,7 +1278,7 @@ namei_inc(IHandle_t * h, Inode ino, int p1)
 	    code = -1;
 	    count = 7;
 	}
-	if (namei_SetLinkCount(fdP, ino, count, 1) < 0)
+	if (namei_SetLinkCount(fdP, ino, count, 1) != 0)
 	    code = -1;
     }
     if (code) {
@@ -1685,7 +1685,8 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
     int index;
     unsigned short row;
     int bytesRead;
-    ssize_t nBytes = -1;
+    ssize_t nBytes;
+    int code = -1;
 
     namei_GetLCOffsetAndIndexFromIno(ino, &offset, &index);
 
@@ -1715,14 +1716,12 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
     }
     (void)FDH_SYNC(fdP);
 
-    nBytes = 0;
-
+    code = 0;
 
   bad_SetLinkCount:
     FDH_UNLOCKFILE(fdP, offset);
 
-    /* disallowed above 7, so... */
-    return (int)nBytes;
+    return code;
 }
 
 static void
