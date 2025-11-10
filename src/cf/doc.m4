@@ -43,11 +43,11 @@ AC_SUBST(DOT_PATH)
 AC_SUBST(PERL)
 
 AS_IF([test x$MAN_PAGES = xyes],
-      [AC_SUBST([MANPAGES_ONLY], [])],
-      [AC_SUBST([MANPAGES_ONLY], ['#'])])
+      [AC_SUBST([IF_MANPAGES], [])],
+      [AC_SUBST([IF_MANPAGES], ['#'])])
 
 AS_IF([test x$MAN_PAGES$MAN_PAGES_HTML = xyesyes],
-      [AC_SUBST([MANPAGES_HTML_ONLY], [])],
-      [AC_SUBST([MANPAGES_HTML_ONLY], ['#'])])
+      [AC_SUBST([IF_MANPAGES_HTML], [])],
+      [AC_SUBST([IF_MANPAGES_HTML], ['#'])])
 
 ])

@@ -4,7 +4,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/doc/man-pages/Makefile.vars
 
-@MANPAGES_HTML_ONLY@TARGET_html = html
+@IF_MANPAGES_HTML@TARGET_html = html
 
 all: man $(TARGET_html)
 

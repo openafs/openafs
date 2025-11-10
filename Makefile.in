@@ -15,7 +15,7 @@ DOXYGEN=@DOXYGEN@
 
 CELLSERVDB=${TOP_SRCDIR}/afsd/CellServDB
 
-@MANPAGES_ONLY@DIR_manpages = man-pages
+@IF_MANPAGES@DIR_manpages = man-pages
 
 # To compile AFS from scratch in the src tree run "make".
 #   This recursively calls "make install ..." and does not depend on the

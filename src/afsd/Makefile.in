@@ -12,7 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 
 # On AIX, we need to import afsl.exp so the linker can understand that
 # syscall() is a syscall provided by libafs.
-@AIX_ONLY@AFSD_KERNEL_LDFLAGS=-Wl,-bI:../sys/afsl.exp
+@IF_AIX@AFSD_KERNEL_LDFLAGS=-Wl,-bI:../sys/afsl.exp
 
 #
 # What to make

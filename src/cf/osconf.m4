@@ -692,12 +692,12 @@ else
   esac
 fi
 
-dnl For convenience for AIX-only Makefile quirks, comment out all @AIX_ONLY@
+dnl For convenience for AIX-only Makefile quirks, comment out all @IF_AIX@
 dnl lines in our Makefiles on non-AIX.
-AIX_ONLY='#'
+IF_AIX='#'
 AS_CASE([$AFS_SYSNAME],
-	[rs_aix*], [AIX_ONLY=])
-AC_SUBST([AIX_ONLY])
+	[rs_aix*], [IF_AIX=])
+AC_SUBST([IF_AIX])
 
 dnl add additional checks if compilers support the flags
 AS_IF([test "x$enable_checking" != "xno"],

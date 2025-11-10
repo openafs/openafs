@@ -135,7 +135,7 @@ ihandle.o: ${VOL}/ihandle.c
 namei_ops.o: ${VOL}/namei_ops.c
 	$(AFS_CCRULE) $(VOL)/namei_ops.c
 
-@AIX_ONLY@LDFLAGS_davolserver = -Wl,-bI:../sys/afsl.exp
+@IF_AIX@LDFLAGS_davolserver = -Wl,-bI:../sys/afsl.exp
 davolserver: ${objects} ${LIBS}
 	$(LT_LDRULE_static) ${objects} ${LIBS} $(LIB_hcrypto) $(LIB_roken) \
 		${MT_LIBS} ${XLIBS}
