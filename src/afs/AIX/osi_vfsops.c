@@ -232,7 +232,7 @@ afs_vget(struct vfs *vfsp, struct vnode **avcp, struct fileid *fidp,
 }
 
 static int
-afs_badop()
+afs_aix_badop()
 {
     return EOPNOTSUPP;
 }
@@ -245,10 +245,10 @@ struct vfsops Afs_vfsops = {
     afs_statfs,
     afs_sync,
     afs_vget,
-    afs_badop,			/* vfs_cntl */
-    afs_badop			/* vfs_quotactl */
+    afs_aix_badop,			/* vfs_cntl */
+    afs_aix_badop			/* vfs_quotactl */
 #ifdef AFS_AIX51_ENV
-	, afs_badop		/* vfs_syncvfs */
+	, afs_aix_badop		/* vfs_syncvfs */
 #endif
 };
 
