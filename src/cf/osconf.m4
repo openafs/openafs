@@ -379,7 +379,7 @@ case $AFS_SYSNAME in
 		  AC_MSG_RESULT([ibm-clang])
 		  MT_CC="$CC"
 		  MT_CFLAGS="-pthread"
-		  AIX_CC_KOPTS="-fno-builtin"
+		  AIX_CC_KOPTS="-fno-builtin -mno-vsx -mno-altivec"
 		  XLDFLAGS="-Wl,-K"
 		  XCFLAGS64=-m64
 		 ],
