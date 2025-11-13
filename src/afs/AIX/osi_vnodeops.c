@@ -1817,8 +1817,8 @@ extern int Afs_init();
  * on this behavior to avoid having to think about locking.
  */
 
-static
-vfs_mount(struct vfs *a, struct ucred *b)
+static int
+afs_vfs_mount(struct vfs *a, struct ucred *b)
 {
     int glockOwner, ret;
 
@@ -1832,8 +1832,8 @@ vfs_mount(struct vfs *a, struct ucred *b)
     return ret;
 }
 
-static
-vfs_unmount(struct vfs *a, int b, struct ucred *c)
+static int
+afs_vfs_unmount(struct vfs *a, int b, struct ucred *c)
 {
     int glockOwner, ret;
 
@@ -1847,8 +1847,8 @@ vfs_unmount(struct vfs *a, int b, struct ucred *c)
     return ret;
 }
 
-static
-vfs_root(struct vfs *a, struct vnode **b, struct ucred *c)
+static int
+afs_vfs_root(struct vfs *a, struct vnode **b, struct ucred *c)
 {
     int glockOwner, ret;
 
@@ -1862,8 +1862,8 @@ vfs_root(struct vfs *a, struct vnode **b, struct ucred *c)
     return ret;
 }
 
-static
-vfs_statfs(struct vfs *a, struct statfs *b, struct ucred *c)
+static int
+afs_vfs_statfs(struct vfs *a, struct statfs *b, struct ucred *c)
 {
     int glockOwner, ret;
 
@@ -1877,8 +1877,8 @@ vfs_statfs(struct vfs *a, struct statfs *b, struct ucred *c)
     return ret;
 }
 
-static
-vfs_sync(struct gfs *a)
+static int
+afs_vfs_sync(struct gfs *a)
 {
     int glockOwner, ret;
 
@@ -1891,8 +1891,8 @@ vfs_sync(struct gfs *a)
     return ret;
 }
 
-static
-vfs_vget(struct vfs *a, struct vnode **b, struct fileid *c, struct ucred *d)
+static int
+afs_vfs_vget(struct vfs *a, struct vnode **b, struct fileid *c, struct ucred *d)
 {
     int glockOwner, ret;
 
@@ -1906,8 +1906,8 @@ vfs_vget(struct vfs *a, struct vnode **b, struct fileid *c, struct ucred *d)
     return ret;
 }
 
-static
-vfs_cntl(struct vfs *a, int b, caddr_t c, size_t d, struct ucred *e)
+static int
+afs_vfs_cntl(struct vfs *a, int b, caddr_t c, size_t d, struct ucred *e)
 {
     int glockOwner, ret;
 
@@ -1921,8 +1921,8 @@ vfs_cntl(struct vfs *a, int b, caddr_t c, size_t d, struct ucred *e)
     return ret;
 }
 
-static
-vfs_quotactl(struct vfs *a, int b, uid_t c, caddr_t d, struct ucred *e)
+static int
+afs_vfs_quotactl(struct vfs *a, int b, uid_t c, caddr_t d, struct ucred *e)
 {
     int glockOwner, ret;
 
@@ -1937,8 +1937,8 @@ vfs_quotactl(struct vfs *a, int b, uid_t c, caddr_t d, struct ucred *e)
 }
 
 #ifdef AFS_AIX51_ENV
-static
-vfs_syncvfs(struct gfs *a, struct vfs *b, int c, struct ucred *d)
+static int
+afs_vfs_syncvfs(struct gfs *a, struct vfs *b, int c, struct ucred *d)
 {
     int glockOwner, ret;
 
@@ -1955,16 +1955,16 @@ vfs_syncvfs(struct gfs *a, struct vfs *b, int c, struct ucred *d)
 
 
 struct vfsops locked_Afs_vfsops = {
-    vfs_mount,
-    vfs_unmount,
-    vfs_root,
-    vfs_statfs,
-    vfs_sync,
-    vfs_vget,
-    vfs_cntl,
-    vfs_quotactl,
+    afs_vfs_mount,
+    afs_vfs_unmount,
+    afs_vfs_root,
+    afs_vfs_statfs,
+    afs_vfs_sync,
+    afs_vfs_vget,
+    afs_vfs_cntl,
+    afs_vfs_quotactl,
 #ifdef AFS_AIX51_ENV
-    vfs_syncvfs
+    afs_vfs_syncvfs
 #endif
 };
 
