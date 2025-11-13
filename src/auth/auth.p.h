@@ -37,6 +37,7 @@ int ktc_ListTokensEx(int, int *, char **cellName);
 int ktc_ListTokens(int, int *, struct ktc_principal *);
 int ktc_ForgetToken(struct ktc_principal *);
 int ktc_ForgetAllTokens(void);
+int ktc_ForgetTokensByCell(const char *cell);
 afs_uint32 ktc_curpag(void);
 
 #ifdef AFS_KERBEROS_ENV

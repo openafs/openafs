@@ -63,6 +63,7 @@ afsconf_typedKey_values
 initialize_ACFG_error_table
 initialize_KTC_error_table
 ktc_ForgetAllTokens
+ktc_ForgetTokensByCell
 ktc_GetToken
 ktc_GetTokenEx
 ktc_OldPioctl

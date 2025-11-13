@@ -89,6 +89,7 @@ ka_UserAuthenticateGeneral
 ka_VerifyUserToken
 ktc_ForgetAllTokens
 ktc_ForgetToken
+ktc_ForgetTokensByCell
 ktc_GetToken
 ktc_GetTokenEx
 ktc_ListTokens

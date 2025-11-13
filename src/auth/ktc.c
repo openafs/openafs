@@ -993,6 +993,88 @@ ktc_ListTokens(int aprevIndex,
     return 0;
 }
 
+/*!
+ * Invalidates tokens for a specified cell name.
+ *
+ * This function first invalidates any matching entries in the local token
+ * cache, then issues the VIOC_UNLOG_CELL pioctl with cell name to unlog tokens
+ * for that cell.
+ *
+ * \param[in] cell
+ *	Name of the cell for which tokens will be invalidated.
+ *
+ * \retval 0
+ *	Successful removal of tokens.
+ * \retval KTC_PIOCTLFAIL
+ *	The pioctl call failed (specific error in 'errno').
+ */
+static int
+ForgetTokensByCell(const char *cell)
+{
+    struct ViceIoctl iob;
+    afs_int32 code;
+    int i;
+
+    for (i = 0; i < MAXLOCALTOKENS; i++) {
+	if (local_tokens[i].valid &&
+	    strcmp(local_tokens[i].server.cell, cell) == 0) {
+	    local_tokens[i].valid = 0;
+	}
+    }
+
+    iob.in = (caddr_t)cell;
+    iob.in_size = strlen(cell) + 1;
+    iob.out = 0;
+    iob.out_size = 0;
+#ifndef NO_AFS_CLIENT
+    code = PIOCTL(0, VIOC_UNLOG_CELL, &iob, 0);
+    if (code != 0) {
+	return KTC_PIOCTLFAIL;
+    }
+#endif /* NO_AFS_CLIENT */
+    return 0;
+}
+
+/*!
+ * Invalidate tokens associated with a specified cell name
+ *
+ * This function removes the tokens associated with the provided cell
+ * name. Unlike ktc_ForgetAllTokens(), it does not destroy the corresponding
+ * tickets in the Kerberos ticket file (KRBTKFILE) for the AFS_KERBEROS_ENV
+ * environment.
+ *
+ * \param[in] cell
+ *	Name of the cell for which tokens will be invalidated.
+ *
+ * \retval 0
+ *	Successful removal of tokens.
+ * \retval KTC_NOPIOCTL
+ *	The pioctl request is not understood by the kernel.
+ * \retval KTC_PIOCTLFAIL
+ *	Operation failed.
+ */
+int
+ktc_ForgetTokensByCell(const char *cell)
+{
+    int ocode;
+
+    LOCK_GLOBAL_MUTEX;
+
+    ocode = ForgetTokensByCell(cell);
+    if (ocode != 0) {
+	if (ocode == KTC_PIOCTLFAIL) {
+	    ocode = errno;
+	}
+	UNLOCK_GLOBAL_MUTEX;
+	if (ocode == EINVAL) {
+	    return KTC_NOPIOCTL;
+	}
+	return KTC_PIOCTLFAIL;
+    }
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
+}
+
 static int
 ForgetAll(void)
 {
