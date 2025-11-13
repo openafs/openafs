@@ -320,6 +320,7 @@ DECL_PIOCTL(PGetPAG);
 DECL_PIOCTL(PSetCachingThreshold);
 #endif
 DECL_PIOCTL(PGetLiteralFID);
+DECL_PIOCTL(PUnlogCell);
 
 /*
  * A macro that says whether we're going to need HandleClientContext().
@@ -443,10 +444,11 @@ static pioctlFunction OpioctlSw[]  = {
     PBogus,			/* 0 */
     PNFSNukeCreds,		/* 1 -- nuke all creds for NFS client */
 #if defined(AFS_CACHE_BYPASS) && defined(AFS_LINUX_ENV)
-    PSetCachingThreshold        /* 2 -- get/set cache-bypass size threshold */
+    PSetCachingThreshold,	/* 2 -- get/set cache-bypass size threshold */
 #else
-    PNoop                       /* 2 -- get/set cache-bypass size threshold */
+    PNoop,			/* 2 -- get/set cache-bypass size threshold */
 #endif
+    PUnlogCell,			/* 3 -- Unlog using cell name */
 };
 
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
@@ -2601,6 +2603,62 @@ DECL_PIOCTL(PUnlog)
 	}
     }
     ReleaseWriteLock(&afs_xuser);
+    return 0;
+}
+
+/*!
+ * VIOC_UNLOG_CELL (3) - Invalidate tokens by cellname
+ *
+ * \ingroup pioctl
+ *
+ * \param[in] ain	name of the cell
+ * \param[out] aout	not in use
+ *
+ * \retval EIO
+ *	Error if the afs daemon hasn't been started yet
+ * \retval EDOM
+ *	The user has no tokens for the specified cell
+ * \retval EINVAL
+ *	Error if some of the standard args aren't set
+ * \retval ESRCH
+ *	Error if the cell for which the Token is being unset can't be found
+ */
+DECL_PIOCTL(PUnlogCell)
+{
+    afs_int32 cellNum;
+    struct unixuser *tu;
+    char *cellName = NULL;
+    int code;
+
+    AFS_STATCNT(PUnlogCell);
+    if (!afs_resourceinit_flag) {	/* afs daemons haven't started yet */
+	return EIO;		/* Inappropriate ioctl for device */
+    }
+
+    if (afs_pd_getStringPtr(ain, &cellName) != 0) {
+	return EINVAL;
+    }
+
+    code = _settok_tokenCell(cellName, &cellNum, NULL);
+    if (code != 0) {
+	return code;
+    }
+
+    tu = afs_FindUser(areq->uid, cellNum, WRITE_LOCK);
+    if (tu == NULL) {
+	return EDOM;
+    }
+
+    tu->states &= ~UHasTokens;
+    afs_FreeTokens(&tu->tokens);
+    afs_NotifyUser(tu, UTokensDropped);
+    afs_ResetUserConns(tu);
+#ifdef UKERNEL
+    /* set expire time to 0, causes afs_GCUserData to remove this entry */
+    tu->tokenTime = 0;
+#endif /* UKERNEL */
+    afs_PutUser(tu, WRITE_LOCK);
+
     return 0;
 }
 
