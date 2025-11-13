@@ -51,6 +51,10 @@
 #include "h/flock.h"
 #include "afsincludes.h"
 
+static int afs_vm_rdwr(struct vnode *vp, struct uio *uiop, enum uio_rw rw,
+		       int ioflag, struct ucred *credp);
+static int afs_direct_rdwr(struct vnode *vp, struct uio *uiop, enum uio_rw rw,
+			   int ioflag, struct ucred *credp);
 
 int
 afs_gn_link(struct vnode *vp, 
