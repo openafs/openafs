@@ -442,7 +442,7 @@ GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
     ids.idlist_len = n;
     names.namelist_val = calloc(n, PR_MAXNAMELEN);
     names.namelist_len = n;
-    lnames->namelist_val = malloc(n * PR_MAXNAMELEN);
+    lnames->namelist_val = calloc(n, PR_MAXNAMELEN);
     lnames->namelist_len = 0;
 
     for (i = as->parms[0].items; i; i = i->next) {

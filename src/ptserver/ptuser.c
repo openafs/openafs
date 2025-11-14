@@ -1017,7 +1017,7 @@ pr_IsAMemberOf(prname uname, prname gname, afs_int32 *flag)
     stolower(uname);
     stolower(gname);
     lnames.namelist_len = 2;
-    lnames.namelist_val = malloc(2 * PR_MAXNAMELEN);
+    lnames.namelist_val = calloc(2, PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[0], uname, PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[1], gname, PR_MAXNAMELEN);
     lids.idlist_val = 0;
