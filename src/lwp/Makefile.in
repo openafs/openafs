@@ -186,6 +186,7 @@ install: liblwp.a afs_lock.h lwp.h timer.h
 dest: liblwp.a afs_lock.h lwp.h timer.h
 	${INSTALL} -d ${DEST}/lib
 	${INSTALL} -d ${DEST}/include
+	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL_DATA} liblwp.a ${DEST}/lib/liblwp.a
 	${INSTALL_DATA} ${srcdir}/afs_lock.h ${DEST}/include/afs/afs_lock.h
 	${INSTALL_DATA} ${srcdir}/lwp.h ${DEST}/include/lwp.h
