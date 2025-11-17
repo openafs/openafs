@@ -42,8 +42,8 @@ UPSTREAM= ${TOP_SRCDIR}/external/heimdal
 
 MODULE_INCLUDE=-I${srcdir} -I${TOP_INCDIR}/hcrypto -I$(UPSTREAM)/hcrypto
 
-@SHARED_ONLY@SHARED_LIBS = libafshcrypto.la
-@SHARED_ONLY@SHARED_SHLIBS_TOP = ${TOP_LIBDIR}/libafshcrypto.$(SHLIB_SUFFIX)
+@IF_SHARED@SHARED_LIBS = libafshcrypto.la
+@IF_SHARED@SHARED_SHLIBS_TOP = ${TOP_LIBDIR}/libafshcrypto.$(SHLIB_SUFFIX)
 
 all: @hcrypto_all_target@
 
@@ -58,13 +58,13 @@ buildtools: ${HEADERS} ${TOP_LIBDIR}/libafshcrypto.a
 install: @hcrypto_install_target@
 
 install-internal: $(SHARED_LIBS) libafshcrypto.a
-	@SHARED_ONLY@${LT_INSTALL_DATA} libafshcrypto.la ${DESTDIR}${libdir}/libafshcrypto.la
-	@SHARED_ONLY@${RM} ${DESTDIR}${libdir}/libafshcrypto.la
+	@IF_SHARED@${LT_INSTALL_DATA} libafshcrypto.la ${DESTDIR}${libdir}/libafshcrypto.la
+	@IF_SHARED@${RM} ${DESTDIR}${libdir}/libafshcrypto.la
 	${INSTALL_DATA} libafshcrypto.a ${DESTDIR}${libdir}/libafshcrypto.a
 
 dest: $(SHARED_LIBS) libafshcrypto.a
-	@SHARED_ONLY@${LT_INSTALL_DATA} libafshcrypto.la ${DEST}/lib/libafshcrypto.la
-	@SHARED_ONLY@${RM} ${DEST}/lib/libafshcrypto.la
+	@IF_SHARED@${LT_INSTALL_DATA} libafshcrypto.la ${DEST}/lib/libafshcrypto.la
+	@IF_SHARED@${RM} ${DEST}/lib/libafshcrypto.la
 	${INSTALL_DATA} libafshcrypto.a ${DEST}/lib/libafshcrypto.a
 
 clean:

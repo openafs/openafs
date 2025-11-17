@@ -24,8 +24,8 @@ MODULE_INCLUDE	= -I. -I${srcdir} -I../sys
 SFLAGS		= -I${TOP_INCDIR}
 SYS		= ${srcdir}/../sys
 
-@SHARED_ONLY@SHARED_LIBS = libkopenafs.la
-@SHARED_ONLY@SHARED_SHLIBS_TOP = ${TOP_LIBDIR}/libkopenafs.${SHLIB_SUFFIX}
+@IF_SHARED@SHARED_LIBS = libkopenafs.la
+@IF_SHARED@SHARED_SHLIBS_TOP = ${TOP_LIBDIR}/libkopenafs.${SHLIB_SUFFIX}
 
 all: $(SHARED_SHLIBS_TOP) ${TOP_LIBDIR}/libkopenafs.a \
 		${TOP_INCDIR}/kopenafs.h
@@ -92,16 +92,16 @@ test-setpag: test-setpag.lo libkopenafs.a
 install: $(SHARED_LIBS) libkopenafs.a
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL} -d ${DESTDIR}${includedir}
-	@SHARED_ONLY@${LT_INSTALL_DATA} libkopenafs.la ${DESTDIR}${libdir}/libkopenafs.la
-	@SHARED_ONLY@${RM} ${DESTDIR}${libdir}/libkopenafs.la
+	@IF_SHARED@${LT_INSTALL_DATA} libkopenafs.la ${DESTDIR}${libdir}/libkopenafs.la
+	@IF_SHARED@${RM} ${DESTDIR}${libdir}/libkopenafs.la
 	${INSTALL_DATA} libkopenafs.a ${DESTDIR}${libdir}/libkopenafs.a
 	${INSTALL_DATA} ${srcdir}/kopenafs.h ${DESTDIR}${includedir}/kopenafs.h
 
 dest: $(SHARED_LIBS) libkopenafs.a
 	${INSTALL} -d ${DEST}/lib
 	${INSTALL} -d ${DEST}/include
-	@SHARED_ONLY@${LT_INSTALL_DATA} libkopenafs.la ${DEST}/lib/libkopenafs.la
-	@SHARED_ONLY@${RM} ${DEST}/lib/libkopenafs.la
+	@IF_SHARED@${LT_INSTALL_DATA} libkopenafs.la ${DEST}/lib/libkopenafs.la
+	@IF_SHARED@${RM} ${DEST}/lib/libkopenafs.la
 	${INSTALL_DATA} libkopenafs.a ${DEST}/lib/libkopenafs.a
 	${INSTALL_DATA} ${srcdir}/kopenafs.h ${DEST}/include/kopenafs.h
 

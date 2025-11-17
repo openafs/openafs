@@ -34,7 +34,7 @@ LT_deps = \
 
 LT_libs = $(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) $(LIB_AFSDB) $(MT_LIBS)
 
-@SHARED_ONLY@SHARED_LIBS = libafsauthent.la
+@IF_SHARED@SHARED_LIBS = libafsauthent.la
 
 all: $(SHARED_LIBS) libafsauthent_pic.la \
 	$(TOP_LIBDIR)/libafsauthent.a \
@@ -63,8 +63,8 @@ clean:
 
 install: $(SHARED_LIBS) libafsauthent.a libafsauthent_pic.la
 	${INSTALL} -d ${DESTDIR}${libdir}
-	@SHARED_ONLY@${LT_INSTALL_DATA} libafsauthent.la ${DESTDIR}${libdir}/libafsauthent.la
-	@SHARED_ONLY@${RM} ${DESTDIR}${libdir}/libafsauthent.la
+	@IF_SHARED@${LT_INSTALL_DATA} libafsauthent.la ${DESTDIR}${libdir}/libafsauthent.la
+	@IF_SHARED@${RM} ${DESTDIR}${libdir}/libafsauthent.la
 	${INSTALL_DATA}  libafsauthent.a ${DESTDIR}${libdir}/libafsauthent.a
 	${INSTALL_DATA}  .libs/libafsauthent_pic.a ${DESTDIR}${libdir}/libafsauthent_pic.a
 

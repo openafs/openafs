@@ -409,10 +409,10 @@ ENABLE_PTHREADED_BOS=yes
 fi
 
 dnl If the libtool --disable-shared option is specified, comment out the
-dnl @SHARED_ONLY@ lines in our Makefiles.
+dnl @IF_SHARED@ lines in our Makefiles.
 AS_IF([test x"$enable_shared" = xyes],
- [SHARED_ONLY=],
- [SHARED_ONLY=#])
-AC_SUBST([SHARED_ONLY])
+ [IF_SHARED=],
+ [IF_SHARED=#])
+AC_SUBST([IF_SHARED])
 
 ])
