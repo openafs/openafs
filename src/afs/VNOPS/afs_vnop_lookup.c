@@ -313,12 +313,9 @@ EvalMountPoint(struct vcache *avc, struct vcache *advc,
 void
 afs_InitFakeStat(struct afs_fakestat_state *state)
 {
-    if (!afs_fakestat_enable)
-	return;
-
+    memset(state, 0, sizeof(*state));
     state->valid = 1;
-    state->did_eval = 0;
-    state->need_release = 0;
+    state->fakestat_enable = afs_fakestat_enable;
 }
 
 #ifdef AFS_DARWIN80_ENV
@@ -443,10 +440,12 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
     struct volume *tvolp = NULL;
     int code = 0;
 
-    if (!afs_fakestat_enable)
-	return 0;
-
     osi_Assert(state->valid == 1);
+
+    if (!state->fakestat_enable) {
+	return 0;
+    }
+
     osi_Assert(state->did_eval == 0);
     state->did_eval = 1;
 
@@ -561,10 +560,12 @@ afs_TryEvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state,
 void
 afs_PutFakeStat(struct afs_fakestat_state *state)
 {
-    if (!afs_fakestat_enable)
-	return;
-
     osi_Assert(state->valid == 1);
+
+    if (!state->fakestat_enable) {
+	return;
+    }
+
     if (state->need_release)
 	afs_PutVCache(state->root_vp);
     state->valid = 0;
@@ -1598,7 +1599,8 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     afs_int32 code;
     afs_int32 bulkcode = 0;
     int pass = 0, hit = 0;
-    int force_eval = afs_fakestat_enable ? 0 : 1;
+    int fakestat_enable = afs_fakestat_enable;
+    int force_eval = fakestat_enable ? 0 : 1;
     long dirCookie;
     afs_hyper_t versionNo;
     int no_read_access = 0;
@@ -1621,7 +1623,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     if ((code = afs_CreateReq(&treq, acred)))
 	goto done;
 
-    if (afs_fakestat_enable && adp->mvstat == AFS_MVSTAT_MTPT) {
+    if (fakestat_enable && adp->mvstat == AFS_MVSTAT_MTPT) {
        if (strcmp(aname, ".directory") == 0)
            tryEvalOnly = 1;
     }
@@ -1630,13 +1632,13 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     /* Workaround for MacOSX Finder, which tries to look for
      * .DS_Store and Contents under every directory.
      */
-    if (afs_fakestat_enable && adp->mvstat == AFS_MVSTAT_MTPT) {
+    if (fakestat_enable && adp->mvstat == AFS_MVSTAT_MTPT) {
 	if (strcmp(aname, ".DS_Store") == 0)
 	    tryEvalOnly = 1;
 	if (strcmp(aname, "Contents") == 0)
 	    tryEvalOnly = 1;
     }
-    if (afs_fakestat_enable && adp->mvstat == AFS_MVSTAT_ROOT) {
+    if (fakestat_enable && adp->mvstat == AFS_MVSTAT_ROOT) {
 	if (strncmp(aname, "._", 2) == 0)
 	    tryEvalOnly = 1;
     }
@@ -2018,7 +2020,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	tvc->f.parent.unique = adp->f.fid.Fid.Unique;
 	tvc->f.states &= ~CBulkStat;
 
-	if (afs_fakestat_enable == 2 && tvc->mvstat == AFS_MVSTAT_MTPT) {
+	if (fakestat_enable == 2 && tvc->mvstat == AFS_MVSTAT_MTPT) {
 	    ObtainSharedLock(&tvc->lock, 680);
 	    if (!tvc->linkData) {
 		UpgradeSToWLock(&tvc->lock, 681);

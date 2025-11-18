@@ -606,7 +606,7 @@ afs_vop_access(struct VOPPROT(access_args) *ap)
 	code = afs_CheckCode(code, &treq, 56);
 	goto out;
     }
-    if (afs_fakestat_enable && tvc->mvstat != AFS_MVSTAT_FILE && !(tvc->f.states & CStatd)) {
+    if (fakestate.fakestat_enable && tvc->mvstat != AFS_MVSTAT_FILE && !(tvc->f.states & CStatd)) {
 	code = 0;
 	goto out;
     }
