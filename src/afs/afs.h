@@ -1595,6 +1595,7 @@ struct fetchOps {
  */
 struct afs_fakestat_state {
     char valid;
+    char fakestat_enable;
     char did_eval;
     char need_release;
     struct vcache *root_vp;

@@ -404,9 +404,11 @@ static int UnEvalFakeStat(struct vrequest *areq, struct vcache **vcpp)
     struct volume *tvp;
     struct vcache *tvc;
     int code;
+    int fakestat_enable = afs_fakestat_enable;
 
-    if (!afs_fakestat_enable)
+    if (!fakestat_enable) {
 	return 0;
+    }
 
     if (*vcpp == afs_globalVp || vType(*vcpp) != VDIR || (*vcpp)->mvstat != AFS_MVSTAT_ROOT)
 	return 0;
@@ -436,7 +438,7 @@ static int UnEvalFakeStat(struct vrequest *areq, struct vcache **vcpp)
 	return ENOENT;
     }
 
-    if (afs_fakestat_enable == 2) {
+    if (fakestat_enable == 2) {
 	ObtainWriteLock(&tvc->lock, 806);
 	code = afs_HandleLink(tvc, areq);
 	if (code) {
