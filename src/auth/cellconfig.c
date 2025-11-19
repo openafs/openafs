@@ -1439,6 +1439,14 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 					* (that is, cells without any
 					* dbservers) */
 
+#if defined(AFS_AIX_ENV) && defined(__clang__)
+/*
+ * Avoid AltiVec instructions on AIX. By default, the clang-based Open XL C
+ * compiler generates AltiVec instructions in this function that can trigger a
+ * SIGILL.
+ */
+__attribute__((target("no-altivec")))
+#endif
 static int
 _GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
 	     struct afsconf_cell *acellInfo, afs_uint32 flags)
