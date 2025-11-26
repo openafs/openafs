@@ -272,8 +272,9 @@ H  AIX notes
    bos.adt.syscalls, and bos.adt.utils. These are available from the AIX
    install media, sometimes located in /usr/sys/inst.images.
 
-   We only support building with the IBM XL C family of compilers. We do not
-   yet support building the kernel module with XL C 17.1 and higher.
+   We only fully support building with the IBM XL C family of compilers.
+   Some limited support is also provided for Open XL C 17.1 on AIX 7.2
+   and higher.
 
 I  Other configure options
 
