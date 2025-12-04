@@ -44,6 +44,8 @@ struct sourcestack {
     FILE *s_file;
 };
 static struct sourcestack *shead;
+static const int MAX_SOURCE_STACK_SIZE = 64;
+static int source_stack_size;
 
 struct authstate {
     int sec;
@@ -90,16 +92,29 @@ pts_Source(struct cmd_syndesc *as, void *arock)
     int code;
     FILE *fp = NULL;
     struct sourcestack *sp = NULL;
+    char *fname;
 
     if (as->parms[0].items == NULL) {  /* -file */
 	code = 1;
 	goto error;
     }
 
-    fp = fopen(as->parms[0].items->data, "r");  /* -file */
+    /* -file */
+    fname = as->parms[0].items->data;
+
+    opr_Assert(source_stack_size >= 0);
+    if (source_stack_size >= MAX_SOURCE_STACK_SIZE) {
+	fprintf(stderr, "Error sourcing '%s': Source command recursion depth "
+		"limit (%d) exceeded.\n",
+		fname, MAX_SOURCE_STACK_SIZE);
+	code = -1;
+	goto error;
+    }
+
+    fp = fopen(fname, "r");
     if (fp == NULL) {
 	code = errno;
-	perror(as->parms[0].items->data);
+	perror(fname);
 	goto error;
     }
 
@@ -114,6 +129,7 @@ pts_Source(struct cmd_syndesc *as, void *arock)
     sp->s_file = source;
     shead = sp;
     source = fp;
+    source_stack_size++;
 
     return 0;
 
@@ -146,14 +162,21 @@ pts_Sleep(struct cmd_syndesc *as, void *arock)
 static int
 popsource(void)
 {
-    struct sourcestack *sp;
-    if (!(sp = shead))
+    struct sourcestack *sp = shead;
+
+    if (sp == NULL) {
+	opr_Assert(source_stack_size == 0);
 	return 0;
-    if (source != stdin)
+    }
+
+    opr_Assert(source_stack_size > 0);
+    if (source != stdin) {
 	fclose(source);
+    }
     source = sp->s_file;
     shead = sp->s_next;
     free(sp);
+    source_stack_size--;
     return 1;
 }
 

@@ -25,6 +25,12 @@ interactively.
 
 =head1 CAUTIONS
 
+To prevent infinite loops, the depth of nested B<source> commands is
+limited to 64. An infinite loop can occur if a file directly or
+indirectly sources itself. For example, if F<file_a> sources F<file_b>
+and F<file_b> sources F<file_a>. If the depth of nested B<source> commands is
+exceeded, the B<source> command will fail and print an error.
+
 Prior to OpenAFS 1.4.5 and OpenAFS 1.5.23, the B<pts source> command was
 only available on Unix or Linux and when OpenAFS was compiled with the
 supergroups option (disabled by default).  As of OpenAFS 1.4.5 and 1.5.23,
