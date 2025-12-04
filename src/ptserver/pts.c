@@ -69,7 +69,7 @@ enum {
     OPT_rxgk	    = 24,
 };
 
-static int CleanUp(struct cmd_syndesc *as, void *arock);
+static void CleanUp(void);
 
 static int
 pts_Interactive(struct cmd_syndesc *as, void *arock)
@@ -280,7 +280,7 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
     }
 
     if (changed) {
-	CleanUp(as, arock);
+	CleanUp();
 	code = pr_Initialize2(sec, confdir, cell, rxgk_level);
 	if (code != 0 && retry_confdir != NULL) {
 	    fprintf(stderr, "pts: Retrying initialization with directory %s\n",
@@ -306,17 +306,14 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
     return code;
 }
 
-static int
-CleanUp(struct cmd_syndesc *as, void *arock)
+static void
+CleanUp(void)
 {
-    if (as && !strcmp(as->name, "help"))
-	return 0;
     if (pruclient) {
 	/* Need to shutdown the ubik_client & other connections */
 	pr_End();
 	rx_Finalize();
     }
-    return 0;
 }
 
 static int
@@ -1234,7 +1231,7 @@ main(int argc, char **argv)
     finished = 1;
     source = NULL;
     if (cmd_Dispatch(argc, argv)) {
-	CleanUp(NULL, NULL);
+	CleanUp();
 	exit(1);
     }
     while (source && !finished) {
@@ -1268,6 +1265,6 @@ main(int argc, char **argv)
 	parsev[0] = savec;
 	cmd_FreeArgv(parsev);
     }
-    CleanUp(NULL, NULL);
+    CleanUp();
     exit(0);
 }
