@@ -38,7 +38,6 @@ int force = 0;
 
 static int finished;
 static FILE *source;
-extern struct ubik_client *pruclient;
 
 struct sourcestack {
     struct sourcestack *s_next;
@@ -309,11 +308,8 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 static void
 CleanUp(void)
 {
-    if (pruclient) {
-	/* Need to shutdown the ubik_client & other connections */
-	pr_End();
-	rx_Finalize();
-    }
+    pr_End();
+    rx_Finalize();
 }
 
 static int

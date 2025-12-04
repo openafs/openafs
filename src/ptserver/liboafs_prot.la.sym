@@ -30,7 +30,6 @@ pr_SNameToId
 pr_SetFieldsEntry
 pr_SetMaxGroupId
 pr_SetMaxUserId
-pruclient
 string_PR_IDToName
 ubik_PR_AddToGroup
 ubik_PR_ChangeEntry
