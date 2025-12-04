@@ -35,14 +35,17 @@ AC_DEFUN([OPENAFS_FUSE],
     [openafs_fuse="$enableval"])
 
  AS_IF([test -z "$openafs_fuse"],
-    [PKG_CHECK_EXISTS([fuse], [openafs_fuse=yes], [OPENAFS_SUN511_FUSE])])
+    [PKG_CHECK_EXISTS([fuse3], [openafs_fuse=yes],
+      [PKG_CHECK_EXISTS([fuse], [openafs_fuse=yes], [OPENAFS_SUN511_FUSE])])])
 
  AS_IF([test x"$openafs_fuse" = xyes && test x"$ENABLE_FUSE_CLIENT" = x],
-    [PKG_CHECK_MODULES([FUSE], [fuse],
+    [PKG_CHECK_MODULES([FUSE], [fuse3],
        [OPENAFS_FUSE_DEFS],
-       [OPENAFS_SUN511_FUSE
+        [PKG_CHECK_MODULES([FUSE], [fuse],
+          [OPENAFS_FUSE_DEFS],
+          [OPENAFS_SUN511_FUSE
            AS_IF([test x"$ENABLE_FUSE_CLIENT" = x],
-               [AC_MSG_ERROR([$FUSE_PKG_ERRORS])])])])
+                 [AC_MSG_ERROR([$FUSE_PKG_ERRORS])])])])])
  AC_SUBST([ENABLE_FUSE_CLIENT])
  AC_SUBST([CLIENT_UAFS_DEP])
  AC_SUBST([FUSE_CFLAGS])

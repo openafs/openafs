@@ -49,7 +49,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#define FUSE_USE_VERSION 27
+#define FUSE_USE_VERSION 31
 #include <fuse.h>
 
 /* command-line arguments to pass to afsd and the cmd_ library */
@@ -83,9 +83,22 @@ afs_path(const char *apath)
     return path;
 }
 
+#if FUSE_MAJOR_VERSION >= 3
+static void *
+fuafsd_init(struct fuse_conn_info *conn, struct fuse_config *cfg)
+#else
 static void *
 fuafsd_init(struct fuse_conn_info *conn)
+#endif
 {
+    /*
+     * For now, don't touch 'cfg'. The various fields in 'cfg' can be set to
+     * specify different variants of behavior that may be useful (such as
+     * .nullpath_ok), or are given to us by fuse according to args given by the
+     * user (such as .kernel_cache). Someday we may want to set some values, or
+     * sanity-check the values given to us, but don't bother for now.
+     */
+
     uafs_Run();
 
     uafs_setMountDir("/afs");
@@ -95,8 +108,14 @@ fuafsd_init(struct fuse_conn_info *conn)
 
 /* Wrappers around libuafs calls for FUSE */
 
+#if FUSE_MAJOR_VERSION >= 3
+static int
+fuafsd_getattr(const char *apath, struct stat *stbuf,
+	       struct fuse_file_info *fi)
+#else
 static int
 fuafsd_getattr(const char *apath, struct stat *stbuf)
+#endif
 {
 	int code;
 	char *path = afs_path(apath);
@@ -136,18 +155,39 @@ fuafsd_opendir(const char *apath, struct fuse_file_info * fi)
 	return 0;
 }
 
+#if FUSE_MAJOR_VERSION >= 3
 static int
 fuafsd_readdir(const char *path, void * buf, fuse_fill_dir_t filler,
-               off_t offset, struct fuse_file_info * fi)
+	       off_t offset, struct fuse_file_info * fi,
+	       enum fuse_readdir_flags flags)
+#else
+static int
+fuafsd_readdir(const char *path, void * buf, fuse_fill_dir_t filler,
+	       off_t offset, struct fuse_file_info * fi)
+#endif
 {
 	usr_DIR * dirp;
 	struct usr_dirent * direntP;
+
+	/*
+	 * Note that any values for 'flags' are okay, and we don't need to
+	 * check them. If the caller has requested that we provide stat data
+	 * (FUSE_READDIR_PLUS), we're allowed to ignore the request and not
+	 * provide any stat data. So for now, we just don't care what flags
+	 * have been passed.
+	 */
 
 	dirp = (usr_DIR *)(uintptr_t)fi->fh;
 
 	errno = 0;
 	while ((direntP = uafs_readdir(dirp))) {
-		if (filler(buf, direntP->d_name, NULL, 0)) {
+		int full;
+#if FUSE_MAJOR_VERSION >= 3
+		full = filler(buf, direntP->d_name, NULL, 0, 0);
+#else
+		full = filler(buf, direntP->d_name, NULL, 0);
+#endif
+		if (full) {
 			/* buffer is full */
 			return 0;
 		}
@@ -309,12 +349,26 @@ fuafsd_symlink(const char *atarget, const char *asource)
 	return 0;
 }
 
+#if FUSE_MAJOR_VERSION >= 3
+static int
+fuafsd_rename(const char *aold, const char *anew, unsigned int flags)
+#else
 static int
 fuafsd_rename(const char *aold, const char *anew)
+#endif
 {
 	int code;
-	char *old = afs_path(aold);
-	char *new = afs_path(anew);
+	char *old;
+	char *new;
+
+#if FUSE_MAJOR_VERSION >= 3
+	if (flags != 0) {
+	    return -EINVAL;
+	}
+#endif
+
+	old = afs_path(aold);
+	new = afs_path(anew);
 
 	if (old == NULL || new == NULL) {
 	    if (old) free(old);
@@ -357,8 +411,13 @@ fuafsd_link(const char *aexisting, const char *anew)
 	return 0;
 }
 
+#if FUSE_MAJOR_VERSION >= 3
+static int
+fuafsd_chmod(const char *apath, mode_t mode, struct fuse_file_info *fi)
+#else
 static int
 fuafsd_chmod(const char *apath, mode_t mode)
+#endif
 {
 	int code;
 	char *path = afs_path(apath);
@@ -376,8 +435,13 @@ fuafsd_chmod(const char *apath, mode_t mode)
 	return 0;
 }
 
+#if FUSE_MAJOR_VERSION >= 3
+static int
+fuafsd_truncate(const char *apath, off_t length, struct fuse_file_info *fi)
+#else
 static int
 fuafsd_truncate(const char *apath, off_t length)
+#endif
 {
 	int code;
 	char *path = afs_path(apath);
