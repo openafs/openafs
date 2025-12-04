@@ -83,13 +83,8 @@ afs_path(const char *apath)
     return path;
 }
 
-#if FUSE_MAJOR_VERSION >= 3
 static void *
 fuafsd_init(struct fuse_conn_info *conn, struct fuse_config *cfg)
-#else
-static void *
-fuafsd_init(struct fuse_conn_info *conn)
-#endif
 {
     /*
      * For now, don't touch 'cfg'. The various fields in 'cfg' can be set to
@@ -108,14 +103,9 @@ fuafsd_init(struct fuse_conn_info *conn)
 
 /* Wrappers around libuafs calls for FUSE */
 
-#if FUSE_MAJOR_VERSION >= 3
 static int
 fuafsd_getattr(const char *apath, struct stat *stbuf,
 	       struct fuse_file_info *fi)
-#else
-static int
-fuafsd_getattr(const char *apath, struct stat *stbuf)
-#endif
 {
 	int code;
 	char *path = afs_path(apath);
@@ -155,16 +145,10 @@ fuafsd_opendir(const char *apath, struct fuse_file_info * fi)
 	return 0;
 }
 
-#if FUSE_MAJOR_VERSION >= 3
 static int
 fuafsd_readdir(const char *path, void * buf, fuse_fill_dir_t filler,
 	       off_t offset, struct fuse_file_info * fi,
 	       enum fuse_readdir_flags flags)
-#else
-static int
-fuafsd_readdir(const char *path, void * buf, fuse_fill_dir_t filler,
-	       off_t offset, struct fuse_file_info * fi)
-#endif
 {
 	usr_DIR * dirp;
 	struct usr_dirent * direntP;
@@ -182,11 +166,7 @@ fuafsd_readdir(const char *path, void * buf, fuse_fill_dir_t filler,
 	errno = 0;
 	while ((direntP = uafs_readdir(dirp))) {
 		int full;
-#if FUSE_MAJOR_VERSION >= 3
 		full = filler(buf, direntP->d_name, NULL, 0, 0);
-#else
-		full = filler(buf, direntP->d_name, NULL, 0);
-#endif
 		if (full) {
 			/* buffer is full */
 			return 0;
@@ -349,23 +329,16 @@ fuafsd_symlink(const char *atarget, const char *asource)
 	return 0;
 }
 
-#if FUSE_MAJOR_VERSION >= 3
 static int
 fuafsd_rename(const char *aold, const char *anew, unsigned int flags)
-#else
-static int
-fuafsd_rename(const char *aold, const char *anew)
-#endif
 {
 	int code;
 	char *old;
 	char *new;
 
-#if FUSE_MAJOR_VERSION >= 3
 	if (flags != 0) {
 	    return -EINVAL;
 	}
-#endif
 
 	old = afs_path(aold);
 	new = afs_path(anew);
@@ -411,13 +384,8 @@ fuafsd_link(const char *aexisting, const char *anew)
 	return 0;
 }
 
-#if FUSE_MAJOR_VERSION >= 3
 static int
 fuafsd_chmod(const char *apath, mode_t mode, struct fuse_file_info *fi)
-#else
-static int
-fuafsd_chmod(const char *apath, mode_t mode)
-#endif
 {
 	int code;
 	char *path = afs_path(apath);
@@ -435,13 +403,8 @@ fuafsd_chmod(const char *apath, mode_t mode)
 	return 0;
 }
 
-#if FUSE_MAJOR_VERSION >= 3
 static int
 fuafsd_truncate(const char *apath, off_t length, struct fuse_file_info *fi)
-#else
-static int
-fuafsd_truncate(const char *apath, off_t length)
-#endif
 {
 	int code;
 	char *path = afs_path(apath);
@@ -648,13 +611,7 @@ main(int argc, char **argv)
 	struct fuse_args args = FUSE_ARGS_INIT(argc-1, &argv[1]);
 	fuse_opt_add_arg(&afsd_args, argv[0]);
 
-#ifdef AFS_SUN511_ENV
-	/* for some reason, Solaris 11 FUSE takes the filesystem name from
-	 * argv[0], and ignores the -ofsname option */
-	fuse_opt_add_arg(&fuse_args, "AFS");
-#else
 	fuse_opt_add_arg(&fuse_args, argv[0]);
-#endif
 
 	/* let us determine file inode numbers, not FUSE. also make "AFS" appear
 	 * in df/mount/mnttab/etc output. */
@@ -691,12 +648,7 @@ main(int argc, char **argv)
 	/* pass "-- /mount/dir" to fuse to specify dir to mount; "--" is
 	 * just to make sure fuse doesn't interpret the mount dir as a flag
 	 */
-#ifndef AFS_SUN511_ENV
-	/* This seems to screw up option parsing on Solaris 11 FUSE, so just
-	 * don't do it. This makes it slightly more annoying to mount on a dir
-	 * called -foo or something, but oh well. */
 	fuse_opt_add_arg(&fuse_args, "--");
-#endif
 	fuse_opt_add_arg(&fuse_args, uafs_MountDir());
 
 	return fuse_main(fuse_args.argc, fuse_args.argv, &fuafsd_oper, NULL);
