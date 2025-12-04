@@ -42,7 +42,8 @@ static FILE *source;
 struct sourcestack {
     struct sourcestack *s_next;
     FILE *s_file;
-} *shead;
+};
+static struct sourcestack *shead;
 
 struct authstate {
     int sec;
@@ -306,6 +307,11 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 static void
 CleanUp(void)
 {
+    /* Clean up source stack. */
+    while (shead != NULL) {
+	popsource();
+    }
+
     pr_End();
     rx_Finalize();
 }
@@ -1086,6 +1092,7 @@ int
 main(int argc, char **argv)
 {
     afs_int32 code;
+    int exit_code;
     struct cmd_syndesc *ts;
 
     char line[2048];
@@ -1225,8 +1232,8 @@ main(int argc, char **argv)
     finished = 1;
     source = NULL;
     if (cmd_Dispatch(argc, argv)) {
-	CleanUp();
-	exit(1);
+	exit_code = 1;
+	goto done;
     }
     while (source && !finished) {
 	if (isatty(fileno(source)))
@@ -1249,9 +1256,10 @@ main(int argc, char **argv)
 	code =
 	    cmd_ParseLine(line, parsev, &parsec,
 			  sizeof(parsev) / sizeof(*parsev));
-	if (code) {
+	if (code != 0) {
 	    afs_com_err(whoami, code, "parsing line: <%s>", line);
-	    exit(2);
+	    exit_code = 2;
+	    goto done;
 	}
 	savec = parsev[0];
 	parsev[0] = argv[0];
@@ -1259,6 +1267,9 @@ main(int argc, char **argv)
 	parsev[0] = savec;
 	cmd_FreeArgv(parsev);
     }
+    exit_code = 0;
+
+ done:
     CleanUp();
-    exit(0);
+    return exit_code;
 }
