@@ -68,8 +68,6 @@ enum {
     OPT_rxgk	    = 24,
 };
 
-static void CleanUp(void);
-
 static int
 pts_Interactive(struct cmd_syndesc *as, void *arock)
 {
@@ -279,7 +277,7 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
     }
 
     if (changed) {
-	CleanUp();
+	pr_End();
 	code = pr_Initialize2(sec, confdir, cell, rxgk_level);
 	if (code != 0 && retry_confdir != NULL) {
 	    fprintf(stderr, "pts: Retrying initialization with directory %s\n",
