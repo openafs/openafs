@@ -23,7 +23,8 @@ AC_DEFUN([_OPENAFS_LINUX_KERNEL_PATHS], [
 if test "x$with_linux_kernel_headers" != "x"; then
   LINUX_KERNEL_PATH="$with_linux_kernel_headers"
 else
-  for utsdir in "/lib/modules/`uname -r`/build" \
+  for utsdir in "/usr/src/kernels/`uname -r`" \
+                "/lib/modules/`uname -r`/build" \
                 "/lib/modules/`uname -r`/source" \
                 "/usr/src/linux"; do
     LINUX_KERNEL_PATH="$utsdir"
