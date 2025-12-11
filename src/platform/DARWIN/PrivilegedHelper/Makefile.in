@@ -5,10 +5,10 @@ include @TOP_OBJDIR@/src/config/Makefile.pthread
 all: org.openafs.privhelper
 
 org.openafs.privhelper: privhelper.c
-	$(CC) -O2 -mmacosx-version-min=10.6 \
+	$(AFS_LDRULE) privhelper.c -mmacosx-version-min=10.6 \
 		-Xlinker -sectcreate -Xlinker __TEXT -Xlinker __info_plist -Xlinker privhelper-info.plist \
 		-Xlinker -sectcreate -Xlinker __TEXT -Xlinker __launchd_plist -Xlinker privhelper-launchd.plist \
-		-o org.openafs.privhelper privhelper.c -framework Security -framework CoreFoundation
+		-framework Security -framework CoreFoundation
 
 clean:
 	$(RM) -f *.o org.openafs.privhelper
