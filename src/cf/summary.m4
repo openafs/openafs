@@ -1,18 +1,20 @@
-dnl
-dnl configure summary
-dnl
-dnl
-dnl OPENAFS_SUMMARY_CHECK_NAME
-dnl
-dnl Check whether namei fileserver is enabled for this platform/configure options.
-dnl When namei is enabled with a configure option, the AFS_NAMEI_ENV will be defined
-dnl for the test program. AFS_NAMEI_ENV can also be defined in the platform and sysname
-dnl param headers for this platform. Avoid including the afs/afs_sysnames.h header since
-dnl it has not been installed to the `include/afs' system directory yet (and is not
-dnl needed for this namei check).
-dnl
-dnl Note that, if set, AFS_PARAM_COMMON is the header filename, including the .h suffix.
-dnl
+
+# OPENAFS_SUMMARY_CHECK_NAME
+# --------------------------
+#
+# Check whether namei fileserver is enabled for this platform and configure
+# options.  When namei is enabled with a configure option, the AFS_NAMEI_ENV
+# will be defined for the test program. AFS_NAMEI_ENV can also be defined in
+# the platform and sysname param headers for this platform. Avoid including the
+# afs/afs_sysnames.h header since it has not been installed to the
+# `include/afs' system directory yet (and is not needed for this namei check).
+#
+# Note that, if set, AFS_PARAM_COMMON is the header filename, including the .h
+# suffix.
+#
+# This macro should be used before AC_OUTPUT so the results will be saved
+# in the configure cache.
+#
 AC_DEFUN([OPENAFS_SUMMARY_CHECK_NAMEI],
   [AC_CACHE_CHECK([whether namei fileserver is enabled], [openafs_cv_summary_check_namei],
     [rm -f conftestparam.h; touch conftestparam.h;  # automatically cleaned up by configure
@@ -33,11 +35,13 @@ AC_DEFUN([OPENAFS_SUMMARY_CHECK_NAMEI],
       [openafs_cv_summary_check_namei="no"])
   ])
 ])
-dnl
-dnl OPENAFS_SUMMARY
-dnl
-dnl Print the configure summary.
-dnl
+
+#
+# OPENAFS_SUMMARY
+# ---------------
+#
+# Print the configure summary.
+#
 AC_DEFUN([OPENAFS_SUMMARY],[
   AS_IF([test "x${LIB_curses}" = "x"],
     [summary_build_scout="no"],
@@ -64,7 +68,7 @@ AC_DEFUN([OPENAFS_SUMMARY],[
     [summary_kernel_module="yes"],
     [summary_kernel_module="no"])
 
-  cat <<EOF
+  AC_MSG_NOTICE([
 ***************************************************************
 OpenAFS configure summary
 
@@ -102,5 +106,5 @@ libraries:
   hcrypto : ${LIB_hcrypto}
   intl    : ${LIB_libintl}
 ***************************************************************
-EOF
+  ])
 ])

@@ -16,8 +16,6 @@ OPENAFS_PATH_CC
 OPENAFS_CONFIGURE_COMMON
 OPENAFS_KRB5
 OPENAFS_GSS
-
-dnl Checks for summary
 OPENAFS_SUMMARY_CHECK_NAMEI
 
 AC_CONFIG_FILES([
@@ -184,6 +182,4 @@ AC_CONFIG_COMMANDS([default],[chmod a+x src/config/shlib-build
  chmod a+x src/config/cc-wrapper
  chmod a+x tests/cmdwrap],[])
 AC_OUTPUT
-
-# print a final summary
 OPENAFS_SUMMARY
