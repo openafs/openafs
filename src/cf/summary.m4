@@ -46,9 +46,9 @@ AC_DEFUN([OPENAFS_SUMMARY],[
   AS_IF([test "x${LIB_curses}" = "x"],
     [summary_build_scout="no"],
     [summary_build_scout="yes"])
-  AS_IF([test "x${DOCBOOK_STYLESHEETS}" = "x"],
-    [summary_docbook_stylesheets="no"],
-    [summary_docbook_stylesheets="yes"])
+  AS_IF([test "x${LIB_curses}" = "x"],
+    [summary_build_afsmonitor="no"],
+    [summary_build_afsmonitor="yes"])
   AS_IF([test "x${DOXYGEN}" = "x"],
     [summary_doxygen="no"],
     [summary_doxygen="yes"])
@@ -72,14 +72,24 @@ AC_DEFUN([OPENAFS_SUMMARY],[
 ***************************************************************
 OpenAFS configure summary
 
-  version : ${PACKAGE_VERSION}
-  sysname : ${AFS_SYSNAME}
+Identification
+  version                : ${PACKAGE_VERSION}
+  sysname                : ${AFS_SYSNAME}
 
-debug:
+Linker
+  krb5                   : ${KRB5_LIBS}
+  curses                 : ${LIB_curses}
+  afsdb                  : ${LIB_AFSDB}
+  crypt                  : ${LIB_crypt}
+  hcrypto                : ${LIB_hcrypto}
+  intl                   : ${LIB_libintl}
+
+Debug symbols
   userspace              : ${enable_debug}
   kernel                 : ${enable_debug_kernel}
   ctf-tools              : ${summary_ctf_tools}
-options:
+
+Options
   transarc paths         : ${enable_transarc_paths}
   namei fileserver       : ${openafs_cv_summary_check_namei}
   use unix sockets       : ${USE_UNIX_SOCKETS}
@@ -87,24 +97,19 @@ options:
   pthreaded ubik         : ${enable_pthreaded_ubik}
   install kauth          : ${INSTALL_KAUTH}
   ubik read while write  : ${enable_ubik_read_while_write}
-build:
+
+Build components
   kernel module          : ${summary_kernel_module}
-  scout/afsmonitor       : ${summary_build_scout}
+  scout                  : ${summary_build_scout}
+  afsmonitor             : ${summary_build_afsmonitor}
   pam                    : ${HAVE_PAM}
   login                  : ${BUILD_LOGIN}
-doc generation:
-  docbook stylesheets    : ${summary_docbook_stylesheets}
-  doxygen                : ${summary_doxygen}
-  doxygen graphs         : ${summary_doxygen_graphs}
-  man pages              : ${summary_man_pages}
-  man pages (html)       : ${summary_man_pages_html}
-libraries:
-  krb5    : ${KRB5_LIBS}
-  curses  : ${LIB_curses}
-  afsdb   : ${LIB_AFSDB}
-  crypt   : ${LIB_crypt}
-  hcrypto : ${LIB_hcrypto}
-  intl    : ${LIB_libintl}
+
+Generate documents
+  doxygen pages          : ${summary_doxygen}
+  doxygen diagrams       : ${summary_doxygen_graphs}
+  man pages, roff format : ${summary_man_pages}
+  man pages, html format : ${summary_man_pages_html}
 ***************************************************************
   ])
 ])
