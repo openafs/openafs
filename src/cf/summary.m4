@@ -64,9 +64,20 @@ AC_DEFUN([OPENAFS_SUMMARY],[
   AS_IF([test "x$CTFCONVERT" != "x" -a "x$CTFMERGE" != "x"],
     [summary_ctf_tools="yes"],
     [summary_ctf_tools="no"])
-  AS_IF([test "x$ENABLE_KERNEL_MODULE" != "x"],
-    [summary_kernel_module="yes"],
-    [summary_kernel_module="no"])
+  AS_IF([test "x$ENABLE_KERNEL_MODULE" == "x"],
+    [summary_kernel_module="no"],
+    [summary_kernel_module="yes"
+     AS_CASE([$AFS_SYSNAME],
+       [*linux*], [summary_kernel_module_section="\
+
+Linux kernel module
+  kernel version         : ${LINUX_VERSION}
+  kernel build directory : ${LINUX_KERNEL_BUILD}
+  kernel headers         : ${LINUX_KERNEL_PATH}
+  module name            : ${LINUX_LIBAFS_NAME}
+  module file            : src/libafs/MODLOAD-${LINUX_VERSION}/${LINUX_LIBAFS_NAME}.ko
+  module C options       :${LINUX_GCC_KOPTS}
+"])])
 
   AC_MSG_NOTICE([
 ***************************************************************
@@ -114,6 +125,7 @@ Generate documents
   doxygen diagrams       : ${summary_doxygen_graphs}
   man pages, roff format : ${summary_man_pages}
   man pages, html format : ${summary_man_pages_html}
+${summary_kernel_module_section}
 ***************************************************************
   ])
 ])
