@@ -74,8 +74,10 @@ Linux kernel module
   kernel version         : ${LINUX_VERSION}
   kernel build directory : ${LINUX_KERNEL_BUILD}
   kernel headers         : ${LINUX_KERNEL_PATH}
+  kernel compiled with   : ${LINUX_KERNEL_CONFIG_CC_TEXT}
   module name            : ${LINUX_LIBAFS_NAME}
   module file            : src/libafs/MODLOAD-${LINUX_VERSION}/${LINUX_LIBAFS_NAME}.ko
+  module C compiler      : ${LINUX_KERNEL_CC_TEXT}
   module C options       :${LINUX_GCC_KOPTS}
 "])])
 
