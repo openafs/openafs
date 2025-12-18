@@ -41,7 +41,7 @@ AC_DEFUN([OPENAFS_FUSE],
     [PKG_CHECK_MODULES([FUSE], [fuse],
        [OPENAFS_FUSE_DEFS],
        [OPENAFS_SUN511_FUSE
-           AS_IF([test x"ENABLE_FUSE_CLIENT" = x],
+           AS_IF([test x"$ENABLE_FUSE_CLIENT" = x],
                [AC_MSG_ERROR(["$FUSE_PACKAGE_ERRORS"])])])])
  AC_SUBST([ENABLE_FUSE_CLIENT])
  AC_SUBST([CLIENT_UAFS_DEP])
