@@ -177,8 +177,8 @@ silent_errors(const char *who,
 
 #if defined(HAVE_KRB5_PRINC_SIZE) || defined(krb5_princ_size)
 
-#define get_princ_str(c, p, n) krb5_princ_component(c, p, n)->data
-#define get_princ_len(c, p, n) krb5_princ_component(c, p, n)->length
+#define get_princ_str(c, p, n) ((krb5_data *)krb5_princ_component(c, p, n))->data
+#define get_princ_len(c, p, n) ((krb5_data *)krb5_princ_component(c, p, n))->length
 #define num_comp(c, p) (krb5_princ_size(c, p))
 #define realm_data(c, p) krb5_princ_realm(c, p)->data
 #define realm_len(c, p) krb5_princ_realm(c, p)->length
