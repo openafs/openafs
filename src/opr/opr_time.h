@@ -304,6 +304,68 @@ opr_time64_toUint32_wrap(struct afs_time64 in, afs_uint32 *out)
 }
 
 #if !defined(KERNEL) || defined(UKERNEL)
+/*
+ * Version of opr_time64_toSecs() that converts to a system time_t
+ * specifically. Only use this when you need to actually use a time_t (for
+ * example, when dealing with libc functions).
+ */
+static_inline void
+opr_time64_toTimeT(struct afs_time64 in, time_t *out)
+{
+    afs_int64 secs;
+
+    opr_time64_toSecs_safe(in, &secs);
+
+# if defined(_AIX) && !defined(__64BIT__) && !defined(_LINUX_SOURCE_COMPAT)
+#  warning "time_t appears to be 32 bits; we may not work beyond year 2038"
+    /*
+     * On AIX, time_t is 32 bits wide unless we are 64-bit, or
+     * _LINUX_SOURCE_COMPAT is defined. Let things still compile for now, but
+     * in the future this will need to break, since there is no way to function
+     * sanely on a system with a 32-bit time_t.
+     */
+    opr_Assert(secs <= MAX_AFS_INT32);
+    opr_Assert(secs >= MIN_AFS_INT32);
+# else
+    opr_StaticAssert(sizeof(time_t) >= sizeof(afs_int64));
+# endif
+
+    *out = secs;
+}
+
+/*
+ * Similar to ctime(3), but we take an afs_time64, and we trim off the trailing
+ * newline of the returned string. If the system ctime(3) call fails, the
+ * returned string instead consists of the number of seconds between brackets,
+ * for example: "[12345]".
+ *
+ * Like ctime(3), this returns a pointer to a static buffer, so try not to use
+ * this in multithreaded code.
+ */
+static_inline char *
+opr_time64_ctime(struct afs_time64 in)
+{
+    static char buf[26];
+    time_t secs;
+    char *str;
+    char *nl;
+
+    opr_time64_toTimeT(in, &secs);
+    str = ctime(&secs);
+    if (str == NULL) {
+	snprintf(buf, sizeof(buf), "[%lld]", (long long)secs);
+	return buf;
+    }
+
+    /* Trim off trailing \n. */
+    nl = strchr(str, '\n');
+    if (nl != NULL) {
+	*nl = '\0';
+    }
+
+    return str;
+}
+
 static_inline int
 opr_time64_now_safe(struct afs_time64 *out)
 {
