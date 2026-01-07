@@ -101,14 +101,6 @@ packages: dest
 		${COMPILE_PART1} packaging/MacOS && bash ./buildpkg.sh ${DEST} ;; \
 	*_darwin_* ) \
 		${COMPILE_PART1} packaging/MacOS && bash ./pkgbuild.sh ${DEST} --csdb ${CELLSERVDB} ;; \
-	hp_ux110 ) \
-		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.00 ;; \
-	hp_ux11i ) \
-		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.11 ;; \
-	ia64_hpux1122 ) \
-		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.22 ;; \
-	ia64_hpux1123 | hp_ux1123) \
-		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.23 ;; \
 	*) \
 		echo Not building packages for ${SYS_NAME} ;; \
 	esac
