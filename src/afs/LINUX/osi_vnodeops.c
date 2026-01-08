@@ -3526,6 +3526,10 @@ afs_linux_end_writeback(struct vcache *vcp, cred_t **acredp, int written_size, u
     return code;
 }
 
+#if defined(LINUX_WRITE_CACHE_PAGES_USES_FOLIOS)
+# define LINUX_WRITEPAGES_USES_FOLIOS
+#endif
+
 #if defined(LINUX_WRITEPAGES_USES_FOLIOS)
 /*
  * Callback function for write_cache_pages
