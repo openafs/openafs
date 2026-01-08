@@ -21,6 +21,9 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
+#if defined(HAVE_LINUX_GET_TREE_NODEV)
+# include "linux/fs_context.h"
+#endif
 
 #include "osi_compat.h"
 
@@ -39,6 +42,28 @@ extern struct dentry_operations afs_dentry_operations;
 
 /* Forward declarations */
 static int afs_root(struct super_block *afsp);
+
+#if defined(HAVE_LINUX_GET_TREE_NODEV)
+static int afs_fill_super(struct super_block *sb, struct fs_context *fc);
+
+static int
+afs_fc_get_tree(struct fs_context *fc)
+{
+    return get_tree_nodev(fc, afs_fill_super);
+}
+
+static struct fs_context_operations afs_fs_context_ops = {
+    .get_tree = afs_fc_get_tree,
+};
+
+static int
+afs_init_fs_context(struct fs_context *fc)
+{
+    fc->ops = &afs_fs_context_ops;
+    return 0;
+}
+
+#else
 static int afs_fill_super(struct super_block *sb, void *data, int silent);
 
 
@@ -48,33 +73,36 @@ static int afs_fill_super(struct super_block *sb, void *data, int silent);
  * structure is setup in the afs_fill_super callback function.
  */
 
-#if defined(STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT)
+# if defined(STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT)
 static struct dentry *
 afs_mount(struct file_system_type *fs_type, int flags,
 	  const char *dev_name, void *data)
 {
     return mount_nodev(fs_type, flags, data, afs_fill_super);
 }
-#elif defined(GET_SB_HAS_STRUCT_VFSMOUNT)
+# elif defined(GET_SB_HAS_STRUCT_VFSMOUNT)
 static int
 afs_get_sb(struct file_system_type *fs_type, int flags,
 	   const char *dev_name, void *data, struct vfsmount *mnt)
 {
     return get_sb_nodev(fs_type, flags, data, afs_fill_super, mnt);
 }
-#else
+# else
 static struct super_block *
 afs_get_sb(struct file_system_type *fs_type, int flags,
 	   const char *dev_name, void *data)
 {
     return get_sb_nodev(fs_type, flags, data, afs_fill_super);
 }
-#endif
+# endif /* STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT */
+#endif /* HAVE_LINUX_GET_TREE_NODEV */
 
 struct file_system_type afs_fs_type = {
     .owner = THIS_MODULE,
     .name = "afs",
-#if defined(STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT)
+#if defined(HAVE_LINUX_GET_TREE_NODEV)
+    .init_fs_context = afs_init_fs_context,
+#elif defined(STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT)
     .mount = afs_mount,
 #else
     .get_sb = afs_get_sb,
@@ -85,8 +113,13 @@ struct file_system_type afs_fs_type = {
 
 struct backing_dev_info *afs_backing_dev_info;
 
+#if defined(HAVE_LINUX_GET_TREE_NODEV)
+static int
+afs_fill_super(struct super_block *sb, struct fs_context *fc)
+#else
 static int
 afs_fill_super(struct super_block *sb, void *data, int silent)
+#endif
 {
     int code = 0;
 #if defined(HAVE_LINUX_BDI_INIT)
