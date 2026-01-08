@@ -379,6 +379,15 @@ AC_CHECK_LINUX_FUNC([write_begin_end_kiocb],
 		    [[aops->write_begin(kiocb, mapping, 0, 0, &foliop, fsdata);
 		      aops->write_end(kiocb, mapping, 0, 0, 0, foliop, fsdata);]])
 
+dnl Linux 6.18 removed mount_nodev().  The replacement is get_tree_nodev()
+dnl (introduced with Linux 5.2), which involves using the
+dnl struct file_system_type.init_fs_context() API.
+AC_CHECK_LINUX_FUNC([get_tree_nodev],
+		    [[#include <linux/fs_context.h>
+		      static int fill_super(struct super_block *sb, struct fs_context *fc) { return 0;}]],
+		    [[static int code;
+		      code = get_tree_nodev(NULL, fill_super);]])
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],
