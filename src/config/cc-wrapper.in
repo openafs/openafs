@@ -13,6 +13,7 @@ set -e
 CTFCONVERT=@CTFCONVERT@
 CTFMERGE=@CTFMERGE@
 RM='@RM@'
+SYSNAME=@AFS_SYSNAME@
 ctf_label=openafs
 
 mode="$1"
@@ -84,6 +85,23 @@ trap cleanup ERR
 
 case "$mode" in
 cc)
+    case "$SYSNAME" in
+    sun*_511)
+        # Detect and skip ctfconvert for "empty compilation unit".
+        empty=0
+        workfile="$target.text"
+        echo_run elfdump -w "$workfile" -N .text "$target"
+        if [ ! -s "$workfile" ] ; then
+            empty=1
+        fi
+        echo_run $RM "$workfile"
+        if [ "$empty" -eq 1 ] ; then
+            echo "$0: skipping ctfconvert for empty compilation unit $target"
+            exit 0
+        fi
+        ;;
+    esac
+
     # It looks like we compiled a single object. For that, we just need to run
     # 'ctfconvert' against the target .o.
     echo_run "$CTFCONVERT" -g -l $ctf_label "$target"
