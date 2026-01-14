@@ -12,6 +12,7 @@ set -e
 
 CTFCONVERT=@CTFCONVERT@
 CTFMERGE=@CTFMERGE@
+RM='@RM@'
 ctf_label=openafs
 
 mode="$1"
@@ -72,6 +73,14 @@ echo_run() {
     fi
     "$@"
 }
+
+cleanup() {
+    # Remove $target, so target doesn't exist after an error.
+    echo_run $RM "$target"
+}
+
+# Run cleanup() if we encounter an error below.
+trap cleanup ERR
 
 case "$mode" in
 cc)
