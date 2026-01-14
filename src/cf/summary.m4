@@ -76,6 +76,10 @@ Identification
   version                : ${PACKAGE_VERSION}
   sysname                : ${AFS_SYSNAME}
 
+Compiler
+  C compiler             : ${CC}
+  Extra flags (XCFLAGS)  : ${XCFLAGS}
+
 Linker
   krb5                   : ${KRB5_LIBS}
   curses                 : ${LIB_curses}
