@@ -988,27 +988,28 @@ LockAndInstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
     int i, j;
     afs_int32 mask;
     afs_uint32 temp;
-    char types = 0;
+    char types;
     struct server *serverHost[AFS_MAXHOSTS];
 
     AFS_STATCNT(InstallVolumeEntry);
 
     memset(serverHost, 0, sizeof(serverHost));
 
-    /* Determine the type of volume we want */
-    if ((ve->flags & VLF_RWEXISTS) && (av->volume == ve->volumeId[RWVOL])) {
-	mask = VLSF_RWVOL;
-    } else if ((ve->flags & VLF_ROEXISTS)
-	       && (av->volume == ve->volumeId[ROVOL])) {
-	mask = VLSF_ROVOL;
-	types |= VRO;
-    } else if ((ve->flags & VLF_BACKEXISTS)
-	       && (av->volume == ve->volumeId[BACKVOL])) {
-	/* backup always is on the same volume as parent */
-	mask = VLSF_RWVOL;
-	types |= (VRO | VBackup);
+    /* Determine type of volume we want */
+    if (av->volume == ve->volumeId[RWVOL]) {
+	types = 0;
+	mask = (ve->flags & VLF_RWEXISTS) != 0 ? VLSF_RWVOL : 0;
+    } else if (av->volume == ve->volumeId[ROVOL]) {
+	types = VRO;
+	mask = (ve->flags & VLF_ROEXISTS) != 0 ? VLSF_ROVOL : 0;
+    } else if (av->volume == ve->volumeId[BACKVOL]) {
+	/* Backup always is on the same volume as parent */
+	types = (VRO | VBackup);
+	mask = (ve->flags & VLF_BACKEXISTS) != 0 ? VLSF_RWVOL : 0;
     } else {
-	mask = 0;		/* Can't find volume in vldb entry */
+	/* Can't find volume in vldb entry */
+	mask = 0;
+	types = 0;
     }
 
     cellp = afs_GetCell(acell, 0);
@@ -1066,7 +1067,7 @@ LockAndInstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
     int i, j;
     afs_int32 mask;
     afs_uint32 temp;
-    char types = 0;
+    char types;
     struct server *serverHost[AFS_MAXHOSTS];
 
     AFS_STATCNT(InstallVolumeEntry);
@@ -1074,19 +1075,20 @@ LockAndInstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
     memset(serverHost, 0, sizeof(serverHost));
 
     /* Determine type of volume we want */
-    if ((ve->flags & VLF_RWEXISTS) && (av->volume == ve->volumeId[RWVOL])) {
-	mask = VLSF_RWVOL;
-    } else if ((ve->flags & VLF_ROEXISTS)
-	       && (av->volume == ve->volumeId[ROVOL])) {
-	mask = VLSF_ROVOL;
-	types |= VRO;
-    } else if ((ve->flags & VLF_BACKEXISTS)
-	       && (av->volume == ve->volumeId[BACKVOL])) {
-	/* backup always is on the same volume as parent */
-	mask = VLSF_RWVOL;
-	types |= (VRO | VBackup);
+    if (av->volume == ve->volumeId[RWVOL]) {
+	types = 0;
+	mask = (ve->flags & VLF_RWEXISTS) != 0 ? VLSF_RWVOL : 0;
+    } else if (av->volume == ve->volumeId[ROVOL]) {
+	types = VRO;
+	mask = (ve->flags & VLF_ROEXISTS) != 0 ? VLSF_ROVOL : 0;
+    } else if (av->volume == ve->volumeId[BACKVOL]) {
+	/* Backup always is on the same volume as parent */
+	types = (VRO | VBackup);
+	mask = (ve->flags & VLF_BACKEXISTS) != 0 ? VLSF_RWVOL : 0;
     } else {
-	mask = 0;		/* Can't find volume in vldb entry */
+	/* Can't find volume in vldb entry */
+	mask = 0;
+	types = 0;
     }
 
     cellp = afs_GetCell(acell, 0);
@@ -1146,7 +1148,7 @@ LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
     afs_uint32 serverid;
     afs_int32 mask;
     int k;
-    char type = 0;
+    char type;
     struct server *serverHost[AFS_MAXHOSTS];
 
     AFS_STATCNT(InstallVolumeEntry);
@@ -1154,19 +1156,20 @@ LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
     memset(serverHost, 0, sizeof(serverHost));
 
     /* Determine type of volume we want */
-    if ((ve->flags & VLF_RWEXISTS) && (av->volume == ve->volumeId[RWVOL])) {
-	mask = VLSF_RWVOL;
-    } else if ((ve->flags & VLF_ROEXISTS)
-	       && av->volume == ve->volumeId[ROVOL]) {
-	mask = VLSF_ROVOL;
-	type |= VRO;
-    } else if ((ve->flags & VLF_BACKEXISTS)
-	       && (av->volume == ve->volumeId[BACKVOL])) {
-	/* backup always is on the same volume as parent */
-	mask = VLSF_RWVOL;
-	type |= (VRO | VBackup);
+    if (av->volume == ve->volumeId[RWVOL]) {
+	type = 0;
+	mask = (ve->flags & VLF_RWEXISTS) != 0 ? VLSF_RWVOL : 0;
+    } else if (av->volume == ve->volumeId[ROVOL]) {
+	type = VRO;
+	mask = (ve->flags & VLF_ROEXISTS) != 0 ? VLSF_ROVOL : 0;
+    } else if (av->volume == ve->volumeId[BACKVOL]) {
+	/* Backup always is on the same volume as parent */
+	type = (VRO | VBackup);
+	mask = (ve->flags & VLF_BACKEXISTS) != 0 ? VLSF_RWVOL : 0;
     } else {
-	mask = 0;		/* Can't find volume in vldb entry */
+	/* Can't find volume in vldb entry */
+	mask = 0;
+	type = 0;
     }
 
     cellp = afs_GetCell(acell, 0);
