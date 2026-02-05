@@ -40,78 +40,61 @@ extern struct afs_q VLRU;
 
 extern struct dentry_operations afs_dentry_operations;
 
-/* Forward declarations */
-static int afs_root(struct super_block *afsp);
-
-#if defined(HAVE_LINUX_GET_TREE_NODEV)
-static int afs_fill_super(struct super_block *sb, struct fs_context *fc);
-
-static int
-afs_fc_get_tree(struct fs_context *fc)
-{
-    return get_tree_nodev(fc, afs_fill_super);
-}
-
-static struct fs_context_operations afs_fs_context_ops = {
-    .get_tree = afs_fc_get_tree,
-};
-
-static int
-afs_init_fs_context(struct fs_context *fc)
-{
-    fc->ops = &afs_fs_context_ops;
-    return 0;
-}
-
-#else
-static int afs_fill_super(struct super_block *sb, void *data, int silent);
-
-
-/*
- * afs_mount (2.6.37+) and afs_get_sb (2.6.36-) are the entry
- * points from the vfs when mounting afs.  The super block
- * structure is setup in the afs_fill_super callback function.
- */
-
-# if defined(STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT)
-static struct dentry *
-afs_mount(struct file_system_type *fs_type, int flags,
-	  const char *dev_name, void *data)
-{
-    return mount_nodev(fs_type, flags, data, afs_fill_super);
-}
-# elif defined(GET_SB_HAS_STRUCT_VFSMOUNT)
-static int
-afs_get_sb(struct file_system_type *fs_type, int flags,
-	   const char *dev_name, void *data, struct vfsmount *mnt)
-{
-    return get_sb_nodev(fs_type, flags, data, afs_fill_super, mnt);
-}
-# else
-static struct super_block *
-afs_get_sb(struct file_system_type *fs_type, int flags,
-	   const char *dev_name, void *data)
-{
-    return get_sb_nodev(fs_type, flags, data, afs_fill_super);
-}
-# endif /* STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT */
-#endif /* HAVE_LINUX_GET_TREE_NODEV */
-
-struct file_system_type afs_fs_type = {
-    .owner = THIS_MODULE,
-    .name = "afs",
-#if defined(HAVE_LINUX_GET_TREE_NODEV)
-    .init_fs_context = afs_init_fs_context,
-#elif defined(STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT)
-    .mount = afs_mount,
-#else
-    .get_sb = afs_get_sb,
-#endif
-    .kill_sb = kill_anon_super,
-    .fs_flags = FS_BINARY_MOUNTDATA,
-};
-
 struct backing_dev_info *afs_backing_dev_info;
+
+/* afs_root - stat the root of the file system. AFS global held on entry. */
+static int
+afs_root(struct super_block *afsp)
+{
+    afs_int32 code = 0;
+    struct vcache *tvp = 0;
+
+    AFS_STATCNT(afs_root);
+    if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
+	tvp = afs_globalVp;
+    } else {
+	struct vrequest *treq = NULL;
+	cred_t *credp = crref();
+
+	if (afs_globalVp) {
+	    afs_PutVCache(afs_globalVp);
+	    afs_globalVp = NULL;
+	}
+
+	if (!(code = afs_CreateReq(&treq, credp)) && !(code = afs_CheckInit())) {
+	    tvp = afs_GetVCache(&afs_rootFid, treq);
+	    if (tvp) {
+		struct inode *ip = AFSTOV(tvp);
+		struct vattr *vattr = NULL;
+
+		code = afs_CreateAttr(&vattr);
+		if (!code) {
+		    afs_getattr(tvp, vattr, credp);
+		    afs_fill_inode(ip, vattr);
+
+		    /* setup super_block and mount point inode. */
+		    afs_globalVp = tvp;
+#if defined(HAVE_LINUX_D_MAKE_ROOT)
+		    afsp->s_root = d_make_root(ip);
+#else
+		    afsp->s_root = d_alloc_root(ip);
+#endif
+#if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
+		    afsp->s_root->d_op = &afs_dentry_operations;
+#endif
+		    afs_DestroyAttr(vattr);
+		}
+	    } else
+		code = EIO;
+	}
+	crfree(credp);
+	afs_DestroyReq(treq);
+    }
+
+    afs_Trace2(afs_iclSetp, CM_TRACE_VFSROOT, ICL_TYPE_POINTER, afs_globalVp,
+	       ICL_TYPE_INT32, code);
+    return code;
+}
 
 #if defined(HAVE_LINUX_GET_TREE_NODEV)
 static int
@@ -218,60 +201,53 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
     return code ? -EINVAL : 0;
 }
 
-
-/* afs_root - stat the root of the file system. AFS global held on entry. */
+#if defined(HAVE_LINUX_GET_TREE_NODEV)
 static int
-afs_root(struct super_block *afsp)
+afs_fc_get_tree(struct fs_context *fc)
 {
-    afs_int32 code = 0;
-    struct vcache *tvp = 0;
-
-    AFS_STATCNT(afs_root);
-    if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
-	tvp = afs_globalVp;
-    } else {
-	struct vrequest *treq = NULL;
-	cred_t *credp = crref();
-
-	if (afs_globalVp) {
-	    afs_PutVCache(afs_globalVp);
-	    afs_globalVp = NULL;
-	}
-
-	if (!(code = afs_CreateReq(&treq, credp)) && !(code = afs_CheckInit())) {
-	    tvp = afs_GetVCache(&afs_rootFid, treq);
-	    if (tvp) {
-		struct inode *ip = AFSTOV(tvp);
-		struct vattr *vattr = NULL;
-
-		code = afs_CreateAttr(&vattr);
-		if (!code) {
-		    afs_getattr(tvp, vattr, credp);
-		    afs_fill_inode(ip, vattr);
-
-		    /* setup super_block and mount point inode. */
-		    afs_globalVp = tvp;
-#if defined(HAVE_LINUX_D_MAKE_ROOT)
-		    afsp->s_root = d_make_root(ip);
-#else
-		    afsp->s_root = d_alloc_root(ip);
-#endif
-#if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
-		    afsp->s_root->d_op = &afs_dentry_operations;
-#endif
-		    afs_DestroyAttr(vattr);
-		}
-	    } else
-		code = EIO;
-	}
-	crfree(credp);
-	afs_DestroyReq(treq);
-    }
-
-    afs_Trace2(afs_iclSetp, CM_TRACE_VFSROOT, ICL_TYPE_POINTER, afs_globalVp,
-	       ICL_TYPE_INT32, code);
-    return code;
+    return get_tree_nodev(fc, afs_fill_super);
 }
+
+static struct fs_context_operations afs_fs_context_ops = {
+    .get_tree = afs_fc_get_tree,
+};
+
+static int
+afs_init_fs_context(struct fs_context *fc)
+{
+    fc->ops = &afs_fs_context_ops;
+    return 0;
+}
+#else
+/*
+ * afs_mount (2.6.37+) and afs_get_sb (2.6.36-) are the entry
+ * points from the vfs when mounting afs.  The super block
+ * structure is setup in the afs_fill_super callback function.
+ */
+
+# if defined(STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT)
+static struct dentry *
+afs_mount(struct file_system_type *fs_type, int flags,
+	  const char *dev_name, void *data)
+{
+    return mount_nodev(fs_type, flags, data, afs_fill_super);
+}
+# elif defined(GET_SB_HAS_STRUCT_VFSMOUNT)
+static int
+afs_get_sb(struct file_system_type *fs_type, int flags,
+	   const char *dev_name, void *data, struct vfsmount *mnt)
+{
+    return get_sb_nodev(fs_type, flags, data, afs_fill_super, mnt);
+}
+# else
+static struct super_block *
+afs_get_sb(struct file_system_type *fs_type, int flags,
+	   const char *dev_name, void *data)
+{
+    return get_sb_nodev(fs_type, flags, data, afs_fill_super);
+}
+# endif /* STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT */
+#endif /* HAVE_LINUX_GET_TREE_NODEV */
 
 /* super_operations */
 
@@ -436,6 +412,20 @@ afs_statfs(struct super_block *sbp, struct kstatfs *statp)
 
     return 0;
 }
+
+struct file_system_type afs_fs_type = {
+    .owner = THIS_MODULE,
+    .name = "afs",
+#if defined(HAVE_LINUX_GET_TREE_NODEV)
+    .init_fs_context = afs_init_fs_context,
+#elif defined(STRUCT_FILE_SYSTEM_TYPE_HAS_MOUNT)
+    .mount = afs_mount,
+#else
+    .get_sb = afs_get_sb,
+#endif
+    .kill_sb = kill_anon_super,
+    .fs_flags = FS_BINARY_MOUNTDATA,
+};
 
 struct super_operations afs_sops = {
 #if defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE)
