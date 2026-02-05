@@ -937,3 +937,29 @@ AC_DEFUN([LINUX_WRITE_CACHE_PAGES_USES_FOLIOS], [
                        [[define if aop.writepages can use folios]],
                        [[-Werror]])
 ])
+
+dnl Linux 6.18 removed write_cache_pages() with no usable replacement, so we
+dnl need to write our own replacement. Check if we need to make our own
+dnl write_cache_pages() by checking:
+dnl - If write_cache_pages() doesn't exist (by defining our own func with that
+dnl   name)
+dnl - If address_space_operations.writepages() uses folios in general (by
+dnl   checking if filemap_get_folios_tag() (Linux 6.2) and folio_batch_next()
+dnl   (Linux 6.8) both exist)
+AC_DEFUN([LINUX_NEED_CUSTOM_WRITE_CACHE_PAGES], [
+  AC_CHECK_LINUX_BUILD([whether we need our own write_cache_pages],
+		       [ac_cv_linux_need_custom_write_cache_pages],
+		       [[#include <linux/pagemap.h>
+			 #include <linux/pagevec.h>
+			 #include <linux/version.h>
+			 static void write_cache_pages(void *x) {return;}]],
+		       [[struct folio_batch fbatch;
+			 struct address_space mapping;
+			 static struct folio *testfolio;
+			 write_cache_pages(testfolio);
+			 filemap_get_folios_tag(&mapping, NULL, 0, 0, &fbatch);
+			 testfolio = folio_batch_next(&fbatch);]],
+		       [[LINUX_NEED_CUSTOM_WRITE_CACHE_PAGES]],
+		       [define if we need to create our own write_cache_pages()],
+		       [-Werror])
+])
