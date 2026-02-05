@@ -378,6 +378,19 @@ AC_CHECK_LINUX_FUNC([get_tree_nodev],
 		    [[static int code;
 		      code = get_tree_nodev(NULL, fill_super);]])
 
+dnl Linux 6.19 introduced struct sockaddr_unsized and updated the
+dnl signature for socket->ops->bind() to use sockaddr_unsized instead of sockaddr.
+dnl When calling, it is sufficient to simply cast a struct sockaddr_in to
+dnl sockaddr_unsized.
+AC_CHECK_LINUX_FUNC([socket_bind_sockaddr_unsized],
+		    [[#include <linux/net.h>
+		      #include <linux/socket.h>]],
+		    [[static struct socket *sockp;
+		      static struct sockaddr_unsized socka;
+		      static int code;
+		      code = sockp->ops->bind(sockp, &socka, sizeof(socka));]])
+
+
 dnl Consequences - things which get set as a result of the
 dnl                above tests
 AS_IF([test "x$ac_cv_linux_func_d_alloc_anon" = "xno"],

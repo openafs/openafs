@@ -36,6 +36,12 @@
 #endif
 #include "osi_compat.h"
 
+#if defined(HAVE_LINUX_SOCKET_BIND_SOCKADDR_UNSIZED)
+# define BIND_SOCKADDR(sa) ((struct sockaddr_unsized *)(sa))
+#else
+# define BIND_SOCKADDR(sa) ((struct sockaddr *)(sa))
+#endif
+
 /* rxk_NewSocket
  * open and bind RX socket
  */
@@ -67,8 +73,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     myaddr.sin_family = AF_INET;
     myaddr.sin_addr.s_addr = ahost;
     myaddr.sin_port = aport;
-    code =
-	sockp->ops->bind(sockp, (struct sockaddr *)&myaddr, sizeof(myaddr));
+    code = sockp->ops->bind(sockp, BIND_SOCKADDR(&myaddr), sizeof(myaddr));
 
     if (code < 0) {
 	printk("sock_release(rx_socket) FIXME\n");
