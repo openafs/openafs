@@ -429,11 +429,10 @@ case $AFS_SYSNAME in
 
 	sgi_65)
 		AFSD_LIBS="/usr/lib32/libdwarf.a /usr/lib32/libelf.a"
-		FSINCLUDES="-I/usr/include/sys/fs"
 		LD="/usr/bin/ld"
 		MT_CFLAGS='-D_SGI_MP_SOURCE'
-		XCFLAGS64="-64 -mips3"
-		XCFLAGS="-n32 -mips3 -woff 1009,1014,1110,1116,1164,1171,1177,1183,1185,1204,1233,1515,1516,1548,1169,1174,1177,1196,1498,1506,1552,3201 -Wl,-woff,84,-woff,15"
+		XCFLAGS64="-I/usr/include/sys/fs -64 -mips3"
+		XCFLAGS="-I/usr/include/sys/fs -n32 -mips3 -woff 1009,1014,1110,1116,1164,1171,1177,1183,1185,1204,1233,1515,1516,1548,1169,1174,1177,1196,1498,1506,1552,3201 -Wl,-woff,84,-woff,15"
 		XLDFLAGS64="-64 -mips3"
 		XLDFLAGS="-n32 -mips3"
 		SHLIB_LINKER="${CC} -shared"
