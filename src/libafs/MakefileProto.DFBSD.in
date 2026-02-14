@@ -39,7 +39,7 @@ KDEFS=-Wall -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
 
 DBUG = -O2
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
-CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 
 # Name of directory to hold object files and libraries.
