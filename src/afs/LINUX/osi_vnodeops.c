@@ -3569,9 +3569,12 @@ afs_linux_writefolio_cb(struct folio *folio, struct writeback_control *wbc, void
     }
     code = afs_linux_begin_writeback(vcp, &credp);
     if (code == AOP_WRITEPAGE_ACTIVATE) {
-	/* WRITEPAGE_ACTIVATE is the only return value that permits us
-	 * to return with the folio still locked */
-	return code;
+	/*
+	 * afs_linux_begin_writeback() detected a recursive writeback, so bail
+	 * out. We didn't actually write out the folio, so mark it as dirty
+	 * again.
+	 */
+	goto redirty;
     }
 
     folio_start_writeback(folio);
@@ -3612,6 +3615,12 @@ afs_linux_writefolio_cb(struct folio *folio, struct writeback_control *wbc, void
     }
 
     return code;
+
+ redirty:
+    folio_mark_dirty(folio);
+    folio_unlock(folio);
+    folio_put(folio);
+    return 0;
 }
 
 static int
