@@ -3335,7 +3335,14 @@ afs_linux_prepare_writeback(struct vcache *avc) {
     spin_lock(&avc->pagewriter_lock);
     list_for_each_entry(pw, &avc->pagewriters, link) {
 	if (pw->writer == pid) {
+	    static int logged;
 	    spin_unlock(&avc->pagewriter_lock);
+	    if (!logged) {
+		logged = 1;
+		afs_warn("afs: Avoiding recursive writeback. This should not cause "
+			 "problems, but is unexpected; please report this as a bug.\n");
+		dump_stack();
+	    }
 	    return AOP_WRITEPAGE_ACTIVATE;
 	}
     }
