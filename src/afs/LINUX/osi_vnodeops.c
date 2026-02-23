@@ -36,6 +36,12 @@
 # include <linux/swap.h>
 #endif
 #include <linux/pagevec.h>
+
+#if defined(LINUX_WRITE_CACHE_PAGES_USES_FOLIOS) || defined(LINUX_NEED_CUSTOM_WRITE_CACHE_PAGES)
+# define LINUX_WRITEPAGES_USES_FOLIOS
+# include <linux/migrate.h>
+#endif
+
 #include <linux/aio.h>
 #include "afs/lock.h"
 #include "afs/afs_bypasscache.h"
@@ -3760,10 +3766,6 @@ afs_linux_end_writeback(struct vcache *vcp, cred_t **acredp, int written_size, u
     return code;
 }
 
-#if defined(LINUX_WRITE_CACHE_PAGES_USES_FOLIOS) || defined(LINUX_NEED_CUSTOM_WRITE_CACHE_PAGES)
-# define LINUX_WRITEPAGES_USES_FOLIOS 1
-#endif
-
 #if defined(LINUX_WRITEPAGES_USES_FOLIOS)
 /*
  * Write out the given folio (for a ->writepages() request) by calling
@@ -4490,6 +4492,7 @@ static struct address_space_operations afs_file_aops = {
 #endif
 #if defined(LINUX_WRITEPAGES_USES_FOLIOS)
   .writepages =		afs_linux_write_pages,
+  .migrate_folio =      migrate_folio,
 #else
   .writepage =		afs_linux_writepage,
 #endif
