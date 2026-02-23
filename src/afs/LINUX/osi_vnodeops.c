@@ -2590,15 +2590,31 @@ mapping_read_page(struct address_space *mapping, struct page *page)
 #endif
 }
 
+#if defined(HAVE_LINUX_FILEMAP_ALLOC_FOLIO_MEMPOLICY)
+# define HAVE_AFS_FILEMAP_ALLOC_FOLIO
+static struct folio *
+afs_filemap_alloc_folio(gfp_t gfp, unsigned int order)
+{
+    return filemap_alloc_folio(gfp, order, NULL);
+}
+#elif defined(HAVE_LINUX_FILEMAP_ALLOC_FOLIO)
+# define HAVE_AFS_FILEMAP_ALLOC_FOLIO
+static struct folio *
+afs_filemap_alloc_folio(gfp_t gfp, unsigned int order)
+{
+    return filemap_alloc_folio(gfp, order);
+}
+#endif /* HAVE_LINUX_FILEMAP_ALLOC_FOLIO_MEMPOLICY */
+
 /*
  * small compat wrapper for filemap_alloc_folio/page_cache_alloc
  */
 static struct page *
 afs_page_cache_alloc(struct address_space *cachemapping)
 {
-#if defined(HAVE_LINUX_FILEMAP_ALLOC_FOLIO)
+#if defined(HAVE_AFS_FILEMAP_ALLOC_FOLIO)
     struct folio *folio;
-    folio = filemap_alloc_folio(mapping_gfp_mask(cachemapping), 0);
+    folio = afs_filemap_alloc_folio(mapping_gfp_mask(cachemapping), 0);
     if (folio == NULL) {
 	return NULL;
     }
