@@ -400,6 +400,13 @@ AC_CHECK_LINUX_FUNC([socket_bind_sockaddr_unsized],
 		      static int code;
 		      code = sockp->ops->bind(sockp, &socka, sizeof(socka));]])
 
+dnl Linux 6.19 updated filemap_alloc_folio() to require a 3rd parameter that
+dnl for NUMA mempolicy support.  Existing callers can pass a NULL for this parameter.
+AC_CHECK_LINUX_FUNC([filemap_alloc_folio_mempolicy],
+		    [#include <linux/kernel.h>
+		     #include <linux/pagemap.h>],
+		    [[static struct folio *folio;
+		      folio = filemap_alloc_folio(0, 0, NULL);]])
 
 dnl Consequences - things which get set as a result of the
 dnl                above tests
