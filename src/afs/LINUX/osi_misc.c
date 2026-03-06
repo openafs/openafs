@@ -75,11 +75,17 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
     return code;
 }
 
+static void
+afs_putname(char *name)
+{
+    __putname(name);
+}
+
 static char *
 afs_getname(char *aname)
 {
     int len;
-    char *name = kmem_cache_alloc(names_cachep, GFP_KERNEL);
+    char *name = __getname();
 
     if (!name)
 	return ERR_PTR(-ENOMEM);
@@ -94,14 +100,8 @@ afs_getname(char *aname)
     return name;
 
 error:
-    kmem_cache_free(names_cachep, name);
+    afs_putname(name);
     return ERR_PTR(len);
-}
-
-static void
-afs_putname(char *name)
-{
-    kmem_cache_free(names_cachep, name);
 }
 
 int
