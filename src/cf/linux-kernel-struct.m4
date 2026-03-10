@@ -44,6 +44,10 @@ AC_CHECK_LINUX_STRUCT([nameidata], [path], [namei.h])
 AC_CHECK_LINUX_STRUCT([proc_dir_entry], [owner], [proc_fs.h])
 AC_CHECK_LINUX_STRUCT([proc_ops], [proc_compat_ioctl], [proc_fs.h])
 AC_CHECK_LINUX_STRUCT([super_block], [s_bdi], [fs.h])
+dnl Linux 2.6.38 added the s_d_op field to hold the default dentry ops.
+dnl Linux 6.17 renamed s_d_op to a private member, requiring users to instead
+dnl call set_default_d_op() to initialize the super_block with the default
+dnl dentry ops.
 AC_CHECK_LINUX_STRUCT([super_block], [s_d_op], [fs.h])
 AC_CHECK_LINUX_STRUCT([super_operations], [alloc_inode],
                       [fs.h])

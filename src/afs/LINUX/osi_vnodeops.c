@@ -1849,7 +1849,7 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 	afs_getattr(vcp, vattr, credp);
 	afs_fill_inode(ip, vattr);
 	insert_inode_hash(ip);
-#if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
+#if !defined(HAVE_LINUX_SET_DEFAULT_D_OP) && !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 	dp->d_op = &afs_dentry_operations;
 #endif
 	dp->d_time = parent_vcache_dv(dip, credp);
@@ -1930,7 +1930,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 
 	afs_DestroyAttr(vattr);
     }
-#if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
+#if !defined(HAVE_LINUX_SET_DEFAULT_D_OP) && !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
     dp->d_op = &afs_dentry_operations;
 #endif
     dp->d_time = parent_vcache_dv(dip, credp);
@@ -2176,7 +2176,7 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 	afs_getattr(tvcp, vattr, credp);
 	afs_fill_inode(ip, vattr);
 
-#if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
+#if !defined(HAVE_LINUX_SET_DEFAULT_D_OP) && !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 	dp->d_op = &afs_dentry_operations;
 #endif
 	dp->d_time = parent_vcache_dv(dip, credp);
