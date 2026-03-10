@@ -369,6 +369,16 @@ AC_CHECK_LINUX_FUNC([write_begin_end_kiocb],
 		    [[aops->write_begin(kiocb, mapping, 0, 0, &foliop, fsdata);
 		      aops->write_end(kiocb, mapping, 0, 0, 0, foliop, fsdata);]])
 
+dnl Linux 6.17 added a helper function set_default_d_op() to set the default
+dnl dentry_operations for a super_block.  The super_block member s_d_op is now
+dnl a private member of the super_block.
+AC_CHECK_LINUX_FUNC([set_default_d_op],
+		    [#include <linux/kernel.h>
+		     #include <linux/dcache.h>],
+		    [[static struct super_block sb;
+		      static struct dentry_operations d_op;
+		      set_default_d_op(&sb, &d_op);]])
+
 dnl Linux 6.18 removed mount_nodev().  The replacement is get_tree_nodev()
 dnl (introduced with Linux 5.2), which involves using the
 dnl struct file_system_type.init_fs_context() API.

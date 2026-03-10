@@ -79,7 +79,7 @@ afs_root(struct super_block *afsp)
 #else
 		    afsp->s_root = d_alloc_root(ip);
 #endif
-#if !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
+#if !defined(HAVE_LINUX_SET_DEFAULT_D_OP) && !defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
 		    afsp->s_root->d_op = &afs_dentry_operations;
 #endif
 		    afs_DestroyAttr(vattr);
@@ -132,8 +132,12 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
     sb->s_magic = AFS_VFSMAGIC;
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
 
-#if defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
+#if defined(HAVE_LINUX_SET_DEFAULT_D_OP)
+    set_default_d_op(sb, &afs_dentry_operations);
+#elif defined(STRUCT_SUPER_BLOCK_HAS_S_D_OP)
     sb->s_d_op = &afs_dentry_operations;
+#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,38)
+# error "Missing method to set the super_block's dentry operations member"
 #endif
 #if defined(HAVE_LINUX_SUPER_SETUP_BDI)
     code = super_setup_bdi(sb);
