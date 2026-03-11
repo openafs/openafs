@@ -348,10 +348,7 @@ AproposProc(struct cmd_syndesc *as, void *arock)
     for (ts = allSyntax; ts; ts = ts->next) {
 	if ((ts->flags & CMD_ALIAS) || (ts->flags & CMD_HIDDEN))
 	    continue;
-	if (SubString(ts->help, tsub)) {
-	    printf("%s: %s\n", ts->name, ts->help);
-	    didAny = 1;
-	} else if (SubString(ts->name, tsub)) {
+	if (SubString(ts->help, tsub) || SubString(ts->name, tsub)) {
 	    printf("%s: %s\n", ts->name, ts->help);
 	    didAny = 1;
 	}
@@ -1205,7 +1202,7 @@ CopyBackArgs(struct cmd_token *alist, char **argv,
 static int
 quote(int x)
 {
-    if (x == '"' || x == 39 /* single quote */ )
+    if (x == '"' || x == '\'' /* single quote */ )
 	return 1;
     else
 	return 0;
@@ -1365,7 +1362,7 @@ cmd_OptionAsInt(struct cmd_syndesc *syn, int pos, int *value)
     const char *str;
     int code;
 
-    code =_get_config_string(syn, pos, &str);
+    code = _get_config_string(syn, pos, &str);
     if (code)
 	return code;
 
