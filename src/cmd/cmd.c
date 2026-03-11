@@ -1202,7 +1202,7 @@ CopyBackArgs(struct cmd_token *alist, char **argv,
 static int
 quote(int x)
 {
-    if (x == '"' || x == '\'' /* single quote */ )
+    if (x == '"' || x == '\'')
 	return 1;
     else
 	return 0;
