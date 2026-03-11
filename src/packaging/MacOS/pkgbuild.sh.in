@@ -562,8 +562,11 @@ if [ x"$PASS2" = x1 ]; then
     fi
 
     rm -rf "$CURDIR/dmg"
-    rm -f "$CURDIR/TMP.dmg"
-    rm -rf "$CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME.dmg"
+    TEMP_DMG="$CURDIR/TMP.dmg"
+    DIST_DMG="$CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME.dmg"
+
+    rm -f "$TEMP_DMG"
+    rm -rf "$DIST_DMG"
 
     mkdir "$CURDIR"/dmg
     mv "$CURDIR"/OpenAFS.pkg "$CURDIR"/dmg
@@ -578,15 +581,15 @@ if [ x"$PASS2" = x1 ]; then
     fi
 
     hdiutil create -srcfolder "$CURDIR"/dmg -volname OpenAFS \
-	    -o "$CURDIR"/TMP.dmg
-    hdiutil convert -format UDZO "$CURDIR"/TMP.dmg \
-	    -o "$CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME".dmg
+	    -o "$TEMP_DMG"
+    hdiutil convert -format UDZO "$TEMP_DMG" \
+	    -o "$DIST_DMG"
 
     echo
-    echo "Created $CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME".dmg
+    echo "Created $DIST_DMG"
 
     if [ x"$KEYCHAIN_PROFILE" != x ] ; then
 	echo "Notarizing package..."
-	./notarize.pl "$KEYCHAIN_PROFILE" "$CURDIR/OpenAFS-@PACKAGE_VERSION@-$RELNAME.dmg"
+	./notarize.pl "$KEYCHAIN_PROFILE" "$DIST_DMG"
     fi
 fi
