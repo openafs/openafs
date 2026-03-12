@@ -212,6 +212,22 @@ else
     exit 1
 fi
 
+MD5="/sbin/md5"
+if [ -x "$MD5" ]; then
+    md5_ok=1
+else
+    md5_ok=0
+    echo "$MD5 not found; skipping md5 checksum" >&2
+fi
+
+SHASUM="/usr/bin/shasum"
+if [ -x "$SHASUM" ]; then
+    sha512_ok=1
+else
+    sha512_ok=0
+    echo "$SHASUM not found; skipping sha512 checksum" >&2
+fi
+
 if [ x"$PASS1" = x1 ]; then
     if [ -x /usr/bin/curl ] && [ x"$CSDB" = x ]; then
 	echo "No CellServDB provided; downloading one from central.org"
@@ -567,6 +583,8 @@ if [ x"$PASS2" = x1 ]; then
 
     rm -f "$TEMP_DMG"
     rm -rf "$DIST_DMG"
+    rm -f "$DIST_DMG".md5
+    rm -f "$DIST_DMG".sha512
 
     mkdir "$CURDIR"/dmg
     mv "$CURDIR"/OpenAFS.pkg "$CURDIR"/dmg
@@ -591,5 +609,12 @@ if [ x"$PASS2" = x1 ]; then
     if [ x"$KEYCHAIN_PROFILE" != x ] ; then
 	echo "Notarizing package..."
 	./notarize.pl "$KEYCHAIN_PROFILE" "$DIST_DMG"
+    fi
+
+    if [ $md5_ok -eq 1 ] ; then
+	$MD5 "$DIST_DMG" > "$DIST_DMG".md5
+    fi
+    if [ $sha512_ok -eq 1 ] ; then
+	$SHASUM --algorithm 512 "$DIST_DMG" > "$DIST_DMG".sha512
     fi
 fi
