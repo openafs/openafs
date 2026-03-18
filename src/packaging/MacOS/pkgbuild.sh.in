@@ -9,7 +9,7 @@ usage() {
     echo '                   [--keychain-profile <profile>]'
     echo '                   [--pass N] [--csdb <CellServDB>] <binary-dir>'
     echo
-    echo '--app-key and --inst-key are for signing. -x prints all comamnds as '
+    echo '--app-key and --inst-key are for signing. -x prints all commands as '
     echo 'they are run. --keychain-profile is for notarizing.'
     echo
     echo 'By default, all passes are run. Available passes:'

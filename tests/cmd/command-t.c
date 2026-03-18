@@ -110,7 +110,7 @@ main(int argc, char **argv)
     code = cmd_ParseLine("-first foo -second bar -flag", tv, &tc, 100);
     is_int(0, code, "cmd_ParseLine succeeds");
     code = cmd_Dispatch(tc, tv);
-    is_int(0, code, "dispatching simple comamnd line succeeds");
+    is_int(0, code, "dispatching simple command line succeeds");
     code = cmd_Parse(tc, tv, &retopts);
     is_int(0, code, "parsing simple command line succeeds");
     is_string("foo", retopts->parms[copt_first].items->data,
