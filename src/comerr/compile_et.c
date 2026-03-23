@@ -140,6 +140,7 @@ dup_err(char const *type, char const *one, char const *two)
 int
 main(int argc, char **argv)
 {
+    const char *last_path_separator;
     char *p, *ename;
     char *et_file;
     char const *const *cpp;
@@ -167,9 +168,10 @@ main(int argc, char **argv)
     debug = 0;
     filename = 0;
     whoami = argv[0];
-    p = strrchr(whoami, '/');
-    if (p)
-	whoami = p + 1;
+    last_path_separator = strrchr(whoami, '/');
+    if (last_path_separator != NULL) {
+	whoami = last_path_separator + 1;
+    }
     while (--argc) {
 	char *arg = *++argv;
 	if (arg[0] != '-') {
