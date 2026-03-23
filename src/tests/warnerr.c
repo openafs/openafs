@@ -53,12 +53,12 @@ void
 setprogname(const char *argv0)
 {
 #ifndef HAVE___PROGNAME
-    char *p;
+    const char *p;
     if (argv0 == NULL)
 	return;
     p = strrchr(argv0, '/');
     if (p == NULL)
-      p = (char *)argv0;
+      p = argv0;
     else
 	p++;
     __progname = p;

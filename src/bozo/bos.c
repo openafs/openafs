@@ -204,7 +204,7 @@ SetAuth(struct cmd_syndesc *as, void *arock)
 static int
 ComputeDestDir(const char *aname, const char *adir, char **apath)
 {
-    char *tp;
+    const char *tp;
 
     tp = strrchr(aname, '/');
     if (tp == NULL) {
