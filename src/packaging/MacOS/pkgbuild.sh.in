@@ -355,6 +355,36 @@ if [ x"$PASS1" = x1 ]; then
     chmod -R og-w "$PKGROOT"/private
     chmod  og-rx "$PKGROOT"/private/var/db/openafs/cache
 
+    # Workaround to avoid LWP segfault/buserr on Apple Silicon:
+    # If we have built universal binaries (both arm64 and x86_64) for selected
+    # LWP programs, use 'lipo' to convert these to x86_64-only.  These will
+    # then run under Rosetta2 on Apple Silicon.
+    for lwp_bin in "$PKGROOT/Library/OpenAFS/Tools/bin/bos" \
+		   "$PKGROOT/Library/OpenAFS/Tools/bin/cmdebug" \
+		   "$PKGROOT/Library/OpenAFS/Tools/bin/fs" \
+		   "$PKGROOT/Library/OpenAFS/Tools/bin/xstat_cm_test" \
+		   "$PKGROOT/Library/OpenAFS/Tools/bin/xstat_fs_test" \
+		   "$PKGROOT/Library/OpenAFS/Tools/etc/backup" \
+		   "$PKGROOT/Library/OpenAFS/Tools/root.server/usr/afs/bin/bos" \
+		   "$PKGROOT/Library/OpenAFS/Tools/root.server/usr/afs/bin/fs"
+    do
+	# Example 'lipo $bin -archs' output:
+	# $ lipo fs -archs
+	# x86_64 arm64
+	if lipo "$lwp_bin" -archs | grep -w x86_64 | grep -w -q arm64 ; then
+	    save_dir="$PKGROOT/Library/OpenAFS/Tools/bin.orig"
+	    mkdir -p "$save_dir"
+
+	    # Remove the arm64 arch in, e.g., 'fs'. Also preserve the original
+	    # universal binary in $save_dir. Some binaries are found at more
+	    # than one path; for those, we'll just keep one original copy
+	    # around (the others will get clobbered when we copy over them).
+	    cp -f "$lwp_bin" "$save_dir"/
+	    lipo "$lwp_bin" -thin x86_64 -output "$lwp_bin".tmp
+	    mv -f "$lwp_bin".tmp "$lwp_bin"
+	fi
+    done
+
     if [ x"$APP_KEY" != x ] ; then
 	# To be notarized by Apple, all files must be signed.
 	find "$PKGROOT" -type f -exec codesign --verbose --force \
