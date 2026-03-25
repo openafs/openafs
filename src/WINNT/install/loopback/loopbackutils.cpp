@@ -568,7 +568,7 @@ extern "C" DWORD InstallLoopBack(LPCTSTR pConnectionName, LPCTSTR ip, LPCTSTR ma
 
 
 cleanup:
-    // an error has occured, but the device is registered, we must remove it
+    // an error has occurred, but the device is registered, we must remove it
     if (ret != 0 && registered)
         SetupDiCallClassInstaller(DIF_REMOVE, hDeviceInfo, &DeviceInfoData);
 

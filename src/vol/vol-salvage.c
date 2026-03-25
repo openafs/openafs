@@ -4374,7 +4374,7 @@ MaybeZapVolume(struct SalvInfo *salvinfo, struct InodeSummary *isp,
 	if (isp->volSummary && !isp->volSummary->deleted) {
 	    if (deleteMe) {
 		if (!Showmode)
-		    Log("Volume %" AFS_VOLID_FMT " (is only a partial volume--probably an attempt was made to move/restore it when a machine crash occured.\n", afs_printable_VolumeId_lu(isp->volumeId));
+		    Log("Volume %" AFS_VOLID_FMT " (is only a partial volume--probably an attempt was made to move/restore it when a machine crash occurred.\n", afs_printable_VolumeId_lu(isp->volumeId));
 		if (!Showmode)
 		    Log("It will be deleted on this server (you may find it elsewhere)\n");
 	    } else {

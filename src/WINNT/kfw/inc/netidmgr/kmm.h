@@ -440,7 +440,7 @@ kmm_this_module(void);
         KMM_LM_FLAG_SYNC.  The module was signed with an invalid
         certificate.  No handle is returned.
     \retval KHM_ERROR_UNKNOWN Only returned when called with
-        KMM_LM_FLAG_SYNC.  Some other error has occured.  No handle is
+        KMM_LM_FLAG_SYNC.  Some other error has occurred.  No handle is
         returned.
 
     \see \ref pi_fw_pm_load

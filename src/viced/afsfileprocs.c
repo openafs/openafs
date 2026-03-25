@@ -1843,7 +1843,7 @@ SetCallBackStruct(afs_uint32 CallBackTime, struct AFSCallBack *CallBack)
 
 /*
  * Adjusts (Subtract) "length" number of blocks from the volume's disk
- * allocation; if some error occured (exceeded volume quota or partition
+ * allocation; if some error occurred (exceeded volume quota or partition
  * was full, or whatever), it frees the space back and returns the code.
  * We usually pre-adjust the volume space to make sure that there's
  * enough space before consuming some.

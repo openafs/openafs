@@ -1451,7 +1451,7 @@ afs_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
     /*
      * It's treated like a callback so that when we do lookups we'll
      * invalidate the unique bit if any
-     * trytoSmush occured during the lookup call
+     * trytoSmush occurred during the lookup call
      */
     afs_allCBs++;
 }

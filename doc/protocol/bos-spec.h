@@ -2075,7 +2075,7 @@ overwriting the original.
 \par Error Codes 
 BZACCESS The caller is not authorized to perform this operation. 
 \n -1 The UserList file could not be opened. 
-\n EIO The UserList.NXX file could not be opened, or an error occured in the
+\n EIO The UserList.NXX file could not be opened, or an error occurred in the
 file close operations. 
 \n ENOENT The given name was not found in the original UserList file. 
 

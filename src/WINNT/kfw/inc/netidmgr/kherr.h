@@ -171,7 +171,7 @@ typedef struct tag_kherr_event {
                                   (not localized) */
     const wchar_t * location;   /*!< Location.  Usually the function
 			          name or such of where the event
-			          occured (not localized) */
+			          occurred (not localized) */
     const wchar_t * long_desc;  /*!< A long description of what went
 			          wrong (localized, formatted) */
     const wchar_t * suggestion; /*!< A suggested way to fix it
@@ -546,7 +546,7 @@ KHMEXP void KHMAPI kherr_remove_ctx_handler(kherr_ctx_handler h,
         type of string used.
     \param[in] facility Facility name of the reporter (not localized)
     \param[in] location Usually the function name or such of where the
-        event occured (not localized)
+        event occurred (not localized)
     \param[in] long_desc Long description of event (localized,
         formatted). Can be a string resource, message resource,
         allocated string or constant string.  The \a flags parameter

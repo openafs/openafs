@@ -147,7 +147,7 @@ afs_int32 bcdb_DeleteVDP(char *dumpSetName, char *dumpPath, afs_int32 dumpID)
  *      clonetime - ptr to vbl for returning result
  * exit:
  *      0 - clonetime set appropriately
- *      -1 - error occured in traversing chain, clone time set to 0.
+ *      -1 - error occurred in traversing chain, clone time set to 0.
  *      -2 - no clone times found, clone time set to 0
  */
 

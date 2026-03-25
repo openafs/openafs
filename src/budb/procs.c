@@ -2416,7 +2416,7 @@ GetDumps(struct rx_call *call,
 	    ABORT(BUDB_BADFLAGS);
 
 	/* lookup a dump by volumename and time stamp. Find the most recent
-	 * dump of the specified volumename, that occured before the supplied
+	 * dump of the specified volumename, that occurred before the supplied
 	 * time
 	 */
 

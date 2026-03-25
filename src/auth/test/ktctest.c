@@ -71,7 +71,7 @@ main(void)
 		/* no more tokens */
 		break;
 	    } else {
-		/* some error occured */
+		/* some error occurred */
 		perror("ktc_ListTokens failed fetching original tokens");
 		exit(1);
 	    }
@@ -83,7 +83,7 @@ main(void)
 			 sizeof(struct ktc_token), &oldClient[i]);
 
 	if (code) {
-	    /* some unexpected error occured */
+	    /* some unexpected error occurred */
 	    perror("ktc_GetToken failed fetching original tokens");
 	    exit(1);
 	}
@@ -170,7 +170,7 @@ main(void)
 		/* no more tokens */
 		break;
 	    } else {
-		/* some error occured */
+		/* some error occurred */
 		perror("ktc_ListTokens failed fetching reinstalled tokens");
 		exit(1);
 	    }
@@ -182,7 +182,7 @@ main(void)
 			 sizeof(struct ktc_token), &newClient[i]);
 
 	if (code) {
-	    /* some unexpected error occured */
+	    /* some unexpected error occurred */
 	    perror("ktc_GetToken failed fetching reinstalled tokens");
 	    exit(1);
 	}

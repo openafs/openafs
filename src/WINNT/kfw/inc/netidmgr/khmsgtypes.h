@@ -250,7 +250,7 @@
     collected credentials from another credential set.
 
     \a uparam of the message is set to a bitmask indicating the change
-    that occured.  It is a combination of ::KCDB_DELTA_ADD,
+    that occurred.  It is a combination of ::KCDB_DELTA_ADD,
     ::KCDB_DELTA_DEL and ::KCDB_DELTA_MODIFY.
  */
 #define KMSG_CRED_ROOTDELTA 1

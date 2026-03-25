@@ -172,7 +172,7 @@ acl_Externalize_pr(int (*func)(idlist *ids, namelist *names), struct acl_accessL
      * in elist.  Non-translatable id's are converted to their ASCII string
      * representations.  Returns 0 on success, -1 if number of entries
      * exceeds ACL_MAXENTRIES, or a failure code from the protection server
-     * if the problem occured there. */
+     * if the problem occurred there. */
 
     int i;
     int j;

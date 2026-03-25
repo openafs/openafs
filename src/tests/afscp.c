@@ -552,7 +552,7 @@ main(int argc, char **argv)
 
 
     if (bytesremaining > 0) {
-	printf("Some network error occured while copying data\n");
+	printf("Some network error occurred while copying data\n");
 	goto Fail_call;
     }
 
