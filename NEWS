@@ -1,5 +1,50 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.16pre1
+
+  All platforms
+
+    * A build error has been fixed for platforms with glibc 2.43 or later and C
+      compilers which are enforcing ISO C23 rules. This change fixes a
+      build error on Ubuntu 26.04 development releases (16751).
+
+    * A build error during parallel builds has been fixed (16758).
+
+  Linux client
+
+    * A bug that caused dentries to not properly be revalidated on Linux 6.17
+      has been fixed. The bug manifested as not seeing filename changes made on
+      other clients; that is, files being renamed, created, or deleted (16729).
+
+    * A Linux kernel function for folio migration has been implemented,
+      silencing a kernel log message warning that a fallback implementation
+      was used instead (16709).
+
+    * A potential bug (with no known path to trigger it) has been fixed where
+      a recursive writeback operation left page dirty flags in an inconsistent
+      state (potentially leading to data corruption) or leaked a folio
+      reference (in effect, leaking memory) (16702).
+
+    * A Linux kernel log message is issued if an unexpected recursive call to
+      writeback occurs. While this condition should not cause any problems,
+      the message should be reported. (16705).
+
+    * Support for Linux kernel 6.18 has been added (16701, 16703, 16704).
+
+    * Support for Linux kernel 6.19 has been added (16707, 16708).
+
+    * Support for Linux kernel 7.0 has been added (16738).
+
+  MacOS client
+
+    * Several binaries (bos, cmdebug, fs, xstat_cm_test, xstat_fs_test, and
+      backup) are now distributed as x86_64-only thin binaries, instead of as
+      universal binaries like all other commands. On arm64, these commands will
+      still run automatically via Rosetta2. This avoids an issue where those
+      binaries experienced segfaults in LWP in arm64 code. The original
+      universal binaries for these utilities are distributed in
+      /Library/OpenAFS/Tools/bin.orig/. (16753)
+
 OpenAFS 1.8.15
 
   All platforms
