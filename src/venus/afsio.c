@@ -448,6 +448,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
 		"overwrite existing file");
+    cmd_AddParm(ts, "-synthesize", CMD_SINGLE, CMD_OPTIONAL,
+		"create data pattern of specified length instead of reading from stdin");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     common_parms(ts);
 
@@ -458,6 +460,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-synthesize", CMD_SINGLE, CMD_OPTIONAL,
+		"create data pattern of specified length instead reading from stdin");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     common_parms(ts);
 
@@ -469,6 +473,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
+    cmd_AddParm(ts, "-synthesize", CMD_SINGLE, CMD_OPTIONAL,
+		"create data pattern of specified length instead reading from stdin");
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     common_parms(ts);
 
