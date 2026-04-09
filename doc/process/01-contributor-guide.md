@@ -71,6 +71,7 @@ your time and expertise, and we look forward to collaborating with you.
 * [howto-create-packages](howto-create-packages.md) : How to create installation packages
 * [howto-report-bugs](howto-report-bugs.md) : How to report bugs
 * [howto-use-gerrit](howto-use-gerrit.md) : How to submit changes to Gerrit
+* [howto-install-kerberos](howto-install-kerberos.md) : How to install Kerberos for testing
 * [security-bugs](security-bugs.md) : How to report security issues
 * [standards-compliance](standards-compliance.md) : Compatibility and interoperability policies
 * [unit-tests](unit-tests.md) : Unit testing guide
