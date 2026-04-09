@@ -260,6 +260,10 @@ PrintOverallPerfInfo(struct afs_stats_CMPerf *a_ovP)
     printf("\t%10u cacheBucket1_Discarded\n",  a_ovP->cacheBucket1_Discarded);
     printf("\t%10u cacheBucket2_Discarded\n",  a_ovP->cacheBucket2_Discarded);
 
+    printf("\t%10u stat_entry_size\n",  a_ovP->stat_entry_size);
+    printf("\t%10u sizeof_struct_vcache\n",  a_ovP->sizeof_struct_vcache);
+    printf("\t%10u sizeof_struct_vnode\n",  a_ovP->sizeof_struct_vnode);
+
     printf("\t%10u sysName_ID\n", a_ovP->sysName_ID);
 
     printf("\tFile Server up/downtimes, same cell:\n");

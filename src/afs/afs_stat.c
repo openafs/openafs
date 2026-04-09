@@ -22,7 +22,28 @@ struct afs_stats_CMPerf afs_stats_cmperf;
 struct afs_stats_CMFullPerf afs_stats_cmfullperf;
 afs_int32 afs_stats_XferSumBytes[AFS_STATS_NUM_FS_XFER_OPS];
 
-
+#if defined(AFS_DARWIN_ENV)
+/*
+ * On DARWIN, 'struct vnode' is opaque, so we cannot get the size of it
+ * directly. But the size of 'struct vnode' is not hidden; the definition of
+ * 'struct vnode' is available in vnode_internal.h, which is publically
+ * available (just not shipped in the MacOS SDKs).
+ *
+ * Also, vnodes on macOS are allocated via "zone"s, and information about zones
+ * can be obtained by running the "zprint" command on macOS. Over time, this
+ * value can change, but the current value was last checked by running "zprint"
+ * on macOS 15:
+ *
+ * $ zprint vnodes
+ *                             elem         cur         max        cur         max         cur  alloc  alloc
+ * zone name                   size        size        size      #elts       #elts       inuse   size  count
+ * -------------------------------------------------------------------------------------------------------------
+ * vnodes                       264      xxxxxK      xxxxxK     xxxxxx      xxxxxx      xxxxxx     xK     xx
+ */
+# define AFS_SIZEOF_VNODE 264
+#else
+# define AFS_SIZEOF_VNODE (sizeof(struct vnode))
+#endif /* AFS_DARWIN_ENV */
 
 /*
  * afs_InitStats
@@ -71,4 +92,12 @@ afs_InitStats(void)
 	xferP->minTime.tv_sec = 999999;
 	xferP->minBytes = 999999999;
     }
+
+    afs_stats_cmperf.sizeof_struct_vcache = sizeof(struct vcache);
+    afs_stats_cmperf.sizeof_struct_vnode = AFS_SIZEOF_VNODE;
+
+    afs_stats_cmperf.stat_entry_size = afs_stats_cmperf.sizeof_struct_vcache;
+#if !defined(AFS_VCACHE_EMBEDDED_VNODE)
+    afs_stats_cmperf.stat_entry_size += afs_stats_cmperf.sizeof_struct_vnode;
+#endif
 }

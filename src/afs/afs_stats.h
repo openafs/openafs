@@ -816,10 +816,14 @@ struct afs_stats_CMPerf {
     afs_int32 cacheBucket1_Discarded;
     afs_int32 cacheBucket2_Discarded;
 
+    afs_int32 stat_entry_size;		/* size of each afsd -stat entry (bytes) */
+    afs_int32 sizeof_struct_vcache;	/* size of a struct vcache (bytes) */
+    afs_int32 sizeof_struct_vnode;	/* size of a struct vnode (bytes) */
+
     /*
      * Spares for future expansion.
      */
-    afs_int32 spare[10];	/*Spares */
+    afs_int32 spare[7];	/*Spares */
 };
 
 
