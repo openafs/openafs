@@ -1,6 +1,6 @@
 # How to build OpenAFS
 
-This guide provides instructions for developers to build OpenAFS from
+This guide provides instructions for developers to build and install OpenAFS from
 source on Unix-like operating systems. It covers checking out the source code,
 installing build dependencies, compiling the software, and performing a basic
 installation.
@@ -204,4 +204,530 @@ After the build is complete, it is recommended to run the unit tests.
 
 ```sh
 make check
+```
+
+## Installation
+
+### System Prerequisites
+
+Before installing the OpenAFS binaries, several system prerequisites must be
+met to ensure a smooth setup. This section outlines the necessary requirements
+and recommendations for configuring your environment.
+
+#### Requirements
+
+These items are essential for a functioning OpenAFS cell.
+
+**Kerberos Realm**
+
+OpenAFS relies on Kerberos for authentication. You must have a functioning
+Kerberos realm, and your host must be configured as a client of that realm. For
+testing purposes, you can set up a local realm by following the
+[howto-install-kerberos.md](howto-install-kerberos.md) guide.
+
+**Network Interface**
+
+OpenAFS clients and servers require a working network interface for UDP
+traffic.  Ensure you have at least one working network interface on each client
+and server machine.  By default, the servers and clients will scan the system
+for all local interfaces.  If some of the interfaces are private, for example
+are management interfaces not to be used for public traffic, you will need to
+specify which ones are to be used by setting the IPv4 addresses in the OpenAFS
+`NetInfo` file (or which to not use by setting the IPv4 addresses in the
+OpenAFS `NetRestrict` file) before starting the services.
+
+**Hostname resolution**
+
+Ensure your system's hostname resolves to a non-loopback, network-accessible
+IPv4 address.  Some Linux distributions (e.g., Debian), and some
+provisioning tools (e.g., `cloud-init`) may add an entry to the `/etc/hosts`
+file to map the hostname to a loopback address, which is problematic
+for OpenAFS. For example:
+
+```text
+127.0.1.1 your-hostname
+```
+
+You can check how your hostname resolves with the following command:
+
+```sh
+getent hosts $(hostname)
+```
+
+The output should show your system's network IP address. If it shows a loopback
+address, you must correct this. First, remove any entry from `/etc/hosts` that
+maps your hostname to a loopback address. If your host does not have a DNS
+entry, you must add one to `/etc/hosts` mapping its network IP address to its
+hostname.
+
+**Time synchronization**
+
+Kerberos authentication is sensitive to time differences between hosts. All
+machines that will be part of your OpenAFS cell (both clients and servers) must
+have their clocks synchronized. Using a Network Time Protocol (NTP) service is
+strongly recommended to ensure this.
+
+In addition to Kerberos, if you are running multiple database servers, their
+clocks must be closely synchronized for the database quorum to be maintained.
+
+For the simple, single-machine deployment described in this guide, where all
+OpenAFS and Kerberos components run on the same host, external time
+synchronization is not a strict requirement.
+
+**SELinux mode**
+
+If your system uses SELinux, its security policies can interfere with OpenAFS
+operations. For a development setup, it is often easiest to temporarily set
+SELinux to `permissive` mode during the initial installation and configuration.
+
+```sh
+sudo setenforce 0
+```
+
+In permissive mode, SELinux logs policy violations without enforcing them. After
+installing OpenAFS, you can analyze these logs (e.g., in
+`/var/log/audit/audit.log`) and use tools like `audit2allow` to generate a local
+security policy module. This will allow OpenAFS to run correctly once you return
+SELinux to `enforcing` mode. For more details on this process, refer to your
+distribution's documentation on SELinux policy creation.
+
+**Firewall configuration**
+
+Your system's firewall must be configured to allow OpenAFS and Kerberos traffic.
+OpenAFS file servers listen on UDP port 7000, and other OpenAFS services use
+subsequent ports. Ensure your firewall rules permit traffic on the necessary
+ports for both Kerberos (e.g., UDP/88) and the AFS services (e.g.,
+UDP/7000-7009).
+
+#### Recommendations
+
+These practices are not strictly required but are highly recommended for a stable
+and manageable OpenAFS installation.
+
+**Static IP Address**
+
+While not mandatory, using static IP addresses, especially for servers, is
+highly recommended. It prevents service disruptions that can occur if a server's
+IP address changes.
+
+**Dedicated Disk Partitions**
+
+Dedicated disk partitions for the client cache and the server disk partitions
+are not required for a basic development and testing installation, so can be
+skipped for a simple configuration. These are recommended for production use,
+or for a more realistic setup.
+
+### Step 1: Install binaries and kernel module
+
+First, run `make install` to install the compiled files on your system. This
+command is the same for all platforms.
+
+```sh
+sudo make install
+```
+
+The previous command may create artifacts in your build tree owned by root. You
+can remove those with `sudo make clean`.
+
+#### Linux post-installation steps
+
+On Linux systems, you must also configure the dynamic linker and update the
+kernel module dependencies.
+
+Create a configuration file for the dynamic linker and update the linker
+cache so the system can find the OpenAFS libraries.
+
+```sh
+echo /opt/openafs/lib | sudo tee /etc/ld.so.conf.d/openafs.conf
+sudo ldconfig
+```
+
+Verify the OpenAFS kernel module was installed correctly and matches your
+current kernel version.  For example, on Red Hat family distributions check the
+path.
+
+```sh
+file /lib/modules/$(uname -r)/extra/openafs/openafs.ko
+```
+
+Finally, update the kernel module dependencies.
+
+```sh
+sudo /usr/sbin/depmod --all
+```
+
+### Step 2: Creating the cell service key
+
+This section covers the initial server configuration, which involves creating a
+Kerberos service principal for OpenAFS.
+
+Throughout this section, replace `EXAMPLE.COM` with your Kerberos realm and
+`example.com` with your AFS cell name.
+
+**1. Create the AFS service principal and keytab**
+
+First, create the Kerberos principal that the OpenAFS services will use for
+authentication. Then, export the keys for this principal into a keytab file.
+
+```sh
+sudo kadmin -p root/admin@EXAMPLE.COM addprinc -randkey afs/example.com@EXAMPLE.COM
+```
+
+```sh
+sudo mkdir -p /opt/openafs/etc/openafs/server
+```
+
+```sh
+sudo kadmin -p root/admin@EXAMPLE.COM ktadd \
+    -k /opt/openafs/etc/openafs/server/rxkad.keytab \
+    -e aes256-cts:normal,aes128-cts:normal \
+    afs/example.com@EXAMPLE.COM
+```
+
+**2. Create temporary cell configuration files**
+
+The `akeyconvert` utility requires `CellServDB` and `ThisCell` to exist before it
+is run. The `bosserver` will create the definitive versions of these files later,
+so for now, create temporary placeholder files.
+
+```sh
+echo ">example.com #Cell name" | sudo tee /opt/openafs/etc/openafs/server/CellServDB
+echo "example.com" | sudo tee /opt/openafs/etc/openafs/server/ThisCell
+```
+
+**3. Generate the OpenAFS KeyFileExt**
+
+Use the `akeyconvert` utility to convert the Kerberos keytab into the
+`KeyFileExt` format that OpenAFS services use internally.
+
+```sh
+sudo /opt/openafs/bin/akeyconvert -all
+```
+
+**4. Clean up temporary files**
+
+The `akeyconvert` utility has now created the `KeyFileExt` file from the
+contents of the `rxkad.keytab`.  The `rxkad.keytab` file and the temporary
+`CellServDB` and `ThisCell` files are no longer needed in this directory and
+should be removed.
+
+```sh
+sudo rm /opt/openafs/etc/openafs/server/rxkad.keytab \
+        /opt/openafs/etc/openafs/server/CellServDB \
+        /opt/openafs/etc/openafs/server/ThisCell
+```
+
+### Step 3: Start the servers
+
+The Basic OverSeer Server (`bosserver`) is the "server of servers" in OpenAFS.
+It is responsible for starting, stopping, and monitoring all other OpenAFS
+server processes on a machine.
+
+**1. Start the bosserver**
+
+Start the Bos Server (`bosserver`) process. The `bosserver` process will
+automatically run in the background. Specify the `-nofork` flag to run it in the
+foreground.
+
+```sh
+sudo /opt/openafs/sbin/bosserver -pidfiles
+```
+
+Check the BosServer log file to ensure it is running without errors.
+
+```sh
+sudo cat /opt/openafs/var/openafs/logs/BosLog
+```
+
+**2. Set the cell name**
+
+Configure the local machine with the name of the OpenAFS cell it will serve.
+
+```sh
+sudo /opt/openafs/bin/bos setcellname -server localhost -name example.com -localauth
+```
+
+**3. Create the database servers**
+
+Use `bos create` to register and start the core database services:
+* `ptserver`: The Protection Server, which manages the user and groups database (PRDB).
+* `vlserver`: The Volume Location Server, which manages the volume location database (VLDB).
+
+```sh
+sudo /opt/openafs/bin/bos create -server localhost -instance ptserver -type simple \
+    -cmd "/opt/openafs/libexec/openafs/ptserver" -localauth
+
+sudo /opt/openafs/bin/bos create -server localhost -instance vlserver -type simple \
+    -cmd "/opt/openafs/libexec/openafs/vlserver" -localauth
+```
+
+Check the logs to verify the servers started without errors before proceeding.
+
+```sh
+sudo tail -n100 /opt/openafs/var/openafs/logs/{Bos,Pt,VL}Log
+```
+
+**4. Create the file server**
+
+If you have not created a separate disk partition for the OpenAFS volumes, for
+development purposes, you can use a regular directory as a file server
+partition. Create a directory (e.g., `/vicepa`) and a special file named
+`AlwaysAttach` to instruct the file server to use it.
+
+```sh
+sudo mkdir -p /vicepa
+sudo touch /vicepa/AlwaysAttach
+```
+
+Now, create the File Server instance, which includes the file server, volume
+server, and salvager processes.
+
+```sh
+sudo /opt/openafs/bin/bos create -server localhost -instance dafs -type dafs \
+  -cmd "/opt/openafs/libexec/openafs/dafileserver -L" \
+  -cmd "/opt/openafs/libexec/openafs/davolserver" \
+  -cmd "/opt/openafs/libexec/openafs/salvageserver" \
+  -cmd "/opt/openafs/libexec/openafs/dasalvager" \
+  -localauth
+```
+
+Check the file server log to ensure it started correctly.
+
+```sh
+sudo tail -n100 /opt/openafs/var/openafs/logs/{Bos,File}Log
+```
+
+**5. Verify and secure the server**
+
+Check the status of all the newly created processes.
+
+```sh
+sudo /opt/openafs/bin/bos status -server localhost -localauth
+```
+
+Finally, set the `bosserver` to "restricted" mode. This is a recommended
+security practice that limits the set of available commands to a safer subset,
+disabling potentially destructive operations until the server is fully
+configured.
+
+```sh
+sudo /opt/openafs/bin/bos setrestricted -server localhost -mode 1 -localauth
+```
+
+### Step 4: Create the Administrative User
+
+OpenAFS has its own user database and permissions system, separate from both the
+operating system and Kerberos. To manage your cell, you need to create an
+administrative user within OpenAFS and grant it the necessary privileges. By
+convention, this user is named `root.admin`.
+
+**1. Create the corresponding Kerberos principal**
+
+First, ensure you have a Kerberos principal for your administrator. By
+convention, this is `root/admin`. If you have already created this principal
+while setting up your Kerberos realm, you can skip this step.
+
+```sh
+sudo kadmin.local -q "addprinc root/admin@EXAMPLE.COM"
+```
+
+**2. Create the OpenAFS user and grant privileges**
+
+Next, create the `root.admin` user within the OpenAFS protection database and
+grant it administrative rights.
+
+Create the user identity with `pts createuser`:
+
+```sh
+sudo /opt/openafs/bin/pts createuser -name root.admin -localauth
+```
+
+Add the user to the `system:administrators` group. This group has special
+privileges and is typically granted full administrative rights throughout the
+cell's filespace.
+
+```sh
+sudo /opt/openafs/bin/pts adduser -user root.admin -group system:administrators -localauth
+```
+
+Finally, add the user to the `bosserver`'s list of superusers. This allows the
+user to execute privileged `bos` commands to manage the server processes.
+
+```sh
+sudo /opt/openafs/bin/bos adduser -server localhost -user root.admin -localauth
+```
+
+### Step 5: Create Root Volumes
+
+Every AFS cell requires two fundamental volumes: `root.afs` and `root.cell`.
+
+* `root.afs`: This is the root volume of the AFS filesystem, mounted at `/afs`.
+   It is a container that will eventually hold the mount point for `root.cell`.
+* `root.cell`: This volume is what users see at the cell's root path (e.g.,
+  `/afs/example.com`). It contains the top-level directories for your cell.
+
+Use the `vos create` command to create these volumes on partition `/vicepa` (which
+is referred to as partition `a`) of your file server.
+
+```sh
+sudo /opt/openafs/sbin/vos create -server $(hostname) -partition a -name root.afs -localauth
+sudo /opt/openafs/sbin/vos create -server $(hostname) -partition a -name root.cell -localauth
+```
+
+### Step 6: Configure the Client
+
+This section describes how to configure and start the OpenAFS client components.
+
+**1. Create client directories**
+
+Create the conventional mount point for the AFS filesystem (`/afs`) and a
+directory for the client cache. The cache is where the client stores local
+copies of frequently accessed files to improve performance. This guide uses the
+modern path `/var/cache/openafs`; the traditional location was `/usr/vice/cache`.
+
+```sh
+sudo mkdir -p /afs
+sudo mkdir -p /var/cache/openafs
+```
+
+**2. Create configuration files**
+
+Create the necessary configuration files in `/opt/openafs/etc/openafs`.
+
+First, create `cacheinfo`, which tells the AFS client its mount point, cache
+directory, and cache size. The third field is the size in 1K blocks. If you are
+using a dedicated partition for the cache, this should be about 90% of its size.
+Since this guide uses a directory on the root filesystem, we set a reasonable
+limit (100000 blocks, or ~100MB) to prevent the cache from consuming all
+available disk space.
+
+```sh
+echo "/afs:/var/cache/openafs:100000" | sudo tee /opt/openafs/etc/openafs/cacheinfo
+```
+
+Next, create `ThisCell` and `CellServDB` files by copying the files from the
+server configuration. Later, we can add additional cell entries to the client's
+`CellServDB` configuration file.
+
+```sh
+sudo cp /opt/openafs/etc/openafs/server/ThisCell /opt/openafs/etc/openafs/ThisCell
+sudo cp /opt/openafs/etc/openafs/server/CellServDB /opt/openafs/etc/openafs/CellServDB
+```
+
+**3. Start the client service**
+
+On Linux, load the OpenAFS kernel module and check the module has been loaded.
+
+```sh
+sudo modprobe openafs
+lsmod | grep openafs
+```
+
+Start the OpenAFS cache manager with the `afsd` program.  (In this guide, we start
+the client without the `-dynroot` flag in order to complete the root volume
+setup in the next section.)
+
+```sh
+sudo /opt/openafs/sbin/afsd
+```
+
+You can verify the `afs` filesystem is mounted with the following command:
+
+```sh
+findmnt -t afs
+```
+
+### Step 7: Create the cell mount point
+
+With the client running, the final step is to create the mount point for your
+cell's root volume, making it visible in the `/afs` namespace.
+
+**1. Obtain an administrator token**
+
+To perform administrative actions in AFS, you must first authenticate with
+Kerberos and then obtain an AFS token using `aklog`. The `tokens` command will
+display your current tokens.
+
+```sh
+kinit root/admin@EXAMPLE.COM
+/opt/openafs/bin/aklog
+/opt/openafs/bin/tokens
+```
+Example output:
+
+```
+$ kinit root/admin@EXAMPLE.COM
+Password for root/admin@EXAMPLE.COM: ********
+$ aklog
+$ tokens
+
+Tokens held by the Cache Manager:
+
+User's (AFS ID 1) rxkad tokens for example.com [Expires Apr 24 03:18]
+   --End of list--
+```
+
+**2. Create the mount point**
+
+Use the `fs mkmount` command to create a mount point in the AFS namespace that
+links a directory (e.g., `/afs/example.com`) to an AFS volume (`root.cell`).
+
+```sh
+/opt/openafs/bin/fs mkmount -dir /afs/example.com -vol root.cell
+```
+
+**3. Set public read access**
+
+It is customary to make your cell root directories visible to everyone. Set the
+Access Control Lists (ACLs) to give `system:anyuser` read and list (`rl`)
+permissions. This allows unauthenticated users to browse the cell.
+
+```sh
+/opt/openafs/bin/fs setacl -dir /afs -acl system:anyuser rl
+/opt/openafs/bin/fs setacl -dir /afs/example.com -acl system:anyuser rl
+```
+
+### Step 8: Create read-only root volumes
+
+A key feature of OpenAFS is its use of read-only replicas. Clients perform most
+read operations from these replicas, which reduces the load on the read-write
+source volume and improves scalability. This section describes how to create
+these replicas for your root volumes.
+
+**1. Create a read-write mount point**
+
+As a convention, administrators often create a hidden mount point (prefixed
+with a dot) that resolves to the read-write volume. This provides a consistent
+path to manage the cell's root directory structure.
+
+```sh
+/opt/openafs/bin/fs mkmount -dir /afs/.example.com -vol root.cell -rw
+```
+
+**2. Create and release the replicas**
+
+The process of creating a read-only replica involves two steps:
+*   `vos addsite`: This command tells the Volume Location Database (VLDB) that a
+    replica site exists for the volume on a specific server and partition.
+*   `vos release`: This command triggers the replication process, creating the
+    actual read-only copy of the volume from the read-write source.
+
+```sh
+/opt/openafs/sbin/vos addsite -server $(hostname) -partition a -id root.cell
+/opt/openafs/sbin/vos addsite -server $(hostname) -partition a -id root.afs
+```
+
+```sh
+/opt/openafs/sbin/vos release -id root.cell -verbose
+/opt/openafs/sbin/vos release -id root.afs -verbose
+```
+
+**3. Flush volume mapping cache**
+
+Finally, run `fs checkvolumes` to force the client's cache manager to discard
+any old volume information and fetch the latest configuration from the VLDB. This
+ensures the client is aware of the new read-only replicas.
+
+```sh
+/opt/openafs/bin/fs checkvolumes
 ```
