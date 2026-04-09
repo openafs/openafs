@@ -1,8 +1,13 @@
 # How to build OpenAFS
 
-This is a developer oriented guide on how to build OpenAFS on unix-like
-platforms.  See [howto-create-packages.md](howto-create-packages.md) to learn
-how to create installation packages for various unix-like platforms.
+This guide provides instructions for developers to build OpenAFS from
+source on Unix-like operating systems. It covers checking out the source code,
+installing build dependencies, compiling the software, and performing a basic
+installation.
+
+For instructions on creating  installation packages
+(e.g., .rpm or .deb files), refer to the
+[howto-create-packages.md](howto-create-packages.md) guide instead.
 
 ## Build requirements
 
@@ -21,8 +26,8 @@ The following tools are needed to build OpenAFS:
 The C compiler used must be capable of building kernel modules for the target
 platform.
 
-Perl and the perl core modules are required to generate documentation and run
-the post build unit tests.
+Perl and the Perl core modules are required to generate documentation and run
+the post-build unit tests.
 
 In addition to the above, the following tools are needed to build OpenAFS from
 a Git checkout:
@@ -32,59 +37,33 @@ a Git checkout:
 - automake
 - libtool
 
-### RedHat/Fedora/CentOS/AlmaLinux/Rocky
+### Red Hat-family distributions
 
-The following RPM packages are required to build OpenAFS on RPM based
-distributions.
-
-* autoconf
-* automake
-* bison
-* elfutils-devel
-* flex
-* fuse-devel
-* gcc
-* glibc-devel
-* krb5-devel
-* libtool
-* make
-* ncurses-devel
-* openssl-devel
-* pam-devel
-* perl-core
-* perl-devel
-* perl-ExtUtils-Embed
-* swig
+This section applies to Red Hat Enterprise Linux and other distributions in the
+Red Hat family, such as CentOS Stream, Fedora, AlmaLinux, and Rocky Linux.
 
 The `kernel-devel` package matching your current running kernel version is
 required to build the OpenAFS kernel module.  It is recommended to upgrade your
 running kernel to the most current version and reboot if needed before
 installing the `kernel-devel` package.
 
-Install the kernel development package with the command.
+Install the required packages with the following command:
 
-    $ yum install "kernel-devel-uname-r==$(uname -r)"
+```sh
+sudo dnf install autoconf automake bison elfutils-devel flex fuse-devel \
+    gcc glibc-devel kernel-devel-matched krb5-devel libtool make \
+    ncurses-devel openssl-devel pam-devel perl-core perl-devel \
+    perl-ExtUtils-Embed swig
+```
 
 ### Arch Linux
 
-The following packages are required to build OpenAFS on Arch Linux.
+Install the required packages with the following command:
 
-* autoconf
-* automake
-* bison
-* elfutils
-* flex
-* fuse3
-* gcc
-* glibc
-* krb5
-* libtool
-* make
-* ncurses
-* openssl
-* pam
-* perl
-* swig
+```sh
+sudo pacman -S autoconf automake bison elfutils flex fuse3 gcc glibc krb5 \
+    libtool make ncurses openssl pam perl swig
+```
 
 The `linux-[lts-]headers` package matching your current running kernel version is
 required to build the OpenAFS kernel module.  It is recommended to upgrade your
@@ -93,51 +72,36 @@ installing the relevant package.
 
 Install the kernel development package with the command.
 
-    $ pacman -S linux-headers     # For the regular kernel
-    $ pacman -S linux-lts-headers # For the LTS kernel
+```sh
+pacman -S linux-headers     # For the regular kernel
+pacman -S linux-lts-headers # For the LTS kernel
+```
 
 ### Debian
 
-The following Debian packages are required to build OpenAFS on Debian and
-Debian based distributions.
+Install the required packages with the following command:
 
-* autoconf
-* automake
-* bison
-* comerr-dev
-* cpio
-* dblatex
-* debhelper
-* dkms
-* docbook-xsl
-* doxygen
-* flex
-* libfuse-dev
-* libkrb5-dev
-* libncurses5-dev
-* libpam0g-dev
-* libxml2-utils
-* perl
-* pkg-config
-* swig
-* xsltproc
+```sh
+sudo apt install -y autoconf automake bison comerr-dev cpio dblatex \
+    debhelper dkms docbook-xsl doxygen flex libfuse-dev libkrb5-dev \
+    libncurses5-dev libpam0g-dev libxml2-utils perl pkg-config swig \
+    xsltproc
+```
+
+Install the Linux kernel headers with the command:
+
+```sh
+sudo apt install -y linux-headers-$(uname -r)
+```
 
 ### FreeBSD
 
-The following packages are required to build OpenAFS on FreeBSD.
+Install the required packages with the following command:
 
-* autoconf
-* automake
-* dblatex
-* docbook-xsl
-* fusefs-libs
-* libtool
-* libxslt
-* perl
-* pkgconf
-* python
-* ruby
-* zip
+```sh
+sudo pkg install autoconf automake dblatex docbook-xsl fusefs-libs \
+    libtool libxslt perl pkgconf python ruby zip
+```
 
 In addition, FreeBSD systems require kernel sources and a configured kernel
 build directory (see section "FreeBSD Notes" in the README file).
@@ -150,23 +114,14 @@ module for Solaris and is usually used to build the userspace binaries as well.
 installer or from a tar file.  See the [Oracle
 Documentation](https://docs.oracle.com/) for more information.
 
-In addition to the C compiler, the following packages are required to build
-OpenAFS on Solaris.
+In addition to the C compiler, install the required packages with the
+following command:
 
-* autoconf
-* automake
-* bison
-* flex
-* gnu-binutils
-* gnu-coreutils
-* gnu-sed
-* library/security/openssl
-* libtool
-* make
-* onbld
-* pkg-config
-* runtime/perl
-* text/locale
+```sh
+sudo pkg install autoconf automake bison flex gnu-binutils gnu-coreutils \
+    gnu-sed library/security/openssl libtool make onbld pkg-config \
+    runtime/perl text/locale
+```
 
 ## Code Checkout
 
