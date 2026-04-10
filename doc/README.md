@@ -14,8 +14,20 @@ fine.
 
 ## pdf
 
-Old Transarc (and possibly pre-Transarc) protocol and API documentation for
-which we have no other source.
+Historical Andrew File System (AFS-3) architecture, protocol, and API
+documentation as PDF files.
+
+Text versions of these files are available in `doc/protocol`.
+
+## protocol
+
+Text versions of the historical Andrew File System (AFS-3) architecture, protocol
+and API documentation files.  These files use Doxygen markup and have a `.h`
+extension, but they are not C header files and are not used in the current
+build process to generate documentation.
+
+This directory also contains a copy of RFC 5864 **DNS SRV Resource Records for AFS**
+in plain text.
 
 ## txt
 
