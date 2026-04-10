@@ -1,5 +1,11 @@
 # OpenAFS Documentation
 
+## process
+
+Documentation related to the OpenAFS development process and the Contributor
+Guide. Includes the code of conduct, guides for submitting changes, and
+reporting bugs.
+
 ## man-pages
 
 pod sources for man pages (converted from original IBM html source).
