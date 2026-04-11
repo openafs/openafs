@@ -76,7 +76,7 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     code = sockp->ops->bind(sockp, BIND_SOCKADDR(&myaddr), sizeof(myaddr));
 
     if (code < 0) {
-	printk("sock_release(rx_socket) FIXME\n");
+	sock_release(sockp);
 	return NULL;
     }
 
