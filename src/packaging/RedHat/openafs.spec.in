@@ -9,6 +9,17 @@
 # Disable using lto (link time optimization)
 %global _lto_cflags %{nil}
 
+#
+# Disable setting the source_date_epoch from the top entry of the changelog and
+# instead use the current system time by default.
+#
+# Note: Downstream packagers which use this reference spec are encouraged
+#       to set %source_date_epoch_from_changelog to 1 and update the %changelog
+#       on each release to set the %source_date_epoch.
+#
+%define source_date_epoch_from_changelog 0
+%{!?source_date_epoch: %global source_date_epoch %(date +%%s)}
+
 %{!?build_dkmspkg: %define build_dkmspkg 1}
 
 #
@@ -128,8 +139,10 @@ administrative management.
 This package provides common files shared across all the various
 OpenAFS packages but are not necessarily tied to a client or server.
 
-The OpenAFS SRPM can be rebuilt with the following options to control
-what gets built:
+The OpenAFS SRPM can be rebuilt with the following options:
+
+ --define "source_date_epoch 1712832000"  Specify the build timestamp. The default
+                                          is the current system time.
 
  --define "kernvers 3.19.3-100.fc20.i686" Specify the specific kernel version
                                   to build modules against. The default is
@@ -429,6 +442,9 @@ krb4 lookalike services.
 #
 ##############################################################################
 %build
+
+export SOURCE_DATE_EPOCH=%{source_date_epoch}
+
 case %{_arch} in
        x86_64)                         sysname=amd64_linux26        ;;
        alpha*)                         sysname=alpha_linux_26       ;;
@@ -580,6 +596,7 @@ done
 ##############################################################################
 %install
 
+export SOURCE_DATE_EPOCH=%{source_date_epoch}
 export DONT_GPRINTIFY=1 # Do not modify initscripts.
 
 [ $RPM_BUILD_ROOT != / ] && rm -rf $RPM_BUILD_ROOT
