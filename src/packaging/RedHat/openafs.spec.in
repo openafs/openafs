@@ -120,12 +120,19 @@ ExclusiveArch: %{ix86} x86_64 ia64 s390 s390x sparc64 ppc ppc64 ppc64le aarch64
 
 Source0: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-src.tar.bz2
 %define srcdir openafs-%{afsvers}
-
 Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
-
 Source20: https://www.central.org/dl/cellservdb/CellServDB.2025-08-16
-
+Source30: openafs-cacheinfo
+Source31: openafs-client.init
+Source32: openafs-client.service
+Source33: openafs-client-systemd-helper.sh
+Source34: openafs-LICENSE.Sun
+Source35: openafs-README
+Source36: openafs-server.init
+Source37: openafs-server.service
+Source38: openafs.sysconfig
+Source39: openafs-ThisCell
 Source997: openafs-buildfedora.pl
 Source998: openafs-buildall.sh
 Source999: openafs-kmodtool
@@ -725,17 +732,17 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man3/AFS::ukernel.3
 # Install client and server initscripts/systemd files
 #-----------------------------------------------------------------------------
 mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
-install -m 755 src/packaging/RedHat/openafs.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/openafs
+install -m 755 %{SOURCE38} $RPM_BUILD_ROOT/etc/sysconfig/openafs
 %if 0%{?fedora} < 15 && 0%{?rhel} < 7 && 0%{?amzn} < 1
 mkdir -p $RPM_BUILD_ROOT%{initdir}
-install -m 755 src/packaging/RedHat/openafs-client.init $RPM_BUILD_ROOT%{initdir}/openafs-client
-install -m 755 src/packaging/RedHat/openafs-server.init $RPM_BUILD_ROOT%{initdir}/openafs-server
+install -m 755 %{SOURCE31} $RPM_BUILD_ROOT%{initdir}/openafs-client
+install -m 755 %{SOURCE36} $RPM_BUILD_ROOT%{initdir}/openafs-server
 %else
 mkdir -p $RPM_BUILD_ROOT%{_unitdir}
 mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/modules
-install -m 644 src/packaging/RedHat/openafs-client.service $RPM_BUILD_ROOT%{_unitdir}/openafs-client.service
-install -m 644 src/packaging/RedHat/openafs-server.service $RPM_BUILD_ROOT%{_unitdir}/openafs-server.service
-install -m 755 src/packaging/RedHat/openafs-client-systemd-helper.sh $RPM_BUILD_ROOT%{_prefix}/vice/etc/openafs-client-systemd-helper.sh
+install -m 644 %{SOURCE32} $RPM_BUILD_ROOT%{_unitdir}/openafs-client.service
+install -m 644 %{SOURCE37} $RPM_BUILD_ROOT%{_unitdir}/openafs-server.service
+install -m 755 %{SOURCE33} $RPM_BUILD_ROOT%{_prefix}/vice/etc/openafs-client-systemd-helper.sh
 %endif
 
 #-----------------------------------------------------------------------------
@@ -750,9 +757,9 @@ mkdir -p $RPM_BUILD_ROOT%{_prefix}/afs/logs
 mkdir -p $RPM_BUILD_ROOT%{_prefix}/vice/etc
 mkdir -p $RPM_BUILD_ROOT%{_prefix}/vice/cache
 chmod 700 $RPM_BUILD_ROOT%{_prefix}/vice/cache
-install -p -m 644 src/packaging/RedHat/openafs-ThisCell $RPM_BUILD_ROOT%{_prefix}/vice/etc/ThisCell
+install -p -m 644 %{SOURCE39} $RPM_BUILD_ROOT%{_prefix}/vice/etc/ThisCell
 install -p -m 644 %{SOURCE20} $RPM_BUILD_ROOT%{_prefix}/vice/etc/CellServDB.dist
-install -p -m 644 src/packaging/RedHat/openafs-cacheinfo $RPM_BUILD_ROOT%{_prefix}/vice/etc/cacheinfo
+install -p -m 644 %{SOURCE30} $RPM_BUILD_ROOT%{_prefix}/vice/etc/cacheinfo
 
 #-----------------------------------------------------------------------------
 # Install DKMS source.
@@ -784,8 +791,8 @@ mkdir -p $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/src
 tar cf - -C libafs_tree . | \
     tar xf - -C $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/src
 install -m 644 LICENSE $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.IBM
-install -m 644 src/packaging/RedHat/openafs-LICENSE.Sun $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.Sun
-install -m 644 src/packaging/RedHat/openafs-README $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/README
+install -m 644 %{SOURCE34} $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.Sun
+install -m 644 %{SOURCE35} $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/README
 
 #-----------------------------------------------------------------------------
 # Install documentation.
