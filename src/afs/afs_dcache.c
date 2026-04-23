@@ -3047,11 +3047,32 @@ afs_MemGetDSlot(afs_int32 aslot, dslot_state type)
 
 }				/*afs_MemGetDSlot */
 
+int
+afs_ShouldLogCacheError(int code)
+{
+#if defined(AFS_LINUX_ENV)
+    if (code == -EINTR && afs_kill_pending()) {
+	/*
+	 * On Linux, it is common and expected to see EINTR errors on I/O if
+	 * the current process is dying. Do not log anything in those cases;
+	 * the messages are just noise at best, and logging about "cache I/O
+	 * errors" can sound scary to users when there really is nothing wrong.
+	 */
+	return 0;
+    }
+#endif
+    return 1;
+}
+
 static void
 LogCacheError(int aslot, int off, int code, int target_size)
 {
     struct osi_stat tstat;
     char *procname;
+
+    if (!afs_ShouldLogCacheError(code)) {
+	return;
+    }
 
     if (afs_osi_Stat(afs_cacheInodep, &tstat)) {
 	tstat.size = -1;
