@@ -101,8 +101,6 @@ get_rpmtemplate ()
 
     cat <<EOF
 
-%global _find_debuginfo_opts %{?_find_debuginfo_opts} -p '.*openafs\.ko.*' -o kmod-debuginfo.list
-
 %package       -n kmod-${kmod_name}${dashvariant}
 Summary:          ${kmod_name} kernel module(s)
 Group:            System Environment/Kernel
@@ -122,6 +120,18 @@ BuildRequires: elfutils-devel
 This package provides the ${kmod_name} kernel modules built for the Linux
 kernel ${kname} for the %{_target_cpu} family of processors.
 
+%post          -n kmod-${kmod_name}${dashvariant}
+${depmod} -aeF /boot/System.map-${kname} ${kname} > /dev/null || :
+%postun        -n kmod-${kmod_name}${dashvariant}
+${depmod} -aF /boot/System.map-${kname} ${kname} &> /dev/null || :
+%files         -n kmod-${kmod_name}${dashvariant}
+%defattr(644,root,root,755)
+/lib/modules/${kname}/extra/${kmod_name}/
+
+
+%if ! ( 0%{?fedora} >= 28 || 0%{?rhel} >= 8 )
+%global _find_debuginfo_opts %{?_find_debuginfo_opts} -p '.*openafs\.ko.*' -o kmod-debuginfo.list
+
 %package       -n kmod-%{kmod_name}${dashvariant}-debuginfo
 Summary:          Debug information for %{kmod_name} kernel modules
 Group:            Development/Debug
@@ -131,16 +141,9 @@ AutoReqProv:      no
 This package provides debug information for the %{kmod_name} kernel modules
 built for the Linux kernel ${kname} for the %{_target_cpu} family of processors.
 
-%post          -n kmod-${kmod_name}${dashvariant}
-${depmod} -aeF /boot/System.map-${kname} ${kname} > /dev/null || :
-%postun        -n kmod-${kmod_name}${dashvariant}
-${depmod} -aF /boot/System.map-${kname} ${kname} &> /dev/null || :
-%files         -n kmod-${kmod_name}${dashvariant}
-%defattr(644,root,root,755)
-/lib/modules/${kname}/extra/${kmod_name}/
-
 %files -f kmod-debuginfo.list -n kmod-%{kmod_name}${dashvariant}-debuginfo
 %defattr(-,root,root)
+%endif
 
 EOF
 }
