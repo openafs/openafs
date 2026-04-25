@@ -14,8 +14,8 @@
 # instead use the current system time by default.
 #
 # Note: Downstream packagers which use this reference spec are encouraged
-#       to set %source_date_epoch_from_changelog to 1 and update the %changelog
-#       on each release to set the %source_date_epoch.
+#       to set source_date_epoch_from_changelog to 1 and update the changelog
+#       on each release to set the source_date_epoch.
 #
 %define source_date_epoch_from_changelog 0
 %{!?source_date_epoch: %global source_date_epoch %(date +%%s)}
