@@ -92,7 +92,7 @@
 #define	VIOCGETTIME		_VICEIOCTL(13)	/* Do a vice gettime for performance testing */
 #define	VIOCWHEREIS		_VICEIOCTL(14)	/* Find out where a volume is located */
 #define	VIOCPREFETCH		_VICEIOCTL(15)	/* Prefetch a file */
-#define	VIOCNOP			_VICEIOCTL(16)	/* Do nothing (more preformance) */
+#define	VIOCNOP			_VICEIOCTL(16)	/* Do nothing */
 #define	VIOCENGROUP		_VICEIOCTL(17)	/* Enable group access for a group */
 #define	VIOCDISGROUP		_VICEIOCTL(18)	/* Disable group access */
 #define	VIOCLISTGROUPS		_VICEIOCTL(19)	/* List enabled and disabled groups */
