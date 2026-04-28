@@ -850,16 +850,18 @@ rxi_CancelDelayedAckEvent(struct rx_call *call)
 	CALL_RELE(call, RX_CALL_REFCOUNT_DELAY);
 }
 
-/* called with unincremented nRequestsRunning to see if it is OK to start
- * a new thread in this service.  Could be "no" for two reasons: over the
- * max quota, or would prevent others from reaching their min quota.
+/*
+ * QuotaOK() and its variants are called with unincremented nRequestsRunning to
+ * see if it is OK to start a new thread in this service.  Could be "no" for
+ * two reasons: over the max quota, or would prevent others from reaching their
+ * min quota.
+ *
+ * @pre rx_serverPool_lock must be held
  */
+
 #ifdef RX_ENABLE_LOCKS
-/* This verion of QuotaOK reserves quota if it's ok while the
- * rx_serverPool_lock is held.  Return quota using ReturnToServerPool().
- */
 static int
-QuotaOK(struct rx_service *aservice)
+QuotaOK_common(struct rx_service *aservice, int reserve)
 {
     /* check if over max quota */
     if (aservice->nRequestsRunning >= aservice->maxProcs) {
@@ -874,12 +876,17 @@ QuotaOK(struct rx_service *aservice)
     MUTEX_ENTER(&rx_quota_mutex);
     if ((aservice->nRequestsRunning < aservice->minProcs)
 	|| (rxi_availProcs > rxi_minDeficit)) {
-	aservice->nRequestsRunning++;
-	/* just started call in minProcs pool, need fewer to maintain
-	 * guarantee */
-	if (aservice->nRequestsRunning <= aservice->minProcs)
-	    rxi_minDeficit--;
-	rxi_availProcs--;
+	if (reserve) {
+	    aservice->nRequestsRunning++;
+	    /*
+	     * just started call in minProcs pool, need fewer to maintain
+	     * guarantee.
+	     */
+	    if (aservice->nRequestsRunning <= aservice->minProcs) {
+		rxi_minDeficit--;
+	    }
+	    rxi_availProcs--;
+	}
 	MUTEX_EXIT(&rx_quota_mutex);
 	return 1;
     }
@@ -888,6 +895,36 @@ QuotaOK(struct rx_service *aservice)
     return 0;
 }
 
+/*
+ * This version of QuotaOK reserves quota (if available) while the
+ * rx_serverPool_lock is held.  Release reserved quota by calling
+ * ReturnToServerPool().
+ *
+ * @pre rx_serverPool_lock must be held
+ */
+static int
+QuotaOK(struct rx_service *aservice)
+{
+    return QuotaOK_common(aservice, 1);
+}
+
+/*
+ * This version of QuotaOK does not reserve quota; this allows for a quick
+ * check without the need to return the quota.
+ *
+ * @pre rx_serverPool_lock must be held
+ */
+static int
+QuotaOK_noreserve(struct rx_service *aservice)
+{
+    return QuotaOK_common(aservice, 0);
+}
+
+/*
+ * Release any reserved quota obtained by QuotaOK().
+ *
+ * @pre rx_serverPool_lock must be held
+ */
 static void
 ReturnToServerPool(struct rx_service *aservice)
 {
@@ -921,6 +958,17 @@ QuotaOK(struct rx_service *aservice)
     MUTEX_EXIT(&rx_quota_mutex);
     return rc;
 }
+
+/*
+ * For !RX_ENABLE_LOCKS, QuotaOK() does not reserve any quota.
+ * Therefore QuotaOK_noreserve() can merely call that.
+ */
+static int
+QuotaOK_noreserve(struct rx_service *aservice)
+{
+   return QuotaOK(aservice);
+}
+
 #endif /* RX_ENABLE_LOCKS */
 
 #ifndef KERNEL
@@ -3271,29 +3319,39 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
 }
 
 /*!
- * Abort the call if the server is over the busy threshold. This
- * can be used without requiring a call structure be initialised,
- * or connected to a particular channel
+ * Abort the call if the server is over the busy threshold. This can be used
+ * without requiring a call structure be initialised, or connected to a
+ * particular channel. However, do NOT enforce the busy threshold for any
+ * service that still has available service threads according to
+ * QuotaOK_noreserve().
  */
 static_inline int
 rxi_AbortIfServerBusy(osi_socket socket, struct rx_connection *conn,
 		      struct rx_packet *np)
 {
     afs_uint32 serial;
+    int busy = 0;
 
     if ((rx_BusyThreshold > 0) &&
 	(rx_atomic_read(&rx_nWaiting) > rx_BusyThreshold)) {
-	MUTEX_ENTER(&conn->conn_data_lock);
-	serial = ++conn->serial;
-	MUTEX_EXIT(&conn->conn_data_lock);
-	rxi_SendRawAbort(socket, conn->peer->host, conn->peer->port,
-			 serial, rx_BusyError, np, 0);
-	if (rx_stats_active)
-	    rx_atomic_inc(&rx_stats.nBusies);
-	return 1;
-    }
+	int haveQuota;
 
-    return 0;
+	MUTEX_ENTER(&rx_serverPool_lock);
+	haveQuota = QuotaOK_noreserve(conn->service);
+	MUTEX_EXIT(&rx_serverPool_lock);
+	if (!haveQuota) {
+	    MUTEX_ENTER(&conn->conn_data_lock);
+	    serial = ++conn->serial;
+	    MUTEX_EXIT(&conn->conn_data_lock);
+	    rxi_SendRawAbort(socket, conn->peer->host, conn->peer->port,
+			     serial, rx_BusyError, np, 0);
+	    if (rx_stats_active) {
+		rx_atomic_inc(&rx_stats.nBusies);
+	    }
+	    busy = 1;
+	}
+    }
+    return busy;
 }
 
 static_inline struct rx_call *
