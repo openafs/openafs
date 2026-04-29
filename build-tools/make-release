@@ -79,7 +79,7 @@ my $name = "openafs-$suffix";
 
 # Grab the tagged code into a temporary directory
 
-my $tempDir = File::Temp::tempdir();
+my $tempDir = File::Temp::tempdir(CLEANUP => 1);
 system ("git archive --format=tar --prefix=$name/ $tagName ".
         " | tar -C $tempDir -x") == 0
     or die "Git archive failed with: $?";
