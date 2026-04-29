@@ -885,7 +885,6 @@ distclean: clean
 	src/packaging/MacOS/OpenAFS.info \
 	src/packaging/MacOS/buildpkg.sh \
 	src/packaging/MacOS/pkgbuild.sh \
-	src/packaging/RedHat/openafs.spec \
 	src/pam/Makefile \
 	src/platform/Makefile \
 	src/platform/${MKAFS_OSTYPE}/Makefile \
