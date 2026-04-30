@@ -153,6 +153,48 @@ opr_time64_add_safe(struct afs_time64 in, struct afs_time64 add,
 }
 
 /*
+ * *out = in - sub
+ *
+ * If the result cannot be represented, return ERANGE.
+ */
+static_inline int
+opr_time64_sub_safe(struct afs_time64 in, struct afs_time64 sub,
+		    struct afs_time64 *out)
+{
+    if (in.ticks >= 0 && sub.ticks < 0) {
+	if (in.ticks > OPR_TIME64_MAX_TICKS + sub.ticks) {
+	    return ERANGE;
+	}
+    }
+    if (in.ticks < 0 && sub.ticks > 0) {
+	if (in.ticks < OPR_TIME64_MIN_TICKS + sub.ticks) {
+	    return ERANGE;
+	}
+    }
+    out->ticks = in.ticks - sub.ticks;
+    return 0;
+}
+
+/*
+ * Same as opr_time64_sub_safe(), but we return the result directly. If the
+ * result cannot be represented, we assert instead of returning an error.
+ * Because we can assert, do NOT use this function with untrusted data! That
+ * is, data from the net or user input. Use opr_time64_sub_safe() instead.
+ *
+ * It's generally okay to use this function if you're subtracting known small
+ * values (for example, subtracting a hard-coded 5 seconds from
+ * opr_time64_now()); since if that overflows an afs_time64, then probably
+ * nothing is going to be able to function.
+ */
+static_inline struct afs_time64
+opr_time64_sub(struct afs_time64 in, struct afs_time64 sub)
+{
+    struct afs_time64 val;
+    opr_Verify(opr_time64_sub_safe(in, sub, &val) == 0);
+    return val;
+}
+
+/*
  * Initialize an afs_time64 from the given number of ticks. This should not
  * usually be necessary, except when decoding an afs_time64 from the net or
  * from disk, etc. It is preferred to use this function instead of setting an
@@ -407,5 +449,19 @@ opr_time64_now(void)
     return now;
 }
 #endif /* !KERNEL || UKERNEL */
+
+/*
+ * Same as opr_time64_sub(), but the result is converted to seconds (as a
+ * signed 64-bit integer) using opr_time64_toSecs_safe().
+ *
+ * As with opr_time64_sub(), do NOT use with untrusted data!
+ */
+static_inline afs_int64
+opr_time64_sub_toSecs(struct afs_time64 in, struct afs_time64 sub)
+{
+    afs_int64 val;
+    opr_time64_toSecs_safe(opr_time64_sub(in, sub), &val);
+    return val;
+}
 
 #endif /* OPENAFS_OPR_TIME_H */

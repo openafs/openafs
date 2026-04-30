@@ -213,6 +213,72 @@ test_add(void)
 }
 
 static void
+test_sub(void)
+{
+    int tc_i;
+    struct {
+	afs_int64 ticks;
+	afs_int64 sub;
+	int code;
+	afs_int64 expected;
+	afs_int64 exp_secs;
+    } *tc, test_cases[] = {
+	{ 0, 0, 0, 0 },
+
+	/*             ticks   sub code            expected       exp_secs */
+	{  17508035496712980LL,  5,   0,  17508035496712975LL,  1750803549 },
+	{  17508035496712980LL, -5,   0,  17508035496712985LL,  1750803549 },
+	{ -17508035496712980LL,  5,   0, -17508035496712985LL, -1750803549 },
+	{ -17508035496712980LL, -5,   0, -17508035496712975LL, -1750803549 },
+
+	/*            ticks                  sub code  expected exp_secs */
+	{ 17508035496712980LL, 17508035496712980LL, 0,        0,       0 },
+	{ 17508035496712980LL, 17508035440123456LL, 0, 56589524,       5 },
+
+	/* ticks	      sub	   code		   expected	   exp_secs */
+	{  0, -0x7FFFFFFFFFFFFFFFLL,	      0, 0x7FFFFFFFFFFFFFFFLL, 922337203685LL },
+	{  1, -0x7FFFFFFFFFFFFFFFLL,	 ERANGE },
+	{  0, -0x7FFFFFFFFFFFFFFFLL - 1, ERANGE },
+	{  1, -0x7FFFFFFFFFFFFFFFLL - 1, ERANGE },
+	{ -1, -0x7FFFFFFFFFFFFFFFLL - 1,      0, 0x7FFFFFFFFFFFFFFFLL, 922337203685LL },
+
+	/*             ticks    sub    code            expected        exp_secs */
+	{ 0x7FFFFFFFFFFFFFF0LL, -15,      0, 0x7FFFFFFFFFFFFFFFLL, 922337203685LL },
+	{ 0x7FFFFFFFFFFFFFF0LL, -16, ERANGE },
+	{ 0x7FFFFFFFFFFFFFF0LL, -20, ERANGE },
+
+	/*              ticks   sub    code                   expected         exp_secs */
+	{ -0x7FFFFFFFFFFFFFF0LL, 16,      0, -0x7FFFFFFFFFFFFFFFLL - 1LL, -922337203685LL },
+	{ -0x7FFFFFFFFFFFFFF0LL, 17, ERANGE },
+	{ -0x7FFFFFFFFFFFFFF0LL, 20, ERANGE },
+    };
+
+    for (afstest_Scan(test_cases, tc, tc_i)) {
+	struct afs_time64 in = opr_time64_fromTicks(tc->ticks);
+	struct afs_time64 sub = opr_time64_fromTicks(tc->sub);
+	struct afs_time64 got = opr_time64_fromTicks(-1);
+
+	is_int(opr_time64_sub_safe(in, sub, &got), tc->code,
+	       "opr_time64_sub_safe(%lld, %lld) == %d",
+	       opr_time64_toTicksLL(in),
+	       opr_time64_toTicksLL(sub),
+	       tc->code);
+
+	if (tc->code == 0) {
+	    is_time64(got, tc->expected,
+		      " ... result matches %lld",
+		      (long long)tc->expected);
+
+	    is_int64(opr_time64_sub_toSecs(in, sub), tc->exp_secs,
+		     "opr_time64_sub_toSecs(%lld, %lld) == %lld",
+		     opr_time64_toTicksLL(in),
+		     opr_time64_toTicksLL(sub),
+		     (long long)tc->exp_secs);
+	}
+    }
+}
+
+static void
 test_fromSecs(void)
 {
     int tc_i;
@@ -479,7 +545,7 @@ test_now(void)
 int
 main(int argc, char **argv)
 {
-    plan(168);
+    plan(208);
 
     /* Assume EST timezone. */
     putenv("TZ=EST+5");
@@ -487,6 +553,7 @@ main(int argc, char **argv)
     test_cmp();
 
     test_add();
+    test_sub();
 
     test_fromSecs();
     test_fromMicrosecs();
