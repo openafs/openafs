@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.8.16pre1
+OpenAFS 1.8.16
 
   All platforms
 
@@ -34,6 +34,16 @@ OpenAFS 1.8.16pre1
     * Support for Linux kernel 6.19 has been added (16707, 16708).
 
     * Support for Linux kernel 7.0 has been added (16738).
+
+  Linux packaging
+
+    * RPM packaging support for the Amazon Linux distribution has been added
+      to the in-tree packaging reference files. (16782, 16783)
+
+    * The RPM specfile now defaults to setting SOURCE_DATE_EPOCH to the
+      current time instead of the latest changelog entry. Set the macro
+      'source_date_epoch_from_changelog' to '1' to preserve the old behavior,
+      or set 'source_date_epoch' to a specific timestamp. (16780, 16781)
 
   MacOS client
 
