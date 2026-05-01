@@ -37,34 +37,31 @@ afs_int32 afs_connectBacks = 0;
  */
 static struct ltable {
     char *name;
-    char *addr;
+    struct afs_lock *addr;
 } ltable[] = {
-    {
-    "afs_xvcache", (char *)&afs_xvcache}, {
-    "afs_xdcache", (char *)&afs_xdcache}, {
-    "afs_xserver", (char *)&afs_xserver}, {
-    "afs_xvcb", (char *)&afs_xvcb}, {
-    "afs_xbrs", (char *)&afs_xbrs}, {
-    "afs_xcell", (char *)&afs_xcell}, {
-    "afs_xconn", (char *)&afs_xconn}, {
-    "afs_xuser", (char *)&afs_xuser}, {
-    "afs_xvolume", (char *)&afs_xvolume}, {
-    "puttofile", (char *)&afs_puttofileLock}, {
-    "afs_ftf", (char *)&afs_ftf}, {
-    "afs_xcbhash", (char *)&afs_xcbhash}, {
-    "afs_xaxs", (char *)&afs_xaxs}, {
-    "afs_xinterface", (char *)&afs_xinterface},
-    {
-      "afs_xsrvAddr", (char *)&afs_xsrvAddr},
-    {
-      "afs_xvreclaim", (char *)&afs_xvreclaim},
-    { "afsdb_client_lock", (char *)&afsdb_client_lock},
-    { "afsdb_req_lock", (char *)&afsdb_req_lock},
-    { "afs_discon_lock", (char *)&afs_discon_lock},
-    { "afs_disconDirtyLock", (char *)&afs_disconDirtyLock},
-    { "afs_discon_vc_dirty", (char *)&afs_xvcdirty},
-    { "afs_dynrootDirLock", (char *)&afs_dynrootDirLock},
-    { "afs_dynSymlinkLock", (char *)&afs_dynSymlinkLock},
+    { "afs_xvcache", &afs_xvcache },
+    { "afs_xdcache", &afs_xdcache },
+    { "afs_xserver", &afs_xserver },
+    { "afs_xvcb", &afs_xvcb },
+    { "afs_xbrs", &afs_xbrs },
+    { "afs_xcell", &afs_xcell },
+    { "afs_xconn", &afs_xconn },
+    { "afs_xuser", &afs_xuser },
+    { "afs_xvolume", &afs_xvolume },
+    { "puttofile", &afs_puttofileLock },
+    { "afs_ftf", &afs_ftf },
+    { "afs_xcbhash", &afs_xcbhash },
+    { "afs_xaxs", &afs_xaxs },
+    { "afs_xinterface", &afs_xinterface },
+    { "afs_xsrvAddr", &afs_xsrvAddr },
+    { "afs_xvreclaim", &afs_xvreclaim },
+    { "afsdb_client_lock", &afsdb_client_lock },
+    { "afsdb_req_lock", &afsdb_req_lock },
+    { "afs_discon_lock", &afs_discon_lock },
+    { "afs_disconDirtyLock", &afs_disconDirtyLock },
+    { "afs_discon_vc_dirty", &afs_xvcdirty },
+    { "afs_dynrootDirLock", &afs_dynrootDirLock },
+    { "afs_dynSymlinkLock", &afs_dynSymlinkLock },
 };
 
 /* these are for storing alternate interface addresses */
@@ -330,20 +327,13 @@ SRXAFSCB_GetLock(struct rx_call *a_call, afs_int32 a_index,
 	 */
 	tl = &ltable[a_index];
 	strlcpy(a_result->name, tl->name, sizeof(a_result->name));
-	a_result->lock.waitStates =
-	    ((struct afs_lock *)(tl->addr))->wait_states;
-	a_result->lock.exclLocked =
-	    ((struct afs_lock *)(tl->addr))->excl_locked;
-	a_result->lock.readersReading =
-	    ((struct afs_lock *)(tl->addr))->readers_reading;
-	a_result->lock.numWaiting =
-	    ((struct afs_lock *)(tl->addr))->num_waiting;
-	a_result->lock.pid_last_reader =
-	    MyPidxx2Pid(((struct afs_lock *)(tl->addr))->pid_last_reader);
-	a_result->lock.pid_writer =
-	    MyPidxx2Pid(((struct afs_lock *)(tl->addr))->pid_writer);
-	a_result->lock.src_indicator =
-	    ((struct afs_lock *)(tl->addr))->src_indicator;
+	a_result->lock.waitStates = tl->addr->wait_states;
+	a_result->lock.exclLocked = tl->addr->excl_locked;
+	a_result->lock.readersReading = tl->addr->readers_reading;
+	a_result->lock.numWaiting = tl->addr->num_waiting;
+	a_result->lock.pid_last_reader = MyPidxx2Pid(tl->addr->pid_last_reader);
+	a_result->lock.pid_writer = MyPidxx2Pid(tl->addr->pid_writer);
+	a_result->lock.src_indicator = tl->addr->src_indicator;
 	code = 0;
     }
 
