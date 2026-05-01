@@ -130,8 +130,6 @@ Source36: openafs-server.init
 Source37: openafs-server.service
 Source38: openafs.sysconfig
 Source39: openafs-ThisCell
-Source997: openafs-buildfedora.pl
-Source998: openafs-buildall.sh
 Source999: openafs-kmodtool
 
 %description
