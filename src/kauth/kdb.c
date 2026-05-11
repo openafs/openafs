@@ -76,6 +76,10 @@ cmdproc(struct cmd_syndesc *as, void * arock)
 	printf("%d entries were found\n", cnt);
     } else {
 	for (; ti; ti = ti->next) {
+	    if (strlen(ti->data) >= MAXKTCNAMELEN) {
+		fprintf(stderr, "%s: key name too long\n", ti->data);
+		continue;
+	    }
 	    key.dsize = strlen(ti->data) + 1;
 	    key.dptr = ti->data;
 	    data = dbm_fetch(kdb, key);
