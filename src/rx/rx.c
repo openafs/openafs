@@ -269,7 +269,6 @@ extern afs_kcondvar_t rx_listener_cond;
 #endif /* !KERNEL */
 
 static afs_kmutex_t rx_init_mutex;
-static afs_kmutex_t rx_debug_mutex;
 static afs_kmutex_t rx_rpc_stats;
 
 static void
@@ -289,7 +288,6 @@ rxi_InitPthread(void)
     MUTEX_INIT(&rx_stats_mutex, "stats", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_atomic_mutex, "atomic", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_init_mutex, "init", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&rx_debug_mutex, "debug", MUTEX_DEFAULT, 0);
 
 #ifndef KERNEL
     CV_INIT(&rx_event_handler_cond, "evhand", CV_DEFAULT, 0);
@@ -7674,26 +7672,14 @@ rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
 }
 #endif
 
-#if defined(AFS_PTHREAD_ENV) && defined(RXDEBUG)
-/*
- * This mutex protects the following static variables:
- * counter
- */
-
-#define LOCK_RX_DEBUG MUTEX_ENTER(&rx_debug_mutex)
-#define UNLOCK_RX_DEBUG MUTEX_EXIT(&rx_debug_mutex)
-#else
-#define LOCK_RX_DEBUG
-#define UNLOCK_RX_DEBUG
-#endif /* AFS_PTHREAD_ENV */
-
 #if defined(RXDEBUG) || defined(MAKEDEBUGCALL)
 static int
 MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	      u_char type, void *inputData, size_t inputLength,
 	      void *outputData, size_t outputLength)
 {
-    static afs_int32 counter = 100;
+    static rx_atomic_t counter_atomic = RX_ATOMIC_INIT(100);
+    afs_int32 counter;
     time_t waitTime, waitCount;
     struct rx_header theader;
     char tbuffer[1500];
@@ -7710,9 +7696,7 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 
     waitTime = 1;
     waitCount = 5;
-    LOCK_RX_DEBUG;
-    counter++;
-    UNLOCK_RX_DEBUG;
+    counter = rx_atomic_inc_and_read(&counter_atomic);
     tp = &tbuffer[sizeof(struct rx_header)];
     taddr.sin_family = AF_INET;
     taddr.sin_port = remotePort;
