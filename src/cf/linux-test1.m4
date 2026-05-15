@@ -22,6 +22,10 @@ void conftest(void)
 $2
 } 
 
+/* Make sure we have function where debugging info is not optimized out so resolve_btfids doesn't complain */
+void conftest_dummy(int *x);
+void conftest_dummy(int *x) {*x = 1;}
+
 MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 MODULE_DESCRIPTION("openafs conftest");
 _ACEOF
