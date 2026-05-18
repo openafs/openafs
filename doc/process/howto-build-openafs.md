@@ -37,17 +37,33 @@ a Git checkout:
 - automake
 - libtool
 
-### Red Hat-family distributions
+### Red Hat Enterprise Linux family
 
-This section applies to Red Hat Enterprise Linux and other distributions in the
-Red Hat family, such as CentOS Stream, Fedora, AlmaLinux, and Rocky Linux.
+This section applies to Red Hat Enterprise Linux, CentOS Stream, AlmaLinux,
+and Rocky Linux. See below for Fedora.
 
 The `kernel-devel` package matching your current running kernel version is
 required to build the OpenAFS kernel module.  It is recommended to upgrade your
 running kernel to the most current version and reboot if needed before
 installing the `kernel-devel` package.
 
-Install the required packages with the following command:
+On these distributions, some of the required packages are in the CodeReady
+Builder (CRB) repository, which may not be enabled by default.
+
+On Red Hat Enterprise Linux, enable the CRB repository with the following
+command:
+
+```sh
+sudo subscription-manager repos --enable codeready-builder-for-rhel-$(rpm -E %rhel)-x86_64-rpms
+```
+
+On CentOS Stream, AlmaLinux, and Rocky Linux, the command is:
+
+```sh
+sudo dnf config-manager --set-enabled crb
+```
+
+Install the build dependencies:
 
 ```sh
 sudo dnf install autoconf automake bison elfutils-devel flex fuse-devel \
@@ -56,9 +72,27 @@ sudo dnf install autoconf automake bison elfutils-devel flex fuse-devel \
     perl-ExtUtils-Embed swig
 ```
 
+### Fedora
+
+This section applies to Fedora.
+
+The `kernel-devel` package matching your current running kernel version is
+required to build the OpenAFS kernel module.  It is recommended to upgrade your
+running kernel to the most current version and reboot if needed before
+installing the `kernel-devel` package.
+
+Install the build dependencies:
+
+```sh
+sudo dnf install @c-development elfutils-libelf-devel fuse-devel kernel-devel-matched \
+                 krb5-devel ncurses-devel perl-devel perl-ExtUtils-Embed \
+                 perl-FindBin perl-podlators perl-Sys-Hostname perl-Test-Simple swig
+```
+
+
 ### Arch Linux
 
-Install the required packages with the following command:
+Install the build dependencies:
 
 ```sh
 sudo pacman -S autoconf automake bison elfutils flex fuse3 gcc glibc krb5 \
@@ -70,7 +104,7 @@ required to build the OpenAFS kernel module.  It is recommended to upgrade your
 running kernel to the most current version and reboot if needed before
 installing the relevant package.
 
-Install the kernel development package with the command.
+Install the kernel development package:
 
 ```sh
 pacman -S linux-headers     # For the regular kernel
@@ -79,24 +113,41 @@ pacman -S linux-lts-headers # For the LTS kernel
 
 ### Debian
 
-Install the required packages with the following command:
+On Debian and derivative systems like Ubuntu, the recommended way to install
+the build dependencies is to use a combination of the `build-essential`
+package and the `apt build-dep` command.
+
+First, install `build-essential`, which includes the C compiler, `make`, and
+other fundamental build tools.
+
+```sh
+sudo apt install -y build-essential
+```
+
+Next, use `apt build-dep` to install the remaining dependencies. This requires
+you to have the source code repositories (`deb-src`) enabled in your
+`/etc/apt/sources.list` file.
+
+```sh
+sudo apt build-dep -y openafs
+```
+
+The `build-dep` command uses the dependencies from the `openafs` package in
+your distribution's repository, which may occasionally be out of date for the
+latest git version. If the `configure` script reports missing dependencies,
+you may need to install them manually. The following command lists all of the
+known dependencies:
 
 ```sh
 sudo apt install -y autoconf automake bison comerr-dev cpio dblatex \
     debhelper dkms docbook-xsl doxygen flex libfuse-dev libkrb5-dev \
     libncurses5-dev libpam0g-dev libxml2-utils perl pkg-config swig \
-    xsltproc
-```
-
-Install the Linux kernel headers with the command:
-
-```sh
-sudo apt install -y linux-headers-$(uname -r)
+    xsltproc linux-headers-$(uname -r)
 ```
 
 ### FreeBSD
 
-Install the required packages with the following command:
+Install the build dependencies:
 
 ```sh
 sudo pkg install autoconf automake dblatex docbook-xsl fusefs-libs \
