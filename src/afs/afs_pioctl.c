@@ -1795,9 +1795,8 @@ DECL_PIOCTL(PGetUserCell)
     /* return the cell name of the primary cell for this user */
     i = UHash(areq->uid);
     ObtainWriteLock(&afs_xuser, 224);
-    for (tu = afs_users[i]; tu; tu = tu->next) {
+    for (afs_UserScan(afs_users[i], tu)) {
 	if (tu->uid == areq->uid && (tu->states & UPrimary)) {
-	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
 	    afs_LockUser(tu, READ_LOCK, 0);
 	    break;
@@ -2411,14 +2410,11 @@ getNthCell(afs_int32 uid, afs_int32 iterator) {
 
     i = UHash(uid);
     ObtainReadLock(&afs_xuser);
-    for (tu = afs_users[i]; tu; tu = tu->next) {
+    for (afs_UserScan(afs_users[i], tu)) {
 	if (tu->uid == uid && (tu->states & UHasTokens)) {
 	    if (iterator-- == 0)
 	    break;	/* are we done yet? */
 	}
-    }
-    if (tu) {
-	tu->refCount++;
     }
     ReleaseReadLock(&afs_xuser);
     if (tu) {
@@ -2573,7 +2569,7 @@ DECL_PIOCTL(PUnlog)
 
     i = UHash(areq->uid);
     ObtainWriteLock(&afs_xuser, 227);
-    for (tu = afs_users[i]; tu; tu = tu->next) {
+    for (afs_UserScan(afs_users[i], tu)) {
 	if (tu->uid == areq->uid) {
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
@@ -5800,7 +5796,7 @@ DECL_PIOCTL(PNFSNukeCreds)
 
     ObtainWriteLock(&afs_xuser, 227);
     for (i = 0; i < NUSERS; i++) {
-	for (tu = afs_users[i]; tu; tu = tu->next) {
+	for (afs_UserScan(afs_users[i], tu)) {
 	    if (tu->exporter && EXP_CHECKHOST(tu->exporter, addr)) {
 		tu->refCount++;
 		ReleaseWriteLock(&afs_xuser);

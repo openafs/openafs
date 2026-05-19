@@ -105,7 +105,7 @@ afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
     uid = (pag == NOPAG) ? afs_cr_uid(*acred) : pag;
     i = UHash(uid);
     ObtainWriteLock(&afs_xuser, 823);
-    for (tu = afs_users[i]; tu; tu = tu->next) {
+    for (afs_UserScan(afs_users[i], tu)) {
 	if (tu->uid == uid) {
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
@@ -241,7 +241,8 @@ SPAGCB_GetCreds(struct rx_call *a_call, afs_int32 a_uid,
 
     /* count them first */
     bucket = UHash(a_uid);
-    for (count = 0, tu = afs_users[bucket]; tu; tu = tu->next) {
+    count = 0;
+    for (afs_UserScan(afs_users[bucket], tu)) {
 	if (tu->uid == a_uid) count++;
     }
 
@@ -257,11 +258,11 @@ SPAGCB_GetCreds(struct rx_call *a_call, afs_int32 a_uid,
     a_creds->CredInfos_len = count;
     memset(a_creds->CredInfos_val, 0, count * sizeof(CredInfo));
 
-    for (i = 0, tu = afs_users[bucket]; tu; tu = tu->next, i++) {
+    i = 0;
+    for (afs_UserScan(afs_users[bucket], tu), i++) {
 	if (tu->uid == a_uid && tu->cellinfo &&
 	    (tu->states & UHasTokens) && !(tu->states & UTokensBad)) {
 
-	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
 
 	    afs_LockUser(tu, READ_LOCK, 0);
@@ -299,6 +300,13 @@ SPAGCB_GetCreds(struct rx_call *a_call, afs_int32 a_uid,
 		   token->rxkad.ticket, token->rxkad.ticketLen);
 	    if (tu->states & UPrimary)
 		tci->states |= UPrimary;
+
+	    /*
+	     * Obtain an extra ref for afs_PutUser() to release. Note that
+	     * afs_UserScan() obtains its own ref that it releases for the next
+	     * loop iteration; this is in addition to afs_UserScan()'s ref.
+	     */
+	    tu->refCount++;
 
 	    afs_PutUser(tu, READ_LOCK);
 	    ObtainWriteLock(&afs_xuser, 372);

@@ -437,6 +437,41 @@ struct unixuser {
     afs_rwlock_t lock;
 };
 
+/*
+ * A macro to iterate over unixusers.
+ *
+ * Use like this:
+ *
+ * {
+ *     struct unixuser *tu;
+ *
+ *     ObtainReadLock(&afs_xuser);
+ *     for (afs_UserScan(afs_users[i], tu)) {
+ *         if (tu->uid == xyz) {
+ *             break;
+ *         }
+ *     }
+ *     ReleaseReadLock(&afs_xuser);
+ *
+ *     if (tu != NULL) {
+ *         do_something_with(tu);
+ *         afs_PutUser(tu, 0);
+ *     }
+ * }
+ *
+ * On each iteration of the loop body, 'tu' will have a ref held (which is
+ * released on the next iteration). So if you 'break' or 'return' early, make
+ * sure to release the ref on 'tu', such as with afs_PutUser().
+ *
+ * @pre AFS_GLOCK must be held
+ * @pre afs_xuser must be at least read-locked
+ */
+#define afs_UserScan(start, cur) \
+    (cur) = (start); \
+    ((cur) != NULL) ? ((cur)->refCount++, 1) : 0; \
+    (cur)->refCount--, (cur) = (cur)->next
+
+
 #define CVEC_LEN 3 /* per-user connection pool */
 
 struct sa_conn_vector;

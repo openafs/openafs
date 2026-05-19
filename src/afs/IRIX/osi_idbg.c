@@ -154,9 +154,13 @@ idbg_afsuser(void *x)
     AFS_GLOCK();
 
     if (x == (void *)-1L) {
+	ObtainReadLock(&afs_xuser);
 	for (i = 0; i < NUSERS; i++)
-	    for (tu = afs_users[i]; tu; tu = tu->next)
+	    for (afs_UserScan(afs_users[i], tu)) {
 		idbg_pruser(tu);
+	    }
+	ReleaseReadLock(&afs_xuser);
+
     } else
 	idbg_pruser((struct unixuser *)x);
 
