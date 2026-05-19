@@ -302,7 +302,7 @@ for OpenAFS. For example:
 You can check how your hostname resolves with the following command:
 
 ```sh
-getent hosts $(hostname)
+getent ahosts $(hostname)
 ```
 
 The output should show your system's network IP address. If it shows a loopback
@@ -377,8 +377,18 @@ command is the same for all platforms.
 sudo make install
 ```
 
-The previous command may create artifacts in your build tree owned by root. You
-can remove those with `sudo make clean`.
+The previous command will create artifacts in your build tree owned by root.
+You can remove those with `sudo make clean`.
+
+Alternatively, the `DESTDIR` path may be specified, which allows you to run
+`make install` as a regular user.  This can be used to create an installation
+staging directory.  For example the following command will build an
+installation staging directory in `/tmp/openafs`. After which, you can copy the
+files into place using sudo (or running as root).
+
+```sh
+make install DESTDIR=/tmp/openafs
+```
 
 #### Linux post-installation steps
 
@@ -407,43 +417,96 @@ Finally, update the kernel module dependencies.
 sudo /usr/sbin/depmod --all
 ```
 
-### Step 2: Creating the cell service key
-
-This section covers the initial server configuration, which involves creating a
-Kerberos service principal for OpenAFS.
+### Step 2: Configure servers
 
 Throughout this section, replace `EXAMPLE.COM` with your Kerberos realm and
-`example.com` with your AFS cell name.
+`example.com` with your OpenAFS cell name.
 
-**1. Create the AFS service principal and keytab**
+**1. Create server directories**
+
+If you have not created a separate disk partition for the OpenAFS volumes, for
+development purposes, you can use a regular directory as a file server
+partition. Create a directory (e.g., `/vicepa`) and a special file named
+`AlwaysAttach` to instruct the file server to use it.
+
+```sh
+sudo mkdir -p /vicepa
+sudo touch /vicepa/AlwaysAttach
+```
+
+**2. Create server configuration files**
+
+Create the server configuration directory.
+
+```sh
+sudo mkdir -p /opt/openafs/etc/openafs/server
+```
+
+Create the `ThisCell` file. Be sure to replace "example.com" with your actual
+cell name.
+
+```sh
+echo "example.com" | sudo tee /opt/openafs/etc/openafs/server/ThisCell
+```
+
+Create the `CellServDB` file.
+
+```sh
+cell=$(cat /opt/openafs/etc/openafs/server/ThisCell)
+host=$(hostname)
+addr=$(getent ahostsv4 ${host} | awk '/STREAM/ {print $1}')
+
+sudo tee /opt/openafs/etc/openafs/server/CellServDB << EOF
+>${cell}	#Cell name
+${addr}    #${host}
+EOF
+```
+
+Create the `BosConfig` file.
+
+```sh
+sudo tee /opt/openafs/etc/openafs/BosConfig <<EOF
+restrictmode 0
+restarttime 16 0 0 0 0
+checkbintime 3 0 5 0 0
+bnode simple ptserver 1
+parm /opt/openafs/libexec/openafs/ptserver
+end
+bnode simple vlserver 1
+parm /opt/openafs/libexec/openafs/vlserver
+end
+bnode dafs dafs 1
+parm /opt/openafs/libexec/openafs/dafileserver -L
+parm /opt/openafs/libexec/openafs/davolserver
+parm /opt/openafs/libexec/openafs/salvageserver
+parm /opt/openafs/libexec/openafs/dasalvager
+end
+EOF
+```
+
+**2. Create the AFS service principal and keytab**
 
 First, create the Kerberos principal that the OpenAFS services will use for
 authentication. Then, export the keys for this principal into a keytab file.
+
+Run `kadmin` to create the service key, it you did not already do this when the
+Kerberos server was setup.  This command will prompt for the `root/admin`
+password you set when the `root/admin` principal was created during the
+Kerberos setup.
 
 ```sh
 sudo kadmin -p root/admin@EXAMPLE.COM addprinc -randkey afs/example.com@EXAMPLE.COM
 ```
 
-```sh
-sudo mkdir -p /opt/openafs/etc/openafs/server
-```
+Run `kadmin` to export the service key to a file. This file is sensitive and
+should only be readable by the root user and should not be copied to another
+machine.  This command will also prompt for the `root/admin` password.
 
 ```sh
 sudo kadmin -p root/admin@EXAMPLE.COM ktadd \
     -k /opt/openafs/etc/openafs/server/rxkad.keytab \
     -e aes256-cts:normal,aes128-cts:normal \
     afs/example.com@EXAMPLE.COM
-```
-
-**2. Create temporary cell configuration files**
-
-The `akeyconvert` utility requires `CellServDB` and `ThisCell` to exist before it
-is run. The `bosserver` will create the definitive versions of these files later,
-so for now, create temporary placeholder files.
-
-```sh
-echo ">example.com #Cell name" | sudo tee /opt/openafs/etc/openafs/server/CellServDB
-echo "example.com" | sudo tee /opt/openafs/etc/openafs/server/ThisCell
 ```
 
 **3. Generate the OpenAFS KeyFileExt**
@@ -455,17 +518,19 @@ Use the `akeyconvert` utility to convert the Kerberos keytab into the
 sudo /opt/openafs/bin/akeyconvert -all
 ```
 
-**4. Clean up temporary files**
+Example output:
+
+```
+$ sudo /opt/openafs/bin/akeyconvert -all
+Wrote 2 keys
+```
 
 The `akeyconvert` utility has now created the `KeyFileExt` file from the
-contents of the `rxkad.keytab`.  The `rxkad.keytab` file and the temporary
-`CellServDB` and `ThisCell` files are no longer needed in this directory and
-should be removed.
+contents of the `rxkad.keytab`.  The `rxkad.keytab` file is no longer needed in
+this directory and should be removed.
 
 ```sh
-sudo rm /opt/openafs/etc/openafs/server/rxkad.keytab \
-        /opt/openafs/etc/openafs/server/CellServDB \
-        /opt/openafs/etc/openafs/server/ThisCell
+sudo rm /opt/openafs/etc/openafs/server/rxkad.keytab
 ```
 
 ### Step 3: Start the servers
@@ -484,85 +549,26 @@ foreground.
 sudo /opt/openafs/sbin/bosserver -pidfiles
 ```
 
-Check the BosServer log file to ensure it is running without errors.
-
-```sh
-sudo cat /opt/openafs/var/openafs/logs/BosLog
-```
-
-**2. Set the cell name**
-
-Configure the local machine with the name of the OpenAFS cell it will serve.
-
-```sh
-sudo /opt/openafs/bin/bos setcellname -server localhost -name example.com -localauth
-```
-
-**3. Create the database servers**
-
-Use `bos create` to register and start the core database services:
-* `ptserver`: The Protection Server, which manages the user and groups database (PRDB).
-* `vlserver`: The Volume Location Server, which manages the volume location database (VLDB).
-
-```sh
-sudo /opt/openafs/bin/bos create -server localhost -instance ptserver -type simple \
-    -cmd "/opt/openafs/libexec/openafs/ptserver" -localauth
-
-sudo /opt/openafs/bin/bos create -server localhost -instance vlserver -type simple \
-    -cmd "/opt/openafs/libexec/openafs/vlserver" -localauth
-```
-
-Check the logs to verify the servers started without errors before proceeding.
-
-```sh
-sudo tail -n100 /opt/openafs/var/openafs/logs/{Bos,Pt,VL}Log
-```
-
-**4. Create the file server**
-
-If you have not created a separate disk partition for the OpenAFS volumes, for
-development purposes, you can use a regular directory as a file server
-partition. Create a directory (e.g., `/vicepa`) and a special file named
-`AlwaysAttach` to instruct the file server to use it.
-
-```sh
-sudo mkdir -p /vicepa
-sudo touch /vicepa/AlwaysAttach
-```
-
-Now, create the File Server instance, which includes the file server, volume
-server, and salvager processes.
-
-```sh
-sudo /opt/openafs/bin/bos create -server localhost -instance dafs -type dafs \
-  -cmd "/opt/openafs/libexec/openafs/dafileserver -L" \
-  -cmd "/opt/openafs/libexec/openafs/davolserver" \
-  -cmd "/opt/openafs/libexec/openafs/salvageserver" \
-  -cmd "/opt/openafs/libexec/openafs/dasalvager" \
-  -localauth
-```
-
-Check the file server log to ensure it started correctly.
-
-```sh
-sudo tail -n100 /opt/openafs/var/openafs/logs/{Bos,File}Log
-```
-
-**5. Verify and secure the server**
-
 Check the status of all the newly created processes.
 
 ```sh
 sudo /opt/openafs/bin/bos status -server localhost -localauth
 ```
 
-Finally, set the `bosserver` to "restricted" mode. This is a recommended
-security practice that limits the set of available commands to a safer subset,
-disabling potentially destructive operations until the server is fully
-configured.
+Example output:
+
+```
+$ sudo /opt/openafs/bin/bos status -server localhost -localauth
+Instance ptserver, currently running normally.
+Instance vlserver, currently running normally.
+Instance dafs, currently running normally.
+    Auxiliary status is: file server running.
+```
+
+Check the logs to verify the servers started without errors before proceeding.
 
 ```sh
-sudo /opt/openafs/bin/bos setrestricted -server localhost -mode 1 -localauth
+sudo tail -n10 /opt/openafs/var/openafs/logs/{Bos,Pt,VL,File}Log
 ```
 
 ### Step 4: Create the Administrative User
@@ -682,10 +688,26 @@ setup in the next section.)
 sudo /opt/openafs/sbin/afsd
 ```
 
+Example output:
+
+```
+$ sudo /opt/openafs/sbin/afsd
+afsd: All AFS daemons started.
+```
+
+
 You can verify the `afs` filesystem is mounted with the following command:
 
 ```sh
 findmnt -t afs
+```
+
+Example output:
+
+```
+$ findmnt -t afs
+TARGET SOURCE FSTYPE OPTIONS
+/afs   AFS    afs    rw,relatime
 ```
 
 ### Step 7: Create the cell mount point
