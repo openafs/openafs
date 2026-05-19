@@ -155,7 +155,7 @@ uu_start(struct seq_file *m, loff_t *pos)
     ret = NULL;
 
     for (i = 0; i < NUSERS; i++) {
-	for (tu = afs_users[i]; tu; tu = tu->next) {
+	for (afs_UserScan(afs_users[i], tu)) {
 	    if (++n == *pos) {
 		ret = tu;
 		goto done;
@@ -174,23 +174,49 @@ uu_next(struct seq_file *m, void *p, loff_t *pos)
     struct unixuser *tu = p;
     afs_int32 i = 0;
 
+    AFS_GLOCK();
+
     (*pos)++;
-    if (!p) return NULL;
+    if (tu == NULL) {
+	goto done;
+    }
 
     if (p != (void *)1) {
-	if (tu->next) return tu->next;
+	tu->refCount--;
+	if (tu->next != NULL) {
+	    tu = tu->next;
+	    goto done;
+	}
 	i = UHash(tu->uid) + 1;
     }
 
-    for (; i < NUSERS; i++)
-	if (afs_users[i]) return afs_users[i];
-    return NULL;
+    for (; i < NUSERS; i++) {
+	tu = afs_users[i];
+	if (tu != NULL) {
+	    goto done;
+	}
+    }
+
+    tu = NULL;
+
+ done:
+    if (tu != NULL) {
+	tu->refCount++;
+    }
+
+    AFS_GUNLOCK();
+
+    return tu;
 }
 
 static void
 uu_stop(struct seq_file *m, void *p)
 {
     AFS_GLOCK();
+    if (p != NULL && p != (void *)1) {
+	struct unixuser *tu = p;
+	tu->refCount--;
+    }
     ReleaseReadLock(&afs_xuser);
     AFS_GUNLOCK();
 }
