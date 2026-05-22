@@ -190,9 +190,9 @@ extern int h_Lock_r(struct host *host);
 #define h_Unlock(host)  ReleaseWriteLock(&(host)->lock)
 #define h_Unlock_r(host)  ReleaseWriteLock(&(host)->lock)
 
-#define	AddCallBack(host, fid)	AddCallBack1((host), (fid), (afs_uint32 *)0, 1/*CB_NORMAL*/, 0)
-#define	AddVolCallBack(host, fid) AddCallBack1((host), (fid), (afs_uint32 *)0, 3/*CB_VOLUME*/, 0)
-#define	AddBulkCallBack(host, fid) AddCallBack1((host), (fid), (afs_uint32 *)0, 4/*CB_BULK*/, 0)
+#define	AddCallBack(host, fid)	AddCallBack1((host), (fid), NULL, CB_NORMAL, 0)
+#define	AddVolCallBack(host, fid) AddCallBack1((host), (fid), NULL, CB_VOLUME, 0)
+#define	AddBulkCallBack(host, fid) AddCallBack1((host), (fid), NULL, CB_BULK, 0)
 
 /* A simple refCount replaces per-thread hold mechanism.  The former
  * hold semantics are not different from refcounting, except with respect
