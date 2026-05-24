@@ -115,28 +115,42 @@ main(int argc, char *argv[])
     exit(code != 0);
 }				/*Main routine */
 
-
 /*
- * Problem: only the KTC gives you the ability to selectively destroy
- *          a specified token.
- *
- * Solution: Build a list of tokens, delete the bad ones (the ones to
- *           remove from the permissions list,) destroy all tokens, and
- *           then re-register the good ones.  Ugly, but it works.
+ * This function first attempts to delete the tokens for the cells specified
+ * in the list. If the PUnlogCell pioctl is not supported, it falls back to the
+ * older logic, which builds a list of tokens, deletes the bad ones, destroys
+ * all tokens, and then re-registers the good ones.
  */
-
 static int
 unlog_ForgetCertainTokens(char **list, int listSize)
 {
+    int cell_i;
     int index, index2;
     int count;
-    afs_int32 code;
+    afs_int32 code = 0;
     char *cellName = NULL;
     struct tokenInfo *tokenInfoP;
 
     /* normalize all the names in the list */
     unlog_NormalizeCellNames(list, listSize);
 
+    for (cell_i = 0; cell_i < listSize; cell_i++) {
+	afs_int32 ret = ktc_ForgetTokensByCell(list[cell_i]);
+	if (ret == KTC_NOPIOCTL && cell_i == 0) {
+	    fprintf(stderr, "unlog: Kernel module does not support unlog by "
+		    "cell. Using legacy unlog method.\n");
+	    /* Fallback to older logic */
+	    goto fallback;
+	}
+	if (ret != 0) {
+	    fprintf(stderr, "unlog: could not discard tokens for cell %s, "
+		"code %d\n", list[cell_i], ret);
+	    code = 1;
+	}
+    }
+    return code;
+
+ fallback:
     /* figure out how many tokens exist */
     count = 0;
     do {
