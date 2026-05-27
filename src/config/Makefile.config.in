@@ -1,6 +1,7 @@
 #
 # Installation vars
 #
+PACKAGE_TARNAME=@PACKAGE_TARNAME@
 afsbackupdir=@afsbackupdir@
 afsbosconfigdir=@afsbosconfigdir@
 afsconfdir=@afsconfdir@
@@ -16,6 +17,7 @@ bindir=@bindir@
 exec_prefix=@exec_prefix@
 datarootdir=@datarootdir@
 datadir=@datadir@
+docdir=@docdir@
 includedir=@includedir@
 libdir=@libdir@
 libexecdir=@libexecdir@
