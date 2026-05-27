@@ -82,5 +82,5 @@ L<fs(1)>
 =head1 COPYRIGHT
 
 Copyright 2008. This documentation is covered by the BSD License as
-written in the doc/LICENSE file. This man page was written by Mike
+written in the F<LICENSE> file. This man page was written by Mike
 Robinson (L<mike@endpoint.com>) for OpenAFS.

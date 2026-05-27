@@ -59,4 +59,4 @@ L<krb.conf(5)>
 Copyright 2010 Sine Nomine Associates
 
 This documentation is covered by the BSD License as written in the
-doc/LICENSE file. This man page was written by Andrew Deason for OpenAFS.
+F<LICENSE> file. This man page was written by Andrew Deason for OpenAFS.

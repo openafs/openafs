@@ -50,5 +50,5 @@ The issuer must be super-user on the local machine.
 Copyright 2009 Steven Jenkins <steven@endpoint.com>
 
 This documentation is covered by the BSD License as written in the
-doc/LICENSE file. This man page was written by Steven Jenkins for
+F<LICENSE> file. This man page was written by Steven Jenkins for
 OpenAFS.

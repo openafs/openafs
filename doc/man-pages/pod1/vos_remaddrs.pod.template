@@ -72,5 +72,5 @@ L<vos_setaddrs(1)>
 Copyright 2014 Sine Nomine Associates.  All Rights Reserved.
 
 This documentation is covered by the BSD License as written in the
-doc/LICENSE file. This man page was written by Michael Meffie for
+F<LICENSE> file. This man page was written by Michael Meffie for
 OpenAFS.

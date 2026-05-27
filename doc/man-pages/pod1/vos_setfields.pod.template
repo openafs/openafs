@@ -113,5 +113,5 @@ L<vos_examine(1)>
 Copyright 2009 Jason Edgecombe <jason@rampaginggeek.com>
 
 This documentation is covered by the BSD License as written in the
-doc/LICENSE file. This man page was written by Jason Edgecombe for
+F<LICENSE> file. This man page was written by Jason Edgecombe for
 OpenAFS.

@@ -76,5 +76,5 @@ L<knfs(1)>
 Copyright 2013 Sine Nomine Associates
 
 This documentation is covered by the BSD License as written in the
-doc/LICENSE file. This man page was written by Andrew Deason for
+F<LICENSE> file. This man page was written by Andrew Deason for
 OpenAFS.

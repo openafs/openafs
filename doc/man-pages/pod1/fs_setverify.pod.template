@@ -83,5 +83,5 @@ L<fs_getverify(1)>
 Copyright 2012 Jeffrey Altman <jaltman@your-file-system.com>
 
 This documentation is covered by the BSD License as written in the
-doc/LICENSE file. This man page was written by Jeffrey Altman for
+F<LICENSE> file. This man page was written by Jeffrey Altman for
 OpenAFS.

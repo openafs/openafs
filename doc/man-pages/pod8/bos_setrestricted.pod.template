@@ -71,6 +71,6 @@ L<bos_getrestricted(8)>
 Copyright 2009 Simon Wilkinson <simon@sxw.org.uk>
 
 This documentation is covered by the BSD License as written in the
-doc/LICENSE file. This man page was written by Simon Wilkinson for
+F<LICENSE> file. This man page was written by Simon Wilkinson for
 OpenAFS.
 

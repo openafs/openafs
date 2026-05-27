@@ -550,5 +550,5 @@ decode-panic clobbers the output file.
 Copyright 2008-2010. Jason Edgecombe <jason@rampaginggeek.com> and others.
 
 This documentation is covered by the BSD License as written in the
-doc/LICENSE file in the OpenAFS source tree. This program was originally
+F<LICENSE> file in the OpenAFS source tree. This program was originally
 written by Jason Edgecombe for OpenAFS.
