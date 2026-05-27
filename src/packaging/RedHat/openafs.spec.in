@@ -503,6 +503,7 @@ export KRB5_CONFIG
        --libdir=%{_libdir} \
        --bindir=%{_bindir} \
        --sbindir=%{_sbindir} \
+       --docdir=%{_docdir}/openafs-%{afsvers} \
        --disable-strip-binaries \
        --enable-debug \
        --with-linux-kernel-packaging \
@@ -791,7 +792,7 @@ install -m 644 src/packaging/RedHat/openafs-README $RPM_BUILD_ROOT%{_prefix}/src
 # Install documentation.
 #-----------------------------------------------------------------------------
 mkdir -p $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
-tar cf - -C doc LICENSE html pdf | \
+tar cf - -C doc html pdf | \
     tar xf - -C $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
 install -m 644 %{SOURCE10} $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
 install -m 644 %{SOURCE11} $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
