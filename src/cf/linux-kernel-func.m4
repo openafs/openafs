@@ -112,9 +112,12 @@ AC_CHECK_LINUX_FUNC([page_get_link],
 AC_CHECK_LINUX_FUNC([page_offset],
                     [#include <linux/pagemap.h>],
                     [page_offset(NULL);])
-AC_CHECK_LINUX_FUNC([pagevec_lru_add_file],
-                    [#include <linux/pagevec.h>],
-                    [__pagevec_lru_add_file(NULL);])
+dnl Linux 7.1: No need to check for __pagevec_lru_add_file() if folio_batch.h is present
+AS_IF([test "x${ac_cv_linux_header_folio_batch_h}" != "xyes"],
+      [AC_CHECK_LINUX_FUNC([pagevec_lru_add_file],
+                           [#include <linux/pagevec.h>],
+                           [__pagevec_lru_add_file(NULL);])
+])
 AC_CHECK_LINUX_FUNC([path_lookup],
                     [#include <linux/fs.h>
                      #include <linux/namei.h>],

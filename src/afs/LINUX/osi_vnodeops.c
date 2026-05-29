@@ -35,8 +35,11 @@
 #if defined(HAVE_LINUX_FOLIO_ADD_LRU) || defined(HAVE_LINUX_LRU_CACHE_ADD_FILE)
 # include <linux/swap.h>
 #endif
-#include <linux/pagevec.h>
-
+#if defined(HAVE_LINUX_FOLIO_BATCH_H)
+# include <linux/folio_batch.h>
+#else
+# include <linux/pagevec.h>
+#endif
 #if defined(LINUX_WRITE_CACHE_PAGES_USES_FOLIOS) || defined(LINUX_NEED_CUSTOM_WRITE_CACHE_PAGES)
 # define LINUX_WRITEPAGES_USES_FOLIOS
 # include <linux/migrate.h>
