@@ -11,4 +11,6 @@ AC_CHECK_LINUX_HEADER([uaccess.h])
 AC_CHECK_LINUX_HEADER([stdarg.h])
 dnl Linux 6.3 relocated file locking related declarations into it's own header
 AC_CHECK_LINUX_HEADER([filelock.h])
+dnl Linux 7.1 renamed pagevec.h to folio_batch.h
+AC_CHECK_LINUX_HEADER([folio_batch.h])
 ])
