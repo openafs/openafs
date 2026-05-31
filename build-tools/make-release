@@ -14,6 +14,7 @@ my $help;
 my $man;
 my $tagPoint;
 my $last;
+my $relnotes = 0;
 my $outDir = ".";
 my $errorCount = 0;
 my $noDocTarball = 0;
@@ -42,6 +43,7 @@ GetOptions(
     "man" => \$man,
     "tagpoint=s" => \$tagPoint,
     "last=s" => \$last,
+    "relnotes" => \$relnotes,
     "dir=s" => \$outDir,
     "no-doc-tarball" => \$noDocTarball,
 ) or pod2usage(2);
@@ -99,6 +101,27 @@ if ($last) {
     system("git log $last..$tagName > $outDir/ChangeLog");
 } else {
     system("git log $tagName > $outDir/ChangeLog");
+}
+
+if ($relnotes) {
+    # Extract the release notes from the top of the NEWS file.  Include the
+    # header lines above the current release, which is the line that starts
+    # with "OpenAFS ...", and then all the lines until the start of the next
+    # release, which is the next line that starts with "OpenAFS ..."
+    my $news = "$tempDir/$name/NEWS";
+    my $relnotes = "$outDir/RELNOTES-$suffix";
+    open(my $in_fh, '<', $news) or die "Could not open file '$news' $!\n";
+    open(my $out_fh, '>', $relnotes) or die "Could not open file '$relnotes' $!\n";
+    my $in_release = 0;
+    while (<$in_fh>) {
+        if (/^OpenAFS\s+/) {
+            last if $in_release;
+            $in_release = 1;
+        }
+        print $out_fh $_;
+    }
+    close $in_fh;
+    close $out_fh;
 }
 
 # Describe the tree
@@ -234,6 +257,7 @@ make-release [options] <tag>
     --man                full documentation
     --tagpoint <object>  create new tag
     --last <object>      generate changelog and diffs from this point
+    --relnotes           generate release notes from NEWS file
     --dir <dir>          output results into this directory
     --no-doc-tarball     do not create a doc.tar archive
 
@@ -256,6 +280,10 @@ This standard behaviour may be modified by the following options
 Generate the ChangeLog starting from I<object>. Also generate a
 openafs-$version.diff file in the output directory containing all of the
 changes between I<object> and the current tag
+
+=item B<--relnotes>
+
+Extract the most recent NEWS items to create the release notes file.
 
 =item B<--dir> I<directory>
 
