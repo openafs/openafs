@@ -24,7 +24,7 @@ mandir=@mandir@
 prefix=@prefix@
 sbindir=@sbindir@
 sysconfdir=@sysconfdir@
-viceetcdir=@viceetcdir@/
+viceetcdir=@viceetcdir@
 top_builddir=@top_builddir@
 
 
