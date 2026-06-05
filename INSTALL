@@ -5,18 +5,6 @@ This software has been released under the terms of the IBM Public
 License.  For details, see the LICENSE file in the top-level
 directory or online at http://www.openafs.org/dl/license10.html
 
-Short instructions for sites upgrading from a previous version of AFS:
-% ./configure --enable-transarc-paths
-% make
-% make dest
-
-will create a Transarc-style dest tree in ${SYS_NAME}/dest where
-${SYS_NAME} is the AFS sysname of the system you built for.
-This assumes if you're building for Linux that your kernel source is
-in /usr/src/linux.
-
-Otherwise, please read on.
-
 Building OpenAFS on UNIX and Linux
 ----------------------------------
 
@@ -75,7 +63,7 @@ A  Configuring
    2. Using configure in the top level directory, configure for your
       AFS system type, providing the necessary flags:
 
-      % ./configure --with-afs-sysname=sun4x_58 --enable-transarc-paths
+      % ./configure
 
       If you do not have the "configure" script, or if you modify the
       source files, you can re-create it by running regen.sh.  You will
@@ -106,29 +94,30 @@ A  Configuring
       'da' variants, will never be stripped, regardless of any options
       given to configure.
 
-   There are two modes for directory path handling: "Transarc mode" and
-   "default mode":
+   There are two modes for directory path handling: "default mode" and
+   "legacy Transarc mode":
 
-   - In Transarc mode, we retain compatibility with Transarc/IBM AFS tools
-     by putting client configuration files in /usr/vice/etc, and server
-     files in /usr/afs under the traditional directory layout.
+   - For building the legacy Transarc mode see section K below.
+
    - In default mode, files are located in standardized locations, usually
-     under $(prefix), which defaults to /usr/local.
+     under $(prefix), which defaults to /usr/local and can be set via the
+     standard configure --prefix option.
+
    - Client programs, libraries, and related files always go in standard
      directories under $(prefix).  This rule covers things that would go
      into $(bindir), $(includedir), $(libdir), $(mandir), and $(sbindir).
    - Other files get located in the following places:
 
-    Directory     Transarc Mode              Default Mode
-    ============  =========================  ==============================
-    viceetcdir    /usr/vice/etc              $(sysconfdir)/openafs
-    afssrvdir     /usr/afs/bin (servers)     $(libexecdir)/openafs
-    afsconfdir    /usr/afs/etc               $(sysconfdir)/openafs/server
-    afslocaldir   /usr/afs/local             $(localstatedir)/openafs
-    afsdbdir      /usr/afs/db                $(localstatedir)/openafs/db
-    afslogsdir    /usr/afs/logs              $(localstatedir)/openafs/logs
-    afsbosconfig  $(afslocaldir)/BosConfig   $(afsconfdir)/BosConfig
-    afsbosserver  $(afsbindir)/bosserver     $(sbindir)/bosserver
+    Directory     Default Mode
+    ============  ==============================
+    viceetcdir    $(sysconfdir)/openafs
+    afssrvdir     $(libexecdir)/openafs
+    afsconfdir    $(sysconfdir)/openafs/server
+    afslocaldir   $(localstatedir)/openafs
+    afsdbdir      $(localstatedir)/openafs/db
+    afslogsdir    $(localstatedir)/openafs/logs
+    afsbosconfig  $(afsconfdir)/BosConfig
+    afsbosserver  $(sbindir)/bosserver
 
    In default mode, you can change all of the variables named above that
    do not start with "afs" by passing the flags with the same name to
@@ -146,14 +135,16 @@ B  Building
 
       % make
 
-   2. Install your build using either "make install" to install
-      into the current system (you will need to be root, and files
-      will be placed as appropriate for Transarc or standard paths),
-      "make install DESTDIR=/some/path" to install into an alternate
-      directory tree, or if you configured with --enable-transarc-paths
-      make dest to create a complete binary tree in the dest directory
-      under the directory named for the sys_name you built for,
-      e.g. sun4x_57/dest or i386_linux26/dest
+   2. Install your build using either
+
+      % make install
+
+      to install into the current system (you will need to be root, and files
+      will be placed into the appropriate paths) or
+
+      % make install DESTDIR=/some/path
+
+      to install into an alternate directory tree,
 
    3. As appropriate you can clean up or, if you're using Linux, build for
       another kernel version.
@@ -280,6 +271,9 @@ I  Other configure options
 
    AFS has a ton of other optional features that must be enabled using
    configure options.  Here is a summary:
+
+   --help
+       List available options and exit.
 
    --enable-bigendian
    --enable-littleendian
@@ -585,3 +579,46 @@ J  Creating 'configure'
    It is possible to create the configure script on one system to be used on
    another. Ensure that the files created by 'regen.sh' are copied to the
    target system.
+
+
+K  Building for legacy Transarc-style paths
+
+   Short instructions for sites upgrading from a previous version of AFS that are
+   using the Transarc-style paths (typically on systems upgrading from IBM AFS or
+   versions of OpenAFS that where upgraded from IBM AFS).
+
+       % ./configure --enable-transarc-paths
+       % make dest
+
+   This will create a Transarc-style dest tree in ${SYS_NAME}/dest which will
+   contain all the binary files to be installed (${SYS_NAME} is the AFS sysname
+   of the system you built for).
+
+   There is no make install for the legacy Transarc build.  To install the build
+   you will need to manually copy the files from the ${SYS_NAME}/dest directory
+   into the current system (you will need to be root).
+
+      % mkdir /usr/afs
+      % mkdir /usr/vice
+      % mkdir /usr/vice/etc
+
+   Then copy the files from ${SYS_NAME}/dest. For the OpenAFS client, copy the
+   files from root.client and for the OpenAFS servers copy the files from
+   root.server (files from root.perf are not required). The rest of the
+   directories are common and the files in them will need to be copied to the
+   appropriate target locations (e.g. etc -> /etc, bin -> /usr/bin, etc.).
+
+   In legacy Transarc mode, we retain compatibility with Transarc/IBM AFS
+   tools by putting client configuration files in /usr/vice/etc, and server
+   files in /usr/afs under the traditional directory layout.
+
+    Directory     Transarc Mode
+    ============  =========================
+    viceetcdir    /usr/vice/etc
+    afssrvdir     /usr/afs/bin (servers)
+    afsconfdir    /usr/afs/etc
+    afslocaldir   /usr/afs/local
+    afsdbdir      /usr/afs/db
+    afslogsdir    /usr/afs/logs
+    afsbosconfig  $(afslocaldir)/BosConfig
+    afsbosserver  $(afsbindir)/bosserver
