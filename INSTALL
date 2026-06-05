@@ -11,88 +11,48 @@ Building OpenAFS on UNIX and Linux
 A  Configuring
 
    Uncompress the source into a directory of your choice. A directory
-   in afs space is also valid. In the directory that you uncompressed the
-   source in, you will only have an src/ directory.
+   in afs space is also valid.
 
-   1. Pick a system to build for, and note its default AFS sys_name.
-      A directory will be automatically created for binaries to be written
-      into with this name when you build.
-
-      alpha_linux26
-      alpha_nbsd15, alpha_nbsd16
-      amd64_fbsd_80, amd64_fbsd_81, amd64_fbsd_82, amd64_fbsd_83,
-         amd64_fbsd_84, amd64_fbsd_90, amd64_fbsd_91, amd64_fbsd_92,
-         amd64_fbsd_93, amd64_fbsd_100, amd64_fbsd_101
-      amd64_linux26
-      amd64_nbsd20, amd64_nbsd30, amd64_nbsd40
-      arm_linux26, arm64_linux26
-      hp_ux11i, hp_ux110, hp_ux1123 (See notes below for information on
-         getting missing header)
-      hp_ux102 (Client port possible, but db servers and utilities work)
-      i386_fbsd_80, i386_fbsd_81, i386_fbsd_82, i386_fbsd_83,
-         i386_fbsd_84, i386_fbsd_90, i386_fbsd_91, i386_fbsd_92,
-         i386_fbsd_93, i386_fbsd_100, i386_fbsd_101
-      i386_linux26
-      i386_nbsd15, i386_nbsd16, i386_nbsd20, i386_nbsd21, i386_nbsd30,
-         i386_nbsd40
-      i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34, i386_obsd35,
-         i386_obsd36, i386_obsd37, i386_obsd38, i386_obsd39, i386_obsd40,
-         i386_obsd41
-      i386_umlinux26
-      ia64_hpux1122, ia64_hpux1123
-      ia64_linux26
-      ppc64_linux26
-      ppc_darwin_12, ppc_darwin_13, ppc_darwin_14, ppc_darwin_60,
-         ppc_darwin_70, ppc_darwin_80, ppc_darwin_90
-      ppc_linux26
-      ppc_nbsd16, ppc_nbsd20
-      rs_aix42, rs_aix51, rs_aix52, rs_aix53, rs_aix61, rs_aix71,
-         rs_aix72, rs_aix73
-      s390_linux26
-      s390x_linux26
-      sgi_65 (file server not tested)
-      sparc64_linux26
-      sun4x_58, sun4x_59, sun4x_510, sun4x_511
-         (logging UFS not supported for mixed-use partitions containing
-         client cache)
-      sunx86_58, sunx86_59, sunx86_510, sunx86_511
-         (logging UFS not supported for mixed-use partitions containing
-         client cache)
-      x86_darwin_80, x86_darwin90
-
-   2. Using configure in the top level directory, configure for your
-      AFS system type, providing the necessary flags:
+   Using configure in the top level directory, configure for your
+   system providing the necessary flags:
 
       % ./configure
 
-      If you do not have the "configure" script, or if you modify the
-      source files, you can re-create it by running regen.sh.  You will
-      need autoconf to do this.
+   If the build system is unable to determine the AFS sysname for
+   your system, specify the AFS syname:
 
-      For some systems you need also provide the path in which your kernel
-      headers for your configured kernel can be found.  See the
-      system-specific Notes sections below for details.  If you want to
-      build only the user-space programs and servers and not the kernel
-      module, specify the --disable-kernel-module option on the
-      ./configure command line.
+      % ./configure --with-afs-sysname=<sysname>
 
-      All binaries, except for the 'fileserver' and 'volserver'
-      executables and their 'da' variants, are stripped of their symbol
-      table information by default.  To enable a debugging build, specify
-      the --enable-debug option on the ./configure command line.  This
-      builds with debugging compiler options and disables stripping of
-      binaries.
+   See section L below for the list of available AFS sysnames.
 
-      You can also use different combinations of --enable-debug and
-      --enable (or --disable)-strip-binaries for finer control.  One can,
-      for example, compile binaries for debug and strip them anyway.
-      Alternatively, one can compile without debug and force the binaries
-      to not be stripped.  Note that these combinations are not
-      necessarily useful.
+   If you do not have the "configure" script, or if you modify the
+   source files, you can re-create it by running regen.sh.  You will
+   need autoconf to do this.
 
-      The binaries noted above, 'fileserver' and 'volserver' and their
-      'da' variants, will never be stripped, regardless of any options
-      given to configure.
+   For some systems you need also provide the path in which your kernel
+   headers for your configured kernel can be found.  See the
+   system-specific Notes sections below for details.  If you want to
+   build only the user-space programs and servers and not the kernel
+   module, specify the --disable-kernel-module option on the
+   ./configure command line.
+
+   All binaries, except for the 'fileserver' and 'volserver'
+   executables and their 'da' variants, are stripped of their symbol
+   table information by default.  To enable a debugging build, specify
+   the --enable-debug option on the ./configure command line.  This
+   builds with debugging compiler options and disables stripping of
+   binaries.
+
+   You can also use different combinations of --enable-debug and
+   --enable (or --disable)-strip-binaries for finer control.  One can,
+   for example, compile binaries for debug and strip them anyway.
+   Alternatively, one can compile without debug and force the binaries
+   to not be stripped.  Note that these combinations are not
+   necessarily useful.
+
+   The binaries noted above, 'fileserver' and 'volserver' and their
+   'da' variants, will never be stripped, regardless of any options
+   given to configure.
 
    There are two modes for directory path handling: "default mode" and
    "legacy Transarc mode":
@@ -622,3 +582,50 @@ K  Building for legacy Transarc-style paths
     afslogsdir    /usr/afs/logs
     afsbosconfig  $(afslocaldir)/BosConfig
     afsbosserver  $(afsbindir)/bosserver
+
+
+L  AFS sysnames
+
+The following list of AFS sysnames are supported by the build system.
+
+      alpha_linux26
+      alpha_nbsd15, alpha_nbsd16
+      amd64_fbsd_80, amd64_fbsd_81, amd64_fbsd_82, amd64_fbsd_83,
+         amd64_fbsd_84, amd64_fbsd_90, amd64_fbsd_91, amd64_fbsd_92,
+         amd64_fbsd_93, amd64_fbsd_100, amd64_fbsd_101
+      amd64_linux26
+      amd64_nbsd20, amd64_nbsd30, amd64_nbsd40
+      arm_linux26, arm64_linux26
+      hp_ux11i, hp_ux110, hp_ux1123 (See notes below for information on
+         getting missing header)
+      hp_ux102 (Client port possible, but db servers and utilities work)
+      i386_fbsd_80, i386_fbsd_81, i386_fbsd_82, i386_fbsd_83,
+         i386_fbsd_84, i386_fbsd_90, i386_fbsd_91, i386_fbsd_92,
+         i386_fbsd_93, i386_fbsd_100, i386_fbsd_101
+      i386_linux26
+      i386_nbsd15, i386_nbsd16, i386_nbsd20, i386_nbsd21, i386_nbsd30,
+         i386_nbsd40
+      i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34, i386_obsd35,
+         i386_obsd36, i386_obsd37, i386_obsd38, i386_obsd39, i386_obsd40,
+         i386_obsd41
+      i386_umlinux26
+      ia64_hpux1122, ia64_hpux1123
+      ia64_linux26
+      ppc64_linux26
+      ppc_darwin_12, ppc_darwin_13, ppc_darwin_14, ppc_darwin_60,
+         ppc_darwin_70, ppc_darwin_80, ppc_darwin_90
+      ppc_linux26
+      ppc_nbsd16, ppc_nbsd20
+      rs_aix42, rs_aix51, rs_aix52, rs_aix53, rs_aix61, rs_aix71,
+         rs_aix72, rs_aix73
+      s390_linux26
+      s390x_linux26
+      sgi_65 (file server not tested)
+      sparc64_linux26
+      sun4x_58, sun4x_59, sun4x_510, sun4x_511
+         (logging UFS not supported for mixed-use partitions containing
+         client cache)
+      sunx86_58, sunx86_59, sunx86_510, sunx86_511
+         (logging UFS not supported for mixed-use partitions containing
+         client cache)
+      x86_darwin_80, x86_darwin90
