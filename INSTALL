@@ -23,7 +23,7 @@ A  Configuring
 
       % ./configure --with-afs-sysname=<sysname>
 
-   See section L below for the list of available AFS sysnames.
+   See section L below for information about AFS sysnames.
 
    If you do not have the "configure" script, or if you modify the
    source files, you can re-create it by running regen.sh.  You will
@@ -586,46 +586,28 @@ K  Building for legacy Transarc-style paths
 
 L  AFS sysnames
 
-The following list of AFS sysnames are supported by the build system.
+An AFS sysname is a standardized identifier for a specific combination of a CPU
+architecture and operating system release. syname idendifiers are shared across
+different AFS implementations and are historically tracked by a central
+registry (https://registrar.central.org).
 
-      alpha_linux26
-      alpha_nbsd15, alpha_nbsd16
-      amd64_fbsd_80, amd64_fbsd_81, amd64_fbsd_82, amd64_fbsd_83,
-         amd64_fbsd_84, amd64_fbsd_90, amd64_fbsd_91, amd64_fbsd_92,
-         amd64_fbsd_93, amd64_fbsd_100, amd64_fbsd_101
-      amd64_linux26
-      amd64_nbsd20, amd64_nbsd30, amd64_nbsd40
-      arm_linux26, arm64_linux26
-      hp_ux11i, hp_ux110, hp_ux1123 (See notes below for information on
-         getting missing header)
-      hp_ux102 (Client port possible, but db servers and utilities work)
-      i386_fbsd_80, i386_fbsd_81, i386_fbsd_82, i386_fbsd_83,
-         i386_fbsd_84, i386_fbsd_90, i386_fbsd_91, i386_fbsd_92,
-         i386_fbsd_93, i386_fbsd_100, i386_fbsd_101
-      i386_linux26
-      i386_nbsd15, i386_nbsd16, i386_nbsd20, i386_nbsd21, i386_nbsd30,
-         i386_nbsd40
-      i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34, i386_obsd35,
-         i386_obsd36, i386_obsd37, i386_obsd38, i386_obsd39, i386_obsd40,
-         i386_obsd41
-      i386_umlinux26
-      ia64_hpux1122, ia64_hpux1123
-      ia64_linux26
-      ppc64_linux26
-      ppc_darwin_12, ppc_darwin_13, ppc_darwin_14, ppc_darwin_60,
-         ppc_darwin_70, ppc_darwin_80, ppc_darwin_90
-      ppc_linux26
-      ppc_nbsd16, ppc_nbsd20
-      rs_aix42, rs_aix51, rs_aix52, rs_aix53, rs_aix61, rs_aix71,
-         rs_aix72, rs_aix73
-      s390_linux26
-      s390x_linux26
-      sgi_65 (file server not tested)
-      sparc64_linux26
-      sun4x_58, sun4x_59, sun4x_510, sun4x_511
-         (logging UFS not supported for mixed-use partitions containing
-         client cache)
-      sunx86_58, sunx86_59, sunx86_510, sunx86_511
-         (logging UFS not supported for mixed-use partitions containing
-         client cache)
-      x86_darwin_80, x86_darwin90
+OpenAFS uses the sysname for two main purposes:
+
+1.  During compilation, to select the correct platform-specific code and
+    build the appropriate binaries for the target system.
+
+2.  To set the default value of the sysname used by the OpenAFS client to
+    resolve paths in the AFS filesystem which contain a `@sys` path component.
+
+On modern systems, the `configure` script should automatically detect the
+correct sysname for your system. However, if it cannot, or if you are building
+for a different system, you may specify it manually using the
+`--with-afs-sysname=<sysname>` option.
+
+To see the full list of sysnames available for building, see the `src/config`
+directory in the source tree. From the top-level of the source tree, run the
+following command:
+
+    % ls src/config/param.*.h
+
+The part of the filename between "param." and ".h" corresponds to the sysname.
