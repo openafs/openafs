@@ -77,3 +77,4 @@ your time and expertise, and we look forward to collaborating with you.
 * [standards-compliance](standards-compliance.md) : Compatibility and interoperability policies
 * [unit-tests](unit-tests.md) : Unit testing guide
 * [code-review-guide](code-review-guide.md) : Code review guide
+* [platform-support](platform-support.md) : Platform support policy
