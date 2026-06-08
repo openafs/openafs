@@ -1310,7 +1310,6 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
     memset(&storeEntry, 0, sizeof(struct nvldbentry));
 
     /* make sure the VLDB entry hasn't changed since we started */
-    memset(&checkEntry, 0, sizeof(checkEntry));
     vcode = GetLockedEntry(entry->volumeId[RWVOL], RWVOL,
 			   VLOP_MOVE, &checkEntry);
     if (vcode) {
