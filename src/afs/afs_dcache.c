@@ -1242,7 +1242,6 @@ afs_GetDownDSlot(int anumber)
     struct afs_q *tq, *nq;
     struct dcache *tdc;
     int ix;
-    unsigned int cnt;
 
     AFS_STATCNT(afs_GetDownDSlot);
     if (cacheDiskType == AFS_FCACHE_TYPE_MEM)
@@ -1257,8 +1256,7 @@ afs_GetDownDSlot(int anumber)
     if (anumber <= 0)
 	return;			/* enough already free */
 
-    for (cnt = 0, tq = afs_DLRU.prev; tq != &afs_DLRU && anumber > 0;
-	 tq = nq, cnt++) {
+    for (tq = afs_DLRU.prev; tq != &afs_DLRU && anumber > 0; tq = nq) {
 	tdc = (struct dcache *)tq;	/* q is first elt in dcache entry */
 	nq = QPrev(tq);		/* in case we remove it */
 	if (tdc->refCount == 0) {
