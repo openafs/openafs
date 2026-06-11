@@ -41,11 +41,10 @@ afs_InitMemCache(int blkCount, int blkSize, int flags)
 	(memCache + index)->size = 0;
 	(memCache + index)->dataSize = memCacheBlkSize;
 	LOCK_INIT(&((memCache + index)->afs_memLock), "afs_memLock");
-	blk = afs_osi_Alloc(memCacheBlkSize);
+	blk = afs_osi_Calloc(memCacheBlkSize);
 	if (blk == NULL)
 	    goto nomem;
 	(memCache + index)->data = blk;
-	memset((memCache + index)->data, 0, memCacheBlkSize);
     }
 #if defined(AFS_HAVE_VXFS)
     afs_InitDualFSCacheOps((struct vnode *)0);

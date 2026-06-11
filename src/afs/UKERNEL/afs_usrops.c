@@ -823,10 +823,23 @@ afs_osi_VOP_RDWR(struct usr_vnode *vnodeP, struct usr_uio *uioP, int rw,
     return 0;
 }
 
+/* See afs_osi_alloc.c for information about these alloc functions. */
+void *
+afs_osi_Alloc_nozero(size_t size)
+{
+    return malloc(size);
+}
+
+void *
+afs_osi_Calloc(size_t size)
+{
+    return calloc(size, 1);
+}
+
 void *
 afs_osi_Alloc(size_t size)
 {
-    return malloc(size);
+    return afs_osi_Calloc(size);
 }
 
 void

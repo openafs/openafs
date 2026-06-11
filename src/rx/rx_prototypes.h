@@ -535,6 +535,8 @@ extern int rx_SetMaxMTU(int mtu);
    include the afs_prototypes.h file - just make sure they match */
 #ifndef afs_osi_Alloc
 extern void *afs_osi_Alloc(size_t x);
+extern void *afs_osi_Calloc(size_t x);
+extern void *afs_osi_Alloc_nozero(size_t x);
 #endif
 #ifndef afs_osi_Free
 extern void afs_osi_Free(void *x, size_t asize);

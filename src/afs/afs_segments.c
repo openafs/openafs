@@ -724,10 +724,9 @@ afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq)
     struct dcache *tdc;
     void *zeros;
 
-    zeros = afs_osi_Alloc(AFS_PAGESIZE);
+    zeros = afs_osi_Calloc(AFS_PAGESIZE);
     if (zeros == NULL)
 	return ENOMEM;
-    memset(zeros, 0, AFS_PAGESIZE);
 
     while (avc->f.m.Length < alen) {
         tdc = afs_ObtainDCacheForWriting(avc, avc->f.m.Length, alen - avc->f.m.Length, areq, 0);

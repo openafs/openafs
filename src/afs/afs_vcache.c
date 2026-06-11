@@ -2929,9 +2929,8 @@ afs_vcacheInit(int astatSize)
 
 #if !defined(AFS_LINUX_ENV)
     /* Allocate and thread the struct vcache entries */
-    tvp = afs_osi_Alloc(astatSize * sizeof(struct vcache));
+    tvp = afs_osi_Calloc(astatSize * sizeof(struct vcache));
     osi_Assert(tvp != NULL);
-    memset(tvp, 0, sizeof(struct vcache) * astatSize);
 
     Initial_freeVCList = tvp;
     freeVCList = &(tvp[0]);

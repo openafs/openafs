@@ -508,10 +508,9 @@ afs_GetUser(struct unixuser **a_user, afs_int32 auid, afs_int32 acell,
      * allocate a new unixuser.
      * xu will be insertion point for our new unixuser.
      */
-    tu = afs_osi_Alloc(sizeof(struct unixuser));
+    tu = afs_osi_Calloc(sizeof(struct unixuser));
     osi_Assert(tu != NULL);
     afs_stats_cmfullperf.authent.PAGCreations++;
-    memset(tu, 0, sizeof(struct unixuser));
     AFS_RWLOCK_INIT(&tu->lock, "unixuser lock");
     /* insert new nu in sorted order after xu */
     if (xu == NULL) {

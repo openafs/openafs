@@ -108,8 +108,6 @@ linux_alloc(unsigned int asize, int drop_glock)
 	    --max_retry;
 	}
     }
-    if (new)
-	memset(MEMADDR(new), 0, asize);
 
     return new;
 }

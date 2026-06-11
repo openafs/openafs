@@ -599,9 +599,8 @@ CkSrv_GetCaps(int nconns, struct rx_connection **rxconns,
     afs_int32 i;
     struct server *ts;
 
-    caps = afs_osi_Alloc(nconns * sizeof (Capabilities));
+    caps = afs_osi_Calloc(nconns * sizeof (Capabilities));
     osi_Assert(caps != NULL);
-    memset(caps, 0, nconns * sizeof(Capabilities));
 
     results = afs_osi_Alloc(nconns * sizeof (afs_int32));
     osi_Assert(results != NULL);
@@ -1708,11 +1707,10 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
     if (oldts) {
 	newts = oldts;
     } else {
-	newts = afs_osi_Alloc(sizeof(struct server));
+	newts = afs_osi_Calloc(sizeof(struct server));
 	if (!newts)
 	    panic("malloc of server struct");
 	afs_totalServers++;
-	memset(newts, 0, sizeof(struct server));
 
 	/* Add the server struct to the afs_servers[] hash chain */
 	srvhash =
@@ -1752,11 +1750,10 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 	if (oldsa) {
 	    newsa = oldsa;
 	} else {
-	    newsa = afs_osi_Alloc(sizeof(struct srvAddr));
+	    newsa = afs_osi_Calloc(sizeof(struct srvAddr));
 	    if (!newsa)
 		panic("malloc of srvAddr struct");
 	    afs_totalSrvAddrs++;
-	    memset(newsa, 0, sizeof(struct srvAddr));
 
 	    /* Add the new srvAddr to the afs_srvAddrs[] hash chain */
 	    newsa->next_bkt = afs_srvAddrs[iphash];
@@ -1802,10 +1799,9 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 
 	    /* Have a srvAddr struct. Now get a server struct (if not already) */
 	    if (!orphts) {
-		orphts = afs_osi_Alloc(sizeof(struct server));
+		orphts = afs_osi_Calloc(sizeof(struct server));
 		if (!orphts)
 		    panic("malloc of lo server struct");
-		memset(orphts, 0, sizeof(struct server));
 		afs_totalServers++;
 
 		/* Add the orphaned server to the afs_servers[] hash chain.

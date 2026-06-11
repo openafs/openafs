@@ -39,8 +39,23 @@ static struct osi_packet {
 
 static char memZero;		/* address of 0 bytes for kmem_alloc */
 
+/*
+ * Allocate memory, and do _NOT_ initialize the returned buffer.
+ *
+ * This is slightly faster than afs_osi_Calloc(), but can be very dangerous if
+ * you accidentally use uninitialized memory, or leak it to a user. Only use
+ * this function if:
+ *
+ * - Speed is important for the relevant code path, AND:
+ *
+ * - You are certain the entire buffer will be filled with something
+ * immediately (a memcpy(), for example), or you are certain you will not be
+ * using any uninitialized portion of the buffer.
+ *
+ * If either of those statements is not true, use afs_osi_Calloc() instead.
+ */
 void *
-afs_osi_Alloc(size_t size)
+afs_osi_Alloc_nozero(size_t size)
 {
     AFS_STATCNT(osi_Alloc);
     /* 0-length allocs may return NULL ptr from AFS_KALLOC, so we special-case
@@ -55,6 +70,29 @@ afs_osi_Alloc(size_t size)
 #else
     return AFS_KALLOC(size);
 #endif
+}
+
+/*
+ * Allocate memory, filling the buffer with zeroes before returning.
+ */
+void *
+afs_osi_Calloc(size_t size)
+{
+    void *ret = afs_osi_Alloc_nozero(size);
+    if (ret != NULL) {
+	memset(ret, 0, size);
+    }
+    return ret;
+}
+
+/*
+ * Old, deprecated alias of afs_osi_Calloc(). New code should use either
+ * afs_osi_Calloc() or afs_osi_Alloc_nozero().
+ */
+void *
+afs_osi_Alloc(size_t size)
+{
+    return afs_osi_Calloc(size);
 }
 
 void

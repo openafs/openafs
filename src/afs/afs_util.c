@@ -175,7 +175,7 @@ afs_strdup(char *s)
     int cc;
 
     cc = strlen(s) + 1;
-    n = afs_osi_Alloc(cc);
+    n = afs_osi_Alloc_nozero(cc);
     if (n)
 	memcpy(n, s, cc);
 

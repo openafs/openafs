@@ -663,7 +663,7 @@ sockproxy_pkts_copyin(user_addr_t a_uaddr, struct afs_pkt_hdr **a_pktlist,
 		      size_t a_npkts)
 {
     int code, pkt_i;
-    struct afs_pkt_hdr *pktlist_u;
+    struct afs_pkt_hdr *pktlist_u = NULL;
     struct afs_pkt_hdr *pktlist_k = NULL;
 
     *a_pktlist = NULL;
@@ -674,18 +674,17 @@ sockproxy_pkts_copyin(user_addr_t a_uaddr, struct afs_pkt_hdr **a_pktlist,
 	return E2BIG;
     }
 
-    pktlist_u = afs_osi_Alloc(a_npkts * sizeof(pktlist_u[0]));
-    if (pktlist_u == NULL) {
-	code = ENOMEM;
-	goto done;
-    }
-
-    pktlist_k = afs_osi_Alloc(a_npkts * sizeof(pktlist_k[0]));
+    pktlist_k = afs_osi_Calloc(a_npkts * sizeof(pktlist_k[0]));
     if (pktlist_k == NULL) {
 	code = ENOMEM;
 	goto done;
     }
-    memset(pktlist_k, 0, a_npkts * sizeof(pktlist_k[0]));
+
+    pktlist_u = afs_osi_Alloc_nozero(a_npkts * sizeof(pktlist_u[0]));
+    if (pktlist_u == NULL) {
+	code = ENOMEM;
+	goto done;
+    }
 
     AFS_COPYIN(a_uaddr, pktlist_u, a_npkts * sizeof(pktlist_u[0]), code);
     if (code != 0) {
@@ -706,7 +705,7 @@ sockproxy_pkts_copyin(user_addr_t a_uaddr, struct afs_pkt_hdr **a_pktlist,
 	 * points to a valid address in kernel-space.
 	 */
 	*pkt_k = *pkt_u;
-	pkt_k->payload = afs_osi_Alloc(pkt_k->size);
+	pkt_k->payload = afs_osi_Alloc_nozero(pkt_k->size);
 	if (pkt_k->payload == NULL) {
 	    code = ENOMEM;
 	    goto done;
@@ -757,7 +756,7 @@ sockproxy_pkts_copyout(user_addr_t a_uaddr, struct afs_pkt_hdr *a_pktlist,
 	return EINVAL;
     }
 
-    pktlist_u = afs_osi_Alloc(a_npkts * sizeof(pktlist_u[0]));
+    pktlist_u = afs_osi_Alloc_nozero(a_npkts * sizeof(pktlist_u[0]));
     if (pktlist_u == NULL) {
 	code = ENOMEM;
 	goto done;

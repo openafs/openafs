@@ -2920,6 +2920,8 @@ rxi_Alloc(size_t size)
 p = (char *)
 #if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_FBSD_ENV)
   afs_osi_Alloc_NoSleep(size);
+#elif defined(KERNEL)
+  afs_osi_Alloc_nozero(size);
 #else
   osi_Alloc(size);
 #endif

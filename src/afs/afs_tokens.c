@@ -133,9 +133,8 @@ afs_AddToken(struct tokenJar **tokens, rx_securityIndex type)
 {
     struct tokenJar *newToken;
 
-    newToken = afs_osi_Alloc(sizeof(*newToken));
+    newToken = afs_osi_Calloc(sizeof(*newToken));
     osi_Assert(newToken != NULL);
-    memset(newToken, 0, sizeof(*newToken));
 
     newToken->type = type;
     newToken->next = *tokens;
@@ -318,7 +317,7 @@ afs_AddRxkadToken(struct tokenJar **tokens, char *ticket, int ticketLen,
     tokenU = afs_AddToken(tokens, RX_SECIDX_KAD);
     rxkad = &tokenU->rxkad;
 
-    rxkad->ticket = afs_osi_Alloc(ticketLen);
+    rxkad->ticket = afs_osi_Calloc(ticketLen);
     osi_Assert(rxkad->ticket != NULL);
     rxkad->ticketLen = ticketLen;
     memcpy(rxkad->ticket, ticket, ticketLen);
@@ -410,7 +409,7 @@ extractPioctlToken(struct tokenJar *token,
 
     memset(opaque, 0, sizeof(token_opaque));
 
-    pioctlToken = osi_Alloc(sizeof(*pioctlToken));
+    pioctlToken = afs_osi_Calloc(sizeof(*pioctlToken));
     if (pioctlToken == NULL)
 	return ENOMEM;
 
@@ -437,7 +436,7 @@ extractPioctlToken(struct tokenJar *token,
     opaque->token_opaque_len = xdr_getpos(&xdrs);
     xdr_destroy(&xdrs);
 
-    opaque->token_opaque_val = osi_Alloc(opaque->token_opaque_len);
+    opaque->token_opaque_val = afs_osi_Calloc(opaque->token_opaque_len);
     if (opaque->token_opaque_val == NULL) {
 	code = ENOMEM;
 	goto out;
