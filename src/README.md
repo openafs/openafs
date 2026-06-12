@@ -20,14 +20,15 @@ OpenAFS file server and cache manager.
 Cache Managers
 --------------
 
-The following directories contain the source code of OpenAFS cache manager and
-related programs.
+The following directories contain the source code for the OpenAFS cache manager
+and related programs.
 
 | directory | description |
 | --------- | ----------- |
 | afs       | The OpenAFS cache manager as a kernel-module for unix-like systems |
 | afsd      | The `afsd` user-space program to start the cache manager on unix-like systems |
 | aklog     | The Kerberos 5 login programs: `aklog`, `asetkey`, `akeyconvert` |
+| log       | The `pagsh`, `tokens`, and `unlog` programs |
 | sys       | NFS translator local and remote system call interfaces |
 | venus     | The `fs` program and other cache manager related utilities |
 | WINNT     | The OpenAFS cache manager and installer for MS Windows |
@@ -36,7 +37,7 @@ related programs.
 Servers
 -------
 
-The following directories contain the source code of the OpenAFS servers and
+The following directories contain the source code for the OpenAFS servers and
 administrative command suites.
 
 | directory | description |
@@ -51,7 +52,7 @@ administrative command suites.
 Backup system
 -------------
 
-The following directories contain the source code of the OpenAFS backup system.
+The following directories contain the source code for the OpenAFS backup system.
 
 | directory | description |
 | --------- | ----------- |
@@ -67,7 +68,7 @@ The following directories contain the source code of the OpenAFS backup system.
 Rx subsystem
 ------------
 
-The following directories contain the source code of the Rx subsystem. Rx
+The following directories contain the source code for the Rx subsystem. Rx
 provides Remote Procedure Calls (RPC) over UDP/IP in user-space and kernel-mode,
 and includes an XDR implementation to encode and decode binary data.
 
@@ -167,7 +168,6 @@ longer actively maintained.
 | directory | description |
 | --------- | ----------- |
 | kauth     | Obsolete Kerberos-4 server (`kaserver`) and related programs |
-| log       | Obsolete programs to show and forget Kerberos-4 tokens |
 | lwp       | Lightweight user-level non-preemptive cooperative threading library |
 | pam       | Pluggable authentication modules (PAM) for kauth authentication |
 | tests     | Legacy test scripts; new unit tests should be added to the top level `tests` directory |
