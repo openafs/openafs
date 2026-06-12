@@ -164,16 +164,10 @@ DoCloneIndex(Volume * srcvp, Volume * clvp, VnodeClass class, int reclone)
     afs_ino_str_t stmp;
 
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
-    /*
-     * The fileserver's -readonly switch should make this false, but we
-     * have no useful way to know in the volserver.
-     * This doesn't make client data mutable.
-     */
-    int SrcMetadataMutable = 1;
 
     /* Correct number of files in volume: this assumes indexes are always
        cloned starting with vLarge */
-    if (SrcMetadataMutable && class != vLarge) {
+    if (class != vLarge) {
 	filecount = V_filecount(srcvp);
 	diskused = V_diskused(srcvp);
     }
@@ -190,7 +184,7 @@ DoCloneIndex(Volume * srcvp, Volume * clvp, VnodeClass class, int reclone)
     srcFd = IH_OPEN(srcH);
     if (!srcFd)
 	ERROR_EXIT(EIO);
-    srcfile = FDH_FDOPEN(srcFd, SrcMetadataMutable ? "r+" : "r");
+    srcfile = FDH_FDOPEN(srcFd, "r+");
     if (!srcfile)
 	ERROR_EXIT(EIO);
     STREAM_ASEEK(srcfile, vcp->diskSize);	/* Will fail if no vnodes */
@@ -264,7 +258,7 @@ DoCloneIndex(Volume * srcvp, Volume * clvp, VnodeClass class, int reclone)
 	    }
 
 	    /* If a directory, mark vnode in source volume as cloned */
-	    if ((srcvnode->type == vDirectory) && SrcMetadataMutable) {
+	    if (srcvnode->type == vDirectory) {
 		srcvnode->cloned = 1;
 		code = STREAM_ASEEK(srcfile, offset);
 		if (code == -1)
@@ -381,9 +375,9 @@ DoCloneIndex(Volume * srcvp, Volume * clvp, VnodeClass class, int reclone)
 	error = code;
     ci_Destroy(&decHead);
 
-    if (SrcMetadataMutable && filecount > 0)
+    if (filecount > 0)
 	V_filecount(srcvp) = filecount;
-    if (SrcMetadataMutable && diskused > 0)
+    if (diskused > 0)
 	V_diskused(srcvp) = diskused;
     return error;
 }
