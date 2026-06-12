@@ -41,11 +41,6 @@
 
 #define NIFS		512
 
-#if defined(AFS_USR_DFBSD_ENV)
-# include <net/if.h>
-# include <sys/sockio.h>
-#endif
-
 #ifdef KERNEL
 /* only used for generating random noise */
 

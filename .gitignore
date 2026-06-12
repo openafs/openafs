@@ -68,7 +68,6 @@ config.log
 /amd64_nbsd*
 /dest
 /hp_ux*
-/i386_dfbsd*
 /i386_fbsd*
 /i386_nbsd*
 /i386_obsd*

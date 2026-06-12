@@ -20,7 +20,7 @@ afs_kmutex_t hckernel_mutex;
  * userspace on startup). Otherwise, we rely on osi_readRandom() as the source
  * of random data.
  */
-#if defined(AFS_AIX_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SGI_ENV)
 # define USE_FORTUNA
 #endif
 

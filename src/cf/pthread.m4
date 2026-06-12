@@ -2,8 +2,6 @@ AC_DEFUN([OPENAFS_PTHREAD_CHECKS],
 [PTHREAD_LIBS=error
 AS_IF([test "x$MKAFS_OSTYPE" = OBSD],
   [PTHREAD_LIBS="-pthread"])
-AS_IF([test "x$MKAFS_OSTYPE" = xDFBSD],
-  [PTHREAD_LIBS="-pthread"])
 AS_IF([test "x$PTHREAD_LIBS" = xerror],
   [AC_CHECK_LIB([pthread], [pthread_attr_init],
                 [PTHREAD_LIBS="-lpthread"])])

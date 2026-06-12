@@ -71,10 +71,6 @@ case $system in
                 MKAFS_OSTYPE=OBSD
                 AC_MSG_RESULT(i386_obsd)
                 ;;
-        *-dragonfly*)
-                MKAFS_OSTYPE=DFBSD
-                AC_MSG_RESULT(i386_dfbsd)
-                ;;
         *)
                 AC_MSG_RESULT($system)
                 ;;

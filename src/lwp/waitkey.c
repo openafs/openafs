@@ -167,19 +167,6 @@ LWP_WaitForKeystroke(int seconds)
 #elif defined(AFS_LINUX_ENV)
     if (stdin->_IO_read_ptr < stdin->_IO_read_end)
 	return 1;
-#elif (defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)) && defined(AFS_DFBSD_ENV)
-    struct appx_sbuf {
-      unsigned char *_base;
-      int     _size;
-    };
-    struct APPX_FILE
-    {
-      struct __FILE_public    pub;
-      struct  appx_sbuf _bf;     /* the buffer (at least 1 byte, if !NULL) */
-    };
-    struct APPX_FILE *appx_stdin = (struct APPX_FILE *) stdin;
-    if (appx_stdin->_bf._size > 0)
-	return 1;
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if (stdin->_bf._size > 0)
 	return 1;

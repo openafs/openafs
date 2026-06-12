@@ -918,7 +918,7 @@ struct vcache {
 #endif
 
 #ifdef AFS_XBSD_ENV
-#if !defined(AFS_DFBSD_ENV) && !defined(AFS_NBSD_ENV)
+#if !defined(AFS_NBSD_ENV)
     struct lock rwlock;
 #endif
 #endif
@@ -1423,8 +1423,8 @@ afs_set_cr_rgid(afs_ucred_t *cred, gid_t gid) {
 #endif
 
 /*
- * Various definitions for osi_sleep and its event hash table
- * DFBSD has no osi_sleep, and HPUX has its own hack for this stuff
+ * Various definitions for osi_sleep and its event hash table.
+ * HPUX has its own hack for this stuff.
  */
 #define AFS_EVHASHSIZE	128	/* size of afs_evhasht, must be power of 2 */
 

@@ -209,7 +209,7 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
     volatile
 #endif
     afs_int32 error;
-#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+#if defined(AFS_FBSD_ENV)
     struct vnode *vp = AFSTOV(avc);
 #endif
     struct uio *tuiop = NULL;
@@ -369,7 +369,7 @@ afs_write(struct vcache *avc, struct uio *auio, int aio,
 		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(filePos));
 	    avc->f.m.Length = filePos;
-#if defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV)
+#if defined(AFS_FBSD_ENV)
             vnode_pager_setsize(vp, filePos);
 #endif
 	}

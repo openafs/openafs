@@ -205,7 +205,7 @@ shutdown_osi(void)
        afs_osi_ctxtp_initialized = 0;
     }
 #endif
-#if !defined(AFS_HPUX_ENV) && !defined(UKERNEL) && !defined(AFS_DFBSD_ENV) && !defined(AFS_LINUX_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(UKERNEL) && !defined(AFS_LINUX_ENV)
     /* LINUX calls this from afs_cleanup() which hooks into module_exit */
     shutdown_osisleep();
 #endif
@@ -214,7 +214,7 @@ shutdown_osi(void)
     }
 }
 
-#if !defined(AFS_HPUX_ENV) && !defined(UKERNEL) && !defined(AFS_DFBSD_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(UKERNEL) && !defined(AFS_DARWIN_ENV)
 /* DARWIN uses locking, and so must provide its own */
 void
 shutdown_osisleep(void)

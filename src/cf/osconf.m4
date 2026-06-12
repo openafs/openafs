@@ -130,14 +130,6 @@ case $AFS_SYSNAME in
 		XCFLAGS="-pipe"
 		;;
 
-	i386_dfbsd_*)
-		MT_CFLAGS='-pthread -D_REENTRANT'
-		PAM_OPTMZ=-O2
-		PAM_CFLAGS="-pipe -fPIC"
-		SHLIB_LINKER="${CC} -shared"
-		XCFLAGS="-pipe"
-		;;
-
 	amd64_fbsd_*)
 		MT_CFLAGS='-pthread -D_REENTRANT'
 		PAM_CFLAGS="-O2 -pipe -fPIC"
