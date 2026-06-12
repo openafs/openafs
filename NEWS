@@ -1,5 +1,15 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.16.1
+
+  All UNIX clients
+
+    * A build warning has been fixed when building with GCC 16 (16824).
+
+  Linux client
+
+    * Support for Linux kernel 7.1 has been added (16822, 16823).
+
 OpenAFS 1.8.16
 
   All platforms
