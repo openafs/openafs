@@ -45,15 +45,8 @@
 #undef VICE
 
 
-struct tokenInfo {
-    struct ktc_setTokenData *tokenSet;
-    int deleted;
-};
-
 static int unlog_ForgetCertainTokens(char **, int);
 static int unlog_NormalizeCellNames(char **, int);
-static int unlog_CheckUnlogList(char **, int, char *);
-static int unlog_VerifyUnlog(char **, int, struct tokenInfo *, int);
 
 static int
 CommandProc(struct cmd_syndesc *as, void *arock)
@@ -116,20 +109,13 @@ main(int argc, char *argv[])
 }				/*Main routine */
 
 /*
- * This function first attempts to delete the tokens for the cells specified
- * in the list. If the PUnlogCell pioctl is not supported, it falls back to the
- * older logic, which builds a list of tokens, deletes the bad ones, destroys
- * all tokens, and then re-registers the good ones.
+ * Invalidate tokens for the cell names provided in the list.
  */
 static int
 unlog_ForgetCertainTokens(char **list, int listSize)
 {
     int cell_i;
-    int index, index2;
-    int count;
     afs_int32 code = 0;
-    char *cellName = NULL;
-    struct tokenInfo *tokenInfoP;
 
     /* normalize all the names in the list */
     unlog_NormalizeCellNames(list, listSize);
@@ -138,9 +124,8 @@ unlog_ForgetCertainTokens(char **list, int listSize)
 	afs_int32 ret = ktc_ForgetTokensByCell(list[cell_i]);
 	if (ret == KTC_NOPIOCTL && cell_i == 0) {
 	    fprintf(stderr, "unlog: Kernel module does not support unlog by "
-		    "cell. Using legacy unlog method.\n");
-	    /* Fallback to older logic */
-	    goto fallback;
+		"cell. Please upgrade your kernel module to unlog specific "
+		"cells.\n");
 	}
 	if (ret != 0) {
 	    fprintf(stderr, "unlog: could not discard tokens for cell %s, "
@@ -148,75 +133,8 @@ unlog_ForgetCertainTokens(char **list, int listSize)
 	    code = 1;
 	}
     }
+
     return code;
-
- fallback:
-    /* figure out how many tokens exist */
-    count = 0;
-    do {
-	code = ktc_ListTokensEx(count, &count, &cellName);
-	free(cellName);
-	cellName = NULL;
-    } while (!code);
-
-    tokenInfoP = calloc(count, sizeof(tokenInfoP[0]));
-    if (!tokenInfoP) {
-	perror("unlog_ForgetCertainTokens -- osi_Alloc failed");
-	exit(1);
-    }
-
-    for (code = index = index2 = 0; (!code) && (index < count); index++) {
-	code =
-	    ktc_ListTokensEx(index2, &index2, &cellName);
-
-	if (!code) {
-	    code =
-		ktc_GetTokenEx(cellName, &tokenInfoP[index].tokenSet);
-
-	    if (!code)
-		tokenInfoP[index].deleted =
-		    unlog_CheckUnlogList(list, listSize,
-					 tokenInfoP[index].tokenSet->cell);
-	}
-	free(cellName);
-	cellName = NULL;
-    }
-
-    unlog_VerifyUnlog(list, listSize, tokenInfoP, count);
-    code = ktc_ForgetAllTokens();
-
-    if (code) {
-	printf("unlog: could not discard tickets, code %d\n", code);
-	exit(1);
-    }
-
-    for (code = index = 0; index < count; index++) {
-	if (!tokenInfoP[index].deleted) {
-	    code =
-		ktc_SetTokenEx(tokenInfoP[index].tokenSet);
-	    if (code) {
-		fprintf(stderr, "Couldn't re-register token, code = %d\n",
-			code);
-	    }
-	}
-    }
-    return 0;
-}
-
-/*
- * 0 if not in list, 1 if in list
- */
-int
-unlog_CheckUnlogList(char **list, int count, char *cell)
-{
-    do {
-	if (strcmp(*list, cell) == 0)
-	    return 1;
-	list++;
-	--count;
-    } while (count);
-
-    return 0;
 }
 
 /*
@@ -264,30 +182,5 @@ unlog_NormalizeCellNames(char **list, int size)
 	*list = newCellName;
     }
     afsconf_Close(conf);
-    return 0;
-}
-
-/*
- * check given list to assure tokens were held for specified cells
- * prints warning messages for those cells without such entries.
- */
-int
-unlog_VerifyUnlog(char **cellList, int cellListSize, struct tokenInfo *tokenList, int tokenListSize)
-{
-    int index;
-
-    for (index = 0; index < cellListSize; index++) {
-	int index2;
-	int found;
-
-	for (found = index2 = 0; !found && index2 < tokenListSize; index2++)
-	    found =
-		strcmp(cellList[index],
-		       tokenList[index2].tokenSet->cell) == 0;
-
-	if (!found)
-	    fprintf(stderr, "unlog: Warning - no tokens held for cell %s\n",
-		    cellList[index]);
-    }
     return 0;
 }
