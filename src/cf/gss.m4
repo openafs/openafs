@@ -25,8 +25,11 @@ dnl and will expand to this when enabled:
 dnl
 dnl     LIBS=$(top_builddir)/src/rxgk/liboafs_rxgk.la
 dnl
+dnl - @IF_BUILD_RXGK@ is "" if BUILD_RXGK is defined, and "#" otherwise.
+dnl
 dnl So in other words, lines prefixed with @IF_RXGK@ will only be interpreted
-dnl when rxgk support is enabled.
+dnl when rxgk support is enabled. Lines prefixed with @IF_BUILD_RXGK@ will only
+dnl be interpreted when we are building rxgk components.
 AC_DEFUN([OPENAFS_GSS],
   [
 dnl Probe for GSSAPI
@@ -53,8 +56,10 @@ dnl Check for the characteristics of whatever GSSAPI we found, if we found one
 
 dnl Determine if we should build rxgk
   BUILD_RXGK=no
+  IF_BUILD_RXGK="#"
   AS_IF([test x"$BUILD_GSSAPI" = xyes],
     [BUILD_RXGK=yes
+     IF_BUILD_RXGK=""
 dnl At this point, we're not using any GSS-API bits yet, but we'll need
 dnl gss_pseudo_random() in the future
      AS_IF([test x"$ac_cv_func_gss_pseudo_random" != xyes],
@@ -79,3 +84,4 @@ dnl decision than whether we should build rxgk)
 
   AC_SUBST([ENABLE_RXGK])
   AC_SUBST([IF_RXGK])])
+  AC_SUBST([IF_BUILD_RXGK])])

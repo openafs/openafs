@@ -40,6 +40,8 @@
 
 #define OPAQUE(str) { sizeof(str) - 1, (str) }
 
+#if defined(BUILD_RXGK)
+
 static void
 key2data(rxgk_key key, struct rx_opaque *data)
 {
@@ -167,3 +169,12 @@ main(void)
 
     return 0;
 }
+
+#else /* BUILD_RXGK */
+int
+main(void)
+{
+    skip_all("No rxgk support");
+    return 0;
+}
+#endif /* BUILD_RXGK */
