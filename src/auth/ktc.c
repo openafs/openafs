@@ -278,24 +278,7 @@ SetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
     iob.out = tbuffer;
     iob.out_size = sizeof(tbuffer);
 
-#if defined(NO_AFS_CLIENT)
-    {
-	int fd;			/* DEBUG */
-	char *tkfile;
-	if ((tkfile = getenv("TKTFILE"))
-	    &&
-	    ((fd =
-	      open(tkfile, O_WRONLY | O_APPEND | O_TRUNC | O_CREAT,
-		   0644)) >= 0)) {
-	    printf("Writing ticket to: %s\n", tkfile);
-	    code = (write(fd, iob.in, iob.in_size) != iob.in_size);
-	    close(fd);
-	} else
-	    code = KTC_PIOCTLFAIL;
-    }
-#else /* NO_AFS_CLIENT */
     code = PIOCTL(0, VIOCSETTOK, &iob, 0);
-#endif /* NO_AFS_CLIENT */
     if (code)
 	return KTC_PIOCTLFAIL;
 #if defined(AFS_LINUX_ENV) && defined(SYS_keyctl)
@@ -422,14 +405,9 @@ ktc_SetToken(struct ktc_principal *aserver,
 	    afs_tf_save_cred(aserver, atoken, aclient);
 	}
 	afs_tf_close();
-#ifdef NO_AFS_CLIENT
-	UNLOCK_GLOBAL_MUTEX;
-	return code;
-#endif /* NO_AFS_CLIENT */
     }
 #endif
 
-#ifndef NO_AFS_CLIENT
     code = SetToken(aserver, atoken, aclient, flags);
     if (code) {
 	UNLOCK_GLOBAL_MUTEX;
@@ -445,7 +423,6 @@ ktc_SetToken(struct ktc_principal *aserver,
 	    return KTC_NOCM;
 	return KTC_PIOCTLFAIL;
     }
-#endif /* NO_AFS_CLIENT */
     UNLOCK_GLOBAL_MUTEX;
     return 0;
 }
@@ -584,9 +561,7 @@ GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
     if (!lcell[0])
 	ktc_LocalCell();
 #endif
-#ifndef NO_AFS_CLIENT
     if (strcmp(aserver->name, "afs") != 0)
-#endif /* NO_AFS_CLIENT */
     {
 	int i;
 	/* try the local tokens */
@@ -641,7 +616,6 @@ GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 	UNLOCK_GLOBAL_MUTEX;
 	return KTC_NOENT;
     }
-#ifndef NO_AFS_CLIENT
     for (index = 0; index < 200; index++) {	/* sanity check in case pioctl fails */
 	iob.in = (char *)&index;
 	iob.in_size = sizeof(afs_int32);
@@ -736,7 +710,6 @@ GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 	    }
 	}
     }
-#endif /* NO_AFS_CLIENT */
 
     UNLOCK_GLOBAL_MUTEX;
     if ((code < 0) && (errno == EINVAL))
@@ -748,7 +721,6 @@ GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
  * Forget tokens for this server and the calling user.
  * NOT IMPLEMENTED YET!
  */
-#ifndef NO_AFS_CLIENT
 int
 ktc_ForgetToken(struct ktc_principal *aserver)
 {
@@ -759,7 +731,6 @@ ktc_ForgetToken(struct ktc_principal *aserver)
     UNLOCK_GLOBAL_MUTEX;
     return rc;
 }
-#endif /* NO_AFS_CLIENT */
 
 /*!
  * An iterator which can list all cells with tokens in the cache
@@ -862,10 +833,6 @@ ktc_ListTokens(int aprevIndex,
     LOCK_GLOBAL_MUTEX;
 
     index = aprevIndex;
-#ifdef NO_AFS_CLIENT
-    if (index < 214)
-	index = 214;
-#endif /* NO_AFS_CLIENT */
 #ifdef AFS_KERBEROS_ENV
     if (index >= 214) {
 	int i;
@@ -895,11 +862,9 @@ ktc_ListTokens(int aprevIndex,
 	}
 	index++;
 
-#ifndef NO_AFS_CLIENT
 	if (!strcmp(cprincipal.name, "afs") && cprincipal.instance[0] == 0) {
 	    goto again;
 	}
-#endif /* NO_AFS_CLIENT */
 
 	for (i = 0; i < MAXLOCALTOKENS; i++) {
 	    if (!strcmp(cprincipal.name, local_tokens[i].server.name)
@@ -918,7 +883,6 @@ ktc_ListTokens(int aprevIndex,
     }
 #endif
 
-#ifndef NO_AFS_CLIENT
     if (index >= 123) {		/* special hack for returning TCS */
 	while (index - 123 < MAXLOCALTOKENS) {
 	    if (local_tokens[index - 123].valid) {
@@ -988,7 +952,6 @@ ktc_ListTokens(int aprevIndex,
     strlcpy(aserver->cell, tp, sizeof(aserver->cell));
     aserver->instance[0] = 0;
     strcpy(aserver->name, "afs");
-#endif /* NO_AFS_CLIENT */
     UNLOCK_GLOBAL_MUTEX;
     return 0;
 }
@@ -1026,12 +989,10 @@ ForgetTokensByCell(const char *cell)
     iob.in_size = strlen(cell) + 1;
     iob.out = 0;
     iob.out_size = 0;
-#ifndef NO_AFS_CLIENT
     code = PIOCTL(0, VIOC_UNLOG_CELL, &iob, 0);
     if (code != 0) {
 	return KTC_PIOCTLFAIL;
     }
-#endif /* NO_AFS_CLIENT */
     return 0;
 }
 
@@ -1089,11 +1050,9 @@ ForgetAll(void)
     iob.in_size = 0;
     iob.out = 0;
     iob.out_size = 0;
-#ifndef NO_AFS_CLIENT
     code = PIOCTL(0, VIOCUNPAG, &iob, 0);
     if (code)
 	return KTC_PIOCTLFAIL;
-#endif /* NO_AFS_CLIENT */
     return 0;
 }
 
