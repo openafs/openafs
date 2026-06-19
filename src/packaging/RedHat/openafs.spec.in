@@ -55,10 +55,6 @@
 # to distribute aklog, asetkey, and akeyconvert.
 %define krb5support %{?_without_krb5:0}%{!?_without_krb5:1}
 
-# Specify '--with bootkernel' if you want to build the
-# kernel module for Red Hat BOOT Kernels on x86.
-%define bootkernelsupport %{?_with_bootkernel:1}%{!?_with_bootkernel:0}
-
 #
 # Definitions
 #
@@ -461,15 +457,6 @@ case %{_arch} in
        aarch64)                        sysname=arm64_linux26        ;;
        *)                              sysname=%{_arch}_linux26     ;;
 esac
-
-%ifarch %{ix86}
-archlist="i386 i586 i686 athlon"
-%if %{bootkernelsupport}
-  archlist="${archlist} BOOT"
-%endif
-%else
-archlist=%{_arch}
-%endif
 
 config_opts="%{?_with_kauth:--enable-kauth} \
         %{?_with_bitmap_later:--enable-bitmap-later} \
