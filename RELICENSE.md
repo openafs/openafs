@@ -122,6 +122,28 @@ that git author.
 Consent/Disapproval List
 ========================
 
+- [Y] Carsten Jacobi <jacobi@de.ibm.com> (IBM)
+- [Y] Erik J. Burckart <ejburcka@us.ibm.com> (IBM)
+- [Y] Ganesh Chaudhari <gangovind@in.ibm.com> (IBM)
+- [Y] Indira Sawant <indira.sawant@ibm.com> (IBM)
+- [Y] James Peterson <jimpeter@us.ibm.com> (IBM)
+- [Y] Jeff Riegel <riegel@almaden.ibm.com> (IBM)
+- [Y] Jeremy Stribling <jstribl@us.ibm.com> (IBM)
+- [Y] Kailas Zadbuke <kailashsz@in.ibm.com> (IBM)
+- [Y] Laura Stentz <stentz@us.ibm.com> (IBM)
+- [Y] Manuel Pereira <mpereira@almaden.ibm.com> (IBM)
+- [Y] Manuel Pereira <mpereira@us.ibm.com> (IBM)
+- [Y] Matthew A. Bacchi <mbacchi@btv.ibm.com> (IBM)
+- [Y] Michael Niksch <nik@zurich.ibm.com> (IBM)
+- [Y] Omkar Sathe <somkar@in.ibm.com> (IBM)
+- [Y] Satish Kumar <ksatish@in.ibm.com> (IBM)
+- [Y] Shyh-Wei Luan <luan@almaden.ibm.com> (IBM)
+- [Y] Srikanth Vishwanathan <vsrikanth@in.ibm.com> (IBM)
+- [Y] Sven Oehme <oehmes@de.ibm.com> (IBM)
+- [Y] Ted Anderson <ota@transarc.com> (IBM)
+- [Y] Todd DeSantis <atd@us.ibm.com> (IBM)
+- [Y] Yadav Yadavendra <yadayada@in.ibm.com> (IBM)
+- [Y] Yadavendra Yadav <yadayada@in.ibm.com> (IBM)
 
 Copyright Held by Other Legal Entities
 ======================================
@@ -130,3 +152,5 @@ The contributors above may have contributed the code on behalf of a company
 that holds the copyright. This list tracks such legal entities. The contributor
 list above indicates (in parentheses) if a contributor provided code for a
 legal entity here.
+
+- [Y] International Business Machines Corporation (IBM)
