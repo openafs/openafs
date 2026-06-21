@@ -122,6 +122,8 @@ that git author.
 Consent/Disapproval List
 ========================
 
+- [Y] Andrew Deason <adeason@dson.org>
+- [Y] Andrew Deason <adeason@sinenomine.net> (SNA)
 - [Y] Carsten Jacobi <jacobi@de.ibm.com> (IBM)
 - [Y] Erik J. Burckart <ejburcka@us.ibm.com> (IBM)
 - [Y] Ganesh Chaudhari <gangovind@in.ibm.com> (IBM)
@@ -154,3 +156,4 @@ list above indicates (in parentheses) if a contributor provided code for a
 legal entity here.
 
 - [Y] International Business Machines Corporation (IBM)
+- [?] Sine Nomine Associates, Inc. (SNA)
