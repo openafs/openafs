@@ -1843,6 +1843,97 @@ out:
     return -1;
 }
 
+static int
+PathInfoCmd(struct cmd_syndesc *as, void *arock)
+{
+    struct cmd_item *ti;
+    int error = 0;
+
+	const char *path;
+	const char *slash;
+	char component[1024];
+
+	afs_int32 code;
+    struct ViceIoctl blob;
+    char *last_component;
+    char *parent_dir;
+    int thru_symlink = 0;
+
+	struct stat s;
+
+    for (ti = as->parms[0].items; ti; ti = ti->next) {
+	path = ti->data + 1;
+
+	while(*path && !error) {
+		slash = strchr(path, '/');
+
+		if (slash) {
+            strncpy(component, ti->data, slash - ti->data);
+            component[slash - ti->data] = '\0';
+            path = slash + 1;
+        } else {
+            strcpy(component, ti->data);
+            path += strlen(path);
+        }
+
+		code = lstat(component, &s);
+
+		if(code == -1) {
+    		if(ENOENT == errno) {
+        		printf("'%s' doesn't exist\n", component);
+    		} else {
+        		printf("lstat failed\n");
+    		}
+			error = 1;
+		} else {
+			if (GetLastComponent(component, &parent_dir,
+				&last_component, &thru_symlink, 0) != 0) {
+				printf("GetLastComponent failed\n");
+	    		return 1;
+			}
+
+			blob.in = last_component;
+			blob.in_size = strlen(last_component) + 1;
+			blob.out_size = AFS_PIOCTL_MAXSIZE;
+			blob.out = space;
+			memset(space, 0, AFS_PIOCTL_MAXSIZE);
+			code = pioctl(parent_dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
+
+    		if(S_ISDIR(s.st_mode)) {
+				if (code == 0) {
+	    			printf("'%s' is a mount point for volume '%s'\n", component,
+		   			space);
+				}
+				else {
+					printf("'%s' is a directory\n", component);
+				}
+    		} else if (S_ISLNK(s.st_mode)) {			
+				if (code == 0) {
+					printf("'%s' is a symbolic link, leading to a mount point for volume '%s'\n",
+						component, space);
+				} else {
+					char leading_folder[PATH_MAX];
+					ssize_t len = readlink(component, leading_folder, sizeof(leading_folder) - 1);
+					leading_folder[len] = '\0';
+
+					printf("'%s' is a symbolic link, leading to a directory -> '%s'\n",
+						component, leading_folder);
+				}
+    		} else if (S_ISREG(s.st_mode)){
+				printf("'%s' is a regular file\n", component);
+			} else {
+				printf("'%s' isn't recognized\n", component);
+				error = 1;
+			}
+		}
+	}
+	}
+
+	free(last_component);
+	free(parent_dir);
+
+	return error;
+}
 
 static int
 ListMountCmd(struct cmd_syndesc *as, void *arock)
@@ -3770,6 +3861,9 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("lsmount", ListMountCmd, NULL, 0, "list mount point");
     cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
+
+	ts = cmd_CreateSyntax("pathinfo", PathInfoCmd, NULL, 0, "grrrr paw");
+	cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
 
     ts = cmd_CreateSyntax("mkmount", MakeMountCmd, NULL, 0, "make mount point");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, 0, "directory");
