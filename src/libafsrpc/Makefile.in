@@ -15,6 +15,9 @@ LT_current = 3
 LT_revision = 0
 LT_age = 0
 
+@IF_RXGK@LT_objs_rxgk=$(top_builddir)/src/rxgk/librxgk_pic.la
+@IF_RXGK@LT_libs_rxgk=$(LDFLAGS_gssapi) $(LIB_gssapi)
+
 LT_objs = \
 	$(top_builddir)/src/fsint/libfsint_pic.la \
 	$(top_builddir)/src/rx/librx_pic.la \
@@ -26,9 +29,9 @@ LT_objs = \
 	$(top_builddir)/src/sys/libafsrpc_sys.la \
 	$(top_builddir)/src/lwp/liblwpcompat_pic.la \
 	$(top_builddir)/src/opr/libopr_pic.la \
-	@RXGK_LIBS_RPC@
+	$(LT_objs_rxgk)
 
-LT_libs = $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS) $(RXGK_GSSAPI_LIBS)
+LT_libs = $(LIB_hcrypto) $(LIB_roken) $(MT_LIBS) $(LT_libs_rxgk)
 
 @IF_SHARED@SHARED_LIBS = libafsrpc.la
 

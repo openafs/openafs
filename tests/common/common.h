@@ -22,6 +22,21 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef OPENAFS_TEST_COMMON_H
+#define OPENAFS_TEST_COMMON_H
+
+#include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
+
+#include <roken.h>
+
+#include <afs/opr.h>
+#include <afs/com_err.h>
+#include <rx/rx_opaque.h>
+
+#include <tests/tap/basic.h>
+
 /**
  * Test case iterator
  *
@@ -125,3 +140,14 @@ extern int is_int64_v(afs_int64 left, afs_int64 right, const char *fmt,
 		      va_list ap);
 extern int is_uint64_v(afs_uint64 left, afs_uint64 right, const char *fmt,
 		       va_list ap);
+extern int is_pointer(void *left, void *right, const char *fmt, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 3, 4);
+
+/* opaque.c */
+extern int is_opaque(struct rx_opaque *left, struct rx_opaque *right,
+		     const char *format, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 3, 4);
+extern int is_opaque_v(struct rx_opaque *left, struct rx_opaque *right,
+		       const char *format, va_list ap);
+
+#endif /* OPENAFS_TEST_COMMON_H */

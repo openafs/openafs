@@ -62,6 +62,7 @@ your time and expertise, and we look forward to collaborating with you.
 
 * [code-of-conduct](code-of-conduct.md) : Our Code of Conduct for contributors and maintainers
 * [code-style-guide](code-style-guide.md) : Our coding style guide
+* [ai-policy](ai-policy.md) : Policies for use of AI in contributions
 * [submitting-changes](submitting-changes.md) : How to submit code changes
 * [commit-messages](commit-messages.md) : Conventions for commit messages
 * [backporting-guide](backporting-guide.md) : How to backport fixes

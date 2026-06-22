@@ -4,6 +4,7 @@ use strict;
 
 use Getopt::Long;
 use Pod::Usage;
+use File::Copy;
 use File::Path;
 use File::Temp;
 use File::Basename;
@@ -113,6 +114,9 @@ system("tar -cf $outDir/$name-src.tar -C $tempDir $name") == 0
 push @toCompress, "$outDir/$name-src.tar";
 
 if (!$noDocTarball) {
+    print "cp $tempDir/$name/LICENSE $tempDir/$name/doc/\n";
+    copy("$tempDir/$name/LICENSE", "$tempDir/$name/doc/")
+        or die "Unable to copy LICENSE file to doc directory: $!";
     print "cd $tempDir/$name && ./configure -q --enable-transarc-paths --disable-kernel-module";
     system ("cd $tempDir/$name && ./configure -q --enable-transarc-paths --disable-kernel-module") == 0
         or die "$!";

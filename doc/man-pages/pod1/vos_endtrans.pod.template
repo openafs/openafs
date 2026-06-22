@@ -109,5 +109,5 @@ L<vos_status(1)>
 Copyright 2009 Sine Nomine Associates
 
 This documentation is covered by the BSD License as written in the
-doc/LICENSE file. This man page was written by Andrew Deason for
+F<LICENSE> file. This man page was written by Andrew Deason for
 OpenAFS.

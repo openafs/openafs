@@ -58,6 +58,7 @@
 #include <rx/rxgk.h>
 #include <afs/rfc3961.h>
 #include <afs/opr.h>
+#include <opr/time.h>
 
 #include "rxgk_private.h"
 
@@ -703,7 +704,7 @@ struct seed_data {
  */
 afs_int32
 rxgk_derive_tk(rxgk_key *tk, rxgk_key k0, afs_uint32 epoch, afs_uint32 cid,
-	       rxgkTime start_time, afs_uint32 key_number)
+	       struct afs_time64 start_time, afs_uint32 key_number)
 {
     krb5_enctype enctype;
     krb5_data pre_key;
@@ -711,6 +712,7 @@ rxgk_derive_tk(rxgk_key *tk, rxgk_key k0, afs_uint32 epoch, afs_uint32 cid,
     struct seed_data seed;
     ssize_t ell;
     afs_int32 ret;
+    afs_int64 start_ticks;
 
     memset(&pre_key, 0, sizeof(pre_key));
     memset(&seed, 0, sizeof(seed));
@@ -723,8 +725,10 @@ rxgk_derive_tk(rxgk_key *tk, rxgk_key k0, afs_uint32 epoch, afs_uint32 cid,
 
     seed.epoch = htonl(epoch);
     seed.cid = htonl(cid);
-    seed.time_hi = htonl((afs_int32)(start_time / ((afs_int64)1 << 32)));
-    seed.time_lo = htonl((afs_uint32)(start_time & (afs_uint64)0xffffffffu));
+
+    start_ticks = opr_time64_toTicks(start_time);
+    seed.time_hi = htonl((afs_int32)(start_ticks / ((afs_int64)1 << 32)));
+    seed.time_lo = htonl((afs_uint32)(start_ticks & (afs_uint64)0xffffffffu));
     seed.key_number = htonl(key_number);
 
     pre_key.data = rxi_Alloc(ell);

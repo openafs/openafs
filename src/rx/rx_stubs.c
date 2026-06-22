@@ -52,7 +52,7 @@
 
 afs_int32
 rxgk_GetServerInfo(struct rx_connection *conn, RXGK_Level *level,
-		   rxgkTime *expiry, struct rx_identity **identity)
+		   struct afs_time64 *expiry, struct rx_identity **identity)
 {
     return EINVAL;
 }

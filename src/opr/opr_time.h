@@ -22,108 +22,328 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* This header provides routines for dealing with the 100ns based AFS
- * time type. We hide the actual variable behind a structure, so that
- * attempts to do
+/*
+ * This header provides routines for dealing with the 100ns-based 64-bit AFS
+ * time type, afs_time64. With this type, time is represented in units of
+ * 100ns, which we call "ticks". Absolute time is the same as with unix time
+ * (time since the unix epoch of 1 Jan 1970 UTC, skipping leap seconds), except
+ * represented in ticks instead of seconds. The count of ticks is always
+ * recorded in a signed 64-bit integer.
+ *
+ * The actual integer is hidden inside a structure, so that accidental
+ * assignment like this will fail during compilation:
  *
  *     time_t ourTime;
- *     opr_time theirTime;
+ *     struct afs_time64 theirTime;
  *
  *     ourTime = theirTime;
  *
- * will be caught by the compiler.
+ * Any callers can still easily access the underlying raw int64 by just looking
+ * at "theirTime.ticks" (but you generally should not do so; use the accessor
+ * functions in this header instead).
+ *
+ * A note on naming:
+ *
+ * Using 100ns units is a common way to represent time, although there is no
+ * universal standard term for the unit. We use the term "tick" for
+ * convenience, since otherwise it is awkward to refer to "100ns units"
+ * everywhere. Other systems use various terms for the unit:
+ *
+ * - Some Win32 and .NET interfaces use the term "tick" (such as
+ * DateTime.Ticks). However, other interfaces use the term "tick" to mean
+ * something else (such as Environment.TickCount, which uses 1ms ticks).
+ *
+ * - The D language and the reference implementation of NTP use the term
+ * "hectonanoseconds", abbreviated to "hnsecs" or "hns", and sometimes referred
+ * to as "hundreds of nanoseconds" with the same abbreviation.
+ *
+ * - VMS used the term "clunks" informally.
  */
 
 #ifndef OPENAFS_OPR_TIME_H
 #define OPENAFS_OPR_TIME_H
 
-struct opr_time {
-    afs_int64 time;
-};
+#include <afs/opr.h>
+#if defined(KERNEL) && !defined(UKERNEL)
+# include "afs/sysincludes.h"
+#else
+# include <errno.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+# include <sys/time.h>
+# include <time.h>
+#endif
 
-#define OPR_TIME_INIT {0LL}
+#define OPR_TIME64_TICKS_PER_US    (10LL)
+#define OPR_TIME64_TICKS_PER_MS    (OPR_TIME64_TICKS_PER_US * 1000LL)
+#define OPR_TIME64_TICKS_PER_SEC   (OPR_TIME64_TICKS_PER_MS * 1000LL)
 
-static_inline void
-opr_time_FromSecs(struct opr_time *out, time_t in)
+#define OPR_TIME64_MAX_SECS  (922337203685LL)
+#define OPR_TIME64_MIN_SECS (-922337203685LL)
+
+#define OPR_TIME64_MAX_MICROSECS  (922337203685477580LL)
+#define OPR_TIME64_MIN_MICROSECS (-922337203685477580LL)
+
+#define OPR_TIME64_MAX_TICKS (0x7FFFFFFFFFFFFFFFLL)
+#define OPR_TIME64_MIN_TICKS (-OPR_TIME64_MAX_TICKS - 1)
+
+static_inline int
+opr_time64_cmp(struct afs_time64 t1, struct afs_time64 t2)
 {
-    out->time = ((afs_int64)in) * 10000000;
-}
-
-static_inline time_t
-opr_time_ToSecs(struct opr_time *in)
-{
-    return in->time/10000000;;
-}
-
-static_inline void
-opr_time_FromMsecs(struct opr_time *out, int msecs)
-{
-    out->time = ((afs_int64)msecs) * 10000;
+    if (t1.ticks > t2.ticks) {
+	return 1;
+    }
+    if (t1.ticks < t2.ticks) {
+	return -1;
+    }
+    return 0;
 }
 
 static_inline int
-opr_time_ToMsecs(struct opr_time *in)
+opr_time64_lt(struct afs_time64 t1, struct afs_time64 t2)
 {
-    return in->time/10000;
-}
-
-static_inline void
-opr_time_FromTimeval(struct opr_time *out, struct timeval *in)
-{
-    out->time = ((afs_int64)in->tv_sec) * 10000000 + in->tv_usec * 10;
-}
-
-static_inline void
-opr_time_ToTimeval(struct opr_time *in, struct timeval *out)
-{
-    out->tv_sec = in->time / 10000000;
-    out->tv_usec = (in->time / 10) % 1000000;
+    return opr_time64_cmp(t1, t2) < 0;
 }
 
 static_inline int
-opr_time_Now(struct opr_time *out)
+opr_time64_lteq(struct afs_time64 t1, struct afs_time64 t2)
+{
+    return opr_time64_cmp(t1, t2) <= 0;
+}
+
+static_inline int
+opr_time64_gt(struct afs_time64 t1, struct afs_time64 t2)
+{
+    return opr_time64_cmp(t1, t2) > 0;
+}
+
+static_inline int
+opr_time64_gteq(struct afs_time64 t1, struct afs_time64 t2)
+{
+    return opr_time64_cmp(t1, t2) >= 0;
+}
+static_inline int
+opr_time64_eq(struct afs_time64 t1, struct afs_time64 t2)
+{
+    return opr_time64_cmp(t1, t2) == 0;
+}
+
+/*
+ * *out = in + add
+ *
+ * If the result cannot be represented, return ERANGE.
+ */
+static_inline int
+opr_time64_add_safe(struct afs_time64 in, struct afs_time64 add,
+		    struct afs_time64 *out)
+{
+    if (in.ticks > 0 && add.ticks > 0) {
+	if (in.ticks > OPR_TIME64_MAX_TICKS - add.ticks) {
+	    return ERANGE;
+	}
+    }
+    if (in.ticks < 0 && add.ticks < 0) {
+	if (in.ticks < OPR_TIME64_MIN_TICKS - add.ticks) {
+	    return ERANGE;
+	}
+    }
+    out->ticks = in.ticks + add.ticks;
+    return 0;
+}
+
+/*
+ * Initialize an afs_time64 from the given number of ticks. This should not
+ * usually be necessary, except when decoding an afs_time64 from the net or
+ * from disk, etc. It is preferred to use this function instead of setting an
+ * afs_time64's ticks directly, to make it easier to track who is doing this if
+ * needed.
+ */
+static_inline struct afs_time64
+opr_time64_fromTicks(afs_int64 ticks)
+{
+    struct afs_time64 val;
+    val.ticks = ticks;
+    return val;
+}
+
+/*
+ * Initialize an afs_time64 from the given number of seconds. If the result
+ * cannot be represented as an afs_time64, return ERANGE.
+ */
+static_inline int
+opr_time64_fromSecs_safe(afs_int64 in, struct afs_time64 *out)
+{
+    if (in < OPR_TIME64_MIN_SECS || in > OPR_TIME64_MAX_SECS) {
+	return ERANGE;
+    }
+    out->ticks = in * OPR_TIME64_TICKS_PER_SEC;
+    return 0;
+}
+
+/*
+ * Same as opr_time64_fromSecs_safe(), but asserts on error. Do NOT use with
+ * untrusted data!
+ */
+static_inline struct afs_time64
+opr_time64_fromSecs(afs_int64 in)
+{
+    struct afs_time64 val;
+    opr_Verify(opr_time64_fromSecs_safe(in, &val) == 0);
+    return val;
+}
+
+static_inline int
+opr_time64_fromMicrosecs_safe(afs_int64 in, struct afs_time64 *out)
+{
+    if (in < OPR_TIME64_MIN_MICROSECS || in > OPR_TIME64_MAX_MICROSECS) {
+	return ERANGE;
+    }
+    out->ticks = in * OPR_TIME64_TICKS_PER_US;
+    return 0;
+}
+
+/*
+ * Similar to opr_time64_fromSecs_safe(), but the given time is given in
+ * seconds and microseconds.
+ *
+ * This doesn't take a struct timeval directly for convenience when we're
+ * dealing with timeval-like structs that aren't literally struct timeval
+ * (e.g., struct rx_clock, or some KERNEL environments).
+ */
+static_inline int
+opr_time64_fromTimeval_safe(afs_int64 sec, afs_int64 microsec,
+			    struct afs_time64 *out)
+{
+    int code;
+    struct afs_time64 val;
+    struct afs_time64 val_usec;
+
+    code = opr_time64_fromSecs_safe(sec, &val);
+    if (code != 0) {
+	return code;
+    }
+
+    code = opr_time64_fromMicrosecs_safe(microsec, &val_usec);
+    if (code != 0) {
+	return code;
+    }
+
+    return opr_time64_add_safe(val, val_usec, out);
+}
+
+/*
+ * Get the raw 'ticks' value from the given afs_time64. This should not
+ * usually be necessary, but it is preferred to use this over directly
+ * referencing the 'ticks' field, to make it easier to track who is using this
+ * and make it less likely to accidentally modify the 'ticks' field.
+ */
+static_inline afs_int64
+opr_time64_toTicks(struct afs_time64 in)
+{
+    return in.ticks;
+}
+
+/* 'long long' version of opr_time64_toTicks() for printf() convenience. */
+static_inline long long
+opr_time64_toTicksLL(struct afs_time64 in)
+{
+    return opr_time64_toTicks(in);
+}
+
+/*
+ * Convert the given afs_time64 time into whole seconds. This does not return
+ * errors, but is "safer" than opr_time64_toSecs() because the output argument
+ * prevents us from accidentally truncating the result in a 32-bit int.
+ */
+static_inline void
+opr_time64_toSecs_safe(struct afs_time64 in, afs_int64 *out)
+{
+    *out = in.ticks / OPR_TIME64_TICKS_PER_SEC;
+}
+
+/*
+ * More convenient form of opr_time64_toSecs_safe(), when we're sure the
+ * returned value will not be truncated and using opr_time64_toSecs_safe() is
+ * very cumbersome.
+ *
+ * In other words, this is okay:
+ *
+ *     if (opr_time64_toSecs(elapsed) > 5)
+ *
+ * But this is not, since the return value will be truncated:
+ *
+ *     afs_int32 secs = opr_time64_toSecs(elapsed);
+ *
+ * Try to use opr_time64_toSecs_safe() where possible instead.
+ */
+static_inline afs_int64
+opr_time64_toSecs(struct afs_time64 in)
+{
+    afs_int64 val;
+    opr_time64_toSecs_safe(in, &val);
+    return val;
+}
+
+/*
+ * Same as opr_time64_toSecs_safe(), but converts the time into seconds
+ * represented by an afs_uint32. If the result cannot be represented as an
+ * afs_uint32, the returned value wraps around.
+ *
+ * That is: 2^32   -> 0
+ *	    2^32+1 -> 1
+ *	    -1	   -> 2^32-1
+ */
+static_inline void
+opr_time64_toUint32_wrap(struct afs_time64 in, afs_uint32 *out)
+{
+    static const afs_int64 limit = MAX_AFS_UINT32 + 1LL;
+    afs_int64 secs;
+    opr_time64_toSecs_safe(in, &secs);
+    *out = (secs % limit + limit) % limit;
+}
+
+#if !defined(KERNEL) || defined(UKERNEL)
+static_inline int
+opr_time64_now_safe(struct afs_time64 *out)
 {
     struct timeval tv;
-    int code;
-
-    code = gettimeofday(&tv, NULL);
-    if (code == 0)
-	opr_time_FromTimeval(out, &tv);
-
-    return code;
+    if (gettimeofday(&tv, NULL) != 0) {
+	/*
+	 * Even for _safe(), don't return an error. The only possible error is
+	 * maybe EFAULT; if that happens, that's basically a segfault, so act
+	 * like a segfault happened and crash.
+	 *
+	 * Do not call opr_Verify/opr_Assert, since opr_Assert calls this.
+	 */
+	opr_abort();
+	return EIO;
+    }
+    return opr_time64_fromTimeval_safe(tv.tv_sec, tv.tv_usec, out);
 }
 
-static_inline int
-opr_time_GreaterThan(struct opr_time *t1, struct opr_time *t2)
+# if defined(__GNUC__) && __GNUC__ <= 4
+/*
+ * gcc 4.8.8 has been seen to erroneously flag the return value from
+ * opr_time64_now() as maybe uninitialized. Work around it by always
+ * initializing the return value up front for older gcc, without sacrificing
+ * compiler uninitialized warnings on platforms or newer gcc.
+ */
+#  define WORKAROUND_WUNINITIALIZED
+# endif
+
+static_inline struct afs_time64
+opr_time64_now(void)
 {
-    return t1->time > t2->time;
+    struct afs_time64 now;
+# ifdef WORKAROUND_WUNINITIALIZED
+    now.ticks = 0;
+# endif
+
+    opr_Verify(opr_time64_now_safe(&now) == 0);
+    opr_Assert(now.ticks != 0);
+    return now;
 }
+#endif /* !KERNEL || UKERNEL */
 
-static_inline int
-opr_time_LessThan(struct opr_time *t1, struct opr_time *t2)
-{
-    return t1->time < t2->time;
-}
-
-static_inline void
-opr_time_Add(struct opr_time *t1, struct opr_time *t2)
-{
-    t1->time += t2->time;
-}
-
-static_inline void
-opr_time_Sub(struct opr_time *t1, struct opr_time *t2)
-{
-    t1->time -= t2->time;
-}
-
-static_inline void
-opr_time_AddMsec(struct opr_time *t1, int msec)
-{
-    struct opr_time t2;
-
-    opr_time_FromMsecs(&t2, msec);
-    opr_time_Add(t1, &t2);
-}
-
-#endif
+#endif /* OPENAFS_OPR_TIME_H */

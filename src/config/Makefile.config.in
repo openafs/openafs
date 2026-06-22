@@ -1,6 +1,7 @@
 #
 # Installation vars
 #
+PACKAGE_TARNAME=@PACKAGE_TARNAME@
 afsbackupdir=@afsbackupdir@
 afsbosconfigdir=@afsbosconfigdir@
 afsconfdir=@afsconfdir@
@@ -16,6 +17,7 @@ bindir=@bindir@
 exec_prefix=@exec_prefix@
 datarootdir=@datarootdir@
 datadir=@datadir@
+docdir=@docdir@
 includedir=@includedir@
 libdir=@libdir@
 libexecdir=@libexecdir@
@@ -24,7 +26,7 @@ mandir=@mandir@
 prefix=@prefix@
 sbindir=@sbindir@
 sysconfdir=@sysconfdir@
-viceetcdir=@viceetcdir@/
+viceetcdir=@viceetcdir@
 top_builddir=@top_builddir@
 
 
@@ -100,7 +102,6 @@ REGEX_OBJ = @REGEX_OBJ@
 REGEX_OBJ_PIC = @REGEX_OBJ_PIC@
 RM = @RM@
 RXDEBUG = @RXDEBUG@
-RXGK_GSSAPI_LIBS = @RXGK_GSSAPI_LIBS@
 ROKEN_HEADERS = @ROKEN_HEADERS@
 ROKEN_LTLIBOBJS = @LTLIBOBJS@
 SED = @SED@

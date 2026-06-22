@@ -804,3 +804,68 @@ ensures the client is aware of the new read-only replicas.
 ```sh
 /opt/openafs/bin/fs checkvolumes
 ```
+
+At this point you should have an operational OpenAFS cell running on your development
+machine.  You should be able to access files in the `/afs/example.com/` namespace
+(or the name of the cell you setup).  You should be able to use `kinit` and `aklog` to acquire
+a Kerberos ticket and OpenAFS token for the admin principal, and use that to create new
+users, and to create and mount OpenAFS volumes.
+
+### Shutting down
+
+Since this guide shows how to run the servers and clients manually (instead of
+setting up systemd units, or some other initialization system), you will need
+to shutdown the servers and clients manually.
+
+#### Shutting down the client (cache manager)
+
+Be sure no processes are currently using the `/afs` filesystem directory.  The
+`lsof` command can be useful to find processes with open files.
+
+Run the following command to umount the `/afs` filesystem,
+
+```sh
+sudo /usr/bin/umount /afs
+```
+
+Unload the OpenAFS kernel module. The command to run will depend on your OS.
+On Linux systems, run `rmmod` to unload the OpenAFS kernel module.
+
+```sh
+sudo /usr/sbin/rmmod openafs
+```
+
+#### Shutting down the servers
+
+Run the following command to shutdown the OpenAFS fileserver and database server
+processes.
+
+```sh
+sudo /opt/openafs/bin/bos shutdown -server localhost -localauth
+```
+
+Verify the processes have stopped,
+
+```sh
+sudo /opt/openafs/bin/bos status -server localhost -localauth
+```
+
+Example output:
+
+```
+$ sudo /opt/openafs/bin/bos status -server localhost -localauth
+Instance ptserver, temporarily disabled, currently shutdown.
+Instance vlserver, temporarily disabled, currently shutdown.
+Instance dafs, temporarily disabled, currently shutdown.
+    Auxiliary status is: file server shut down.
+```
+
+Stop the `bosserver` process,
+
+```sh
+sudo pkill bosserver
+```
+
+At this point the client and server processes should be stopped.  The binaries
+and configuration can be updated, and the client and servers can be started
+again.

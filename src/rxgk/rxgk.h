@@ -49,25 +49,6 @@
 #include <rx/rx_opaque.h>
 #include <rx/rx_identity.h>
 
-/* rxgkTime is defined in rxgk_int.xg. rxgkTime values are unix timestamps, but
- * in 100-nanosecond units. */
-
-/* Helpers to avoid having to count zeros. */
-static_inline rxgkTime secondsToRxgkTime(afs_uint64 seconds) {
-    return seconds * (rxgkTime)10000000;
-}
-static_inline afs_uint64 rxgkTimeToSeconds(rxgkTime atime) {
-    return (afs_uint64)atime / 10000000;
-}
-
-/** Get the current timestamp as an rxgkTime. */
-static_inline rxgkTime RXGK_NOW(void)
-{
-    struct timeval tv;
-    osi_GetTime(&tv);
-    return secondsToRxgkTime(tv.tv_sec) + (rxgkTime)tv.tv_usec * 10;
-}
-
 typedef afs_int32 (*rxgk_getkey_func)(void *rock, afs_int32 *kvno,
 				      afs_int32 *enctype, rxgk_key *key);
 
@@ -79,7 +60,8 @@ typedef afs_int32 (*rxgk_getkey_func)(void *rock, afs_int32 *kvno,
 struct rx_securityClass * rxgk_NewServerSecurityObject(void *getkey_rock,
 						       rxgk_getkey_func getkey);
 afs_int32 rxgk_GetServerInfo(struct rx_connection *conn, RXGK_Level *level,
-			     rxgkTime *expiry, struct rx_identity **identity);
+			     struct afs_time64 *expiry,
+			     struct rx_identity **identity);
 
 /* rxgk_client.c */
 struct rx_securityClass *rxgk_NewClientSecurityObject(RXGK_Level level,
@@ -103,7 +85,7 @@ afs_int32 rxgk_encrypt_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
 afs_int32 rxgk_decrypt_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
 			      RXGK_Data *out) AFS_NONNULL();
 afs_int32 rxgk_derive_tk(rxgk_key *tk, rxgk_key k0, afs_uint32 epoch,
-			 afs_uint32 cid, rxgkTime start_time,
+			 afs_uint32 cid, struct afs_time64 start_time,
 			 afs_uint32 key_number) AFS_NONNULL();
 afs_int32 rxgk_cipher_expansion(rxgk_key k0, afs_uint32 *len_out) AFS_NONNULL();
 afs_int32 rxgk_nonce(RXGK_Data *nonce, afs_uint32 len) AFS_NONNULL();

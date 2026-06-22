@@ -200,7 +200,12 @@ xdr_char(XDR * xdrs, char *sp)
     switch (xdrs->x_op) {
 
     case XDR_ENCODE:
-	l = (afs_int32) * sp;
+	/*
+	 * Note that 'signed char' is not the same as 'char'! The cast here is
+	 * necessary when 'char' is unsigned (for example, with
+	 * CFLAGS=-funsigned-char).
+	 */
+	l = (afs_int32)(signed char)*sp;
 	return (XDR_PUTINT32(xdrs, &l));
 
     case XDR_DECODE:
@@ -337,6 +342,15 @@ xdr_enum(XDR * xdrs, enum_t * ep)
      */
 
     return (xdr_int(xdrs, ep));
+}
+
+/*
+ * XDR 64-bit afs time
+ */
+bool_t
+xdr_afs_time64(XDR *xdrs, struct afs_time64 *objp)
+{
+    return xdr_afs_int64(xdrs, &objp->ticks);
 }
 
 /*

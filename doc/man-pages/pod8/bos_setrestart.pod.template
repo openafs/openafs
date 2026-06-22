@@ -122,30 +122,7 @@ Sets the general restart time.
 
 Sets the binary restart time.
 
-=item B<-cell> <I<cell name>>
-
-Names the cell in which to run the command. Do not combine this argument
-with the B<-localauth> flag. For more details, see L<bos(8)>.
-
-=item B<-noauth>
-
-Assigns the unprivileged identity C<anonymous> to the issuer. Do not
-combine this flag with the B<-localauth> flag. For more details, see
-L<bos(8)>.
-
-=item B<-localauth>
-
-Constructs a server ticket using a key from the local
-F<{{ afsconfdir }}/KeyFile> or F<{{ afsconfdir }}/KeyFileExt> file.
-The B<bos> command interpreter presents the
-ticket to the BOS Server during mutual authentication. Do not combine this
-flag with the B<-cell> or B<-noauth> options. For more details, see
-L<bos(8)>.
-
-=item B<-help>
-
-Prints the online help for this command. All other valid options are
-ignored.
+=include fragments/bos-options.pod
 
 =back
 

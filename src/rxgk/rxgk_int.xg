@@ -14,7 +14,7 @@ prefix S
 
 /* General values */
 
-typedef afs_int64 rxgkTime;
+typedef struct afs_time64 rxgkTime;
 
 /* key usage values */
 const RXGK_CLIENT_ENC_PACKET            = 1026;

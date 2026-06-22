@@ -7,7 +7,7 @@
 /jhash-t
 /queues-t
 /rbtree-t
-/time-t
+/time64-t
 /uuid-t
 /softsig-helper
 /cache-t

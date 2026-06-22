@@ -76,12 +76,18 @@ generated: force buildtools
 
 install: all install_dirs
 	$(MAKE) build COMPILE_PART2B=install
+	$(INSTALL) -d $(DESTDIR)$(docdir)
+	$(INSTALL_DATA) $(srcdir)/LICENSE $(DESTDIR)$(docdir)/LICENSE
 
 install_nolibafs: all_nolibafs install_dirs
 	$(MAKE) build TARGET=finale_nolibafs COMPILE_PART2B=install
+	$(INSTALL) -d $(DESTDIR)$(docdir)
+	$(INSTALL_DATA) $(srcdir)/LICENSE $(DESTDIR)$(docdir)/LICENSE
 
 install_only_libafs: only_libafs install_dirs
 	$(MAKE) build TARGET=libafs COMPILE_PART2B=install
+	$(INSTALL) -d $(DESTDIR)$(docdir)
+	$(INSTALL_DATA) $(srcdir)/LICENSE $(DESTDIR)$(docdir)/LICENSE
 
 dest: all dest_dirs
 	$(MAKE) build COMPILE_PART2B=dest
@@ -943,6 +949,7 @@ distclean: clean
 	tests/cmd/Makefile \
 	tests/common/Makefile \
 	tests/rx/Makefile \
+	tests/rxgk/Makefile \
 	tests/opr/Makefile \
 	tests/util/Makefile \
 	tests/volser/Makefile \

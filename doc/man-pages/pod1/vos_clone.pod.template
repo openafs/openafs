@@ -136,5 +136,5 @@ L<vos_shadow(1)>
 Copyright 2008 Jason Edgecombe <jason@rampaginggeek.com>
 
 This documentation is covered by the BSD License as written in the
-doc/LICENSE file. This man page was written by Jason Edgecombe for
+F<LICENSE> file. This man page was written by Jason Edgecombe for
 OpenAFS.

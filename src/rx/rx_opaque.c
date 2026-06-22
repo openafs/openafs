@@ -31,6 +31,7 @@
 # include "afs/sysincludes.h"
 # include "afsincludes.h"
 #endif
+#include <afs/opr.h>
 
 #include <rx/rx.h>
 #include <rx/rx_opaque.h>
@@ -204,4 +205,120 @@ rx_opaque_zeroFree(struct rx_opaque **a_buf)
 
     rx_opaque_zeroFreeContents(buf);
     rxi_Free(buf, sizeof(*buf));
+}
+
+/*!
+ * Compare two opaque objects.
+ *
+ * Like memcmp(), but compares two opaque objects. If the two objects are of
+ * different length, we compare the memory in the first
+ * min(buf_a->len, buf_b->len) bytes. If the memory is the same, then the
+ * greater opaque object is the one with the greater length.
+ *
+ * Note that 'val' must be non-NULL for each opaque if the opaque's 'len' is
+ * non-zero; there is no special handling for NULL. If 'val' is NULL for a
+ * non-zero 'len', this function will assert. But NULL is okay for a 0-length
+ * opaque.
+ *
+ * @retval 0	The given opaque objects are equal.
+ * @retval -1	buf_a is less than buf_b.
+ * @retval 1	buf_a is greater than buf_b.
+ */
+int
+rx_opaque_cmp(const struct rx_opaque *buf_a, const struct rx_opaque *buf_b)
+{
+    size_t len = opr_min(buf_a->len, buf_b->len);
+
+    if (len > 0) {
+	int diff;
+
+	osi_Assert(buf_a->val != NULL);
+	osi_Assert(buf_b->val != NULL);
+
+	diff = memcmp(buf_a->val, buf_b->val, len);
+	if (diff < 0) {
+	    return -1;
+	}
+	if (diff > 0) {
+	    return 1;
+	}
+    }
+
+    if (buf_a->len < buf_b->len) {
+	return -1;
+    }
+    if (buf_a->len > buf_b->len) {
+	return 1;
+    }
+    return 0;
+}
+
+/*!
+ * Format an opaque object into a human-readable string.
+ *
+ * For example, given an opaque object like this:
+ *
+ * struct rx_opaque buf = {
+ *     .len = 4,
+ *     .val = "\xde\xad\xbe\xef",
+ * }
+ *
+ * You can print that opaque like this:
+ *
+ * struct rx_opaque_stringbuf strbuf;
+ * printf("%s\n", rx_opaque_stringify(&buf, &strbuf));
+ *
+ * That prints the string "4:deadbeef". The buffer has an arbitrary limit; if
+ * the opaque data is too big to be formatted into the buffer, the hex data
+ * will be silently truncated, but the truncation is noticeable since the
+ * length is printed separately.
+ *
+ * Do NOT use this function to fully identify an opaque (for example, to
+ * compare two opaques); the stringification is a convenience for developers,
+ * for use in debug messages and unit tests and such.
+ *
+ * @param buf
+ *	The opaque object
+ * @param strbuf
+ *	Storage space for the formatted buffer
+ * @returns
+ *	A char* pointer to the given strbuf
+ */
+char *
+rx_opaque_stringify(const struct rx_opaque *buf, struct rx_opaque_stringbuf *strbuf)
+{
+    char *str = &strbuf->sbuf[0];
+    size_t remain = sizeof(*strbuf) - 1;
+    int byte_i;
+    int nbytes;
+
+    memset(strbuf, 0, sizeof(*strbuf));
+
+    nbytes = snprintf(str, remain, "%ld:", (long)buf->len);
+    if (nbytes >= remain) {
+	goto done;
+    }
+
+    str += nbytes;
+    remain -= nbytes;
+
+    if (buf->val == NULL) {
+	snprintf(str, remain, "(null)");
+	goto done;
+    }
+
+    for (byte_i = 0; byte_i < buf->len; byte_i++) {
+	unsigned char byte = ((unsigned char*)buf->val)[byte_i];
+
+	nbytes = snprintf(str, remain, "%02x", byte);
+	if (nbytes >= remain) {
+	    goto done;
+	}
+
+	str += nbytes;
+	remain -= nbytes;
+    }
+
+ done:
+    return &strbuf->sbuf[0];
 }

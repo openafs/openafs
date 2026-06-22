@@ -950,7 +950,11 @@ AC_DEFUN([LINUX_NEED_CUSTOM_WRITE_CACHE_PAGES], [
   AC_CHECK_LINUX_BUILD([whether we need our own write_cache_pages],
 		       [ac_cv_linux_need_custom_write_cache_pages],
 		       [[#include <linux/pagemap.h>
-			 #include <linux/pagevec.h>
+		         #if defined(HAVE_LINUX_FOLIO_BATCH_H)
+			 # include <linux/folio_batch.h>
+			 #else
+			 # include <linux/pagevec.h>
+			 #endif
 			 #include <linux/version.h>
 			 static void write_cache_pages(void *x) {return;}]],
 		       [[struct folio_batch fbatch;

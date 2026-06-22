@@ -38,6 +38,7 @@
 #include <afs/stds.h>
 
 #include <afs/opr.h>
+#include <opr/time.h>
 
 /* OS-specific system headers go here */
 
@@ -92,6 +93,7 @@ rxgk_NewClientConnection(struct rx_securityClass *aobj,
 {
     struct rxgk_cconn *cc = NULL;
     struct rxgk_cprivate *cp;
+    int code;
 
     if (rx_GetSecurityData(aconn) != NULL)
 	goto error;
@@ -100,7 +102,12 @@ rxgk_NewClientConnection(struct rx_securityClass *aobj,
     cc = rxi_Alloc(sizeof(*cc));
     if (cc == NULL)
 	goto error;
-    cc->start_time = RXGK_NOW();
+
+    code = opr_time64_now_safe(&cc->start_time);
+    if (code != 0) {
+	goto error;
+    }
+
     /* Set the header and trailer size to be reserved for the security
      * class in each packet. */
     if (rxgk_security_overhead(aconn, cp->level, cp->k0) != 0)

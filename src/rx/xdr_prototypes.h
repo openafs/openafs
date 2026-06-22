@@ -51,6 +51,7 @@ extern bool_t xdr_short(XDR * xdrs, short *sp);
 extern bool_t xdr_u_short(XDR * xdrs, u_short * usp);
 extern bool_t xdr_bool(XDR * xdrs, bool_t * bp);
 extern bool_t xdr_enum(XDR * xdrs, enum_t * ep);
+extern bool_t xdr_afs_time64(XDR * xdrs, struct afs_time64 *objp);
 extern bool_t xdr_opaque(XDR * xdrs, caddr_t cp, u_int cnt);
 extern bool_t xdr_bytes(XDR * xdrs, char **cpp,
 			u_int * sizep, u_int maxsize);
