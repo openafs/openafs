@@ -587,7 +587,7 @@ K  Building for legacy Transarc-style paths
 L  AFS sysnames
 
 An AFS sysname is a standardized identifier for a specific combination of a CPU
-architecture and operating system release. syname idendifiers are shared across
+architecture and operating system release. syname identifiers are shared across
 different AFS implementations and are historically tracked by a central
 registry (https://registrar.central.org).
 
