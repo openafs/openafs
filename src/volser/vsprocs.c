@@ -1357,6 +1357,75 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
 	}
     }
 
+    if (roserver != 0) {
+	/*
+	 * If the RO site to be converted exists in the VLDB, update it to
+	 * reflect its new role as an RW site.
+	 */
+	entry->serverFlags[roindex] = VLSF_RWVOL;
+
+	if (rwserver != 0) {
+	    /*
+	     * If the old RW was in the VLDB, remove it by decrementing the
+	     * number of servers, replacing the RW entry with the last entry,
+	     * and zeroing out the last entry.
+	     */
+	    int end_i = entry->nServers - 1;
+
+	    opr_Assert(entry->nServers > 0);
+
+	    if (rwindex != end_i) {
+		entry->serverNumber[rwindex] = entry->serverNumber[end_i];
+		entry->serverPartition[rwindex] = entry->serverPartition[end_i];
+		entry->serverFlags[rwindex] = entry->serverFlags[end_i];
+	    }
+	    entry->serverNumber[end_i] = 0;
+	    entry->serverPartition[end_i] = 0;
+	    entry->serverFlags[end_i] = 0;
+
+	    entry->nServers--;
+	}
+    } else if (rwserver != 0) {
+	/*
+	 * If the old RW was in the VLDB, change that entry to point to the
+	 * new RW.
+	 */
+	entry->serverNumber[rwindex] = server;
+	entry->serverPartition[rwindex] = partition;
+
+    } else {
+	/* Add the new RW site to the VLDB. */
+	int newindex;
+
+	if (entry->nServers >= NMAXNSERVERS) {
+	    fprintf(STDERR, "Failed to add RW site to VLDB entry for volume "
+		    "%lu; no available server slots\n", (unsigned long)volid);
+	    code = ENOSPC;
+	    goto error_exit;
+	}
+
+	newindex = entry->nServers;
+
+	entry->serverNumber[newindex] = server;
+	entry->serverPartition[newindex] = partition;
+	entry->serverFlags[newindex] = VLSF_RWVOL;
+
+	entry->nServers++;
+    }
+
+    entry->flags |= VLF_RWEXISTS;
+    entry->flags &= ~VLF_BACKEXISTS;
+    entry->flags &= ~VLF_ROEXISTS;
+
+    /* If any RO sites remain, make sure VLF_ROEXISTS is set. */
+    for (i = 0; i < entry->nServers; i++) {
+	if ((entry->serverFlags[i] & VLSF_ROVOL) != 0 &&
+	    (entry->serverFlags[i] & (VLSF_DONTUSE | VLSF_NEWREPSITE)) == 0) {
+	    entry->flags |= VLF_ROEXISTS;
+	    break;
+	}
+    }
+
     aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
     code = AFSVolConvertROtoRWvolume(aconn, partition, volid);
     if (code) {
@@ -1366,48 +1435,7 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
 	PrintError("convertROtoRW ", code);
 	goto error_exit;
     }
-    /* Update the VLDB to match what we did on disk as much as possible.  */
-    /* If the converted RO was in the VLDB, make it look like the new RW. */
-    if (roserver) {
-	entry->serverFlags[roindex] = VLSF_RWVOL;
-    } else {
-	/* Add a new site entry for the newly created RW.  It's possible
-	 * (but unlikely) that we are already at MAXNSERVERS and that this
-	 * new site will invalidate the whole VLDB entry;  however,
-	 * VLDB_ReplaceEntry will detect this and return VL_BADSERVER,
-	 * so we need no extra guard logic here.
-	 */
-	afs_int32 newrwindex = entry->nServers;
-	(entry->nServers)++;
-	entry->serverNumber[newrwindex] = server;
-	entry->serverPartition[newrwindex] = partition;
-	entry->serverFlags[newrwindex] = VLSF_RWVOL;
-    }
-    entry->flags |= VLF_RWEXISTS;
-    entry->flags &= ~VLF_BACKEXISTS;
 
-    /* if the old RW was in the VLDB, remove it by decrementing the number */
-    /* of servers, replacing the RW entry with the last entry, and zeroing */
-    /* out the last entry. */
-    if (rwserver) {
-	(entry->nServers)--;
-	if (rwindex != entry->nServers) {
-	    entry->serverNumber[rwindex] = entry->serverNumber[entry->nServers];
-	    entry->serverPartition[rwindex] =
-		entry->serverPartition[entry->nServers];
-	    entry->serverFlags[rwindex] = entry->serverFlags[entry->nServers];
-	    entry->serverNumber[entry->nServers] = 0;
-	    entry->serverPartition[entry->nServers] = 0;
-	    entry->serverFlags[entry->nServers] = 0;
-	}
-    }
-    entry->flags &= ~VLF_ROEXISTS;
-    for (i = 0; i < entry->nServers; i++) {
-	if (entry->serverFlags[i] & VLSF_ROVOL) {
-	    if (!(entry->serverFlags[i] & (VLSF_DONTUSE | VLSF_NEWREPSITE)))
-		entry->flags |= VLF_ROEXISTS;
-	}
-    }
     MapNetworkToHost(entry, &storeEntry);
     code =
 	VLDB_ReplaceEntry(entry->volumeId[RWVOL], RWVOL, &storeEntry,
