@@ -685,13 +685,13 @@ VolClone(struct rx_call *acid, afs_int32 atrans, VolumeId purgeId,
 	Log("%s on %s is executing Clone Volume new name=%s\n", caller,
 	    callerAddress(acid, buffer), newName);
     }
-    error = 0;
     purgevp = (Volume *) 0;
     newvp = (Volume *) 0;
     tt = ttc = (struct volser_trans *)0;
 
     if (!newNumber || !*newNumber) {
 	Log("1 Volser: Clone: missing volume number for the clone; aborted\n");
+	error = EINVAL;
 	goto fail;
     }
     newId = *newNumber;
@@ -711,7 +711,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, VolumeId purgeId,
     }
     TSetRxCall(tt, acid, "Clone");
 
-
+    error = 0;
     if (purgeId) {
 	purgevp = VAttachVolume_retry(&error, purgeId, V_VOLUPD);
 	if (error) {
