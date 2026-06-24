@@ -1,0 +1,107 @@
+=head1 NAME
+
+fs_pathinfo - Shows data about every component of a path
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs pathinfo> S<<< [B<-path> <I<dir/file path>>+] >>> [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The fs pathinfo command displays the type of every component of a
+path. If a mount point, it shows which volume it references. If a symlink,
+it shows the target path or the volume it resolves to.
+
+This command walks in a given path, and resolves each prefix using the
+pioctl interface. It avoids running B<fs examine> and B<fs lsmount> on
+each component.
+
+=head1 CAUTIONS
+
+If a component doesn't exist, the command will just display "<component>
+does not exist" and continue.
+
+If the command is used outside AFS, it will walk the path and display the type
+of each entry.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-path> <I<dir/file path>>+
+
+Names each component for which to display information about
+itself. Partial pathnames are interpreted relative to the
+current working directory, which is also the default value if this
+argument is omitted.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output displays information about every component of a path,
+showing the type of items (mount point, symlink, directory, file)
+in the following format:
+
+    'component' is a (mount point|symlink|directory|file), <additional information corresponding to the type>
+
+One line like this appears per component in the path.
+
+=head1 EXAMPLES
+
+The pathinfo command can take multiple paths:
+
+    % fs pathinfo path1 path2 ...
+
+The following example shows a full path walk of the command on
+multiple types of items:
+
+    % fs pathinfo -path /afs/example.com/usr/smith/joeSymlink/smithSymlink/file
+    '/afs' is a directory
+    '/afs/example.com' is a mount point, for volume '#example.com:root.cell'
+    '/afs/example.com/usr' is a mount point, for volume '#usr'
+    '/afs/example.com/usr/smith' is a directory
+    '/afs/example.com/usr/smith/joeSymlink' is a symbolic link, leading to a mount point for volume '#joe'
+    '/afs/example.com/usr/smith/joeSymlink/smithSymlink' is a symbolic link, leading to a directory -> '/afs/example.com/usr/smith'
+    '/afs/example.com/usr/smith/joeSymlink/smithSymlink/file' is a regular file
+
+The following example shows the command used on a normal path:
+
+    % fs pathinfo /tmp/foo/bar
+    '/tmp' is a directory
+    '/tmp/foo' is a directory
+    '/tmp/foo/bar' is a regular file
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the C<l> (list) permission on the ACL of each directory
+that precedes the file or directory named by the B<-path> argument.
+
+=head1 SEE ALSO
+
+L<fs_listquota(1)>,
+L<fs_listcells(1)>,
+L<fs_examine(1)>,
+L<fs_lsmount(1)>,
+L<fs_whichcell(1)>,
+L<symlink(7)>
+
+=head1 COPYRIGHT
+
+Copyright 2026 Bastien Desert <bastien.desert@outlook.com>
+
+This documentation is covered by the IBM Public License Version 1.0.
+This man page was written by Bastien Desert for OpenAFS.
+
+=cut
