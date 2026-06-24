@@ -145,16 +145,16 @@ IDecProc(Inode adata, void *arock)
 }
 
 afs_int32
-DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
+DoCloneIndex(Volume * srcvp, Volume * clvp, VnodeClass class, int reclone)
 {
     afs_int32 code, error = 0;
-    FdHandle_t *rwFd = 0, *clFdIn = 0, *clFdOut = 0;
-    StreamHandle_t *rwfile = 0, *clfilein = 0, *clfileout = 0;
-    IHandle_t *rwH = 0, *clHin = 0, *clHout = 0;
+    FdHandle_t *srcFd = 0, *clFdIn = 0, *clFdOut = 0;
+    StreamHandle_t *srcfile = 0, *clfilein = 0, *clfileout = 0;
+    IHandle_t *srcH = 0, *clHin = 0, *clHout = 0;
     char buf[SIZEOF_LARGEDISKVNODE], dbuf[SIZEOF_LARGEDISKVNODE];
-    struct VnodeDiskObject *rwvnode = (struct VnodeDiskObject *)buf;
+    struct VnodeDiskObject *srcvnode = (struct VnodeDiskObject *)buf;
     struct VnodeDiskObject *clvnode = (struct VnodeDiskObject *)dbuf;
-    Inode rwinode = 0;
+    Inode srcinode = 0;
     Inode clinode;
     struct clone_head decHead;
     struct clone_rock decRock;
@@ -169,31 +169,31 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
      * have no useful way to know in the volserver.
      * This doesn't make client data mutable.
      */
-    int ReadWriteOriginal = 1;
+    int SrcMetadataMutable = 1;
 
     /* Correct number of files in volume: this assumes indexes are always
        cloned starting with vLarge */
-    if (ReadWriteOriginal && class != vLarge) {
-	filecount = V_filecount(rwvp);
-	diskused = V_diskused(rwvp);
+    if (SrcMetadataMutable && class != vLarge) {
+	filecount = V_filecount(srcvp);
+	diskused = V_diskused(srcvp);
     }
 
     /* Initialize list of inodes to nuke - must do this before any calls
      * to ERROR_EXIT, as the error handler requires an initialised list
      */
     ci_InitHead(&decHead);
-    decRock.h = V_linkHandle(rwvp);
-    decRock.vol = V_parentId(rwvp);
+    decRock.h = V_linkHandle(srcvp);
+    decRock.vol = V_parentId(srcvp);
 
-    /* Open the RW volume's index file and seek to beginning */
-    IH_COPY(rwH, rwvp->vnodeIndex[class].handle);
-    rwFd = IH_OPEN(rwH);
-    if (!rwFd)
+    /* Open the source volume's index file and seek to beginning */
+    IH_COPY(srcH, srcvp->vnodeIndex[class].handle);
+    srcFd = IH_OPEN(srcH);
+    if (!srcFd)
 	ERROR_EXIT(EIO);
-    rwfile = FDH_FDOPEN(rwFd, ReadWriteOriginal ? "r+" : "r");
-    if (!rwfile)
+    srcfile = FDH_FDOPEN(srcFd, SrcMetadataMutable ? "r+" : "r");
+    if (!srcfile)
 	ERROR_EXIT(EIO);
-    STREAM_ASEEK(rwfile, vcp->diskSize);	/* Will fail if no vnodes */
+    STREAM_ASEEK(srcfile, vcp->diskSize);	/* Will fail if no vnodes */
 
     /* Open the clone volume's index file and seek to beginning */
     IH_COPY(clHout, clvp->vnodeIndex[class].handle);
@@ -222,9 +222,9 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	STREAM_ASEEK(clfilein, vcp->diskSize);	/* Will fail if no vnodes */
     }
 
-    /* Read each vnode in the old volume's index file */
+    /* Read each vnode in the source volume's index file */
     for (offset = vcp->diskSize;
-	 STREAM_READ(rwvnode, vcp->diskSize, 1, rwfile) == 1;
+	 STREAM_READ(srcvnode, vcp->diskSize, 1, srcfile) == 1;
 	 offset += vcp->diskSize) {
 	dircloned = inodeinced = 0;
 
@@ -238,68 +238,68 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	    clinode = 0;
 	}
 
-	if (rwvnode->type != vNull) {
+	if (srcvnode->type != vNull) {
 	    afs_fsize_t ll;
 
-	    if (rwvnode->vnodeMagic != vcp->magic)
+	    if (srcvnode->vnodeMagic != vcp->magic)
 		ERROR_EXIT(-1);
-	    rwinode = VNDISK_GET_INO(rwvnode);
+	    srcinode = VNDISK_GET_INO(srcvnode);
 	    filecount++;
-	    VNDISK_GET_LEN(ll, rwvnode);
+	    VNDISK_GET_LEN(ll, srcvnode);
 	    diskused += nBlocks(ll);
 
 	    /* Increment the inode if not already */
-	    if (clinode && (clinode == rwinode)) {
+	    if (clinode && (clinode == srcinode)) {
 		clinode = 0;	/* already cloned - don't delete later */
-	    } else if (rwinode) {
-		if (IH_INC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
+	    } else if (srcinode) {
+		if (IH_INC(V_linkHandle(srcvp), srcinode, V_parentId(srcvp)) ==
 		    -1) {
 		    Log("IH_INC failed: %p, %s, %" AFS_VOLID_FMT " errno %d\n",
-			V_linkHandle(rwvp), PrintInode(stmp, rwinode),
-			afs_printable_VolumeId_lu(V_parentId(rwvp)), errno);
-		    VForceOffline(rwvp);
+			V_linkHandle(srcvp), PrintInode(stmp, srcinode),
+			afs_printable_VolumeId_lu(V_parentId(srcvp)), errno);
+		    VForceOffline(srcvp);
 		    ERROR_EXIT(EIO);
 		}
 		inodeinced = 1;
 	    }
 
-	    /* If a directory, mark vnode in old volume as cloned */
-	    if ((rwvnode->type == vDirectory) && ReadWriteOriginal) {
-		rwvnode->cloned = 1;
-		code = STREAM_ASEEK(rwfile, offset);
+	    /* If a directory, mark vnode in source volume as cloned */
+	    if ((srcvnode->type == vDirectory) && SrcMetadataMutable) {
+		srcvnode->cloned = 1;
+		code = STREAM_ASEEK(srcfile, offset);
 		if (code == -1)
 		    goto clonefailed;
-		code = STREAM_WRITE(rwvnode, vcp->diskSize, 1, rwfile);
+		code = STREAM_WRITE(srcvnode, vcp->diskSize, 1, srcfile);
 		if (code != 1)
 		    goto clonefailed;
 		dircloned = 1;
-		code = STREAM_ASEEK(rwfile, offset + vcp->diskSize);
+		code = STREAM_ASEEK(srcfile, offset + vcp->diskSize);
 		if (code == -1)
 		    goto clonefailed;
 	    }
 	}
 
 	/* Overwrite the vnode entry in the clone volume */
-	rwvnode->cloned = 0;
-	code = STREAM_WRITE(rwvnode, vcp->diskSize, 1, clfileout);
+	srcvnode->cloned = 0;
+	code = STREAM_WRITE(srcvnode, vcp->diskSize, 1, clfileout);
 	if (code != 1) {
 	  clonefailed:
 	    /* Couldn't clone, go back and decrement the inode's link count */
 	    if (inodeinced) {
-		if (IH_DEC(V_linkHandle(rwvp), rwinode, V_parentId(rwvp)) ==
+		if (IH_DEC(V_linkHandle(srcvp), srcinode, V_parentId(srcvp)) ==
 		    -1) {
 		    Log("IH_DEC failed: %p, %s, %" AFS_VOLID_FMT " errno %d\n",
-			V_linkHandle(rwvp), PrintInode(stmp, rwinode),
-			afs_printable_VolumeId_lu(V_parentId(rwvp)), errno);
-		    VForceOffline(rwvp);
+			V_linkHandle(srcvp), PrintInode(stmp, srcinode),
+			afs_printable_VolumeId_lu(V_parentId(srcvp)), errno);
+		    VForceOffline(srcvp);
 		    ERROR_EXIT(EIO);
 		}
 	    }
 	    /* And if the directory was marked clone, unmark it */
 	    if (dircloned) {
-		rwvnode->cloned = 0;
-		if (STREAM_ASEEK(rwfile, offset) != -1)
-		    (void)STREAM_WRITE(rwvnode, vcp->diskSize, 1, rwfile);
+		srcvnode->cloned = 0;
+		if (STREAM_ASEEK(srcfile, offset) != -1)
+		    (void)STREAM_WRITE(srcvnode, vcp->diskSize, 1, srcfile);
 	    }
 	    ERROR_EXIT(EIO);
 	}
@@ -329,22 +329,22 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
      * and shouldn't do the idecs.
      */
   error_exit:
-    if (rwfile)
-	STREAM_CLOSE(rwfile);
+    if (srcfile)
+	STREAM_CLOSE(srcfile);
     if (clfilein)
 	STREAM_CLOSE(clfilein);
     if (clfileout)
 	STREAM_CLOSE(clfileout);
 
-    if (rwFd)
-	FDH_CLOSE(rwFd);
+    if (srcFd)
+	FDH_CLOSE(srcFd);
     if (clFdIn)
 	FDH_CLOSE(clFdIn);
     if (clFdOut)
 	FDH_CLOSE(clFdOut);
 
-    if (rwH)
-	IH_RELEASE(rwH);
+    if (srcH)
+	IH_RELEASE(srcH);
     if (clHout)
 	IH_RELEASE(clHout);
     if (clHin)
@@ -354,8 +354,8 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
      * since we were using stdio above, and don't know when the buffers
      * would otherwise be flushed.  There's no stdio fftruncate call.
      */
-    rwFd = IH_OPEN(clvp->vnodeIndex[class].handle);
-    if (rwFd == NULL) {
+    clFdOut = IH_OPEN(clvp->vnodeIndex[class].handle);
+    if (clFdOut == NULL) {
 	if (!error)
 	    error = EIO;
     } else {
@@ -364,11 +364,11 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	     * truncate the file to offset bytes.
 	     */
 	    if (reclone && !error) {
-		error = FDH_TRUNC(rwFd, offset);
+		error = FDH_TRUNC(clFdOut, offset);
 	    }
 	}
-	(void)FDH_SYNC(rwFd);
-	FDH_CLOSE(rwFd);
+	(void)FDH_SYNC(clFdOut);
+	FDH_CLOSE(clFdOut);
     }
 
     /* Now finally do the idec's.  At this point, all potential
@@ -381,10 +381,10 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 	error = code;
     ci_Destroy(&decHead);
 
-    if (ReadWriteOriginal && filecount > 0)
-	V_filecount(rwvp) = filecount;
-    if (ReadWriteOriginal && diskused > 0)
-	V_diskused(rwvp) = diskused;
+    if (SrcMetadataMutable && filecount > 0)
+	V_filecount(srcvp) = filecount;
+    if (SrcMetadataMutable && diskused > 0)
+	V_diskused(srcvp) = diskused;
     return error;
 }
 
