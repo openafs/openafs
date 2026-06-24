@@ -1901,7 +1901,7 @@ PathInfoCmd(struct cmd_syndesc *as, void *arock)
 
     		if(S_ISDIR(s.st_mode)) {
 				if (code == 0) {
-	    			printf("'%s' is a mount point for volume '%s'\n", component,
+	    			printf("'%s' is a mount point, for volume '%s'\n", component,
 		   			space);
 				}
 				else {
@@ -3862,8 +3862,8 @@ main(int argc, char **argv)
     ts = cmd_CreateSyntax("lsmount", ListMountCmd, NULL, 0, "list mount point");
     cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
 
-	ts = cmd_CreateSyntax("pathinfo", PathInfoCmd, NULL, 0, "grrrr paw");
-	cmd_AddParm(ts, "-dir", CMD_LIST, 0, "directory");
+	ts = cmd_CreateSyntax("pathinfo", PathInfoCmd, NULL, 0, "display each components' path status");
+	cmd_AddParm(ts, "-path", CMD_LIST, 0, "dir/file path");
 
     ts = cmd_CreateSyntax("mkmount", MakeMountCmd, NULL, 0, "make mount point");
     cmd_AddParm(ts, "-dir", CMD_SINGLE, 0, "directory");
