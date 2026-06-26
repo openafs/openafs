@@ -238,10 +238,10 @@ Cell.
 Summary:        DKMS-ready kernel source for AFS distributed filesystem
 Group:          Development/Kernel
 Provides:       openafs-kernel = %{version}
-Provides: %{name}-kmod = %{version}
+Provides:       %{name}-kmod = %{version}
 Requires(pre):  dkms, make, flex
 Requires(post): dkms
-Requires:	%{name}-kmod-common = %{version}
+Requires:       %{name}-kmod-common = %{version}
 
 %description -n dkms-%{name}
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -463,9 +463,9 @@ archlist=%{_arch}
 %endif
 
 config_opts="%{?_with_kauth:--enable-kauth} \
-	%{?_with_bitmap_later:--enable-bitmap-later} \
-	%{?_with_supergroups:--enable-supergroups} \
-	--enable-transarc-paths"
+        %{?_with_bitmap_later:--enable-bitmap-later} \
+        %{?_with_supergroups:--enable-supergroups} \
+        --enable-transarc-paths"
 
 # Configure AFS
 
@@ -512,12 +512,12 @@ export KRB5_CONFIG
        --disable-kernel-module \
 %endif
 %if %{krb5support}
-	--with-krb5 \
+       --with-krb5 \
 %endif
 %if 0%{?fedora} >= 15 || 0%{?rhel} >= 6 || 0%{?amzn} >= 1
-    --with-swig \
+       --with-swig \
 %else
-    --without-swig \
+       --without-swig \
 %endif
        $config_opts \
        || exit 1
@@ -554,17 +554,17 @@ for kvariant in %{kvariants} ; do
     cp -R libafs_tree _kmod_build_${kvariant}
     pushd _kmod_build_${kvariant}
     ./configure --with-afs-sysname=${sysname} \
-  	--prefix=%{_prefix} \
-	--libdir=%{_libdir} \
-	--bindir=%{_bindir} \
-	--sbindir=%{_sbindir} \
+        --prefix=%{_prefix} \
+        --libdir=%{_libdir} \
+        --bindir=%{_bindir} \
+        --sbindir=%{_sbindir} \
         --with-linux-kernel-packaging \
-	--with-linux-kernel-headers=${ksrc} \
+        --with-linux-kernel-headers=${ksrc} \
 %if %{krb5support}
-	--with-krb5 \
+        --with-krb5 \
 %endif
-	$config_opts \
-	|| exit 1
+        $config_opts \
+        || exit 1
     popd
   fi
 done
@@ -782,7 +782,7 @@ EOF
 #-----------------------------------------------------------------------------
 mkdir -p $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/src
 tar cf - -C libafs_tree . | \
-	tar xf - -C $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/src
+    tar xf - -C $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/src
 install -m 644 LICENSE $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.IBM
 install -m 644 src/packaging/RedHat/openafs-LICENSE.Sun $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.Sun
 install -m 644 src/packaging/RedHat/openafs-README $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsvers}/README
@@ -879,7 +879,7 @@ done
 ##############################################################################
 %clean
 [ "$RPM_BUILD_ROOT" != "/" -a "x%{debugspec}" != "x1" ] && \
-	rm -fr $RPM_BUILD_ROOT
+        rm -fr $RPM_BUILD_ROOT
 
 
 ##############################################################################
@@ -891,7 +891,7 @@ done
 
 %pre compat
 if [ -e %{_prefix}/afsws ]; then
-        /bin/rm -fr %{_prefix}/afsws
+    /bin/rm -fr %{_prefix}/afsws
 fi
 
 %post client
@@ -904,10 +904,10 @@ if [ $1 -eq 1 ] ; then
 fi
 %endif
 if [ ! -d /afs ]; then
-	mkdir /afs
-	chown root.root /afs
-	chmod 0755 /afs
-	[ -x /sbin/restorecon ] && /sbin/restorecon /afs
+    mkdir /afs
+    chown root.root /afs
+    chmod 0755 /afs
+    [ -x /sbin/restorecon ] && /sbin/restorecon /afs
 fi
 
 # Create the CellServDB
@@ -924,7 +924,7 @@ fi
 #on an upgrade, don't enable if we were disabled
 %if 0%{?fedora} < 15 && 0%{?rhel} < 7 && 0%{?amzn} < 1
 if [ $1 = 1 ] ; then
-  chkconfig --add openafs-server
+    chkconfig --add openafs-server
 fi
 %{initdir}/openafs-server condrestart
 %else
@@ -944,34 +944,34 @@ fi
 
 %preun
 if [ $1 = 0 ] ; then
-	[ -d /afs ] && rmdir /afs
-	:
+    [ -d /afs ] && rmdir /afs
+    :
 fi
 
 %preun client
 %if 0%{?fedora} < 15 && 0%{?rhel} < 7 && 0%{?amzn} < 1
 if [ $1 = 0 ] ; then
-        %{initdir}/openafs-client stop
-        chkconfig --del openafs-client
+    %{initdir}/openafs-client stop
+    chkconfig --del openafs-client
 fi
 %else
 if [ $1 -eq 0 ] ; then
-    	# Package removal, not upgrade
-    	/bin/systemctl --no-reload disable openafs-client.service > /dev/null 2>&1 || :
-    	/bin/systemctl stop openafs-client.service > /dev/null 2>&1 || :
+    # Package removal, not upgrade
+    /bin/systemctl --no-reload disable openafs-client.service > /dev/null 2>&1 || :
+    /bin/systemctl stop openafs-client.service > /dev/null 2>&1 || :
 fi
 %endif
 
 %preun server
 %if 0%{?fedora} < 15 && 0%{?rhel} < 7 && 0%{?amzn} < 1
 if [ $1 = 0 ] ; then
-        %{initdir}/openafs-server stop
-        chkconfig --del openafs-server
+    %{initdir}/openafs-server stop
+    chkconfig --del openafs-server
 fi
 %else
 if [ $1 -eq 0 ] ; then
-    	/bin/systemctl --no-reload disable openafs-server.service > /dev/null 2>&1 || :
-    	/bin/systemctl stop openafs-server.service > /dev/null 2>&1 || :
+    /bin/systemctl --no-reload disable openafs-server.service > /dev/null 2>&1 || :
+    /bin/systemctl stop openafs-server.service > /dev/null 2>&1 || :
 fi
 %endif
 
