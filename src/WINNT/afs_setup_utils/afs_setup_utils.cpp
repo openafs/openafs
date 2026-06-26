@@ -685,7 +685,7 @@ static char *GetTimeStamp()
     _strtime(szTime);
     _strdate(szDate);
 
-    sprintf(szTimeDate, "[%s %s] ", szTime, szDate);
+    snprintf(szTimeDate, sizeof(szTimeDate), "[%s %s] ", szTime, szDate);
 
     return szTimeDate;
 }
@@ -742,18 +742,21 @@ static void ShowError(UINT nResID, LONG nError)
     char *psz;
 
     psz = LoadResString(nResID);
-    if (psz)
-        strcpy(szErr, psz);
-    else
-        sprintf(szErr, "unknown error msg (Msg ID = %d)", nResID);
+    if (psz) {
+        strncpy(szErr, psz, sizeof(szErr) - 1);
+        szErr[sizeof(szErr) - 1] = '\0';
+    } else
+        snprintf(szErr, sizeof(szErr), "unknown error msg (Msg ID = %d)", nResID);
 
     psz = LoadResString(IDS_INSTALLATION_FAILURE);
-    strcpy(szPrompt, psz ? psz : "An error has occurred:  %s (Last Error = %ld).");
+    strncpy(szPrompt, psz ? psz : "An error has occurred:  %s (Last Error = %ld).", sizeof(szPrompt) - 1);
+    szPrompt[sizeof(szPrompt) - 1] = '\0';
 
-    sprintf(szMsg, szPrompt, szErr, nError);
+    snprintf(szMsg, sizeof(szMsg), szPrompt, szErr, nError);
 
     psz = LoadResString(IDS_TITLE);
-    strcpy(szTitle, psz ? psz : "AFS");
+    strncpy(szTitle, psz ? psz : "AFS", sizeof(szTitle) - 1);
+    szTitle[sizeof(szTitle) - 1] = '\0';
 
     if (bSilentMode)
         WriteToUninstallErrorLog(szMsg);
@@ -767,7 +770,8 @@ static int ShowMsg(UINT nResID, int nType)
     char *psz;
 
     psz = LoadResString(IDS_TITLE);
-    strcpy(szTitle, psz ? psz : "AFS");
+    strncpy(szTitle, psz ? psz : "AFS", sizeof(szTitle) - 1);
+    szTitle[sizeof(szTitle) - 1] = '\0';
 
     return MessageBox(hDlg, LoadResString(nResID), szTitle, nType);
 }
@@ -1088,7 +1092,8 @@ static void RemoveFiles(char *pszFileSpec)
     char szDir[MAX_PATH];
     char *p;
 
-    strcpy(szDir, pszFileSpec);
+    strncpy(szDir, pszFileSpec, sizeof(szDir) - 1);
+    szDir[sizeof(szDir) - 1] = '\0';
     p = strrchr(szDir, '\\');
     if (p)
         *p = 0;
@@ -1099,7 +1104,7 @@ static void RemoveFiles(char *pszFileSpec)
 
     while (1) {
         if ((strcmp(fileinfo.name, ".") != 0) && (strcmp(fileinfo.name, "..") != 0)) {
-            sprintf(szDel, "%s\\%s", szDir, fileinfo.name);
+            snprintf(szDel, sizeof(szDel), "%s\\%s", szDir, fileinfo.name);
             DeleteFile(szDel);
         }
 
@@ -1114,7 +1119,7 @@ static void RemoveDir(char *pszDir)
 {
     char szFileSpec[MAX_PATH];
 
-    sprintf(szFileSpec, "%s\\*.*", pszDir);
+    snprintf(szFileSpec, sizeof(szFileSpec), "%s\\*.*", pszDir);
 
     RemoveFiles(szFileSpec);
     RemoveDirectory(pszDir);
@@ -1175,7 +1180,8 @@ static char *GetRootInstallDir()
     static char szRootInstallDir[MAX_PATH] = "";
 
     if (szRootInstallDir[0] == 0) {
-        strcpy(szRootInstallDir, pszInstallDir);
+        strncpy(szRootInstallDir, pszInstallDir, sizeof(szRootInstallDir) - 1);
+        szRootInstallDir[sizeof(szRootInstallDir) - 1] = '\0';
 
         // Strip off the app specific part of the install dir
         psz = strrchr(szRootInstallDir, '\\');
@@ -1304,19 +1310,25 @@ static char *ExpandPath(char *pszFile)
     // real path in the file system.  One of these MUST be the start of
     // the file path passed in.  Also convert the string ???? to an
     // actual locale number.
-    if (strncmp(pszFile, TARGETDIR, strlen(TARGETDIR)) == 0)
-        strcpy(szPath, GetRootInstallDir());
-    else if (strncmp(pszFile, WINDIR, strlen(WINDIR)) == 0)
-        strcpy(szPath, GetWinDir());
-    else if (strncmp(pszFile, WINSYSDIR, strlen(WINSYSDIR)) == 0)
-        strcpy(szPath, GetWinSysDir());
+    if (strncmp(pszFile, TARGETDIR, strlen(TARGETDIR)) == 0) {
+        strncpy(szPath, GetRootInstallDir(), sizeof(szPath) - 1);
+        szPath[sizeof(szPath) - 1] = '\0';
+    } else if (strncmp(pszFile, WINDIR, strlen(WINDIR)) == 0) {
+        strncpy(szPath, GetWinDir(), sizeof(szPath) - 1);
+        szPath[sizeof(szPath) - 1] = '\0';
+    } else if (strncmp(pszFile, WINSYSDIR, strlen(WINSYSDIR)) == 0) {
+        strncpy(szPath, GetWinSysDir(), sizeof(szPath) - 1);
+        szPath[sizeof(szPath) - 1] = '\0';
+    }
 
     if (szPath[0]) {
         psz = strchr(pszFile, '\\');
         if (psz)
-            strcat(szPath, psz);
-    } else
-        strcpy(szPath, pszFile);
+            strncat(szPath, psz, sizeof(szPath) - strlen(szPath) - 1);
+    } else {
+        strncpy(szPath, pszFile, sizeof(szPath) - 1);
+        szPath[sizeof(szPath) - 1] = '\0';
+    }
 
     // Is this a language dll?
     psz = strstr(szPath, "????.");
@@ -1379,7 +1391,8 @@ static void DeleteInUseFiles(struct APPINFO *pAppInfo, struct FILEINFO *pFileInf
     // them to the temp dir and mark them for deletion after the next reboot.
     for (ii = 0; pFileInfo[ii].pszName != 0; ii++) {
         // Get the source path
-        strcpy(szSrcPath, ExpandPath(pFileInfo[ii].pszName));
+        strncpy(szSrcPath, ExpandPath(pFileInfo[ii].pszName), sizeof(szSrcPath) - 1);
+        szSrcPath[sizeof(szSrcPath) - 1] = '\0';
 
         // Only delete the file if it is not used by some other app
         if (FileNeededByOtherApp(pAppInfo, &pFileInfo[ii]))
@@ -1397,7 +1410,8 @@ static void DeleteInUseFiles(struct APPINFO *pAppInfo, struct FILEINFO *pFileInf
 
         // Get a temp dir that is on the same drive as the src path.
         // We can't move an in use file to a different drive.
-        strcpy(szTempDir, GetTempDir());
+        strncpy(szTempDir, GetTempDir(), sizeof(szTempDir) - 1);
+        szTempDir[sizeof(szTempDir) - 1] = '\0';
         if (szTempDir[0] != szSrcPath[0]) {
             // Get the drive, colon, and slash of the src path
             strncpy(szTempDir, szSrcPath, 3);
@@ -1432,7 +1446,7 @@ static void RemoveDirectoryTree(char *pszDir)
     char szSubFileOrDir[MAX_PATH];
     BOOL bContinue;
 
-    sprintf(szSpec, "%s\\*.*", pszDir);
+    snprintf(szSpec, sizeof(szSpec), "%s\\*.*", pszDir);
 
     // First delete the contents of the dir
     hFind = FindFirstFile(szSpec, &findFileData);
@@ -1440,7 +1454,7 @@ static void RemoveDirectoryTree(char *pszDir)
 
     while (bContinue) {
         if ((strcmp(findFileData.cFileName, ".") != 0) && (strcmp(findFileData.cFileName, "..") != 0)) {
-            sprintf(szSubFileOrDir, "%s\\%s", pszDir, findFileData.cFileName);
+            snprintf(szSubFileOrDir, sizeof(szSubFileOrDir), "%s\\%s", pszDir, findFileData.cFileName);
 
             if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 RemoveDirectoryTree(szSubFileOrDir);
@@ -1505,9 +1519,9 @@ static char *GetAfsStartMenuRoot()
             return 0;
 
         if (bSilentMode)
-            sprintf(szAfsStartMenuRoot, "%s\\IBM WebSphere\\Performance Pack\\AFS", pszStartMenuRoot );
+            snprintf(szAfsStartMenuRoot, sizeof(szAfsStartMenuRoot), "%s\\IBM WebSphere\\Performance Pack\\AFS", pszStartMenuRoot );
         else
-            sprintf(szAfsStartMenuRoot, "%s\\IBM AFS", pszStartMenuRoot );
+            snprintf(szAfsStartMenuRoot, sizeof(szAfsStartMenuRoot), "%s\\IBM AFS", pszStartMenuRoot );
     }
 
     return szAfsStartMenuRoot;
@@ -1535,7 +1549,7 @@ static void DeleteStartMenuEntries(char *pszEntries)
         return;
 
     for (pszCurEntry = pszEntries; *pszCurEntry; pszCurEntry += strlen(pszCurEntry) + 1) {
-        sprintf(szStartMenuPath, "%s\\%s", pszAfsStartMenuRoot, pszCurEntry);
+        snprintf(szStartMenuPath, sizeof(szStartMenuPath), "%s\\%s", pszAfsStartMenuRoot, pszCurEntry);
         if (IsADir(szStartMenuPath))
             RemoveDirectoryTree(szStartMenuPath);
         else
@@ -1552,7 +1566,7 @@ static void RefreshStartMenu()
     if (!pszAfsStartMenuRoot)
         return;
 
-    sprintf(szTemp, "%s - Refresh Attempt", pszAfsStartMenuRoot);
+    snprintf(szTemp, sizeof(szTemp), "%s - Refresh Attempt", pszAfsStartMenuRoot);
 
     // Deleting items from below the root level of the start menu does not
     // cause it to refresh.  In order that users can see changes without
@@ -1587,14 +1601,14 @@ static BOOL PreserveConfigInfo(struct APPINFO *pApp)
             continue;
 
         // Create the destination path for the copy
-        sprintf(szDestKey, "%s\\%s\\%s", AFS_PRESERVED_CFG_INFO_KEY, pApp->pszAppName, pszRegKey);
+        snprintf(szDestKey, sizeof(szDestKey), "%s\\%s\\%s", AFS_PRESERVED_CFG_INFO_KEY, pApp->pszAppName, pszRegKey);
 
         // Try to copy it
         result = RegDupKeyAlt(pszRegKey, szDestKey);
 
         if ((result != ERROR_SUCCESS) && (result != ERROR_FILE_NOT_FOUND)) {
             // If the copy failed, then delete any copies that succeeded
-            sprintf(szDestKey, "%s\\%s", AFS_PRESERVED_CFG_INFO_KEY, pApp->pszAppName);
+            snprintf(szDestKey, sizeof(szDestKey), "%s\\%s", AFS_PRESERVED_CFG_INFO_KEY, pApp->pszAppName);
             RegDeleteEntryAlt(szDestKey, REGENTRY_KEY);
      		goto done;
         }
@@ -1607,7 +1621,7 @@ static BOOL PreserveConfigInfo(struct APPINFO *pApp)
 		bOk = InNetworkProviderOrder(pApp->pszNetworkProviderOrder, &bOn);
 		if (bOk && bOn) {
 			HKEY hKey;
-			sprintf(szDestKey, "%s\\%s\\IntegratedLogin", AFS_PRESERVED_CFG_INFO_KEY, pApp->pszAppName);
+			snprintf(szDestKey, sizeof(szDestKey), "%s\\%s\\IntegratedLogin", AFS_PRESERVED_CFG_INFO_KEY, pApp->pszAppName);
 			result = RegOpenKeyAlt(AFSREG_NULL_KEY, szDestKey, KEY_WRITE, TRUE, &hKey, 0);
 			// The existance of the key is a flag indicating that integrated login was turned on
 			RegCloseKey(hKey);
@@ -1643,7 +1657,7 @@ int SUCALLCONV RestoreConfigInfo(int nApp)
     // Copy each reg key (and all of its subkeys and values) back to its original place in the registry.
     for (pszRegKey = pApp->pszRegKeysToPreserve; *pszRegKey; pszRegKey += strlen(pszRegKey) + 1) {
         // Create the source path for the copy
-        sprintf(szSrcKey, "%s\\%s\\%s", AFS_PRESERVED_CFG_INFO_KEY, pApp->pszAppName, pszRegKey);
+        snprintf(szSrcKey, sizeof(szSrcKey), "%s\\%s\\%s", AFS_PRESERVED_CFG_INFO_KEY, pApp->pszAppName, pszRegKey);
 
         if (!DoesRegKeyExist(szSrcKey))
             continue;
@@ -1661,7 +1675,7 @@ int SUCALLCONV RestoreConfigInfo(int nApp)
 		// Check if integrated login was turned on.  The IntegratedLogin key is a flag
 		// telling us that it was on.  If the key does not exist, integrated login was
 		// not on.
-		sprintf(szSrcKey, "%s\\%s\\IntegratedLogin", AFS_PRESERVED_CFG_INFO_KEY, pApp->pszAppName);
+		snprintf(szSrcKey, sizeof(szSrcKey), "%s\\%s\\IntegratedLogin", AFS_PRESERVED_CFG_INFO_KEY, pApp->pszAppName);
 		if (DoesRegKeyExist(szSrcKey)) {
 			if (!AddToProviderOrder(pApp->pszNetworkProviderOrder))
 				bError = TRUE;
