@@ -1183,7 +1183,7 @@ doSweepAFSCache(int *vFilesFound,
 		    assert(inode_for_V[vFileNum] == (AFSD_INO_T) 0);
 #endif
 		    sprintf(vFilePtr, "D%d/V%d", thisDir, vFileNum);
-		    if (afsd_verbose)
+		    if (afsd_debug)
 			printf("%s: Creating '%s'\n", rn, fullpn_VFile);
 		    if (cache_dir_list[thisDir] < 0
 			&& CreateCacheSubDir(directory, thisDir))
