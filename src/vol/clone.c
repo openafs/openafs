@@ -68,8 +68,6 @@ struct clone_head {
     struct clone_items *last;
 };
 
-void CloneVolume(Error *, Volume *, Volume *, Volume *);
-
 static int
 ci_AddItem(struct clone_head *ah, Inode aino)
 {
@@ -390,15 +388,24 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
     return error;
 }
 
+/**
+ * Clone a volume into a destination volume.
+ *
+ * Creates or refreshes a clone of an existing volume by copying the vnode index
+ * files and the volume header.
+ *
+ * @param[out] rerror    error code if cloning fails; 0 on success
+ * @param[in]  original  source volume to be cloned
+ * @param[in]  new       destination clone volume
+ * @param[in]  reclone   non-zero if recloning an existing clone volume
+ */
 void
-CloneVolume(Error * rerror, Volume * original, Volume * new, Volume * old)
+CloneVolume(Error * rerror, Volume * original, Volume * new, int reclone)
 {
     afs_int32 code, error = 0;
-    afs_int32 reclone;
     afs_int32 filecount = V_filecount(original), diskused = V_diskused(original);
 
     *rerror = 0;
-    reclone = ((new == old) ? 1 : 0);
 
     code = DoCloneIndex(original, new, vLarge, reclone);
     if (code)

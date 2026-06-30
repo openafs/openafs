@@ -11,7 +11,8 @@
 #define _VOL_PROTOTYPES_H
 
 /* clone.c */
-extern void CloneVolume(Error *, Volume *, Volume *, Volume *);
+extern void CloneVolume(Error * rerror, Volume * original, Volume * new,
+			int reclone);
 extern int (*vol_PollProc) (void);
 
 /* nuke.c */

@@ -675,6 +675,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, VolumeId purgeId,
 #ifdef AFS_DEMAND_ATTACH_FS
     struct Volume *salv_vp = NULL;
 #endif
+    int reclone = 0;
 
     if (strlen(newName) > 31)
 	return VOLSERBADNAME;
@@ -753,6 +754,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, VolumeId purgeId,
 
     if (purgeId == newId) {
 	newvp = purgevp;
+	reclone = 1;
     } else {
 	newvp =
 	    VCreateVolume(&error, originalvp->partition->name, newId,
@@ -770,7 +772,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, VolumeId purgeId,
 	afs_printable_VolumeId_lu(newId));
     if (purgevp)
 	Log("1 Volser: Clone: Purging old read only volume %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(purgeId));
-    CloneVolume(&error, originalvp, newvp, purgevp);
+    CloneVolume(&error, originalvp, newvp, reclone);
     purgevp = NULL;		/* clone releases it, maybe even if error */
     if (error) {
 	Log("1 Volser: Clone: clone operation failed with code %u\n", error);
@@ -925,7 +927,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, VolumeId cloneId)
     error = 0;
     Log("1 Volser: Clone: Recloning volume %" AFS_VOLID_FMT " to volume %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(tt->volid),
 	afs_printable_VolumeId_lu(cloneId));
-    CloneVolume(&error, originalvp, clonevp, clonevp);
+    CloneVolume(&error, originalvp, clonevp, 1);
     if (error) {
 	Log("1 Volser: Clone: reclone operation failed with code %d\n",
 	    error);
