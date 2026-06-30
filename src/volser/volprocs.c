@@ -690,6 +690,11 @@ VolClone(struct rx_call *acid, afs_int32 atrans, VolumeId purgeId,
     newvp = (Volume *) 0;
     tt = ttc = (struct volser_trans *)0;
 
+    if (newType != readwriteVolume && newType != readonlyVolume &&
+	newType != backupVolume) {
+	error = EINVAL;
+	goto fail;
+    }
     if (!newNumber || !*newNumber) {
 	Log("1 Volser: Clone: missing volume number for the clone; aborted\n");
 	error = EINVAL;
@@ -772,27 +777,58 @@ VolClone(struct rx_call *acid, afs_int32 atrans, VolumeId purgeId,
 	afs_printable_VolumeId_lu(newId));
     if (purgevp)
 	Log("1 Volser: Clone: Purging old read only volume %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(purgeId));
-    CloneVolume(&error, originalvp, newvp, reclone);
+    CloneVolume(&error, originalvp, newvp, newType, reclone);
     purgevp = NULL;		/* clone releases it, maybe even if error */
     if (error) {
 	Log("1 Volser: Clone: clone operation failed with code %u\n", error);
 	LogError(error);
 	goto fail;
     }
-    if (newType == readonlyVolume) {
-	V_type(newvp) = readonlyVolume;
+    V_type(newvp) = newType;
+    if (newType == readwriteVolume) {
+	/*
+	 * Remember how the volume was created, following the same approach as
+	 * AFSVolConvertROtoRWvolume().
+	 */
+	V_restoredFromId(newvp) = V_id(originalvp);
+
+	if (V_type(originalvp) == readonlyVolume) {
+	    V_cloneId(newvp) = V_id(originalvp);
+	} else if (V_type(originalvp) == backupVolume) {
+	    V_backupId(newvp) = V_id(originalvp);
+	}
     } else if (newType == backupVolume) {
-	V_type(newvp) = backupVolume;
 	V_backupId(originalvp) = newId;
     }
+
+    memset(V_name(newvp), 0, sizeof(V_name(newvp)));
     strcpy(V_name(newvp), newName);
-    V_creationDate(newvp) = V_copyDate(newvp);
     ClearVolumeStats(&V_disk(newvp));
     V_destroyMe(newvp) = DESTROY_ME;
     V_inService(newvp) = 0;
-    if (newType == backupVolume) {
+    if (newType == readwriteVolume) {
+	if (V_type(originalvp) == readonlyVolume ||
+	    V_type(originalvp) == backupVolume) {
+	    /*
+	     * Follow the same logic as convertVolumeInfo() to bump the
+	     * uniquifier, trying to avoid conflicts with file copies that may
+	     * still exist from a previous incarnation of the RW volume, and to
+	     * set the creation date that best approximates the RW volume's
+	     * creation time, helping avoid unnecessary full releases.
+	     */
+	    V_uniquifier(newvp) += 5000;
+	    if (V_copyDate(newvp) < V_creationDate(newvp)) {
+		V_creationDate(newvp) = V_copyDate(newvp);
+	    } else {
+		V_copyDate(newvp) = V_creationDate(newvp);
+	    }
+	}
+    } else if (newType == backupVolume) {
+	V_creationDate(newvp) = V_copyDate(newvp);
 	V_backupDate(originalvp) = V_copyDate(newvp);
 	V_backupDate(newvp) = V_copyDate(newvp);
+    } else {
+	V_creationDate(newvp) = V_copyDate(newvp);
     }
     V_inUse(newvp) = 0;
     VUpdateVolume(&error, newvp);
@@ -927,7 +963,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, VolumeId cloneId)
     error = 0;
     Log("1 Volser: Clone: Recloning volume %" AFS_VOLID_FMT " to volume %" AFS_VOLID_FMT "\n", afs_printable_VolumeId_lu(tt->volid),
 	afs_printable_VolumeId_lu(cloneId));
-    CloneVolume(&error, originalvp, clonevp, 1);
+    CloneVolume(&error, originalvp, clonevp, newType, 1);
     if (error) {
 	Log("1 Volser: Clone: reclone operation failed with code %d\n",
 	    error);

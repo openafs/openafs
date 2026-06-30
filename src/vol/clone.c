@@ -144,8 +144,9 @@ IDecProc(Inode adata, void *arock)
     return 0;
 }
 
-afs_int32
-DoCloneIndex(Volume * srcvp, Volume * clvp, VnodeClass class, int reclone)
+static afs_int32
+DoCloneIndex(Volume * srcvp, Volume * clvp, afs_int32 cltype, VnodeClass class,
+	     int reclone)
 {
     afs_int32 code, error = 0;
     FdHandle_t *srcFd = 0, *clFdIn = 0, *clFdOut = 0;
@@ -257,8 +258,12 @@ DoCloneIndex(Volume * srcvp, Volume * clvp, VnodeClass class, int reclone)
 		inodeinced = 1;
 	    }
 
-	    /* If a directory, mark vnode in source volume as cloned */
-	    if (srcvnode->type == vDirectory) {
+	    /*
+	     * If cloning a RW volume and this vnode represents a directory,
+	     * mark vnode in source volume as cloned.
+	     */
+	    if (srcvnode->type == vDirectory &&
+		V_type(srcvp) == readwriteVolume) {
 		srcvnode->cloned = 1;
 		code = STREAM_ASEEK(srcfile, offset);
 		if (code == -1)
@@ -274,7 +279,11 @@ DoCloneIndex(Volume * srcvp, Volume * clvp, VnodeClass class, int reclone)
 	}
 
 	/* Overwrite the vnode entry in the clone volume */
-	srcvnode->cloned = 0;
+	if (srcvnode->type == vDirectory && cltype == readwriteVolume) {
+	    srcvnode->cloned = 1;
+	} else {
+	    srcvnode->cloned = 0;
+	}
 	code = STREAM_WRITE(srcvnode, vcp->diskSize, 1, clfileout);
 	if (code != 1) {
 	  clonefailed:
@@ -375,10 +384,14 @@ DoCloneIndex(Volume * srcvp, Volume * clvp, VnodeClass class, int reclone)
 	error = code;
     ci_Destroy(&decHead);
 
-    if (filecount > 0)
-	V_filecount(srcvp) = filecount;
-    if (diskused > 0)
-	V_diskused(srcvp) = diskused;
+    if (V_type(srcvp) == readwriteVolume) {
+	if (filecount > 0) {
+	    V_filecount(srcvp) = filecount;
+	}
+	if (diskused > 0) {
+	    V_diskused(srcvp) = diskused;
+	}
+    }
     return error;
 }
 
@@ -391,20 +404,24 @@ DoCloneIndex(Volume * srcvp, Volume * clvp, VnodeClass class, int reclone)
  * @param[out] rerror    error code if cloning fails; 0 on success
  * @param[in]  original  source volume to be cloned
  * @param[in]  new       destination clone volume
+ * @param[in]  newtype   volume type of 'new' (e.g., readwriteVolume).
+ *                       V_type(new) may not be accurate, since 'new' is in the
+ *                       process of being created.
  * @param[in]  reclone   non-zero if recloning an existing clone volume
  */
 void
-CloneVolume(Error * rerror, Volume * original, Volume * new, int reclone)
+CloneVolume(Error * rerror, Volume * original, Volume * new, afs_int32 newtype,
+	    int reclone)
 {
     afs_int32 code, error = 0;
     afs_int32 filecount = V_filecount(original), diskused = V_diskused(original);
 
     *rerror = 0;
 
-    code = DoCloneIndex(original, new, vLarge, reclone);
+    code = DoCloneIndex(original, new, newtype, vLarge, reclone);
     if (code)
 	ERROR_EXIT(code);
-    code = DoCloneIndex(original, new, vSmall, reclone);
+    code = DoCloneIndex(original, new, newtype, vSmall, reclone);
     if (code)
 	ERROR_EXIT(code);
     if (filecount != V_filecount(original) || diskused != V_diskused(original))

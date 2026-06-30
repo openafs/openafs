@@ -12,7 +12,7 @@
 
 /* clone.c */
 extern void CloneVolume(Error * rerror, Volume * original, Volume * new,
-			int reclone);
+			afs_int32 newtype, int reclone);
 extern int (*vol_PollProc) (void);
 
 /* nuke.c */
