@@ -9,7 +9,7 @@ vos_convertROtoRW - Converts a Read-Only volume into a Read/Write volume
 
 B<vos convertROtoRW> S<<< [B<-server>] <I<machine name>> >>>
    S<<< [B<-partition>] <I<partition name>> >>>
-   S<<< [B<-id>] <I<volume name or ID>> >>> [B<-force>]
+   S<<< [B<-id>] <I<volume name or ID>> >>> [B<-force>] [B<-keep-ro>]
    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
    [B<-verbose>] [B<-encrypt>] [B<-noresolve>]
    S<<< [B<-config> <I<config directory>>] >>>
@@ -17,7 +17,7 @@ B<vos convertROtoRW> S<<< [B<-server>] <I<machine name>> >>>
 
 B<vos con> S<<< [B<-s>] <I<machine name>> >>>
    S<<< [B<-p>] <I<partition name>> >>>
-   S<<< [B<-i>] <I<volume name or ID>> >>> [B<-f>]
+   S<<< [B<-i>] <I<volume name or ID>> >>> [B<-f>] [B<-k>]
    S<<< [B<-c> <I<cell name>>] >>> [B<-noa>] [B<-l>]
    [B<-v>] [B<-e>] [B<-nor>]
    S<<< [B<-co> <I<config directory>>] >>>
@@ -70,6 +70,27 @@ volume.
 =item B<-force>
 
 Don't ask for confirmation.
+
+=item B<-keep-ro>
+
+Do not remove the original read-only volume when creating the read-write volume.
+
+Without the B<-keep-ro> option, B<vos convertROtoRW> converts the specified
+read-only volume into a read-write volume in-place. As a result, the original
+read-only volume no longer exists on the specified server after the command
+completes, and any callback promises obtained by clients to the volume on that
+server are broken.
+
+The B<-keep-ro> option avoids these disruptions by preserving the original
+read-only volume. Rather than modifying the volume in place, it creates a new
+read-write clone from the existing read-only copy. As a result, both the new
+read-write volume and the pre-existing read-only volume will exist after the
+command completes, and existing callback promises to the original read-only
+volume are not broken.
+
+The B<vos convertROtoRW> operation is slightly slower when B<-keep-ro> is used,
+since the server needs to perform processing on each vnode in the volume. This
+is similar in speed to creating a local clone with B<vos backup>.
 
 =include fragments/vos-common.pod
 

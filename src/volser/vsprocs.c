@@ -1289,6 +1289,116 @@ cfail:
     return error;
 }
 
+/**
+ * Recover a RW volume from an existing RO volume.
+ *
+ * This function creates a read-write volume by cloning an existing read-only
+ * volume on the specified server and partition. This is used used when
+ * converting a RO volume to RW while preserving the RO copy (-keep-ro).
+ *
+ * @param[in] server    volume server ip address (network byte order)
+ * @param[in] part      partition where the RO lives and the RW will be created
+ * @param[in] conn      connection to the volume server
+ * @param[in] vl_entry  volume location entry for the RW and RO volumes involved
+ *
+ * @return 0 on success, error code otherwise.
+ *
+ * @retval EEXIST       the RW volume already exists on the partition
+ * @retval EINVAL       the volume location entry is invalid
+ * @retval VOLSERBADOP	volume server cannot guarantee correct cloning behavior
+ */
+static int
+RecoverRWFromRO(afs_uint32 server, afs_uint32 part, struct rx_connection *conn,
+		struct nvldbentry *vl_entry)
+{
+    int code, error;
+    char hoststr[16];
+    afs_int32 tid = 0;
+    int clone_created = 0;
+    struct volser_status volstatus;
+    afs_uint32 rw_volid = vl_entry->volumeId[RWVOL];
+    afs_uint32 ro_volid = vl_entry->volumeId[ROVOL];
+
+    if (rw_volid <= 0 || ro_volid <= 0) {
+	error = EINVAL;
+	goto done;
+    }
+
+    code = DoVolClone(conn, ro_volid, part, readwriteVolume, rw_volid,
+		      "clone", NULL, vl_entry->name, NULL, NULL, 0);
+    if (code != 0) {
+	error = code;
+	goto done;
+    }
+
+    clone_created = 1;
+
+    code = AFSVolTransCreate_retry(conn, rw_volid, part, ITOffline, &tid);
+    if (code != 0) {
+	fprintf(STDERR, "Failed to start a transaction on the RW volume %u\n",
+		rw_volid);
+	error = code;
+	goto done;
+    }
+
+    memset(&volstatus, 0, sizeof(volstatus));
+    code = AFSVolGetStatus(conn, tid, &volstatus);
+    if (code != 0) {
+	fprintf(STDERR, "Could not get status for volume %u\n", rw_volid);
+	error = code;
+	goto done;
+    }
+
+    /*
+     * Before bringing the volume online, ensure that the volume server
+     * created the RW clone correctly; older releases of OpenAFS did not set
+     * the 'type' and 'cloneID' fields correctly and generated a broken volume.
+     */
+    if (volstatus.type != readwriteVolume || volstatus.cloneID != ro_volid) {
+	fprintf(STDERR, "Volume server %s does not support the -keep-ro "
+		"option because its clone implementation is broken for creating "
+		"RW clones. Please upgrade the volume server.\n",
+		afs_inet_ntoa_r(server, hoststr));
+	error = VOLSERBADOP;
+	goto done;
+    }
+
+    code = AFSVolSetFlags(conn, tid, 0);
+    if (code != 0) {
+	fprintf(STDERR, "Could not bring volume %u online\n", rw_volid);
+	error = code;
+	goto done;
+    }
+
+    error = 0;
+
+ done:
+    if (error != 0 && clone_created) {
+	if (tid != 0) {
+	    code = AFSVolDeleteVolume(conn, tid);
+	} else {
+	    code = error;
+	}
+	if (code != 0) {
+	    fprintf(STDERR, "Could not delete partially-created volume %u "
+		    "(error: %d)\n", rw_volid, code);
+	}
+    }
+    if (tid != 0) {
+	int rcode;
+	code = AFSVolEndTrans(conn, tid, &rcode);
+	code = (code != 0) ? code : rcode;
+	if (code != 0) {
+	    fprintf(STDERR, "Could not end transaction on volume %u "
+		    "(error: %d)\n", rw_volid, code);
+	}
+	if (error == 0) {
+	    error = code;
+	}
+    }
+    return error;
+}
+
 /* Convert volume from RO to RW; adjust the VLDB entry to match.
  * The nvldbentry passed to us has already been MapHostToNetwork'd
  * by the caller.
@@ -1296,7 +1406,7 @@ cfail:
 
 int
 UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
-		struct nvldbentry *entry)
+		struct nvldbentry *entry, int keep_ro)
 {
     afs_int32 code, i, same;
     struct nvldbentry checkEntry, storeEntry;
@@ -1359,10 +1469,11 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
 	}
     }
 
-    if (roserver != 0) {
+    if (roserver != 0 && !keep_ro) {
 	/*
-	 * If the RO site to be converted exists in the VLDB, update it to
-	 * reflect its new role as an RW site.
+	 * If the RO site to be converted exists in the VLDB and it won't be
+	 * preserved after the conversion, update it to reflect its new role as
+	 * an RW site.
 	 */
 	entry->serverFlags[roindex] = VLSF_RWVOL;
 
@@ -1429,7 +1540,12 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
     }
 
     aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
-    code = AFSVolConvertROtoRWvolume(aconn, partition, volid);
+
+    if (keep_ro) {
+	code = RecoverRWFromRO(server, partition, aconn, entry);
+    } else {
+	code = AFSVolConvertROtoRWvolume(aconn, partition, volid);
+    }
     if (code) {
 	fprintf(STDERR,
 		"Converting RO volume %lu to RW volume failed with code %d\n",

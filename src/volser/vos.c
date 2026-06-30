@@ -5644,7 +5644,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     afs_int32 rwpartition = 0;
     afs_uint32 roserver = 0;
     afs_int32 ropartition = 0;
-    int force = 0;
+    int force = 0, keep_ro = 0;
     int c, dc;
 
     server = GetServer(as->parms[0].items->data);
@@ -5679,6 +5679,9 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     }
     if (as->parms[3].items)
 	force = 1;
+    if (as->parms[4].items != NULL) {	/* -keep-ro */
+	keep_ro = 1;
+    }
 
     memset(&entry, 0, sizeof(entry));
     vcode = VLDB_GetEntryByID(volid, -1, &entry);
@@ -5743,7 +5746,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    code = UV_ConvertRO(server, partition, volid, &entry);
+    code = UV_ConvertRO(server, partition, volid, &entry, keep_ro);
 
     return code;
 }
@@ -6350,6 +6353,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL, "don't ask");
+    cmd_AddParm(ts, "-keep-ro", CMD_FLAG, CMD_OPTIONAL,
+		"preserve the original read-only volume");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("size", Sizes, NULL, 0,
