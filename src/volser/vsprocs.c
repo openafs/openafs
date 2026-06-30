@@ -168,10 +168,6 @@ static int SimulateForwardMultiple(struct rx_connection *fromconn,
 				   afs_int32 fromtid, afs_int32 fromdate,
 				   manyDests * tr, afs_int32 flags,
 				   void *cookie, manyResults * results);
-static int DoVolClone(struct rx_connection *aconn, afs_uint32 avolid,
-		      afs_int32 apart, int type, afs_uint32 cloneid,
-		      char *typestring, char *pname, char *vname, char *suffix,
-		      struct volser_status *volstatus, afs_int32 *transPtr);
 static int DoVolDelete(struct rx_connection *aconn, afs_uint32 avolid,
 		       afs_int32 apart, char *typestring, afs_uint32 atoserver,
 		       struct volser_status *volstatus, char *pprefix);
@@ -1174,7 +1170,7 @@ static int
 DoVolClone(struct rx_connection *aconn, afs_uint32 avolid,
 	   afs_int32 apart, int type, afs_uint32 cloneid,
 	   char *typestring, char *pname, char *vname, char *suffix,
-	   struct volser_status *volstatus, afs_int32 *transPtr)
+	   struct volser_status *volstatus, int reclone_ok)
 {
     char cname[64];
     afs_int32 ttid = 0, btid = 0;
@@ -1205,6 +1201,12 @@ DoVolClone(struct rx_connection *aconn, afs_uint32 avolid,
             error = (code ? code : rcode);
             goto cfail;
         }
+    }
+
+    if (cloneexists && !reclone_ok) {
+	fprintf(STDERR, "Volume %lu already exists\n", (unsigned long)cloneid);
+	error = VVOLEXISTS;
+	goto cfail;
     }
 
     /* Now go ahead and try to clone the RW volume.
@@ -2788,7 +2790,7 @@ UV_BackupVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
     }
 
     code = DoVolClone(aconn, avolid, apart, backupVolume, backupID, "backup",
-		      entry.name, NULL, ".backup", NULL, NULL);
+		      entry.name, NULL, ".backup", NULL, 1);
     if (code) {
 	error = code;
 	goto bfail;
@@ -2967,7 +2969,7 @@ UV_CloneVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid,
 	type = backupVolume;
 
     code = DoVolClone(aconn, avolid, apart, type, acloneid, "clone",
-		      NULL, aname, NULL, NULL, NULL);
+		      NULL, aname, NULL, NULL, 1);
     if (code) {
 	error = code;
 	goto bfail;
@@ -3205,7 +3207,7 @@ GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 				  vldbEntryPtr->serverPartition[index],
 				  readonlyVolume, tmpVolId, "temporary",
 				  vldbEntryPtr->name, NULL, ".roclone", NULL,
-				  transPtr);
+				  1);
 	    if (code)
 		goto fail;
 	}
@@ -3743,7 +3745,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 
 	code = DoVolClone(fromconn, afromvol, afrompart, readonlyVolume,
 			  cloneVolId, roclone?"permanent RO":
-			  "temporary RO", NULL, vname, NULL, &volstatus, NULL);
+			  "temporary RO", NULL, vname, NULL, &volstatus, 1);
 	if (code) {
 	    error = code;
 	    goto rfail;
