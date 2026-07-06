@@ -533,6 +533,7 @@ test_ctime(void)
 static void
 test_now(void)
 {
+    struct afs_time64 last;
     struct afs_time64 now = opr_time64_now();
     time_t now_t = time(NULL);
     afs_int64 epsilon = 2 * OPR_TIME64_TICKS_PER_SEC;
@@ -540,12 +541,20 @@ test_now(void)
     is_time64_approx(now, now_t * OPR_TIME64_TICKS_PER_SEC, epsilon,
 		    "opr_time64_now() (%lld) returns time close to time() (%ld)",
 		    opr_time64_toTicksLL(now), (long)now_t);
+
+    last = now;
+    is_int(opr_time64_ratelimit(&last, 2), 0,
+	   "opr_time64_ratelimit(now, 2) returns 0");
+
+    last = opr_time64_fromTicks(0);
+    is_int(opr_time64_ratelimit(&last, 2), 1,
+	   "opr_time64_ratelimit(0, 2) returns 1");
 }
 
 int
 main(int argc, char **argv)
 {
-    plan(208);
+    plan(210);
 
     /* Assume EST timezone. */
     putenv("TZ=EST+5");

@@ -464,4 +464,34 @@ opr_time64_sub_toSecs(struct afs_time64 in, struct afs_time64 sub)
     return val;
 }
 
+#if !defined(KERNEL) || defined(UKERNEL)
+/*
+ * A simple helper for rate-limiting some action. Use like so:
+ *
+ * static struct afs_time64 lastlog;
+ * if (opr_time64_ratelimit(&lastlog, 60)) {
+ *     ViceLog(0, ("Some possibly-frequent message.\n"));
+ * }
+ *
+ * This will try to limit the relevant log message to being logged about once
+ * per 60 seconds, using 'lastlog' as a place to store the last log time.
+ * Protecting 'a_last' from access in other threads is the responsibility of
+ * the caller.
+ */
+static_inline int
+opr_time64_ratelimit(struct afs_time64 *a_last, int secs)
+{
+    struct afs_time64 now = opr_time64_now();
+    struct afs_time64 last = *a_last;
+
+    if (opr_time64_lt(now, last) ||
+	opr_time64_sub_toSecs(now, last) >= secs) {
+
+	*a_last = now;
+	return 1;
+    }
+    return 0;
+}
+#endif /* !KERNEL || UKERNEL */
+
 #endif /* OPENAFS_OPR_TIME_H */
