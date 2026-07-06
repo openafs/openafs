@@ -75,6 +75,7 @@ and L<B<fs setcachesize>|fs_setcachesize(1)>.
 Commands to administer volume mount points:
 L<B<fs lsmount>|fs_lsmount(1)>,
 L<B<fs mkmount>|fs_mkmount(1)>,
+L<B<fs pathinfo>|fs_pathinfo(1)>,
 and L<B<fs rmmount>|fs_rmmount(1)>.
 
 =item *
@@ -229,6 +230,7 @@ L<fs_mkmount(1)>,
 L<fs_monitor(1)>,
 L<fs_newalias(1)>,
 L<fs_newcell(1)>,
+L<fs_pathinfo(1)>,
 L<fs_quota(1)>,
 L<fs_rmmount(1)>,
 L<fs_rxstatpeer(1)>,

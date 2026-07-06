@@ -24,8 +24,9 @@ each component.
 
 =head1 CAUTIONS
 
-If a component doesn't exist, the command will just display "<component>
-does not exist" and continue.
+If a component doesn't exist, the command displays "<component> does not
+exist" and stops walking that path; any remaining B<-path> arguments are
+still processed.
 
 If the command is used outside AFS, it will walk the path and display the type
 of each entry.
@@ -72,8 +73,8 @@ multiple types of items:
     '/afs/example.com' is a mount point, for volume '#example.com:root.cell'
     '/afs/example.com/usr' is a mount point, for volume '#usr'
     '/afs/example.com/usr/smith' is a directory
-    '/afs/example.com/usr/smith/joeSymlink' is a symbolic link, leading to a mount point for volume '#joe'
-    '/afs/example.com/usr/smith/joeSymlink/smithSymlink' is a symbolic link, leading to a directory -> '/afs/example.com/usr/smith'
+    '/afs/example.com/usr/smith/joeSymlink' is a symbolic link, leading to '/afs/example.com/usr/joe' is a mount point, for volume '#joe'
+    '/afs/example.com/usr/smith/joeSymlink/smithSymlink' is a symbolic link, leading to '/afs/example.com/usr/smith' is a directory
     '/afs/example.com/usr/smith/joeSymlink/smithSymlink/file' is a regular file
 
 The following example shows the command used on a normal path:
