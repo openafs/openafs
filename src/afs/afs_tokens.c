@@ -208,7 +208,7 @@ afs_IsTokenUsable(struct tokenJar *token, afs_int32 now)
 	/* We assume that all non-expired rxkad tokens are usable by us */
 	return 1;
       case RX_SECIDX_GK:
-	/* We assume that all non-expired rxkad tokens are usable by us */
+	/* We assume that all non-expired rxgk tokens are usable by us */
 	return 1;
       default :
 	return 0;
