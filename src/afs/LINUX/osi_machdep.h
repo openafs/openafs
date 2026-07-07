@@ -491,7 +491,9 @@ do { \
 #  define __NR_ia32_unlink 10
 # endif
 #endif
-
-#define osi_procname(procname, size) strncpy(procname, current->comm, size)
-
+#if defined(HAVE_LINUX_STRSCPY)
+# define osi_procname(procname, size) strscpy(procname, current->comm, size)
+#else
+# define osi_procname(procname, size) strncpy(procname, current->comm, size)
+#endif
 #endif /* OSI_MACHDEP_H_ */

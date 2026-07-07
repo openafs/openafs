@@ -173,6 +173,14 @@ AC_CHECK_LINUX_FUNC([lru_cache_add_file],
                     [#include <linux/swap.h>],
                     [lru_cache_add_file(NULL);])
 
+dnl Linux 4.3 introduced strscpy()
+AC_CHECK_LINUX_FUNC([strscpy],
+		    [[#include <linux/string.h>
+		      char buff1[32];
+		      char buff2[32];]],
+		    [[static size_t code;
+		      code = strscpy(buff1, buff2, sizeof(buff1));]])
+
 dnl Linux 4.6 introduced in_compat_syscall as replacement for is_compat_task
 dnl for certain platforms.
 AC_CHECK_LINUX_FUNC([in_compat_syscall],
