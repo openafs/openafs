@@ -93,7 +93,7 @@ Name: openafs
 Version: %{pkgvers}
 Release: %{pkgrel}%{?dist}
 License: IBM Public License
-URL: http://www.openafs.org
+URL: https://www.openafs.org
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Group: Networking/Filesystems
 BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, make, flex, bison
@@ -116,10 +116,10 @@ BuildRequires: elfutils-devel
 
 ExclusiveArch: %{ix86} x86_64 ia64 s390 s390x sparc64 ppc ppc64 ppc64le aarch64
 
-Source0: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-src.tar.bz2
+Source0: https://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-src.tar.bz2
 %define srcdir openafs-%{afsvers}
-Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
-Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
+Source10: https://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
+Source11: https://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 Source20: https://www.central.org/dl/cellservdb/CellServDB.2025-08-16
 Source30: openafs-cacheinfo
 Source31: openafs-client.init
