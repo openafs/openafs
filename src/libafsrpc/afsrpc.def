@@ -348,6 +348,7 @@ EXPORTS
 ;	xdr_Capabilities                        @353
 	xdr_rpcStats                            @354
 	rx_GetCallStatus                        @355
+	xdr_afs_time64                          @356
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
