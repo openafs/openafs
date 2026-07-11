@@ -353,13 +353,14 @@ SRXAFSCB_CallBack(struct rx_call * rxcall, AFSCBFids * Fids_Array,
 {
     struct rx_connection *rxconn = rx_ConnectionOf(rxcall);
     struct rx_peer *rxpeer = rx_PeerOf(rxconn);
-    struct afscp_server *server = afscp_AnyServerByAddr(rx_HostOf(rxpeer));
+    struct afscp_server *server;
     struct afscp_callback *cb;
     struct afscp_venusfid f;
     struct AFSFid *fid;
     int i;
     unsigned int j;
 
+    server = afscp_AnyServerByAddr(ntohl(rx_HostOf(rxpeer)));
     if (server == NULL) {
 	return 0;
     }
@@ -397,11 +398,12 @@ SRXAFSCB_InitCallBackState(struct rx_call * rxcall)
 {
     struct rx_connection *rxconn = rx_ConnectionOf(rxcall);
     struct rx_peer *rxpeer = rx_PeerOf(rxconn);
-    struct afscp_server *server = afscp_AnyServerByAddr(rx_HostOf(rxpeer));
+    struct afscp_server *server;
     struct afscp_callback *cb;
     struct afscp_venusfid f;
     int i;
 
+    server = afscp_AnyServerByAddr(ntohl(rx_HostOf(rxpeer)));
     if (server == NULL) {
 	return 0;
     }
@@ -615,11 +617,12 @@ SRXAFSCB_InitCallBackState3(struct rx_call * rxcall, afsUUID * serverUuid)
 {
     struct rx_connection *rxconn = rx_ConnectionOf(rxcall);
     struct rx_peer *rxpeer = rx_PeerOf(rxconn);
-    struct afscp_server *server = afscp_AnyServerByAddr(rx_HostOf(rxpeer));
+    struct afscp_server *server;
     struct afscp_callback *cb;
     struct afscp_venusfid f;
     int i;
 
+    server = afscp_AnyServerByAddr(ntohl(rx_HostOf(rxpeer)));
     if (server == NULL) {
 	return 0;
     }
