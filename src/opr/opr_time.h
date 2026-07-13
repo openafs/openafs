@@ -71,7 +71,9 @@
 # include <stdio.h>
 # include <stdlib.h>
 # include <string.h>
-# include <sys/time.h>
+# if !defined(AFS_NT40_ENV)
+#  include <sys/time.h>
+# endif
 # include <time.h>
 #endif
 
