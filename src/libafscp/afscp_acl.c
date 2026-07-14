@@ -35,6 +35,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "afscp.h"
 #include "afscp_internal.h"
 
+static int
+IsACLValid(const struct AFSOpaque *acl)
+{
+    if (acl->AFSOpaque_len == 0) {
+	/* Zero-length ACLs are malformed */
+	return 0;
+    }
+    if (memchr(acl->AFSOpaque_val, '\0', acl->AFSOpaque_len) == NULL) {
+	/* Non-string ACLs are malformed */
+	return 0;
+    }
+    if (strlen(acl->AFSOpaque_val) + 1 != acl->AFSOpaque_len) {
+	/* ACLs with data beyond the trailing NUL are malformed */
+	return 0;
+    }
+    return 1;
+}
+
 int
 afscp_FetchACL(const struct afscp_venusfid *dir, struct AFSOpaque *acl)
 {
@@ -58,20 +76,13 @@ afscp_FetchACL(const struct afscp_venusfid *dir, struct AFSOpaque *acl)
 		code = RXAFS_FetchACL(server->conns[j], &df, acl, &dfst, &vs);
 		if (code >= 0)
 		    break;
-		/* Zero-length or non-string ACLs are malformed. */
-		if (acl->AFSOpaque_len == 0 || memchr(acl->AFSOpaque_val, '\0',
-						      acl->AFSOpaque_len) == NULL) {
-		    code = EIO;
-		    break;
-		}
-		if (strlen(acl->AFSOpaque_val) + 1 != acl->AFSOpaque_len) {
-		    code = EIO;
-		    break;
-		}
 	    }
 	}
 	if (code >= 0)
 	    break;
+    }
+    if (code == 0 && !IsACLValid(acl)) {
+	code = EIO;
     }
     if (code != 0) {
 	_StatInvalidate(dir);
