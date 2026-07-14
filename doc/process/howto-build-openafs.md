@@ -649,21 +649,8 @@ sudo mkdir -p /var/cache/openafs
 
 **2. Create configuration files**
 
-Create the necessary configuration files in `/opt/openafs/etc/openafs`.
-
-First, create `cacheinfo`, which tells the AFS client its mount point, cache
-directory, and cache size. The third field is the size in 1K blocks. If you are
-using a dedicated partition for the cache, this should be about 90% of its size.
-Since this guide uses a directory on the root filesystem, we set a reasonable
-limit (100000 blocks, or ~100MB) to prevent the cache from consuming all
-available disk space.
-
-```sh
-echo "/afs:/var/cache/openafs:100000" | sudo tee /opt/openafs/etc/openafs/cacheinfo
-```
-
-Next, create `ThisCell` and `CellServDB` files by copying the files from the
-server configuration. Later, we can add additional cell entries to the client's
+Create `ThisCell` and `CellServDB` files by copying the files from the server
+configuration. Later, we can add additional cell entries to the client's
 `CellServDB` configuration file.
 
 ```sh
@@ -680,21 +667,35 @@ sudo modprobe openafs
 lsmod | grep openafs
 ```
 
-Start the OpenAFS cache manager with the `afsd` program.  (In this guide, we start
-the client without the `-dynroot` flag in order to complete the root volume
-setup in the next section.)
+Start the OpenAFS cache manager with the `afsd` program.
 
 ```sh
-sudo /opt/openafs/sbin/afsd
+sudo /opt/openafs/sbin/afsd -mountdir /afs -cachedir /var/cache/openafs -blocks 1000000
 ```
+
+The `-mountdir /afs` option specifies the AFS filesystem will be mounted at
+`/afs`.
+
+The `-cachedir /var/cache/openafs` option specifies the disk cache will be
+located at `/var/cache/openafs`. The `/var/cache` directory should already
+exist. For a production system, the cache directory should be a mount point to
+a dedicated disk partition, but that is not required for a test system.
+
+The `-blocks 1000000` option specifies a disk cache size of 1000000 1K block
+(about 100MB).  If you are using a dedicated partition for the cache, this
+should be about 90% of its size.  Since this guide uses a directory on the root
+filesystem, we set a reasonable limit to prevent the cache from consuming all
+available disk space.
+
+In this guide, we start the client without the `-dynroot` flag in order to
+complete the root volume setup in the next section.
 
 Example output:
 
 ```
-$ sudo /opt/openafs/sbin/afsd
+$ sudo /opt/openafs/sbin/afsd -mountdir /afs -cachedir /var/cache/openfs -blocks 1000000
 afsd: All AFS daemons started.
 ```
-
 
 You can verify the `afs` filesystem is mounted with the following command:
 
