@@ -12,7 +12,7 @@
 /* A sanitized version of a routine prototyped in ptint.h.  The implementation
  * is in ptuser.c, but putting the declaration in ptuser.h breaks things. */
 extern int string_PR_IDToName(struct ubik_client *client, afs_int32 flags,
-			      idlist *ids, namelist *names) AFS_NONNULL();
+			      idlist *ids, namelist *names) AFS_NONNULL_ALL;
 
 #define	PRSRV		73
 

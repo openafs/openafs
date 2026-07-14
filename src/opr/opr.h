@@ -101,8 +101,8 @@ struct opr_cache_opts {
 struct opr_cache;
 
 extern int opr_cache_init(struct opr_cache_opts *opts,
-			  struct opr_cache **a_cache) AFS_NONNULL();
-extern void opr_cache_free(struct opr_cache **a_cache) AFS_NONNULL();
+			  struct opr_cache **a_cache) AFS_NONNULL_ALL;
+extern void opr_cache_free(struct opr_cache **a_cache) AFS_NONNULL_ALL;
 
 extern int opr_cache_get(struct opr_cache *cache, void *key_buf,
 			 size_t key_len, void *val_buf, size_t *a_val_len)

@@ -301,9 +301,19 @@ hdr_static_inline(unsigned long long) afs_printable_uint64_lu(afs_uint64 d) { re
 # define AFS_NORETURN
 #endif
 
+/*
+ * Use AFS_NONNULL_ALL to declare that all pointer arguments of a function must
+ * not be NULL.
+ *
+ * Use AFS_NONNULL((1,2)), for example, to declare that arguments 1 and 2 of a
+ * function must not be NULL. The first argument of a function is considered
+ * argument 1, not argument 0.
+ */
 #ifdef HAVE_FUNC_ATTRIBUTE_NONNULL
+# define AFS_NONNULL_ALL __attribute__((__nonnull__))
 # define AFS_NONNULL(x) __attribute__((__nonnull__ x))
 #else
+# define AFS_NONNULL_ALL
 # define AFS_NONNULL(x)
 #endif
 

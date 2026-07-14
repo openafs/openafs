@@ -71,24 +71,24 @@ struct rx_securityClass *rxgk_NewClientSecurityObject(RXGK_Level level,
 
 /* rxgk_crypto_IMPL.c (currently rfc3961 is the only IMPL) */
 afs_int32 rxgk_make_key(rxgk_key *key_out, void *raw_key, afs_uint32 length,
-			afs_int32 enctype) AFS_NONNULL();
-afs_int32 rxgk_copy_key(rxgk_key key_in, rxgk_key *key_out) AFS_NONNULL();
-afs_int32 rxgk_random_key(afs_int32 *enctype, rxgk_key *key_out) AFS_NONNULL();
-void rxgk_release_key(rxgk_key *key) AFS_NONNULL();
-afs_int32 rxgk_mic_length(rxgk_key key, size_t *out) AFS_NONNULL();
+			afs_int32 enctype) AFS_NONNULL_ALL;
+afs_int32 rxgk_copy_key(rxgk_key key_in, rxgk_key *key_out) AFS_NONNULL_ALL;
+afs_int32 rxgk_random_key(afs_int32 *enctype, rxgk_key *key_out) AFS_NONNULL_ALL;
+void rxgk_release_key(rxgk_key *key) AFS_NONNULL_ALL;
+afs_int32 rxgk_mic_length(rxgk_key key, size_t *out) AFS_NONNULL_ALL;
 afs_int32 rxgk_mic_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
-			  RXGK_Data *out) AFS_NONNULL();
+			  RXGK_Data *out) AFS_NONNULL_ALL;
 afs_int32 rxgk_check_mic_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
-				RXGK_Data *mic) AFS_NONNULL();
+				RXGK_Data *mic) AFS_NONNULL_ALL;
 afs_int32 rxgk_encrypt_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
-			      RXGK_Data *out) AFS_NONNULL();
+			      RXGK_Data *out) AFS_NONNULL_ALL;
 afs_int32 rxgk_decrypt_in_key(rxgk_key key, afs_int32 usage, RXGK_Data *in,
-			      RXGK_Data *out) AFS_NONNULL();
+			      RXGK_Data *out) AFS_NONNULL_ALL;
 afs_int32 rxgk_derive_tk(rxgk_key *tk, rxgk_key k0, afs_uint32 epoch,
 			 afs_uint32 cid, struct afs_time64 start_time,
-			 afs_uint32 key_number) AFS_NONNULL();
-afs_int32 rxgk_cipher_expansion(rxgk_key k0, afs_uint32 *len_out) AFS_NONNULL();
-afs_int32 rxgk_nonce(RXGK_Data *nonce, afs_uint32 len) AFS_NONNULL();
+			 afs_uint32 key_number) AFS_NONNULL_ALL;
+afs_int32 rxgk_cipher_expansion(rxgk_key k0, afs_uint32 *len_out) AFS_NONNULL_ALL;
+afs_int32 rxgk_nonce(RXGK_Data *nonce, afs_uint32 len) AFS_NONNULL_ALL;
 int rxgk_enctype_better(afs_int32 old_enctype, afs_int32 new_enctype);
 
 /* rxgk_token.c */
@@ -98,10 +98,10 @@ afs_int32 rxgk_make_token(struct rx_opaque *out, RXGK_TokenInfo *info,
 			  afs_int32 enctype) AFS_NONNULL((1,2,3,6));
 afs_int32 rxgk_print_token(struct rx_opaque *out, RXGK_TokenInfo *input_info,
 			   struct rx_opaque *k0, rxgk_key key, afs_int32 kvno,
-			   afs_int32 enctype) AFS_NONNULL();
+			   afs_int32 enctype) AFS_NONNULL_ALL;
 afs_int32 rxgk_print_token_and_key(struct rx_opaque *out,
                                    RXGK_TokenInfo *input_info, rxgk_key key,
                                    afs_int32 kvno, afs_int32 enctype,
-                                   rxgk_key *k0_out) AFS_NONNULL();
+                                   rxgk_key *k0_out) AFS_NONNULL_ALL;
 
 #endif /* OPENAFS_RXGK_H */
