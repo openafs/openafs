@@ -49,6 +49,10 @@ memory cache between reboots, use the B<fs getcacheparms> command.
 
 =back
 
+
+The B<cacheinfo> file is ignored when the B<afsd> B<-mountdir>, B<-cachedir> (or
+B<-memcache>), and B<-blocks> options are specified.
+
 =head1 EXAMPLES
 
 The following example cacheinfo file mounts the AFS namespace at F</afs>,

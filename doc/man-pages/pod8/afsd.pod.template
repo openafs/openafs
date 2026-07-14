@@ -145,6 +145,11 @@ argument by the default memory cache chunk size of eight kilobytes. Using
 this argument is not recommended, as it requires the issuer to perform the
 calculation beforehand to determine the resulting cache size.
 
+=item *
+
+The F<{{ viceetcdir }}/cacheinfo> file is ignored when B<-mountdir>,
+B<-cachedir> (or B<-memcache>), and B<-blocks> options are specified.
+
 =back
 
 For satisfactory memory cache performance, the specified value must leave

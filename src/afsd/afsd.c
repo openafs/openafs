@@ -2379,9 +2379,14 @@ CheckOptions(struct cmd_syndesc *as)
 	}
     }
 
-    /* parse cacheinfo file if this is a diskcache */
-    if (ParseCacheInfoFile()) {
-	exit(1);
+    /*
+     * Parse the cacheinfo file unless -mountdir, -cachedir (or -memcache),
+     * and -blocks is specified.
+     */
+    if (!sawCacheMountDir || !sawCacheBaseDir || !sawCacheBlocks) {
+	if (ParseCacheInfoFile()) {
+	    exit(1);
+	}
     }
 
     free(atsys_str);
