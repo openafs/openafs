@@ -177,6 +177,10 @@ elif [ x"$majorvers" = x25 ]; then
     RELNAME="Tahoe"
     THISREL=26
     OSVER=26
+elif [ x"$majorvers" = x27 ]; then
+    RELNAME="Golden Gate"
+    THISREL=27
+    OSVER=27
 
 
 elif [ x"$majorvers" = x ] ; then
