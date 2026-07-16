@@ -1399,32 +1399,30 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 	    break;
 	code = AddToPRList(alist, &size, tentry2->entries[i]);
 	if (code)
-	    break;
+	    return code;
     }
 
-    if (!code) {
-	nptr = tentry2->next;
-	while (nptr != 0) {
-	    /* look through cont entries */
-	    code = pr_ReadCoEntry(at, 0, nptr, &centry);
-	    if (code != 0)
+    nptr = tentry2->next;
+    while (nptr != 0) {
+	/* look through cont entries */
+	code = pr_ReadCoEntry(at, 0, nptr, &centry);
+	if (code != 0)
+	    return code;
+	for (i = 0; i < COSIZE; i++) {
+	    if (centry.entries[i] == PRBADID)
+		continue;
+	    if (centry.entries[i] == 0)
 		break;
-	    for (i = 0; i < COSIZE; i++) {
-		if (centry.entries[i] == PRBADID)
-		    continue;
-		if (centry.entries[i] == 0)
-		    break;
-		code = AddToPRList(alist, &size, centry.entries[i]);
-		if (code)
-		    break;
-	    }
-	    nptr = centry.next;
-	    if (count++ > 50) {
+	    code = AddToPRList(alist, &size, centry.entries[i]);
+	    if (code)
+		return code;
+	}
+	nptr = centry.next;
+	if (count++ > 50) {
 #ifndef AFS_PTHREAD_ENV
-		IOMGR_Poll();
+	    IOMGR_Poll();
 #endif
-		count = 0;
-	    }
+	    count = 0;
 	}
     }
     if (add) {			/* this is for a CPS, so tack on appropriate stuff */
