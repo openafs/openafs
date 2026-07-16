@@ -126,7 +126,7 @@ process.o	: process.default.s process.i386.s process.amd64.s process.c lwp.o
 		${AS} -o process.o process.s; \
 		$(RM) process.s ;; \
 	sunx86_510 | sunx86_511) \
-		if [ "${ASFLAGS}" = "-m64" ] ; then \
+		if [ "${ASFLAGS}" = "-m64" ] || [ "${ASFLAGS}" = "--64" ]; then \
 			CURRENTBUILDARCH=amd64 ; \
 		else \
 			XCPPFLAGS="-D__i386" ; \
