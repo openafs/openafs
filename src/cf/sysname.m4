@@ -343,7 +343,12 @@ else
                         enable_pam="yes"
                         ;;
                 *)
-                        AC_MSG_ERROR(An AFS sysname is required)
+			AC_MSG_ERROR(m4_normalize([
+			    An AFS sysname is required. We could not
+			    automatically detect a sysname for your platform
+			    ($host). Either file a bug, or provide an explicit
+			    sysname using --with-afs-sysname.
+			]))
                         ;;
         esac
         case $AFS_SYSNAME in
