@@ -255,7 +255,7 @@ else
                 i386-pc-solaris2.10)
                         AFS_SYSNAME="sunx86_510"
                         ;;
-                i386-pc-solaris2.11)
+		i386-pc-solaris2.11 | x86_64-pc-solaris2.11)
                         AFS_SYSNAME="sunx86_511"
                         ;;
                 mips-sgi-irix6.5)

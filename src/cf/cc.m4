@@ -75,7 +75,7 @@ AC_DEFUN([OPENAFS_PATH_CC], [
      [SOLARIS_PATH_CC],
 
    dnl sunx86_5*
-   [i386-pc-solaris2.*],
+   [i386-pc-solaris2.* | x86_64-pc-solaris2.*],
      [SOLARIS_PATH_CC],
    [])
 ])
