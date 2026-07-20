@@ -385,16 +385,52 @@ EmptyAcl(char *astr)
     return tp;
 }
 
-static struct aclu_Acl *
-ParseAcl(const char *astr)
+/**
+ * Create a new struct aclu_Acl from an ACL string.
+ *
+ * The expected format of the input string is the standard AFS ACL string
+ * format, as used in the RPC RXAFS_FetchACL(). The first two lines are
+ * formatted as follows:
+ *
+ * <nplus> [dfs:<type> <cell>]
+ * <nminus>
+ *
+ * <nplus>, <type>, and <nminus> are decimal-integers, while <cell> is a string.
+ * The dfs:<type> <cell> portion of the first line is only present for DFS ACLs,
+ * AFS ACLs omit this part.
+ *
+ * The next nplus lines represent the positive entries, formatted as
+ * <name> <rights>, where <rights> is the rights bitmask, formatted as a decimal
+ * integer. Then, the next nminus lines represent the negative entries, in the
+ * same format.
+ *
+ * The caller is responsible for freeing the newly created aclu_Acl struct by
+ * invoking aclu_FreeAcl().
+ *
+ * @param[in]  astr  ACL string to construct the ACL from
+ * @param[out] a_acl address of the resulting ACL
+ *
+ * @return status codes
+ *   @retval 0      success
+ *   @retval ENOMEM allocation failed, insufficient memory
+ */
+static int
+aclu_ParseAcl(const char *astr, struct aclu_Acl **a_acl)
 {
     int nplus = 0, nminus = 0, i, trights = 0;
+    int code;
     char tname[ACLU_MAXNAME + 1] = "";
     struct aclu_AclEntry *first, *last, *tl;
     struct aclu_Acl *ta;
 
+    *a_acl = NULL;
+
     ta = calloc(sizeof(*ta), 1);
-    assert(ta);
+    if (ta == NULL) {
+	code = ENOMEM;
+	goto done;
+    }
+
     ta->dfs = 0;
     sscanf(astr, "%d dfs:%d %1024s", &ta->nplus, &ta->dfs, ta->cell);
     astr = SkipLine(astr);
@@ -410,9 +446,14 @@ ParseAcl(const char *astr)
 	sscanf(astr, "%99s %d", tname, &trights);
 	astr = SkipLine(astr);
 	tl = calloc(sizeof(*tl), 1);
-	assert(tl);
-	if (!first)
+	if (tl == NULL) {
+	    code = ENOMEM;
+	    goto done;
+	}
+	if (!first) {
 	    first = tl;
+	    ta->pluslist = first;
+	}
 	strcpy(tl->name, tname);
 	tl->rights = trights;
 	tl->next = 0;
@@ -420,7 +461,6 @@ ParseAcl(const char *astr)
 	    last->next = tl;
 	last = tl;
     }
-    ta->pluslist = first;
 
     last = 0;
     first = 0;
@@ -428,9 +468,14 @@ ParseAcl(const char *astr)
 	sscanf(astr, "%99s %d", tname, &trights);
 	astr = SkipLine(astr);
 	tl = calloc(sizeof(*tl), 1);
-	assert(tl);
-	if (!first)
+	if (tl == NULL) {
+	    code = ENOMEM;
+	    goto done;
+	}
+	if (!first) {
 	    first = tl;
+	    ta->minuslist = first;
+	}
 	strcpy(tl->name, tname);
 	tl->rights = trights;
 	tl->next = 0;
@@ -438,9 +483,25 @@ ParseAcl(const char *astr)
 	    last->next = tl;
 	last = tl;
     }
-    ta->minuslist = first;
 
-    return ta;
+    *a_acl = ta;
+    code = 0;
+
+ done:
+    if (code != 0) {
+	aclu_FreeAcl(&ta);
+    }
+    return code;
+}
+
+static struct aclu_Acl *
+ParseAcl(const char *astr)
+{
+    struct aclu_Acl *acl = NULL;
+    int code = aclu_ParseAcl(astr, &acl);
+    opr_Assert(code == 0);
+    opr_Assert(acl != NULL);
+    return acl;
 }
 
 static int
