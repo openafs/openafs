@@ -41,7 +41,7 @@
 #include <afs/afsutil.h>
 #include <afs/sys_prototypes.h>
 
-#define MAXNAME 100
+#define ACLU_MAXNAME 100
 #define MAXINSIZE 1300		/* pioctl complains if data is larger than this */
 #define VMSGSIZE 128		/* size of msg buf in volume hdr */
 
@@ -60,11 +60,11 @@ static int UuidCmd(struct cmd_syndesc *, void *);
 static char pn[] = "fs";
 static int rxInitDone = 0;
 
-struct AclEntry;
-struct Acl;
-static void ZapList(struct AclEntry *);
-static int PruneList(struct AclEntry **, int);
-static int CleanAcl(struct Acl *, char *);
+struct aclu_AclEntry;
+struct aclu_Acl;
+static void ZapList(struct aclu_AclEntry *);
+static int PruneList(struct aclu_AclEntry **, int);
+static int CleanAcl(struct aclu_Acl *, char *);
 static int SetVolCmd(struct cmd_syndesc *as, void *arock);
 static int GetCellName(char *, char *, size_t);
 static void Die(int, char *);
@@ -75,22 +75,20 @@ static void Die(int, char *);
  */
 #define DFS_SEPARATOR	' '
 
-typedef char sec_rgy_name_t[1025];	/* A DCE definition */
-
-struct Acl {
+struct aclu_Acl {
     int dfs;			/* Originally true if a dfs acl; now also the type
 				 * of the acl (1, 2, or 3, corresponding to object,
 				 * initial dir, or initial object). */
-    sec_rgy_name_t cell;	/* DFS cell name */
+    char cell[1025];	/* DFS cell name, from DCE sec_rgy_name_t */
     int nplus;
     int nminus;
-    struct AclEntry *pluslist;
-    struct AclEntry *minuslist;
+    struct aclu_AclEntry *pluslist;
+    struct aclu_AclEntry *minuslist;
 };
 
-struct AclEntry {
-    struct AclEntry *next;
-    char name[MAXNAME];
+struct aclu_AclEntry {
+    struct aclu_AclEntry *next;
+    char name[ACLU_MAXNAME];
     afs_int32 rights;
 };
 
@@ -102,7 +100,7 @@ struct vcxstat2 {
 };
 
 static void
-ZapAcl(struct Acl *acl)
+ZapAcl(struct aclu_Acl *acl)
 {
     if (!acl)
 	return;
@@ -234,8 +232,8 @@ Convert(const char *arights, int dfs, enum aclu_rights_type *rtypep)
     return mask;
 }
 
-static struct AclEntry *
-FindList(struct AclEntry *alist, char *aname)
+static struct aclu_AclEntry *
+FindList(struct aclu_AclEntry *alist, char *aname)
 {
     while (alist) {
 	if (!foldcmp(alist->name, aname))
@@ -263,10 +261,10 @@ SetDotDefault(struct cmd_item **aitemp)
 }
 
 static void
-ChangeList(struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights,
+ChangeList(struct aclu_Acl *al, afs_int32 plus, char *aname, afs_int32 arights,
 	   enum aclu_rights_type *artypep)
 {
-    struct AclEntry *tlist;
+    struct aclu_AclEntry *tlist;
     tlist = (plus ? al->pluslist : al->minuslist);
     tlist = FindList(tlist, aname);
     if (tlist) {
@@ -293,7 +291,7 @@ ChangeList(struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights,
         return;                 /* can't reduce non-existing rights   */
 
     /* Otherwise we make a new item and plug in the new data. */
-    tlist = malloc(sizeof(struct AclEntry));
+    tlist = malloc(sizeof(struct aclu_AclEntry));
     assert(tlist);
     strcpy(tlist->name, aname);
     tlist->rights = arights;
@@ -313,9 +311,9 @@ ChangeList(struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights,
 }
 
 static void
-ZapList(struct AclEntry *alist)
+ZapList(struct aclu_AclEntry *alist)
 {
-    struct AclEntry *tp, *np;
+    struct aclu_AclEntry *tp, *np;
     for (tp = alist; tp; tp = np) {
 	np = tp->next;
 	free(tp);
@@ -323,10 +321,10 @@ ZapList(struct AclEntry *alist)
 }
 
 static int
-PruneList(struct AclEntry **ae, int dfs)
+PruneList(struct aclu_AclEntry **ae, int dfs)
 {
-    struct AclEntry **lp;
-    struct AclEntry *te, *ne;
+    struct aclu_AclEntry **lp;
+    struct aclu_AclEntry *te, *ne;
     afs_int32 ctr;
     ctr = 0;
     lp = ae;
@@ -361,10 +359,10 @@ SkipLine(char *astr)
  * assume that the acl is AFS: for DFS, the user can always resort to
  * acl_edit, but for AFS there may be no other way out).
  */
-static struct Acl *
+static struct aclu_Acl *
 EmptyAcl(char *astr)
 {
-    struct Acl *tp;
+    struct aclu_Acl *tp;
     int junk;
 
     tp = calloc(sizeof(*tp), 1);
@@ -376,13 +374,13 @@ EmptyAcl(char *astr)
     return tp;
 }
 
-static struct Acl *
+static struct aclu_Acl *
 ParseAcl(char *astr)
 {
     int nplus = 0, nminus = 0, i, trights = 0;
-    char tname[MAXNAME + 1] = "";
-    struct AclEntry *first, *last, *tl;
-    struct Acl *ta;
+    char tname[ACLU_MAXNAME + 1] = "";
+    struct aclu_AclEntry *first, *last, *tl;
+    struct aclu_Acl *ta;
 
     ta = calloc(sizeof(*ta), 1);
     assert(ta);
@@ -554,12 +552,12 @@ QuickPrintSpace(VolumeStatus * status, char *name, int human)
 }
 
 static char *
-AclToString(struct Acl *acl)
+AclToString(struct aclu_Acl *acl)
 {
     static char mydata[AFS_PIOCTL_MAXSIZE + 24];
     char tstring[AFS_PIOCTL_MAXSIZE];
     char dfsstring[AFS_PIOCTL_MAXSIZE];
-    struct AclEntry *tp;
+    struct aclu_AclEntry *tp;
 
     if (acl->dfs)
 	snprintf(dfsstring, sizeof(dfsstring), " dfs:%d %s", acl->dfs, acl->cell);
@@ -582,7 +580,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
-    struct Acl *ta = 0;
+    struct aclu_Acl *ta = 0;
     struct cmd_item *ti, *ui;
     int plusp;
     afs_int32 rights;
@@ -635,7 +633,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 	    }
 	    rights = Convert(ui->next->data, ta->dfs, &rtype);
 	    if (rtype == ACLU_RTYPE_DESTROY && !ta->dfs) {
-		struct AclEntry *tlist;
+		struct aclu_AclEntry *tlist;
 
 		tlist = (plusp ? ta->pluslist : ta->minuslist);
 		if (!FindList(tlist, ui->data))
@@ -716,8 +714,8 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
-    struct Acl *fa, *ta = 0;
-    struct AclEntry *tp;
+    struct aclu_Acl *fa, *ta = 0;
+    struct aclu_AclEntry *tp;
     struct cmd_item *ti;
     int clear;
     int idf = getidf(as, parm_copyacl_id);
@@ -853,9 +851,9 @@ BadName(char *aname, char *fname)
 /* clean up an access control list of its bad entries; return 1 if we made
    any changes to the list, and 0 otherwise */
 static int
-CleanAcl(struct Acl *aa, char *fname)
+CleanAcl(struct aclu_Acl *aa, char *fname)
 {
-    struct AclEntry *te, **le, *ne;
+    struct aclu_AclEntry *te, **le, *ne;
     int changes;
 
     /* Don't correct DFS ACL's for now */
@@ -899,11 +897,11 @@ static int
 CleanACLCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
-    struct Acl *ta = 0;
+    struct aclu_Acl *ta = 0;
     struct ViceIoctl blob;
     int changes;
     struct cmd_item *ti;
-    struct AclEntry *te;
+    struct aclu_AclEntry *te;
     int error = 0;
 
     SetDotDefault(&as->parms[0].items);
@@ -986,9 +984,9 @@ static int
 ListACLCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
-    struct Acl *ta;
+    struct aclu_Acl *ta;
     struct ViceIoctl blob;
-    struct AclEntry *te;
+    struct aclu_AclEntry *te;
     struct cmd_item *ti;
     int idf = getidf(as, parm_listacl_id);
     int error = 0;
