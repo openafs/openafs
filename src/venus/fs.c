@@ -363,26 +363,54 @@ SkipLine(const char *astr)
     return astr;
 }
 
-/*
- * Create an empty acl, taking into account whether the acl pointed
- * to by astr is an AFS or DFS acl. Only parse this minimally, so we
- * can recover from problems caused by bogus ACL's (in that case, always
- * assume that the acl is AFS: for DFS, the user can always resort to
- * acl_edit, but for AFS there may be no other way out).
+/**
+ * Create an empty aclu_Acl struct, using an ACL string to obtain DFS info.
+ *
+ * The only part of the input string that is parsed is the first line, since
+ * that is the part containing DFS information, and so that bogus ACLs can be
+ * recovered from. See aclu_ParseAcl() for information on expected ACL string
+ * format.
+ *
+ * The caller is responsible for freeing the newly created Acl struct by
+ * invoking aclu_FreeAcl().
+ *
+ * @param[in]  astr  ACL string to mimic the DFS status and cell from
+ * @param[out] a_acl address of the resulting ACL
+ *
+ * @return status codes
+ *   @retval 0      success
+ *   @retval ENOMEM allocation failed, insufficient memory
  */
-static struct aclu_Acl *
-EmptyAcl(char *astr)
+static int
+aclu_ParseEmptyAcl(const char *astr, struct aclu_Acl **a_acl)
 {
     struct aclu_Acl *tp;
     int junk;
 
     tp = calloc(sizeof(*tp), 1);
-    assert(tp);
+    if (tp == NULL) {
+	return ENOMEM;
+    }
+
     tp->nplus = tp->nminus = 0;
     tp->pluslist = tp->minuslist = 0;
     tp->dfs = 0;
     sscanf(astr, "%d dfs:%d %1024s", &junk, &tp->dfs, tp->cell);
-    return tp;
+
+    *a_acl = tp;
+    return 0;
+}
+
+static struct aclu_Acl *
+EmptyAcl(const char *astr)
+{
+    struct aclu_Acl *acl = NULL;
+    int code;
+
+    code = aclu_ParseEmptyAcl(astr, &acl);
+    opr_Assert(code == 0);
+    opr_Assert(acl != NULL);
+    return acl;
 }
 
 /**
