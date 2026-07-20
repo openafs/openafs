@@ -9,3 +9,5 @@ acl_IsAMember
 acl_NtohACL
 aclu_ParseRights
 aclu_ParseRightsDFS
+aclu_StringifyRights
+aclu_StringifyRightsDFS

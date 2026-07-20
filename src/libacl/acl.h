@@ -104,4 +104,15 @@ extern int aclu_ParseRightsDFS(const char *arights, afs_uint32 *mask,
 			       enum aclu_rights_type *rtypep, char *bad_char)
 			       AFS_NONNULL((1,2,3));
 
+struct aclu_rightsbuf {
+    char sbuf[16];
+};
+
+extern const char *aclu_StringifyRights(afs_uint32 arights,
+					struct aclu_rightsbuf *strbuf)
+					AFS_NONNULL_ALL;
+extern const char *aclu_StringifyRightsDFS(afs_uint32 arights,
+					   struct aclu_rightsbuf *strbuf)
+					   AFS_NONNULL_ALL;
+
 #endif

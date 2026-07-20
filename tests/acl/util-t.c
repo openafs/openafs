@@ -160,12 +160,45 @@ test_ParseRights(void)
     }
 }
 
+static void
+test_StringifyRights(void)
+{
+    int tc_i;
+    struct {
+	afs_uint32 rights;
+	const char *str;
+
+    } *tc, test_cases[] = {
+	{ READ, "rl" },
+	{ WRITE, "rlidwk"},
+	{ MAIL, "lik"},
+	{ ALL, "rlidwka"},
+
+	{ 0xffffffff, "rlidwkaABCDEFGH" },
+	{ R_rlidwkaH, "rlidwkaH" },
+	{ R_rlA, "rlA" },
+	{ R_ABC, "ABC" },
+	{ R_rlidwkAEH, "rlidwkAEH" },
+	{ R_iklBCD, "likBCD" },
+	{ 0, "" },
+    };
+
+    for (afstest_Scan(test_cases, tc, tc_i)) {
+	struct aclu_rightsbuf buf;
+
+	is_string(aclu_StringifyRights(tc->rights, &buf), tc->str,
+		  "aclu_StringifyRights(0x%x) == %s",
+		  tc->rights, tc->str);
+    }
+}
+
 int
 main(void)
 {
-    plan(110);
+    plan(121);
 
     test_ParseRights();
+    test_StringifyRights();
 
     return 0;
 }
