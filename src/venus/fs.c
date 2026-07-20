@@ -353,8 +353,8 @@ PruneList(struct aclu_AclEntry **ae, int dfs)
     return ctr;
 }
 
-static char *
-SkipLine(char *astr)
+static const char *
+SkipLine(const char *astr)
 {
     while (*astr != '\0' && *astr != '\n')
 	astr++;
@@ -386,7 +386,7 @@ EmptyAcl(char *astr)
 }
 
 static struct aclu_Acl *
-ParseAcl(char *astr)
+ParseAcl(const char *astr)
 {
     int nplus = 0, nminus = 0, i, trights = 0;
     char tname[ACLU_MAXNAME + 1] = "";
