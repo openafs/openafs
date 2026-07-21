@@ -662,8 +662,10 @@ export DONT_GPRINTIFY=1 # Do not modify initscripts.
 #-----------------------------------------------------------------------------
 make %{_smp_mflags} install_nolibafs DESTDIR="$RPM_BUILD_ROOT"
 
-# Set the executable bit on libraries in libdir, so rpmbuild knows to
-# create "Provides" entries in the package metadata for the libraries
+# Shared libraries are conventionally installed executable on Red Hat
+# systems, and rpm tooling such as find-debuginfo relies on this. The
+# OpenAFS build system installs them without the executable bit, so set
+# it here.
 chmod +x $RPM_BUILD_ROOT%{_libdir}/*.so*
 
 # Exclude duplicated files.
