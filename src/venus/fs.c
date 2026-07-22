@@ -309,11 +309,15 @@ Parent(char *apath)
 enum rtype { add, destroy, deny, reladd, reldel };
 
 static afs_int32
-Convert(char *arights, int dfs, enum rtype *rtypep)
+Convert(const char *rights_str, int dfs, enum rtype *rtypep)
 {
     afs_int32 mode;
     char tc;
     char *tcp;                  /* to walk through the rights string  */
+    char *arights = NULL;
+
+    arights = strdup(rights_str);
+    opr_Assert(arights != NULL);
 
     *rtypep = add;		/* add rights, by default */
 
@@ -334,31 +338,47 @@ Convert(char *arights, int dfs, enum rtype *rtypep)
     if (dfs) {
 	if (!strcmp(arights, "null")) {
 	    *rtypep = deny;
-	    return 0;
+	    mode = 0;
+	    goto success;
 	}
-	if (!strcmp(arights, "read"))
-	    return DFS_READ | DFS_EXECUTE;
-	if (!strcmp(arights, "write"))
-	    return DFS_READ | DFS_EXECUTE | DFS_INSERT | DFS_DELETE |
+	if (!strcmp(arights, "read")) {
+	    mode = DFS_READ | DFS_EXECUTE;
+	    goto success;
+	}
+	if (!strcmp(arights, "write")) {
+	    mode = DFS_READ | DFS_EXECUTE | DFS_INSERT | DFS_DELETE |
 		DFS_WRITE;
-	if (!strcmp(arights, "all"))
-	    return DFS_READ | DFS_EXECUTE | DFS_INSERT | DFS_DELETE |
+	    goto success;
+	}
+	if (!strcmp(arights, "all")) {
+	    mode = DFS_READ | DFS_EXECUTE | DFS_INSERT | DFS_DELETE |
 		DFS_WRITE | DFS_CONTROL;
+	    goto success;
+	}
     } else {
-	if (!strcmp(arights, "read"))
-	    return PRSFS_READ | PRSFS_LOOKUP;
-	if (!strcmp(arights, "write"))
-	    return PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE |
+	if (!strcmp(arights, "read")) {
+	    mode = PRSFS_READ | PRSFS_LOOKUP;
+	    goto success;
+	}
+	if (!strcmp(arights, "write")) {
+	    mode = PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE |
 		PRSFS_WRITE | PRSFS_LOCK;
-	if (!strcmp(arights, "mail"))
-	    return PRSFS_INSERT | PRSFS_LOCK | PRSFS_LOOKUP;
-	if (!strcmp(arights, "all"))
-	    return PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE |
+	    goto success;
+	}
+	if (!strcmp(arights, "mail")) {
+	    mode = PRSFS_INSERT | PRSFS_LOCK | PRSFS_LOOKUP;
+	    goto success;
+	}
+	if (!strcmp(arights, "all")) {
+	    mode = PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | PRSFS_DELETE |
 		PRSFS_WRITE | PRSFS_LOCK | PRSFS_ADMINISTER;
+	    goto success;
+	}
     }
     if (!strcmp(arights, "none")) {
 	*rtypep = destroy;	/* Remove entire entry */
-	return 0;
+	mode = 0;
+	goto success;
     }
     mode = 0;
     tcp = arights;
@@ -437,6 +457,9 @@ Convert(char *arights, int dfs, enum rtype *rtypep)
 	    }
 	}
     }
+
+ success:
+    free(arights);
     return mode;
 }
 
