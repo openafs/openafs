@@ -9,6 +9,9 @@
 # Disable using lto (link time optimization)
 %global _lto_cflags %{nil}
 
+# Define the location to the legacy workstation directory.
+%global afswsdir /usr/afsws
+
 #
 # Disable setting the source_date_epoch from the top entry of the changelog and
 # instead use the current system time by default.
@@ -351,7 +354,7 @@ allowing cross-platform sharing of files among multiple computers.
 Facilities are provided for access control, authentication, backup and
 administrative management.
 
-This package provides compatibility symlinks in /usr/afsws.  It is
+This package provides compatibility symlinks in %{afswsdir}.  It is
 completely optional, and is only necessary to support legacy
 applications and scripts that hard-code the location of AFS client
 programs.
@@ -803,45 +806,6 @@ tar cf - -C doc html pdf | \
 install -m 644 %{SOURCE10} $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
 install -m 644 %{SOURCE11} $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
 
-#-----------------------------------------------------------------------------
-# Install compatiblity links.
-#-----------------------------------------------------------------------------
-mkdir -p $RPM_BUILD_ROOT%{_prefix}/afsws/bin
-mkdir -p $RPM_BUILD_ROOT%{_prefix}/afsws/etc
-ln -sf %{_prefix}/bin/afsmonitor    $RPM_BUILD_ROOT%{_prefix}/afsws/bin/afsmonitor
-ln -sf %{_prefix}/bin/bos           $RPM_BUILD_ROOT%{_prefix}/afsws/bin/bos
-ln -sf %{_prefix}/bin/fs            $RPM_BUILD_ROOT%{_prefix}/afsws/bin/fs
-%if %{kauth_support}
-ln -sf %{_prefix}/bin/kapasswd      $RPM_BUILD_ROOT%{_prefix}/afsws/bin/kapasswd
-ln -sf %{_prefix}/bin/klog          $RPM_BUILD_ROOT%{_prefix}/afsws/bin/klog
-ln -sf %{_prefix}/bin/klog.krb      $RPM_BUILD_ROOT%{_prefix}/afsws/bin/klog.krb
-ln -sf %{_prefix}/bin/pagsh.krb     $RPM_BUILD_ROOT%{_prefix}/afsws/bin/pagsh.krb
-ln -sf %{_prefix}/bin/tokens.krb    $RPM_BUILD_ROOT%{_prefix}/afsws/bin/tokens.krb
-%endif
-ln -sf %{_prefix}/bin/pagsh         $RPM_BUILD_ROOT%{_prefix}/afsws/bin/pagsh
-ln -sf %{_prefix}/bin/pts           $RPM_BUILD_ROOT%{_prefix}/afsws/bin/pts
-ln -sf %{_prefix}/bin/restorevol    $RPM_BUILD_ROOT%{_prefix}/afsws/bin/restorevol
-ln -sf %{_prefix}/bin/scout         $RPM_BUILD_ROOT%{_prefix}/afsws/bin/scout
-ln -sf %{_prefix}/bin/sys           $RPM_BUILD_ROOT%{_prefix}/afsws/bin/sys
-ln -sf %{_prefix}/bin/tokens        $RPM_BUILD_ROOT%{_prefix}/afsws/bin/tokens
-ln -sf %{_prefix}/bin/translate_et  $RPM_BUILD_ROOT%{_prefix}/afsws/bin/translate_et
-ln -sf %{_prefix}/bin/xstat_cm_test $RPM_BUILD_ROOT%{_prefix}/afsws/bin/xstat_cm_test
-ln -sf %{_prefix}/bin/xstat_fs_test $RPM_BUILD_ROOT%{_prefix}/afsws/bin/xstat_fs_test
-ln -sf %{_prefix}/bin/udebug        $RPM_BUILD_ROOT%{_prefix}/afsws/bin/udebug
-ln -sf %{_prefix}/bin/unlog         $RPM_BUILD_ROOT%{_prefix}/afsws/bin/unlog
-ln -sf %{_prefix}/sbin/backup       $RPM_BUILD_ROOT%{_prefix}/afsws/etc/backup
-ln -sf %{_prefix}/sbin/butc         $RPM_BUILD_ROOT%{_prefix}/afsws/etc/butc
-ln -sf %{_prefix}/sbin/fms          $RPM_BUILD_ROOT%{_prefix}/afsws/etc/fms
-ln -sf %{_prefix}/sbin/fstrace      $RPM_BUILD_ROOT%{_prefix}/afsws/etc/fstrace
-%if %{kauth_support}
-ln -sf %{_prefix}/sbin/kas          $RPM_BUILD_ROOT%{_prefix}/afsws/etc/kas
-%endif
-ln -sf %{_prefix}/sbin/read_tape    $RPM_BUILD_ROOT%{_prefix}/afsws/etc/read_tape
-ln -sf %{_prefix}/sbin/rxdebug      $RPM_BUILD_ROOT%{_prefix}/afsws/etc/rxdebug
-ln -sf %{_prefix}/sbin/uss          $RPM_BUILD_ROOT%{_prefix}/afsws/etc/uss
-ln -sf %{_prefix}/sbin/vos          $RPM_BUILD_ROOT%{_prefix}/afsws/etc/vos
-ln -sf %{_prefix}/sbin/vsys         $RPM_BUILD_ROOT%{_prefix}/afsws/etc/vsys
-
 %endif
 
 ##############################################################################
@@ -933,6 +897,61 @@ fi
 if [ $1 -eq 1 ] ; then
     # Initial installation
     /bin/systemctl daemon-reload >/dev/null 2>&1 || :
+fi
+%endif
+
+%post compat
+# Create compatiblity links.
+mkdir -p %{afswsdir}/bin
+mkdir -p %{afswsdir}/etc
+ln -sf %{_bindir}/afsmonitor    %{afswsdir}/bin/afsmonitor
+ln -sf %{_bindir}/bos           %{afswsdir}/bin/bos
+ln -sf %{_bindir}/fs            %{afswsdir}/bin/fs
+ln -sf %{_bindir}/pagsh         %{afswsdir}/bin/pagsh
+ln -sf %{_bindir}/pts           %{afswsdir}/bin/pts
+ln -sf %{_bindir}/restorevol    %{afswsdir}/bin/restorevol
+ln -sf %{_bindir}/scout         %{afswsdir}/bin/scout
+ln -sf %{_bindir}/sys           %{afswsdir}/bin/sys
+ln -sf %{_bindir}/tokens        %{afswsdir}/bin/tokens
+ln -sf %{_bindir}/translate_et  %{afswsdir}/bin/translate_et
+ln -sf %{_bindir}/xstat_cm_test %{afswsdir}/bin/xstat_cm_test
+ln -sf %{_bindir}/xstat_fs_test %{afswsdir}/bin/xstat_fs_test
+ln -sf %{_bindir}/udebug        %{afswsdir}/bin/udebug
+ln -sf %{_bindir}/unlog         %{afswsdir}/bin/unlog
+ln -sf %{_sbindir}/backup       %{afswsdir}/etc/backup
+ln -sf %{_sbindir}/butc         %{afswsdir}/etc/butc
+ln -sf %{_sbindir}/fms          %{afswsdir}/etc/fms
+ln -sf %{_sbindir}/fstrace      %{afswsdir}/etc/fstrace
+ln -sf %{_sbindir}/read_tape    %{afswsdir}/etc/read_tape
+ln -sf %{_sbindir}/rxdebug      %{afswsdir}/etc/rxdebug
+ln -sf %{_sbindir}/uss          %{afswsdir}/etc/uss
+ln -sf %{_sbindir}/vos          %{afswsdir}/etc/vos
+ln -sf %{_sbindir}/vsys         %{afswsdir}/etc/vsys
+
+%postun compat
+if [ $1 = 0 ] ; then
+    rmdir %{afswsdir}/bin >/dev/null 2>/dev/null || :
+    rmdir %{afswsdir}/etc >/dev/null 2>/dev/null || :
+    rmdir %{afswsdir} >/dev/null 2>/dev/null || :
+fi
+
+%if %{kauth_support}
+%post kauth-client
+# Create compatiblity links.
+mkdir -p %{afswsdir}/bin
+mkdir -p %{afswsdir}/etc
+ln -sf %{_bindir}/kapasswd      %{afswsdir}/bin/kapasswd
+ln -sf %{_bindir}/klog          %{afswsdir}/bin/klog
+ln -sf %{_bindir}/klog.krb      %{afswsdir}/bin/klog.krb
+ln -sf %{_sbindir}/kas          %{afswsdir}/etc/kas
+ln -sf %{_bindir}/pagsh.krb     %{afswsdir}/bin/pagsh.krb
+ln -sf %{_bindir}/tokens.krb    %{afswsdir}/bin/tokens.krb
+
+%postun kauth-client
+if [ $1 = 0 ] ; then
+    rmdir %{afswsdir}/bin >/dev/null 2>/dev/null || :
+    rmdir %{afswsdir}/etc >/dev/null 2>/dev/null || :
+    rmdir %{afswsdir} >/dev/null 2>/dev/null || :
 fi
 %endif
 
@@ -1298,29 +1317,29 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 
 %files compat
 %defattr(-,root,root)
-%{_prefix}/afsws/bin/afsmonitor
-%{_prefix}/afsws/bin/bos
-%{_prefix}/afsws/bin/fs
-%{_prefix}/afsws/bin/pagsh
-%{_prefix}/afsws/bin/pts
-%{_prefix}/afsws/bin/restorevol
-%{_prefix}/afsws/bin/scout
-%{_prefix}/afsws/bin/sys
-%{_prefix}/afsws/bin/tokens
-%{_prefix}/afsws/bin/translate_et
-%{_prefix}/afsws/bin/udebug
-%{_prefix}/afsws/bin/unlog
-%{_prefix}/afsws/bin/xstat_cm_test
-%{_prefix}/afsws/bin/xstat_fs_test
-%{_prefix}/afsws/etc/backup
-%{_prefix}/afsws/etc/butc
-%{_prefix}/afsws/etc/fms
-%{_prefix}/afsws/etc/fstrace
-%{_prefix}/afsws/etc/read_tape
-%{_prefix}/afsws/etc/rxdebug
-%{_prefix}/afsws/etc/uss
-%{_prefix}/afsws/etc/vos
-%{_prefix}/afsws/etc/vsys
+%ghost %{afswsdir}/bin/afsmonitor
+%ghost %{afswsdir}/bin/bos
+%ghost %{afswsdir}/bin/fs
+%ghost %{afswsdir}/bin/pagsh
+%ghost %{afswsdir}/bin/pts
+%ghost %{afswsdir}/bin/restorevol
+%ghost %{afswsdir}/bin/scout
+%ghost %{afswsdir}/bin/sys
+%ghost %{afswsdir}/bin/tokens
+%ghost %{afswsdir}/bin/translate_et
+%ghost %{afswsdir}/bin/udebug
+%ghost %{afswsdir}/bin/unlog
+%ghost %{afswsdir}/bin/xstat_cm_test
+%ghost %{afswsdir}/bin/xstat_fs_test
+%ghost %{afswsdir}/etc/backup
+%ghost %{afswsdir}/etc/butc
+%ghost %{afswsdir}/etc/fms
+%ghost %{afswsdir}/etc/fstrace
+%ghost %{afswsdir}/etc/read_tape
+%ghost %{afswsdir}/etc/rxdebug
+%ghost %{afswsdir}/etc/uss
+%ghost %{afswsdir}/etc/vos
+%ghost %{afswsdir}/etc/vsys
 
 %if %{kauth_support}
 %files kauth-client
@@ -1336,12 +1355,12 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_bindir}/kpwvalid
 %{_bindir}/pagsh.krb
 %{_bindir}/tokens.krb
-%{_prefix}/afsws/bin/kapasswd
-%{_prefix}/afsws/bin/klog
-%{_prefix}/afsws/bin/klog.krb
-%{_prefix}/afsws/bin/pagsh.krb
-%{_prefix}/afsws/bin/tokens.krb
-%{_prefix}/afsws/etc/kas
+%ghost %{afswsdir}/bin/kapasswd
+%ghost %{afswsdir}/bin/klog
+%ghost %{afswsdir}/bin/klog.krb
+%ghost %{afswsdir}/bin/pagsh.krb
+%ghost %{afswsdir}/bin/tokens.krb
+%ghost %{afswsdir}/etc/kas
 %{_mandir}/man1/kapasswd.1.gz
 %{_mandir}/man1/klog.1.gz
 %{_mandir}/man1/klog.krb.1.gz
