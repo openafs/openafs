@@ -1321,10 +1321,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/afsws/etc/uss
 %{_prefix}/afsws/etc/vos
 %{_prefix}/afsws/etc/vsys
-%if %{kauth_support}
-%{_prefix}/afsws/bin/pagsh.krb
-%{_prefix}/afsws/bin/tokens.krb
-%endif
 
 %if %{kauth_support}
 %files kauth-client
@@ -1343,6 +1339,8 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/afsws/bin/kapasswd
 %{_prefix}/afsws/bin/klog
 %{_prefix}/afsws/bin/klog.krb
+%{_prefix}/afsws/bin/pagsh.krb
+%{_prefix}/afsws/bin/tokens.krb
 %{_prefix}/afsws/etc/kas
 %{_mandir}/man1/kapasswd.1.gz
 %{_mandir}/man1/klog.1.gz
