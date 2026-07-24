@@ -115,4 +115,30 @@ extern const char *aclu_StringifyRightsDFS(afs_uint32 arights,
 					   struct aclu_rightsbuf *strbuf)
 					   AFS_NONNULL_ALL;
 
+
+#define ACLU_MAXNAME 100
+
+struct aclu_AclEntry {
+    struct aclu_AclEntry *next;
+    char name[ACLU_MAXNAME];
+    afs_int32 rights;
+};
+
+struct aclu_Acl {
+    int dfs;		/* Originally true if a dfs acl; now also the type
+			 * of the acl (1, 2, or 3, corresponding to object,
+			 * initial dir, or initial object). */
+    char cell[1025];	/* DFS cell name, from DCE sec_rgy_name_t */
+    int nplus;
+    int nminus;
+    struct aclu_AclEntry *pluslist;
+    struct aclu_AclEntry *minuslist;
+};
+
+extern int aclu_ParseEmptyAcl(const char *astr, struct aclu_Acl **a_acl)
+			      AFS_NONNULL_ALL;
+extern int aclu_ParseAcl(const char *astr, struct aclu_Acl **a_acl)
+			 AFS_NONNULL_ALL;
+extern void aclu_FreeAcl(struct aclu_Acl **a_acl) AFS_NONNULL_ALL;
+
 #endif

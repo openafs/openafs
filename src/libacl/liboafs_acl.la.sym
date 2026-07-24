@@ -7,6 +7,9 @@ acl_Initialize
 acl_Internalize_pr
 acl_IsAMember
 acl_NtohACL
+aclu_FreeAcl
+aclu_ParseAcl
+aclu_ParseEmptyAcl
 aclu_ParseRights
 aclu_ParseRightsDFS
 aclu_StringifyRights

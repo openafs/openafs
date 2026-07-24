@@ -41,7 +41,6 @@
 #include <afs/afsutil.h>
 #include <afs/sys_prototypes.h>
 
-#define ACLU_MAXNAME 100
 #define MAXINSIZE 1300		/* pioctl complains if data is larger than this */
 #define VMSGSIZE 128		/* size of msg buf in volume hdr */
 
@@ -60,8 +59,6 @@ static int UuidCmd(struct cmd_syndesc *, void *);
 static char pn[] = "fs";
 static int rxInitDone = 0;
 
-struct aclu_AclEntry;
-struct aclu_Acl;
 static int PruneList(struct aclu_AclEntry **, int);
 static int CleanAcl(struct aclu_Acl *, char *);
 static int SetVolCmd(struct cmd_syndesc *as, void *arock);
@@ -74,61 +71,12 @@ static void Die(int, char *);
  */
 #define DFS_SEPARATOR	' '
 
-struct aclu_Acl {
-    int dfs;			/* Originally true if a dfs acl; now also the type
-				 * of the acl (1, 2, or 3, corresponding to object,
-				 * initial dir, or initial object). */
-    char cell[1025];	/* DFS cell name, from DCE sec_rgy_name_t */
-    int nplus;
-    int nminus;
-    struct aclu_AclEntry *pluslist;
-    struct aclu_AclEntry *minuslist;
-};
-
-struct aclu_AclEntry {
-    struct aclu_AclEntry *next;
-    char name[ACLU_MAXNAME];
-    afs_int32 rights;
-};
-
 struct vcxstat2 {
     afs_int32 callerAccess;
     afs_int32 cbExpires;
     afs_int32 anyAccess;
     char mvstat;
 };
-
-static void
-FreeEntryList(struct aclu_AclEntry *alist)
-{
-    struct aclu_AclEntry *tp, *np;
-    for (tp = alist; tp; tp = np) {
-	np = tp->next;
-	free(tp);
-    }
-}
-
-/**
- * Free an aclu_Acl and all of its entries.
- *
- * If *a_acl is NULL, the function does nothing. On return, the caller's pointer
- * (*a_acl) is set to NULL.
- *
- * @param[inout] a_acl the ACL to free, set to NULL on return
- */
-static void
-aclu_FreeAcl(struct aclu_Acl **a_acl)
-{
-    struct aclu_Acl *acl = *a_acl;
-    if (acl == NULL) {
-	return;
-    }
-    *a_acl = NULL;
-
-    FreeEntryList(acl->pluslist);
-    FreeEntryList(acl->minuslist);
-    free(acl);
-}
 
 static int
 foldcmp(char *a, char *b)
@@ -353,54 +301,6 @@ PruneList(struct aclu_AclEntry **ae, int dfs)
     return ctr;
 }
 
-static const char *
-SkipLine(const char *astr)
-{
-    while (*astr != '\0' && *astr != '\n')
-	astr++;
-    if (*astr == '\n')
-	astr++;
-    return astr;
-}
-
-/**
- * Create an empty aclu_Acl struct, using an ACL string to obtain DFS info.
- *
- * The only part of the input string that is parsed is the first line, since
- * that is the part containing DFS information, and so that bogus ACLs can be
- * recovered from. See aclu_ParseAcl() for information on expected ACL string
- * format.
- *
- * The caller is responsible for freeing the newly created Acl struct by
- * invoking aclu_FreeAcl().
- *
- * @param[in]  astr  ACL string to mimic the DFS status and cell from
- * @param[out] a_acl address of the resulting ACL
- *
- * @return status codes
- *   @retval 0      success
- *   @retval ENOMEM allocation failed, insufficient memory
- */
-static int
-aclu_ParseEmptyAcl(const char *astr, struct aclu_Acl **a_acl)
-{
-    struct aclu_Acl *tp;
-    int junk;
-
-    tp = calloc(sizeof(*tp), 1);
-    if (tp == NULL) {
-	return ENOMEM;
-    }
-
-    tp->nplus = tp->nminus = 0;
-    tp->pluslist = tp->minuslist = 0;
-    tp->dfs = 0;
-    sscanf(astr, "%d dfs:%d %1024s", &junk, &tp->dfs, tp->cell);
-
-    *a_acl = tp;
-    return 0;
-}
-
 static struct aclu_Acl *
 EmptyAcl(const char *astr)
 {
@@ -411,115 +311,6 @@ EmptyAcl(const char *astr)
     opr_Assert(code == 0);
     opr_Assert(acl != NULL);
     return acl;
-}
-
-/**
- * Create a new struct aclu_Acl from an ACL string.
- *
- * The expected format of the input string is the standard AFS ACL string
- * format, as used in the RPC RXAFS_FetchACL(). The first two lines are
- * formatted as follows:
- *
- * <nplus> [dfs:<type> <cell>]
- * <nminus>
- *
- * <nplus>, <type>, and <nminus> are decimal-integers, while <cell> is a string.
- * The dfs:<type> <cell> portion of the first line is only present for DFS ACLs,
- * AFS ACLs omit this part.
- *
- * The next nplus lines represent the positive entries, formatted as
- * <name> <rights>, where <rights> is the rights bitmask, formatted as a decimal
- * integer. Then, the next nminus lines represent the negative entries, in the
- * same format.
- *
- * The caller is responsible for freeing the newly created aclu_Acl struct by
- * invoking aclu_FreeAcl().
- *
- * @param[in]  astr  ACL string to construct the ACL from
- * @param[out] a_acl address of the resulting ACL
- *
- * @return status codes
- *   @retval 0      success
- *   @retval ENOMEM allocation failed, insufficient memory
- */
-static int
-aclu_ParseAcl(const char *astr, struct aclu_Acl **a_acl)
-{
-    int nplus = 0, nminus = 0, i, trights = 0;
-    int code;
-    char tname[ACLU_MAXNAME + 1] = "";
-    struct aclu_AclEntry *first, *last, *tl;
-    struct aclu_Acl *ta;
-
-    *a_acl = NULL;
-
-    ta = calloc(sizeof(*ta), 1);
-    if (ta == NULL) {
-	code = ENOMEM;
-	goto done;
-    }
-
-    ta->dfs = 0;
-    sscanf(astr, "%d dfs:%d %1024s", &ta->nplus, &ta->dfs, ta->cell);
-    astr = SkipLine(astr);
-    sscanf(astr, "%d", &ta->nminus);
-    astr = SkipLine(astr);
-
-    nplus = ta->nplus;
-    nminus = ta->nminus;
-
-    last = 0;
-    first = 0;
-    for (i = 0; i < nplus; i++) {
-	sscanf(astr, "%99s %d", tname, &trights);
-	astr = SkipLine(astr);
-	tl = calloc(sizeof(*tl), 1);
-	if (tl == NULL) {
-	    code = ENOMEM;
-	    goto done;
-	}
-	if (!first) {
-	    first = tl;
-	    ta->pluslist = first;
-	}
-	strcpy(tl->name, tname);
-	tl->rights = trights;
-	tl->next = 0;
-	if (last)
-	    last->next = tl;
-	last = tl;
-    }
-
-    last = 0;
-    first = 0;
-    for (i = 0; i < nminus; i++) {
-	sscanf(astr, "%99s %d", tname, &trights);
-	astr = SkipLine(astr);
-	tl = calloc(sizeof(*tl), 1);
-	if (tl == NULL) {
-	    code = ENOMEM;
-	    goto done;
-	}
-	if (!first) {
-	    first = tl;
-	    ta->minuslist = first;
-	}
-	strcpy(tl->name, tname);
-	tl->rights = trights;
-	tl->next = 0;
-	if (last)
-	    last->next = tl;
-	last = tl;
-    }
-
-    *a_acl = ta;
-    code = 0;
-
- done:
-    if (code != 0) {
-	aclu_FreeAcl(&ta);
-    }
-    return code;
 }
 
 static struct aclu_Acl *
