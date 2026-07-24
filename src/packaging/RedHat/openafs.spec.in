@@ -345,7 +345,7 @@ module.
 
 %package compat
 Summary: OpenAFS client compatibility symlinks
-Requires: openafs = %{version}, openafs-client = %{version}
+Requires: openafs = %{version}
 Group: Networking/Filesystems
 
 %description compat
