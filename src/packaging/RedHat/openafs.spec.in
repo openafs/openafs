@@ -896,11 +896,6 @@ done
 ##############################################################################
 %if %{build_userspace}
 
-%pre compat
-if [ -e %{_prefix}/afsws ]; then
-    /bin/rm -fr %{_prefix}/afsws
-fi
-
 %post client
 %if 0%{?fedora} < 15 && 0%{?rhel} < 7 && 0%{?amzn} < 1
 chkconfig --add openafs-client
