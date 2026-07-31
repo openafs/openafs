@@ -5236,6 +5236,9 @@ SRXAFS_GetStatistics64(struct rx_call *acall, afs_int32 statsVersion, ViceStatis
     ViceLog(1, ("SAFS_GetStatistics64 Received\n"));
     Statistics->ViceStatistics64_val =
 	calloc(statsVersion, sizeof(afs_uint64));
+    if (Statistics->ViceStatistics64_val == NULL) {
+	ViceLogThenPanic(0, ("Failed malloc in SAFS_GetStatistics64\n"));
+    }
     Statistics->ViceStatistics64_len = statsVersion;
     FS_LOCK;
     AFSCallStats.GetStatistics++, AFSCallStats.TotalCalls++;
@@ -5737,6 +5740,9 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
 
     dataBytes = 1 * sizeof(afs_int32);
     dataBuffP = malloc(dataBytes);
+    if (dataBuffP == NULL) {
+	ViceLogThenPanic(0, ("Failed malloc in SRXAFS_GetCapabilities\n"));
+    }
     dataBuffP[0] = VICED_CAPABILITY_ERRORTRANS | VICED_CAPABILITY_WRITELOCKACL;
     dataBuffP[0] |= VICED_CAPABILITY_64BITFILES;
     if (saneacls)
