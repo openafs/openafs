@@ -304,12 +304,16 @@ Parent(char *apath)
     return tspace;
 }
 
-                                /* added relative add resp. delete    */
-                                /* (so old add really means to set)   */
-enum rtype { add, destroy, deny, reladd, reldel };
+enum aclu_rights_type {
+    ACLU_RTYPE_SET = 1,	/**< overwrite/set rights ('=' default behavior) */
+    ACLU_RTYPE_DESTROY,	/**< remove the ACL entirely ("none") */
+    ACLU_RTYPE_DENY,	/**< revoke all rights ("null" DFS specific) */
+    ACLU_RTYPE_RELADD,	/**< add specific rights to existing ones ('+') */
+    ACLU_RTYPE_RELDEL,	/**< remove specific rights from existing ones ('-') */
+};
 
 static afs_int32
-Convert(const char *rights_str, int dfs, enum rtype *rtypep)
+Convert(const char *rights_str, int dfs, enum aclu_rights_type *rtypep)
 {
     afs_int32 mode;
     char tc;
@@ -319,17 +323,18 @@ Convert(const char *rights_str, int dfs, enum rtype *rtypep)
     arights = strdup(rights_str);
     opr_Assert(arights != NULL);
 
-    *rtypep = add;		/* add rights, by default */
+    /* set rights by default */
+    *rtypep = ACLU_RTYPE_SET;
 
                                 /* analyze last character of string   */
     tcp = arights + strlen(arights);
     if ( tcp-- > arights ) {    /* assure non-empty string            */
         if ( *tcp == '+' )
-            *rtypep = reladd;   /* '+' indicates more rights          */
+	    *rtypep = ACLU_RTYPE_RELADD;   /* '+' indicates more rights          */
         else if ( *tcp == '-' )
-            *rtypep = reldel;   /* '-' indicates less rights          */
+	    *rtypep = ACLU_RTYPE_RELDEL;   /* '-' indicates less rights          */
         else if ( *tcp == '=' )
-            *rtypep = add;      /* '=' also allows old behaviour      */
+	    *rtypep = ACLU_RTYPE_SET;      /* '=' also allows old behaviour      */
         else
             tcp++;              /* back to original null byte         */
         *tcp = '\0';            /* do not disturb old strcmp-s        */
@@ -337,7 +342,7 @@ Convert(const char *rights_str, int dfs, enum rtype *rtypep)
 
     if (dfs) {
 	if (!strcmp(arights, "null")) {
-	    *rtypep = deny;
+	    *rtypep = ACLU_RTYPE_DENY;
 	    mode = 0;
 	    goto success;
 	}
@@ -376,7 +381,7 @@ Convert(const char *rights_str, int dfs, enum rtype *rtypep)
 	}
     }
     if (!strcmp(arights, "none")) {
-	*rtypep = destroy;	/* Remove entire entry */
+	*rtypep = ACLU_RTYPE_DESTROY;	/* Remove entire entry */
 	mode = 0;
 	goto success;
     }
@@ -493,21 +498,21 @@ SetDotDefault(struct cmd_item **aitemp)
 
 static void
 ChangeList(struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights,
-	   enum rtype *artypep)
+	   enum aclu_rights_type *artypep)
 {
     struct AclEntry *tlist;
     tlist = (plus ? al->pluslist : al->minuslist);
     tlist = FindList(tlist, aname);
     if (tlist) {
 	/* Found the item already in the list.
-	 * modify rights in case of reladd and reladd only,
-	 * use standard - add, ie. set - otherwise
+	 * modify rights in case of _RELADD and _RELDEL only,
+	 * use standard _SET otherwise
 	 */
         if ( artypep == NULL )
             tlist->rights = arights;
-        else if ( *artypep == reladd )
+	else if ( *artypep == ACLU_RTYPE_RELADD )
             tlist->rights |= arights;
-        else if ( *artypep == reldel )
+	else if ( *artypep == ACLU_RTYPE_RELDEL )
             tlist->rights &= ~arights;
         else
             tlist->rights = arights;
@@ -518,7 +523,7 @@ ChangeList(struct Acl *al, afs_int32 plus, char *aname, afs_int32 arights,
 	    al->nminus -= PruneList(&al->minuslist, al->dfs);
 	return;
     }
-    if ( artypep != NULL && *artypep == reldel )
+    if ( artypep != NULL && *artypep == ACLU_RTYPE_RELDEL )
         return;                 /* can't reduce non-existing rights   */
 
     /* Otherwise we make a new item and plug in the new data. */
@@ -855,7 +860,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 	    ta = ParseAcl(space);
 	CleanAcl(ta, ti->data);
 	for (ui = as->parms[1].items; ui; ui = ui->next->next) {
-	    enum rtype rtype;
+	    enum aclu_rights_type rtype;
 	    if (!ui->next) {
 		fprintf(stderr,
 			"%s: Missing second half of user/access pair.\n", pn);
@@ -863,16 +868,16 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 		return 1;
 	    }
 	    rights = Convert(ui->next->data, ta->dfs, &rtype);
-	    if (rtype == destroy && !ta->dfs) {
+	    if (rtype == ACLU_RTYPE_DESTROY && !ta->dfs) {
 		struct AclEntry *tlist;
 
 		tlist = (plusp ? ta->pluslist : ta->minuslist);
 		if (!FindList(tlist, ui->data))
 		    continue;
 	    }
-	    if (rtype == deny && !ta->dfs)
+	    if (rtype == ACLU_RTYPE_DENY && !ta->dfs)
 		plusp = 0;
-	    if (rtype == destroy && ta->dfs)
+	    if (rtype == ACLU_RTYPE_DESTROY && ta->dfs)
 		rights = -1;
 	    ChangeList(ta, plusp, ui->data, rights, &rtype);
 	}
