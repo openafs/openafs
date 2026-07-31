@@ -117,7 +117,7 @@ Copious(struct client *c, char *buf, u_long buflen)
     long outlen = c->recvLen;
     long d = 23;
     long mysum;
-    size_t outsum;
+    u_long outsum;
 
     mysum = 0;
     for (i = 0; i < inlen; i++)
