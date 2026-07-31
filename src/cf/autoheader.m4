@@ -7,6 +7,16 @@ AC_DEFUN([OPENAFS_AUTOHEADER_BOTTOM],[
     AH_BOTTOM([
 #undef HAVE_RES_SEARCH
 #undef STRUCT_SOCKADDR_HAS_SA_LEN
+#ifdef UKERNEL
+/*
+ * Always use 64-bit file offsets for UKERNEL code. Needed for UKERNEL stuff to
+ * play nice with some other interfaces like FUSE. We technically only would
+ * need to define this when building for such interfaces, but set it always to
+ * try and reduce potential confusion.
+ */
+# define _FILE_OFFSET_BITS 64
+# define AFS_CACHE_VNODE_PATH
+#endif
 #if !defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)
 # if ENDIANESS_IN_SYS_PARAM_H
 #  ifndef KERNEL
@@ -35,16 +45,6 @@ AC_DEFUN([OPENAFS_AUTOHEADER_BOTTOM],[
 # else
 #  undef WORDS_BIGENDIAN
 # endif
-#endif
-#ifdef UKERNEL
-/*
- * Always use 64-bit file offsets for UKERNEL code. Needed for UKERNEL stuff to
- * play nice with some other interfaces like FUSE. We technically only would
- * need to define this when building for such interfaces, but set it always to
- * try and reduce potential confusion.
- */
-# define _FILE_OFFSET_BITS 64
-# define AFS_CACHE_VNODE_PATH
 #endif
 
 #undef AFS_NAMEI_ENV
