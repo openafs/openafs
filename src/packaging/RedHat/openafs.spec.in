@@ -635,7 +635,6 @@ make %{_smp_mflags} libafs
 %install
 
 export SOURCE_DATE_EPOCH=%{source_date_epoch}
-export DONT_GPRINTIFY=1 # Do not modify initscripts.
 
 ##############################################################################
 ###
