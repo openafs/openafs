@@ -86,13 +86,7 @@ afs_path(const char *apath)
 static void *
 fuafsd_init(struct fuse_conn_info *conn, struct fuse_config *cfg)
 {
-    /*
-     * For now, don't touch 'cfg'. The various fields in 'cfg' can be set to
-     * specify different variants of behavior that may be useful (such as
-     * .nullpath_ok), or are given to us by fuse according to args given by the
-     * user (such as .kernel_cache). Someday we may want to set some values, or
-     * sanity-check the values given to us, but don't bother for now.
-     */
+    cfg->use_ino = 1;
 
     uafs_Run();
 
@@ -613,9 +607,8 @@ main(int argc, char **argv)
 
 	fuse_opt_add_arg(&fuse_args, argv[0]);
 
-	/* let us determine file inode numbers, not FUSE. also make "AFS" appear
-	 * in df/mount/mnttab/etc output. */
-	fuse_opt_add_arg(&fuse_args, "-ouse_ino,fsname=AFS");
+	/* Make "AFS" appear in df/mount/mnttab/etc output. */
+	fuse_opt_add_arg(&fuse_args, "-ofsname=AFS");
 
 	if (getuid() == 0) {
 	    /* allow other users to access the mountpoint. only do this for
