@@ -96,7 +96,7 @@ License: IBM Public License
 URL: https://www.openafs.org
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Group: Networking/Filesystems
-BuildRequires: %{?kdepend:%{kdepend}, } pam-devel, ncurses-devel, make, flex, bison
+BuildRequires: pam-devel, ncurses-devel, make, flex, bison
 %if 0%{?fedora} >= 15 || 0%{?rhel} >= 7 || 0%{?amzn} >= 1
 BuildRequires: systemd-units
 %endif
