@@ -945,6 +945,7 @@ distclean: clean
 	tests/Makefile \
 	tests/cmdwrap \
 	tests/tap/Makefile \
+	tests/acl/Makefile \
 	tests/auth/Makefile \
 	tests/cmd/Makefile \
 	tests/common/Makefile \

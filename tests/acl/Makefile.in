@@ -1,0 +1,24 @@
+# Build rules for the OpenAFS acl test suite.
+
+srcdir=@srcdir@
+abs_top_builddir=@abs_top_builddir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+include @TOP_OBJDIR@/src/config/Makefile.pthread
+
+MODULE_CFLAGS = -I$(TOP_OBJDIR) -I$(srcdir)/../common/
+
+LIBS = $(abs_top_builddir)/tests/common/libafstest_common.la \
+       $(abs_top_builddir)/src/libacl/liboafs_acl.la
+
+tests = util-t
+
+all check test tests: $(tests)
+
+util-t: util-t.o $(LIBS)
+	$(LT_LDRULE_static) util-t.o $(LIBS) $(LIB_roken) $(XLIBS)
+
+install:
+
+clean distclean:
+	$(LT_CLEAN)
+	$(RM) -f $(tests) *.o core

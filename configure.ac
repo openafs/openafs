@@ -151,6 +151,7 @@ AC_CONFIG_FILES([
     src/helper-splint.sh
     tests/Makefile
     tests/cmdwrap
+    tests/acl/Makefile
     tests/auth/Makefile
     tests/cmd/Makefile
     tests/common/Makefile

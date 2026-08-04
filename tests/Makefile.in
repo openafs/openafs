@@ -12,6 +12,7 @@ MODULE_CFLAGS = -DC_TAP_SOURCE='"$(abs_top_srcdir)/tests"' \
 SUBDIRS = \
     tap \
     common \
+    acl \
     auth \
     util \
     cmd \
