@@ -347,6 +347,24 @@ opr_time64_toUint32_wrap(struct afs_time64 in, afs_uint32 *out)
     *out = (secs % limit + limit) % limit;
 }
 
+static_inline afs_int64
+opr_time64_toMicrosecs(struct afs_time64 in)
+{
+    return in.ticks / OPR_TIME64_TICKS_PER_US;
+}
+
+/*
+ * Return the number of fractional microseconds in 'in'. That is, the number of
+ * microseconds represented by 'in' beyond the amount of whole seconds. For
+ * example, if 'in' represents 1.234567 seconds, opr_time64_toFracMicrosecs(in)
+ * returns 234567 microseconds.
+ */
+static_inline afs_int32
+opr_time64_toFracMicrosecs(struct afs_time64 in)
+{
+    return opr_time64_toMicrosecs(in) % 1000000;
+}
+
 #if !defined(KERNEL) || defined(UKERNEL)
 /*
  * Version of opr_time64_toSecs() that converts to a system time_t

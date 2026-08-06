@@ -452,6 +452,58 @@ test_toSecs(void)
 }
 
 static void
+test_toMicrosecs(void)
+{
+    int tc_i;
+    struct {
+	afs_int64 ticks;
+	afs_int64 usec;
+	afs_int32 frac_usec;
+	struct timeval tv;
+    } *tc, test_cases[] = {
+	{ 0 },
+
+	/*    ticks	 usec frac_usec */
+	{  51234567,  5123456,  123456 },
+	{ -51234567, -5123456, -123456 },
+
+	/*	      ticks		   usec frac_usec */
+	{ 21474836479999999LL, 2147483647999999LL, 999999 },
+	{ 21474836480000000LL, 2147483648000000LL,	0 },
+	{ 21474836491234567LL, 2147483649123456LL, 123456 },
+	{ 42949672959999999LL, 4294967295999999LL, 999999 },
+	{ 42949672960000000LL, 4294967296000000LL,	0 },
+	{ 42949672971234567LL, 4294967297123456LL, 123456 },
+
+	{ 0x7fffffffffffffffLL, 922337203685477580LL, 477580 },
+
+	/*             ticks		     usec  frac_usec */
+	{ -21474836479999999LL, -2147483647999999LL, -999999 },
+	{ -21474836480000000LL, -2147483648000000LL,	   0 },
+	{ -21474836491234567LL, -2147483649123456LL, -123456 },
+	{ -42949672959999999LL, -4294967295999999LL, -999999 },
+	{ -42949672960000000LL, -4294967296000000LL,	   0 },
+	{ -42949672970123456LL, -4294967297012345LL,  -12345 },
+
+	{ -0x8000000000000000LL, -922337203685477580LL, -477580 },
+    };
+
+    for (afstest_Scan(test_cases, tc, tc_i)) {
+	struct afs_time64 val = opr_time64_fromTicks(tc->ticks);
+
+	is_int64(opr_time64_toMicrosecs(val), tc->usec,
+		 "opr_time64_toMicrosecs(%lld) == %lld",
+		 opr_time64_toTicksLL(val),
+		 (long long)tc->usec);
+
+	is_int64(opr_time64_toFracMicrosecs(val), tc->frac_usec,
+		 "opr_time64_toFracMicrosecs(%lld) == %ld",
+		 opr_time64_toTicksLL(val),
+		 (long)tc->frac_usec);
+    }
+}
+
+static void
 test_ctime(void)
 {
     int tc_i;
@@ -554,7 +606,7 @@ test_now(void)
 int
 main(int argc, char **argv)
 {
-    plan(210);
+    plan(244);
 
     /* Assume EST timezone. */
     putenv("TZ=EST+5");
@@ -569,6 +621,7 @@ main(int argc, char **argv)
     test_fromTimeval();
 
     test_toSecs();
+    test_toMicrosecs();
 
     test_ctime();
 
