@@ -122,9 +122,12 @@ that git author.
 Consent/Disapproval List
 ========================
 
+- [Y] Alistair Ferguson <alistair.ferguson@morganstanley.com> (Morgan Stanley)
+- [Y] Andrei Keis <Andrei.Keis@morganstanley.com> (Morgan Stanley)
 - [Y] Andrew Deason <adeason@dson.org>
 - [Y] Andrew Deason <adeason@sinenomine.net> (SNA)
 - [Y] Carsten Jacobi <jacobi@de.ibm.com> (IBM)
+- [Y] Cesar Garcia <cesarg@ms.com> (Morgan Stanley)
 - [Y] Daria Phoebe Brashear <shadow@andrew.cmu.edu>
 - [Y] Daria Phoebe Brashear <shadow@dementia.org>
 - [Y] Daria Phoebe Brashear <shadow@dementix.org>
@@ -142,6 +145,7 @@ Consent/Disapproval List
 - [Y] Matthew A. Bacchi <mbacchi@btv.ibm.com> (IBM)
 - [Y] Michael Niksch <nik@zurich.ibm.com> (IBM)
 - [Y] Omkar Sathe <somkar@in.ibm.com> (IBM)
+- [Y] Paul Smeddle <paul.smeddle@morganstanley.com> (Morgan Stanley)
 - [Y] Satish Kumar <ksatish@in.ibm.com> (IBM)
 - [Y] Shyh-Wei Luan <luan@almaden.ibm.com> (IBM)
 - [Y] Srikanth Vishwanathan <vsrikanth@in.ibm.com> (IBM)
@@ -160,4 +164,5 @@ list above indicates (in parentheses) if a contributor provided code for a
 legal entity here.
 
 - [Y] International Business Machines Corporation (IBM)
+- [Y] Morgan Stanley
 - [?] Sine Nomine Associates, Inc. (SNA)
