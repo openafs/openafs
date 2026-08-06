@@ -125,6 +125,10 @@ Consent/Disapproval List
 - [Y] Andrew Deason <adeason@dson.org>
 - [Y] Andrew Deason <adeason@sinenomine.net> (SNA)
 - [Y] Carsten Jacobi <jacobi@de.ibm.com> (IBM)
+- [Y] Daria Phoebe Brashear <shadow@andrew.cmu.edu>
+- [Y] Daria Phoebe Brashear <shadow@dementia.org>
+- [Y] Daria Phoebe Brashear <shadow@dementix.org>
+- [Y] Daria Phoebe Brashear <shadow@gmail.com>
 - [Y] Erik J. Burckart <ejburcka@us.ibm.com> (IBM)
 - [Y] Ganesh Chaudhari <gangovind@in.ibm.com> (IBM)
 - [Y] Indira Sawant <indira.sawant@ibm.com> (IBM)
