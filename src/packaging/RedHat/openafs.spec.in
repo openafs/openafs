@@ -104,6 +104,14 @@ unsupported_fedora_release: %{fedora}
 %global have_orc_unwinder 0
 %endif
 
+# Distributions where glibc runs ldconfig automatically via an rpm file
+# trigger when libraries are installed in the standard library directories.
+%if 0%{?rhel} >= 8 || 0%{?fedora} >= 28 || 0%{?amzn} >= 2023
+%global have_ldconfig_trigger 1
+%else
+%global have_ldconfig_trigger 0
+%endif
+
 # Distributions which use systemd instead of SysV init scripts.
 %if 0%{?rhel} >= 7 || 0%{?fedora} || 0%{?amzn} >= 2
 %global have_systemd 1
@@ -942,11 +950,13 @@ fi
 %endif
 
 %if %{build_authlibs}
+%if !%{have_ldconfig_trigger}
 %post authlibs
 /sbin/ldconfig
 
 %postun authlibs
 /sbin/ldconfig
+%endif
 %endif
 
 %preun
