@@ -119,6 +119,13 @@ unsupported_fedora_release: %{fedora}
 %global have_systemd 0
 %endif
 
+# Distributions which provide the systemd rpm macros in a separate package.
+%if 0%{?rhel} >= 8 || 0%{?fedora} >= 30 || 0%{?amzn} >= 2023
+%global have_systemd_rpm_macros_pkg 1
+%else
+%global have_systemd_rpm_macros_pkg 0
+%endif
+
 # Distributions which provide swig, to build the perl ukernel bindings.
 %if 0%{?rhel} >= 6 || 0%{?fedora} || 0%{?amzn} >= 1
 %global have_swig 1
@@ -177,7 +184,11 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Group: Networking/Filesystems
 BuildRequires: pam-devel, ncurses-devel, make, flex, bison
 %if %{have_systemd}
-BuildRequires: systemd-units
+%if %{have_systemd_rpm_macros_pkg}
+BuildRequires: systemd-rpm-macros
+%else
+BuildRequires: systemd
+%endif
 %endif
 %if %{have_swig}
 BuildRequires: perl-devel, swig
@@ -857,11 +868,6 @@ install -m 755 \
 %post client
 %if !%{have_systemd}
 chkconfig --add openafs-client
-%else
-if [ $1 -eq 1 ] ; then
-    # Initial installation
-    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
-fi
 %endif
 if [ ! -d /afs ]; then
     mkdir /afs
@@ -880,6 +886,10 @@ fi
   cat CellServDB.local CellServDB.dist > CellServDB ; \
   chmod 644 CellServDB )
 
+%if %{have_systemd}
+%systemd_post openafs-client.service
+%endif
+
 %post server
 %if !%{have_systemd}
 #on an upgrade, don't enable if we were disabled
@@ -888,10 +898,7 @@ if [ $1 = 1 ] ; then
 fi
 %{initdir}/openafs-server condrestart
 %else
-if [ $1 -eq 1 ] ; then
-    # Initial installation
-    /bin/systemctl daemon-reload >/dev/null 2>&1 || :
-fi
+%systemd_post openafs-server.service
 %endif
 
 %post compat
@@ -972,11 +979,7 @@ if [ $1 = 0 ] ; then
     chkconfig --del openafs-client
 fi
 %else
-if [ $1 -eq 0 ] ; then
-    # Package removal, not upgrade
-    /bin/systemctl --no-reload disable openafs-client.service > /dev/null 2>&1 || :
-    /bin/systemctl stop openafs-client.service > /dev/null 2>&1 || :
-fi
+%systemd_preun openafs-client.service
 %endif
 
 %preun server
@@ -986,20 +989,17 @@ if [ $1 = 0 ] ; then
     chkconfig --del openafs-server
 fi
 %else
-if [ $1 -eq 0 ] ; then
-    /bin/systemctl --no-reload disable openafs-server.service > /dev/null 2>&1 || :
-    /bin/systemctl stop openafs-server.service > /dev/null 2>&1 || :
-fi
+%systemd_preun openafs-server.service
 %endif
 
 %if %{have_systemd}
 %postun client
-/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+%systemd_postun openafs-client.service
 %endif
 
 %if %{have_systemd}
 %postun server
-/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+%systemd_postun openafs-server.service
 %endif
 
 %if %{build_dkmspkg}
