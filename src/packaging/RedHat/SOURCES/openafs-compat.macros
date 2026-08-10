@@ -1,0 +1,40 @@
+#
+# Check for legacy macro names and convert to the modern names.  This file must
+# be included in the spec file before the bcond declarations.
+#
+
+#
+# Convert --define "build_userspace 1/0" to --with/--without userspace.
+#
+%if %{defined build_userspace} && ! %{defined _with_userspace} && ! %{defined _without_userspace}
+%{warn:--define build_userspace is deprecated; use --with userspace or --without userspace}
+%if %{build_userspace}
+%global _with_userspace --with-userspace
+%else
+%global _without_userspace --without-userspace
+%endif
+%endif
+
+#
+# Convert --define "build_modules 1/0" to --with/--without kmod.
+#
+%if %{defined build_modules} && ! %{defined _with_kmod} && ! %{defined _without_kmod}
+%{warn:--define build_modules is deprecated; use --with kmod or --without kmod}
+%if %{build_modules}
+%global _with_kmod --with-kmod
+%else
+%global _without_kmod --without-kmod
+%endif
+%endif
+
+#
+# Convert --define "build_dkmspkg 1/0" to --with/--without dkms.
+#
+%if %{defined build_dkmspkg} && ! %{defined _with_dkms} && ! %{defined _without_dkms}
+%{warn:--define build_dkmspkg is deprecated; use --with dkms or --without dkms}
+%if %{build_dkmspkg}
+%global _with_dkms --with-dkms
+%else
+%global _without_dkms --without-dkms
+%endif
+%endif

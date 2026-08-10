@@ -34,18 +34,18 @@
 #       The kernel module installation path for kernel_version. The default
 #       is /usr/lib/modules/<kernel_version>.
 #
-# --define "build_userspace 0"
-#       Do not build the userspace packages.
-#
-# --define "build_modules 0"
-#       Do not build the kernel module package.
-#
-# --define "build_dkmspkg 0"
-#       Do not build the dkms-openafs package.
-#
 # --define "source_date_epoch <seconds>"
 #       The build timestamp, in seconds since the epoch. The default is the
 #       current time.
+#
+# --without userspace
+#       Do not build the userspace packages.
+#
+# --without kmod
+#       Do not build the kernel module package.
+#
+# --without dkms
+#       Do not build the dkms-openafs package.
 #
 # --without authlibs
 #       Do not build the openafs-authlibs package.
@@ -60,6 +60,10 @@
 # --with kauth
 #       Build the openafs-kauth-client and openafs-kauth-server packages,
 #       which contain the legacy kaserver and related programs.
+#
+# The deprecated --define "build_userspace 0", --define "build_modules 0",
+# and --define "build_dkmspkg 0" options are still accepted, and are
+# converted to the --without options above.
 #
 
 #-----------------------------------------------------------------------------
@@ -88,18 +92,12 @@
 # Build options
 #
 
-%if 0%{!?build_userspace:1}
-%global build_userspace 1
-%endif
+# Convert the deprecated build_* macros to the --with/--without options.
+%include %{_sourcedir}/openafs-compat.macros
 
-%if 0%{!?build_modules:1}
-%global build_modules 1
-%endif
-
-%if 0%{!?build_dkmspkg:1}
-%global build_dkmspkg 1
-%endif
-
+%bcond_without userspace
+%bcond_without kmod
+%bcond_without dkms
 %bcond_without authlibs
 %bcond_without krb5
 %bcond_with kauth
@@ -137,7 +135,7 @@ unsupported_amzn_release: %{amzn}
 # Kernel module
 #
 
-%if %{build_modules}
+%if %{with kmod}
 
 %if 0%{!?kernel_version:1}
 %if 0%{?kernvers:1}
@@ -219,7 +217,7 @@ BuildRequires: perl-core
 %if %{with krb5}
 BuildRequires: krb5-devel
 %endif
-%if %{build_userspace}
+%if %{with userspace}
 BuildRequires: perl(Test::More)
 %endif
 
@@ -229,6 +227,7 @@ Source0: https://www.openafs.org/dl/openafs/%{openafs_version}/openafs-%{openafs
 Source10: https://www.openafs.org/dl/openafs/%{openafs_version}/RELNOTES-%{openafs_version}
 Source11: https://www.openafs.org/dl/openafs/%{openafs_version}/ChangeLog
 Source20: https://www.central.org/dl/cellservdb/CellServDB.2025-08-16
+Source29: openafs-compat.macros
 Source30: openafs-cacheinfo
 Source32: openafs-client.service
 Source33: openafs-client-systemd-helper.sh
@@ -248,7 +247,7 @@ pts, tokens, vos, and bos commands.
 #
 # Userspace packages
 #
-%if %{build_userspace}
+%if %{with userspace}
 
 %package client
 Summary: OpenAFS Filesystem Client
@@ -278,7 +277,7 @@ Requires(postun): systemd-units
 This package provides basic server support to host files in an AFS
 cell.
 
-%if %{build_dkmspkg}
+%if %{with dkms}
 %package -n dkms-%{name}
 Summary:        DKMS-ready kernel source for OpenAFS distributed filesystem
 Provides:       openafs-kernel = %{version}
@@ -336,7 +335,7 @@ openafs-authlibs-devel package.
 %package docs
 Summary: OpenAFS user and administrator documentation
 Requires: %{name} = %{version}-%{release}
-%if %{build_userspace}
+%if %{with userspace}
 BuildRequires: libxslt
 BuildRequires: docbook-style-xsl
 BuildRequires: docbook-dtds
@@ -409,7 +408,7 @@ server key files.
 #
 # Kernel module packages
 #
-%if %{build_modules}
+%if %{with kmod}
 
 # Internal: kernel_version without the architecture suffix for the package
 # metadata.
@@ -446,14 +445,15 @@ kernel %{kernel_version}.
 
 : @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 : @@@
-%if %{build_modules}
+%if %{with kmod}
 : @@@ kernel version:     %{kernel_version}
 %endif
 %if %{with kauth}
 : @@@ PAM modules dir:    %{pamdir}
 %endif
-: @@@ build userspace:    %{build_userspace}
-: @@@ build modules:      %{build_modules}
+: @@@ build userspace:    %{?with_userspace:yes}%{!?with_userspace:no}
+: @@@ build kmod:         %{?with_kmod:yes}%{!?with_kmod:no}
+: @@@ build dkms:         %{?with_dkms:yes}%{!?with_dkms:no}
 : @@@ arch:               %{_arch}
 : @@@
 : @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -483,7 +483,7 @@ export CFLAGS="$RPM_OPT_FLAGS"
        --enable-transarc-paths \
        --disable-fuse-client \
        --with-linux-kernel-packaging \
-%if %{build_modules}
+%if %{with kmod}
        --enable-kernel-module \
        --with-linux-kernel-headers=%{kernel_headers} \
 %else
@@ -502,14 +502,14 @@ export CFLAGS="$RPM_OPT_FLAGS"
 
 make %{_smp_mflags} only_libafs_tree
 
-%if %{build_userspace}
+%if %{with userspace}
 make %{_smp_mflags} all_nolibafs
 make %{_smp_mflags} -C doc/xml/UserGuide index.html
 make %{_smp_mflags} -C doc/xml/AdminGuide index.html
 make %{_smp_mflags} -C doc/xml/QuickStartUnix index.html
 %endif
 
-%if %{build_modules}
+%if %{with kmod}
 make %{_smp_mflags} libafs
 %endif
 
@@ -520,7 +520,7 @@ make %{_smp_mflags} libafs
 
 export SOURCE_DATE_EPOCH=%{source_date_epoch}
 
-%if %{build_userspace}
+%if %{with userspace}
 
 #
 # Install userspace files
@@ -641,7 +641,7 @@ cp -pr doc/pdf %{buildroot}%{_docdir}/%{name}/pdf
 #
 # Install the kernel module
 #
-%if %{build_modules}
+%if %{with kmod}
 
 mkdir -p %{buildroot}%{kernel_modules}/extra/openafs
 install -m 755 \
@@ -654,14 +654,14 @@ install -m 755 \
 # Check
 #-----------------------------------------------------------------------------
 %check
-%if %{build_userspace}
+%if %{with userspace}
 make -C tests check
 %endif
 
 #-----------------------------------------------------------------------------
 # Scriptlets
 #-----------------------------------------------------------------------------
-%if %{build_userspace}
+%if %{with userspace}
 
 # package openafs
 %preun
@@ -707,7 +707,7 @@ chmod 644 %{_prefix}/vice/etc/CellServDB
 %systemd_postun openafs-server.service
 
 # package dkms-openafs
-%if %{build_dkmspkg}
+%if %{with dkms}
 %post -n dkms-%{name}
 dkms add -m %{name} -v %{dkms_version} --rpm_safe_upgrade
 dkms build -m %{name} -v %{dkms_version} --rpm_safe_upgrade
@@ -774,11 +774,11 @@ if [ $1 = 0 ] ; then
 fi
 %endif
 
-# end of build_userspace
+# end of userspace
 %endif
 
 # package kmod-openafs
-%if %{build_modules}
+%if %{with kmod}
 %post -n kmod-%{name}
 /usr/sbin/depmod -aeF /boot/System.map-%{kernel_version} %{kernel_version} > /dev/null || :
 
@@ -789,7 +789,7 @@ fi
 #-----------------------------------------------------------------------------
 # Files
 #-----------------------------------------------------------------------------
-%if %{build_userspace}
+%if %{with userspace}
 
 %files
 %config(noreplace) %{_sysconfdir}/sysconfig/openafs
@@ -1067,7 +1067,7 @@ fi
 %{_libdir}/perl/ukernel.so
 %{_mandir}/man3/AFS::ukernel.3*
 
-%if %{build_dkmspkg}
+%if %{with dkms}
 %files -n dkms-%{name}
 %{_prefix}/src/%{name}-%{dkms_version}
 %endif
@@ -1158,7 +1158,7 @@ fi
 %endif
 %endif
 
-%if %{build_modules}
+%if %{with kmod}
 
 %files -n kmod-%{name}
 %defattr(644,root,root,755)
