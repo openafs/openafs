@@ -725,7 +725,6 @@ install -m 755 %{SOURCE31} $RPM_BUILD_ROOT%{initdir}/openafs-client
 install -m 755 %{SOURCE36} $RPM_BUILD_ROOT%{initdir}/openafs-server
 %else
 mkdir -p $RPM_BUILD_ROOT%{_unitdir}
-mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/modules
 install -m 644 %{SOURCE32} $RPM_BUILD_ROOT%{_unitdir}/openafs-client.service
 install -m 644 %{SOURCE37} $RPM_BUILD_ROOT%{_unitdir}/openafs-server.service
 install -m 755 %{SOURCE33} $RPM_BUILD_ROOT%{_prefix}/vice/etc/openafs-client-systemd-helper.sh
