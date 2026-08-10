@@ -193,6 +193,9 @@ BuildRequires: perl(ExtUtils::Embed)
 %if %{krb5support}
 BuildRequires: krb5-devel
 %endif
+%if %{build_userspace}
+BuildRequires: perl(Test::More)
+%endif
 
 ExclusiveArch: %{ix86} x86_64 ia64 s390 s390x sparc64 ppc ppc64 ppc64le aarch64
 
@@ -841,6 +844,14 @@ install -m 755 \
     src/libafs/MODLOAD-%{kernel_version}/openafs.ko \
     $RPM_BUILD_ROOT%{kernel_modules}/extra/openafs/openafs.ko
 
+%endif
+
+##############################################################################
+# Run tests
+##############################################################################
+%check
+%if %{build_userspace}
+make -C tests check
 %endif
 
 ##############################################################################
