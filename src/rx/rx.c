@@ -3401,9 +3401,11 @@ newcall_ok(struct rx_packet *np)
 	 * call. If the first packet we saw for this call channel is
 	 * something else, then either the DATA packets got lost/delayed,
 	 * or we were restarted and this is an existing call from before we
-	 * were restarted. In the latter case, some clients get confused if
-	 * we respond to such requests, so just drop the packet to make
-	 * things easier for them.
+	 * were restarted. If we'll never get the missing DATA packets (because
+	 * of network issues, or because this is an old call and we were
+	 * restarted), the call will never be able to run. So, ignore these
+	 * packets to avoid cases where an impossible-to-run call appears to
+	 * hang forever.
 	 */
 	return 0;
     }
@@ -3441,14 +3443,26 @@ rxi_ReceiveServerCall(osi_socket socket, struct rx_packet *np,
     }
 
     call = conn->call[channel];
-    if (!call) {
-	if (!newcall_ok(np)) {
-	    MUTEX_EXIT(&conn->conn_call_lock);
-	    if (rx_stats_active)
-		rx_atomic_inc(&rx_stats.spuriousPacketsRead);
-	    return NULL;
-	}
+    if (call != NULL && np->header.callNumber == conn->callNumber[channel]) {
+	/* This packet is for an existing call; return that call. */
+	MUTEX_ENTER(&call->lock);
+	MUTEX_EXIT(&conn->conn_call_lock);
+	return call;
+    }
 
+    /*
+     * If we've reached here, this packet is for a new call: either a new call
+     * on an existing struct rx_call, or we need to allocate a new struct
+     * rx_call.
+     */
+    if (!newcall_ok(np)) {
+	MUTEX_EXIT(&conn->conn_call_lock);
+	if (rx_stats_active)
+	    rx_atomic_inc(&rx_stats.spuriousPacketsRead);
+	return NULL;
+    }
+
+    if (call == NULL) {
 	if (rxi_AbortIfServerBusy(socket, conn, np)) {
 	    MUTEX_EXIT(&conn->conn_call_lock);
 	    return NULL;
@@ -3464,12 +3478,6 @@ rxi_ReceiveServerCall(osi_socket socket, struct rx_packet *np,
 	call->app.bytesRcvd = 0;
 	rxi_KeepAliveOn(call);
 
-	return call;
-    }
-
-    if (np->header.callNumber == conn->callNumber[channel]) {
-	MUTEX_ENTER(&call->lock);
-	MUTEX_EXIT(&conn->conn_call_lock);
 	return call;
     }
 
