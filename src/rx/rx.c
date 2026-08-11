@@ -3389,6 +3389,39 @@ rxi_ReceiveClientCall(struct rx_packet *np, struct rx_connection *conn)
     return call;
 }
 
+/*
+ * Is it ok for this packet to start a new call?
+ */
+static int
+newcall_ok(struct rx_packet *np)
+{
+    if (np->header.type != RX_PACKET_TYPE_DATA) {
+	/*
+	 * Clients must send DATA packets at some point to create a new
+	 * call. If the first packet we saw for this call channel is
+	 * something else, then either the DATA packets got lost/delayed,
+	 * or we were restarted and this is an existing call from before we
+	 * were restarted. In the latter case, some clients get confused if
+	 * we respond to such requests, so just drop the packet to make
+	 * things easier for them.
+	 */
+	return 0;
+    }
+
+    if (np->header.seq > rx_maxReceiveWindow) {
+	/*
+	 * This is a DATA packet for further along in the call than is
+	 * possible for a new call. This is probably from an existing call
+	 * that was in the middle of running when we were restarted; ignore
+	 * it to avoid confusing clients. (See above comment about non-DATA
+	 * packets.)
+	 */
+	return 0;
+    }
+
+    return 1;
+}
+
 static_inline struct rx_call *
 rxi_ReceiveServerCall(osi_socket socket, struct rx_packet *np,
 		      struct rx_connection *conn)
@@ -3409,30 +3442,7 @@ rxi_ReceiveServerCall(osi_socket socket, struct rx_packet *np,
 
     call = conn->call[channel];
     if (!call) {
-	if (np->header.type != RX_PACKET_TYPE_DATA) {
-	    /*
-	     * Clients must send DATA packets at some point to create a new
-	     * call. If the first packet we saw for this call channel is
-	     * something else, then either the DATA packets got lost/delayed,
-	     * or we were restarted and this is an existing call from before we
-	     * were restarted. In the latter case, some clients get confused if
-	     * we respond to such requests, so just drop the packet to make
-	     * things easier for them.
-	     */
-	    MUTEX_EXIT(&conn->conn_call_lock);
-	    if (rx_stats_active)
-		rx_atomic_inc(&rx_stats.spuriousPacketsRead);
-	    return NULL;
-	}
-
-	if (np->header.seq > rx_maxReceiveWindow) {
-	    /*
-	     * This is a DATA packet for further along in the call than is
-	     * possible for a new call. This is probably from an existing call
-	     * that was in the middle of running when we were restarted; ignore
-	     * it to avoid confusing clients. (See above comment about non-DATA
-	     * packets.)
-	     */
+	if (!newcall_ok(np)) {
 	    MUTEX_EXIT(&conn->conn_call_lock);
 	    if (rx_stats_active)
 		rx_atomic_inc(&rx_stats.spuriousPacketsRead);
