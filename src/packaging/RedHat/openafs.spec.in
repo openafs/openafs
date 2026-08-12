@@ -1531,7 +1531,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 * Thu Sep 22 2005  Derek Atkins <warlord@MIT.EDU>
 - update kversis script, add 'kvers' operation
 - fix bug that 2.6 smp/hugemem kernels don't provide
-  kernel-foo = %{kernvers} with 'smp', 'hugemem', etc.
+  a kernel version with 'smp', 'hugemem', etc.
 - add patch to remove res_search from the afs-krb5 configure
 
 * Thu Sep 15 2005  Derek Atkins <warlord@MIT.EDU> 1.4.0rc4-1
