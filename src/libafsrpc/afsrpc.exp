@@ -170,3 +170,4 @@ RXAFS_FsCmd
 rx_GetLocalPeers
 xdr_free
 xdr_alloc
+xdr_afs_time64

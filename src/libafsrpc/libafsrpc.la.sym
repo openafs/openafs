@@ -183,6 +183,7 @@ xdr_Capabilities
 xdr_afsUUID
 xdr_afs_int32
 xdr_afs_int64
+xdr_afs_time64
 xdr_afs_uint32
 xdr_afs_uint64
 xdr_rpcStats
