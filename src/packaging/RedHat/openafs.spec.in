@@ -503,7 +503,6 @@ export KRB5_CONFIG
        --libdir=%{_libdir} \
        --bindir=%{_bindir} \
        --sbindir=%{_sbindir} \
-       --docdir=%{_docdir}/openafs-%{afsvers} \
        --disable-strip-binaries \
        --enable-debug \
        --with-linux-kernel-packaging \
@@ -1025,7 +1024,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %files
 %defattr(-,root,root)
 %config(noreplace) /etc/sysconfig/openafs
-%doc %{_docdir}/openafs-%{afsvers}/LICENSE
+%doc LICENSE
 %{_bindir}/afsmonitor
 %{_bindir}/bos
 %{_bindir}/fs
