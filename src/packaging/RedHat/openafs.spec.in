@@ -165,7 +165,7 @@ unsupported_fedora_release: %{fedora}
 %define dkms_version %{pkgvers}-%{pkgrel}%{?dist}
 
 # Define the location of your init.d directory
-%define initdir /etc/rc.d/init.d
+%define initdir %{_sysconfdir}/rc.d/init.d
 
 # Define the location of the PAM security module directory
 %define pamdir /%{_lib}/security
@@ -706,8 +706,8 @@ mv $RPM_BUILD_ROOT%{_mandir}/man1/kpasswd.1 $RPM_BUILD_ROOT%{_mandir}/man1/kapas
 #-----------------------------------------------------------------------------
 # Install client and server initscripts/systemd files
 #-----------------------------------------------------------------------------
-mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
-install -m 755 %{SOURCE38} $RPM_BUILD_ROOT/etc/sysconfig/openafs
+mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig
+install -m 755 %{SOURCE38} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/openafs
 %if !%{have_systemd}
 mkdir -p $RPM_BUILD_ROOT%{initdir}
 install -m 755 %{SOURCE31} $RPM_BUILD_ROOT%{initdir}/openafs-client
@@ -993,7 +993,7 @@ fi
 %if %{build_userspace}
 
 %files
-%config(noreplace) /etc/sysconfig/openafs
+%config(noreplace) %{_sysconfdir}/sysconfig/openafs
 %doc LICENSE
 %doc ChangeLog
 %doc RELNOTES-%{afsvers}
