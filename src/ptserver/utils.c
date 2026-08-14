@@ -18,6 +18,7 @@
 
 #include "ptserver.h"
 #include "pterror.h"
+#include "ptprototypes.h"
 
 #if defined(SUPERGROUPS)
 extern afs_int32 depthsg;
@@ -32,7 +33,7 @@ IDHash(afs_int32 x)
     return ((abs(x)) % HASHSIZE);
 }
 
-afs_int32
+static afs_int32
 NameHash(char *aname)
 {
     /* returns hash bucket for aname */

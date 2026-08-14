@@ -27,7 +27,6 @@ extern afs_int32 RemoveFromSGEntry(struct ubik_trans *at, afs_int32 aid,
 extern void pt_hook_write(void);
 #endif
 
-extern afs_int32 NameHash(unsigned char *aname);
 extern afs_int32 pr_Write(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos,
 			  void *buff, afs_int32 len);
 extern afs_int32 pr_Read(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos,
