@@ -288,7 +288,7 @@ To build a kernel module for your running kernel, just run:
 %if %{build_userspace}
 
 %package client
-Requires: openafs = %{version}
+Requires: %{name} = %{version}
 Requires: binutils
 %if %{have_systemd}
 Requires: systemd-units
@@ -315,7 +315,7 @@ This package provides basic client support to mount and manipulate
 AFS.
 
 %package server
-Requires: openafs = %{version}
+Requires: %{name} = %{version}
 Summary: OpenAFS Filesystem Server
 %if %{have_systemd}
 Requires: systemd-units
@@ -375,9 +375,9 @@ authentication may link against them.
 
 %package authlibs-devel
 %if %{build_authlibs}
-Requires: openafs-authlibs = %{version}-%{release}
+Requires: %{name}-authlibs = %{version}-%{release}
 %endif
-Requires: openafs-devel = %{version}-%{release}
+Requires: %{name}-devel = %{version}-%{release}
 Summary: OpenAFS shared library development
 
 %description authlibs-devel
@@ -392,7 +392,7 @@ libraries.
 
 %package devel
 Summary: OpenAFS Development Libraries and Headers
-Requires: openafs = %{version}-%{release}
+Requires: %{name} = %{version}-%{release}
 
 %description devel
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -406,7 +406,7 @@ shared libraries.
 
 %package docs
 Summary: OpenAFS user and administrator documentation
-Requires: openafs = %{version}-%{release}
+Requires: %{name} = %{version}-%{release}
 %if %{build_userspace}
 BuildRequires: libxslt
 BuildRequires: docbook-style-xsl
@@ -438,7 +438,7 @@ module.
 
 %package compat
 Summary: OpenAFS client compatibility symlinks
-Requires: openafs = %{version}
+Requires: %{name} = %{version}
 
 %description compat
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -454,7 +454,7 @@ programs.
 %if %{kauth_support}
 %package kauth-client
 Summary: OpenAFS Kauth Client support
-Requires: openafs
+Requires: %{name}
 
 %description kauth-client
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -469,7 +469,7 @@ cells using Kerberos v5.
 
 %package kauth-server
 Summary: OpenAFS Kauth Server support
-Requires: openafs
+Requires: %{name}
 
 %description kauth-server
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -485,7 +485,7 @@ cells using Kerberos v5.
 %if %{krb5support}
 %package krb5
 Summary: OpenAFS programs to use with krb5
-Requires: openafs = %{version}
+Requires: %{name} = %{version}
 BuildRequires: krb5-devel
 
 %description krb5
