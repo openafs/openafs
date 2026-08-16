@@ -802,6 +802,7 @@ mkdir -p $RPM_BUILD_ROOT%{_prefix}/vice/etc
 mkdir -p $RPM_BUILD_ROOT%{_prefix}/vice/cache
 chmod 700 $RPM_BUILD_ROOT%{_prefix}/vice/cache
 install -p -m 644 %{SOURCE39} $RPM_BUILD_ROOT%{_prefix}/vice/etc/ThisCell
+touch $RPM_BUILD_ROOT%{_prefix}/vice/etc/CellServDB.local
 install -p -m 644 %{SOURCE20} $RPM_BUILD_ROOT%{_prefix}/vice/etc/CellServDB.dist
 install -p -m 644 %{SOURCE30} $RPM_BUILD_ROOT%{_prefix}/vice/etc/cacheinfo
 
@@ -877,8 +878,6 @@ if [ ! -d /afs ]; then
 fi
 
 # Create the CellServDB
-[ -f /usr/vice/etc/CellServDB.local ] || touch /usr/vice/etc/CellServDB.local
-
 ( cd /usr/vice/etc ; \
   if [ -h CellServDB ]; then \
     rm -f CellServDB; \
@@ -1144,6 +1143,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %dir %{_prefix}/vice/etc
 %dir %{_prefix}/vice/etc/C
 %{_prefix}/vice/etc/CellServDB.dist
+%config(noreplace) %{_prefix}/vice/etc/CellServDB.local
 %config(noreplace) %{_prefix}/vice/etc/ThisCell
 %config(noreplace) %{_prefix}/vice/etc/cacheinfo
 %{_bindir}/afsio
