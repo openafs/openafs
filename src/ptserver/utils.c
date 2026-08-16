@@ -22,7 +22,7 @@
 
 #if defined(SUPERGROUPS)
 extern afs_int32 depthsg;
-afs_int32 IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid,
+afs_int32 IsAMemberOfSG(struct pt_ctx *ctx, afs_int32 aid, afs_int32 gid,
 			afs_int32 depth);
 #endif
 
@@ -47,9 +47,10 @@ NameHash(char *aname)
 
 
 afs_int32
-pr_Write(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, void *buff, afs_int32 len)
+pr_Write(struct pt_ctx *ctx, afs_int32 afd, afs_int32 pos, void *buff, afs_int32 len)
 {
     /* package up seek and write into one procedure for ease of use */
+    struct ubik_trans *tt = ctx->trans;
     afs_int32 code;
     if ((pos < sizeof(cheader)) && (buff != (char *)&cheader + pos)) {
 	fprintf(stderr,
@@ -64,9 +65,10 @@ pr_Write(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, void *buff, afs_in
 }
 
 afs_int32
-pr_Read(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, void *buff, afs_int32 len)
+pr_Read(struct pt_ctx *ctx, afs_int32 afd, afs_int32 pos, void *buff, afs_int32 len)
 {
     /* same thing for read */
+    struct ubik_trans *tt = ctx->trans;
     afs_int32 code;
     code = ubik_Seek(tt, afd, pos);
     if (code)
@@ -76,7 +78,7 @@ pr_Read(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, void *buff, afs_int
 }
 
 int
-pr_WriteEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct prentry *tentry)
+pr_WriteEntry(struct pt_ctx *ctx, afs_int32 afd, afs_int32 pos, struct prentry *tentry)
 {
     afs_int32 code;
     afs_int32 i;
@@ -110,13 +112,14 @@ pr_WriteEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct prentr
 	    nentry.entries[i] = htonl(tentry->entries[i]);
 	tentry = &nentry;
     }
-    code = pr_Write(tt, afd, pos, (char *)tentry, sizeof(struct prentry));
+    code = pr_Write(ctx, afd, pos, (char *)tentry, sizeof(struct prentry));
     return (code);
 }
 
 int
-pr_ReadEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct prentry *tentry)
+pr_ReadEntry(struct pt_ctx *ctx, afs_int32 afd, afs_int32 pos, struct prentry *tentry)
 {
+    struct ubik_trans *tt = ctx->trans;
     afs_int32 code;
     afs_int32 i;
     struct prentry nentry;
@@ -159,7 +162,7 @@ pr_ReadEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct prentry
 }
 
 int
-pr_WriteCoEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct contentry *tentry)
+pr_WriteCoEntry(struct pt_ctx *ctx, afs_int32 afd, afs_int32 pos, struct contentry *tentry)
 {
     afs_int32 code;
     afs_int32 i;
@@ -175,13 +178,14 @@ pr_WriteCoEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct cont
 	    nentry.entries[i] = htonl(tentry->entries[i]);
 	tentry = &nentry;
     }
-    code = pr_Write(tt, afd, pos, (char *)tentry, sizeof(struct contentry));
+    code = pr_Write(ctx, afd, pos, (char *)tentry, sizeof(struct contentry));
     return (code);
 }
 
 int
-pr_ReadCoEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct contentry *tentry)
+pr_ReadCoEntry(struct pt_ctx *ctx, afs_int32 afd, afs_int32 pos, struct contentry *tentry)
 {
+    struct ubik_trans *tt = ctx->trans;
     afs_int32 code;
     afs_int32 i;
     struct contentry nentry;
@@ -209,7 +213,7 @@ pr_ReadCoEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct conte
  * new entry */
 
 afs_int32
-AllocBlock(struct ubik_trans *at)
+AllocBlock(struct pt_ctx *ctx)
 {
     afs_int32 code;
     afs_int32 temp;
@@ -218,12 +222,12 @@ AllocBlock(struct ubik_trans *at)
     if (cheader.freePtr) {
 	/* allocate this dude */
 	temp = ntohl(cheader.freePtr);
-	code = pr_ReadEntry(at, 0, temp, &tentry);
+	code = pr_ReadEntry(ctx, 0, temp, &tentry);
 	if (code)
 	    return 0;
 	cheader.freePtr = htonl(tentry.next);
 	code =
-	    pr_Write(at, 0, 8, (char *)&cheader.freePtr,
+	    pr_Write(ctx, 0, 8, (char *)&cheader.freePtr,
 		     sizeof(cheader.freePtr));
 	if (code != 0)
 	    return 0;
@@ -233,7 +237,7 @@ AllocBlock(struct ubik_trans *at)
 	temp = ntohl(cheader.eofPtr);	/* remember this guy */
 	cheader.eofPtr = htonl(temp + ENTRYSIZE);
 	code =
-	    pr_Write(at, 0, 12, (char *)&cheader.eofPtr,
+	    pr_Write(ctx, 0, 12, (char *)&cheader.eofPtr,
 		     sizeof(cheader.eofPtr));
 	if (code != 0)
 	    return 0;
@@ -242,7 +246,7 @@ AllocBlock(struct ubik_trans *at)
 }
 
 afs_int32
-FreeBlock(struct ubik_trans *at, afs_int32 pos)
+FreeBlock(struct pt_ctx *ctx, afs_int32 pos)
 {
     /* add a block of storage to the free list */
     afs_int32 code;
@@ -253,17 +257,17 @@ FreeBlock(struct ubik_trans *at, afs_int32 pos)
     tentry.flags |= PRFREE;
     cheader.freePtr = htonl(pos);
     code =
-	pr_Write(at, 0, 8, (char *)&cheader.freePtr, sizeof(cheader.freePtr));
+	pr_Write(ctx, 0, 8, (char *)&cheader.freePtr, sizeof(cheader.freePtr));
     if (code != 0)
 	return code;
-    code = pr_WriteEntry(at, 0, pos, &tentry);
+    code = pr_WriteEntry(ctx, 0, pos, &tentry);
     if (code != 0)
 	return code;
     return PRSUCCESS;
 }
 
 afs_int32
-FindByID(struct ubik_trans *at, afs_int32 aid)
+FindByID(struct pt_ctx *ctx, afs_int32 aid)
 {
     /* returns address of entry if found, 0 otherwise */
     afs_int32 code;
@@ -278,7 +282,7 @@ FindByID(struct ubik_trans *at, afs_int32 aid)
     if (entry == 0)
 	return entry;
     memset(&tentry, 0, sizeof(tentry));
-    code = pr_ReadEntry(at, 0, entry, &tentry);
+    code = pr_ReadEntry(ctx, 0, entry, &tentry);
     if (code != 0)
 	return 0;
     if (aid == tentry.id)
@@ -287,7 +291,7 @@ FindByID(struct ubik_trans *at, afs_int32 aid)
     entry = tentry.nextID;
     while (entry != 0) {
 	memset(&tentry, 0, sizeof(tentry));
-	code = pr_ReadEntry(at, 0, entry, &tentry);
+	code = pr_ReadEntry(ctx, 0, entry, &tentry);
 	if (code != 0)
 	    return 0;
 	if (aid == tentry.id)
@@ -299,7 +303,7 @@ FindByID(struct ubik_trans *at, afs_int32 aid)
 }
 
 afs_int32
-FindByName(struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct prentry *tentryp)
+FindByName(struct pt_ctx *ctx, char aname[PR_MAXNAMELEN], struct prentry *tentryp)
 {
     /* ditto */
     afs_int32 code;
@@ -311,7 +315,7 @@ FindByName(struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct prentry *ten
     if (entry == 0)
 	return entry;
     memset(tentryp, 0, sizeof(struct prentry));
-    code = pr_ReadEntry(at, 0, entry, tentryp);
+    code = pr_ReadEntry(ctx, 0, entry, tentryp);
     if (code != 0)
 	return 0;
     if ((strncmp(aname, tentryp->name, PR_MAXNAMELEN)) == 0)
@@ -320,7 +324,7 @@ FindByName(struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct prentry *ten
     entry = tentryp->nextName;
     while (entry != 0) {
 	memset(tentryp, 0, sizeof(struct prentry));
-	code = pr_ReadEntry(at, 0, entry, tentryp);
+	code = pr_ReadEntry(ctx, 0, entry, tentryp);
 	if (code != 0)
 	    return 0;
 	if ((strncmp(aname, tentryp->name, PR_MAXNAMELEN)) == 0)
@@ -332,7 +336,7 @@ FindByName(struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct prentry *ten
 }
 
 afs_int32
-AllocID(struct ubik_trans *at, afs_int32 flag, afs_int32 *aid)
+AllocID(struct pt_ctx *ctx, afs_int32 flag, afs_int32 *aid)
 {
     /* allocs an id from the proper area of address space, based on flag */
     afs_int32 code = 1;
@@ -344,14 +348,14 @@ AllocID(struct ubik_trans *at, afs_int32 flag, afs_int32 *aid)
 	/* Check for PRBADID to avoid wrap-around. */
 	while (code && i < maxcount && *aid != PRBADID) {
 	    --(*aid);
-	    code = FindByID(at, *aid);
+	    code = FindByID(ctx, *aid);
 	    i++;
 	}
 	if (code)
 	    return PRNOIDS;
 	cheader.maxGroup = htonl(*aid);
 	code =
-	    pr_Write(at, 0, 16, (char *)&cheader.maxGroup,
+	    pr_Write(ctx, 0, 16, (char *)&cheader.maxGroup,
 		     sizeof(cheader.maxGroup));
 	if (code)
 	    return PRDBFAIL;
@@ -360,14 +364,14 @@ AllocID(struct ubik_trans *at, afs_int32 flag, afs_int32 *aid)
 	*aid = ntohl(cheader.maxForeign);
 	while (code && i < maxcount) {
 	    ++(*aid);
-	    code = FindByID(at, *aid);
+	    code = FindByID(ctx, *aid);
 	    i++;
 	}
 	if (code)
 	    return PRNOIDS;
 	cheader.maxForeign = htonl(*aid);
 	code =
-	    pr_Write(at, 0, 24, (char *)&cheader.maxForeign,
+	    pr_Write(ctx, 0, 24, (char *)&cheader.maxForeign,
 		     sizeof(cheader.maxForeign));
 	if (code)
 	    return PRDBFAIL;
@@ -376,14 +380,14 @@ AllocID(struct ubik_trans *at, afs_int32 flag, afs_int32 *aid)
 	*aid = ntohl(cheader.maxID);
 	while (code && i < maxcount && *aid != 0x7fffffff) {
 	    ++(*aid);
-	    code = FindByID(at, *aid);
+	    code = FindByID(ctx, *aid);
 	    i++;
 	}
 	if (code)
 	    return PRNOIDS;
 	cheader.maxID = htonl(*aid);
 	code =
-	    pr_Write(at, 0, 20, (char *)&cheader.maxID,
+	    pr_Write(ctx, 0, 20, (char *)&cheader.maxID,
 		     sizeof(cheader.maxID));
 	if (code)
 	    return PRDBFAIL;
@@ -405,7 +409,7 @@ IDCmp(const void *a, const void *b)
 }
 
 afs_int32
-RemoveFromIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 *loc)		/* ??? in case ID hashed twice ??? */
+RemoveFromIDHash(struct pt_ctx *ctx, afs_int32 aid, afs_int32 *loc)		/* ??? in case ID hashed twice ??? */
 {
     /* remove entry designated by aid from id hash table */
     afs_int32 code;
@@ -422,7 +426,7 @@ RemoveFromIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 *loc)		/* ??? i
     trail = 0;
     if (current == 0)
 	return PRSUCCESS;	/* already gone */
-    code = pr_ReadEntry(tt, 0, current, &tentry);
+    code = pr_ReadEntry(ctx, 0, current, &tentry);
     if (code)
 	return PRDBFAIL;
     while (aid != tentry.id) {
@@ -431,7 +435,7 @@ RemoveFromIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 *loc)		/* ??? i
 	current = tentry.nextID;
 	if (current == 0)
 	    break;
-	code = pr_ReadEntry(tt, 0, current, &tentry);
+	code = pr_ReadEntry(ctx, 0, current, &tentry);
 	if (code)
 	    return PRDBFAIL;
     }
@@ -441,16 +445,16 @@ RemoveFromIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 *loc)		/* ??? i
 	/* it's the first entry! */
 	cheader.idHash[i] = htonl(tentry.nextID);
 	code =
-	    pr_Write(tt, 0, 72 + HASHSIZE * 4 + i * 4,
+	    pr_Write(ctx, 0, 72 + HASHSIZE * 4 + i * 4,
 		     (char *)&cheader.idHash[i], sizeof(cheader.idHash[i]));
 	if (code)
 	    return PRDBFAIL;
     } else {
-	code = pr_ReadEntry(tt, 0, trail, &bentry);
+	code = pr_ReadEntry(ctx, 0, trail, &bentry);
 	if (code)
 	    return PRDBFAIL;
 	bentry.nextID = tentry.nextID;
-	code = pr_WriteEntry(tt, 0, trail, &bentry);
+	code = pr_WriteEntry(ctx, 0, trail, &bentry);
 	if (code)
 	    return PRDBFAIL;
     }
@@ -459,7 +463,7 @@ RemoveFromIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 *loc)		/* ??? i
 }
 
 afs_int32
-AddToIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 loc)
+AddToIDHash(struct pt_ctx *ctx, afs_int32 aid, afs_int32 loc)
 {
     /* add entry at loc designated by aid to id hash table */
     afs_int32 code;
@@ -470,16 +474,16 @@ AddToIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 loc)
 	return PRINCONSISTENT;
     i = IDHash(aid);
     memset(&tentry, 0, sizeof(tentry));
-    code = pr_ReadEntry(tt, 0, loc, &tentry);
+    code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code)
 	return PRDBFAIL;
     tentry.nextID = ntohl(cheader.idHash[i]);
     cheader.idHash[i] = htonl(loc);
-    code = pr_WriteEntry(tt, 0, loc, &tentry);
+    code = pr_WriteEntry(ctx, 0, loc, &tentry);
     if (code)
 	return PRDBFAIL;
     code =
-	pr_Write(tt, 0, 72 + HASHSIZE * 4 + i * 4, (char *)&cheader.idHash[i],
+	pr_Write(ctx, 0, 72 + HASHSIZE * 4 + i * 4, (char *)&cheader.idHash[i],
 		 sizeof(cheader.idHash[i]));
     if (code)
 	return PRDBFAIL;
@@ -487,7 +491,7 @@ AddToIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 loc)
 }
 
 afs_int32
-RemoveFromNameHash(struct ubik_trans *tt, char *aname, afs_int32 *loc)
+RemoveFromNameHash(struct pt_ctx *ctx, char *aname, afs_int32 *loc)
 {
     /* remove from name hash */
     afs_int32 code;
@@ -502,7 +506,7 @@ RemoveFromNameHash(struct ubik_trans *tt, char *aname, afs_int32 *loc)
     trail = 0;
     if (current == 0)
 	return PRSUCCESS;	/* already gone */
-    code = pr_ReadEntry(tt, 0, current, &tentry);
+    code = pr_ReadEntry(ctx, 0, current, &tentry);
     if (code)
 	return PRDBFAIL;
     while (strcmp(aname, tentry.name)) {
@@ -511,7 +515,7 @@ RemoveFromNameHash(struct ubik_trans *tt, char *aname, afs_int32 *loc)
 	current = tentry.nextName;
 	if (current == 0)
 	    break;
-	code = pr_ReadEntry(tt, 0, current, &tentry);
+	code = pr_ReadEntry(ctx, 0, current, &tentry);
 	if (code)
 	    return PRDBFAIL;
     }
@@ -521,16 +525,16 @@ RemoveFromNameHash(struct ubik_trans *tt, char *aname, afs_int32 *loc)
 	/* it's the first entry! */
 	cheader.nameHash[i] = htonl(tentry.nextName);
 	code =
-	    pr_Write(tt, 0, 72 + i * 4, (char *)&cheader.nameHash[i],
+	    pr_Write(ctx, 0, 72 + i * 4, (char *)&cheader.nameHash[i],
 		     sizeof(cheader.nameHash[i]));
 	if (code)
 	    return PRDBFAIL;
     } else {
-	code = pr_ReadEntry(tt, 0, trail, &bentry);
+	code = pr_ReadEntry(ctx, 0, trail, &bentry);
 	if (code)
 	    return PRDBFAIL;
 	bentry.nextName = tentry.nextName;
-	code = pr_WriteEntry(tt, 0, trail, &bentry);
+	code = pr_WriteEntry(ctx, 0, trail, &bentry);
 	if (code)
 	    return PRDBFAIL;
     }
@@ -539,7 +543,7 @@ RemoveFromNameHash(struct ubik_trans *tt, char *aname, afs_int32 *loc)
 }
 
 afs_int32
-AddToNameHash(struct ubik_trans *tt, char *aname, afs_int32 loc)
+AddToNameHash(struct pt_ctx *ctx, char *aname, afs_int32 loc)
 {
     /* add to name hash */
     afs_int32 code;
@@ -548,16 +552,16 @@ AddToNameHash(struct ubik_trans *tt, char *aname, afs_int32 loc)
 
     i = NameHash(aname);
     memset(&tentry, 0, sizeof(tentry));
-    code = pr_ReadEntry(tt, 0, loc, &tentry);
+    code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code)
 	return PRDBFAIL;
     tentry.nextName = ntohl(cheader.nameHash[i]);
     cheader.nameHash[i] = htonl(loc);
-    code = pr_WriteEntry(tt, 0, loc, &tentry);
+    code = pr_WriteEntry(ctx, 0, loc, &tentry);
     if (code)
 	return PRDBFAIL;
     code =
-	pr_Write(tt, 0, 72 + i * 4, (char *)&cheader.nameHash[i],
+	pr_Write(ctx, 0, 72 + i * 4, (char *)&cheader.nameHash[i],
 		 sizeof(cheader.nameHash[i]));
     if (code)
 	return PRDBFAIL;
@@ -565,7 +569,7 @@ AddToNameHash(struct ubik_trans *tt, char *aname, afs_int32 loc)
 }
 
 afs_int32
-AddToOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
+AddToOwnerChain(struct pt_ctx *ctx, afs_int32 gid, afs_int32 oid)
 {
     /* add entry designated by gid to owner chain of entry designated by oid */
     afs_int32 code;
@@ -574,27 +578,27 @@ AddToOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
     struct prentry gentry;
     afs_int32 gloc;
 
-    loc = FindByID(at, oid);
+    loc = FindByID(ctx, oid);
     if (!loc)
 	return PRNOENT;
-    code = pr_ReadEntry(at, 0, loc, &tentry);
+    code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code != 0)
 	return PRDBFAIL;
     if (oid == gid) {		/* added it to its own chain */
 	tentry.nextOwned = tentry.owned;
 	tentry.owned = loc;
     } else {
-	gloc = FindByID(at, gid);
-	code = pr_ReadEntry(at, 0, gloc, &gentry);
+	gloc = FindByID(ctx, gid);
+	code = pr_ReadEntry(ctx, 0, gloc, &gentry);
 	if (code != 0)
 	    return PRDBFAIL;
 	gentry.nextOwned = tentry.owned;
 	tentry.owned = gloc;
-	code = pr_WriteEntry(at, 0, gloc, &gentry);
+	code = pr_WriteEntry(ctx, 0, gloc, &gentry);
 	if (code != 0)
 	    return PRDBFAIL;
     }
-    code = pr_WriteEntry(at, 0, loc, &tentry);
+    code = pr_WriteEntry(ctx, 0, loc, &tentry);
     if (code != 0)
 	return PRDBFAIL;
     return PRSUCCESS;
@@ -603,7 +607,7 @@ AddToOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
 /* RemoveFromOwnerChain - remove gid from owner chain for oid */
 
 afs_int32
-RemoveFromOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
+RemoveFromOwnerChain(struct pt_ctx *ctx, afs_int32 gid, afs_int32 oid)
 {
     afs_int32 code;
     afs_int32 nptr;
@@ -613,10 +617,10 @@ RemoveFromOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
     struct prentry *le;		/* pointer to previous (last) entry */
     afs_int32 loc, lastLoc;
 
-    loc = FindByID(at, oid);
+    loc = FindByID(ctx, oid);
     if (!loc)
 	return PRNOENT;
-    code = pr_ReadEntry(at, 0, loc, &thisEntry);
+    code = pr_ReadEntry(ctx, 0, loc, &thisEntry);
     if (code != 0)
 	return PRDBFAIL;
     le = &thisEntry;
@@ -630,7 +634,7 @@ RemoveFromOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
 		te = &thatEntry;
 	    else
 		te = &thisEntry;
-	    code = pr_ReadEntry(at, 0, nptr, te);
+	    code = pr_ReadEntry(ctx, 0, nptr, te);
 	    if (code != 0)
 		return PRDBFAIL;
 	}
@@ -643,11 +647,11 @@ RemoveFromOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
 		le->nextOwned = te->nextOwned;
 	    te->nextOwned = 0;
 	    if (te != le) {
-		code = pr_WriteEntry(at, 0, nptr, te);
+		code = pr_WriteEntry(ctx, 0, nptr, te);
 		if (code != 0)
 		    return PRDBFAIL;
 	    }
-	    code = pr_WriteEntry(at, 0, lastLoc, le);
+	    code = pr_WriteEntry(ctx, 0, lastLoc, le);
 	    if (code != 0)
 		return PRDBFAIL;
 	    return PRSUCCESS;
@@ -662,31 +666,31 @@ RemoveFromOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
 /* AddToOrphan - add gid to orphan list, as it's owner has died */
 
 afs_int32
-AddToOrphan(struct ubik_trans *at, afs_int32 gid)
+AddToOrphan(struct pt_ctx *ctx, afs_int32 gid)
 {
     afs_int32 code;
     afs_int32 loc;
     struct prentry tentry;
 
-    loc = FindByID(at, gid);
+    loc = FindByID(ctx, gid);
     if (!loc)
 	return PRNOENT;
-    code = pr_ReadEntry(at, 0, loc, &tentry);
+    code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code != 0)
 	return PRDBFAIL;
     tentry.nextOwned = ntohl(cheader.orphan);
-    code = set_header_word(at, orphan, htonl(loc));
+    code = set_header_word(ctx, orphan, htonl(loc));
     if (code != 0)
 	return PRDBFAIL;
     tentry.owner = 0;		/* so there's no confusion later */
-    code = pr_WriteEntry(at, 0, loc, &tentry);
+    code = pr_WriteEntry(ctx, 0, loc, &tentry);
     if (code != 0)
 	return PRDBFAIL;
     return PRSUCCESS;
 }
 
 afs_int32
-RemoveFromOrphan(struct ubik_trans *at, afs_int32 gid)
+RemoveFromOrphan(struct pt_ctx *ctx, afs_int32 gid)
 {
     /* remove gid from the orphan list */
     afs_int32 code;
@@ -695,21 +699,21 @@ RemoveFromOrphan(struct ubik_trans *at, afs_int32 gid)
     struct prentry tentry;
     struct prentry bentry;
 
-    loc = FindByID(at, gid);
+    loc = FindByID(ctx, gid);
     if (!loc)
 	return PRNOENT;
-    code = pr_ReadEntry(at, 0, loc, &tentry);
+    code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code != 0)
 	return PRDBFAIL;
     if (cheader.orphan == htonl(loc)) {
 	cheader.orphan = htonl(tentry.nextOwned);
 	tentry.nextOwned = 0;
 	code =
-	    pr_Write(at, 0, 32, (char *)&cheader.orphan,
+	    pr_Write(ctx, 0, 32, (char *)&cheader.orphan,
 		     sizeof(cheader.orphan));
 	if (code != 0)
 	    return PRDBFAIL;
-	code = pr_WriteEntry(at, 0, loc, &tentry);
+	code = pr_WriteEntry(ctx, 0, loc, &tentry);
 	if (code != 0)
 	    return PRDBFAIL;
 	return PRSUCCESS;
@@ -718,17 +722,17 @@ RemoveFromOrphan(struct ubik_trans *at, afs_int32 gid)
     memset(&bentry, 0, sizeof(bentry));
     loc = 0;
     while (nptr != 0) {
-	code = pr_ReadEntry(at, 0, nptr, &tentry);
+	code = pr_ReadEntry(ctx, 0, nptr, &tentry);
 	if (code != 0)
 	    return PRDBFAIL;
 	if (gid == tentry.id) {
 	    /* found it */
 	    bentry.nextOwned = tentry.nextOwned;
 	    tentry.nextOwned = 0;
-	    code = pr_WriteEntry(at, 0, loc, &bentry);
+	    code = pr_WriteEntry(ctx, 0, loc, &bentry);
 	    if (code != 0)
 		return PRDBFAIL;
-	    code = pr_WriteEntry(at, 0, nptr, &tentry);
+	    code = pr_WriteEntry(ctx, 0, nptr, &tentry);
 	    if (code != 0)
 		return PRDBFAIL;
 	    return PRSUCCESS;
@@ -741,17 +745,17 @@ RemoveFromOrphan(struct ubik_trans *at, afs_int32 gid)
 }
 
 afs_int32
-IsOwnerOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid)
+IsOwnerOf(struct pt_ctx *ctx, afs_int32 aid, afs_int32 gid)
 {
     /* returns 1 if aid is the owner of gid, 0 otherwise */
     afs_int32 code;
     struct prentry tentry;
     afs_int32 loc;
 
-    loc = FindByID(at, gid);
+    loc = FindByID(ctx, gid);
     if (!loc)
 	return 0;
-    code = pr_ReadEntry(at, 0, loc, &tentry);
+    code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code != 0)
 	return 0;
     if (tentry.owner == aid)
@@ -760,17 +764,17 @@ IsOwnerOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid)
 }
 
 afs_int32
-OwnerOf(struct ubik_trans *at, afs_int32 gid)
+OwnerOf(struct pt_ctx *ctx, afs_int32 gid)
 {
     /* returns the owner of gid */
     afs_int32 code;
     afs_int32 loc;
     struct prentry tentry;
 
-    loc = FindByID(at, gid);
+    loc = FindByID(ctx, gid);
     if (!loc)
 	return 0;
-    code = pr_ReadEntry(at, 0, loc, &tentry);
+    code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code != 0)
 	return 0;
     return tentry.owner;
@@ -778,7 +782,7 @@ OwnerOf(struct ubik_trans *at, afs_int32 gid)
 
 
 afs_int32
-IsAMemberOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid)
+IsAMemberOf(struct pt_ctx *ctx, afs_int32 aid, afs_int32 gid)
 {
     /* returns true if aid is a member of gid */
 #if !defined(SUPERGROUPS)
@@ -800,13 +804,13 @@ IsAMemberOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid)
     if ((gid == 0) || (aid == 0))
 	return 0;
 #if defined(SUPERGROUPS)
-    return IsAMemberOfSG(at, aid, gid, depthsg);
+    return IsAMemberOfSG(ctx, aid, gid, depthsg);
 #else
-    loc = FindByID(at, gid);
+    loc = FindByID(ctx, gid);
     if (!loc)
 	return 0;
     memset(&tentry, 0, sizeof(tentry));
-    code = pr_ReadEntry(at, 0, loc, &tentry);
+    code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code)
 	return 0;
     if (!(tentry.flags & PRGRP))
@@ -821,7 +825,7 @@ IsAMemberOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid)
 	loc = tentry.next;
 	while (loc) {
 	    memset(&centry, 0, sizeof(centry));
-	    code = pr_ReadCoEntry(at, 0, loc, &centry);
+	    code = pr_ReadCoEntry(ctx, 0, loc, &centry);
 	    if (code)
 		return 0;
 	    for (i = 0; i < COSIZE; i++) {
@@ -840,7 +844,7 @@ IsAMemberOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid)
 
 #if defined(SUPERGROUPS)
 afs_int32
-IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid, afs_int32 depth)
+IsAMemberOfSG(struct pt_ctx *ctx, afs_int32 aid, afs_int32 gid, afs_int32 depth)
 {
     /* returns true if aid is a member of gid */
     struct prentry tentry;
@@ -851,11 +855,11 @@ IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid, afs_int32 dep
 
     if (depth < 1)
 	return 0;
-    loc = FindByID(at, gid);
+    loc = FindByID(ctx, gid);
     if (!loc)
 	return 0;
     memset(&tentry, 0, sizeof(tentry));
-    code = pr_ReadEntry(at, 0, loc, &tentry);
+    code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code)
 	return 0;
     if (!(tentry.flags & PRGRP))
@@ -874,7 +878,7 @@ IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid, afs_int32 dep
 #ifndef AFS_PTHREAD_ENV
 	    IOMGR_Poll();
 #endif
-	    if (IsAMemberOfSG(at, aid, gid, depth - 1))
+	    if (IsAMemberOfSG(ctx, aid, gid, depth - 1))
 		return 1;
 	}
     }
@@ -882,7 +886,7 @@ IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid, afs_int32 dep
 	loc = tentry.next;
 	while (loc) {
 	    memset(&centry, 0, sizeof(centry));
-	    code = pr_ReadCoEntry(at, 0, loc, &centry);
+	    code = pr_ReadCoEntry(ctx, 0, loc, &centry);
 	    if (code)
 		return 0;
 	    for (i = 0; i < COSIZE; i++) {
@@ -899,7 +903,7 @@ IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid, afs_int32 dep
 #ifndef AFS_PTHREAD_ENV
 		    IOMGR_Poll();
 #endif
-		    if (IsAMemberOfSG(at, aid, gid, depth - 1))
+		    if (IsAMemberOfSG(ctx, aid, gid, depth - 1))
 			return 1;
 		}
 	    }

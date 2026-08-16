@@ -144,8 +144,11 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
     char *pfile = NULL;
     char pbuffer[1028];
     struct cmd_parmdesc *tparm;
-    struct ubik_trans *tt = NULL;
     afs_int32 transMode;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     tparm = a_as->parms;
 
@@ -238,7 +241,7 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
     initialize_PT_error_table();
 
     transMode = wflag ? UBIK_WRITETRANS : UBIK_READTRANS;
-    code = pr_Preamble(transMode, 0, &tt);
+    code = pr_Preamble(transMode, 0, &ctx->trans);
     if (code != 0) {
 	fprintf(stderr, "pt_util: error initializing prdb: code %ld\n", code);
 	exit(1);
@@ -273,20 +276,20 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 		if (u) {
 		    /* Add user - deferred because it is probably foreign */
 		    u->uid = 0;
-		    if (FindByID(0, uid))
+		    if (FindByID(ctx, uid))
 			code = PRIDEXIST;
 		    else {
 			if (!code
 			    && (flags & (PRGRP | PRQUOTA)) ==
 			    (PRGRP | PRQUOTA)) {
 			    gentry.ngroups++;
-			    code = pr_WriteEntry(0, 0, gpos, &gentry);
+			    code = pr_WriteEntry(ctx, 0, gpos, &gentry);
 			    if (code)
 				fprintf(stderr,
 					"Error setting group count on %s: %s\n",
 					name, afs_error_message(code));
 			}
-			code = CreateEntry(0, u->name, &uid, 1 /*idflag */ ,
+			code = CreateEntry(ctx, u->name, &uid, 1 /*idflag */ ,
 					   1 /*gflag */ ,
 					   SYSADMINID /*oid */ ,
 					   SYSADMINID /*cid */ );
@@ -299,15 +302,15 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 		/* Add user to group */
 		if (id == ANYUSERID || id == AUTHUSERID || uid == ANONYMOUSID) {
 		    code = PRPERM;
-		} else if ((upos = FindByID(0, uid))
-			   && (gpos = FindByID(0, id))) {
-		    code = pr_ReadEntry(0, 0, upos, &uentry);
+		} else if ((upos = FindByID(ctx, uid))
+			   && (gpos = FindByID(ctx, id))) {
+		    code = pr_ReadEntry(ctx, 0, upos, &uentry);
 		    if (!code)
-			code = pr_ReadEntry(0, 0, gpos, &gentry);
+			code = pr_ReadEntry(ctx, 0, gpos, &gentry);
 		    if (!code)
-			code = AddToEntry(0, &gentry, gpos, uid);
+			code = AddToEntry(ctx, &gentry, gpos, uid);
 		    if (!code)
-			code = AddToEntry(0, &uentry, upos, id);
+			code = AddToEntry(ctx, &uentry, upos, id);
 		} else
 		    code = PRNOENT;
 
@@ -325,10 +328,10 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 
 		seenGroup = 1;
 
-		if (FindByID(0, id))
+		if (FindByID(ctx, id))
 		    code = PRIDEXIST;
 		else
-		    code = CreateEntry(0, name, &id, 1 /*idflag */ ,
+		    code = CreateEntry(ctx, name, &id, 1 /*idflag */ ,
 				       flags & PRGRP, oid, cid);
 		if (code == PRBADNAM) {
 		    u = malloc(sizeof(struct usr_list));
@@ -342,12 +345,12 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 		} else if ((flags & PRACCESS)
 			   || (flags & (PRGRP | PRQUOTA)) ==
 			   (PRGRP | PRQUOTA)) {
-		    gpos = FindByID(0, id);
-		    code = pr_ReadEntry(0, 0, gpos, &gentry);
+		    gpos = FindByID(ctx, id);
+		    code = pr_ReadEntry(ctx, 0, gpos, &gentry);
 		    if (!code) {
 			gentry.flags = flags;
 			gentry.ngroups = quota;
-			code = pr_WriteEntry(0, 0, gpos, &gentry);
+			code = pr_WriteEntry(ctx, 0, gpos, &gentry);
 		    }
 		    if (code)
 			fprintf(stderr,

@@ -46,7 +46,7 @@ extern struct afsconf_dir *prdir;
 extern int pr_noAuth;
 
 static int inRange(struct prentry *cellEntry, afs_int32 aid);
-static afs_int32 allocNextId(struct ubik_trans *, struct prentry *);
+static afs_int32 allocNextId(struct pt_ctx *, struct prentry *);
 static int AddAuthGroup(struct prentry *tentry, prlist *alist, afs_int32 *size);
 
 static char *whoami = "ptserver";
@@ -59,7 +59,7 @@ int prp_group_default = PRP_GROUP_DEFAULT;
 #include "map.h"
 
 afs_int32 depthsg = 5;		/* Maximum iterations used during IsAMemberOF */
-afs_int32 GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist * alist,
+afs_int32 GetListSG2(struct pt_ctx *ctx, afs_int32 gid, prlist * alist,
 		     afs_int32 * sizeP, afs_int32 depth);
 
 struct map *sg_flagged;
@@ -192,7 +192,7 @@ CorrectUserName(char *name)
  * rename, which then compares the correct name with the requested new name. */
 
 static afs_int32
-CorrectGroupName(struct ubik_trans *ut, char aname[PR_MAXNAMELEN],	/* name for group */
+CorrectGroupName(struct pt_ctx *ctx, char aname[PR_MAXNAMELEN],	/* name for group */
 		 afs_int32 cid,		/* caller id */
 		 afs_int32 oid,		/* owner of group */
 		 afs_int32 admin,	/* non-zero if admin */
@@ -211,7 +211,7 @@ CorrectGroupName(struct ubik_trans *ut, char aname[PR_MAXNAMELEN],	/* name for g
     if (oid == SYSADMINID)
 	prefix = "system";
     else {
-	afs_int32 loc = FindByID(ut, oid);
+	afs_int32 loc = FindByID(ctx, oid);
 	if (loc == 0) {
 	    /* let admin create groups owned by non-existent ids (probably
 	     * setting a group to own itself).  Check that they look like
@@ -222,7 +222,7 @@ CorrectGroupName(struct ubik_trans *ut, char aname[PR_MAXNAMELEN],	/* name for g
 	    }
 	    return PRNOENT;
 	}
-	code = pr_Read(ut, 0, loc, &tentry, sizeof(tentry));
+	code = pr_Read(ctx, 0, loc, &tentry, sizeof(tentry));
 	if (code)
 	    return code;
 	if (ntohl(tentry.flags) & PRGRP) {
@@ -274,7 +274,7 @@ CorrectGroupName(struct ubik_trans *ut, char aname[PR_MAXNAMELEN],	/* name for g
 }
 
 int
-AccessOK(struct ubik_trans *ut, afs_int32 cid,		/* caller id */
+AccessOK(struct pt_ctx *ctx, afs_int32 cid,		/* caller id */
 	 struct prentry *tentry,	/* object being accessed */
 	 int mem,			/* check membership in aid, if group */
 	 int any)			/* if set return true */
@@ -287,7 +287,7 @@ AccessOK(struct ubik_trans *ut, afs_int32 cid,		/* caller id */
 	return 1;
     if (cid == SYSADMINID)
 	return 1;		/* special case fileserver */
-    if (restricted && !IsAMemberOf(ut, cid, SYSADMINID)) {
+    if (restricted && !IsAMemberOf(ctx, cid, SYSADMINID)) {
         if (mem == PRP_ADD_MEM || mem == PRP_REMOVE_MEM) {
             /* operation is for adding/removing members from a group */
             return 0;
@@ -315,27 +315,27 @@ AccessOK(struct ubik_trans *ut, afs_int32 cid,		/* caller id */
     if (flags & any)
 	return 1;
     if (oid) {
-	if ((cid == oid) || IsAMemberOf(ut, cid, oid))
+	if ((cid == oid) || IsAMemberOf(ctx, cid, oid))
 	    return 1;
     }
     if (aid > 0) {		/* checking on a user */
 	if (aid == cid)
 	    return 1;
     } else if (aid < 0) {	/* checking on group */
-	if ((flags & mem) && IsAMemberOf(ut, cid, aid))
+	if ((flags & mem) && IsAMemberOf(ctx, cid, aid))
 	    return 1;
     }
     /* Allow members of SYSVIEWERID to get membership and status only */
     if (((mem == PRP_STATUS_MEM) || (mem == PRP_MEMBER_MEM)
-	 || (any == PRP_OWNED_ANY)) && (IsAMemberOf(ut, cid, SYSVIEWERID)))
+	 || (any == PRP_OWNED_ANY)) && (IsAMemberOf(ctx, cid, SYSVIEWERID)))
 	return 1;
-    if (IsAMemberOf(ut, cid, SYSADMINID))
+    if (IsAMemberOf(ctx, cid, SYSADMINID))
 	return 1;
     return 0;			/* no access */
 }
 
 afs_int32
-CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, afs_int32 idflag, afs_int32 flag, afs_int32 oid, afs_int32 creator)
+CreateEntry(struct pt_ctx *ctx, char aname[PR_MAXNAMELEN], afs_int32 *aid, afs_int32 idflag, afs_int32 flag, afs_int32 oid, afs_int32 creator)
 {
     /* get and init a new entry */
     afs_int32 code;
@@ -346,7 +346,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 
     memset(&tentry, 0, sizeof(tentry));
 
-    admin = pr_noAuth || IsAMemberOf(at, creator, SYSADMINID);
+    admin = pr_noAuth || IsAMemberOf(ctx, creator, SYSADMINID);
 
     if (oid == 0 || oid == ANONYMOUSID) {
 	if (!admin && creator == 0)
@@ -355,7 +355,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
     }
 
     if (flag & PRGRP) {
-	code = CorrectGroupName(at, aname, creator, oid, admin, tentry.name);
+	code = CorrectGroupName(ctx, aname, creator, oid, admin, tentry.name);
 	if (code)
 	    return code;
 	if (strcmp(aname, tentry.name) != 0)
@@ -366,10 +366,10 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	strcpy(tentry.name, aname);
     }
 
-    if (FindByName(at, aname, &tent))
+    if (FindByName(ctx, aname, &tent))
 	return PREXIST;
 
-    newEntry = AllocBlock(at);
+    newEntry = AllocBlock(ctx);
     if (!newEntry)
 	return PRDBFAIL;
     tentry.createTime = time(0);
@@ -390,7 +390,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	if (idflag)
 	    tentry.id = *aid;
 	else {
-	    code = AllocID(at, flag, &tentry.id);
+	    code = AllocID(ctx, flag, &tentry.id);
 	    if (code != PRSUCCESS)
 		return code;
 	}
@@ -409,7 +409,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	if (idflag)
 	    tentry.id = *aid;
 	else {
-	    code = AllocID(at, flag, &tentry.id);
+	    code = AllocID(ctx, flag, &tentry.id);
 	    if (code != PRSUCCESS)
 		return code;
 	}
@@ -426,11 +426,11 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	 */
 	if (asprintf(&cellGroup, "%s%s", AUTHUSER_GROUP, atsign) < 0)
 	    return PRNOMEM;
-	pos = FindByName(at, cellGroup, &centry);
+	pos = FindByName(ctx, cellGroup, &centry);
 	free(cellGroup);
 	if (!pos)
 	    return PRBADNAM;
-	code = pr_Read(at, 0, pos, &centry, sizeof(centry));
+	code = pr_Read(ctx, 0, pos, &centry, sizeof(centry));
 	if (code)
 	    return code;
 
@@ -446,7 +446,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	    /* Allocate an ID special for this foreign user. It is based
 	     * on the representing group's id and nusers count.
 	     */
-	    tentry.id = allocNextId(at, &centry);
+	    tentry.id = allocNextId(ctx, &centry);
 	    if (!tentry.id)
 		return PRNOIDS;
 	}
@@ -464,7 +464,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	centry.ngroups = htonl(n - 1);
 
 	/* write updated entry for group */
-	code = pr_Write(at, 0, pos, &centry, sizeof(centry));
+	code = pr_Write(ctx, 0, pos, &centry, sizeof(centry));
 	if (code)
 	    return PRDBFAIL;
 
@@ -474,16 +474,16 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	else
 	    tentry.creator = creator;
 	*aid = tentry.id;
-	code = pr_WriteEntry(at, 0, newEntry, &tentry);
+	code = pr_WriteEntry(ctx, 0, newEntry, &tentry);
 	if (code)
 	    return PRDBFAIL;
-	code = AddToIDHash(at, *aid, newEntry);
+	code = AddToIDHash(ctx, *aid, newEntry);
 	if (code != PRSUCCESS)
 	    return code;
-	code = AddToNameHash(at, aname, newEntry);
+	code = AddToNameHash(ctx, aname, newEntry);
 	if (code != PRSUCCESS)
 	    return code;
-	if (inc_header_word(at, foreigncount, 1))
+	if (inc_header_word(ctx, foreigncount, 1))
 	    return PRDBFAIL;
 
 	/* Now add the entry to the authuser group for this cell.
@@ -491,23 +491,23 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	 * instead of modifying them before writing them in the
 	 * previous steps. Although not very efficient, much simpler
 	 */
-	pos = FindByID(at, tentry.cellid);
+	pos = FindByID(ctx, tentry.cellid);
 	if (!pos)
 	    return PRBADNAM;
-	code = pr_ReadEntry(at, 0, pos, &centry);
+	code = pr_ReadEntry(ctx, 0, pos, &centry);
 	if (code)
 	    return code;
-	code = AddToEntry(at, &centry, pos, *aid);
+	code = AddToEntry(ctx, &centry, pos, *aid);
 	if (code)
 	    return code;
 	/* and now the user entry */
-	pos = FindByID(at, *aid);
+	pos = FindByID(ctx, *aid);
 	if (!pos)
 	    return PRBADNAM;
-	code = pr_ReadEntry(at, 0, pos, &tentry);
+	code = pr_ReadEntry(ctx, 0, pos, &tentry);
 	if (code)
 	    return code;
-	code = AddToEntry(at, &tentry, pos, tentry.cellid);
+	code = AddToEntry(ctx, &tentry, pos, tentry.cellid);
 	if (code)
 	    return code;
 
@@ -518,13 +518,13 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
     if (flag & PRGRP) {
 	/* group ids are negative */
 	if (tentry.id < (afs_int32) ntohl(cheader.maxGroup)) {
-	    code = set_header_word(at, maxGroup, htonl(tentry.id));
+	    code = set_header_word(ctx, maxGroup, htonl(tentry.id));
 	    if (code)
 		return PRDBFAIL;
 	}
     } else {
 	if (tentry.id > (afs_int32) ntohl(cheader.maxID)) {
-	    code = set_header_word(at, maxID, htonl(tentry.id));
+	    code = set_header_word(ctx, maxID, htonl(tentry.id));
 	    if (code)
 		return PRDBFAIL;
 	}
@@ -532,12 +532,12 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 
     /* Charge the creator for this group */
     if (flag & PRGRP) {
-	afs_int32 loc = FindByID(at, creator);
+	afs_int32 loc = FindByID(ctx, creator);
 	struct prentry centry;
 	int admin;
 
 	if (loc) {		/* this should only fail during initialization */
-	    code = pr_Read(at, 0, loc, &centry, sizeof(centry));
+	    code = pr_Read(ctx, 0, loc, &centry, sizeof(centry));
 	    if (code)
 		return code;
 
@@ -552,7 +552,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 	     * are still allowed to create as many groups as you want.
 	     */
 	    admin = ((creator == SYSADMINID)
-		     || IsAMemberOf(at, creator, SYSADMINID));
+		     || IsAMemberOf(ctx, creator, SYSADMINID));
 	    if (!admin) {
 		if (ntohl(centry.ngroups) <= 0) {
 		    if (!pr_noAuth)
@@ -562,7 +562,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
 		}
 	    }
 
-	    code = pr_Write(at, 0, loc, &centry, sizeof(centry));
+	    code = pr_Write(ctx, 0, loc, &centry, sizeof(centry));
 	    if (code)
 		return code;
 	}			/* if (loc) */
@@ -579,28 +579,28 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
     else
 	tentry.creator = creator;
     *aid = tentry.id;
-    code = pr_WriteEntry(at, 0, newEntry, &tentry);
+    code = pr_WriteEntry(ctx, 0, newEntry, &tentry);
     if (code)
 	return PRDBFAIL;
-    code = AddToIDHash(at, *aid, newEntry);
+    code = AddToIDHash(ctx, *aid, newEntry);
     if (code != PRSUCCESS)
 	return code;
-    code = AddToNameHash(at, aname, newEntry);
+    code = AddToNameHash(ctx, aname, newEntry);
     if (code != PRSUCCESS)
 	return code;
     if (tentry.flags & PRGRP) {
-	code = AddToOwnerChain(at, tentry.id, oid);
+	code = AddToOwnerChain(ctx, tentry.id, oid);
 	if (code)
 	    return code;
     }
     if (tentry.flags & PRGRP) {
-	if (inc_header_word(at, groupcount, 1))
+	if (inc_header_word(ctx, groupcount, 1))
 	    return PRDBFAIL;
     } else if (tentry.flags & PRINST) {
-	if (inc_header_word(at, instcount, 1))
+	if (inc_header_word(ctx, instcount, 1))
 	    return PRDBFAIL;
     } else {
-	if (inc_header_word(at, usercount, 1))
+	if (inc_header_word(ctx, usercount, 1))
 	    return PRDBFAIL;
     }
     return PRSUCCESS;
@@ -611,7 +611,7 @@ CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, af
  * entry if appropriate */
 
 afs_int32
-RemoveFromEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
+RemoveFromEntry(struct pt_ctx *ctx, afs_int32 aid, afs_int32 bid)
 {
     afs_int32 code;
     struct prentry tentry;
@@ -625,10 +625,10 @@ RemoveFromEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
     if (aid == bid)
 	return PRINCONSISTENT;
     memset(&hentry, 0, sizeof(hentry));
-    temp = FindByID(at, bid);
+    temp = FindByID(ctx, bid);
     if (temp == 0)
 	return PRNOENT;
-    code = pr_ReadEntry(at, 0, temp, &tentry);
+    code = pr_ReadEntry(ctx, 0, temp, &tentry);
     if (code != 0)
 	return code;
     tentry.removeTime = time(0);
@@ -636,7 +636,7 @@ RemoveFromEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
 	if (tentry.entries[i] == aid) {
 	    tentry.entries[i] = PRBADID;
 	    tentry.count--;
-	    code = pr_WriteEntry(at, 0, temp, &tentry);
+	    code = pr_WriteEntry(ctx, 0, temp, &tentry);
 	    if (code != 0)
 		return code;
 	    return PRSUCCESS;
@@ -647,7 +647,7 @@ RemoveFromEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
     hloc = 0;
     nptr = tentry.next;
     while (nptr != 0) {
-	code = pr_ReadCoEntry(at, 0, nptr, &centry);
+	code = pr_ReadCoEntry(ctx, 0, nptr, &centry);
 	if (code != 0)
 	    return code;
 	if ((centry.id != bid) || !(centry.flags & PRCONT))
@@ -664,20 +664,20 @@ RemoveFromEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
 			tentry.next = centry.next;
 		    } else {
 			hentry.next = centry.next;
-			code = pr_WriteCoEntry(at, 0, hloc, &hentry);
+			code = pr_WriteCoEntry(ctx, 0, hloc, &hentry);
 			if (code != 0)
 			    return code;
 		    }
-		    code = FreeBlock(at, nptr);
+		    code = FreeBlock(ctx, nptr);
 		    if (code)
 			return code;
 		} else {	/* can't free it yet */
-		    code = pr_WriteCoEntry(at, 0, nptr, &centry);
+		    code = pr_WriteCoEntry(ctx, 0, nptr, &centry);
 		    if (code != 0)
 			return code;
 		}
 		tentry.count--;
-		code = pr_WriteEntry(at, 0, temp, &tentry);
+		code = pr_WriteEntry(ctx, 0, temp, &tentry);
 		if (code)
 		    return PRDBFAIL;
 		return 0;
@@ -697,7 +697,7 @@ RemoveFromEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
  * entry if appropriate */
 
 afs_int32
-ChangeIDEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 newid, afs_int32 bid)
+ChangeIDEntry(struct pt_ctx *ctx, afs_int32 aid, afs_int32 newid, afs_int32 bid)
 {
     afs_int32 code;
     struct prentry tentry;
@@ -708,17 +708,17 @@ ChangeIDEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 newid, afs_int32 b
 
     if (aid == bid)
 	return PRINCONSISTENT;
-    temp = FindByID(at, bid);
+    temp = FindByID(ctx, bid);
     if (temp == 0) {
 	return PRNOENT;
     }
-    code = pr_ReadEntry(at, 0, temp, &tentry);
+    code = pr_ReadEntry(ctx, 0, temp, &tentry);
     if (code != 0)
 	return code;
     for (i = 0; i < PRSIZE; i++) {
 	if (tentry.entries[i] == aid) {
 	    tentry.entries[i] = newid;
-	    code = pr_WriteEntry(at, 0, temp, &tentry);
+	    code = pr_WriteEntry(ctx, 0, temp, &tentry);
 	    if (code != 0)
 		return code;
 	    return PRSUCCESS;
@@ -730,7 +730,7 @@ ChangeIDEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 newid, afs_int32 b
 
     nptr = tentry.next;
     while (nptr) {
-	code = pr_ReadCoEntry(at, 0, nptr, &centry);
+	code = pr_ReadCoEntry(ctx, 0, nptr, &centry);
 	if (code != 0)
 	    return code;
 	if ((centry.id != bid) || !(centry.flags & PRCONT)) {
@@ -746,7 +746,7 @@ ChangeIDEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 newid, afs_int32 b
 		    if (centry.entries[j] != PRBADID
 			&& centry.entries[j] != 0)
 			break;
-		code = pr_WriteCoEntry(at, 0, nptr, &centry);
+		code = pr_WriteCoEntry(ctx, 0, nptr, &centry);
 		if (code != 0)
 		    return code;
 		return 0;
@@ -765,7 +765,7 @@ ChangeIDEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 newid, afs_int32 b
  * continuation entry if appropriate */
 
 afs_int32
-RemoveFromSGEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
+RemoveFromSGEntry(struct pt_ctx *ctx, afs_int32 aid, afs_int32 bid)
 {
     afs_int32 code;
     struct prentry tentry;
@@ -780,11 +780,11 @@ RemoveFromSGEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
     if (aid == bid)
 	return PRINCONSISTENT;
     memset(&hentry, 0, sizeof(hentry));
-    temp = FindByID(at, bid);
+    temp = FindByID(ctx, bid);
     if (temp == 0) {
 	return PRNOENT;
     }
-    code = pr_ReadEntry(at, 0, temp, &tentry);
+    code = pr_ReadEntry(ctx, 0, temp, &tentry);
     if (code != 0)
 	return code;
     tentry.removeTime = time(NULL);
@@ -793,7 +793,7 @@ RemoveFromSGEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
 	if (tentryg->supergroup[i] == aid) {
 	    tentryg->supergroup[i] = PRBADID;
 	    tentryg->countsg--;
-	    code = pr_WriteEntry(at, 0, temp, &tentry);
+	    code = pr_WriteEntry(ctx, 0, temp, &tentry);
 	    if (code != 0)
 		return code;
 	    return PRSUCCESS;
@@ -805,7 +805,7 @@ RemoveFromSGEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
     hloc = 0;
     nptr = tentryg->nextsg;
     while (nptr) {
-	code = pr_ReadCoEntry(at, 0, nptr, &centry);
+	code = pr_ReadCoEntry(ctx, 0, nptr, &centry);
 	if (code != 0)
 	    return code;
 	if ((centry.id != bid) || !(centry.flags & PRCONT)) {
@@ -826,20 +826,20 @@ RemoveFromSGEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
 			tentryg->nextsg = centry.next;
 		    } else {
 			hentry.next = centry.next;
-			code = pr_WriteCoEntry(at, 0, hloc, &hentry);
+			code = pr_WriteCoEntry(ctx, 0, hloc, &hentry);
 			if (code != 0)
 			    return code;
 		    }
-		    code = FreeBlock(at, nptr);
+		    code = FreeBlock(ctx, nptr);
 		    if (code)
 			return code;
 		} else {	/* can't free it yet */
-		    code = pr_WriteCoEntry(at, 0, nptr, &centry);
+		    code = pr_WriteCoEntry(ctx, 0, nptr, &centry);
 		    if (code != 0)
 			return code;
 		}
 		tentryg->countsg--;
-		code = pr_WriteEntry(at, 0, temp, &tentry);
+		code = pr_WriteEntry(ctx, 0, temp, &tentry);
 		if (code)
 		    return PRDBFAIL;
 		return 0;
@@ -861,7 +861,7 @@ RemoveFromSGEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
  * groups, putting groups owned by it on orphan chain, and freeing the space */
 
 afs_int32
-DeleteEntry(struct ubik_trans *at, struct prentry *tentry, afs_int32 loc)
+DeleteEntry(struct pt_ctx *ctx, struct prentry *tentry, afs_int32 loc)
 {
     afs_int32 code;
     struct contentry centry;
@@ -877,16 +877,16 @@ DeleteEntry(struct ubik_trans *at, struct prentry *tentry, afs_int32 loc)
 	} else {
 	    /* adjust quota */
 
-	    afs_int32 loc = FindByID(at, tentry->cellid);
+	    afs_int32 loc = FindByID(ctx, tentry->cellid);
 	    struct prentry centry;
 	    if (loc) {
-		code = pr_Read(at, 0, loc, &centry, sizeof(centry));
+		code = pr_Read(ctx, 0, loc, &centry, sizeof(centry));
 		if (code)
 		    return code;
 		if (ntohl(centry.flags) & PRQUOTA) {
 		    centry.ngroups = htonl(ntohl(centry.ngroups) + 1);
 		}
-		code = pr_Write(at, 0, loc, &centry, sizeof(centry));
+		code = pr_Write(ctx, 0, loc, &centry, sizeof(centry));
 		if (code)
 		    return code;
 	    }
@@ -900,10 +900,10 @@ DeleteEntry(struct ubik_trans *at, struct prentry *tentry, afs_int32 loc)
 	    break;
 #if defined(SUPERGROUPS)
 	if ((tentry->flags & PRGRP) && tentry->entries[i] < 0)	/* Supergroup */
-	    code = RemoveFromSGEntry(at, tentry->id, tentry->entries[i]);
+	    code = RemoveFromSGEntry(ctx, tentry->id, tentry->entries[i]);
 	else
 #endif
-	    code = RemoveFromEntry(at, tentry->id, tentry->entries[i]);
+	    code = RemoveFromEntry(ctx, tentry->id, tentry->entries[i]);
 	if (code)
 	    return code;
     }
@@ -917,7 +917,7 @@ DeleteEntry(struct ubik_trans *at, struct prentry *tentry, afs_int32 loc)
 		continue;
 	    if (tentryg->supergroup[i] == 0)
 		break;
-	    code = RemoveFromEntry(at, tentry->id, tentryg->supergroup[i]);
+	    code = RemoveFromEntry(ctx, tentry->id, tentryg->supergroup[i]);
 	    if (code)
 		return code;
 	}
@@ -925,7 +925,7 @@ DeleteEntry(struct ubik_trans *at, struct prentry *tentry, afs_int32 loc)
 #endif /* SUPERGROUPS */
     nptr = tentry->next;
     while (nptr != 0) {
-	code = pr_ReadCoEntry(at, 0, nptr, &centry);
+	code = pr_ReadCoEntry(ctx, 0, nptr, &centry);
 	if (code != 0)
 	    return PRDBFAIL;
 	for (i = 0; i < COSIZE; i++) {
@@ -933,11 +933,11 @@ DeleteEntry(struct ubik_trans *at, struct prentry *tentry, afs_int32 loc)
 		continue;
 	    if (centry.entries[i] == 0)
 		break;
-	    code = RemoveFromEntry(at, tentry->id, centry.entries[i]);
+	    code = RemoveFromEntry(ctx, tentry->id, centry.entries[i]);
 	    if (code)
 		return code;
 	}
-	code = FreeBlock(at, nptr);	/* free continuation block */
+	code = FreeBlock(ctx, nptr);	/* free continuation block */
 	if (code)
 	    return code;
 	nptr = centry.next;
@@ -948,61 +948,61 @@ DeleteEntry(struct ubik_trans *at, struct prentry *tentry, afs_int32 loc)
      * on our own owned list. */
     if (tentry->flags & PRGRP) {
 	if (tentry->owner) {
-	    code = RemoveFromOwnerChain(at, tentry->id, tentry->owner);
+	    code = RemoveFromOwnerChain(ctx, tentry->id, tentry->owner);
 	    if (code)
 		return code;
 	} else {
-	    code = RemoveFromOrphan(at, tentry->id);
+	    code = RemoveFromOrphan(ctx, tentry->id);
 	    if (code)
 		return code;
 	}
     }
 
-    code = RemoveFromIDHash(at, tentry->id, &loc);
+    code = RemoveFromIDHash(ctx, tentry->id, &loc);
     if (code != PRSUCCESS)
 	return code;
-    code = RemoveFromNameHash(at, tentry->name, &loc);
+    code = RemoveFromNameHash(ctx, tentry->name, &loc);
     if (code != PRSUCCESS)
 	return code;
 
     if (tentry->flags & PRGRP) {
-	afs_int32 loc = FindByID(at, tentry->creator);
+	afs_int32 loc = FindByID(ctx, tentry->creator);
 	struct prentry centry;
 	int admin;
 
 	if (loc) {
-	    code = pr_Read(at, 0, loc, &centry, sizeof(centry));
+	    code = pr_Read(ctx, 0, loc, &centry, sizeof(centry));
 	    if (code)
 		return code;
 	    admin = ((tentry->creator == SYSADMINID)
-		     || IsAMemberOf(at, tentry->creator, SYSADMINID));
+		     || IsAMemberOf(ctx, tentry->creator, SYSADMINID));
 	    if (ntohl(centry.flags) & PRQUOTA) {
 		if (!(admin && (ntohl(centry.ngroups) >= 20))) {
 		    centry.ngroups = htonl(ntohl(centry.ngroups) + 1);
 		}
 	    }
-	    code = pr_Write(at, 0, loc, &centry, sizeof(centry));
+	    code = pr_Write(ctx, 0, loc, &centry, sizeof(centry));
 	    if (code)
 		return code;
 	}
     }
 
     if (tentry->flags & PRGRP) {
-	if (inc_header_word(at, groupcount, -1))
+	if (inc_header_word(ctx, groupcount, -1))
 	    return PRDBFAIL;
     } else if (tentry->flags & PRINST) {
-	if (inc_header_word(at, instcount, -1))
+	if (inc_header_word(ctx, instcount, -1))
 	    return PRDBFAIL;
     } else {
 	if (strchr(tentry->name, '@')) {
-	    if (inc_header_word(at, foreigncount, -1))
+	    if (inc_header_word(ctx, foreigncount, -1))
 		return PRDBFAIL;
 	} else {
-	    if (inc_header_word(at, usercount, -1))
+	    if (inc_header_word(ctx, usercount, -1))
 		return PRDBFAIL;
 	}
     }
-    code = FreeBlock(at, loc);
+    code = FreeBlock(ctx, loc);
     return code;
 }
 
@@ -1012,7 +1012,7 @@ DeleteEntry(struct ubik_trans *at, struct prentry *tentry, afs_int32 loc)
  * Note the entry is written out by this routine. */
 
 afs_int32
-AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int32 aid)
+AddToEntry(struct pt_ctx *ctx, struct prentry *entry, afs_int32 loc, afs_int32 aid)
 {
     afs_int32 code;
     afs_int32 i;
@@ -1047,7 +1047,7 @@ AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int3
     last = 0;
     nptr = entry->next;
     while (nptr != 0) {
-	code = pr_ReadCoEntry(tt, 0, nptr, &nentry);
+	code = pr_ReadCoEntry(ctx, 0, nptr, &nentry);
 	if (code != 0)
 	    return code;
 	last = nptr;
@@ -1098,29 +1098,29 @@ AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int3
 	entry->count++;
 	if (first) {		/* place is in first block */
 	    entry->entries[slot] = aid;
-	    code = pr_WriteEntry(tt, 0, loc, entry);
+	    code = pr_WriteEntry(ctx, 0, loc, entry);
 	    if (code != 0)
 		return code;
 	    return PRSUCCESS;
 	}
-	code = pr_WriteEntry(tt, 0, loc, entry);
+	code = pr_WriteEntry(ctx, 0, loc, entry);
 	if (code)
 	    return code;
-	code = pr_ReadCoEntry(tt, 0, cloc, &aentry);
+	code = pr_ReadCoEntry(ctx, 0, cloc, &aentry);
 	if (code != 0)
 	    return code;
 	aentry.entries[slot] = aid;
-	code = pr_WriteCoEntry(tt, 0, cloc, &aentry);
+	code = pr_WriteCoEntry(ctx, 0, cloc, &aentry);
 	if (code != 0)
 	    return code;
 	return PRSUCCESS;
     }
     /* have to allocate a continuation block if we got here */
-    nptr = AllocBlock(tt);
+    nptr = AllocBlock(ctx);
     if (last) {
 	/* then we should tack new block after last block in cont. chain */
 	nentry.next = nptr;
-	code = pr_WriteCoEntry(tt, 0, last, &nentry);
+	code = pr_WriteCoEntry(ctx, 0, last, &nentry);
 	if (code != 0)
 	    return code;
     } else {
@@ -1131,12 +1131,12 @@ AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int3
     aentry.id = entry->id;
     aentry.next = 0;
     aentry.entries[0] = aid;
-    code = pr_WriteCoEntry(tt, 0, nptr, &aentry);
+    code = pr_WriteCoEntry(ctx, 0, nptr, &aentry);
     if (code != 0)
 	return code;
     /* don't forget to update count, here! */
     entry->count++;
-    code = pr_WriteEntry(tt, 0, loc, entry);
+    code = pr_WriteEntry(ctx, 0, loc, entry);
     return code;
 
 }
@@ -1149,7 +1149,7 @@ AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int3
  * Note the entry is written out by this routine. */
 
 afs_int32
-AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int32 aid)
+AddToSGEntry(struct pt_ctx *ctx, struct prentry *entry, afs_int32 loc, afs_int32 aid)
 {
     afs_int32 code;
     afs_int32 i;
@@ -1183,7 +1183,7 @@ AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_in
     last = 0;
     nptr = entryg->nextsg;
     while (nptr) {
-	code = pr_ReadCoEntry(tt, 0, nptr, &nentry);
+	code = pr_ReadCoEntry(ctx, 0, nptr, &nentry);
 	if (code != 0)
 	    return code;
 	last = nptr;
@@ -1211,29 +1211,29 @@ AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_in
 	entryg->countsg++;
 	if (first) {		/* place is in first block */
 	    entryg->supergroup[slot] = aid;
-	    code = pr_WriteEntry(tt, 0, loc, entry);
+	    code = pr_WriteEntry(ctx, 0, loc, entry);
 	    if (code != 0)
 		return code;
 	    return PRSUCCESS;
 	}
-	code = pr_WriteEntry(tt, 0, loc, entry);
+	code = pr_WriteEntry(ctx, 0, loc, entry);
 	if (code)
 	    return code;
-	code = pr_ReadCoEntry(tt, 0, cloc, &aentry);
+	code = pr_ReadCoEntry(ctx, 0, cloc, &aentry);
 	if (code != 0)
 	    return code;
 	aentry.entries[slot] = aid;
-	code = pr_WriteCoEntry(tt, 0, cloc, &aentry);
+	code = pr_WriteCoEntry(ctx, 0, cloc, &aentry);
 	if (code != 0)
 	    return code;
 	return PRSUCCESS;
     }
     /* have to allocate a continuation block if we got here */
-    nptr = AllocBlock(tt);
+    nptr = AllocBlock(ctx);
     if (last) {
 	/* then we should tack new block after last block in cont. chain */
 	nentry.next = nptr;
-	code = pr_WriteCoEntry(tt, 0, last, &nentry);
+	code = pr_WriteCoEntry(ctx, 0, last, &nentry);
 	if (code != 0)
 	    return code;
     } else {
@@ -1244,12 +1244,12 @@ AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_in
     aentry.id = entry->id;
     aentry.next = 0;
     aentry.entries[0] = aid;
-    code = pr_WriteCoEntry(tt, 0, nptr, &aentry);
+    code = pr_WriteCoEntry(ctx, 0, nptr, &aentry);
     if (code != 0)
 	return code;
     /* don't forget to update count, here! */
     entryg->countsg++;
-    code = pr_WriteEntry(tt, 0, loc, entry);
+    code = pr_WriteEntry(ctx, 0, loc, entry);
     return code;
 
 }
@@ -1291,7 +1291,7 @@ AddToPRList(afs_int32 log_id, prlist *alist, int *sizeP, afs_int32 id)
 }
 
 afs_int32
-GetList(struct ubik_trans *at, struct prentry *tentry, prlist *alist, afs_int32 add)
+GetList(struct pt_ctx *ctx, struct prentry *tentry, prlist *alist, afs_int32 add)
 {
     afs_int32 code;
     afs_int32 i;
@@ -1315,7 +1315,7 @@ GetList(struct ubik_trans *at, struct prentry *tentry, prlist *alist, afs_int32 
 #if defined(SUPERGROUPS)
 	if (!add)
 	    continue;
-	code = GetListSG2(at, tentry->entries[i], alist, &size, depthsg);
+	code = GetListSG2(ctx, tentry->entries[i], alist, &size, depthsg);
 	if (code)
 	    return code;
 #endif
@@ -1323,7 +1323,7 @@ GetList(struct ubik_trans *at, struct prentry *tentry, prlist *alist, afs_int32 
 
     for (nptr = tentry->next; nptr != 0; nptr = centry.next) {
 	/* look through cont entries */
-	code = pr_ReadCoEntry(at, 0, nptr, &centry);
+	code = pr_ReadCoEntry(ctx, 0, nptr, &centry);
 	if (code != 0)
 	    return code;
 	for (i = 0; i < COSIZE; i++) {
@@ -1337,7 +1337,7 @@ GetList(struct ubik_trans *at, struct prentry *tentry, prlist *alist, afs_int32 
 #if defined(SUPERGROUPS)
 	    if (!add)
 		continue;
-	    code = GetListSG2(at, centry.entries[i], alist, &size, depthsg);
+	    code = GetListSG2(ctx, centry.entries[i], alist, &size, depthsg);
 	    if (code)
 		return code;
 #endif
@@ -1372,7 +1372,7 @@ GetList(struct ubik_trans *at, struct prentry *tentry, prlist *alist, afs_int32 
 
 
 afs_int32
-GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2, prlist *alist, afs_int32 add)
+GetList2(struct pt_ctx *ctx, struct prentry *tentry, struct prentry *tentry2, prlist *alist, afs_int32 add)
 {
     afs_int32 code = 0;
     afs_int32 i;
@@ -1395,7 +1395,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 #if defined(SUPERGROUPS)
 	if (!add)
 	    continue;
-	code = GetListSG2(at, tentry->entries[i], alist, &size, depthsg);
+	code = GetListSG2(ctx, tentry->entries[i], alist, &size, depthsg);
 	if (code)
 	    return code;
 #endif
@@ -1404,7 +1404,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
     nptr = tentry->next;
     while (nptr != 0) {
 	/* look through cont entries */
-	code = pr_ReadCoEntry(at, 0, nptr, &centry);
+	code = pr_ReadCoEntry(ctx, 0, nptr, &centry);
 	if (code != 0)
 	    return code;
 	for (i = 0; i < COSIZE; i++) {
@@ -1418,7 +1418,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 #if defined(SUPERGROUPS)
 	    if (!add)
 		continue;
-	    code = GetListSG2(at, centry.entries[i], alist, &size, depthsg);
+	    code = GetListSG2(ctx, centry.entries[i], alist, &size, depthsg);
 	    if (code)
 		return code;
 #endif
@@ -1445,7 +1445,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
     nptr = tentry2->next;
     while (nptr != 0) {
 	/* look through cont entries */
-	code = pr_ReadCoEntry(at, 0, nptr, &centry);
+	code = pr_ReadCoEntry(ctx, 0, nptr, &centry);
 	if (code != 0)
 	    return code;
 	for (i = 0; i < COSIZE; i++) {
@@ -1488,7 +1488,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 #if defined(SUPERGROUPS)
 
 afs_int32
-GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP, afs_int32 depth)
+GetListSG2(struct pt_ctx *ctx, afs_int32 gid, prlist *alist, afs_int32 *sizeP, afs_int32 depth)
 {
     afs_int32 code;
     struct prentry tentry;
@@ -1529,12 +1529,12 @@ GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP
 
     if (depth < 1)
 	return 0;
-    temp = FindByID(at, gid);
+    temp = FindByID(ctx, gid);
     if (!temp) {
 	code = PRNOENT;
 	return code;
     }
-    code = pr_ReadEntry(at, 0, temp, &tentry);
+    code = pr_ReadEntry(ctx, 0, temp, &tentry);
     if (code)
 	return code;
 #if DEBUG_SG_MAP
@@ -1556,7 +1556,7 @@ GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP
 	if (code)
 	    return code;
 	code =
-	    GetListSG2(at, tentryg->supergroup[i], alist, sizeP, depth - 1);
+	    GetListSG2(ctx, tentryg->supergroup[i], alist, sizeP, depth - 1);
 	if (code)
 	    return code;
     }
@@ -1565,7 +1565,7 @@ GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP
     while (nptr) {
 	didsomething = 1;
 	/* look through cont entries */
-	code = pr_ReadCoEntry(at, 0, nptr, &centry);
+	code = pr_ReadCoEntry(ctx, 0, nptr, &centry);
 	if (code != 0)
 	    return code;
 	for (i = 0; i < COSIZE; i++) {
@@ -1580,7 +1580,7 @@ GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP
 	    code = AddToPRList(gid, alist, sizeP, centry.entries[i]);
 	    if (code)
 		return code;
-	    code = GetListSG2(at, centry.entries[i], alist, sizeP, depth - 1);
+	    code = GetListSG2(ctx, centry.entries[i], alist, sizeP, depth - 1);
 	    if (code)
 		return code;
 	}
@@ -1608,7 +1608,7 @@ GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP
 }
 
 afs_int32
-GetSGList(struct ubik_trans *at, struct prentry *tentry, prlist *alist)
+GetSGList(struct pt_ctx *ctx, struct prentry *tentry, prlist *alist)
 {
     afs_int32 code;
     afs_int32 i;
@@ -1636,7 +1636,7 @@ GetSGList(struct ubik_trans *at, struct prentry *tentry, prlist *alist)
     nptr = tentryg->nextsg;
     while (nptr) {
 	/* look through cont entries */
-	code = pr_ReadCoEntry(at, 0, nptr, &centry);
+	code = pr_ReadCoEntry(ctx, 0, nptr, &centry);
 	if (code != 0)
 	    return code;
 	for (i = 0; i < COSIZE; i++) {
@@ -1668,7 +1668,7 @@ GetSGList(struct ubik_trans *at, struct prentry *tentry, prlist *alist)
 #endif /* SUPERGROUPS */
 
 afs_int32
-GetOwnedChain(struct ubik_trans *ut, afs_int32 log_id, afs_int32 *next,
+GetOwnedChain(struct pt_ctx *ctx, afs_int32 log_id, afs_int32 *next,
 	      prlist *alist)
 {
     afs_int32 code;
@@ -1681,7 +1681,7 @@ GetOwnedChain(struct ubik_trans *ut, afs_int32 log_id, afs_int32 *next,
     alist->prlist_len = 0;
 
     for (; *next; *next = ntohl(tentry.nextOwned)) {
-	code = pr_Read(ut, 0, *next, &tentry, sizeof(tentry));
+	code = pr_Read(ctx, 0, *next, &tentry, sizeof(tentry));
 	if (code)
 	    return code;
 	code = AddToPRList(log_id, alist, &size, ntohl(tentry.id));
@@ -1706,7 +1706,7 @@ GetOwnedChain(struct ubik_trans *ut, afs_int32 log_id, afs_int32 *next,
 }
 
 afs_int32
-GetMax(struct ubik_trans *at, afs_int32 *uid, afs_int32 *gid)
+GetMax(struct pt_ctx *ctx, afs_int32 *uid, afs_int32 *gid)
 {
     *uid = ntohl(cheader.maxID);
     *gid = ntohl(cheader.maxGroup);
@@ -1714,20 +1714,20 @@ GetMax(struct ubik_trans *at, afs_int32 *uid, afs_int32 *gid)
 }
 
 afs_int32
-SetMax(struct ubik_trans *at, afs_int32 id, afs_int32 flag)
+SetMax(struct pt_ctx *ctx, afs_int32 id, afs_int32 flag)
 {
     afs_int32 code;
     if (flag & PRGRP) {
 	cheader.maxGroup = htonl(id);
 	code =
-	    pr_Write(at, 0, 16, (char *)&cheader.maxGroup,
+	    pr_Write(ctx, 0, 16, (char *)&cheader.maxGroup,
 		     sizeof(cheader.maxGroup));
 	if (code != 0)
 	    return code;
     } else {
 	cheader.maxID = htonl(id);
 	code =
-	    pr_Write(at, 0, 20, (char *)&cheader.maxID,
+	    pr_Write(ctx, 0, 20, (char *)&cheader.maxID,
 		     sizeof(cheader.maxID));
 	if (code != 0)
 	    return code;
@@ -1739,8 +1739,14 @@ static afs_int32
 UpdateCache(struct ubik_trans *tt, void *rock)
 {
     afs_int32 code;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
 
-    code = pr_Read(tt, 0, 0, (char *)&cheader, sizeof(cheader));
+    memset(&ctx_s, 0, sizeof(ctx_s));
+
+    ctx->trans = tt;
+
+    code = pr_Read(ctx, 0, 0, (char *)&cheader, sizeof(cheader));
     if (code != 0) {
 	afs_com_err(whoami, code, "Couldn't read header");
     }
@@ -1750,10 +1756,17 @@ UpdateCache(struct ubik_trans *tt, void *rock)
 static int
 dbheader_isvalid(struct ubik_trans *tt)
 {
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
+
+    ctx->trans = tt;
+
     if ((ntohl(cheader.version) == PRDBVERSION)
 	&& ntohl(cheader.headerSize) == sizeof(cheader)
 	&& ntohl(cheader.eofPtr) != 0
-	&& FindByID(tt, ANONYMOUSID) != 0) {
+	&& FindByID(ctx, ANONYMOUSID) != 0) {
 	return 1;
     }
     return 0;
@@ -1865,11 +1878,17 @@ static afs_int32
 InitializeDB(struct ubik_trans *tt)
 {
     afs_int32 code;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
+
+    ctx->trans = tt;
 
     /* Initialize the database header */
-    if ((code = set_header_word(tt, version, htonl(PRDBVERSION)))
-	|| (code = set_header_word(tt, headerSize, htonl(sizeof(cheader))))
-	|| (code = set_header_word(tt, eofPtr, cheader.headerSize))) {
+    if ((code = set_header_word(ctx, version, htonl(PRDBVERSION)))
+	|| (code = set_header_word(ctx, headerSize, htonl(sizeof(cheader))))
+	|| (code = set_header_word(ctx, eofPtr, cheader.headerSize))) {
 	afs_com_err(whoami, code, "couldn't write header words");
 	return code;
     }
@@ -1883,7 +1902,7 @@ InitializeDB(struct ubik_trans *tt)
 	return code;		      \
     } \
     code = CreateEntry		      \
-	(tt, tname, &temp, /*idflag*/1, flag, SYSADMINID, SYSADMINID); \
+	(ctx, tname, &temp, /*idflag*/1, flag, SYSADMINID, SYSADMINID); \
     if (code) {			      \
 	afs_com_err (whoami, code, "couldn't create %s with id %di.", 	\
 		 (name), (id));	      \
@@ -1900,7 +1919,7 @@ InitializeDB(struct ubik_trans *tt)
 
     /* Well, we don't really want the max id set to anonymousid, so we'll set
      * it back to 0 */
-    code = set_header_word(tt, maxID, 0);	/* correct in any byte order */
+    code = set_header_word(ctx, maxID, 0);	/* correct in any byte order */
     if (code) {
 	afs_com_err(whoami, code, "couldn't reset max id");
 	return code;
@@ -2027,7 +2046,7 @@ pr_Preamble(afs_int32 transMode, int noinitdb, struct ubik_trans **a_tt)
 }
 
 afs_int32
-ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs_int32 oid, afs_int32 newid)
+ChangeEntry(struct pt_ctx *ctx, afs_int32 aid, afs_int32 cid, char *name, afs_int32 oid, afs_int32 newid)
 {
     afs_int32 code;
     afs_int32 i, pos;
@@ -2048,26 +2067,26 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 
     memset(holder, 0, PR_MAXNAMELEN);
     memset(temp, 0, PR_MAXNAMELEN);
-    loc = FindByID(at, aid);
+    loc = FindByID(ctx, aid);
     if (!loc)
 	return PRNOENT;
-    code = pr_ReadEntry(at, 0, loc, &tentry);
+    code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code)
 	return PRDBFAIL;
-    if (restricted && !IsAMemberOf(at, cid, SYSADMINID))
+    if (restricted && !IsAMemberOf(ctx, cid, SYSADMINID))
 	return PRPERM;
-    if (tentry.owner != cid && !IsAMemberOf(at, cid, SYSADMINID)
-	&& !IsAMemberOf(at, cid, tentry.owner) && !pr_noAuth)
+    if (tentry.owner != cid && !IsAMemberOf(ctx, cid, SYSADMINID)
+	&& !IsAMemberOf(ctx, cid, tentry.owner) && !pr_noAuth)
 	return PRPERM;
     tentry.changeTime = time(0);
-    admin = pr_noAuth || IsAMemberOf(at, cid, SYSADMINID);
+    admin = pr_noAuth || IsAMemberOf(ctx, cid, SYSADMINID);
 
     /* we're actually trying to change the id */
     if (newid && (newid != aid)) {
 	if (!admin)
 	    return PRPERM;
 
-	pos = FindByID(at, newid);
+	pos = FindByID(ctx, newid);
 	if (pos)
 	    return PRIDEXIST;	/* new id already in use! */
 	if ((aid < 0 && newid > 0) || (aid > 0 && newid < 0))
@@ -2076,25 +2095,25 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 	/* Should check that foreign users id to change to is good: inRange() */
 
 	/* if new id is not in use, rehash things */
-	code = RemoveFromIDHash(at, aid, &loc);
+	code = RemoveFromIDHash(ctx, aid, &loc);
 	if (code != PRSUCCESS)
 	    return code;
 	tentry.id = newid;
-	code = pr_WriteEntry(at, 0, loc, &tentry);
+	code = pr_WriteEntry(ctx, 0, loc, &tentry);
 	if (code)
 	    return code;
-	code = AddToIDHash(at, tentry.id, loc);
+	code = AddToIDHash(ctx, tentry.id, loc);
 	if (code)
 	    return code;
 
 	/* get current data */
-	code = pr_ReadEntry(at, 0, loc, &tentry);
+	code = pr_ReadEntry(ctx, 0, loc, &tentry);
 	if (code)
 	    return PRDBFAIL;
 
 #if defined(SUPERGROUPS)
 	if (tentry.id > (afs_int32) ntohl(cheader.maxID))
-	    code = set_header_word(at, maxID, htonl(tentry.id));
+	    code = set_header_word(ctx, maxID, htonl(tentry.id));
 	if (code)
 	    return PRDBFAIL;
 
@@ -2111,25 +2130,25 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 	    if ((tentry.flags & PRGRP) && tentry.entries[i] < 0) {	/* Supergroup */
 		return 5;	/* not yet, in short. */
 	    } else {
-		code = ChangeIDEntry(at, aid, newid, tentry.entries[i]);
+		code = ChangeIDEntry(ctx, aid, newid, tentry.entries[i]);
 	    }
 	    if (code)
 		return code;
 	}
 	for (pos = ntohl(tentry.owned); pos; pos = nextpos) {
-	    code = pr_ReadEntry(at, 0, pos, &tent);
+	    code = pr_ReadEntry(ctx, 0, pos, &tent);
 	    if (code)
 		break;
 	    tent.owner = newid;
 	    nextpos = tent.nextOwned;
-	    code = pr_WriteEntry(at, 0, pos, &tent);
+	    code = pr_WriteEntry(ctx, 0, pos, &tent);
 	    if (code)
 		break;
 	}
 	pos = tentry.next;
 	while (pos) {
 #define centry  (*(struct contentry*)&tent)
-	    code = pr_ReadCoEntry(at, 0, pos, &centry);
+	    code = pr_ReadCoEntry(ctx, 0, pos, &centry);
 	    if ((centry.id != aid)
 		|| !(centry.flags & PRCONT)) {
 		fprintf(stderr,
@@ -2146,12 +2165,12 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 		if ((centry.flags & PRGRP) && centry.entries[i] < 0) {	/* Supergroup */
 		    return 5;	/* not yet, in short. */
 		} else {
-		    code = ChangeIDEntry(at, aid, newid, centry.entries[i]);
+		    code = ChangeIDEntry(ctx, aid, newid, centry.entries[i]);
 		}
 		if (code)
 		    return code;
 	    }
-	    code = pr_WriteCoEntry(at, 0, pos, &centry);
+	    code = pr_WriteCoEntry(ctx, 0, pos, &centry);
 	    pos = centry.next;
 #undef centry
 	}
@@ -2167,16 +2186,16 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 		continue;
 	    if (tentry.entries[i] == 0)
 		break;
-	    pos = FindByID(at, tentry.entries[i]);
+	    pos = FindByID(ctx, tentry.entries[i]);
 	    if (!pos)
 		return (PRDBFAIL);
-	    code = RemoveFromEntry(at, aid, tentry.entries[i]);
+	    code = RemoveFromEntry(ctx, aid, tentry.entries[i]);
 	    if (code)
 		return code;
-	    code = pr_ReadEntry(at, 0, pos, &tent);
+	    code = pr_ReadEntry(ctx, 0, pos, &tent);
 	    if (code)
 		return code;
-	    code = AddToEntry(at, &tent, pos, newid);
+	    code = AddToEntry(ctx, &tent, pos, newid);
 	    if (code)
 		return code;
 	}
@@ -2185,7 +2204,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 	 * large to complete.
 	 */
 	for (nptr = tentry.next; nptr; nptr = centry.next) {
-	    code = pr_ReadCoEntry(at, 0, nptr, &centry);
+	    code = pr_ReadCoEntry(ctx, 0, nptr, &centry);
 	    if (code)
 		return code;
 	    for (i = 0; i < COSIZE; i++) {
@@ -2193,16 +2212,16 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 		    continue;
 		if (centry.entries[i] == 0)
 		    break;
-		pos = FindByID(at, centry.entries[i]);
+		pos = FindByID(ctx, centry.entries[i]);
 		if (!pos)
 		    return (PRDBFAIL);
-		code = RemoveFromEntry(at, aid, centry.entries[i]);
+		code = RemoveFromEntry(ctx, aid, centry.entries[i]);
 		if (code)
 		    return code;
-		code = pr_ReadEntry(at, 0, pos, &tent);
+		code = pr_ReadEntry(ctx, 0, pos, &tent);
 		if (code)
 		    return code;
-		code = AddToEntry(at, &tent, pos, newid);
+		code = AddToEntry(ctx, &tent, pos, newid);
 		if (code)
 		    return code;
 	    }
@@ -2223,18 +2242,18 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 	tentry.owner = oid;
 	/* The entry must be written through first so Remove and Add routines
 	 * can operate on disk data */
-	code = pr_WriteEntry(at, 0, loc, &tentry);
+	code = pr_WriteEntry(ctx, 0, loc, &tentry);
 	if (code)
 	    return PRDBFAIL;
 
 	/* switch owner chains */
 	if (oldowner)		/* if it has an owner */
-	    code = RemoveFromOwnerChain(at, tentry.id, oldowner);
+	    code = RemoveFromOwnerChain(ctx, tentry.id, oldowner);
 	else			/* must be an orphan */
-	    code = RemoveFromOrphan(at, tentry.id);
+	    code = RemoveFromOrphan(ctx, tentry.id);
 	if (code)
 	    return code;
-	code = AddToOwnerChain(at, tentry.id, tentry.owner);
+	code = AddToOwnerChain(ctx, tentry.id, tentry.owner);
 	if (code)
 	    return code;
 
@@ -2242,7 +2261,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 	if (strlen(name) == 0)
 	    name = tentry.name;
 	/* get current data */
-	code = pr_ReadEntry(at, 0, loc, &tentry);
+	code = pr_ReadEntry(ctx, 0, loc, &tentry);
 	if (code)
 	    return PRDBFAIL;
     }
@@ -2259,7 +2278,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 	    if (tentry.owner == 0 || tentry.owner == ANONYMOUSID)
 		tentry.owner = cid;
 
-	    code = CorrectGroupName(at, name, cid, tentry.owner, admin, tentry.name);
+	    code = CorrectGroupName(ctx, name, cid, tentry.owner, admin, tentry.name);
 	    if (code)
 		return code;
 
@@ -2287,17 +2306,17 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 		return PRBADNAM;
 	}
 
-	pos = FindByName(at, name, &tent);
+	pos = FindByName(ctx, name, &tent);
 	if (pos)
 	    return PREXIST;
-	code = RemoveFromNameHash(at, oldname, &loc);
+	code = RemoveFromNameHash(ctx, oldname, &loc);
 	if (code != PRSUCCESS)
 	    return code;
 	strncpy(tentry.name, name, PR_MAXNAMELEN);
-	code = pr_WriteEntry(at, 0, loc, &tentry);
+	code = pr_WriteEntry(ctx, 0, loc, &tentry);
 	if (code)
 	    return PRDBFAIL;
-	code = AddToNameHash(at, tentry.name, loc);
+	code = AddToNameHash(ctx, tentry.name, loc);
 	if (code != PRSUCCESS)
 	    return code;
       nameOK:;
@@ -2307,7 +2326,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 
 
 static afs_int32
-allocNextId(struct ubik_trans * at, struct prentry * cellEntry)
+allocNextId(struct pt_ctx * ctx, struct prentry * cellEntry)
 {
     /* Id's for foreign cell entries are constructed as follows:
      * The 16 low order bits are the group id of the cell and the
@@ -2317,7 +2336,7 @@ allocNextId(struct ubik_trans * at, struct prentry * cellEntry)
     afs_int32 cellid = ((ntohl(cellEntry->id)) & 0x0000ffff);
 
     id = (ntohl(cellEntry->nusers) + 1);
-    while (FindByID(at, ((id << 16) | cellid))) {
+    while (FindByID(ctx, ((id << 16) | cellid))) {
 	id++;
 	if (id > 0xffff)
 	    return 0;

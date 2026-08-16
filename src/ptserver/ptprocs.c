@@ -91,9 +91,9 @@ static afs_int32 addToGroup(struct rx_call *call, afs_int32 aid, afs_int32 gid,
 			    afs_int32 *cid);
 static afs_int32 nameToID(struct rx_call *call, namelist *aname, idlist *aid);
 static afs_int32 idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid);
-static afs_int32 lookup_name_from_id(struct ubik_trans *at, afs_int32 aid,
+static afs_int32 lookup_name_from_id(struct pt_ctx *ctx, afs_int32 aid,
 				     char aname[PR_MAXNAMELEN]);
-static afs_int32 lookup_id_from_name(struct ubik_trans *at,
+static afs_int32 lookup_id_from_name(struct pt_ctx *ctx,
 				     char aname[PR_MAXNAMELEN],
 				     afs_int32 *aid);
 static afs_int32 Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid);
@@ -134,20 +134,20 @@ static afs_int32 listOwned(struct rx_call *call, afs_int32 aid, prlist *alist,
 			   afs_int32 *lastP, afs_int32 *cid);
 static afs_int32 isAMemberOf(struct rx_call *call, afs_int32 uid, afs_int32 gid,
 			     afs_int32 *flag, afs_int32 *cid);
-static afs_int32 addWildCards(struct ubik_trans *tt, prlist *alist,
+static afs_int32 addWildCards(struct pt_ctx *ctx, prlist *alist,
 			      afs_uint32 host);
 static afs_int32 WhoIsThisWithName(struct rx_call *acall,
-				   struct ubik_trans *at, afs_int32 *aid,
+				   struct pt_ctx *ctx, afs_int32 *aid,
 				   char *aname);
 
 /* when we abort, the ubik cachedVersion will be reset, so we'll read in the
  * header on the next call.
  * Abort the transaction and return the code.
  */
-#define ABORT_WITH(tt,code) return(ubik_AbortTrans(tt),code)
+#define ABORT_WITH(ctx,code) return(ubik_AbortTrans((ctx)->trans),code)
 
 static int
-CreateOK(struct ubik_trans *ut, afs_int32 cid, afs_int32 oid, afs_int32 flag,
+CreateOK(struct pt_ctx *ctx, afs_int32 cid, afs_int32 oid, afs_int32 flag,
 	 int admin)
 {
     if (restricted && !admin)
@@ -176,30 +176,30 @@ CreateOK(struct ubik_trans *ut, afs_int32 cid, afs_int32 oid, afs_int32 flag,
 }
 
 afs_int32
-WhoIsThis(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid)
+WhoIsThis(struct rx_call *acall, struct pt_ctx *ctx, afs_int32 *aid)
 {
-    int code = WhoIsThisWithName(acall, at, aid, NULL);
+    int code = WhoIsThisWithName(acall, ctx, aid, NULL);
     if (code == 2 && *aid == ANONYMOUSID)
 	return PRNOENT;
     return code;
 }
 
 static int
-WritePreamble(struct ubik_trans **tt)
+WritePreamble(struct pt_ctx *ctx)
 {
-    return pr_Preamble(UBIK_WRITETRANS, 0, tt);
+    return pr_Preamble(UBIK_WRITETRANS, 0, &ctx->trans);
 }
 
 static int
-WritePreambleNoInitDB(struct ubik_trans **tt)
+WritePreambleNoInitDB(struct pt_ctx *ctx)
 {
-    return pr_Preamble(UBIK_WRITETRANS, 1, tt);
+    return pr_Preamble(UBIK_WRITETRANS, 1, &ctx->trans);
 }
 
 static int
-ReadPreamble(struct ubik_trans **tt)
+ReadPreamble(struct pt_ctx *ctx)
 {
-    return pr_Preamble(UBIK_READTRANS, 0, tt);
+    return pr_Preamble(UBIK_READTRANS, 0, &ctx->trans);
 }
 
 afs_int32
@@ -221,44 +221,47 @@ iNewEntry(struct rx_call *call, char aname[], afs_int32 aid, afs_int32 oid,
 {
     /* used primarily for conversion - not intended to be used as usual means
      * of entering people into the database. */
-    struct ubik_trans *tt;
     afs_int32 code;
     afs_int32 gflag = 0;
     int admin;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     stolower(aname);
 
-    code = WritePreamble(&tt);
+    code = WritePreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
-    admin = IsAMemberOf(tt, *cid, SYSADMINID);
+	ABORT_WITH(ctx, PRPERM);
+    admin = IsAMemberOf(ctx, *cid, SYSADMINID);
 
     /* first verify the id is good */
     if (aid == 0)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
     if (aid < 0) {
 	gflag |= PRGRP;
 	/* only sysadmin can reuse a group id */
 	if (!admin && !pr_noAuth && (aid != ntohl(cheader.maxGroup) - 1))
-	    ABORT_WITH(tt, PRPERM);
+	    ABORT_WITH(ctx, PRPERM);
     }
-    if (FindByID(tt, aid))
-	ABORT_WITH(tt, PRIDEXIST);
+    if (FindByID(ctx, aid))
+	ABORT_WITH(ctx, PRIDEXIST);
 
     /* check a few other things */
-    if (!CreateOK(tt, *cid, oid, gflag, admin))
-	ABORT_WITH(tt, PRPERM);
+    if (!CreateOK(ctx, *cid, oid, gflag, admin))
+	ABORT_WITH(ctx, PRPERM);
 
-    code = CreateEntry(tt, aname, &aid, 1, gflag, oid, *cid);
+    code = CreateEntry(ctx, aname, &aid, 1, gflag, oid, *cid);
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
     /* finally, commit transaction */
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -284,13 +287,17 @@ newEntry(struct rx_call *call, char aname[], afs_int32 flag, afs_int32 oid,
 	 afs_int32 *aid, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     int admin;
     int foreign = 0;
     char cname[PR_MAXNAMELEN];
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
+
     stolower(aname);
 
-    code = WritePreamble(&tt);
+    code = WritePreamble(ctx);
     if (code)
 	return code;
 
@@ -298,26 +305,26 @@ newEntry(struct rx_call *call, char aname[], afs_int32 flag, afs_int32 oid,
      * SPR_INewEntry because we want self-registration to only do
      * automatic id assignment.
      */
-    code = WhoIsThisWithName(call, tt, cid, cname);
+    code = WhoIsThisWithName(call, ctx, cid, cname);
     if (code && code != 2)
-	ABORT_WITH(tt, PRPERM);
-    admin = IsAMemberOf(tt, *cid, SYSADMINID);
+	ABORT_WITH(ctx, PRPERM);
+    admin = IsAMemberOf(ctx, *cid, SYSADMINID);
     if (code == 2 /* foreign cell request */) {
 	foreign = 1;
 
 	if (!restricted && (strcmp(aname, cname) == 0)) {
 	    /* can't autoregister while providing an owner id */
 	    if (oid != 0)
-		ABORT_WITH(tt, PRPERM);
+		ABORT_WITH(ctx, PRPERM);
 
 	    admin = 1;
 	    oid = SYSADMINID;
 	}
     }
-    if (!CreateOK(tt, *cid, oid, flag, admin))
-	ABORT_WITH(tt, PRPERM);
+    if (!CreateOK(ctx, *cid, oid, flag, admin))
+	ABORT_WITH(ctx, PRPERM);
 
-    code = CreateEntry(tt, aname, aid, 0, flag, oid, *cid);
+    code = CreateEntry(ctx, aname, aid, 0, flag, oid, *cid);
     /*
      * If this was an autoregistration then be sure to audit log
      * the proper id as the creator.
@@ -325,9 +332,9 @@ newEntry(struct rx_call *call, char aname[], afs_int32 flag, afs_int32 oid,
     if (foreign && code == 0 && *aid > 0)
 	*cid = *aid;
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -352,24 +359,27 @@ static afs_int32
 whereIsIt(struct rx_call *call, afs_int32 aid, afs_int32 *apos, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     afs_int32 temp;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
 
-    code = ReadPreamble(&tt);
+    memset(&ctx_s, 0, sizeof(ctx_s));
+
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
     if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
 
-    temp = FindByID(tt, aid);
+    temp = FindByID(ctx, aid);
     if (!temp)
-	ABORT_WITH(tt, PRNOENT);
+	ABORT_WITH(ctx, PRNOENT);
     *apos = temp;
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -394,23 +404,26 @@ dumpEntry(struct rx_call *call, afs_int32 apos, struct prdebugentry *aentry,
 	  afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
 
-    code = ReadPreamble(&tt);
+    memset(&ctx_s, 0, sizeof(ctx_s));
+
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
-    code = pr_ReadEntry(tt, 0, apos, (struct prentry *)aentry);
+	ABORT_WITH(ctx, PRPERM);
+    code = pr_ReadEntry(ctx, 0, apos, (struct prentry *)aentry);
     if (code)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    if (!AccessOK(tt, *cid, 0, PRP_STATUS_MEM, 0))
-	ABORT_WITH(tt, PRPERM);
+    if (!AccessOK(ctx, *cid, 0, PRP_STATUS_MEM, 0))
+	ABORT_WITH(ctx, PRPERM);
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -433,64 +446,67 @@ static afs_int32
 addToGroup(struct rx_call *call, afs_int32 aid, afs_int32 gid, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     afs_int32 tempu;
     afs_int32 tempg;
     struct prentry tentry;
     struct prentry uentry;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     if (gid == ANYUSERID || gid == AUTHUSERID)
 	return PRPERM;
     if (aid == ANONYMOUSID)
 	return PRPERM;
 
-    code = WritePreamble(&tt);
+    code = WritePreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
-    tempu = FindByID(tt, aid);
+	ABORT_WITH(ctx, PRPERM);
+    tempu = FindByID(ctx, aid);
     if (!tempu)
-	ABORT_WITH(tt, PRNOENT);
+	ABORT_WITH(ctx, PRNOENT);
     memset(&uentry, 0, sizeof(uentry));
-    code = pr_ReadEntry(tt, 0, tempu, &uentry);
+    code = pr_ReadEntry(ctx, 0, tempu, &uentry);
     if (code != 0)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
 #if !defined(SUPERGROUPS)
     /* we don't allow groups as members of groups at present */
     if (uentry.flags & PRGRP)
-	ABORT_WITH(tt, PRNOTUSER);
+	ABORT_WITH(ctx, PRNOTUSER);
 #endif
 
-    tempg = FindByID(tt, gid);
+    tempg = FindByID(ctx, gid);
     if (!tempg)
-	ABORT_WITH(tt, PRNOENT);
-    code = pr_ReadEntry(tt, 0, tempg, &tentry);
+	ABORT_WITH(ctx, PRNOENT);
+    code = pr_ReadEntry(ctx, 0, tempg, &tentry);
     if (code != 0)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
     /* make sure that this is a group */
     if (!(tentry.flags & PRGRP))
-	ABORT_WITH(tt, PRNOTGROUP);
-    if (!AccessOK(tt, *cid, &tentry, PRP_ADD_MEM, PRP_ADD_ANY))
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRNOTGROUP);
+    if (!AccessOK(ctx, *cid, &tentry, PRP_ADD_MEM, PRP_ADD_ANY))
+	ABORT_WITH(ctx, PRPERM);
 
-    code = AddToEntry(tt, &tentry, tempg, aid);
+    code = AddToEntry(ctx, &tentry, tempg, aid);
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
 #if defined(SUPERGROUPS)
     if (uentry.flags & PRGRP)
-	code = AddToSGEntry(tt, &uentry, tempu, gid);	/* mod group to be in sg */
+	code = AddToSGEntry(ctx, &uentry, tempu, gid);	/* mod group to be in sg */
     else
 #endif
 	/* now, modify the user's entry as well */
-	code = AddToEntry(tt, &uentry, tempu, gid);
+	code = AddToEntry(ctx, &uentry, tempu, gid);
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
-    code = ubik_EndTrans(tt);
+	ABORT_WITH(ctx, code);
+    code = ubik_EndTrans(ctx->trans);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -511,10 +527,13 @@ static afs_int32
 nameToID(struct rx_call *call, namelist *aname, idlist *aid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     afs_int32 i;
     int size;
     int count = 0;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     /* Initialize return struct */
     aid->idlist_len = 0;
@@ -530,7 +549,7 @@ nameToID(struct rx_call *call, namelist *aname, idlist *aid)
     if (!aid->idlist_val)
 	return PRNOMEM;
 
-    code = ReadPreamble(&tt);
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
@@ -556,9 +575,9 @@ nameToID(struct rx_call *call, namelist *aname, idlist *aid)
 		     code, nameinst, cell));
 	}
 	if (islocal)
-	    code = lookup_id_from_name(tt, nameinst, &aid->idlist_val[i]);
+	    code = lookup_id_from_name(ctx, nameinst, &aid->idlist_val[i]);
 	else
-	    code = lookup_id_from_name(tt, aname->namelist_val[i],
+	    code = lookup_id_from_name(ctx, aname->namelist_val[i],
 				       &aid->idlist_val[i]);
 
 	if (code != PRSUCCESS)
@@ -577,7 +596,7 @@ nameToID(struct rx_call *call, namelist *aname, idlist *aid)
     }
     aid->idlist_len = aname->namelist_len;
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -604,10 +623,13 @@ static afs_int32
 idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     afs_int32 i;
     int size;
     int count = 0;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     /* leave this first for rpc stub */
     size = aid->idlist_len;
@@ -624,18 +646,18 @@ idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid)
     if (size == 0)
 	return PRTOOMANY;	/* rxgen will probably handle this */
 
-    code = ReadPreamble(&tt);
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
     if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
 
     for (i = 0; i < aid->idlist_len; i++) {
-	code = lookup_name_from_id(tt, aid->idlist_val[i],
+	code = lookup_name_from_id(ctx, aid->idlist_val[i],
 				   aname->namelist_val[i]);
 	if (code != PRSUCCESS)
 	    sprintf(aname->namelist_val[i], "%d", aid->idlist_val[i]);
@@ -652,24 +674,24 @@ idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid)
     }
     aname->namelist_len = aid->idlist_len;
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     if (code)
 	return code;
     return PRSUCCESS;
 }
 
 static afs_int32
-lookup_name_from_id(struct ubik_trans *at, afs_int32 aid,
+lookup_name_from_id(struct pt_ctx *ctx, afs_int32 aid,
 		    char aname[PR_MAXNAMELEN])
 {
     afs_int32 temp;
     struct prentry tentry;
     afs_int32 code;
 
-    temp = FindByID(at, aid);
+    temp = FindByID(ctx, aid);
     if (temp == 0)
 	return PRNOENT;
-    code = pr_Read(at, 0, temp, (char *)&tentry, sizeof(tentry));
+    code = pr_Read(ctx, 0, temp, (char *)&tentry, sizeof(tentry));
     if (code)
 	return code;
     strncpy(aname, tentry.name, PR_MAXNAMELEN);
@@ -677,13 +699,13 @@ lookup_name_from_id(struct ubik_trans *at, afs_int32 aid,
 }
 
 static afs_int32
-lookup_id_from_name(struct ubik_trans *at, char aname[PR_MAXNAMELEN],
+lookup_id_from_name(struct pt_ctx *ctx, char aname[PR_MAXNAMELEN],
 		    afs_int32 *aid)
 {
     afs_int32 temp;
     struct prentry tentry;
 
-    temp = FindByName(at, aname, &tentry);
+    temp = FindByName(ctx, aname, &tentry);
     if (!temp)
 	return PRNOENT;
     *aid = tentry.id;
@@ -706,38 +728,41 @@ static afs_int32
 Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     struct prentry tentry;
     afs_int32 loc, nptr;
     int count;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     if (aid == SYSADMINID || aid == ANYUSERID || aid == AUTHUSERID
 	|| aid == ANONYMOUSID)
 	return PRPERM;
 
-    code = WritePreamble(&tt);
+    code = WritePreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
 
     /* Read in entry to be deleted */
-    loc = FindByID(tt, aid);
+    loc = FindByID(ctx, aid);
     if (loc == 0)
-	ABORT_WITH(tt, PRNOENT);
-    code = pr_ReadEntry(tt, 0, loc, &tentry);
+	ABORT_WITH(ctx, PRNOENT);
+    code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code)
-	ABORT_WITH(tt, PRDBFAIL);
+	ABORT_WITH(ctx, PRDBFAIL);
 
     /* Do some access checking */
-    if (tentry.owner != *cid && !IsAMemberOf(tt, *cid, SYSADMINID)
-	&& !IsAMemberOf(tt, *cid, tentry.owner) && !pr_noAuth)
-	ABORT_WITH(tt, PRPERM);
+    if (tentry.owner != *cid && !IsAMemberOf(ctx, *cid, SYSADMINID)
+	&& !IsAMemberOf(ctx, *cid, tentry.owner) && !pr_noAuth)
+	ABORT_WITH(ctx, PRPERM);
 
-    if (restricted && !IsAMemberOf(tt, *cid, SYSADMINID)) {
-        ABORT_WITH(tt, PRPERM);
+    if (restricted && !IsAMemberOf(ctx, *cid, SYSADMINID)) {
+	ABORT_WITH(ctx, PRPERM);
     }
 
     /* Delete each continuation block as a separate transaction so that no one
@@ -747,9 +772,9 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 	struct contentry centry;
 	int i;
 
-	code = pr_ReadCoEntry(tt, 0, nptr, &centry);
+	code = pr_ReadCoEntry(ctx, 0, nptr, &centry);
 	if (code != 0)
-	    ABORT_WITH(tt, PRDBFAIL);
+	    ABORT_WITH(ctx, PRDBFAIL);
 	for (i = 0; i < COSIZE; i++) {
 	    if (centry.entries[i] == PRBADID)
 		continue;
@@ -757,12 +782,12 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 		break;
 #if defined(SUPERGROUPS)
 	    if (aid < 0 && centry.entries[i] < 0)	/* Supergroup */
-		code = RemoveFromSGEntry(tt, aid, centry.entries[i]);
+		code = RemoveFromSGEntry(ctx, aid, centry.entries[i]);
 	    else
 #endif
-		code = RemoveFromEntry(tt, aid, centry.entries[i]);
+		code = RemoveFromEntry(ctx, aid, centry.entries[i]);
 	    if (code)
-		ABORT_WITH(tt, code);
+		ABORT_WITH(ctx, code);
 	    tentry.count--;	/* maintain count */
 #ifndef AFS_PTHREAD_ENV
 	    if ((i & 3) == 0)
@@ -770,31 +795,31 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 #endif
 	}
 	tentry.next = centry.next;	/* thread out this block */
-	code = FreeBlock(tt, nptr);	/* free continuation block */
+	code = FreeBlock(ctx, nptr);	/* free continuation block */
 	if (code)
-	    ABORT_WITH(tt, code);
-	code = pr_WriteEntry(tt, 0, loc, &tentry);	/* update main entry */
+	    ABORT_WITH(ctx, code);
+	code = pr_WriteEntry(ctx, 0, loc, &tentry);	/* update main entry */
 	if (code)
-	    ABORT_WITH(tt, code);
+	    ABORT_WITH(ctx, code);
 
 	/* end this trans and start a new one */
-	code = ubik_EndTrans(tt);
+	code = ubik_EndTrans(ctx->trans);
 	if (code)
 	    return code;
 #ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();		/* just to keep the connection alive */
 #endif
-	code = WritePreambleNoInitDB(&tt);
+	code = WritePreambleNoInitDB(ctx);
 	if (code)
 	    return code;
 
 	/* re-read entry to get consistent uptodate info */
-	loc = FindByID(tt, aid);
+	loc = FindByID(ctx, aid);
 	if (loc == 0)
-	    ABORT_WITH(tt, PRNOENT);
-	code = pr_ReadEntry(tt, 0, loc, &tentry);
+	    ABORT_WITH(ctx, PRNOENT);
+	code = pr_ReadEntry(ctx, 0, loc, &tentry);
 	if (code)
-	    ABORT_WITH(tt, PRDBFAIL);
+	    ABORT_WITH(ctx, PRDBFAIL);
 
 	nptr = tentry.next;
     }
@@ -809,17 +834,17 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 	    struct contentry centry;
 	    int i;
 
-	    code = pr_ReadCoEntry(tt, 0, nptr, &centry);
+	    code = pr_ReadCoEntry(ctx, 0, nptr, &centry);
 	    if (code != 0)
-		ABORT_WITH(tt, PRDBFAIL);
+		ABORT_WITH(ctx, PRDBFAIL);
 	    for (i = 0; i < COSIZE; i++) {
 		if (centry.entries[i] == PRBADID)
 		    continue;
 		if (centry.entries[i] == 0)
 		    break;
-		code = RemoveFromEntry(tt, aid, centry.entries[i]);
+		code = RemoveFromEntry(ctx, aid, centry.entries[i]);
 		if (code)
-		    ABORT_WITH(tt, code);
+		    ABORT_WITH(ctx, code);
 		tentryg->countsg--;	/* maintain count */
 #ifndef AFS_PTHREAD_ENV
 		if ((i & 3) == 0)
@@ -827,32 +852,32 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 #endif
 	    }
 	    tentryg->nextsg = centry.next;	/* thread out this block */
-	    code = FreeBlock(tt, nptr);	/* free continuation block */
+	    code = FreeBlock(ctx, nptr);	/* free continuation block */
 	    if (code)
-		ABORT_WITH(tt, code);
-	    code = pr_WriteEntry(tt, 0, loc, &tentry);	/* update main entry */
+		ABORT_WITH(ctx, code);
+	    code = pr_WriteEntry(ctx, 0, loc, &tentry);	/* update main entry */
 	    if (code)
-		ABORT_WITH(tt, code);
+		ABORT_WITH(ctx, code);
 
 	    /* end this trans and start a new one */
-	    code = ubik_EndTrans(tt);
+	    code = ubik_EndTrans(ctx->trans);
 	    if (code)
 		return code;
 #ifndef AFS_PTHREAD_ENV
 	    IOMGR_Poll();	/* just to keep the connection alive */
 #endif
 
-	    code = WritePreambleNoInitDB(&tt);
+	    code = WritePreambleNoInitDB(ctx);
 	    if (code)
 		return code;
 
 	    /* re-read entry to get consistent uptodate info */
-	    loc = FindByID(tt, aid);
+	    loc = FindByID(ctx, aid);
 	    if (loc == 0)
-		ABORT_WITH(tt, PRNOENT);
-	    code = pr_ReadEntry(tt, 0, loc, &tentry);
+		ABORT_WITH(ctx, PRNOENT);
+	    code = pr_ReadEntry(ctx, 0, loc, &tentry);
 	    if (code)
-		ABORT_WITH(tt, PRDBFAIL);
+		ABORT_WITH(ctx, PRDBFAIL);
 
 	    nptr = tentryg->nextsg;
 	}
@@ -868,15 +893,15 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
     while (nptr != 0) {
 	struct prentry nentry;
 
-	code = pr_ReadEntry(tt, 0, nptr, &nentry);
+	code = pr_ReadEntry(ctx, 0, nptr, &nentry);
 	if (code)
-	    ABORT_WITH(tt, PRDBFAIL);
+	    ABORT_WITH(ctx, PRDBFAIL);
 	nptr = tentry.owned = nentry.nextOwned;	/* thread out */
 
 	if (nentry.id != tentry.id) {	/* don't add us to orphan chain! */
-	    code = AddToOrphan(tt, nentry.id);
+	    code = AddToOrphan(ctx, nentry.id);
 	    if (code)
-		ABORT_WITH(tt, code);
+		ABORT_WITH(ctx, code);
 	    count++;
 #ifndef AFS_PTHREAD_ENV
 	    if ((count & 3) == 0)
@@ -885,38 +910,38 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 	}
 	if (count < 50)
 	    continue;
-	code = pr_WriteEntry(tt, 0, loc, &tentry);	/* update main entry */
+	code = pr_WriteEntry(ctx, 0, loc, &tentry);	/* update main entry */
 	if (code)
-	    ABORT_WITH(tt, code);
+	    ABORT_WITH(ctx, code);
 
 	/* end this trans and start a new one */
-	code = ubik_EndTrans(tt);
+	code = ubik_EndTrans(ctx->trans);
 	if (code)
 	    return code;
 #ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();		/* just to keep the connection alive */
 #endif
-	code = WritePreambleNoInitDB(&tt);
+	code = WritePreambleNoInitDB(ctx);
 	if (code)
 	    return code;
 
 	/* re-read entry to get consistent uptodate info */
-	loc = FindByID(tt, aid);
+	loc = FindByID(ctx, aid);
 	if (loc == 0)
-	    ABORT_WITH(tt, PRNOENT);
-	code = pr_ReadEntry(tt, 0, loc, &tentry);
+	    ABORT_WITH(ctx, PRNOENT);
+	code = pr_ReadEntry(ctx, 0, loc, &tentry);
 	if (code)
-	    ABORT_WITH(tt, PRDBFAIL);
+	    ABORT_WITH(ctx, PRDBFAIL);
 
 	nptr = tentry.owned;
     }
 
     /* now do what's left of the deletion stuff */
-    code = DeleteEntry(tt, &tentry, loc);
+    code = DeleteEntry(ctx, &tentry, loc);
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -940,10 +965,13 @@ UpdateEntry(struct rx_call *call, afs_int32 aid, char *name,
 	    struct PrUpdateEntry *uentry, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     struct prentry tentry;
     afs_int32 loc;
     int id = 0;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     if (aid) {
 	id = aid;
@@ -952,52 +980,52 @@ UpdateEntry(struct rx_call *call, afs_int32 aid, char *name,
 	    return PRPERM;
     }
 
-    code = WritePreamble(&tt);
+    code = WritePreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
-    code = IsAMemberOf(tt, *cid, SYSADMINID);
+	ABORT_WITH(ctx, PRPERM);
+    code = IsAMemberOf(ctx, *cid, SYSADMINID);
     if (!code && !pr_noAuth)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
 
     /* Read in entry to be deleted */
     if (id) {
-	loc = FindByID(tt, aid);
+	loc = FindByID(ctx, aid);
     } else {
-	loc = FindByName(tt, name, &tentry);
+	loc = FindByName(ctx, name, &tentry);
     }
     if (loc == 0)
-	ABORT_WITH(tt, PRNOENT);
-    code = pr_ReadEntry(tt, 0, loc, &tentry);
+	ABORT_WITH(ctx, PRNOENT);
+    code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code)
-	ABORT_WITH(tt, PRDBFAIL);
+	ABORT_WITH(ctx, PRDBFAIL);
 
     if (uentry->Mask & PRUPDATE_NAMEHASH) {
 	int tloc;
-	code = RemoveFromNameHash(tt, tentry.name, &tloc);
+	code = RemoveFromNameHash(ctx, tentry.name, &tloc);
 	if (code != PRSUCCESS)
-	    ABORT_WITH(tt, PRDBFAIL);
-	code = AddToNameHash(tt, tentry.name, loc);
+	    ABORT_WITH(ctx, PRDBFAIL);
+	code = AddToNameHash(ctx, tentry.name, loc);
 	if (code)
-	    ABORT_WITH(tt, code);
+	    ABORT_WITH(ctx, code);
     }
 
     if (uentry->Mask & PRUPDATE_IDHASH) {
 	int tloc;
 	if (!id)
 	    id = tentry.id;
-	code = RemoveFromIDHash(tt, id, &tloc);
+	code = RemoveFromIDHash(ctx, id, &tloc);
 	if (code != PRSUCCESS)
-	    ABORT_WITH(tt, PRDBFAIL);
-	code = AddToIDHash(tt, id, loc);
+	    ABORT_WITH(ctx, PRDBFAIL);
+	code = AddToIDHash(ctx, id, loc);
 	if (code)
-	    ABORT_WITH(tt, code);
+	    ABORT_WITH(ctx, code);
     }
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -1021,56 +1049,59 @@ removeFromGroup(struct rx_call *call, afs_int32 aid, afs_int32 gid,
 		afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     afs_int32 tempu;
     afs_int32 tempg;
     struct prentry uentry;
     struct prentry gentry;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
 
-    code = WritePreamble(&tt);
+    memset(&ctx_s, 0, sizeof(ctx_s));
+
+    code = WritePreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
-    tempu = FindByID(tt, aid);
+	ABORT_WITH(ctx, PRPERM);
+    tempu = FindByID(ctx, aid);
     if (!tempu)
-	ABORT_WITH(tt, PRNOENT);
-    tempg = FindByID(tt, gid);
+	ABORT_WITH(ctx, PRNOENT);
+    tempg = FindByID(ctx, gid);
     if (!tempg)
-	ABORT_WITH(tt, PRNOENT);
+	ABORT_WITH(ctx, PRNOENT);
     memset(&uentry, 0, sizeof(uentry));
     memset(&gentry, 0, sizeof(gentry));
-    code = pr_ReadEntry(tt, 0, tempu, &uentry);
+    code = pr_ReadEntry(ctx, 0, tempu, &uentry);
     if (code != 0)
-	ABORT_WITH(tt, code);
-    code = pr_ReadEntry(tt, 0, tempg, &gentry);
+	ABORT_WITH(ctx, code);
+    code = pr_ReadEntry(ctx, 0, tempg, &gentry);
     if (code != 0)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
     if (!(gentry.flags & PRGRP))
-	ABORT_WITH(tt, PRNOTGROUP);
+	ABORT_WITH(ctx, PRNOTGROUP);
 #if !defined(SUPERGROUPS)
     if (uentry.flags & PRGRP)
-	ABORT_WITH(tt, PRNOTUSER);
+	ABORT_WITH(ctx, PRNOTUSER);
 #endif
-    if (!AccessOK(tt, *cid, &gentry, PRP_REMOVE_MEM, 0))
-	ABORT_WITH(tt, PRPERM);
-    code = RemoveFromEntry(tt, aid, gid);
+    if (!AccessOK(ctx, *cid, &gentry, PRP_REMOVE_MEM, 0))
+	ABORT_WITH(ctx, PRPERM);
+    code = RemoveFromEntry(ctx, aid, gid);
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 #if defined(SUPERGROUPS)
     if (!(uentry.flags & PRGRP))
 #endif
-	code = RemoveFromEntry(tt, gid, aid);
+	code = RemoveFromEntry(ctx, gid, aid);
 #if defined(SUPERGROUPS)
     else
-	code = RemoveFromSGEntry(tt, gid, aid);
+	code = RemoveFromSGEntry(ctx, gid, aid);
 #endif
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -1094,39 +1125,42 @@ getCPS(struct rx_call *call, afs_int32 aid, prlist *alist, afs_int32 *over,
        afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     afs_int32 temp;
     struct prentry tentry;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     *over = 0;
     alist->prlist_len = 0;
     alist->prlist_val = NULL;
 
-    code = ReadPreamble(&tt);
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
     if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
 
-    temp = FindByID(tt, aid);
+    temp = FindByID(ctx, aid);
     if (!temp)
-	ABORT_WITH(tt, PRNOENT);
-    code = pr_ReadEntry(tt, 0, temp, &tentry);
+	ABORT_WITH(ctx, PRNOENT);
+    code = pr_ReadEntry(ctx, 0, temp, &tentry);
     if (code)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    if (!AccessOK(tt, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
-	ABORT_WITH(tt, PRPERM);
+    if (!AccessOK(ctx, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
+	ABORT_WITH(ctx, PRPERM);
 
-    code = GetList(tt, &tentry, alist, 1);
+    code = GetList(ctx, &tentry, alist, 1);
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     return code;
 }
 
@@ -1163,7 +1197,6 @@ getCPS2(struct rx_call *call, afs_int32 aid, afs_uint32 ahost, prlist *alist,
 	afs_int32 *over, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     afs_int32 temp;
     struct prentry tentry;
     struct prentry host_tentry;
@@ -1171,36 +1204,40 @@ getCPS2(struct rx_call *call, afs_int32 aid, afs_uint32 ahost, prlist *alist,
     int host_list = 0;
     struct in_addr iaddr;
     char hoststr[16];
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     *over = 0;
     iaddr.s_addr = ntohl(ahost);
     alist->prlist_len = 0;
     alist->prlist_val = NULL;
 
-    code = ReadPreamble(&tt);
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
     if (aid != PRBADID) {
-	temp = FindByID(tt, aid);
+	temp = FindByID(ctx, aid);
 	if (!temp)
-	    ABORT_WITH(tt, PRNOENT);
-	code = pr_ReadEntry(tt, 0, temp, &tentry);
+	    ABORT_WITH(ctx, PRNOENT);
+	code = pr_ReadEntry(ctx, 0, temp, &tentry);
 	if (code)
-	    ABORT_WITH(tt, code);
+	    ABORT_WITH(ctx, code);
 
 	/* afs does authenticate now */
-	code = WhoIsThis(call, tt, cid);
+	code = WhoIsThis(call, ctx, cid);
 	if (code
-	    || !AccessOK(tt, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
-	    ABORT_WITH(tt, PRPERM);
+	    || !AccessOK(ctx, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
+	    ABORT_WITH(ctx, PRPERM);
     }
-    code = lookup_id_from_name(tt, afs_inet_ntoa_r(iaddr.s_addr, hoststr),
+    code = lookup_id_from_name(ctx, afs_inet_ntoa_r(iaddr.s_addr, hoststr),
 			       &hostid);
     if (code == PRSUCCESS && hostid != 0) {
-	temp = FindByID(tt, hostid);
+	temp = FindByID(ctx, hostid);
 	if (temp) {
-	    code = pr_ReadEntry(tt, 0, temp, &host_tentry);
+	    code = pr_ReadEntry(ctx, 0, temp, &host_tentry);
 	    if (code == PRSUCCESS)
 		host_list = 1;
 	    else
@@ -1209,15 +1246,15 @@ getCPS2(struct rx_call *call, afs_int32 aid, afs_uint32 ahost, prlist *alist,
 	    fprintf(stderr, "FindByID Failed -- Not found\n");
     }
     if (host_list)
-	code = GetList2(tt, &tentry, &host_tentry, alist, 1);
+	code = GetList2(ctx, &tentry, &host_tentry, alist, 1);
     else
-	code = GetList(tt, &tentry, alist, 1);
+	code = GetList(ctx, &tentry, alist, 1);
     if (!code)
-	code = addWildCards(tt, alist, ntohl(ahost));
+	code = addWildCards(ctx, alist, ntohl(ahost));
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     return code;
 }
 
@@ -1240,35 +1277,38 @@ getHostCPS(struct rx_call *call, afs_uint32 ahost, prlist *alist,
 	   afs_int32 *over, afs_int32 *cid)
 {
     afs_int32 code, temp;
-    struct ubik_trans *tt;
     struct prentry host_tentry;
     afs_int32 hostid;
     struct in_addr iaddr;
     char hoststr[16];
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     *over = 0;
     iaddr.s_addr = ntohl(ahost);
     alist->prlist_len = 0;
     alist->prlist_val = NULL;
 
-    code = ReadPreamble(&tt);
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
     if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
 
-    code = lookup_id_from_name(tt, afs_inet_ntoa_r(iaddr.s_addr, hoststr),
+    code = lookup_id_from_name(ctx, afs_inet_ntoa_r(iaddr.s_addr, hoststr),
 			       &hostid);
     if (code == PRSUCCESS && hostid != 0) {
-	temp = FindByID(tt, hostid);
+	temp = FindByID(ctx, hostid);
 	if (temp) {
-	    code = pr_ReadEntry(tt, 0, temp, &host_tentry);
+	    code = pr_ReadEntry(ctx, 0, temp, &host_tentry);
 	    if (code == PRSUCCESS) {
-		code = GetList(tt, &host_tentry, alist, 0);
+		code = GetList(ctx, &host_tentry, alist, 0);
 		if (code)
 		    goto bad;
 	    } else
@@ -1276,12 +1316,12 @@ getHostCPS(struct rx_call *call, afs_uint32 ahost, prlist *alist,
 	} else
 	    fprintf(stderr, "FindByID Failed -- Not found\n");
     }
-    code = addWildCards(tt, alist, ntohl(ahost));
+    code = addWildCards(ctx, alist, ntohl(ahost));
   bad:
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     return code;
 }
 
@@ -1302,23 +1342,26 @@ afs_int32
 listMax(struct rx_call *call, afs_int32 *uid, afs_int32 *gid, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
 
-    code = ReadPreamble(&tt);
+    memset(&ctx_s, 0, sizeof(ctx_s));
+
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
     if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
 
-    code = GetMax(tt, uid, gid);
+    code = GetMax(ctx, uid, gid);
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -1341,25 +1384,28 @@ static afs_int32
 setMax(struct rx_call *call, afs_int32 aid, afs_int32 gflag, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
 
-    code = WritePreamble(&tt);
+    memset(&ctx_s, 0, sizeof(ctx_s));
+
+    code = WritePreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
-    if (!AccessOK(tt, *cid, 0, 0, 0))
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
+    if (!AccessOK(ctx, *cid, 0, 0, 0))
+	ABORT_WITH(ctx, PRPERM);
     if (((gflag & PRGRP) && (aid > 0)) || (!(gflag & PRGRP) && (aid < 0)))
-	ABORT_WITH(tt, PRBADARG);
+	ABORT_WITH(ctx, PRBADARG);
 
-    code = SetMax(tt, aid, gflag);
+    code = SetMax(ctx, aid, gflag);
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -1382,27 +1428,30 @@ listEntry(struct rx_call *call, afs_int32 aid, struct prcheckentry *aentry,
 	  afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     afs_int32 temp;
     struct prentry tentry;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
 
-    code = ReadPreamble(&tt);
+    memset(&ctx_s, 0, sizeof(ctx_s));
+
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
     if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
-	ABORT_WITH(tt, PRPERM);
-    temp = FindByID(tt, aid);
+	ABORT_WITH(ctx, PRPERM);
+    temp = FindByID(ctx, aid);
     if (!temp)
-	ABORT_WITH(tt, PRNOENT);
-    code = pr_ReadEntry(tt, 0, temp, &tentry);
+	ABORT_WITH(ctx, PRNOENT);
+    code = pr_ReadEntry(ctx, 0, temp, &tentry);
     if (code != 0)
-	ABORT_WITH(tt, code);
-    if (!AccessOK(tt, *cid, &tentry, PRP_STATUS_MEM, PRP_STATUS_ANY))
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, code);
+    if (!AccessOK(ctx, *cid, &tentry, PRP_STATUS_MEM, PRP_STATUS_ANY))
+	ABORT_WITH(ctx, PRPERM);
 
     aentry->flags = tentry.flags >> PRIVATE_SHIFT;
     if (aentry->flags == 0) {
@@ -1419,7 +1468,7 @@ listEntry(struct rx_call *call, afs_int32 aid, struct prcheckentry *aentry,
     aentry->nusers = tentry.nusers;
     aentry->count = tentry.count;
     memset(aentry->reserved, 0, sizeof(aentry->reserved));
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -1444,43 +1493,46 @@ listEntries(struct rx_call *call, afs_int32 flag, afs_int32 startindex,
 	    prentries *bulkentries, afs_int32 *nextstartindex, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     afs_int32 i, eof, pos, maxentries, f;
     struct prentry tentry;
     afs_int32 pollcount = 0;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     *nextstartindex = -1;
     bulkentries->prentries_val = 0;
     bulkentries->prentries_len = 0;
 
-    code = ReadPreamble(&tt);
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
     /* Make sure we are an authenticated caller and that we are on the
      * SYSADMIN list.
      */
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
-    code = IsAMemberOf(tt, *cid, SYSADMINID);
+	ABORT_WITH(ctx, PRPERM);
+    code = IsAMemberOf(ctx, *cid, SYSADMINID);
     if (!code && !pr_noAuth)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
 
     eof = ntohl(cheader.eofPtr) - sizeof(cheader);
     if (eof < 0) {
-	ABORT_WITH(tt, PRDBBAD);
+	ABORT_WITH(ctx, PRDBBAD);
     }
     maxentries = eof / sizeof(struct prentry);
 
     bulkentries->prentries_val = calloc(PR_MAXENTRIES,
 					sizeof(bulkentries->prentries_val[0]));
     if (!bulkentries->prentries_val)
-	ABORT_WITH(tt, PRNOMEM);
+	ABORT_WITH(ctx, PRNOMEM);
 
     for (i = startindex; i < maxentries; i++) {
 	pos = i * sizeof(struct prentry) + sizeof(cheader);
-	code = pr_ReadEntry(tt, 0, pos, &tentry);
+	code = pr_ReadEntry(ctx, 0, pos, &tentry);
 	if (code)
 	    goto done;
 
@@ -1509,9 +1561,9 @@ listEntries(struct rx_call *call, afs_int32 flag, afs_int32 startindex,
 	    free(bulkentries->prentries_val);
 	bulkentries->prentries_val = 0;
 	bulkentries->prentries_len = 0;
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
     } else {
-	code = ubik_EndTrans(tt);
+	code = ubik_EndTrans(ctx->trans);
     }
     if (code)
 	return code;
@@ -1562,8 +1614,11 @@ changeEntry(struct rx_call *call, afs_int32 aid, char *name, afs_int32 oid,
 	    afs_int32 newid, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     afs_int32 pos;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     if (!name)
 	return PRPERM;
@@ -1573,22 +1628,22 @@ changeEntry(struct rx_call *call, afs_int32 aid, char *name, afs_int32 oid,
 	|| aid == SYSADMINID)
 	return PRPERM;
 
-    code = WritePreamble(&tt);
+    code = WritePreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
-    pos = FindByID(tt, aid);
+	ABORT_WITH(ctx, PRPERM);
+    pos = FindByID(ctx, aid);
     if (!pos)
-	ABORT_WITH(tt, PRNOENT);
+	ABORT_WITH(ctx, PRNOENT);
     /* protection check in changeentry */
-    code = ChangeEntry(tt, aid, *cid, name, oid, newid);
+    code = ChangeEntry(ctx, aid, *cid, name, oid, newid);
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     return code;
 }
 
@@ -1618,10 +1673,13 @@ setFieldsEntry(struct rx_call *call,
 	       afs_int32 spare1, afs_int32 spare2, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     afs_int32 pos;
     struct prentry tentry;
     afs_int32 tflags;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     if (mask == 0)
 	return 0;		/* no-op */
@@ -1629,30 +1687,30 @@ setFieldsEntry(struct rx_call *call,
     if (id == ANYUSERID || id == AUTHUSERID || id == ANONYMOUSID)
 	return PRPERM;
 
-    code = WritePreamble(&tt);
+    code = WritePreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
-    pos = FindByID(tt, id);
+	ABORT_WITH(ctx, PRPERM);
+    pos = FindByID(ctx, id);
     if (!pos)
-	ABORT_WITH(tt, PRNOENT);
-    code = pr_ReadEntry(tt, 0, pos, &tentry);
+	ABORT_WITH(ctx, PRNOENT);
+    code = pr_ReadEntry(ctx, 0, pos, &tentry);
     if (code)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
     tflags = tentry.flags;
 
     if (mask & (PR_SF_NGROUPS | PR_SF_NUSERS)) {
-	if (!AccessOK(tt, *cid, 0, 0, 0))
-	    ABORT_WITH(tt, PRPERM);
+	if (!AccessOK(ctx, *cid, 0, 0, 0))
+	    ABORT_WITH(ctx, PRPERM);
 	if ((tflags & PRQUOTA) == 0) {	/* default if only setting one */
 	    tentry.ngroups = tentry.nusers = 20;
 	}
     } else {
-	if (!AccessOK(tt, *cid, &tentry, 0, 0))
-	    ABORT_WITH(tt, PRPERM);
+	if (!AccessOK(ctx, *cid, &tentry, 0, 0))
+	    ABORT_WITH(ctx, PRPERM);
     }
 
     if (mask & 0xffff) {	/* if setting flag bits */
@@ -1664,24 +1722,24 @@ setFieldsEntry(struct rx_call *call,
 
     if (mask & PR_SF_NGROUPS) {	/* setting group limit */
 	if (ngroups < 0)
-	    ABORT_WITH(tt, PRBADARG);
+	    ABORT_WITH(ctx, PRBADARG);
 	tentry.ngroups = ngroups;
 	tflags |= PRQUOTA;
     }
 
     if (mask & PR_SF_NUSERS) {	/* setting foreign user limit */
 	if (nusers < 0)
-	    ABORT_WITH(tt, PRBADARG);
+	    ABORT_WITH(ctx, PRBADARG);
 	tentry.nusers = nusers;
 	tflags |= PRQUOTA;
     }
     tentry.flags = tflags;
 
-    code = pr_WriteEntry(tt, 0, pos, &tentry);
+    code = pr_WriteEntry(ctx, 0, pos, &tentry);
     if (code)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     return code;
 }
 
@@ -1703,36 +1761,39 @@ listElements(struct rx_call *call, afs_int32 aid, prlist *alist,
 	     afs_int32 *over, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     afs_int32 temp;
     struct prentry tentry;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     *over = 0;
     alist->prlist_len = 0;
     alist->prlist_val = NULL;
 
-    code = ReadPreamble(&tt);
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
 
-    temp = FindByID(tt, aid);
+    temp = FindByID(ctx, aid);
     if (!temp)
-	ABORT_WITH(tt, PRNOENT);
-    code = pr_ReadEntry(tt, 0, temp, &tentry);
+	ABORT_WITH(ctx, PRNOENT);
+    code = pr_ReadEntry(ctx, 0, temp, &tentry);
     if (code)
-	ABORT_WITH(tt, code);
-    if (!AccessOK(tt, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, code);
+    if (!AccessOK(ctx, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
+	ABORT_WITH(ctx, PRPERM);
 
-    code = GetList(tt, &tentry, alist, 0);
+    code = GetList(ctx, &tentry, alist, 0);
     if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     return code;
 }
 
@@ -1760,40 +1821,43 @@ listSuperGroups(struct rx_call *call, afs_int32 aid, prlist *alist,
 		afs_int32 *over, afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     afs_int32 temp;
     struct prentry tentry;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     alist->prlist_len = 0;
     alist->prlist_val = (afs_int32 *) 0;
 
-    code = ReadPreamble(&tt);
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
     if (!pr_noAuth && restrict_anonymous && *cid == ANONYMOUSID)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
 
-    temp = FindByID(tt, aid);
+    temp = FindByID(ctx, aid);
     if (!temp)
-	ABORT_WITH(tt, PRNOENT);
-    code = pr_ReadEntry(tt, 0, temp, &tentry);
+	ABORT_WITH(ctx, PRNOENT);
+    code = pr_ReadEntry(ctx, 0, temp, &tentry);
     if (code)
-	ABORT_WITH(tt, code);
-    if (!AccessOK(tt, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, code);
+    if (!AccessOK(ctx, *cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
+	ABORT_WITH(ctx, PRPERM);
 
-    code = GetSGList(tt, &tentry, alist);
+    code = GetSGList(ctx, &tentry, alist);
     *over = 0;
     if (code == PRTOOMANY)
 	*over = 1;
     else if (code != PRSUCCESS)
-	ABORT_WITH(tt, code);
+	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
 
     return code;
 }
@@ -1825,10 +1889,13 @@ listOwned(struct rx_call *call, afs_int32 aid, prlist *alist, afs_int32 *lastP,
 	  afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
     struct prentry tentry;
     afs_int32 head = 0;
     afs_int32 start;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
+
+    memset(&ctx_s, 0, sizeof(ctx_s));
 
     alist->prlist_len = 0;
     alist->prlist_val = NULL;
@@ -1838,48 +1905,48 @@ listOwned(struct rx_call *call, afs_int32 aid, prlist *alist, afs_int32 *lastP,
     start = *lastP;
     *lastP = 0;
 
-    code = ReadPreamble(&tt);
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
-    code = WhoIsThis(call, tt, cid);
+    code = WhoIsThis(call, ctx, cid);
     if (code)
-	ABORT_WITH(tt, PRPERM);
+	ABORT_WITH(ctx, PRPERM);
 
     if (start) {
-	code = pr_ReadEntry(tt, 0, start, &tentry);
+	code = pr_ReadEntry(ctx, 0, start, &tentry);
 	if (!code && (tentry.owner == aid))
 	    head = start;	/* pick up where we left off */
     }
 
     if (!head) {
 	if (aid) {
-	    afs_int32 loc = FindByID(tt, aid);
+	    afs_int32 loc = FindByID(ctx, aid);
 	    if (loc == 0)
-		ABORT_WITH(tt, PRNOENT);
-	    code = pr_ReadEntry(tt, 0, loc, &tentry);
+		ABORT_WITH(ctx, PRNOENT);
+	    code = pr_ReadEntry(ctx, 0, loc, &tentry);
 	    if (code)
-		ABORT_WITH(tt, code);
+		ABORT_WITH(ctx, code);
 
-	    if (!AccessOK(tt, *cid, &tentry, -1, PRP_OWNED_ANY))
-		ABORT_WITH(tt, PRPERM);
+	    if (!AccessOK(ctx, *cid, &tentry, -1, PRP_OWNED_ANY))
+		ABORT_WITH(ctx, PRPERM);
 	    head = tentry.owned;
 	} else {
-	    if (!AccessOK(tt, *cid, 0, 0, 0))
-		ABORT_WITH(tt, PRPERM);
+	    if (!AccessOK(ctx, *cid, 0, 0, 0))
+		ABORT_WITH(ctx, PRPERM);
 	    head = ntohl(cheader.orphan);
 	}
     }
 
-    code = GetOwnedChain(tt, aid, &head, alist);
+    code = GetOwnedChain(ctx, aid, &head, alist);
     if (code) {
 	if (code == PRTOOMANY)
 	    *lastP = head;
 	else
-	    ABORT_WITH(tt, code);
+	    ABORT_WITH(ctx, code);
     }
 
-    code = ubik_EndTrans(tt);
+    code = ubik_EndTrans(ctx->trans);
     return code;
 }
 
@@ -1902,47 +1969,50 @@ isAMemberOf(struct rx_call *call, afs_int32 uid, afs_int32 gid, afs_int32 *flag,
 	    afs_int32 *cid)
 {
     afs_int32 code;
-    struct ubik_trans *tt;
+    struct pt_ctx ctx_s;
+    struct pt_ctx *ctx = &ctx_s;
 
-    code = ReadPreamble(&tt);
+    memset(&ctx_s, 0, sizeof(ctx_s));
+
+    code = ReadPreamble(ctx);
     if (code)
 	return code;
 
     {
-	afs_int32 uloc = FindByID(tt, uid);
-	afs_int32 gloc = FindByID(tt, gid);
+	afs_int32 uloc = FindByID(ctx, uid);
+	afs_int32 gloc = FindByID(ctx, gid);
 	struct prentry uentry, gentry;
 
 	if (!uloc || !gloc)
-	    ABORT_WITH(tt, PRNOENT);
-	code = WhoIsThis(call, tt, cid);
+	    ABORT_WITH(ctx, PRNOENT);
+	code = WhoIsThis(call, ctx, cid);
 	if (code)
-	    ABORT_WITH(tt, PRPERM);
-	code = pr_ReadEntry(tt, 0, uloc, &uentry);
+	    ABORT_WITH(ctx, PRPERM);
+	code = pr_ReadEntry(ctx, 0, uloc, &uentry);
 	if (code)
-	    ABORT_WITH(tt, code);
-	code = pr_ReadEntry(tt, 0, gloc, &gentry);
+	    ABORT_WITH(ctx, code);
+	code = pr_ReadEntry(ctx, 0, gloc, &gentry);
 	if (code)
-	    ABORT_WITH(tt, code);
+	    ABORT_WITH(ctx, code);
 #if !defined(SUPERGROUPS)
 	if ((uentry.flags & PRGRP) || !(gentry.flags & PRGRP))
-	    ABORT_WITH(tt, PRBADARG);
+	    ABORT_WITH(ctx, PRBADARG);
 #else
 	if (!(gentry.flags & PRGRP))
-	    ABORT_WITH(tt, PRBADARG);
+	    ABORT_WITH(ctx, PRBADARG);
 #endif
-	if (!AccessOK(tt, *cid, &uentry, 0, PRP_MEMBER_ANY)
-	    && !AccessOK(tt, *cid, &gentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
-	    ABORT_WITH(tt, PRPERM);
+	if (!AccessOK(ctx, *cid, &uentry, 0, PRP_MEMBER_ANY)
+	    && !AccessOK(ctx, *cid, &gentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
+	    ABORT_WITH(ctx, PRPERM);
     }
 
-    *flag = IsAMemberOf(tt, uid, gid);
-    code = ubik_EndTrans(tt);
+    *flag = IsAMemberOf(ctx, uid, gid);
+    code = ubik_EndTrans(ctx->trans);
     return code;
 }
 
 static afs_int32
-addWildCards(struct ubik_trans *tt, prlist *alist, afs_uint32 host)
+addWildCards(struct pt_ctx *ctx, prlist *alist, afs_uint32 host)
 {
     afs_int32 temp;
     struct prentry tentry;
@@ -1957,12 +2027,12 @@ addWildCards(struct ubik_trans *tt, prlist *alist, afs_uint32 host)
     while ((host = (host & wild))) {
 	wild = htonl(ntohl(wild) << 8);
 	iaddr.s_addr = host;
-	code = lookup_id_from_name(tt, afs_inet_ntoa_r(iaddr.s_addr, hoststr),
+	code = lookup_id_from_name(ctx, afs_inet_ntoa_r(iaddr.s_addr, hoststr),
 				   &hostid);
 	if (code == PRSUCCESS && hostid != 0) {
-	    temp = FindByID(tt, hostid);
+	    temp = FindByID(ctx, hostid);
 	    if (temp) {
-		code = pr_ReadEntry(tt, 0, temp, &tentry);
+		code = pr_ReadEntry(ctx, 0, temp, &tentry);
 		if (code != PRSUCCESS)
 		    continue;
 	    } else
@@ -1972,7 +2042,7 @@ addWildCards(struct ubik_trans *tt, prlist *alist, afs_uint32 host)
 	wlist.prlist_len = 0;
 	wlist.prlist_val = NULL;
 
-	code = GetList(tt, &tentry, &wlist, 0);
+	code = GetList(ctx, &tentry, &wlist, 0);
 	if (code)
 	    return code;
 	added += wlist.prlist_len;
@@ -1993,7 +2063,7 @@ addWildCards(struct ubik_trans *tt, prlist *alist, afs_uint32 host)
 }
 
 static afs_int32
-WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid,
+WhoIsThisWithName(struct rx_call *acall, struct pt_ctx *ctx, afs_int32 *aid,
 		  char *aname)
 {
     afs_int32 islocal = 1;
@@ -2037,7 +2107,7 @@ WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid,
 	    strcat(vname, "@");
 	    strcat(vname, tcell);
 	    lcstring(vname, vname, sizeof(vname));
-	    lookup_id_from_name(at, vname, aid);
+	    lookup_id_from_name(ctx, vname, aid);
 	    if (aname)
 		strcpy(aname, vname);
 	    return 2;
@@ -2047,7 +2117,7 @@ WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid,
 	    *aid = SYSADMINID;	/* special case for the fileserver */
 	else {
 	    lcstring(vname, vname, sizeof(vname));
-	    code = lookup_id_from_name(at, vname, aid);
+	    code = lookup_id_from_name(ctx, vname, aid);
 	}
 
     } else {
