@@ -866,6 +866,15 @@ install -m 755 \
 ##############################################################################
 %if %{build_userspace}
 
+# package openafs
+%preun
+if [ $1 = 0 ] ; then
+    if [ -d /afs ]; then
+        rmdir /afs || :
+    fi
+fi
+
+# package openafs-client
 %post client
 %if !%{have_systemd}
 chkconfig --add openafs-client
@@ -889,6 +898,33 @@ chmod 644 %{_prefix}/vice/etc/CellServDB
 %systemd_post openafs-client.service
 %endif
 
+%preun client
+%if !%{have_systemd}
+if [ $1 = 0 ] ; then
+    %{initdir}/openafs-client stop
+    chkconfig --del openafs-client
+fi
+%else
+%systemd_preun openafs-client.service
+%endif
+
+%if %{have_systemd}
+%postun client
+%systemd_postun openafs-client.service
+%endif
+
+%if 0%{?rhel} == 7
+%triggerun -- openafs-client < 1.6.0-1
+# Save the current service runlevel info
+# User must manually run systemd-sysv-convert --apply openafs-client
+# to migrate them to systemd targets
+/usr/bin/systemd-sysv-convert --save openafs-client >/dev/null 2>&1 ||:
+
+# Run this because the SysV package being removed won't do it
+/sbin/chkconfig --del openafs-client >/dev/null 2>&1 || :
+%endif
+
+# package openafs-server
 %post server
 %if !%{have_systemd}
 #on an upgrade, don't enable if we were disabled
@@ -900,6 +936,55 @@ fi
 %systemd_post openafs-server.service
 %endif
 
+%preun server
+%if !%{have_systemd}
+if [ $1 = 0 ] ; then
+    %{initdir}/openafs-server stop
+    chkconfig --del openafs-server
+fi
+%else
+%systemd_preun openafs-server.service
+%endif
+
+%if %{have_systemd}
+%postun server
+%systemd_postun openafs-server.service
+%endif
+
+%if 0%{?rhel} == 7
+%triggerun -- openafs-server < 1.6.0-1
+# Save the current service runlevel info
+# User must manually run systemd-sysv-convert --apply openafs-server
+# to migrate them to systemd targets
+/usr/bin/systemd-sysv-convert --save openafs-server >/dev/null 2>&1 ||:
+
+# Run this because the SysV package being removed won't do it
+/sbin/chkconfig --del openafs-server >/dev/null 2>&1 || :
+%endif
+
+# package dkms-openafs
+%if %{build_dkmspkg}
+%post -n dkms-%{name}
+dkms add -m %{name} -v %{dkms_version} --rpm_safe_upgrade
+dkms build -m %{name} -v %{dkms_version} --rpm_safe_upgrade
+dkms install -m %{name} -v %{dkms_version} --rpm_safe_upgrade
+
+%preun -n dkms-%{name}
+dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
+%endif
+
+# package openafs-authlibs
+%if %{build_authlibs}
+%if !%{have_ldconfig_trigger}
+%post authlibs
+/sbin/ldconfig
+
+%postun authlibs
+/sbin/ldconfig
+%endif
+%endif
+
+# package openafs-compat
 %post compat
 # Create compatiblity links.
 mkdir -p %{afswsdir}/bin
@@ -935,6 +1020,7 @@ if [ $1 = 0 ] ; then
     rmdir %{afswsdir} >/dev/null 2>/dev/null || :
 fi
 
+# package openafs-kauth-client
 %if %{kauth_support}
 %post kauth-client
 # Create compatiblity links.
@@ -955,86 +1041,10 @@ if [ $1 = 0 ] ; then
 fi
 %endif
 
-%if %{build_authlibs}
-%if !%{have_ldconfig_trigger}
-%post authlibs
-/sbin/ldconfig
-
-%postun authlibs
-/sbin/ldconfig
-%endif
+# end of build_userspace
 %endif
 
-%preun
-if [ $1 = 0 ] ; then
-    if [ -d /afs ]; then
-        rmdir /afs || :
-    fi
-fi
-
-%preun client
-%if !%{have_systemd}
-if [ $1 = 0 ] ; then
-    %{initdir}/openafs-client stop
-    chkconfig --del openafs-client
-fi
-%else
-%systemd_preun openafs-client.service
-%endif
-
-%preun server
-%if !%{have_systemd}
-if [ $1 = 0 ] ; then
-    %{initdir}/openafs-server stop
-    chkconfig --del openafs-server
-fi
-%else
-%systemd_preun openafs-server.service
-%endif
-
-%if %{have_systemd}
-%postun client
-%systemd_postun openafs-client.service
-%endif
-
-%if %{have_systemd}
-%postun server
-%systemd_postun openafs-server.service
-%endif
-
-%if %{build_dkmspkg}
-%post -n dkms-%{name}
-dkms add -m %{name} -v %{dkms_version} --rpm_safe_upgrade
-dkms build -m %{name} -v %{dkms_version} --rpm_safe_upgrade
-dkms install -m %{name} -v %{dkms_version} --rpm_safe_upgrade
-
-%preun -n dkms-%{name}
-dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
-%endif
-%endif
-
-%if 0%{?rhel} == 7
-%triggerun -- openafs-client < 1.6.0-1
-# Save the current service runlevel info
-# User must manually run systemd-sysv-convert --apply openafs-client
-# to migrate them to systemd targets
-/usr/bin/systemd-sysv-convert --save openafs-client >/dev/null 2>&1 ||:
-
-# Run this because the SysV package being removed won't do it
-/sbin/chkconfig --del openafs-client >/dev/null 2>&1 || :
-%endif
-
-%if 0%{?rhel} == 7
-%triggerun -- openafs-server < 1.6.0-1
-# Save the current service runlevel info
-# User must manually run systemd-sysv-convert --apply openafs-server
-# to migrate them to systemd targets
-/usr/bin/systemd-sysv-convert --save openafs-server >/dev/null 2>&1 ||:
-
-# Run this because the SysV package being removed won't do it
-/sbin/chkconfig --del openafs-server >/dev/null 2>&1 || :
-%endif
-
+# package kmod-openafs
 %if %{build_modules}
 %post -n kmod-%{name}
 %{depmod} -aeF /boot/System.map-%{kernel_version} %{kernel_version} > /dev/null || :
