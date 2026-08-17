@@ -246,7 +246,7 @@ iNewEntry(struct rx_call *call, char aname[], afs_int32 aid, afs_int32 oid,
     if (aid < 0) {
 	gflag |= PRGRP;
 	/* only sysadmin can reuse a group id */
-	if (!admin && !pr_noAuth && (aid != ntohl(cheader.maxGroup) - 1))
+	if (!admin && !pr_noAuth && (aid != ntohl(ctx->cheader->maxGroup) - 1))
 	    ABORT_WITH(ctx, PRPERM);
     }
     if (FindByID(ctx, aid))
@@ -1519,7 +1519,7 @@ listEntries(struct rx_call *call, afs_int32 flag, afs_int32 startindex,
     if (!code && !pr_noAuth)
 	ABORT_WITH(ctx, PRPERM);
 
-    eof = ntohl(cheader.eofPtr) - sizeof(cheader);
+    eof = ntohl(ctx->cheader->eofPtr) - sizeof(ctx->cheader[0]);
     if (eof < 0) {
 	ABORT_WITH(ctx, PRDBBAD);
     }
@@ -1531,7 +1531,7 @@ listEntries(struct rx_call *call, afs_int32 flag, afs_int32 startindex,
 	ABORT_WITH(ctx, PRNOMEM);
 
     for (i = startindex; i < maxentries; i++) {
-	pos = i * sizeof(struct prentry) + sizeof(cheader);
+	pos = i * sizeof(struct prentry) + sizeof(ctx->cheader[0]);
 	code = pr_ReadEntry(ctx, 0, pos, &tentry);
 	if (code)
 	    goto done;
@@ -1934,7 +1934,7 @@ listOwned(struct rx_call *call, afs_int32 aid, prlist *alist, afs_int32 *lastP,
 	} else {
 	    if (!AccessOK(ctx, *cid, 0, 0, 0))
 		ABORT_WITH(ctx, PRPERM);
-	    head = ntohl(cheader.orphan);
+	    head = ntohl(ctx->cheader->orphan);
 	}
     }
 

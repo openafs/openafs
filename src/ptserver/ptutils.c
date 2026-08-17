@@ -518,13 +518,13 @@ CreateEntry(struct pt_ctx *ctx, char aname[PR_MAXNAMELEN], afs_int32 *aid, afs_i
     /* Remember the largest group id or largest user id */
     if (flag & PRGRP) {
 	/* group ids are negative */
-	if (tentry.id < (afs_int32) ntohl(cheader.maxGroup)) {
+	if (tentry.id < (afs_int32) ntohl(ctx->cheader->maxGroup)) {
 	    code = set_header_word(ctx, maxGroup, htonl(tentry.id));
 	    if (code)
 		return PRDBFAIL;
 	}
     } else {
-	if (tentry.id > (afs_int32) ntohl(cheader.maxID)) {
+	if (tentry.id > (afs_int32) ntohl(ctx->cheader->maxID)) {
 	    code = set_header_word(ctx, maxID, htonl(tentry.id));
 	    if (code)
 		return PRDBFAIL;
@@ -1709,8 +1709,8 @@ GetOwnedChain(struct pt_ctx *ctx, afs_int32 log_id, afs_int32 *next,
 afs_int32
 GetMax(struct pt_ctx *ctx, afs_int32 *uid, afs_int32 *gid)
 {
-    *uid = ntohl(cheader.maxID);
-    *gid = ntohl(cheader.maxGroup);
+    *uid = ntohl(ctx->cheader->maxID);
+    *gid = ntohl(ctx->cheader->maxGroup);
     return PRSUCCESS;
 }
 
@@ -1719,17 +1719,17 @@ SetMax(struct pt_ctx *ctx, afs_int32 id, afs_int32 flag)
 {
     afs_int32 code;
     if (flag & PRGRP) {
-	cheader.maxGroup = htonl(id);
+	ctx->cheader->maxGroup = htonl(id);
 	code =
-	    pr_Write(ctx, 0, 16, (char *)&cheader.maxGroup,
-		     sizeof(cheader.maxGroup));
+	    pr_Write(ctx, 0, 16, (char *)&ctx->cheader->maxGroup,
+		     sizeof(ctx->cheader->maxGroup));
 	if (code != 0)
 	    return code;
     } else {
-	cheader.maxID = htonl(id);
+	ctx->cheader->maxID = htonl(id);
 	code =
-	    pr_Write(ctx, 0, 20, (char *)&cheader.maxID,
-		     sizeof(cheader.maxID));
+	    pr_Write(ctx, 0, 20, (char *)&ctx->cheader->maxID,
+		     sizeof(ctx->cheader->maxID));
 	if (code != 0)
 	    return code;
     }
@@ -1744,7 +1744,7 @@ UpdateCache(struct ubik_trans *tt, void *rock)
 
     opr_Assert(ctx->trans == tt);
 
-    code = pr_Read(ctx, 0, 0, (char *)&cheader, sizeof(cheader));
+    code = pr_Read(ctx, 0, 0, (char *)ctx->cheader, sizeof(ctx->cheader[0]));
     if (code != 0) {
 	afs_com_err(whoami, code, "Couldn't read header");
     }
@@ -1754,9 +1754,9 @@ UpdateCache(struct ubik_trans *tt, void *rock)
 static int
 dbheader_isvalid(struct pt_ctx *ctx)
 {
-    if ((ntohl(cheader.version) == PRDBVERSION)
-	&& ntohl(cheader.headerSize) == sizeof(cheader)
-	&& ntohl(cheader.eofPtr) != 0
+    if ((ntohl(ctx->cheader->version) == PRDBVERSION)
+	&& ntohl(ctx->cheader->headerSize) == sizeof(ctx->cheader[0])
+	&& ntohl(ctx->cheader->eofPtr) != 0
 	&& FindByID(ctx, ANONYMOUSID) != 0) {
 	return 1;
     }
@@ -1820,6 +1820,8 @@ pr_BeginTrans(struct pt_ctx *ctx, afs_int32 transMode, int *a_valid)
 	goto done;
     }
 
+    ctx->cheader = &cheader;
+
     code = ubik_CheckCache(ctx->trans, UpdateCache, ctx);
     if (code != 0) {
 	goto done;
@@ -1870,8 +1872,8 @@ InitializeDB(struct pt_ctx *ctx)
 
     /* Initialize the database header */
     if ((code = set_header_word(ctx, version, htonl(PRDBVERSION)))
-	|| (code = set_header_word(ctx, headerSize, htonl(sizeof(cheader))))
-	|| (code = set_header_word(ctx, eofPtr, cheader.headerSize))) {
+	|| (code = set_header_word(ctx, headerSize, htonl(sizeof(ctx->cheader[0]))))
+	|| (code = set_header_word(ctx, eofPtr, ctx->cheader->headerSize))) {
 	afs_com_err(whoami, code, "couldn't write header words");
 	return code;
     }
@@ -1967,7 +1969,7 @@ pr_Preamble(struct pt_ctx *ctx, afs_int32 transMode, int noinitdb)
 	 * Database looks bad; we need to build a new db. But only rebuild
 	 * database if the db was deleted (the header is zero).
 	 */
-	if (!dbheader_isblank(&cheader)) {
+	if (!dbheader_isblank(ctx->cheader)) {
 	    code = PRDBBAD;
 	    afs_com_err(whoami, code,
 			"Can't rebuild database because it is not empty");
@@ -2095,7 +2097,7 @@ ChangeEntry(struct pt_ctx *ctx, afs_int32 aid, afs_int32 cid, char *name, afs_in
 	    return PRDBFAIL;
 
 #if defined(SUPERGROUPS)
-	if (tentry.id > (afs_int32) ntohl(cheader.maxID))
+	if (tentry.id > (afs_int32) ntohl(ctx->cheader->maxID))
 	    code = set_header_word(ctx, maxID, htonl(tentry.id));
 	if (code)
 	    return PRDBFAIL;

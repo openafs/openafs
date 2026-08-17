@@ -52,7 +52,7 @@ pr_Write(struct pt_ctx *ctx, afs_int32 afd, afs_int32 pos, void *buff, afs_int32
     /* package up seek and write into one procedure for ease of use */
     struct ubik_trans *tt = ctx->trans;
     afs_int32 code;
-    if ((pos < sizeof(cheader)) && (buff != (char *)&cheader + pos)) {
+    if ((pos < sizeof(ctx->cheader[0])) && (buff != (char *)ctx->cheader + pos)) {
 	fprintf(stderr,
 		"ptserver: dbwrite: Illegal attempt to write a location 0\n");
 	return PRDBFAIL;
@@ -219,26 +219,26 @@ AllocBlock(struct pt_ctx *ctx)
     afs_int32 temp;
     struct prentry tentry;
 
-    if (cheader.freePtr) {
+    if (ctx->cheader->freePtr) {
 	/* allocate this dude */
-	temp = ntohl(cheader.freePtr);
+	temp = ntohl(ctx->cheader->freePtr);
 	code = pr_ReadEntry(ctx, 0, temp, &tentry);
 	if (code)
 	    return 0;
-	cheader.freePtr = htonl(tentry.next);
+	ctx->cheader->freePtr = htonl(tentry.next);
 	code =
-	    pr_Write(ctx, 0, 8, (char *)&cheader.freePtr,
-		     sizeof(cheader.freePtr));
+	    pr_Write(ctx, 0, 8, (char *)&ctx->cheader->freePtr,
+		     sizeof(ctx->cheader->freePtr));
 	if (code != 0)
 	    return 0;
 	return temp;
     } else {
 	/* hosed, nothing on free list, grow file */
-	temp = ntohl(cheader.eofPtr);	/* remember this guy */
-	cheader.eofPtr = htonl(temp + ENTRYSIZE);
+	temp = ntohl(ctx->cheader->eofPtr);	/* remember this guy */
+	ctx->cheader->eofPtr = htonl(temp + ENTRYSIZE);
 	code =
-	    pr_Write(ctx, 0, 12, (char *)&cheader.eofPtr,
-		     sizeof(cheader.eofPtr));
+	    pr_Write(ctx, 0, 12, (char *)&ctx->cheader->eofPtr,
+		     sizeof(ctx->cheader->eofPtr));
 	if (code != 0)
 	    return 0;
 	return temp;
@@ -253,11 +253,11 @@ FreeBlock(struct pt_ctx *ctx, afs_int32 pos)
     struct prentry tentry;
 
     memset(&tentry, 0, sizeof(tentry));
-    tentry.next = ntohl(cheader.freePtr);
+    tentry.next = ntohl(ctx->cheader->freePtr);
     tentry.flags |= PRFREE;
-    cheader.freePtr = htonl(pos);
+    ctx->cheader->freePtr = htonl(pos);
     code =
-	pr_Write(ctx, 0, 8, (char *)&cheader.freePtr, sizeof(cheader.freePtr));
+	pr_Write(ctx, 0, 8, (char *)&ctx->cheader->freePtr, sizeof(ctx->cheader->freePtr));
     if (code != 0)
 	return code;
     code = pr_WriteEntry(ctx, 0, pos, &tentry);
@@ -278,7 +278,7 @@ FindByID(struct pt_ctx *ctx, afs_int32 aid)
     if ((aid == PRBADID) || (aid == 0))
 	return 0;
     i = IDHash(aid);
-    entry = ntohl(cheader.idHash[i]);
+    entry = ntohl(ctx->cheader->idHash[i]);
     if (entry == 0)
 	return entry;
     memset(&tentry, 0, sizeof(tentry));
@@ -311,7 +311,7 @@ FindByName(struct pt_ctx *ctx, char aname[PR_MAXNAMELEN], struct prentry *tentry
     afs_int32 entry;
 
     i = NameHash(aname);
-    entry = ntohl(cheader.nameHash[i]);
+    entry = ntohl(ctx->cheader->nameHash[i]);
     if (entry == 0)
 	return entry;
     memset(tentryp, 0, sizeof(struct prentry));
@@ -344,7 +344,7 @@ AllocID(struct pt_ctx *ctx, afs_int32 flag, afs_int32 *aid)
     int maxcount = 50;	/* to prevent infinite loops */
 
     if (flag & PRGRP) {
-	*aid = ntohl(cheader.maxGroup);
+	*aid = ntohl(ctx->cheader->maxGroup);
 	/* Check for PRBADID to avoid wrap-around. */
 	while (code && i < maxcount && *aid != PRBADID) {
 	    --(*aid);
@@ -353,15 +353,15 @@ AllocID(struct pt_ctx *ctx, afs_int32 flag, afs_int32 *aid)
 	}
 	if (code)
 	    return PRNOIDS;
-	cheader.maxGroup = htonl(*aid);
+	ctx->cheader->maxGroup = htonl(*aid);
 	code =
-	    pr_Write(ctx, 0, 16, (char *)&cheader.maxGroup,
-		     sizeof(cheader.maxGroup));
+	    pr_Write(ctx, 0, 16, (char *)&ctx->cheader->maxGroup,
+		     sizeof(ctx->cheader->maxGroup));
 	if (code)
 	    return PRDBFAIL;
 	return PRSUCCESS;
     } else if (flag & PRFOREIGN) {
-	*aid = ntohl(cheader.maxForeign);
+	*aid = ntohl(ctx->cheader->maxForeign);
 	while (code && i < maxcount) {
 	    ++(*aid);
 	    code = FindByID(ctx, *aid);
@@ -369,15 +369,15 @@ AllocID(struct pt_ctx *ctx, afs_int32 flag, afs_int32 *aid)
 	}
 	if (code)
 	    return PRNOIDS;
-	cheader.maxForeign = htonl(*aid);
+	ctx->cheader->maxForeign = htonl(*aid);
 	code =
-	    pr_Write(ctx, 0, 24, (char *)&cheader.maxForeign,
-		     sizeof(cheader.maxForeign));
+	    pr_Write(ctx, 0, 24, (char *)&ctx->cheader->maxForeign,
+		     sizeof(ctx->cheader->maxForeign));
 	if (code)
 	    return PRDBFAIL;
 	return PRSUCCESS;
     } else {
-	*aid = ntohl(cheader.maxID);
+	*aid = ntohl(ctx->cheader->maxID);
 	while (code && i < maxcount && *aid != 0x7fffffff) {
 	    ++(*aid);
 	    code = FindByID(ctx, *aid);
@@ -385,10 +385,10 @@ AllocID(struct pt_ctx *ctx, afs_int32 flag, afs_int32 *aid)
 	}
 	if (code)
 	    return PRNOIDS;
-	cheader.maxID = htonl(*aid);
+	ctx->cheader->maxID = htonl(*aid);
 	code =
-	    pr_Write(ctx, 0, 20, (char *)&cheader.maxID,
-		     sizeof(cheader.maxID));
+	    pr_Write(ctx, 0, 20, (char *)&ctx->cheader->maxID,
+		     sizeof(ctx->cheader->maxID));
 	if (code)
 	    return PRDBFAIL;
 	return PRSUCCESS;
@@ -420,7 +420,7 @@ RemoveFromIDHash(struct pt_ctx *ctx, afs_int32 aid, afs_int32 *loc)		/* ??? in c
     if ((aid == PRBADID) || (aid == 0))
 	return PRINCONSISTENT;
     i = IDHash(aid);
-    current = ntohl(cheader.idHash[i]);
+    current = ntohl(ctx->cheader->idHash[i]);
     memset(&tentry, 0, sizeof(tentry));
     memset(&bentry, 0, sizeof(bentry));
     trail = 0;
@@ -443,10 +443,10 @@ RemoveFromIDHash(struct pt_ctx *ctx, afs_int32 aid, afs_int32 *loc)		/* ??? in c
 	return PRSUCCESS;	/* we didn't find him, so he's already gone */
     if (trail == 0) {
 	/* it's the first entry! */
-	cheader.idHash[i] = htonl(tentry.nextID);
+	ctx->cheader->idHash[i] = htonl(tentry.nextID);
 	code =
 	    pr_Write(ctx, 0, 72 + HASHSIZE * 4 + i * 4,
-		     (char *)&cheader.idHash[i], sizeof(cheader.idHash[i]));
+		     (char *)&ctx->cheader->idHash[i], sizeof(ctx->cheader->idHash[i]));
 	if (code)
 	    return PRDBFAIL;
     } else {
@@ -477,14 +477,14 @@ AddToIDHash(struct pt_ctx *ctx, afs_int32 aid, afs_int32 loc)
     code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code)
 	return PRDBFAIL;
-    tentry.nextID = ntohl(cheader.idHash[i]);
-    cheader.idHash[i] = htonl(loc);
+    tentry.nextID = ntohl(ctx->cheader->idHash[i]);
+    ctx->cheader->idHash[i] = htonl(loc);
     code = pr_WriteEntry(ctx, 0, loc, &tentry);
     if (code)
 	return PRDBFAIL;
     code =
-	pr_Write(ctx, 0, 72 + HASHSIZE * 4 + i * 4, (char *)&cheader.idHash[i],
-		 sizeof(cheader.idHash[i]));
+	pr_Write(ctx, 0, 72 + HASHSIZE * 4 + i * 4, (char *)&ctx->cheader->idHash[i],
+		 sizeof(ctx->cheader->idHash[i]));
     if (code)
 	return PRDBFAIL;
     return PRSUCCESS;
@@ -500,7 +500,7 @@ RemoveFromNameHash(struct pt_ctx *ctx, char *aname, afs_int32 *loc)
     struct prentry bentry;
 
     i = NameHash(aname);
-    current = ntohl(cheader.nameHash[i]);
+    current = ntohl(ctx->cheader->nameHash[i]);
     memset(&tentry, 0, sizeof(tentry));
     memset(&bentry, 0, sizeof(bentry));
     trail = 0;
@@ -523,10 +523,10 @@ RemoveFromNameHash(struct pt_ctx *ctx, char *aname, afs_int32 *loc)
 	return PRSUCCESS;	/* we didn't find him, already gone */
     if (trail == 0) {
 	/* it's the first entry! */
-	cheader.nameHash[i] = htonl(tentry.nextName);
+	ctx->cheader->nameHash[i] = htonl(tentry.nextName);
 	code =
-	    pr_Write(ctx, 0, 72 + i * 4, (char *)&cheader.nameHash[i],
-		     sizeof(cheader.nameHash[i]));
+	    pr_Write(ctx, 0, 72 + i * 4, (char *)&ctx->cheader->nameHash[i],
+		     sizeof(ctx->cheader->nameHash[i]));
 	if (code)
 	    return PRDBFAIL;
     } else {
@@ -555,14 +555,14 @@ AddToNameHash(struct pt_ctx *ctx, char *aname, afs_int32 loc)
     code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code)
 	return PRDBFAIL;
-    tentry.nextName = ntohl(cheader.nameHash[i]);
-    cheader.nameHash[i] = htonl(loc);
+    tentry.nextName = ntohl(ctx->cheader->nameHash[i]);
+    ctx->cheader->nameHash[i] = htonl(loc);
     code = pr_WriteEntry(ctx, 0, loc, &tentry);
     if (code)
 	return PRDBFAIL;
     code =
-	pr_Write(ctx, 0, 72 + i * 4, (char *)&cheader.nameHash[i],
-		 sizeof(cheader.nameHash[i]));
+	pr_Write(ctx, 0, 72 + i * 4, (char *)&ctx->cheader->nameHash[i],
+		 sizeof(ctx->cheader->nameHash[i]));
     if (code)
 	return PRDBFAIL;
     return PRSUCCESS;
@@ -678,7 +678,7 @@ AddToOrphan(struct pt_ctx *ctx, afs_int32 gid)
     code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code != 0)
 	return PRDBFAIL;
-    tentry.nextOwned = ntohl(cheader.orphan);
+    tentry.nextOwned = ntohl(ctx->cheader->orphan);
     code = set_header_word(ctx, orphan, htonl(loc));
     if (code != 0)
 	return PRDBFAIL;
@@ -705,12 +705,12 @@ RemoveFromOrphan(struct pt_ctx *ctx, afs_int32 gid)
     code = pr_ReadEntry(ctx, 0, loc, &tentry);
     if (code != 0)
 	return PRDBFAIL;
-    if (cheader.orphan == htonl(loc)) {
-	cheader.orphan = htonl(tentry.nextOwned);
+    if (ctx->cheader->orphan == htonl(loc)) {
+	ctx->cheader->orphan = htonl(tentry.nextOwned);
 	tentry.nextOwned = 0;
 	code =
-	    pr_Write(ctx, 0, 32, (char *)&cheader.orphan,
-		     sizeof(cheader.orphan));
+	    pr_Write(ctx, 0, 32, (char *)&ctx->cheader->orphan,
+		     sizeof(ctx->cheader->orphan));
 	if (code != 0)
 	    return PRDBFAIL;
 	code = pr_WriteEntry(ctx, 0, loc, &tentry);
@@ -718,7 +718,7 @@ RemoveFromOrphan(struct pt_ctx *ctx, afs_int32 gid)
 	    return PRDBFAIL;
 	return PRSUCCESS;
     }
-    nptr = ntohl(cheader.orphan);
+    nptr = ntohl(ctx->cheader->orphan);
     memset(&bentry, 0, sizeof(bentry));
     loc = 0;
     while (nptr != 0) {

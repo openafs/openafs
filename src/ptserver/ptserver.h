@@ -52,14 +52,14 @@ struct prheader {
 extern struct prheader cheader;
 
 #define set_header_word(ctx,field,value) \
-  pr_Write ((ctx), 0, ((char *)&(cheader.field) - (char *)&cheader),   \
-	    ((cheader.field = (value)), (char *)&(cheader.field)),    \
+  pr_Write ((ctx), 0, ((char *)&(ctx->cheader->field) - (char *)ctx->cheader),   \
+	    ((ctx->cheader->field = (value)), (char *)&(ctx->cheader->field)),    \
 	    sizeof(afs_int32))
 
 #define inc_header_word(ctx,field,inc) \
-  pr_Write ((ctx), 0, ((char *)&(cheader.field) - (char *)&cheader), \
-	    ((cheader.field = (htonl(ntohl(cheader.field)+(inc)))),	    \
-	     (char *)&(cheader.field)),				    \
+  pr_Write ((ctx), 0, ((char *)&(ctx->cheader->field) - (char *)ctx->cheader), \
+	    ((ctx->cheader->field = (htonl(ntohl(ctx->cheader->field)+(inc)))),	    \
+	     (char *)&(ctx->cheader->field)),				    \
 	    sizeof(afs_int32))
 
 #define	PRFREE		1	/* 1 if in free list */

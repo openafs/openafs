@@ -12,6 +12,7 @@
 
 struct pt_ctx {
     struct ubik_trans *trans;
+    struct prheader *cheader;
 };
 
 /* utils.c */
