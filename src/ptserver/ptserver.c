@@ -163,6 +163,8 @@ static struct afsconf_cell info;
 extern int prp_group_default;
 extern int prp_user_default;
 
+extern int pr_readDuringWrite;
+
 #include "AFS_component_version_number.c"
 
 int
@@ -234,7 +236,8 @@ enum optionsList {
     OPT_rxmaxmtu,
     OPT_dotted,
     OPT_transarc_logs,
-    OPT_s2s_crypt
+    OPT_s2s_crypt,
+    OPT_read_during_write,
 };
 
 int
@@ -333,6 +336,11 @@ main(int argc, char **argv)
     cmd_AddParmAtOffset(opts, OPT_restrict_anonymous, "-restrict_anonymous",
 			CMD_FLAG, CMD_OPTIONAL, "enable restricted anonymous mode");
 
+    /* ubik options */
+    cmd_AddParmAtOffset(opts, OPT_read_during_write, "-read-during-write",
+			CMD_FLAG, CMD_OPTIONAL,
+			"(experimental) enable reading from the db during writes");
+
     /* general server options */
     cmd_AddParmAtOffset(opts, OPT_auditlog, "-auditlog", CMD_LIST,
 			CMD_OPTIONAL, "[interface:]path[:options]");
@@ -400,6 +408,16 @@ main(int argc, char **argv)
 
     cmd_OptionAsFlag(opts, OPT_restricted, &restricted);
     cmd_OptionAsFlag(opts, OPT_restrict_anonymous, &restrict_anonymous);
+
+    /* ubik options */
+    cmd_OptionAsFlag(opts, OPT_read_during_write, &pr_readDuringWrite);
+#if defined(SUPERGROUPS)
+    if (pr_readDuringWrite) {
+	fprintf(stderr, "Error: -read-during-write cannot currently be used "
+		"with supergroups enabled.\n");
+	PT_EXIT(1);
+    }
+#endif
 
     /* general server options */
 
@@ -542,6 +560,10 @@ main(int argc, char **argv)
     }
     ubik_SetServerSecurityProcs(afsconf_BuildServerSecurityObjects,
 				afsconf_CheckAuth, prdir);
+
+    if (pr_readDuringWrite) {
+	ubik_SyncWriterCacheProc = pr_SyncCache;
+    }
 
     /* The max needed is when deleting an entry.  A full CoEntry deletion
      * required removal from 39 entries.  Each of which may refers to the entry

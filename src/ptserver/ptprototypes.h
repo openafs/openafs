@@ -99,6 +99,7 @@ extern afs_int32 AddToPRList(afs_int32 log_id, prlist *alist, int *sizeP,
 			     afs_int32 id);
 extern afs_int32 pr_Preamble(struct pt_ctx *ctx, afs_int32 transMode,
 			     int noinitdb);
+extern int pr_SyncCache(void);
 
 /* ptuser.c */
 

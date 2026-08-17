@@ -61,6 +61,13 @@ ubik_BeginTransReadAny(struct ubik_dbase *dbase, afs_int32 transMode,
 }
 
 int
+ubik_BeginTransReadAnyWrite(struct ubik_dbase *dbase, afs_int32 transMode,
+			    struct ubik_trans **transPtr)
+{
+    return (0);
+}
+
+int
 ubik_AbortTrans(struct ubik_trans *transPtr)
 {
     return (0);

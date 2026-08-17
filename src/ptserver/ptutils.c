@@ -46,13 +46,31 @@ extern struct ubik_dbase *dbase;
 extern struct afsconf_dir *prdir;
 extern int pr_noAuth;
 
+int pr_readDuringWrite;
+
 static int inRange(struct prentry *cellEntry, afs_int32 aid);
 static afs_int32 allocNextId(struct pt_ctx *, struct prentry *);
 static int AddAuthGroup(struct prentry *tentry, prlist *alist, afs_int32 *size);
 
 static char *whoami = "ptserver";
 
+/*
+ * Cached header to use for read transactions. This must only be written to
+ * with the ubik cache_lock write-locked (so, inside a call to
+ * ubik_CheckCache(), or inside ubik_SyncWriterCacheProc / pr_SyncCache).
+ */
 static struct prheader rd_cheader;
+
+/*
+ * Private copy of rd_cheader for a write transaction, so write transactions
+ * can modify the header if needed. This must only be written to inside an ubik
+ * write transaction (the ubik cache_lock does not need to be held).
+ *
+ * This is only used if -read-during-write is set. Otherwise, read transactions
+ * and write transactions can both use rd_cheader, since a write transaction
+ * cannot run at the same time as a read transaction.
+ */
+static struct prheader wr_cheader;
 
 int prp_user_default = PRP_USER_DEFAULT;
 int prp_group_default = PRP_GROUP_DEFAULT;
@@ -1806,7 +1824,11 @@ pr_BeginTrans(struct pt_ctx *ctx, afs_int32 transMode, int *a_valid)
 
     if (transMode == UBIK_READTRANS) {
 	locktype = LOCKREAD;
-	code = ubik_BeginTransReadAny(dbase, transMode, &ctx->trans);
+	if (pr_readDuringWrite) {
+	    code = ubik_BeginTransReadAnyWrite(dbase, transMode, &ctx->trans);
+	} else {
+	    code = ubik_BeginTransReadAny(dbase, transMode, &ctx->trans);
+	}
 
     } else {
 	opr_Assert(transMode == UBIK_WRITETRANS);
@@ -1829,6 +1851,11 @@ pr_BeginTrans(struct pt_ctx *ctx, afs_int32 transMode, int *a_valid)
 	goto done;
     }
 
+    if (pr_readDuringWrite && transMode == UBIK_WRITETRANS) {
+	wr_cheader = rd_cheader;
+	ctx->cheader = &wr_cheader;
+    }
+
     *a_valid = dbheader_isvalid(ctx);
 
     code = 0;
@@ -1842,6 +1869,24 @@ pr_BeginTrans(struct pt_ctx *ctx, afs_int32 transMode, int *a_valid)
     }
 
     return code;
+}
+
+/*
+ * If -read-during-write is being used, this is called (with the ubik
+ * cache_lock write-locked) when a write transaction successfully commits. We
+ * copy wr_cheader, which the write transaction possibly modified, to
+ * rd_cheader, so read transactions can see the modified data.
+ */
+int
+pr_SyncCache(void)
+{
+    /*
+     * pr_readDuringWrite must be set if this is called; if pr_readDuringWrite
+     * is not set, we don't use the separate wr_cheader.
+     */
+    opr_Assert(pr_readDuringWrite);
+    rd_cheader = wr_cheader;
+    return 0;
 }
 
 /*

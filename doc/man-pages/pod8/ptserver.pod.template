@@ -22,6 +22,7 @@ ptserver S<<< [B<-database> | B<-db> <I<db path>>] >>>
     S<<< [B<-config> <I<configuration path>>] >>>
     S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
     S<< [B<-s2scrypt> (rxgk-crypt | never)] >>
+    [B<-read-during-write>]
     [B<-help>]
 
 =for html
@@ -204,6 +205,32 @@ server-to-server (s2s) communication. Specify C<never> to use rxkad connections
 instead, without per-packet encryption ("rxkad_clear").
 
 The default is currently C<never>.
+
+=item B<-read-during-write>
+
+If this option is given, B<ptserver> will run all ubik read transactions in an
+experimental "read during write" mode.
+
+By default if B<-read-during-write> is not given, ubik write transactions
+prevent other ubik read transactions from running at the same time. That is,
+while some process is modifying the Protection Database (for example,
+B<pts adduser>), other processes cannot read from the Protection Database (for
+example, B<pts examine>).
+
+If B<-read-during-write> is given, read transactions can run at the same time
+as write transactions, but read transactions will only see "old" data if they
+are started before the write transaction finished. This can result in
+significant performance improvements if the Protection Database is frequently
+modified, or if the ptserver encounters network issues (or anything causing
+slow write transactions) in a multi-dbserver environment.
+
+The ubik "read during write" mode is currently considered experimental, and so
+is disabled by default. It may be enabled by default at some point in the
+future.
+
+If B<ptserver> is built with supergroups support (B<--enable-supergroups>), the
+B<-read-during-write> option cannot be given, and B<ptserver> will exit with an
+error if it is specified. This restriction may be removed in the future.
 
 =item B<-help>
 
