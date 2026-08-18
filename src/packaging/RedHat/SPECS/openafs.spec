@@ -100,23 +100,10 @@
 %global build_dkmspkg 1
 %endif
 
-%if 0%{?_without_authlibs:1}
-%global build_authlibs 0
-%else
-%global build_authlibs 1
-%endif
-
-%if 0%{?_without_krb5:1}
-%global krb5support 0
-%else
-%global krb5support 1
-%endif
-
-%if 0%{?_with_kauth:1}
-%global kauth_support 1
-%else
-%global kauth_support 0
-%endif
+%bcond_without authlibs
+%bcond_without krb5
+%bcond_with kauth
+%bcond_with supergroups
 
 #
 # Supported distributions
@@ -180,7 +167,7 @@ unsupported_amzn_release: %{amzn}
 # Define the location to the legacy workstation directory.
 %global afswsdir /usr/afsws
 
-%if %{kauth_support}
+%if %{with kauth}
 # Define the location of the PAM security module directory
 %global pamdir %{_libdir}/security
 %endif
@@ -229,7 +216,7 @@ BuildRequires: perl-devel
 BuildRequires: swig
 BuildRequires: perl(ExtUtils::Embed)
 BuildRequires: perl-core
-%if %{krb5support}
+%if %{with krb5}
 BuildRequires: krb5-devel
 %endif
 %if %{build_userspace}
@@ -308,7 +295,7 @@ This package provides the source code to allow DKMS to build an
 OpenAFS kernel module.
 %endif
 
-%if %{build_authlibs}
+%if %{with authlibs}
 %package authlibs
 Summary: OpenAFS authentication shared libraries
 
@@ -321,7 +308,7 @@ authentication or makes AFS RPC calls.
 
 %package authlibs-devel
 Summary: OpenAFS shared library development
-%if %{build_authlibs}
+%if %{with authlibs}
 Requires: %{name}-authlibs = %{version}-%{release}
 %endif
 Requires: %{name}-devel = %{version}-%{release}
@@ -381,7 +368,7 @@ completely optional, and is only necessary to support legacy
 applications and scripts that hard-code the location of OpenAFS client
 programs.
 
-%if %{kauth_support}
+%if %{with kauth}
 %package kauth-client
 Summary: OpenAFS Kauth Client support
 Requires: %{name}
@@ -404,7 +391,7 @@ service. Generally you should not install this package for new cells or for
 cells using Kerberos v5.
 %endif
 
-%if %{krb5support}
+%if %{with krb5}
 %package krb5
 Summary: OpenAFS programs for Kerberos 5 authentication
 Requires: %{name} = %{version}
@@ -462,7 +449,7 @@ kernel %{kernel_version}.
 %if %{build_modules}
 : @@@ kernel version:     %{kernel_version}
 %endif
-%if %{kauth_support}
+%if %{with kauth}
 : @@@ PAM modules dir:    %{pamdir}
 %endif
 : @@@ build userspace:    %{build_userspace}
@@ -502,14 +489,14 @@ export CFLAGS="$RPM_OPT_FLAGS"
 %else
        --disable-kernel-module \
 %endif
-%if %{krb5support}
+%if %{with krb5}
        --with-krb5 \
 %endif
        --with-swig \
-%if %{kauth_support}
+%if %{with kauth}
        --enable-kauth \
 %endif
-%if 0%{?_with_supergroups:1}
+%if %{with supergroups}
        --enable-supergroups \
 %endif
 
@@ -549,7 +536,7 @@ chmod +x %{buildroot}%{_libdir}/*.so*
 # Exclude duplicated files.
 rm -f %{buildroot}%{_prefix}/afs/bin/bos
 rm -f %{buildroot}%{_prefix}/afs/bin/fs
-%if %{kauth_support}
+%if %{with kauth}
 rm -f %{buildroot}%{_prefix}/afs/bin/kas
 rm -f %{buildroot}%{_prefix}/afs/bin/klog
 rm -f %{buildroot}%{_prefix}/afs/bin/klog.krb
@@ -563,18 +550,18 @@ rm -f %{buildroot}%{_prefix}/afs/bin/udebug
 rm -f %{buildroot}%{_prefix}/afs/bin/vos
 
 # Relocate admin utilities to a modern path.
-%if %{kauth_support}
+%if %{with kauth}
 mv %{buildroot}%{_prefix}/afs/bin/kadb_check %{buildroot}%{_sbindir}/kadb_check
 %endif
 mv %{buildroot}%{_prefix}/afs/bin/prdb_check %{buildroot}%{_sbindir}/prdb_check
 mv %{buildroot}%{_prefix}/afs/bin/vldb_check %{buildroot}%{_sbindir}/vldb_check
 mv %{buildroot}%{_prefix}/afs/bin/vldb_convert %{buildroot}%{_sbindir}/vldb_convert
-%if %{krb5support}
+%if %{with krb5}
 mv %{buildroot}%{_prefix}/afs/bin/akeyconvert %{buildroot}%{_sbindir}/akeyconvert
 mv %{buildroot}%{_prefix}/afs/bin/asetkey %{buildroot}%{_sbindir}/asetkey
 %endif
 
-%if %{kauth_support}
+%if %{with kauth}
 # Relocate PAM files to the standard PAM module path.
 mkdir -p %{buildroot}%{pamdir}
 mv %{buildroot}%{_libdir}/pam_afs.krb.so %{buildroot}%{pamdir}
@@ -767,7 +754,7 @@ if [ $1 = 0 ] ; then
 fi
 
 # package openafs-kauth-client
-%if %{kauth_support}
+%if %{with kauth}
 %post kauth-client
 # Create compatiblity links.
 mkdir -p %{afswsdir}/bin
@@ -897,18 +884,18 @@ fi
 %exclude %{_mandir}/man8/rmtsysd.8*
 %exclude %{_mandir}/man8/xfs_size_check.8*
 %exclude %{_sbindir}/rmtsysd
-%if ! %{build_authlibs}
+%if %{without authlibs}
 %exclude %{_libdir}/libafsauthent.so*
 %exclude %{_libdir}/libafsrpc.so*
 %exclude %{_libdir}/libkopenafs.so*
 %endif
-%if ! %{kauth_support}
+%if %{without kauth}
 %exclude %{_bindir}/pagsh.krb
 %exclude %{_bindir}/tokens.krb
 %exclude %{_mandir}/man5/AuthLog.5*
 %exclude %{_mandir}/man5/AuthLog.dir.5*
 %endif
-%if ! %{krb5support}
+%if %{without krb5}
 %exclude %{_mandir}/man8/akeyconvert.8*
 %exclude %{_mandir}/man8/asetkey.8*
 %endif
@@ -1028,7 +1015,7 @@ fi
 %{_mandir}/man8/volscan.8*
 %{_mandir}/man8/volserver.8*
 
-%if %{build_authlibs}
+%if %{with authlibs}
 %files authlibs
 %{_libdir}/libafsauthent.so.*
 %{_libdir}/libafsrpc.so.*
@@ -1043,7 +1030,7 @@ fi
 %{_libdir}/libafsrpc.a
 %{_libdir}/libafsrpc_pic.a
 %{_libdir}/libkopenafs.a
-%if %{build_authlibs}
+%if %{with authlibs}
 %{_libdir}/libafsauthent.so
 %{_libdir}/libafsrpc.so
 %{_libdir}/libkopenafs.so
@@ -1113,7 +1100,7 @@ fi
 %ghost %{afswsdir}/etc/vos
 %ghost %{afswsdir}/etc/vsys
 
-%if %{kauth_support}
+%if %{with kauth}
 %files kauth-client
 %{_bindir}/kapasswd
 %{_bindir}/klog
@@ -1158,7 +1145,7 @@ fi
 %exclude %{_prefix}/afs/bin/kdb
 %endif
 
-%if %{krb5support}
+%if %{with krb5}
 %files krb5
 %{_bindir}/aklog
 %{_bindir}/klog.krb5
