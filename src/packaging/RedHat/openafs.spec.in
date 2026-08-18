@@ -190,7 +190,11 @@ Version: %{pkgvers}
 Release: %{pkgrel}%{?dist}
 License: IBM Public License
 URL: https://www.openafs.org
-BuildRequires: pam-devel, ncurses-devel, make, flex, bison
+BuildRequires: pam-devel
+BuildRequires: ncurses-devel
+BuildRequires: make
+BuildRequires: flex
+BuildRequires: bison
 %if %{have_systemd}
 %if %{have_systemd_rpm_macros_pkg}
 BuildRequires: systemd-rpm-macros
@@ -199,7 +203,8 @@ BuildRequires: systemd
 %endif
 %endif
 %if %{have_swig}
-BuildRequires: perl-devel, swig
+BuildRequires: perl-devel
+BuildRequires: swig
 %endif
 BuildRequires: perl(ExtUtils::Embed)
 BuildRequires: perl-core
@@ -283,7 +288,8 @@ To build a kernel module for your running kernel, just run:
 %if %{build_userspace}
 
 %package client
-Requires: binutils, openafs = %{version}
+Requires: openafs = %{version}
+Requires: binutils
 %if %{have_systemd}
 Requires: systemd-units
 Requires(post): systemd-units
@@ -335,7 +341,9 @@ Cell.
 Summary:        DKMS-ready kernel source for AFS distributed filesystem
 Provides:       openafs-kernel = %{version}
 Provides:       %{name}-kmod = %{version}
-Requires(pre):  dkms, make, flex
+Requires(pre):  dkms
+Requires(pre):  make
+Requires(pre):  flex
 Requires(post): dkms
 Requires:       %{name}-kmod-common = %{version}
 
@@ -400,7 +408,9 @@ shared libraries.
 Summary: OpenAFS user and administrator documentation
 Requires: openafs = %{version}-%{release}
 %if %{build_userspace}
-BuildRequires: libxslt, docbook-style-xsl, docbook-dtds
+BuildRequires: libxslt
+BuildRequires: docbook-style-xsl
+BuildRequires: docbook-dtds
 %endif
 
 %description docs
