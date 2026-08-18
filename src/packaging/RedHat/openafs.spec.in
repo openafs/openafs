@@ -290,6 +290,7 @@ To build a kernel module for your running kernel, just run:
 %if %{build_userspace}
 
 %package client
+Summary: OpenAFS Filesystem Client
 Requires: %{name} = %{version}
 Requires: binutils
 %if %{have_systemd}
@@ -301,11 +302,8 @@ Requires(postun): systemd-units
 %if 0%{?rhel} == 7
 Requires(post): systemd-sysv
 %endif
-
 Requires: %{name}-kmod >= %{version}
 Provides: %{name}-kmod-common = %{version}
-
-Summary: OpenAFS Filesystem Client
 
 %description client
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -317,8 +315,8 @@ This package provides basic client support to mount and manipulate
 AFS.
 
 %package server
-Requires: %{name} = %{version}
 Summary: OpenAFS Filesystem Server
+Requires: %{name} = %{version}
 %if %{have_systemd}
 Requires: systemd-units
 Requires(post): systemd-units
@@ -376,11 +374,11 @@ authentication may link against them.
 %endif
 
 %package authlibs-devel
+Summary: OpenAFS shared library development
 %if %{build_authlibs}
 Requires: %{name}-authlibs = %{version}-%{release}
 %endif
 Requires: %{name}-devel = %{version}-%{release}
-Summary: OpenAFS shared library development
 
 %description authlibs-devel
 The AFS distributed filesystem.  AFS is a distributed filesystem
