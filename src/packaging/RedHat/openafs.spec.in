@@ -509,6 +509,7 @@ export KRB5_CONFIG
        --enable-debug \
        --with-linux-kernel-packaging \
 %if %{build_modules}
+       --enable-kernel-module \
        --with-linux-kernel-headers=%{kernel_headers} \
 %else
        --disable-kernel-module \
