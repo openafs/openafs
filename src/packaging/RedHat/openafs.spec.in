@@ -593,11 +593,6 @@ cp -p %{SOURCE11} .
 
 export SOURCE_DATE_EPOCH=%{source_date_epoch}
 export CFLAGS="$RPM_OPT_FLAGS"
-%if %{krb5support}
-%if %{?krb5config:1}%{!?krb5config:0}
-export KRB5_CONFIG="%{krb5config}"
-%endif
-%endif
 
 ./configure \
        --prefix=%{_prefix} \
