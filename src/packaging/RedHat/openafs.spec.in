@@ -522,10 +522,10 @@ Summary:          %{name} kernel module
 %if !%{have_kernel_modules_pkg}
 Provides:         kernel-modules = %{?kepoch:%{kepoch}:}%{kernel_version}
 %endif
-Provides:         %{name}-kmod = %{?epoch:%{epoch}:}%{version}-%{release}
+Provides:         %{name}-kmod = %{version}-%{release}
 Provides:         openafs-kernel = %{version}
 Requires:         kernel-%{_target_cpu} = %{?kepoch:%{kepoch}:}%{kverrel}
-Requires:         %{name}-kmod-common >= %{?epoch:%{epoch}:}%{version}
+Requires:         %{name}-kmod-common >= %{version}
 Requires(post):   %{depmod}
 Requires(postun): %{depmod}
 Release:          %{pkgrel}.%(echo %{kverrel} | tr - _)
