@@ -112,7 +112,9 @@ get_rpmtemplate ()
 %package       -n kmod-${kmod_name}${dashvariant}
 Summary:          ${kmod_name} kernel module(s)
 Group:            System Environment/Kernel
+%if ! (0%{?fedora} >= 27 || 0%{?rhel} >= 8 || 0%{?amzn} >= 2023)
 Provides:         kernel-modules = ${kernel_epoch}${kname}
+%endif
 Provides:         ${kmod_name}-kmod = %{?epoch:%{epoch}:}%{version}-%{release}
 Provides:         openafs-kernel = %{version}
 Requires:         ${kdep}
