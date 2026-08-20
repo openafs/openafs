@@ -50,10 +50,6 @@
 # --with supergroups
 #       Enable support for supergroups.
 #
-# --with kauth
-#       Build the openafs-kauth-client and openafs-kauth-server packages,
-#       which contain the legacy kaserver and related programs.
-#
 # The deprecated --define "build_userspace 0", --define "build_modules 0",
 # and --define "build_dkmspkg 0" options are still accepted, and are
 # converted to the --without options above.
@@ -91,7 +87,6 @@
 %bcond_without userspace
 %bcond_without kmod
 %bcond_without dkms
-%bcond_with kauth
 %bcond_with supergroups
 
 #
@@ -155,11 +150,6 @@ unsupported_amzn_release: %{amzn}
 
 # Define the location to the legacy workstation directory.
 %global afswsdir /usr/afsws
-
-%if %{with kauth}
-# Define the location of the PAM security module directory
-%global pamdir %{_libdir}/security
-%endif
 
 #
 # rpm build settings
@@ -352,29 +342,6 @@ completely optional, and is only necessary to support legacy
 applications and scripts that hard-code the location of OpenAFS client
 programs.
 
-%if %{with kauth}
-%package kauth-client
-Summary: OpenAFS Kauth Client support
-Requires: %{name}
-
-%description kauth-client
-%{openafs_description}
-This package provides the legacy KAServer client programs and the PAM module
-for authentication with the OpenAFS KAserver; a deprecated authentication
-service.  Generally you should not install this package for new cells or for
-cells using Kerberos v5.
-
-%package kauth-server
-Summary: OpenAFS Kauth Server support
-Requires: %{name}
-
-%description kauth-server
-%{openafs_description}
-This package provides the legacy OpenAFS KAServer; a deprecated authentication
-service. Generally you should not install this package for new cells or for
-cells using Kerberos v5.
-%endif
-
 %package krb5
 Summary: OpenAFS programs for Kerberos 5 authentication
 Requires: %{name} = %{version}
@@ -431,9 +398,6 @@ kernel %{kernel_version}.
 %if %{with kmod}
 : @@@ kernel version:     %{kernel_version}
 %endif
-%if %{with kauth}
-: @@@ PAM modules dir:    %{pamdir}
-%endif
 : @@@ build userspace:    %{?with_userspace:yes}%{!?with_userspace:no}
 : @@@ build kmod:         %{?with_kmod:yes}%{!?with_kmod:no}
 : @@@ build dkms:         %{?with_dkms:yes}%{!?with_dkms:no}
@@ -474,9 +438,6 @@ export CFLAGS="$RPM_OPT_FLAGS"
 %endif
        --with-krb5 \
        --with-swig \
-%if %{with kauth}
-       --enable-kauth \
-%endif
 %if %{with supergroups}
        --enable-supergroups \
 %endif
@@ -517,13 +478,6 @@ chmod +x %{buildroot}%{_libdir}/*.so*
 # Exclude duplicated files.
 rm -f %{buildroot}%{_prefix}/afs/bin/bos
 rm -f %{buildroot}%{_prefix}/afs/bin/fs
-%if %{with kauth}
-rm -f %{buildroot}%{_prefix}/afs/bin/kas
-rm -f %{buildroot}%{_prefix}/afs/bin/klog
-rm -f %{buildroot}%{_prefix}/afs/bin/klog.krb
-rm -f %{buildroot}%{_prefix}/afs/bin/kpwvalid
-rm -f %{buildroot}%{_sbindir}/kpwvalid
-%endif
 rm -f %{buildroot}%{_prefix}/afs/bin/pts
 rm -f %{buildroot}%{_prefix}/afs/bin/tokens
 rm -f %{buildroot}%{_prefix}/afs/bin/tokens.krb
@@ -531,27 +485,11 @@ rm -f %{buildroot}%{_prefix}/afs/bin/udebug
 rm -f %{buildroot}%{_prefix}/afs/bin/vos
 
 # Relocate admin utilities to a modern path.
-%if %{with kauth}
-mv %{buildroot}%{_prefix}/afs/bin/kadb_check %{buildroot}%{_sbindir}/kadb_check
-%endif
 mv %{buildroot}%{_prefix}/afs/bin/prdb_check %{buildroot}%{_sbindir}/prdb_check
 mv %{buildroot}%{_prefix}/afs/bin/vldb_check %{buildroot}%{_sbindir}/vldb_check
 mv %{buildroot}%{_prefix}/afs/bin/vldb_convert %{buildroot}%{_sbindir}/vldb_convert
 mv %{buildroot}%{_prefix}/afs/bin/akeyconvert %{buildroot}%{_sbindir}/akeyconvert
 mv %{buildroot}%{_prefix}/afs/bin/asetkey %{buildroot}%{_sbindir}/asetkey
-
-%if %{with kauth}
-# Relocate PAM files to the standard PAM module path.
-mkdir -p %{buildroot}%{pamdir}
-mv %{buildroot}%{_libdir}/pam_afs.krb.so %{buildroot}%{pamdir}
-mv %{buildroot}%{_libdir}/pam_afs.so %{buildroot}%{pamdir}
-ln -sf pam_afs.so %{buildroot}%{pamdir}/pam_afs.so.1
-ln -sf pam_afs.krb.so %{buildroot}%{pamdir}/pam_afs.krb.so.1
-
-# Rename kpasswd to avoid conflicting with krb5 kpasswd.
-mv %{buildroot}%{_bindir}/kpasswd %{buildroot}%{_bindir}/kapasswd
-mv %{buildroot}%{_mandir}/man1/kpasswd.1 %{buildroot}%{_mandir}/man1/kapasswd.1
-%endif
 
 #
 # Install client and server systemd files
@@ -732,27 +670,6 @@ if [ $1 = 0 ] ; then
     rmdir %{afswsdir} >/dev/null 2>/dev/null || :
 fi
 
-# package openafs-kauth-client
-%if %{with kauth}
-%post kauth-client
-# Create compatiblity links.
-mkdir -p %{afswsdir}/bin
-mkdir -p %{afswsdir}/etc
-ln -sf %{_bindir}/kapasswd      %{afswsdir}/bin/kapasswd
-ln -sf %{_bindir}/klog          %{afswsdir}/bin/klog
-ln -sf %{_bindir}/klog.krb      %{afswsdir}/bin/klog.krb
-ln -sf %{_sbindir}/kas          %{afswsdir}/etc/kas
-ln -sf %{_bindir}/pagsh.krb     %{afswsdir}/bin/pagsh.krb
-ln -sf %{_bindir}/tokens.krb    %{afswsdir}/bin/tokens.krb
-
-%postun kauth-client
-if [ $1 = 0 ] ; then
-    rmdir %{afswsdir}/bin >/dev/null 2>/dev/null || :
-    rmdir %{afswsdir}/etc >/dev/null 2>/dev/null || :
-    rmdir %{afswsdir} >/dev/null 2>/dev/null || :
-fi
-%endif
-
 # end of userspace
 %endif
 
@@ -863,12 +780,10 @@ fi
 %exclude %{_mandir}/man8/rmtsysd.8*
 %exclude %{_mandir}/man8/xfs_size_check.8*
 %exclude %{_sbindir}/rmtsysd
-%if %{without kauth}
 %exclude %{_bindir}/pagsh.krb
 %exclude %{_bindir}/tokens.krb
 %exclude %{_mandir}/man5/AuthLog.5*
 %exclude %{_mandir}/man5/AuthLog.dir.5*
-%endif
 
 %files docs
 %{_docdir}/%{name}/html
@@ -1065,51 +980,6 @@ fi
 %ghost %{afswsdir}/etc/uss
 %ghost %{afswsdir}/etc/vos
 %ghost %{afswsdir}/etc/vsys
-
-%if %{with kauth}
-%files kauth-client
-%{_bindir}/kapasswd
-%{_bindir}/klog
-%{_bindir}/klog.krb
-%{_bindir}/kpwvalid
-%{_bindir}/pagsh.krb
-%{_bindir}/tokens.krb
-%{_mandir}/man1/kapasswd.1*
-%{_mandir}/man1/klog.1*
-%{_mandir}/man1/klog.krb.1*
-%{_mandir}/man1/pagsh.krb.1*
-%{_mandir}/man1/tokens.krb.1*
-%{_mandir}/man8/kas.8*
-%{_mandir}/man8/kas_*.8*
-%{_mandir}/man8/kpwvalid.8*
-%{_sbindir}/kas
-%{pamdir}/pam_afs.krb.so
-%{pamdir}/pam_afs.krb.so.1
-%{pamdir}/pam_afs.so
-%{pamdir}/pam_afs.so.1
-%ghost %{afswsdir}/bin/kapasswd
-%ghost %{afswsdir}/bin/klog
-%ghost %{afswsdir}/bin/klog.krb
-%ghost %{afswsdir}/bin/pagsh.krb
-%ghost %{afswsdir}/bin/tokens.krb
-%ghost %{afswsdir}/etc/kas
-%exclude %{_bindir}/knfs
-%exclude %{_mandir}/man1/knfs.1*
-
-%files kauth-server
-%{_mandir}/man5/AuthLog.5*
-%{_mandir}/man5/AuthLog.dir.5*
-%{_mandir}/man5/kaserver.DB0.5*
-%{_mandir}/man5/kaserverauxdb.5*
-%{_mandir}/man8/ka-forwarder.8*
-%{_mandir}/man8/kadb_check.8*
-%{_mandir}/man8/kaserver.8*
-%{_prefix}/afs/bin/ka-forwarder
-%{_prefix}/afs/bin/kaserver
-%{_sbindir}/kadb_check
-%exclude %{_mandir}/man8/kdb.8*
-%exclude %{_prefix}/afs/bin/kdb
-%endif
 
 %files krb5
 %{_bindir}/aklog
