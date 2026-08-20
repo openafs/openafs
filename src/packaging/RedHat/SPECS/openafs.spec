@@ -47,9 +47,6 @@
 # --without dkms
 #       Do not build the dkms-openafs package.
 #
-# --without authlibs
-#       Do not build the openafs-authlibs package.
-#
 # --with supergroups
 #       Enable support for supergroups.
 #
@@ -94,7 +91,6 @@
 %bcond_without userspace
 %bcond_without kmod
 %bcond_without dkms
-%bcond_without authlibs
 %bcond_with kauth
 %bcond_with supergroups
 
@@ -287,7 +283,6 @@ This package provides the source code to allow DKMS to build an
 OpenAFS kernel module.
 %endif
 
-%if %{with authlibs}
 %package authlibs
 Summary: OpenAFS authentication shared libraries
 
@@ -296,13 +291,10 @@ Summary: OpenAFS authentication shared libraries
 This package provides the libafsauthent, libafsrpc, and libkopenafs
 shared libraries, for third-party software that performs AFS
 authentication or makes AFS RPC calls.
-%endif
 
 %package authlibs-devel
 Summary: OpenAFS shared library development
-%if %{with authlibs}
 Requires: %{name}-authlibs = %{version}-%{release}
-%endif
 Requires: %{name}-devel = %{version}-%{release}
 
 %description authlibs-devel
@@ -871,11 +863,6 @@ fi
 %exclude %{_mandir}/man8/rmtsysd.8*
 %exclude %{_mandir}/man8/xfs_size_check.8*
 %exclude %{_sbindir}/rmtsysd
-%if %{without authlibs}
-%exclude %{_libdir}/libafsauthent.so*
-%exclude %{_libdir}/libafsrpc.so*
-%exclude %{_libdir}/libkopenafs.so*
-%endif
 %if %{without kauth}
 %exclude %{_bindir}/pagsh.krb
 %exclude %{_bindir}/tokens.krb
@@ -998,12 +985,10 @@ fi
 %{_mandir}/man8/volscan.8*
 %{_mandir}/man8/volserver.8*
 
-%if %{with authlibs}
 %files authlibs
 %{_libdir}/libafsauthent.so.*
 %{_libdir}/libafsrpc.so.*
 %{_libdir}/libkopenafs.so.*
-%endif
 
 %files authlibs-devel
 %{_includedir}/kopenafs.h
@@ -1013,11 +998,9 @@ fi
 %{_libdir}/libafsrpc.a
 %{_libdir}/libafsrpc_pic.a
 %{_libdir}/libkopenafs.a
-%if %{with authlibs}
 %{_libdir}/libafsauthent.so
 %{_libdir}/libafsrpc.so
 %{_libdir}/libkopenafs.so
-%endif
 
 %files devel
 %dir %{_includedir}/opr
