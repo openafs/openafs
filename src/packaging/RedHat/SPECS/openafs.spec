@@ -50,10 +50,6 @@
 # --without authlibs
 #       Do not build the openafs-authlibs package.
 #
-# --without krb5
-#       Build without Kerberos 5 support, and do not build the openafs-krb5
-#       package (aklog, asetkey, and akeyconvert).
-#
 # --with supergroups
 #       Enable support for supergroups.
 #
@@ -99,7 +95,6 @@
 %bcond_without kmod
 %bcond_without dkms
 %bcond_without authlibs
-%bcond_without krb5
 %bcond_with kauth
 %bcond_with supergroups
 
@@ -214,9 +209,7 @@ BuildRequires: perl-devel
 BuildRequires: swig
 BuildRequires: perl(ExtUtils::Embed)
 BuildRequires: perl-core
-%if %{with krb5}
 BuildRequires: krb5-devel
-%endif
 %if %{with userspace}
 BuildRequires: perl(Test::More)
 %endif
@@ -390,7 +383,6 @@ service. Generally you should not install this package for new cells or for
 cells using Kerberos v5.
 %endif
 
-%if %{with krb5}
 %package krb5
 Summary: OpenAFS programs for Kerberos 5 authentication
 Requires: %{name} = %{version}
@@ -401,7 +393,6 @@ This package provides the programs for using Kerberos 5 with AFS,
 including aklog, which obtains AFS tokens from Kerberos 5 tickets, and
 asetkey and akeyconvert, which add keys from a Kerberos 5 keytab to the
 server key files.
-%endif
 
 %endif
 
@@ -489,9 +480,7 @@ export CFLAGS="$RPM_OPT_FLAGS"
 %else
        --disable-kernel-module \
 %endif
-%if %{with krb5}
        --with-krb5 \
-%endif
        --with-swig \
 %if %{with kauth}
        --enable-kauth \
@@ -556,10 +545,8 @@ mv %{buildroot}%{_prefix}/afs/bin/kadb_check %{buildroot}%{_sbindir}/kadb_check
 mv %{buildroot}%{_prefix}/afs/bin/prdb_check %{buildroot}%{_sbindir}/prdb_check
 mv %{buildroot}%{_prefix}/afs/bin/vldb_check %{buildroot}%{_sbindir}/vldb_check
 mv %{buildroot}%{_prefix}/afs/bin/vldb_convert %{buildroot}%{_sbindir}/vldb_convert
-%if %{with krb5}
 mv %{buildroot}%{_prefix}/afs/bin/akeyconvert %{buildroot}%{_sbindir}/akeyconvert
 mv %{buildroot}%{_prefix}/afs/bin/asetkey %{buildroot}%{_sbindir}/asetkey
-%endif
 
 %if %{with kauth}
 # Relocate PAM files to the standard PAM module path.
@@ -895,10 +882,6 @@ fi
 %exclude %{_mandir}/man5/AuthLog.5*
 %exclude %{_mandir}/man5/AuthLog.dir.5*
 %endif
-%if %{without krb5}
-%exclude %{_mandir}/man8/akeyconvert.8*
-%exclude %{_mandir}/man8/asetkey.8*
-%endif
 
 %files docs
 %{_docdir}/%{name}/html
@@ -1145,7 +1128,6 @@ fi
 %exclude %{_prefix}/afs/bin/kdb
 %endif
 
-%if %{with krb5}
 %files krb5
 %{_bindir}/aklog
 %{_bindir}/klog.krb5
@@ -1155,7 +1137,6 @@ fi
 %{_mandir}/man8/asetkey.8*
 %{_sbindir}/akeyconvert
 %{_sbindir}/asetkey
-%endif
 %endif
 
 %if %{with kmod}
