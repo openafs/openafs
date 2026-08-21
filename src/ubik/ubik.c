@@ -798,7 +798,12 @@ ubik_EndTrans(struct ubik_trans *transPtr)
     struct ubik_server *ts;
     afs_int32 now;
     int cachelocked = 0;
-    struct ubik_dbase *dbase;
+    struct ubik_dbase *dbase = transPtr->dbase;
+
+    if ((transPtr->flags & TRCACHELOCKED) != 0) {
+	ReleaseReadLock(&dbase->cache_lock);
+	transPtr->flags &= ~TRCACHELOCKED;
+    }
 
     if (transPtr->type == UBIK_WRITETRANS) {
 	code = ubik_Flush(transPtr);
@@ -806,13 +811,6 @@ ubik_EndTrans(struct ubik_trans *transPtr)
 	    ubik_AbortTrans(transPtr);
 	    return (code);
 	}
-    }
-
-    dbase = transPtr->dbase;
-
-    if (transPtr->flags & TRCACHELOCKED) {
-	ReleaseReadLock(&dbase->cache_lock);
-	transPtr->flags &= ~TRCACHELOCKED;
     }
 
     if (transPtr->type != UBIK_READTRANS) {
