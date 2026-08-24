@@ -1755,48 +1755,11 @@ read_DbHeader(struct ubik_trans *tt)
 
 int pr_noAuth;
 
-/**
- * reads in db cache from ubik.
- *
- * @param[in] ut ubik transaction
- * @param[out] rock  opaque pointer to an int*, which on success will be set
- *                   to 1 if we need to build the database, or 0 if we do not
- *
- * @return operation status
- *   @retval 0 success
- */
-static afs_int32
-Initdb_check(struct ubik_trans *tt, void *rock)
-{
-    int *build_rock = rock;
-    afs_int32 code;
-    afs_int32 len;
-
-    len = sizeof(cheader);
-    code = pr_Read(tt, 0, 0, (char *)&cheader, len);
-    if (code != 0) {
-	afs_com_err(whoami, code, "couldn't read header");
-	return code;
-    }
-    if ((ntohl(cheader.version) == PRDBVERSION)
-	&& ntohl(cheader.headerSize) == sizeof(cheader)
-	&& ntohl(cheader.eofPtr) != 0
-	&& FindByID(tt, ANONYMOUSID) != 0) {
-	/* database exists, so we don't have to build it */
-	*build_rock = 0;
-	return 0;
-    }
-
-    /* else we need to build a database */
-    *build_rock = 1;
-    return 0;
-}
-
 afs_int32
 Initdb(void)
 {
     struct ubik_trans *tt;
-    int build = 0;
+    int build;
     afs_int32 code;
 
     /* init the database.  We'll try reading it, but if we're starting
@@ -1813,10 +1776,20 @@ Initdb(void)
 	return code;
     }
 
-    code = ubik_CheckCache(tt, Initdb_check, &build);
+    code = read_DbHeader(tt);
     if (code) {
 	ubik_AbortTrans(tt);
 	return code;
+    }
+
+    if ((ntohl(cheader.version) == PRDBVERSION)
+	&& ntohl(cheader.headerSize) == sizeof(cheader)
+	&& ntohl(cheader.eofPtr) != 0
+	&& FindByID(tt, ANONYMOUSID) != 0) {
+	/* database exists, so we don't have to build it */
+	build = 0;
+    } else {
+	build = 1;
     }
 
     if (build) {
