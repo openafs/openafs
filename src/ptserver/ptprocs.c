@@ -1511,6 +1511,9 @@ listEntries(struct rx_call *call, afs_int32 flag, afs_int32 startindex,
 	ABORT_WITH(tt, PRPERM);
 
     eof = ntohl(cheader.eofPtr) - sizeof(cheader);
+    if (eof < 0) {
+	ABORT_WITH(tt, PRDBBAD);
+    }
     maxentries = eof / sizeof(struct prentry);
 
     bulkentries->prentries_val = calloc(PR_MAXENTRIES,
