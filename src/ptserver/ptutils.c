@@ -1753,6 +1753,32 @@ read_DbHeader(struct ubik_trans *tt)
     return ubik_CheckCache(tt, UpdateCache, NULL);
 }
 
+static int
+dbheader_isvalid(struct ubik_trans *tt)
+{
+    if ((ntohl(cheader.version) == PRDBVERSION)
+	&& ntohl(cheader.headerSize) == sizeof(cheader)
+	&& ntohl(cheader.eofPtr) != 0
+	&& FindByID(tt, ANONYMOUSID) != 0) {
+	return 1;
+    }
+    return 0;
+}
+
+static int
+dbheader_isblank(struct prheader *hdr)
+{
+    char *bp = (char *)hdr;
+    int i;
+
+    for (i = 0; i < sizeof(*hdr); i++) {
+	if (bp[i] != 0) {
+	    return 0;
+	}
+    }
+    return 1;
+}
+
 int pr_noAuth;
 
 afs_int32
@@ -1782,10 +1808,7 @@ Initdb(void)
 	return code;
     }
 
-    if ((ntohl(cheader.version) == PRDBVERSION)
-	&& ntohl(cheader.headerSize) == sizeof(cheader)
-	&& ntohl(cheader.eofPtr) != 0
-	&& FindByID(tt, ANONYMOUSID) != 0) {
+    if (dbheader_isvalid(tt)) {
 	/* database exists, so we don't have to build it */
 	build = 0;
     } else {
@@ -1794,15 +1817,10 @@ Initdb(void)
 
     if (build) {
 	/* Only rebuild database if the db was deleted (the header is zero) */
-	char *bp = (char *)&cheader;
-	int i;
-	for (i = 0; i < sizeof(cheader); i++) {
-	    if (bp[i]) {
-		code = PRDBBAD;
-		afs_com_err(whoami, code,
+	if (!dbheader_isblank(&cheader)) {
+	    code = PRDBBAD;
+	    afs_com_err(whoami, code,
 			"Can't rebuild database because it is not empty");
-		break;
-	    }
 	}
     }
 
@@ -1837,10 +1855,7 @@ Initdb(void)
 	ubik_AbortTrans(tt);
 	return code;
     }
-    if ((ntohl(cheader.version) == PRDBVERSION)
-	&& ntohl(cheader.headerSize) == sizeof(cheader)
-	&& ntohl(cheader.eofPtr) != 0
-	&& FindByID(tt, ANONYMOUSID) != 0) {
+    if (dbheader_isvalid(tt)) {
 	/* database exists, so we don't have to build it */
 	code = ubik_EndTrans(tt);
 	if (code)
