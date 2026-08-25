@@ -2388,6 +2388,20 @@ CheckOptions(struct cmd_syndesc *as)
 	    exit(1);
 	}
     }
+    if (afsd_verbose) {
+	char *print_cachedir = (cacheBaseDir != NULL) ? cacheBaseDir : "NULL";
+
+	printf("afsd: mountdir: %s\n", afsd_cacheMountDir);
+	printf("afsd: cache blocks: %d\n", cacheBlocks);
+
+	if ((cacheFlags & AFSCALL_INIT_MEMCACHE) != 0) {
+	    printf("afsd: using memcache\n");
+	    printf("afsd: cachedir: %s (ignored)\n", print_cachedir);
+	} else {
+	    printf("afsd: using diskcache\n");
+	    printf("afsd: cachedir: %s\n", print_cachedir);
+	}
+    }
 
     free(atsys_str);
 
