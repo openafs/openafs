@@ -1498,6 +1498,11 @@ GetLastComponent(const char *data, char **outdir, char **outbase,
 	basename = strdup(true_name);
     }
 
+    if (dirname == NULL || basename == NULL) {
+	fprintf(stderr, "%s: Error allocating memory\n", pn);
+	goto out;
+    }
+
     if (strcmp(basename, ".") == 0
 	|| strcmp(basename, "..") == 0) {
 	fprintf(stderr,
