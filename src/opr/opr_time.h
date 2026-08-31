@@ -344,7 +344,7 @@ opr_time64_toUint32_wrap(struct afs_time64 in, afs_uint32 *out)
     static const afs_int64 limit = MAX_AFS_UINT32 + 1LL;
     afs_int64 secs;
     opr_time64_toSecs_safe(in, &secs);
-    *out = (secs % limit + limit) % limit;
+    *out = (afs_uint32)((secs % limit + limit) % limit);
 }
 
 static_inline afs_int64
@@ -362,7 +362,7 @@ opr_time64_toMicrosecs(struct afs_time64 in)
 static_inline afs_int32
 opr_time64_toFracMicrosecs(struct afs_time64 in)
 {
-    return opr_time64_toMicrosecs(in) % 1000000;
+    return (afs_int32)(opr_time64_toMicrosecs(in) % 1000000);
 }
 
 #if !defined(KERNEL) || defined(UKERNEL)
