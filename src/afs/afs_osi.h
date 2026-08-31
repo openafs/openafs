@@ -79,8 +79,6 @@ struct osi_file {
     afs_int32 offset;
 #endif
 #endif
-    int (*proc) (struct osi_file * afile, afs_int32 code);	/* proc, which, if not null, is called on writes */
-    char *rock;			/* rock passed to proc */
 #if defined(UKERNEL)
     int fd;			/* file descriptor for user space files */
 #endif				/* defined(UKERNEL) */
@@ -105,11 +103,6 @@ struct afs_osi_WaitHandle {
     caddr_t proc;		/* process waiting */
 #endif
 };
-
-#define	osi_SetFileProc(x,p)	((x)->proc=(p))
-#define	osi_SetFileRock(x,r)	((x)->rock=(r))
-#define	osi_GetFileProc(x)	((x)->proc)
-#define	osi_GetFileRock(x)	((x)->rock)
 
 #ifdef	AFS_TEXT_ENV
 #define osi_FlushText(vp) if (hcmp((vp)->f.m.DataVersion, (vp)->flushDV) > 0) \

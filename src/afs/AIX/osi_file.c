@@ -53,7 +53,6 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     afile->vnode = vp;		/* Save the vnode pointer for the inode ip; also ip is already prele'ed in igetinode */
     afile->size = VTOI(afile->vnode)->i_size;
     afile->offset = 0;
-    afile->proc = (int (*)())0;
     return (void *)afile;
 }
 
@@ -245,9 +244,6 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	if (code > 0) {
 	    code = -code;
 	}
-    }
-    if (afile->proc) {
-	(*afile->proc) (afile, code);
     }
     return code;
 }

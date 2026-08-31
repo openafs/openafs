@@ -59,7 +59,6 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     AFS_GLOCK();
     afile->size = VnodeToSize(afile->vnode);
     afile->offset = 0;
-    afile->proc = (int (*)())0;
     return (void *)afile;
 }
 
@@ -189,9 +188,6 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	if (code > 0) {
 	    code = -code;
 	}
-    }
-    if (afile->proc) {
-	(*afile->proc) (afile, code);
     }
     return code;
 }

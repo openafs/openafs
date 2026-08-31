@@ -46,7 +46,6 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     afile->vnode = vp;
     afile->size = VTOI(vp)->i_size;
     afile->offset = 0;
-    afile->proc = NULL;
     return (void *)afile;
 }
 
@@ -198,9 +197,6 @@ afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	if (code > 0) {
 	    code = -code;
 	}
-    }
-    if (afile->proc) {
-	(*afile->proc) (afile, code);
     }
     return code;
 }
