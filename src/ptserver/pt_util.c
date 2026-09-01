@@ -144,6 +144,8 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
     char *pfile = NULL;
     char pbuffer[1028];
     struct cmd_parmdesc *tparm;
+    struct ubik_trans *tt = NULL;
+    afs_int32 transMode;
 
     tparm = a_as->parms;
 
@@ -233,8 +235,14 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
 	exit(1);
     }
 
-    Initdb();
     initialize_PT_error_table();
+
+    transMode = wflag ? UBIK_WRITETRANS : UBIK_READTRANS;
+    code = pr_Preamble(transMode, &tt);
+    if (code != 0) {
+	fprintf(stderr, "pt_util: error initializing prdb: code %ld\n", code);
+	exit(1);
+    }
 
     if (wflag) {
 	struct usr_list *u;

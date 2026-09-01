@@ -1832,7 +1832,7 @@ InitializeDB(struct ubik_trans *tt)
 
 int pr_noAuth;
 
-afs_int32
+static afs_int32
 Initdb(void)
 {
     struct ubik_trans *tt;
