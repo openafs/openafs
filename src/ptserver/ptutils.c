@@ -1779,6 +1779,43 @@ dbheader_isblank(struct prheader *hdr)
     return 1;
 }
 
+static afs_int32
+pr_BeginTrans(afs_int32 transMode, struct ubik_trans **a_tt)
+{
+    afs_int32 code;
+    int locktype;
+    struct ubik_trans *tt = NULL;
+
+    if (transMode == UBIK_READTRANS) {
+	locktype = LOCKREAD;
+	code = ubik_BeginTransReadAny(dbase, transMode, &tt);
+
+    } else {
+	opr_Assert(transMode == UBIK_WRITETRANS);
+	locktype = LOCKWRITE;
+	code = ubik_BeginTrans(dbase, transMode, &tt);
+    }
+
+    if (code != 0) {
+	goto done;
+    }
+
+    code = ubik_SetLock(tt, 1, 1, locktype);
+    if (code != 0) {
+	goto done;
+    }
+
+    *a_tt = tt;
+    tt = NULL;
+    code = 0;
+
+ done:
+    if (tt != NULL) {
+	ubik_AbortTrans(tt);
+    }
+    return code;
+}
+
 /*
  * Initialize a new prdb, using the given transaction to write to the db.
  */
@@ -1844,14 +1881,9 @@ Initdb(void)
 
     pr_noAuth = afsconf_GetNoAuthFlag(prdir);
 
-    code = ubik_BeginTransReadAny(dbase, UBIK_READTRANS, &tt);
+    code = pr_BeginTrans(UBIK_READTRANS, &tt);
     if (code)
 	return code;
-    code = ubik_SetLock(tt, 1, 1, LOCKREAD);
-    if (code) {
-	ubik_AbortTrans(tt);
-	return code;
-    }
 
     code = read_DbHeader(tt);
     if (code) {
@@ -1885,15 +1917,9 @@ Initdb(void)
 	return code;
     }
 
-    code = ubik_BeginTrans(dbase, UBIK_WRITETRANS, &tt);
+    code = pr_BeginTrans(UBIK_WRITETRANS, &tt);
     if (code)
 	return code;
-
-    code = ubik_SetLock(tt, 1, 1, LOCKWRITE);
-    if (code) {
-	ubik_AbortTrans(tt);
-	return code;
-    }
 
     /* before doing a rebuild, check again that the dbase looks bad, because
      * the previous check was only under a ReadAny transaction, and there could
@@ -1929,32 +1955,17 @@ Initdb(void)
 afs_int32
 pr_Preamble(afs_int32 transMode, struct ubik_trans **tt)
 {
-    int locktype;
     int code;
 
     code = Initdb();
     if (code)
 	return code;
 
-    if (transMode == UBIK_READTRANS) {
-	locktype = LOCKREAD;
-	code = ubik_BeginTransReadAny(dbase, transMode, tt);
-
-    } else {
-	opr_Assert(transMode == UBIK_WRITETRANS);
-	locktype = LOCKWRITE;
-	code = ubik_BeginTrans(dbase, transMode, tt);
-    }
+    code = pr_BeginTrans(transMode, tt);
     if (code)
 	return code;
 
-    code = ubik_SetLock(*tt, 1, 1, locktype);
-    if (code)
-	goto out;
-
     code = read_DbHeader(*tt);
-
- out:
     if (code)
 	ubik_AbortTrans(*tt);
 
