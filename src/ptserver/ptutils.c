@@ -1779,6 +1779,57 @@ dbheader_isblank(struct prheader *hdr)
     return 1;
 }
 
+/*
+ * Initialize a new prdb, using the given transaction to write to the db.
+ */
+static afs_int32
+InitializeDB(struct ubik_trans *tt)
+{
+    afs_int32 code;
+
+    /* Initialize the database header */
+    if ((code = set_header_word(tt, version, htonl(PRDBVERSION)))
+	|| (code = set_header_word(tt, headerSize, htonl(sizeof(cheader))))
+	|| (code = set_header_word(tt, eofPtr, cheader.headerSize))) {
+	afs_com_err(whoami, code, "couldn't write header words");
+	return code;
+    }
+#define InitialGroup(id,name) do {    \
+    afs_int32 temp = (id);		      \
+    afs_int32 flag = (id) < 0 ? PRGRP : 0; \
+    char tname[PR_MAXNAMELEN]; \
+    if (strlcpy(tname, (name), sizeof(tname)) >= sizeof(tname)) { \
+	code = PRBADNAM; \
+	afs_com_err (whoami, code, "name too long %s", (name)); \
+	return code;		      \
+    } \
+    code = CreateEntry		      \
+	(tt, tname, &temp, /*idflag*/1, flag, SYSADMINID, SYSADMINID); \
+    if (code) {			      \
+	afs_com_err (whoami, code, "couldn't create %s with id %di.", 	\
+		 (name), (id));	      \
+	return code;		      \
+    }				      \
+} while (0)
+
+    InitialGroup(SYSADMINID, "system:administrators");
+    InitialGroup(SYSBACKUPID, "system:backup");
+    InitialGroup(ANYUSERID, "system:anyuser");
+    InitialGroup(AUTHUSERID, "system:authuser");
+    InitialGroup(SYSVIEWERID, "system:ptsviewers");
+    InitialGroup(ANONYMOUSID, "anonymous");
+
+    /* Well, we don't really want the max id set to anonymousid, so we'll set
+     * it back to 0 */
+    code = set_header_word(tt, maxID, 0);	/* correct in any byte order */
+    if (code) {
+	afs_com_err(whoami, code, "couldn't reset max id");
+	return code;
+    }
+
+    return 0;
+}
+
 int pr_noAuth;
 
 afs_int32
@@ -1863,46 +1914,8 @@ Initdb(void)
 	return PRSUCCESS;
     }
 
-    /* Initialize the database header */
-    if ((code = set_header_word(tt, version, htonl(PRDBVERSION)))
-	|| (code = set_header_word(tt, headerSize, htonl(sizeof(cheader))))
-	|| (code = set_header_word(tt, eofPtr, cheader.headerSize))) {
-	afs_com_err(whoami, code, "couldn't write header words");
-	ubik_AbortTrans(tt);
-	return code;
-    }
-#define InitialGroup(id,name) do {    \
-    afs_int32 temp = (id);		      \
-    afs_int32 flag = (id) < 0 ? PRGRP : 0; \
-    char tname[PR_MAXNAMELEN]; \
-    if (strlcpy(tname, (name), sizeof(tname)) >= sizeof(tname)) { \
-	code = PRBADNAM; \
-	afs_com_err (whoami, code, "name too long %s", (name)); \
-	ubik_AbortTrans(tt);	      \
-	return code;		      \
-    } \
-    code = CreateEntry		      \
-	(tt, tname, &temp, /*idflag*/1, flag, SYSADMINID, SYSADMINID); \
-    if (code) {			      \
-	afs_com_err (whoami, code, "couldn't create %s with id %di.", 	\
-		 (name), (id));	      \
-	ubik_AbortTrans(tt);	      \
-	return code;		      \
-    }				      \
-} while (0)
-
-    InitialGroup(SYSADMINID, "system:administrators");
-    InitialGroup(SYSBACKUPID, "system:backup");
-    InitialGroup(ANYUSERID, "system:anyuser");
-    InitialGroup(AUTHUSERID, "system:authuser");
-    InitialGroup(SYSVIEWERID, "system:ptsviewers");
-    InitialGroup(ANONYMOUSID, "anonymous");
-
-    /* Well, we don't really want the max id set to anonymousid, so we'll set
-     * it back to 0 */
-    code = set_header_word(tt, maxID, 0);	/* correct in any byte order */
+    code = InitializeDB(tt);
     if (code) {
-	afs_com_err(whoami, code, "couldn't reset max id");
 	ubik_AbortTrans(tt);
 	return code;
     }
