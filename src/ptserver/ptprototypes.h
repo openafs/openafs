@@ -92,8 +92,8 @@ extern afs_int32 GetOwnedChain(struct ubik_trans *ut, afs_int32 log_id,
 			       afs_int32 *next, prlist *alist);
 extern afs_int32 AddToPRList(afs_int32 log_id, prlist *alist, int *sizeP,
 			     afs_int32 id);
-extern afs_int32 read_DbHeader(struct ubik_trans *tt);
 extern afs_int32 Initdb(void);
+extern afs_int32 pr_Preamble(afs_int32 transMode, struct ubik_trans **tt);
 
 /* ptuser.c */
 

@@ -1747,7 +1747,7 @@ UpdateCache(struct ubik_trans *tt, void *rock)
     return code;
 }
 
-afs_int32
+static afs_int32
 read_DbHeader(struct ubik_trans *tt)
 {
     return ubik_CheckCache(tt, UpdateCache, NULL);
@@ -1911,6 +1911,41 @@ Initdb(void)
     if (code)
 	return code;
     return PRSUCCESS;
+}
+
+afs_int32
+pr_Preamble(afs_int32 transMode, struct ubik_trans **tt)
+{
+    int locktype;
+    int code;
+
+    code = Initdb();
+    if (code)
+	return code;
+
+    if (transMode == UBIK_READTRANS) {
+	locktype = LOCKREAD;
+	code = ubik_BeginTransReadAny(dbase, transMode, tt);
+
+    } else {
+	opr_Assert(transMode == UBIK_WRITETRANS);
+	locktype = LOCKWRITE;
+	code = ubik_BeginTrans(dbase, transMode, tt);
+    }
+    if (code)
+	return code;
+
+    code = ubik_SetLock(*tt, 1, 1, locktype);
+    if (code)
+	goto out;
+
+    code = read_DbHeader(*tt);
+
+ out:
+    if (code)
+	ubik_AbortTrans(*tt);
+
+    return code;
 }
 
 afs_int32

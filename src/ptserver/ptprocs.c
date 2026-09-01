@@ -187,53 +187,13 @@ WhoIsThis(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid)
 static int
 WritePreamble(struct ubik_trans **tt)
 {
-    int code;
-
-    code = Initdb();
-    if (code)
-	return code;
-
-    code = ubik_BeginTrans(dbase, UBIK_WRITETRANS, tt);
-    if (code)
-	return code;
-
-    code = ubik_SetLock(*tt, 1, 1, LOCKWRITE);
-    if (code)
-	goto out;
-
-    code = read_DbHeader(*tt);
-
-out:
-    if (code)
-	ubik_AbortTrans(*tt);
-
-    return code;
+    return pr_Preamble(UBIK_WRITETRANS, tt);
 }
 
 static int
 ReadPreamble(struct ubik_trans **tt)
 {
-    int code;
-
-    code = Initdb();
-    if (code)
-	return code;
-
-    code = ubik_BeginTransReadAny(dbase, UBIK_READTRANS, tt);
-    if (code)
-	return code;
-
-    code = ubik_SetLock(*tt, 1, 1, LOCKREAD);
-    if (code)
-	goto out;
-
-    code = read_DbHeader(*tt);
-
-out:
-    if (code)
-	ubik_AbortTrans(*tt);
-
-    return code;
+    return pr_Preamble(UBIK_READTRANS, tt);
 }
 
 afs_int32
