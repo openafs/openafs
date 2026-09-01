@@ -1747,12 +1747,6 @@ UpdateCache(struct ubik_trans *tt, void *rock)
     return code;
 }
 
-static afs_int32
-read_DbHeader(struct ubik_trans *tt)
-{
-    return ubik_CheckCache(tt, UpdateCache, NULL);
-}
-
 static int
 dbheader_isvalid(struct ubik_trans *tt)
 {
@@ -1779,12 +1773,30 @@ dbheader_isblank(struct prheader *hdr)
     return 1;
 }
 
+/**
+ * Start a ptserver ubik transaction.
+ *
+ * This handles calling ubik_BeginTrans*(), ubik_SetLock(), and
+ * ubik_CheckCache(). This also checks if the db header is valid within the
+ * returned transaction, but does not handle initializing a new db header.
+ *
+ * @param[in] transMode	The type of transaction to return (UBIK_READTRANS or
+ *			UBIK_WRITETRANS).
+ * @param[out] a_tt	On success, set to the new ubik transaction.
+ * @param[out] a_valid	On success, set to 1 if the db header looks valid. 0
+ *			otherwise.
+ *
+ * @return ubik/pt errors
+ */
 static afs_int32
-pr_BeginTrans(afs_int32 transMode, struct ubik_trans **a_tt)
+pr_BeginTrans(afs_int32 transMode, struct ubik_trans **a_tt, int *a_valid)
 {
     afs_int32 code;
     int locktype;
     struct ubik_trans *tt = NULL;
+
+    *a_tt = NULL;
+    *a_valid = 0;
 
     if (transMode == UBIK_READTRANS) {
 	locktype = LOCKREAD;
@@ -1795,7 +1807,6 @@ pr_BeginTrans(afs_int32 transMode, struct ubik_trans **a_tt)
 	locktype = LOCKWRITE;
 	code = ubik_BeginTrans(dbase, transMode, &tt);
     }
-
     if (code != 0) {
 	goto done;
     }
@@ -1804,6 +1815,13 @@ pr_BeginTrans(afs_int32 transMode, struct ubik_trans **a_tt)
     if (code != 0) {
 	goto done;
     }
+
+    code = ubik_CheckCache(tt, UpdateCache, NULL);
+    if (code != 0) {
+	goto done;
+    }
+
+    *a_valid = dbheader_isvalid(tt);
 
     *a_tt = tt;
     tt = NULL;
@@ -1814,6 +1832,30 @@ pr_BeginTrans(afs_int32 transMode, struct ubik_trans **a_tt)
 	ubik_AbortTrans(tt);
     }
     return code;
+}
+
+/*
+ * Convenience wrapper around pr_BeginTrans() that first ends the transaction
+ * in *at (if not NULL) before creating a new transaction.
+ */
+static afs_int32
+pr_EndAndBeginTrans(afs_int32 transMode, struct ubik_trans **at, int *a_valid)
+{
+    struct ubik_trans *tt;
+
+    tt = *at;
+    *at = NULL;
+    *a_valid = 0;
+
+    if (tt != NULL) {
+	afs_int32 code = ubik_EndTrans(tt);
+	tt = NULL;
+	if (code != 0) {
+	    return code;
+	}
+    }
+
+    return pr_BeginTrans(transMode, at, a_valid);
 }
 
 /*
@@ -1869,105 +1911,103 @@ InitializeDB(struct ubik_trans *tt)
 
 int pr_noAuth;
 
-static afs_int32
-Initdb(void)
+/*
+ * Start a new prdb ubik transaction. If the db header is blank, this also
+ * handles initializing a new db header.
+ */
+afs_int32
+pr_Preamble(afs_int32 transMode, struct ubik_trans **a_tt)
 {
-    struct ubik_trans *tt;
-    int build;
-    afs_int32 code;
+    int code;
+    struct ubik_trans *tt = NULL;
+    int valid = 0;
 
-    /* init the database.  We'll try reading it, but if we're starting
-     * from scratch, we'll have to do a write transaction. */
+    *a_tt = NULL;
 
     pr_noAuth = afsconf_GetNoAuthFlag(prdir);
 
-    code = pr_BeginTrans(UBIK_READTRANS, &tt);
-    if (code)
-	return code;
-
-    code = read_DbHeader(tt);
-    if (code) {
-	ubik_AbortTrans(tt);
-	return code;
+    code = pr_BeginTrans(transMode, &tt, &valid);
+    if (code != 0) {
+	goto done;
     }
 
-    if (dbheader_isvalid(tt)) {
-	/* database exists, so we don't have to build it */
-	build = 0;
-    } else {
-	build = 1;
+    if (valid) {
+	/* Database looks good; no need to do anything else. */
+	goto success;
     }
 
-    if (build) {
-	/* Only rebuild database if the db was deleted (the header is zero) */
+    if (transMode != UBIK_WRITETRANS) {
+	/*
+	 * If we don't have a write transaction, we need to start a new write
+	 * transaction in order to rebuild the database.
+	 */
+	code = pr_EndAndBeginTrans(UBIK_WRITETRANS, &tt, &valid);
+	if (code != 0) {
+	    goto done;
+	}
+    }
+
+    if (!valid) {
+	/*
+	 * Database looks bad; we need to build a new db. But only rebuild
+	 * database if the db was deleted (the header is zero).
+	 */
 	if (!dbheader_isblank(&cheader)) {
 	    code = PRDBBAD;
 	    afs_com_err(whoami, code,
 			"Can't rebuild database because it is not empty");
+	    goto done;
+	}
+
+	code = InitializeDB(tt);
+	if (code != 0) {
+	    goto done;
 	}
     }
 
-    if (code) {
-	ubik_EndTrans(tt);
-    } else {
-	code = ubik_EndTrans(tt);
-    }
-    if (code || !build) {
-	/* either we encountered an error, or we don't need to build the db */
-	return code;
-    }
-
-    code = pr_BeginTrans(UBIK_WRITETRANS, &tt);
-    if (code)
-	return code;
-
-    /* before doing a rebuild, check again that the dbase looks bad, because
-     * the previous check was only under a ReadAny transaction, and there could
-     * actually have been a good database out there.  Now that we have a
-     * real write transaction, make sure things are still bad.
+    /*
+     * Now we've rebuilt the db (or it become valid when we created a new
+     * transaction). Now we need to end our current transaction and start a new
+     * transaction for our caller to use.
+     *
+     * If transMode is UBIK_WRITETRANS, we could just reuse the current
+     * transaction and give it to our caller. However, we still recreate the
+     * transaction here so the transaction to initialize the db is committed
+     * separately, to help keep our write transactions small and to make sure
+     * the transaction to initialize the db commits (even if the
+     * application-level logic fails for any reason). This also checks that
+     * 'valid' gets set properly after we initialized the db.
      */
-    code = pr_Read(tt, 0, 0, (char *)&cheader, sizeof(cheader));
+    code = pr_EndAndBeginTrans(transMode, &tt, &valid);
     if (code != 0) {
-	afs_com_err(whoami, code, "couldn't read header");
+	goto done;
+    }
+
+    if (!valid) {
+	/*
+	 * We just tried to initialize the db. If we make a new transaction and
+	 * it looks invalid; don't keep trying to initialize the db, so we
+	 * don't just keep trying to initialize the db forever. Trying once is
+	 * enough, but log a message to say what is happening because this is
+	 * an unusual situation.
+	 */
+	ViceLog(0, ("pr_Preamble: We tried to initialize a new db, but "
+		"afterwards the db still looks invalid (trans %u.%u). Bailing "
+		"out!\n",
+		tt->tid.epoch, tt->tid.counter));
+	code = PRDBBAD;
+	goto done;
+    }
+
+ success:
+    *a_tt = tt;
+    tt = NULL;
+    code = 0;
+
+ done:
+    if (tt != NULL) {
 	ubik_AbortTrans(tt);
-	return code;
     }
-    if (dbheader_isvalid(tt)) {
-	/* database exists, so we don't have to build it */
-	code = ubik_EndTrans(tt);
-	if (code)
-	    return code;
-	return PRSUCCESS;
-    }
-
-    code = InitializeDB(tt);
-    if (code) {
-	ubik_AbortTrans(tt);
-	return code;
-    }
-
-    code = ubik_EndTrans(tt);
-    if (code)
-	return code;
-    return PRSUCCESS;
-}
-
-afs_int32
-pr_Preamble(afs_int32 transMode, struct ubik_trans **tt)
-{
-    int code;
-
-    code = Initdb();
-    if (code)
-	return code;
-
-    code = pr_BeginTrans(transMode, tt);
-    if (code)
-	return code;
-
-    code = read_DbHeader(*tt);
-    if (code)
-	ubik_AbortTrans(*tt);
 
     return code;
 }
