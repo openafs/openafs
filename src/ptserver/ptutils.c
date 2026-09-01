@@ -1913,10 +1913,11 @@ int pr_noAuth;
 
 /*
  * Start a new prdb ubik transaction. If the db header is blank, this also
- * handles initializing a new db header.
+ * handles initializing a new db header (unless 'noinitdb' is nonzero; in that
+ * case, a blank db header is an error).
  */
 afs_int32
-pr_Preamble(afs_int32 transMode, struct ubik_trans **a_tt)
+pr_Preamble(afs_int32 transMode, int noinitdb, struct ubik_trans **a_tt)
 {
     int code;
     struct ubik_trans *tt = NULL;
@@ -1934,6 +1935,19 @@ pr_Preamble(afs_int32 transMode, struct ubik_trans **a_tt)
     if (valid) {
 	/* Database looks good; no need to do anything else. */
 	goto success;
+    }
+
+    if (noinitdb) {
+	/*
+	 * Our caller asked us to not try to reinitialize the db, so throw an
+	 * error instead. This probably happened in the middle of a request
+	 * involving multiple transactions.
+	 */
+	code = PRDBBAD;
+	ViceLog(0, ("pr_Preamble: Database header appears to have been "
+		"corrupted in the middle of a request; returning error %u\n",
+		code));
+	goto done;
     }
 
     if (transMode != UBIK_WRITETRANS) {

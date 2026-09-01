@@ -187,13 +187,19 @@ WhoIsThis(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid)
 static int
 WritePreamble(struct ubik_trans **tt)
 {
-    return pr_Preamble(UBIK_WRITETRANS, tt);
+    return pr_Preamble(UBIK_WRITETRANS, 0, tt);
+}
+
+static int
+WritePreambleNoInitDB(struct ubik_trans **tt)
+{
+    return pr_Preamble(UBIK_WRITETRANS, 1, tt);
 }
 
 static int
 ReadPreamble(struct ubik_trans **tt)
 {
-    return pr_Preamble(UBIK_READTRANS, tt);
+    return pr_Preamble(UBIK_READTRANS, 0, tt);
 }
 
 afs_int32
@@ -778,12 +784,9 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 #ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();		/* just to keep the connection alive */
 #endif
-	code = ubik_BeginTrans(dbase, UBIK_WRITETRANS, &tt);
+	code = WritePreambleNoInitDB(&tt);
 	if (code)
 	    return code;
-	code = ubik_SetLock(tt, 1, 1, LOCKWRITE);
-	if (code)
-	    ABORT_WITH(tt, code);
 
 	/* re-read entry to get consistent uptodate info */
 	loc = FindByID(tt, aid);
@@ -839,12 +842,9 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 	    IOMGR_Poll();	/* just to keep the connection alive */
 #endif
 
-	    code = ubik_BeginTrans(dbase, UBIK_WRITETRANS, &tt);
+	    code = WritePreambleNoInitDB(&tt);
 	    if (code)
 		return code;
-	    code = ubik_SetLock(tt, 1, 1, LOCKWRITE);
-	    if (code)
-		ABORT_WITH(tt, code);
 
 	    /* re-read entry to get consistent uptodate info */
 	    loc = FindByID(tt, aid);
@@ -896,12 +896,9 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 #ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();		/* just to keep the connection alive */
 #endif
-	code = ubik_BeginTrans(dbase, UBIK_WRITETRANS, &tt);
+	code = WritePreambleNoInitDB(&tt);
 	if (code)
 	    return code;
-	code = ubik_SetLock(tt, 1, 1, LOCKWRITE);
-	if (code)
-	    ABORT_WITH(tt, code);
 
 	/* re-read entry to get consistent uptodate info */
 	loc = FindByID(tt, aid);
