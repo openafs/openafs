@@ -241,7 +241,7 @@ CommandProc(struct cmd_syndesc *a_as, void *arock)
     initialize_PT_error_table();
 
     transMode = wflag ? UBIK_WRITETRANS : UBIK_READTRANS;
-    code = pr_Preamble(transMode, 0, &ctx->trans);
+    code = pr_Preamble(ctx, transMode, 0);
     if (code != 0) {
 	fprintf(stderr, "pt_util: error initializing prdb: code %ld\n", code);
 	exit(1);

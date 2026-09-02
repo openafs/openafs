@@ -187,19 +187,19 @@ WhoIsThis(struct rx_call *acall, struct pt_ctx *ctx, afs_int32 *aid)
 static int
 WritePreamble(struct pt_ctx *ctx)
 {
-    return pr_Preamble(UBIK_WRITETRANS, 0, &ctx->trans);
+    return pr_Preamble(ctx, UBIK_WRITETRANS, 0);
 }
 
 static int
 WritePreambleNoInitDB(struct pt_ctx *ctx)
 {
-    return pr_Preamble(UBIK_WRITETRANS, 1, &ctx->trans);
+    return pr_Preamble(ctx, UBIK_WRITETRANS, 1);
 }
 
 static int
 ReadPreamble(struct pt_ctx *ctx)
 {
-    return pr_Preamble(UBIK_READTRANS, 0, &ctx->trans);
+    return pr_Preamble(ctx, UBIK_READTRANS, 0);
 }
 
 afs_int32

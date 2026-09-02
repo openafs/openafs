@@ -26,6 +26,7 @@
 
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <afs/afs_lock.h>
 #include <ubik.h>
 #include <rx/xdr.h>
@@ -1739,12 +1740,9 @@ static afs_int32
 UpdateCache(struct ubik_trans *tt, void *rock)
 {
     afs_int32 code;
-    struct pt_ctx ctx_s;
-    struct pt_ctx *ctx = &ctx_s;
+    struct pt_ctx *ctx = rock;
 
-    memset(&ctx_s, 0, sizeof(ctx_s));
-
-    ctx->trans = tt;
+    opr_Assert(ctx->trans == tt);
 
     code = pr_Read(ctx, 0, 0, (char *)&cheader, sizeof(cheader));
     if (code != 0) {
@@ -1754,15 +1752,8 @@ UpdateCache(struct ubik_trans *tt, void *rock)
 }
 
 static int
-dbheader_isvalid(struct ubik_trans *tt)
+dbheader_isvalid(struct pt_ctx *ctx)
 {
-    struct pt_ctx ctx_s;
-    struct pt_ctx *ctx = &ctx_s;
-
-    memset(&ctx_s, 0, sizeof(ctx_s));
-
-    ctx->trans = tt;
-
     if ((ntohl(cheader.version) == PRDBVERSION)
 	&& ntohl(cheader.headerSize) == sizeof(cheader)
 	&& ntohl(cheader.eofPtr) != 0
@@ -1793,97 +1784,89 @@ dbheader_isblank(struct prheader *hdr)
  * ubik_CheckCache(). This also checks if the db header is valid within the
  * returned transaction, but does not handle initializing a new db header.
  *
+ * @param[in] ctx	The pt_ctx to use. On success, ctx->trans is set to a
+ *			ubik transaction.
  * @param[in] transMode	The type of transaction to return (UBIK_READTRANS or
  *			UBIK_WRITETRANS).
- * @param[out] a_tt	On success, set to the new ubik transaction.
  * @param[out] a_valid	On success, set to 1 if the db header looks valid. 0
  *			otherwise.
  *
  * @return ubik/pt errors
  */
 static afs_int32
-pr_BeginTrans(afs_int32 transMode, struct ubik_trans **a_tt, int *a_valid)
+pr_BeginTrans(struct pt_ctx *ctx, afs_int32 transMode, int *a_valid)
 {
     afs_int32 code;
     int locktype;
-    struct ubik_trans *tt = NULL;
 
-    *a_tt = NULL;
+    ctx->trans = NULL;
     *a_valid = 0;
 
     if (transMode == UBIK_READTRANS) {
 	locktype = LOCKREAD;
-	code = ubik_BeginTransReadAny(dbase, transMode, &tt);
+	code = ubik_BeginTransReadAny(dbase, transMode, &ctx->trans);
 
     } else {
 	opr_Assert(transMode == UBIK_WRITETRANS);
 	locktype = LOCKWRITE;
-	code = ubik_BeginTrans(dbase, transMode, &tt);
+	code = ubik_BeginTrans(dbase, transMode, &ctx->trans);
     }
     if (code != 0) {
 	goto done;
     }
 
-    code = ubik_SetLock(tt, 1, 1, locktype);
+    code = ubik_SetLock(ctx->trans, 1, 1, locktype);
     if (code != 0) {
 	goto done;
     }
 
-    code = ubik_CheckCache(tt, UpdateCache, NULL);
+    code = ubik_CheckCache(ctx->trans, UpdateCache, ctx);
     if (code != 0) {
 	goto done;
     }
 
-    *a_valid = dbheader_isvalid(tt);
+    *a_valid = dbheader_isvalid(ctx);
 
-    *a_tt = tt;
-    tt = NULL;
     code = 0;
 
  done:
-    if (tt != NULL) {
-	ubik_AbortTrans(tt);
+    if (code != 0) {
+	if (ctx->trans != NULL) {
+	    ubik_AbortTrans(ctx->trans);
+	}
+	ctx->trans = NULL;
     }
+
     return code;
 }
 
 /*
  * Convenience wrapper around pr_BeginTrans() that first ends the transaction
- * in *at (if not NULL) before creating a new transaction.
+ * in ctx->trans (if not NULL) before creating a new transaction.
  */
 static afs_int32
-pr_EndAndBeginTrans(afs_int32 transMode, struct ubik_trans **at, int *a_valid)
+pr_EndAndBeginTrans(struct pt_ctx *ctx, afs_int32 transMode, int *a_valid)
 {
-    struct ubik_trans *tt;
-
-    tt = *at;
-    *at = NULL;
     *a_valid = 0;
 
-    if (tt != NULL) {
-	afs_int32 code = ubik_EndTrans(tt);
-	tt = NULL;
+    if (ctx->trans != NULL) {
+	afs_int32 code = ubik_EndTrans(ctx->trans);
+	ctx->trans = NULL;
 	if (code != 0) {
 	    return code;
 	}
     }
 
-    return pr_BeginTrans(transMode, at, a_valid);
+    return pr_BeginTrans(ctx, transMode, a_valid);
 }
 
 /*
  * Initialize a new prdb, using the given transaction to write to the db.
  */
 static afs_int32
-InitializeDB(struct ubik_trans *tt)
+InitializeDB(struct pt_ctx *ctx)
 {
     afs_int32 code;
-    struct pt_ctx ctx_s;
-    struct pt_ctx *ctx = &ctx_s;
-
-    memset(&ctx_s, 0, sizeof(ctx_s));
-
-    ctx->trans = tt;
 
     /* Initialize the database header */
     if ((code = set_header_word(ctx, version, htonl(PRDBVERSION)))
@@ -1936,17 +1919,16 @@ int pr_noAuth;
  * case, a blank db header is an error).
  */
 afs_int32
-pr_Preamble(afs_int32 transMode, int noinitdb, struct ubik_trans **a_tt)
+pr_Preamble(struct pt_ctx *ctx, afs_int32 transMode, int noinitdb)
 {
     int code;
-    struct ubik_trans *tt = NULL;
     int valid = 0;
 
-    *a_tt = NULL;
+    memset(ctx, 0, sizeof(*ctx));
 
     pr_noAuth = afsconf_GetNoAuthFlag(prdir);
 
-    code = pr_BeginTrans(transMode, &tt, &valid);
+    code = pr_BeginTrans(ctx, transMode, &valid);
     if (code != 0) {
 	goto done;
     }
@@ -1974,7 +1956,7 @@ pr_Preamble(afs_int32 transMode, int noinitdb, struct ubik_trans **a_tt)
 	 * If we don't have a write transaction, we need to start a new write
 	 * transaction in order to rebuild the database.
 	 */
-	code = pr_EndAndBeginTrans(UBIK_WRITETRANS, &tt, &valid);
+	code = pr_EndAndBeginTrans(ctx, UBIK_WRITETRANS, &valid);
 	if (code != 0) {
 	    goto done;
 	}
@@ -1992,7 +1974,7 @@ pr_Preamble(afs_int32 transMode, int noinitdb, struct ubik_trans **a_tt)
 	    goto done;
 	}
 
-	code = InitializeDB(tt);
+	code = InitializeDB(ctx);
 	if (code != 0) {
 	    goto done;
 	}
@@ -2011,7 +1993,7 @@ pr_Preamble(afs_int32 transMode, int noinitdb, struct ubik_trans **a_tt)
      * application-level logic fails for any reason). This also checks that
      * 'valid' gets set properly after we initialized the db.
      */
-    code = pr_EndAndBeginTrans(transMode, &tt, &valid);
+    code = pr_EndAndBeginTrans(ctx, transMode, &valid);
     if (code != 0) {
 	goto done;
     }
@@ -2027,19 +2009,20 @@ pr_Preamble(afs_int32 transMode, int noinitdb, struct ubik_trans **a_tt)
 	ViceLog(0, ("pr_Preamble: We tried to initialize a new db, but "
 		"afterwards the db still looks invalid (trans %u.%u). Bailing "
 		"out!\n",
-		tt->tid.epoch, tt->tid.counter));
+		ctx->trans->tid.epoch, ctx->trans->tid.counter));
 	code = PRDBBAD;
 	goto done;
     }
 
  success:
-    *a_tt = tt;
-    tt = NULL;
     code = 0;
 
  done:
-    if (tt != NULL) {
-	ubik_AbortTrans(tt);
+    if (code != 0) {
+	if (ctx->trans != NULL) {
+	    ubik_AbortTrans(ctx->trans);
+	}
+	ctx->trans = NULL;
     }
 
     return code;

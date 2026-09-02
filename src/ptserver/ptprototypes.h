@@ -96,8 +96,8 @@ extern afs_int32 GetOwnedChain(struct pt_ctx *ctx, afs_int32 log_id,
 			       afs_int32 *next, prlist *alist);
 extern afs_int32 AddToPRList(afs_int32 log_id, prlist *alist, int *sizeP,
 			     afs_int32 id);
-extern afs_int32 pr_Preamble(afs_int32 transMode, int noinitdb,
-			     struct ubik_trans **a_tt);
+extern afs_int32 pr_Preamble(struct pt_ctx *ctx, afs_int32 transMode,
+			     int noinitdb);
 
 /* ptuser.c */
 
