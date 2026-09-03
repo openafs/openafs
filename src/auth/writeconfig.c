@@ -28,19 +28,19 @@ static int
 VerifyEntries(struct afsconf_cell *aci)
 {
     int i;
-    struct hostent *th;
 
     for (i = 0; i < aci->numServers; i++) {
-	if (aci->hostAddr[i].sin_addr.s_addr == 0) {
+	if (aci->hostAddr[i].rxsa_family == 0) {
 	    /* no address spec'd */
 	    if (*(aci->hostName[i]) != 0) {
 		int code;
 		struct addrinfo hints;
 		struct addrinfo *result;
 		struct addrinfo *rp;
+		int found = 0;
 
 		memset(&hints, 0, sizeof(struct addrinfo));
-		hints.ai_family = AF_INET;
+		hints.ai_family = AF_UNSPEC;
 		hints.ai_socktype = SOCK_DGRAM;
 
 		code = getaddrinfo(aci->hostName[i], NULL, &hints, &result);
@@ -50,14 +50,17 @@ VerifyEntries(struct afsconf_cell *aci)
 		    return AFSCONF_FAILURE;
 		}
 		for (rp = result; rp != NULL; rp = rp->ai_next) {
-		    struct sockaddr_in *sa = (struct sockaddr_in *)rp->ai_addr;
-		    if (!rx_IsLoopbackAddr(ntohl(sa->sin_addr.s_addr))) {
-			aci->hostAddr[i].sin_addr.s_addr = sa->sin_addr.s_addr;
+		    struct rx_sockaddr sa;
+		    if (rx_addrinfo_to_sockaddr(rp, 0, &sa) != 0)
+			continue;
+		    if (!rx_is_loopback_sockaddr(&sa)) {
+			aci->hostAddr[i] = sa;
+			found = 1;
 			break;
 		    }
 		}
 		freeaddrinfo(result);
-		if (aci->hostAddr[i].sin_addr.s_addr == 0) {
+		if (!found) {
 		    printf("No non-loopback addresses found for host %s\n",
 			   aci->hostName[i]);
 		    return AFSCONF_FAILURE;
@@ -69,17 +72,11 @@ VerifyEntries(struct afsconf_cell *aci)
 	    if (aci->hostName[i][0] != 0)
 		continue;	/* name known too */
 	    /* figure out name, if possible */
-	    th = gethostbyaddr((char *)(&aci->hostAddr[i].sin_addr), 4,
-			       AF_INET);
-	    if (!th) {
+	    if (getnameinfo(&aci->hostAddr[i].addr.sa,
+			     aci->hostAddr[i].addrlen,
+			     aci->hostName[i], sizeof(aci->hostName[i]),
+			     NULL, 0, NI_NAMEREQD) != 0) {
 		strcpy(aci->hostName[i], "UNKNOWNHOST");
-	    } else {
-		if (strlcpy(aci->hostName[i],
-			    th->h_name,
-			    sizeof(aci->hostName[i]))
-			>= sizeof(aci->hostName[i])) {
-		   strcpy(aci->hostName[i], "UNKNOWNHOST");
-		}
 	    }
 	}
     }
@@ -149,18 +146,28 @@ afsconf_SetExtendedCellInfo(struct afsconf_dir *adir,
     }
     fprintf(tf, ">%s	#Cell name\n", acellInfo->name);
     for (i = 0; i < acellInfo->numServers; i++) {
-	code = acellInfo->hostAddr[i].sin_addr.s_addr;	/* net order */
-	if (code == 0)
-	    continue;		/* delete request */
-	code = ntohl(code);	/* convert to host order */
-	if (clones && clones[i])
-	    fprintf(tf, "[%d.%d.%d.%d]  #%s\n", (code >> 24) & 0xff,
-		    (code >> 16) & 0xff, (code >> 8) & 0xff, code & 0xff,
-		    acellInfo->hostName[i]);
+	char addrtext[INET6_ADDRSTRLEN];
+	const void *src;
+
+	if (acellInfo->hostAddr[i].rxsa_family == AF_INET)
+	    src = &acellInfo->hostAddr[i].rxsa_in_addr;
+#ifdef HAVE_IPV6
+	else if (acellInfo->hostAddr[i].rxsa_family == AF_INET6)
+	    src = &acellInfo->hostAddr[i].rxsa_in6_addr;
+#endif
 	else
-	    fprintf(tf, "%d.%d.%d.%d    #%s\n", (code >> 24) & 0xff,
-		    (code >> 16) & 0xff, (code >> 8) & 0xff, code & 0xff,
-		    acellInfo->hostName[i]);
+	    continue;		/* delete request */
+
+	if (!inet_ntop(acellInfo->hostAddr[i].rxsa_family, src, addrtext,
+		       sizeof(addrtext))) {
+	    fclose(tf);
+	    UNLOCK_GLOBAL_MUTEX;
+	    return AFSCONF_FAILURE;
+	}
+	if (clones && clones[i])
+	    fprintf(tf, "[%s]  #%s\n", addrtext, acellInfo->hostName[i]);
+	else
+	    fprintf(tf, "%s    #%s\n", addrtext, acellInfo->hostName[i]);
     }
     if (ferror(tf)) {
 	fclose(tf);

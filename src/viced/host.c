@@ -318,8 +318,8 @@ hpr_Initialize(struct ubik_client **uclient)
     memset(serverconns, 0, sizeof(serverconns));        /* terminate list!!! */
     for (i = 0; i < info.numServers; i++) {
         serverconns[i] =
-            rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-                             info.hostAddr[i].sin_port, PRSRV,
+            rx_NewConnection(info.hostAddr[i].rxsa_s_addr,
+                             info.hostAddr[i].rxsa_in_port, PRSRV,
 			     sc, scIndex);
     }
 

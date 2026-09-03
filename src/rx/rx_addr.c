@@ -221,7 +221,7 @@ rx_copy_sockaddr(const struct rx_sockaddr *src, struct rx_sockaddr *dst)
     return 0;
 }
 
-#ifndef KERNEL
+#if !defined(KERNEL) || defined(UKERNEL)
 int
 rx_addrinfo_to_sockaddr(const struct addrinfo *ai, rx_service_t service,
 			struct rx_sockaddr *sa)
@@ -493,7 +493,7 @@ rx_try_address_to_ipv4(const struct rx_address *a, afs_uint32 *ipv4)
     return 0;
 }
 
-#ifndef KERNEL
+#if !defined(KERNEL) || defined(UKERNEL)
 char *
 rx_print_address(const struct rx_address *a, char *dst, size_t size)
 {

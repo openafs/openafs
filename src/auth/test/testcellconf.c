@@ -46,9 +46,9 @@ PrintOneCell(struct afsconf_cell *ainfo, void *arock, struct afsconf_dir *adir)
 
     printf("Cell %s:\n", ainfo->name);
     for (i = 0; i < ainfo->numServers; i++) {
-	memcpy(&temp, &ainfo->hostAddr[i].sin_addr, sizeof(long));
+	memcpy(&temp, &ainfo->hostAddr[i].rxsa_in_addr, sizeof(long));
 	printf("    host %s at %lx.%x\n", ainfo->hostName[i], temp,
-	       ainfo->hostAddr[i].sin_port);
+	       ainfo->hostAddr[i].rxsa_in_port);
     }
     return 0;
 }

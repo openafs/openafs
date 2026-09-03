@@ -59,14 +59,14 @@ ka_ExplicitCell(char *cell, afs_uint32 serverList[])
     for (i = 0; i < MAXHOSTSPERCELL; i++)
 	if (serverList[i]) {
 	    explicit_cell_server_list.numServers = i + 1;
-	    explicit_cell_server_list.hostAddr[i].sin_family = AF_INET;
-	    explicit_cell_server_list.hostAddr[i].sin_addr.s_addr =
+	    explicit_cell_server_list.hostAddr[i].rxsa_family = AF_INET;
+	    explicit_cell_server_list.hostAddr[i].rxsa_s_addr =
 		serverList[i];
 	    explicit_cell_server_list.hostName[i][0] = 0;
-	    explicit_cell_server_list.hostAddr[i].sin_port =
+	    explicit_cell_server_list.hostAddr[i].rxsa_in_port =
 		htons(AFSCONF_KAUTHPORT);
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
-	    explicit_cell_server_list.hostAddr[i].sin_len =
+	    explicit_cell_server_list.hostAddr[i].rxsa_in_len =
 		sizeof(struct sockaddr_in);
 #endif
 	    explicit = 1;
@@ -203,13 +203,13 @@ ka_SingleServerConn(char *cell, char *server,	/* name of server to contact */
     }
 #ifdef AFS_PTHREAD_ENV
     serverconns[0] =
-	rx_GetCachedConnection(cellinfo.hostAddr[match].sin_addr.s_addr,
-			       cellinfo.hostAddr[match].sin_port, service, sc,
+	rx_GetCachedConnection(cellinfo.hostAddr[match].rxsa_s_addr,
+			       cellinfo.hostAddr[match].rxsa_in_port, service, sc,
 			       si);
 #else
     serverconns[0] =
-	rx_NewConnection(cellinfo.hostAddr[match].sin_addr.s_addr,
-			 cellinfo.hostAddr[match].sin_port, service, sc, si);
+	rx_NewConnection(cellinfo.hostAddr[match].rxsa_s_addr,
+			 cellinfo.hostAddr[match].rxsa_in_port, service, sc, si);
 #endif
     serverconns[1] = 0;		/* terminate list */
 
@@ -252,13 +252,13 @@ ka_AuthSpecificServersConn(int service, struct ktc_token * token,
     for (i = 0; i < cellinfo->numServers; i++)
 #ifdef AFS_PTHREAD_ENV
 	serverconns[i] =
-	    rx_GetCachedConnection(cellinfo->hostAddr[i].sin_addr.s_addr,
-				   cellinfo->hostAddr[i].sin_port, service,
+	    rx_GetCachedConnection(cellinfo->hostAddr[i].rxsa_s_addr,
+				   cellinfo->hostAddr[i].rxsa_in_port, service,
 				   sc, si);
 #else
 	serverconns[i] =
-	    rx_NewConnection(cellinfo->hostAddr[i].sin_addr.s_addr,
-			     cellinfo->hostAddr[i].sin_port, service, sc, si);
+	    rx_NewConnection(cellinfo->hostAddr[i].rxsa_s_addr,
+			     cellinfo->hostAddr[i].rxsa_in_port, service, sc, si);
 #endif
     serverconns[cellinfo->numServers] = 0;	/* terminate list */
 
@@ -307,13 +307,13 @@ ka_AuthServerConn(char *cell, int service, struct ktc_token * token,
     for (i = 0; i < cellinfo.numServers; i++)
 #ifdef AFS_PTHREAD_ENV
 	serverconns[i] =
-	    rx_GetCachedConnection(cellinfo.hostAddr[i].sin_addr.s_addr,
-				   cellinfo.hostAddr[i].sin_port, service, sc,
+	    rx_GetCachedConnection(cellinfo.hostAddr[i].rxsa_s_addr,
+				   cellinfo.hostAddr[i].rxsa_in_port, service, sc,
 				   si);
 #else
 	serverconns[i] =
-	    rx_NewConnection(cellinfo.hostAddr[i].sin_addr.s_addr,
-			     cellinfo.hostAddr[i].sin_port, service, sc, si);
+	    rx_NewConnection(cellinfo.hostAddr[i].rxsa_s_addr,
+			     cellinfo.hostAddr[i].rxsa_in_port, service, sc, si);
 #endif
     serverconns[cellinfo.numServers] = 0;	/* terminate list */
 

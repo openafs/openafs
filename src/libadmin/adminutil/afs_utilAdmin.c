@@ -142,7 +142,7 @@ GetDatabaseServerRPC(void *rpc_specific, int slot, int *last_item,
     database_server_get_p serv = (database_server_get_p) rpc_specific;
 
     serv->server[slot].serverAddress =
-	ntohl(serv->cell.hostAddr[serv->index].sin_addr.s_addr);
+	ntohl(serv->cell.hostAddr[serv->index].rxsa_s_addr);
     strcpy(serv->server[slot].serverName, serv->cell.hostName[serv->index]);
     serv->index++;
 

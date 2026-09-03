@@ -311,7 +311,7 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 
     if (info) {
 	for (i = 0; i < info->numServers; i++) {
-	    if (ntohl((afs_uint32) info->hostAddr[i].sin_addr.s_addr) ==
+	    if (ntohl((afs_uint32) info->hostAddr[i].rxsa_s_addr) ==
 		ntohl((afs_uint32) ame)) {
 		me = i;
 		if (clones[i]) {
@@ -327,7 +327,7 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	    ts = calloc(1, sizeof(struct ubik_server));
 	    ts->next = ubik_servers;
 	    ubik_servers = ts;
-	    ts->addr[0] = info->hostAddr[i].sin_addr.s_addr;
+	    ts->addr[0] = info->hostAddr[i].rxsa_s_addr;
 	    if (clones[i]) {
 		ts->isClone = 1;
 	    } else {
@@ -341,12 +341,12 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	    }
 	    /* for vote reqs */
 	    ts->vote_rxcid =
-		rx_NewConnection(info->hostAddr[i].sin_addr.s_addr,
+		rx_NewConnection(info->hostAddr[i].rxsa_s_addr,
 				 ubik_callPortal, VOTE_SERVICE_ID,
 				 addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
 	    /* for disk reqs */
 	    ts->disk_rxcid =
-		rx_NewConnection(info->hostAddr[i].sin_addr.s_addr,
+		rx_NewConnection(info->hostAddr[i].rxsa_s_addr,
 				 ubik_callPortal, DISK_SERVICE_ID,
 				 addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
 	    ts->up = 1;
@@ -768,7 +768,7 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
     for (j = 0, found = 0; j < count; j++) {
 	for (i = 0; i < totalServers; i++) {
 	    if (info)
-		tmpAddr = (afs_uint32) info->hostAddr[i].sin_addr.s_addr;
+		tmpAddr = (afs_uint32) info->hostAddr[i].rxsa_s_addr;
 	    else
 		tmpAddr = aservers[i];
 	    if (myAddr[j] == tmpAddr) {

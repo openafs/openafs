@@ -38,11 +38,18 @@ Creation date:
 #endif
 #endif
 #include <rx/rx_opaque.h>
+#include <rx/rx_addr.h>
 #include <opr/queue.h>
 
 #define	MAXCELLCHARS	64
 #define	MAXHOSTCHARS	64
-#define MAXHOSTSPERCELL  8
+/* Was 8; a dual-stack dbserver can occupy two entries (one v4, one v6)
+ * in a hostname-resolved CellServDB entry (see the gethostbyname/
+ * getaddrinfo expansion in _GetCellInfo()), so cells with several
+ * dual-stack dbservers need the extra room. AFSMAXCELLHOSTS
+ * (src/fsint/common.xg) - the on-the-wire limit RPCs like
+ * RXAFSCB_InitCallBackState3 use - is unrelated and unchanged at 8. */
+#define MAXHOSTSPERCELL  16
 
 /*
  * Return codes.
@@ -56,7 +63,12 @@ struct afsconf_cell {
     char name[MAXCELLCHARS];	/*Cell name */
     short numServers;		/*Num active servers for the cell */
     short flags;		/* useful flags */
-    struct sockaddr_in hostAddr[MAXHOSTSPERCELL];	/*IP addresses for cell's servers */
+    /* Was struct sockaddr_in[]; widened to carry IPv6 addresses too.
+     * This is a public ABI (libafsauthent/libafsrpc) - the struct's
+     * size and layout both changed, so any out-of-tree consumer needs
+     * a rebuild, not just a relink. See the library Makefiles for the
+     * accompanying soname/version-info bump. */
+    struct rx_sockaddr hostAddr[MAXHOSTSPERCELL];	/*addresses for cell's servers */
     char hostName[MAXHOSTSPERCELL][MAXHOSTCHARS];	/*Names for cell's servers */
     char *linkedCell;		/* Linked cell name, if any */
     int timeout;		/* Data timeout, if non-zero */

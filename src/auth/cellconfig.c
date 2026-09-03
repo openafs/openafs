@@ -75,8 +75,8 @@ static int GetCellNT(struct afsconf_dir *adir);
 static int GetCellUnix(struct afsconf_dir *adir);
 static int afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 				char clones[]);
-static int ParseHostLine(char *aline, struct sockaddr_in *addr,
-			 char *aname, char *aclone);
+static int ParseHostLine(char *aline, struct rx_sockaddr *addr,
+			 char *aname, char *aclone /* boolean */);
 static int ParseCellLine(char *aline, char *aname,
 			 char *alname);
 static int afsconf_CloseInternal(struct afsconf_dir *adir);
@@ -567,7 +567,12 @@ cm_serverConfigProc(void *rockp, struct sockaddr_in *addrp,
     if (cellInfop->numServers == MAXHOSTSPERCELL)
         return 0;
 
-    cellInfop->hostAddr[cellInfop->numServers] = *addrp;
+    /* This whole AFS_NT40_ENV path is IPv4-only, untouched by this
+     * change beyond the mechanical fix needed to keep building against
+     * the now-widened struct afsconf_cell - Windows is a stated
+     * non-goal of this series and isn't build-tested here. */
+    rx_ipv4_to_sockaddr(addrp->sin_addr.s_addr, addrp->sin_port, 0,
+		       &cellInfop->hostAddr[cellInfop->numServers]);
     strncpy(cellInfop->hostName[cellInfop->numServers], hostNamep, MAXHOSTCHARS);
     cellInfop->hostName[cellInfop->numServers][MAXHOSTCHARS-1] = '\0';
     cellInfop->numServers++;
@@ -832,50 +837,80 @@ afsconf_OpenInternal(struct afsconf_dir *adir, char *cell,
 
 /* parse a line of the form
  *"128.2.1.3   #hostname" or
- *"[128.2.1.3]  #hostname" for clones
- * into the appropriate pieces.
+ *"[128.2.1.3]  #hostname" for clones, or
+ *"2001:db8::1   #hostname" or
+ *"[2001:db8::1]  #hostname" for clones
+ * into the appropriate pieces. The leading '[...]' always means "this is
+ * a clone" (an existing AFS convention, unrelated to the IPv6 bracket-
+ * for-a-port-suffix convention this address happens to resemble); family
+ * is detected by whether the address text itself contains a ':'.
  */
 static int
-ParseHostLine(char *aline, struct sockaddr_in *addr, char *aname,
-	      char *aclone)
+ParseHostLine(char *aline, struct rx_sockaddr *addr, char *aname,
+	      char *aclone /* boolean */)
 {
-    int i;
-    int c[4];
     afs_int32 code;
-    char *tp;
+    char *start = aline;
+    char *end;
+    char addrtext[INET6_ADDRSTRLEN];
+    size_t addrlen;
+    int clone = 0;
+    struct rx_address ra;
 
-    if (*aline == '[') {
-	if (aclone)
-	    *aclone = 1;
-	/* FIXME: length of aname unknown here */
-	code = sscanf(aline, "[%d.%d.%d.%d] #%s", &c[0], &c[1], &c[2], &c[3],
-		      aname);
+    if (*start == '[') {
+	clone = 1;
+	start++;
+	end = strchr(start, ']');
+	if (!end)
+	    return AFSCONF_SYNTAX;
     } else {
-	if (aclone)
-	    *aclone = 0;
-	/* FIXME: length of aname unknown here */
-	code = sscanf(aline, "%d.%d.%d.%d #%s", &c[0], &c[1], &c[2], &c[3],
-		      aname);
+	end = start;
+	while (*end && !isspace((unsigned char)*end))
+	    end++;
     }
-    if (code != 5)
+    addrlen = end - start;
+    if (addrlen == 0 || addrlen >= sizeof(addrtext))
 	return AFSCONF_SYNTAX;
-    for(i = 0; i < 4; ++i) {
-	if (c[i] < 0 || c[i] > 255) {
-	    fprintf(stderr, "Illegal IP address %d.%d.%d.%d\n", c[0], c[1],
-		    c[2], c[3]);
+    memcpy(addrtext, start, addrlen);
+    addrtext[addrlen] = '\0';
+
+    /* skip past the closing ']' (if any) and any whitespace, then " #",
+     * to reach the hostname - same shape the sscanf() version parsed. */
+    start = end;
+    if (*start == ']')
+	start++;
+    while (*start && isspace((unsigned char)*start))
+	start++;
+    if (*start != '#')
+	return AFSCONF_SYNTAX;
+    start++;
+    /* FIXME: length of aname unknown here, same pre-existing limitation
+     * the sscanf() version had. */
+    code = sscanf(start, "%s", aname);
+    if (code != 1)
+	return AFSCONF_SYNTAX;
+
+    memset(&ra, 0, sizeof(ra));
+#ifdef HAVE_IPV6
+    if (strchr(addrtext, ':')) {
+	ra.addrtype = AF_INET6;
+	if (inet_pton(AF_INET6, addrtext, &ra.rxa_in6_addr) != 1) {
+	    fprintf(stderr, "Illegal IPv6 address %s\n", addrtext);
+	    return AFSCONF_SYNTAX;
+	}
+    } else
+#endif
+    {
+	ra.addrtype = AF_INET;
+	if (inet_pton(AF_INET, addrtext, &ra.rxa_in_addr) != 1) {
+	    fprintf(stderr, "Illegal IP address %s\n", addrtext);
 	    return AFSCONF_SYNTAX;
 	}
     }
-    addr->sin_family = AF_INET;
-    addr->sin_port = 0;
-#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
-    addr->sin_len = sizeof(struct sockaddr_in);
-#endif
-    tp = (char *)&addr->sin_addr;
-    *tp++ = c[0];
-    *tp++ = c[1];
-    *tp++ = c[2];
-    *tp++ = c[3];
+    if (rx_address_to_sockaddr(&ra, 0, 0, addr) != 0)
+	return AFSCONF_SYNTAX;
+    if (aclone)
+	*aclone = clone;
     return 0;
 }
 
@@ -1235,11 +1270,13 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 	acellInfo->timeout = ttl;
 	acellInfo->numServers = numServers;
 	for (i = 0; i < numServers; i++) {
-	    memcpy(&acellInfo->hostAddr[i].sin_addr.s_addr, &cellHostAddrs[i],
-		   sizeof(afs_int32));
+	    /* AFSDB/SRV lookup itself (getAFSServer()/afsconf_LookupServer()
+	     * above) is still IPv4-only - deliberately not widened in this
+	     * pass, see the IPv6 plan's D6 note on converting modules as
+	     * each phase reaches them rather than a tree-wide sweep. */
+	    rx_ipv4_to_sockaddr(cellHostAddrs[i], ports[i], 0,
+			       &acellInfo->hostAddr[i]);
 	    memcpy(acellInfo->hostName[i], cellHostNames[i], MAXHOSTCHARS);
-	    acellInfo->hostAddr[i].sin_family = AF_INET;
-	    acellInfo->hostAddr[i].sin_port = ports[i];
 
 	    if (realCellName) {
 		strlcpy(acellInfo->name, realCellName,
@@ -1307,14 +1344,11 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 	return -1;
 
     for (i = 0; i < numServers; i++) {
-	memcpy(&acellInfo->hostAddr[i].sin_addr.s_addr, &cellHostAddrs[i],
-	       sizeof(afs_uint32));
+	/* Still IPv4-only - see the matching comment in the AFS_NT40_ENV
+	 * variant of this function above. */
+	rx_ipv4_to_sockaddr(cellHostAddrs[i], aservice ? ports[i] : 0, 0,
+			   &acellInfo->hostAddr[i]);
 	memcpy(acellInfo->hostName[i], cellHostNames[i], MAXHOSTCHARS);
-	acellInfo->hostAddr[i].sin_family = AF_INET;
-        if (aservice)
-            acellInfo->hostAddr[i].sin_port = ports[i];
-        else
-            acellInfo->hostAddr[i].sin_port = 0;
     }
 
     acellInfo->numServers = numServers;
@@ -1406,7 +1440,7 @@ _GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
 		return AFSCONF_NOTFOUND;	/* service not found */
 	    }
 	    for (i = 0; i < acellInfo->numServers; i++) {
-		acellInfo->hostAddr[i].sin_port = tservice;
+		rx_set_sockaddr_port(&acellInfo->hostAddr[i], tservice);
 	    }
 	}
 	acellInfo->timeout = 0;
@@ -1420,43 +1454,49 @@ _GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
             !(acellInfo->flags & AFSCONF_CELL_FLAG_DNS_QUERIED)) {
             int j;
             short numServers=0;		                        /*Num active servers for the cell */
-            struct sockaddr_in hostAddr[MAXHOSTSPERCELL];	/*IP addresses for cell's servers */
+            struct rx_sockaddr hostAddr[MAXHOSTSPERCELL];	/*addresses for cell's servers */
             char hostName[MAXHOSTSPERCELL][MAXHOSTCHARS];	/*Names for cell's servers */
+            afs_uint16 port = rx_get_sockaddr_port(&acellInfo->hostAddr[0]);
 
             memset(&hostAddr, 0, sizeof(hostAddr));
             memset(&hostName, 0, sizeof(hostName));
 
             for ( j=0; j<acellInfo->numServers && numServers < MAXHOSTSPERCELL; j++ ) {
-                struct hostent *he = gethostbyname(acellInfo->hostName[j]);
+                struct addrinfo hints, *res = NULL, *rp;
                 int foundAddr = 0;
 
-                if (he && he->h_addrtype == AF_INET) {
+                memset(&hints, 0, sizeof(hints));
+                hints.ai_family = AF_UNSPEC;
+                hints.ai_socktype = SOCK_DGRAM;
+
+                if (getaddrinfo(acellInfo->hostName[j], NULL, &hints, &res) == 0) {
                     int i;
-                    /* obtain all the valid address from the list */
-                    for (i=0 ; he->h_addr_list[i] && numServers < MAXHOSTSPERCELL; i++) {
-                        /* check to see if this is a new address; if so insert it into the list */
+                    /* obtain all the valid addresses from the list, both
+                     * families, deduped against what's already collected */
+                    for (rp = res, i = 0;
+                         rp != NULL && numServers < MAXHOSTSPERCELL;
+                         rp = rp->ai_next, i++) {
+                        struct rx_sockaddr sa;
                         int k, dup;
-			afs_uint32 addr;
-			memcpy(&addr, he->h_addr_list[i], sizeof(addr));
+
+                        if (rx_addrinfo_to_sockaddr(rp, 0, &sa) != 0)
+                            continue;
                         for (k=0, dup=0; !dup && k < numServers; k++) {
-                            if (hostAddr[k].sin_addr.s_addr == addr) {
+                            if (rx_compare_sockaddr(&hostAddr[k], &sa, RXA_ADDR))
                                 dup = 1;
-			    }
                         }
                         if (dup)
                             continue;
 
-                        hostAddr[numServers].sin_family = AF_INET;
-                        hostAddr[numServers].sin_port = acellInfo->hostAddr[0].sin_port;
-#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
-                        hostAddr[numServers].sin_len = sizeof(struct sockaddr_in);
-#endif
-                        memcpy(&hostAddr[numServers].sin_addr.s_addr, he->h_addr_list[i], sizeof(afs_uint32));
+                        rx_set_sockaddr_port(&sa, port);
+                        hostAddr[numServers] = sa;
                         strcpy(hostName[numServers], acellInfo->hostName[j]);
                         foundAddr = 1;
                         numServers++;
                     }
                 }
+                if (res)
+                    freeaddrinfo(res);
                 if (!foundAddr) {
                     hostAddr[numServers] = acellInfo->hostAddr[j];
                     strcpy(hostName[numServers], acellInfo->hostName[j]);

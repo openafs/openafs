@@ -192,12 +192,12 @@ InitThisModule(int a_noAuthFlag, char *a_confDir, char *a_cellName)
 #ifdef USS_VOL_DB
 	printf
 	    ("[%s] Connecting to VLDB server 0x%x, port %d, service id %d\n",
-	     rn, info.hostAddr[i].sin_addr.s_addr, info.hostAddr[i].sin_port,
+	     rn, info.hostAddr[i].rxsa_s_addr, info.hostAddr[i].rxsa_in_port,
 	     USER_SERVICE_ID);
 #endif /* USS_VOL_DB */
 	serverconns[i] =
-	    rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-			     info.hostAddr[i].sin_port, USER_SERVICE_ID, sc,
+	    rx_NewConnection(info.hostAddr[i].rxsa_s_addr,
+			     info.hostAddr[i].rxsa_in_port, USER_SERVICE_ID, sc,
 			     scIndex);
     }
 

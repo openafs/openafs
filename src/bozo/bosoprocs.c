@@ -516,7 +516,7 @@ SBOZO_DeleteCellHost(struct rx_call *acall, char *aname)
 	goto fail;
     }
 
-    memset(&tcell.hostAddr[which], 0, sizeof(struct sockaddr_in));
+    memset(&tcell.hostAddr[which], 0, sizeof(struct rx_sockaddr));
     memset(tcell.hostName[which], 0, MAXHOSTCHARS);
     code =
 	afsconf_SetExtendedCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH,
@@ -596,7 +596,7 @@ SBOZO_AddCellHost(struct rx_call *acall, char *aname)
 	}
     }
 
-    memset(&tcell.hostAddr[which], 0, sizeof(struct sockaddr_in));
+    memset(&tcell.hostAddr[which], 0, sizeof(struct rx_sockaddr));
     strcpy(tcell.hostName[which], n);
     clones[which] = isClone;
     code =

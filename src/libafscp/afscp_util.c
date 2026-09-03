@@ -348,7 +348,7 @@ _GetVLservers(struct afscp_cell *cell)
     }
 
     for (i = 0; i < celldata.numServers; i++) {
-	conns[i] = rx_NewConnection(celldata.hostAddr[i].sin_addr.s_addr,
+	conns[i] = rx_NewConnection(celldata.hostAddr[i].rxsa_s_addr,
 				    htons(AFSCONF_VLDBPORT),
 				    USER_SERVICE_ID, cell->security,
 				    cell->scindex);

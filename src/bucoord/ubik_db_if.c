@@ -843,8 +843,8 @@ vldbClientInit(int noAuthFlag, int localauth, char *cellName,
 
     for (i = 0; i < info.numServers; i++)
 	serverconns[i] =
-	    rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-			     info.hostAddr[i].sin_port, USER_SERVICE_ID, sc,
+	    rx_NewConnection(info.hostAddr[i].rxsa_s_addr,
+			     info.hostAddr[i].rxsa_in_port, USER_SERVICE_ID, sc,
 			     scIndex);
     serverconns[i] = 0;
 
@@ -919,7 +919,7 @@ udbClientInit(int noAuthFlag, int localauth, char *cellName)
     /* establish connections to the servers. Check for failed connections? */
     for (i = 0; i < info.numServers; i++) {
 	udbHandle.uh_serverConn[i] =
-	    rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
+	    rx_NewConnection(info.hostAddr[i].rxsa_s_addr,
 			     htons(AFSCONF_BUDBPORT), BUDB_SERVICE,
 			     udbHandle.uh_secobj, udbHandle.uh_scIndex);
     }
