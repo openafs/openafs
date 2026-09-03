@@ -36,6 +36,11 @@
 
 /* Basic socket for client requests; other sockets (for receiving server requests) are in the service structures */
 EXT osi_socket rx_socket;
+#ifdef HAVE_IPV6
+/* IPv6 counterpart of rx_socket. OSI_NULLSOCKET when IPv6 is unavailable
+ * or rx_InitHost2() was not used to start Rx. */
+EXT osi_socket rx_socket6 GLOBALSINIT(OSI_NULLSOCKET);
+#endif
 
 /* The array of installed services.  Null terminated. */
 EXT struct rx_service *rx_services[RX_MAX_SERVICES + 1];

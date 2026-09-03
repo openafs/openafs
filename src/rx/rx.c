@@ -475,14 +475,40 @@ rxi_IsRunning(void)
     return rx_atomic_read(&rxi_running);
 }
 
+#ifdef HAVE_IPV6
+/*
+ * Build a struct rx_sockaddr for the IPv6 wildcard address (::) on the
+ * given port (network byte order).
+ */
+static void
+rxi_BuildIPv6AnySockaddr(afs_uint16 port, struct rx_sockaddr *sa)
+{
+    memset(sa, 0, sizeof(*sa));
+    sa->rxsa_in6_family = AF_INET6;
+    sa->rxsa_in6_addr = in6addr_any;
+    sa->rxsa_in6_port = port;
+    sa->addrlen = sizeof(struct sockaddr_in6);
+    sa->socktype = SOCK_DGRAM;
+#ifdef STRUCT_SOCKADDR_HAS_SA6_LEN
+    sa->rxsa_in6_len = sizeof(struct sockaddr_in6);
+#endif
+}
+#endif /* HAVE_IPV6 */
+
 /* Initialize rx.  A port number may be mentioned, in which case this
  * becomes the default port number for any service installed later.
  * If 0 is provided for the port number, a random port will be chosen
  * by the kernel.  Whether this will ever overlap anything in
  * /etc/services is anybody's guess...  Returns 0 on success, -1 on
- * error. */
+ * error.
+ *
+ * v6, if non-NULL, additionally opens rx_socket6 on v6's address (its port
+ * is ignored: rx_socket6 always ends up bound to the same numeric port as
+ * rx_socket, chosen below if v4's own port was 0). Opening the v6 socket
+ * is best-effort: failure there does not fail this call, only IPv4 is
+ * guaranteed. */
 int
-rx_InitHost(u_int host, u_int port)
+rx_InitHost2(const struct rx_sockaddr *v4, const struct rx_sockaddr *v6)
 {
 #ifdef KERNEL
     osi_timeval32_t tv;
@@ -490,6 +516,10 @@ rx_InitHost(u_int host, u_int port)
     struct timeval tv;
 #endif /* KERNEL */
     char *htable, *ptable;
+    afs_uint32 host = 0;
+    u_int port = rx_get_sockaddr_port(v4);
+
+    (void)rx_try_sockaddr_to_ipv4(v4, &host);
 
     SPLVAR;
 
@@ -518,7 +548,7 @@ rx_InitHost(u_int host, u_int port)
     /* Allocate and initialize a socket for client and perhaps server
      * connections. */
 
-    rx_socket = rxi_GetHostUDPSocket(host, (u_short) port);
+    rx_socket = rxi_GetHostUDPSocketSA(v4);
     if (rx_socket == OSI_NULLSOCKET) {
         goto addrinuse;
     }
@@ -644,6 +674,24 @@ rx_InitHost(u_int host, u_int port)
     rx_GetIFInfo();
 #endif
 
+#ifdef HAVE_IPV6
+    if (v6) {
+	struct rx_sockaddr sa6;
+
+	/* rx_socket6 must end up on the same numeric port as rx_socket,
+	 * which is now final (above) even if the caller asked for port 0.
+	 * v6's own address (but not its port) is honored, so a caller can
+	 * still request a specific local v6 address rather than "::". */
+	rx_copy_sockaddr(v6, &sa6);
+	sa6.rxsa_in6_port = rx_port;
+	rx_socket6 = rxi_GetHostUDPSocketSA(&sa6);
+	if (rx_socket6 == OSI_NULLSOCKET) {
+	    osi_Msg("rx_InitHost2: unable to open IPv6 socket; "
+		    "continuing IPv4-only\n");
+	}
+    }
+#endif /* HAVE_IPV6 */
+
     /* Start listener process (exact function is dependent on the
      * implementation environment--kernel or user space) */
     rxi_StartListener();
@@ -665,9 +713,39 @@ rx_InitHost(u_int host, u_int port)
 }
 
 int
+rx_InitHost(u_int host, u_int port)
+{
+    struct rx_sockaddr v4;
+
+    rx_ipv4_to_sockaddr(host, (u_short) port, 0, &v4);
+    return rx_InitHost2(&v4, NULL);
+}
+
+int
 rx_Init(u_int port)
 {
     return rx_InitHost(htonl(INADDR_ANY), port);
+}
+
+/*
+ * Like rx_Init(), but also opens an IPv6 listener (best-effort - see
+ * rx_InitHost2()) on the same port, bound to the IPv6 wildcard address.
+ */
+int
+rx_Init2(u_int port)
+{
+    struct rx_sockaddr v4;
+#ifdef HAVE_IPV6
+    struct rx_sockaddr v6;
+#endif
+
+    rx_ipv4_to_sockaddr(htonl(INADDR_ANY), (u_short) port, 0, &v4);
+#ifdef HAVE_IPV6
+    rxi_BuildIPv6AnySockaddr((u_short) port, &v6);
+    return rx_InitHost2(&v4, &v6);
+#else
+    return rx_InitHost2(&v4, NULL);
+#endif
 }
 
 /* RTT Timer
@@ -1074,7 +1152,12 @@ rx_NewConnectionSA(const struct rx_sockaddr *saddr, u_short sservice,
     conn->cid = rx_nextCid;
     update_nextCid();
     conn->peer = rxi_FindPeer(saddr, 1);
+#ifdef HAVE_IPV6
+    conn->socket = (saddr->rxsa_family == AF_INET6 && rx_socket6 != OSI_NULLSOCKET)
+	? rx_socket6 : rx_socket;
+#else
     conn->socket = rx_socket;
+#endif
     conn->serviceId = sservice;
     conn->securityObject = securityObject;
     conn->securityData = (void *) 0;
@@ -1762,6 +1845,15 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 		  afs_int32(*serviceProc) (struct rx_call * acall))
 {
     osi_socket socket = OSI_NULLSOCKET;
+#ifdef HAVE_IPV6
+    /* Automatically dual-stacked only when host is the IPv4 wildcard: a
+     * service bound to one specific IPv4 address has no natural IPv6
+     * counterpart to guess at. Opening this socket is best-effort, exactly
+     * like rx_InitHost2()'s: a service still works over IPv4 alone if IPv6
+     * is unavailable. */
+    osi_socket socket6 = OSI_NULLSOCKET;
+    int wantV6 = (host == htonl(INADDR_ANY));
+#endif
     struct rx_service *tservice;
     int i;
     SPLVAR;
@@ -1783,6 +1875,9 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 	}
 	port = rx_port;
 	socket = rx_socket;
+#ifdef HAVE_IPV6
+	socket6 = rx_socket6;
+#endif
     }
 
     tservice = rxi_AllocService();
@@ -1806,9 +1901,12 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 		    rxi_FreeService(tservice);
 		    return service;
 		}
-		/* Different service, same port: re-use the socket
-		 * which is bound to the same port */
+		/* Different service, same port: re-use the socket(s)
+		 * which are bound to the same port */
 		socket = service->socket;
+#ifdef HAVE_IPV6
+		socket6 = service->socket6;
+#endif
 	    }
 	} else {
 	    if (socket == OSI_NULLSOCKET) {
@@ -1821,8 +1919,19 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 		    return 0;
 		}
 	    }
+#ifdef HAVE_IPV6
+	    if (wantV6 && socket6 == OSI_NULLSOCKET) {
+		struct rx_sockaddr sa6;
+		rxi_BuildIPv6AnySockaddr(port, &sa6);
+		socket6 = rxi_GetHostUDPSocketSA(&sa6);
+		/* best effort: an IPv6-less host still gets the v4 service */
+	    }
+#endif
 	    service = tservice;
 	    service->socket = socket;
+#ifdef HAVE_IPV6
+	    service->socket6 = socket6;
+#endif
 	    service->serviceHost = host;
 	    service->servicePort = port;
 	    service->serviceId = serviceId;
@@ -2638,8 +2747,14 @@ rxi_FindService(osi_socket socket, u_short serviceId)
 {
     struct rx_service **sp;
     for (sp = &rx_services[0]; *sp; sp++) {
-	if ((*sp)->serviceId == serviceId && (*sp)->socket == socket)
+	if ((*sp)->serviceId != serviceId)
+	    continue;
+	if ((*sp)->socket == socket)
 	    return *sp;
+#ifdef HAVE_IPV6
+	if ((*sp)->socket6 == socket)
+	    return *sp;
+#endif
     }
     return 0;
 }
@@ -6599,24 +6714,21 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1,
     struct rx_connection *conn = arg1;
     struct rx_header theader;
     char tbuffer[1 + sizeof(struct rx_header)];
-    struct sockaddr_in taddr;
+    /* This NAT keepalive ping is not meaningful for an IPv6 peer (NAT
+     * traversal is primarily an IPv4 concern), and it is opt-in per
+     * connection (rx_SetConnSecondsUntilNatPing, off by default), so
+     * building it from the peer's IPv4 projection - which is 0 for a
+     * v6-only peer - is a deliberate no-op there, not a bug. */
+    struct rx_sockaddr taddr;
     char *tp;
     char a[1] = { 0 };
     int resched = 0;
     struct iovec tmpiov[2];
-    osi_socket socket =
-        (conn->type ==
-         RX_CLIENT_CONNECTION ? rx_socket : conn->service->socket);
-
+    osi_socket socket = conn->socket;
 
     tp = &tbuffer[sizeof(struct rx_header)];
-    taddr.sin_family = AF_INET;
-    taddr.sin_port = rx_PortOf(rx_PeerOf(conn));
-    taddr.sin_addr.s_addr = rx_HostOf(rx_PeerOf(conn));
-    memset(&taddr.sin_zero, 0, sizeof(taddr.sin_zero));
-#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
-    taddr.sin_len = sizeof(struct sockaddr_in);
-#endif
+    rx_ipv4_to_sockaddr(rx_HostOf(rx_PeerOf(conn)), rx_PortOf(rx_PeerOf(conn)),
+		       0, &taddr);
     memset(&theader, 0, sizeof(theader));
     theader.epoch = htonl(999);
     theader.cid = 0;
@@ -6632,7 +6744,11 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1,
     tmpiov[0].iov_base = tbuffer;
     tmpiov[0].iov_len = 1 + sizeof(struct rx_header);
 
+#ifdef KERNEL
+    rxi_NetSend(socket, &taddr.addr, tmpiov, 1, 1 + sizeof(struct rx_header), 1);
+#else
     rxi_NetSend(socket, &taddr, tmpiov, 1, 1 + sizeof(struct rx_header), 1);
+#endif
 
     MUTEX_ENTER(&conn->conn_data_lock);
     /* We ran, so the handle is no longer needed to try to cancel ourselves. */

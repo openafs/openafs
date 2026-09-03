@@ -85,15 +85,18 @@ afs_kmutex_t rx_if_mutex;
  * Make a socket for receiving/sending IP packets.  Set it into non-blocking
  * and large buffering modes.  If port isn't specified, the kernel will pick
  * one.  Returns the socket (>= 0) on success.  Returns OSI_NULLSOCKET on
- * failure. Port must be in network byte order.
+ * failure. sa's port must be in network byte order.
+ *
+ * This is the family-agnostic implementation; rxi_GetHostUDPSocket() below
+ * is a thin IPv4-only wrapper kept for the many existing callers.
  */
 osi_socket
-rxi_GetHostUDPSocket(u_int ahost, u_short port)
+rxi_GetHostUDPSocketSA(const struct rx_sockaddr *sa)
 {
     int binds, code = 0;
     osi_socket socketFd = OSI_NULLSOCKET;
-    struct sockaddr_in taddr;
-    char *name = "rxi_GetUDPSocket: ";
+    char *name = "rxi_GetHostUDPSocketSA: ";
+    u_short port = rx_get_sockaddr_port(sa);
 #ifdef AFS_LINUX_ENV
 # if defined(AFS_ADAPT_PMTU)
     int pmtu = IP_PMTUDISC_WANT;
@@ -114,7 +117,7 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	goto error;
     }
 #endif
-    socketFd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    socketFd = socket(sa->rxsa_family, SOCK_DGRAM, IPPROTO_UDP);
 
     if (socketFd == OSI_NULLSOCKET) {
 #ifdef AFS_NT40_ENV
@@ -129,18 +132,21 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     rxi_xmit_init(socketFd);
 #endif /* AFS_NT40_ENV */
 
-    taddr.sin_addr.s_addr = ahost;
-    taddr.sin_family = AF_INET;
-    taddr.sin_port = (u_short) port;
-    memset(&taddr.sin_zero, 0, sizeof(taddr.sin_zero));
-#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
-    taddr.sin_len = sizeof(struct sockaddr_in);
+#if defined(HAVE_IPV6) && defined(HAVE_IPV6_V6ONLY)
+    if (sa->rxsa_family == AF_INET6) {
+	/* Two separate sockets, one per family (D2): never accept a v4
+	 * connection on the v6 socket via a v4-mapped address. */
+	int on = 1;
+	setsockopt(socketFd, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on,
+		  sizeof(on));
+    }
 #endif
+
 #define MAX_RX_BINDS 10
     for (binds = 0; binds < MAX_RX_BINDS; binds++) {
 	if (binds)
 	    rxi_Delay(10);
-	code = bind(socketFd, (struct sockaddr *)&taddr, sizeof(taddr));
+	code = bind(socketFd, (struct sockaddr *)&sa->addr, sa->addrlen);
         break;
     }
     if (code) {
@@ -198,12 +204,26 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     }
 
 #ifdef AFS_LINUX_ENV
-    setsockopt(socketFd, SOL_IP, IP_MTU_DISCOVER, &pmtu, sizeof(pmtu));
+    if (sa->rxsa_family == AF_INET) {
+	setsockopt(socketFd, SOL_IP, IP_MTU_DISCOVER, &pmtu, sizeof(pmtu));
+    }
+    /* A v6 IPV6_MTU_DISCOVER equivalent is deliberately not set here yet:
+     * the PMTUDISC_* value constants are Linux-specific and this code path
+     * cannot be exercised on the platform this was written on. Revisit
+     * once verified on Linux. */
 #endif
 #ifdef AFS_RXERRQ_ENV
     {
 	int recverr = 1;
-	setsockopt(socketFd, SOL_IP, IP_RECVERR, &recverr, sizeof(recverr));
+	if (sa->rxsa_family == AF_INET) {
+	    setsockopt(socketFd, SOL_IP, IP_RECVERR, &recverr,
+		      sizeof(recverr));
+#if defined(HAVE_IPV6) && defined(HAVE_IPV6_RECVERR)
+	} else if (sa->rxsa_family == AF_INET6) {
+	    setsockopt(socketFd, SOL_IPV6, IPV6_RECVERR, &recverr,
+		      sizeof(recverr));
+#endif
+	}
     }
 #endif
     if (rxi_Listen(socketFd) < 0) {
@@ -222,6 +242,15 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 #endif
 
     return OSI_NULLSOCKET;
+}
+
+osi_socket
+rxi_GetHostUDPSocket(u_int ahost, u_short port)
+{
+    struct rx_sockaddr sa;
+
+    rx_ipv4_to_sockaddr(ahost, port, 0, &sa);
+    return rxi_GetHostUDPSocketSA(&sa);
 }
 
 osi_socket

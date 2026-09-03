@@ -199,6 +199,7 @@ extern const struct rx_sockaddr *rx_SockaddrOf(struct rx_peer *peer);
 typedef void (*rx_destructor_t) (void *);
 int rx_KeyCreate(rx_destructor_t);
 osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
+osi_socket rxi_GetHostUDPSocketSA(const struct rx_sockaddr *sa);
 osi_socket rxi_GetUDPSocket(u_short port);
 # endif /* !KERNEL */
 
@@ -326,6 +327,13 @@ struct rx_service {
     u_short servicePort;	/* UDP port for this service */
     char *serviceName;		/* Name of the service */
     osi_socket socket;		/* socket structure or file descriptor */
+#ifdef HAVE_IPV6
+    /* IPv6 counterpart of socket, opened automatically alongside it when
+     * serviceHost is INADDR_ANY (there is no way to guess a "matching" v6
+     * address for a service bound to one specific IPv4 address). Unused
+     * (OSI_NULLSOCKET) if IPv6 is unavailable or was not requested. */
+    osi_socket socket6;
+#endif
     u_short nRequestsRunning;	/* Number of requests currently in progress */
     u_short nSecurityObjects;	/* Number of entries in security objects array */
     struct rx_securityClass **securityObjects;	/* Array of security class objects */

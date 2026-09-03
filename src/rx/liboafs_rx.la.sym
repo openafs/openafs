@@ -48,7 +48,9 @@ rx_GetThreadNum
 rx_HostOf
 rx_IncrementTimeAndCount
 rx_Init
+rx_Init2
 rx_InitHost
+rx_InitHost2
 rx_InterruptCall
 rx_IsServerConn
 rx_IsUsingPktCksum

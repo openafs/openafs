@@ -1612,25 +1612,30 @@ rxi_SplitJumboPacket(struct rx_packet *p, afs_uint32 host, short port,
 }
 
 #ifndef KERNEL
-/* Send a udp datagram.
+/*
+ * Send a udp datagram.
  *
- * addr is void* rather than struct rx_sockaddr*, because this function is
- * reached (via rxi_NetSend) from rxi_SendPacket() et al, which are shared
- * with KERNEL builds and still address a struct sockaddr_in there; making
- * this dual-stack-aware, together with the equivalent per-platform KERNEL
- * osi_NetSend()s, is follow-on work. */
+ * addr is void* (rather than struct rx_sockaddr*) purely so this shares a
+ * declaration with rxi_NetSend() and the KERNEL per-platform osi_NetSend()s,
+ * which still take a plain struct sockaddr_in* - real KERNEL callers are
+ * unaffected by this being dual-stack-aware here, since rxi_NetSend()'s own
+ * callers pick which shape of pointer to hand it based on #ifdef KERNEL
+ * (see rxi_SendPacket() et al). In this, the actual !KERNEL implementation,
+ * addr always points at a real struct rx_sockaddr.
+ */
 int
 osi_NetSend(osi_socket socket, void *addr, struct iovec *dvec, int nvecs,
 	    int length, int istack)
 {
     struct msghdr msg;
-	int ret;
+    struct rx_sockaddr *sa = addr;
+    int ret;
 
     memset(&msg, 0, sizeof(msg));
     msg.msg_iov = dvec;
     msg.msg_iovlen = nvecs;
-    msg.msg_name = addr;
-    msg.msg_namelen = sizeof(struct sockaddr_in);
+    msg.msg_name = &sa->addr;
+    msg.msg_namelen = sa->addrlen;
 
     ret = rxi_Sendmsg(socket, &msg, 0);
 
@@ -2138,20 +2143,16 @@ static void
 rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 		    afs_uint32 ahost, short aport, afs_int32 istack)
 {
-    struct sockaddr_in taddr;
+    /* The rxdebug wire protocol is still IPv4-only, so ahost/aport (taken
+     * from the request packet) are always IPv4 here. */
+    struct rx_sockaddr addr;
     unsigned int i, nbytes, savelen = 0;
     int saven = 0;
 #ifdef KERNEL
     int waslocked = ISAFS_GLOCK();
 #endif
 
-    taddr.sin_family = AF_INET;
-    taddr.sin_port = aport;
-    taddr.sin_addr.s_addr = ahost;
-    memset(&taddr.sin_zero, 0, sizeof(taddr.sin_zero));
-#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
-    taddr.sin_len = sizeof(struct sockaddr_in);
-#endif
+    rx_ipv4_to_sockaddr(ahost, aport, 0, &addr);
 
     /* We need to trim the niovecs. */
     nbytes = apacket->length;
@@ -2179,8 +2180,13 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 #endif
 #endif
     /* debug packets are not reliably delivered, hence the cast below. */
-    (void)rxi_NetSend(asocket, &taddr, apacket->wirevec, apacket->niovecs,
+#ifdef KERNEL
+    (void)rxi_NetSend(asocket, &addr.addr, apacket->wirevec, apacket->niovecs,
 		      apacket->length + RX_HEADER_SIZE, istack);
+#else
+    (void)rxi_NetSend(asocket, &addr, apacket->wirevec, apacket->niovecs,
+		      apacket->length + RX_HEADER_SIZE, istack);
+#endif
 #ifdef KERNEL
 #ifdef RX_KERNEL_TRACE
     if (ICL_SETACTIVE(afs_iclSetp)) {
@@ -2238,21 +2244,14 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
     int waslocked;
 #endif
     int code;
-    struct sockaddr_in addr;
+    struct rx_sockaddr addr;
     struct rx_peer *peer = conn->peer;
     osi_socket socket;
 #ifdef RXDEBUG
     char deliveryType = 'S';
 #endif
-    /* The address we're sending the packet to.
-     * TODO: peer->saddr may not be AF_INET once a peer can be IPv6; this
-     * send path is still IPv4-only, converted separately in a later
-     * change alongside the KERNEL per-platform osi_NetSend()s. */
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = rx_PortOf(peer);
-    addr.sin_addr.s_addr = rx_HostOf(peer);
-    memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
+    /* The address we're sending the packet to. */
+    rx_copy_sockaddr(&peer->saddr, &addr);
 
     /* This stuff should be revamped, I think, so that most, if not
      * all, of the header stuff is always added here.  We could
@@ -2286,9 +2285,10 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
     }
 #ifdef RXDEBUG
     /* If an output tracer function is defined, call it with the packet and
-     * network address.  Note this function may modify its arguments. */
-    if (rx_almostSent) {
-	int drop = (*rx_almostSent) (p, &addr);
+     * network address.  Note this function may modify its arguments.
+     * rx_almostSent is an IPv4-only debug hook; skip it for a v6 peer. */
+    if (rx_almostSent && addr.rxsa_family == AF_INET) {
+	int drop = (*rx_almostSent) (p, &addr.addr.sin);
 	/* drop packet if return value is non-zero? */
 	if (drop)
 	    deliveryType = 'D';	/* Drop the packet */
@@ -2300,10 +2300,10 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 				 * touch ALL the fields */
 
     /* Send the packet out on the same socket that related packets are being
-     * received on */
-    socket =
-	(conn->type ==
-	 RX_CLIENT_CONNECTION ? rx_socket : conn->service->socket);
+     * received on. conn->socket is set at connection-creation time to the
+     * correct family (v4 or v6) socket, replacing the old client/server,
+     * IPv4-only-service ternary this used to be. */
+    socket = conn->socket;
 
 #ifdef RXDEBUG
     /* Possibly drop this packet,  for testing purposes */
@@ -2334,9 +2334,14 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	    AFS_GUNLOCK();
 #endif
 #endif
-	if ((code =
-	     rxi_NetSend(socket, &addr, p->wirevec, p->niovecs,
-			 p->length + RX_HEADER_SIZE, istack)) != 0) {
+#ifdef KERNEL
+	code = rxi_NetSend(socket, &addr.addr, p->wirevec, p->niovecs,
+			   p->length + RX_HEADER_SIZE, istack);
+#else
+	code = rxi_NetSend(socket, &addr, p->wirevec, p->niovecs,
+			   p->length + RX_HEADER_SIZE, istack);
+#endif
+	if (code != 0) {
 	    /* send failed, so let's hurry up the resend, eh? */
             if (rx_stats_active)
                 rx_atomic_inc(&rx_stats.netSendFailures);
@@ -2390,7 +2395,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 #if     defined(AFS_SUN5_ENV) && defined(KERNEL)
     int waslocked;
 #endif
-    struct sockaddr_in addr;
+    struct rx_sockaddr addr;
     struct rx_peer *peer = conn->peer;
     osi_socket socket;
     struct rx_packet *p = NULL;
@@ -2402,12 +2407,8 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 #ifdef RXDEBUG
     char deliveryType = 'S';
 #endif
-    /* The address we're sending the packet to. TODO: see the note in
-     * rxi_SendPacket() above about IPv6 peers. */
-    addr.sin_family = AF_INET;
-    addr.sin_port = rx_PortOf(peer);
-    addr.sin_addr.s_addr = rx_HostOf(peer);
-    memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
+    /* The address we're sending the packet to. */
+    rx_copy_sockaddr(&peer->saddr, &addr);
 
     if (len + 1 > RX_MAXIOVECS) {
 	osi_Panic("rxi_SendPacketList, len > RX_MAXIOVECS\n");
@@ -2494,9 +2495,10 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 	}
 #ifdef RXDEBUG
 	/* If an output tracer function is defined, call it with the packet and
-	 * network address.  Note this function may modify its arguments. */
-	if (rx_almostSent) {
-	    int drop = (*rx_almostSent) (p, &addr);
+	 * network address.  Note this function may modify its arguments.
+	 * rx_almostSent is an IPv4-only debug hook; skip it for a v6 peer. */
+	if (rx_almostSent && addr.rxsa_family == AF_INET) {
+	    int drop = (*rx_almostSent) (p, &addr.addr.sin);
 	    /* drop packet if return value is non-zero? */
 	    if (drop)
 		deliveryType = 'D';	/* Drop the packet */
@@ -2509,10 +2511,10 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     }
 
     /* Send the packet out on the same socket that related packets are being
-     * received on */
-    socket =
-	(conn->type ==
-	 RX_CLIENT_CONNECTION ? rx_socket : conn->service->socket);
+     * received on. conn->socket is set at connection-creation time to the
+     * correct family (v4 or v6) socket, replacing the old client/server,
+     * IPv4-only-service ternary this used to be. */
+    socket = conn->socket;
 
 #ifdef RXDEBUG
     /* Possibly drop this packet,  for testing purposes */
@@ -2533,9 +2535,14 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 	if (!istack && waslocked)
 	    AFS_GUNLOCK();
 #endif
-	if ((code =
-	     rxi_NetSend(socket, &addr, &wirevec[0], len + 1, length,
-			 istack)) != 0) {
+#ifdef KERNEL
+	code = rxi_NetSend(socket, &addr.addr, &wirevec[0], len + 1, length,
+			   istack);
+#else
+	code = rxi_NetSend(socket, &addr, &wirevec[0], len + 1, length,
+			   istack);
+#endif
+	if (code != 0) {
 	    /* send failed, so let's hurry up the resend, eh? */
             if (rx_stats_active)
                 rx_atomic_inc(&rx_stats.netSendFailures);
@@ -2575,14 +2582,16 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     }
 }
 
-/* Send a raw abort packet, without any call or connection structures */
+/* Send a raw abort packet, without any call or connection structures.
+ * host/port are always IPv4: every caller derives them from a peer's or a
+ * connection's IPv4 projection (rx_HostOf()/rx_PortOf()). */
 void
 rxi_SendRawAbort(osi_socket socket, afs_uint32 host, u_short port,
 		 afs_uint32 serial, afs_int32 error,
 		 struct rx_packet *source, int istack)
 {
     struct rx_header theader;
-    struct sockaddr_in addr;
+    struct rx_sockaddr addr;
     struct iovec iov[2];
 
     memset(&theader, 0, sizeof(theader));
@@ -2609,16 +2618,15 @@ rxi_SendRawAbort(osi_socket socket, afs_uint32 host, u_short port,
     iov[1].iov_base = &error;
     iov[1].iov_len = sizeof(error);
 
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = host;
-    addr.sin_port = port;
-    memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
-#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
-    addr.sin_len = sizeof(struct sockaddr_in);
-#endif
+    rx_ipv4_to_sockaddr(host, port, 0, &addr);
 
+#ifdef KERNEL
+    rxi_NetSend(socket, &addr.addr, iov, 2,
+		sizeof(struct rx_header) + sizeof(error), istack);
+#else
     rxi_NetSend(socket, &addr, iov, 2,
 		sizeof(struct rx_header) + sizeof(error), istack);
+#endif
 }
 
 /* Send a "special" packet to the peer connection.  If call is
