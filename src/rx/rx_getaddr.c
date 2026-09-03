@@ -566,6 +566,16 @@ rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
 }
 #endif
 
+#if defined(UKERNEL) && defined(HAVE_IFADDRS_H)
+/* The top-of-file #ifndef KERNEL/#else split (which pulls in <ifaddrs.h>
+ * only in the former) predates this function and doesn't account for the
+ * "!KERNEL || UKERNEL" scope the rest of this file uses below - UKERNEL
+ * (src/libuafs) links against the real system libc and has <ifaddrs.h>
+ * available same as plain userspace, it just isn't included yet at this
+ * point in the file for that case. */
+# include <ifaddrs.h>
+#endif
+
 #ifdef HAVE_GETIFADDRS
 /*
  * rx_getAllSockaddr - fill in a struct rx_sockaddr[] with every configured,

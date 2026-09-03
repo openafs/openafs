@@ -546,9 +546,17 @@ rx_InitHost2(const struct rx_sockaddr *v4, const struct rx_sockaddr *v6)
 #endif
 
     /* Allocate and initialize a socket for client and perhaps server
-     * connections. */
-
+     * connections. rxi_GetHostUDPSocketSA() is a userspace-only API (see
+     * rx_user.c); real KERNEL builds keep using the IPv4-only
+     * rxi_GetHostUDPSocket() from rx_kcommon.c until the per-platform
+     * kernel listener sockets are converted (v6 is simply never
+     * requested there yet, since only rx_Init2() ever passes a non-NULL
+     * v6, and that is itself unreachable from kernel code). */
+#ifndef KERNEL
     rx_socket = rxi_GetHostUDPSocketSA(v4);
+#else
+    rx_socket = rxi_GetHostUDPSocket(host, (u_short) port);
+#endif
     if (rx_socket == OSI_NULLSOCKET) {
         goto addrinuse;
     }
@@ -674,7 +682,7 @@ rx_InitHost2(const struct rx_sockaddr *v4, const struct rx_sockaddr *v6)
     rx_GetIFInfo();
 #endif
 
-#ifdef HAVE_IPV6
+#if defined(HAVE_IPV6) && !defined(KERNEL)
     if (v6) {
 	struct rx_sockaddr sa6;
 
@@ -690,7 +698,7 @@ rx_InitHost2(const struct rx_sockaddr *v4, const struct rx_sockaddr *v6)
 		    "continuing IPv4-only\n");
 	}
     }
-#endif /* HAVE_IPV6 */
+#endif /* HAVE_IPV6 && !KERNEL */
 
     /* Start listener process (exact function is dependent on the
      * implementation environment--kernel or user space) */
@@ -1850,9 +1858,13 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
      * service bound to one specific IPv4 address has no natural IPv6
      * counterpart to guess at. Opening this socket is best-effort, exactly
      * like rx_InitHost2()'s: a service still works over IPv4 alone if IPv6
-     * is unavailable. */
+     * is unavailable. Userspace-only for now (see rx_InitHost2()'s v6
+     * block for why): wantV6 would otherwise sit unused in a KERNEL
+     * build, since only the !KERNEL block below ever reads it. */
     osi_socket socket6 = OSI_NULLSOCKET;
+# ifndef KERNEL
     int wantV6 = (host == htonl(INADDR_ANY));
+# endif
 #endif
     struct rx_service *tservice;
     int i;
@@ -1919,14 +1931,14 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 		    return 0;
 		}
 	    }
-#ifdef HAVE_IPV6
+#if defined(HAVE_IPV6) && !defined(KERNEL)
 	    if (wantV6 && socket6 == OSI_NULLSOCKET) {
 		struct rx_sockaddr sa6;
 		rxi_BuildIPv6AnySockaddr(port, &sa6);
 		socket6 = rxi_GetHostUDPSocketSA(&sa6);
 		/* best effort: an IPv6-less host still gets the v4 service */
 	    }
-#endif
+#endif /* HAVE_IPV6 && !KERNEL */
 	    service = tservice;
 	    service->socket = socket;
 #ifdef HAVE_IPV6

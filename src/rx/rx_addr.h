@@ -43,10 +43,21 @@
  * ("netinet/in.h"/<netinet/in.h>). Pull in struct sockaddr_in6/in6_addr the
  * same way rx.h pulls in the IPv4 equivalents: quoted (and thus subject to
  * the platform's kernel-build header aliasing, e.g. the "netinet" -> Linux
- * kernel "linux" directory symlink) under KERNEL, angle-bracket otherwise.
+ * kernel "linux" directory symlink) under a real KERNEL build, angle-bracket
+ * otherwise.
+ *
+ * UKERNEL (src/libuafs's userspace kernel simulation) is excluded from the
+ * KERNEL case even though it also defines KERNEL: it links against the
+ * real system libc, not actual kernel headers, and has no netinet-aliasing
+ * symlink of its own - a real build failure caught only once this was
+ * finally build-tested against a real Linux target (this whole file was
+ * previously verified only via macOS userspace builds). The angle-bracket
+ * <netinet/in.h> already carries struct sockaddr_in6/in6_addr on both
+ * glibc and Darwin - glibc has no separate netinet/in6.h at all, unlike
+ * the BSD-heritage split this comment used to assume.
  */
 #ifdef HAVE_IPV6
-# ifdef KERNEL
+# if defined(KERNEL) && !defined(UKERNEL)
 #  include "netinet/in6.h"
 # else
 #  include <netinet/in.h>
@@ -61,7 +72,13 @@ typedef afs_uint16 rx_service_t;
 struct rx_sockaddr {
     rx_service_t service;	/**< rx service id, 0 if not applicable */
     int socktype;		/**< socket type (e.g. SOCK_DGRAM) */
-    socklen_t addrlen;		/**< length in bytes of the active union member */
+    /* afs_uint32, not socklen_t: this struct is also built under KERNEL
+     * (a real Linux kernel module has no socklen_t at all), and every use
+     * of this field elsewhere in the tree passes it by value (to bind()'s
+     * socklen_t parameter, or assigns it from sizeof()/msg_namelen), never
+     * by address as a socklen_t* out-parameter - so the narrower portable
+     * type is a safe, silent-conversion fit everywhere it's used. */
+    afs_uint32 addrlen;		/**< length in bytes of the active union member */
     union {
 	struct sockaddr sa;
 	struct sockaddr_in sin;

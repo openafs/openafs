@@ -766,8 +766,11 @@ rxi_InitPeerParams(struct rx_peer *pp)
     sock=socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock != OSI_NULLSOCKET) {
         addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = pp->host;
-        addr.sin_port = pp->port;
+        /* SOL_IP/IP_MTU below is IPv4-specific, so the IPv4 projection is
+         * all this needs; a v6-only peer (host 0) just skips the connect()
+         * below and falls through to the generic ifMTU set above. */
+        addr.sin_addr.s_addr = rx_HostOf(pp);
+        addr.sin_port = rx_PortOf(pp);
         memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
         if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
             int mtu=0;
