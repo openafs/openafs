@@ -49,8 +49,6 @@ struct prheader {
     afs_int32 idHash[HASHSIZE];	/* hash table for ids */
 };
 
-extern struct prheader cheader;
-
 #define set_header_word(ctx,field,value) \
   pr_Write ((ctx), 0, ((char *)&(ctx->cheader->field) - (char *)ctx->cheader),   \
 	    ((ctx->cheader->field = (value)), (char *)&(ctx->cheader->field)),    \

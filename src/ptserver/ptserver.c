@@ -142,7 +142,6 @@
 #include "error_macros.h"
 
 /* make	all of these into a structure if you want */
-struct prheader cheader;
 struct ubik_dbase *dbase;
 struct afsconf_dir *prdir;
 

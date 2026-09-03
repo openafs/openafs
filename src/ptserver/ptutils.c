@@ -52,6 +52,8 @@ static int AddAuthGroup(struct prentry *tentry, prlist *alist, afs_int32 *size);
 
 static char *whoami = "ptserver";
 
+static struct prheader rd_cheader;
+
 int prp_user_default = PRP_USER_DEFAULT;
 int prp_group_default = PRP_GROUP_DEFAULT;
 
@@ -85,7 +87,7 @@ int (*pt_save_dbase_write)(struct ubik_dbase *, afs_int32, void *, afs_int32,
 int
 pt_mywrite(struct ubik_dbase *tdb, afs_int32 fno, void *bp, afs_int32 pos, afs_int32 count)
 {
-    afs_uint32 headersize = ntohl(cheader.headerSize);
+    afs_uint32 headersize = ntohl(rd_cheader.headerSize);
 
     if (fno == 0 && pos + count > headersize) {
 	afs_int32 p, l, c, o;
@@ -1820,7 +1822,7 @@ pr_BeginTrans(struct pt_ctx *ctx, afs_int32 transMode, int *a_valid)
 	goto done;
     }
 
-    ctx->cheader = &cheader;
+    ctx->cheader = &rd_cheader;
 
     code = ubik_CheckCache(ctx->trans, UpdateCache, ctx);
     if (code != 0) {

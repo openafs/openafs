@@ -172,4 +172,3 @@ afsconf_GetNoAuthFlag(struct afsconf_dir *adir)
 
 
 char *prdir = "/dev/null";
-struct prheader cheader;
