@@ -125,7 +125,7 @@ static struct rx_packet *rxi_SendCallAbort(struct rx_call *call,
 					   int istack, int force);
 static void rxi_AckAll(struct rx_call *call);
 static struct rx_connection
-	*rxi_FindConnection(osi_socket socket, afs_uint32 host, u_short port,
+	*rxi_FindConnection(osi_socket socket, const struct rx_sockaddr *sa,
 			    u_short serviceId, afs_uint32 cid,
 			    afs_uint32 epoch, int type, u_int securityIndex,
                             int *unknownService);
@@ -1041,21 +1041,23 @@ rx_StartServer(int donateMe)
  * specified security object to implement the security model for this
  * connection. */
 struct rx_connection *
-rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
-		 struct rx_securityClass *securityObject,
-		 int serviceSecurityIndex)
+rx_NewConnectionSA(const struct rx_sockaddr *saddr, u_short sservice,
+		   struct rx_securityClass *securityObject,
+		   int serviceSecurityIndex)
 {
     int hashindex, i;
     struct rx_connection *conn;
     int code;
+    afs_uint32 shost_dbg = 0;
 
     SPLVAR;
 
     clock_NewTime();
+    (void)rx_try_sockaddr_to_ipv4(saddr, &shost_dbg);
     dpf(("rx_NewConnection(host %x, port %u, service %u, securityObject %p, "
 	 "serviceSecurityIndex %d)\n",
-         ntohl(shost), ntohs(sport), sservice, securityObject,
-	 serviceSecurityIndex));
+         ntohl(shost_dbg), ntohs(rx_get_sockaddr_port(saddr)), sservice,
+	 securityObject, serviceSecurityIndex));
 
     /* Vasilsi said: "NETPRI protects Cid and Alloc", but can this be true in
      * the case of kmem_alloc? */
@@ -1071,7 +1073,8 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
     conn->epoch = rx_epoch;
     conn->cid = rx_nextCid;
     update_nextCid();
-    conn->peer = rxi_FindPeer(shost, sport, 1);
+    conn->peer = rxi_FindPeer(saddr, 1);
+    conn->socket = rx_socket;
     conn->serviceId = sservice;
     conn->securityObject = securityObject;
     conn->securityData = (void *) 0;
@@ -1093,7 +1096,7 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
 
     code = RXS_NewConnection(securityObject, conn);
     hashindex =
-	CONN_HASH(shost, sport, conn->cid, conn->epoch, RX_CLIENT_CONNECTION);
+	CONN_HASH(0, 0, conn->cid, conn->epoch, RX_CLIENT_CONNECTION);
 
     conn->refCount++;		/* no lock required since only this thread knows... */
     conn->next = rx_connHashTable[hashindex];
@@ -1106,6 +1109,18 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
 	rxi_ConnectionError(conn, code);
     }
     return conn;
+}
+
+struct rx_connection *
+rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
+		 struct rx_securityClass *securityObject,
+		 int serviceSecurityIndex)
+{
+    struct rx_sockaddr saddr;
+
+    rx_ipv4_to_sockaddr(shost, sport, 0, &saddr);
+    return rx_NewConnectionSA(&saddr, sservice, securityObject,
+			      serviceSecurityIndex);
 }
 
 /**
@@ -1347,7 +1362,7 @@ rxi_DestroyConnectionNoLock(struct rx_connection *conn)
     /* Remove from connection hash table before proceeding */
     conn_ptr =
 	&rx_connHashTable[CONN_HASH
-			  (peer->host, peer->port, conn->cid, conn->epoch,
+			  (0, 0, conn->cid, conn->epoch,
 			   conn->type)];
     for (; *conn_ptr; conn_ptr = &(*conn_ptr)->next) {
 	if (*conn_ptr == conn) {
@@ -2865,15 +2880,24 @@ rxi_Free(void *addr, size_t size)
 }
 
 void
-rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host, afs_uint32 port, int mtu)
+rxi_SetPeerMtu(struct rx_peer *peer, const struct rx_sockaddr *sa, int mtu)
 {
     struct rx_peer **peer_ptr = NULL, **peer_end = NULL;
     struct rx_peer *next = NULL;
     int hashIndex;
+    /* When the caller already has the peer in hand, sa is unused (and may
+     * be NULL) - this mirrors the historical behavior, where callers that
+     * passed a peer directly also always passed host==0, which made the
+     * "wildcard" test below false regardless of port. A zero port means
+     * "every peer at this address", regardless of port - used when an
+     * ICMP error names only a host - but only when we are searching for
+     * the peer(s) ourselves. */
+    int searching = (peer == NULL);
+    int wildcard = searching && (rx_get_sockaddr_port(sa) == 0);
 
-    if (!peer) {
+    if (searching) {
 	MUTEX_ENTER(&rx_peerHashTable_lock);
-	if (port == 0) {
+	if (wildcard) {
 	    peer_ptr = &rx_peerHashTable[0];
 	    peer_end = &rx_peerHashTable[rx_hashTableSize];
 	    next = NULL;
@@ -2883,14 +2907,14 @@ rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host, afs_uint32 port, int mtu)
 		    peer = *peer_ptr;
 		for ( ; peer; peer = next) {
 		    next = peer->next;
-		    if (host == peer->host)
+		    if (rx_compare_sockaddr(&peer->saddr, sa, RXA_ADDR))
 			break;
 		}
 	    }
 	} else {
-	    hashIndex = PEER_HASH(host, port);
+	    hashIndex = rx_hash_sockaddr(sa, rx_hashTableSize);
 	    for (peer = rx_peerHashTable[hashIndex]; peer; peer = peer->next) {
-		if ((peer->host == host) && (peer->port == port))
+		if (rx_compare_sockaddr(&peer->saddr, sa, RXA_AP))
 		    break;
 	    }
 	}
@@ -2919,7 +2943,7 @@ rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host, afs_uint32 port, int mtu)
 
         MUTEX_ENTER(&rx_peerHashTable_lock);
         peer->refCount--;
-        if (host && !port) {
+        if (wildcard) {
             peer = next;
 	    /* pick up where we left off */
             goto resume;
@@ -2930,15 +2954,15 @@ rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host, afs_uint32 port, int mtu)
 
 #ifdef AFS_RXERRQ_ENV
 static void
-rxi_SetPeerDead(struct sock_extended_err *err, afs_uint32 host, afs_uint16 port)
+rxi_SetPeerDead(struct sock_extended_err *err, const struct rx_sockaddr *sa)
 {
-    int hashIndex = PEER_HASH(host, port);
+    int hashIndex = rx_hash_sockaddr(sa, rx_hashTableSize);
     struct rx_peer *peer;
 
     MUTEX_ENTER(&rx_peerHashTable_lock);
 
     for (peer = rx_peerHashTable[hashIndex]; peer; peer = peer->next) {
-	if (peer->host == host && peer->port == port) {
+	if (rx_compare_sockaddr(&peer->saddr, sa, RXA_AP)) {
 	    peer->refCount++;
 	    break;
 	}
@@ -2961,11 +2985,11 @@ rxi_SetPeerDead(struct sock_extended_err *err, afs_uint32 host, afs_uint16 port)
 }
 
 void
-rxi_ProcessNetError(struct sock_extended_err *err, afs_uint32 addr, afs_uint16 port)
+rxi_ProcessNetError(struct sock_extended_err *err, const struct rx_sockaddr *sa)
 {
 # ifdef AFS_ADAPT_PMTU
     if (err->ee_errno == EMSGSIZE && err->ee_info >= 68) {
-	rxi_SetPeerMtu(NULL, addr, port, err->ee_info - RX_IPUDP_SIZE);
+	rxi_SetPeerMtu(NULL, sa, err->ee_info - RX_IPUDP_SIZE);
 	return;
     }
 # endif
@@ -2976,7 +3000,7 @@ rxi_ProcessNetError(struct sock_extended_err *err, afs_uint32 addr, afs_uint16 p
 	case ICMP_PORT_UNREACH:
 	case ICMP_NET_ANO:
 	case ICMP_HOST_ANO:
-	    rxi_SetPeerDead(err, addr, port);
+	    rxi_SetPeerDead(err, sa);
 	    break;
 	}
     }
@@ -3062,21 +3086,20 @@ rx_GetNetworkError(struct rx_connection *conn, int *err_origin, int *err_type,
  * new one will be allocated and initialized
  */
 struct rx_peer *
-rxi_FindPeer(afs_uint32 host, u_short port, int create)
+rxi_FindPeer(const struct rx_sockaddr *sa, int create)
 {
     struct rx_peer *pp;
-    int hashIndex;
-    hashIndex = PEER_HASH(host, port);
+    afs_uint32 hashIndex;
+    hashIndex = rx_hash_sockaddr(sa, rx_hashTableSize);
     MUTEX_ENTER(&rx_peerHashTable_lock);
     for (pp = rx_peerHashTable[hashIndex]; pp; pp = pp->next) {
-	if ((pp->host == host) && (pp->port == port))
+	if (rx_compare_sockaddr(&pp->saddr, sa, RXA_AP))
 	    break;
     }
     if (!pp) {
 	if (create) {
 	    pp = rxi_AllocPeer();	/* This zeroes *pp */
-	    pp->host = host;	/* set here or in InitPeerParams is zero */
-	    pp->port = port;
+	    rx_copy_sockaddr(sa, &pp->saddr);	/* set here or in InitPeerParams is zero */
 #ifdef AFS_RXERRQ_ENV
 	    rx_atomic_set(&pp->neterrs, 0);
 #endif
@@ -3096,6 +3119,45 @@ rxi_FindPeer(afs_uint32 host, u_short port, int create)
     return pp;
 }
 
+static_inline int
+rxi_ConnectionMatch(struct rx_connection *conn,
+		    const struct rx_sockaddr *sa, afs_uint32 cid,
+		    afs_uint32 epoch, int type, u_int securityIndex,
+		    int *a_badSecurityIndex)
+{
+    struct rx_peer *pp;
+    if (conn->type != type) {
+	return 0;
+    }
+    if (conn->cid != (cid & RX_CIDMASK)) {
+	return 0;
+    }
+    if (conn->epoch != epoch) {
+	return 0;
+    }
+    if (conn->securityIndex != securityIndex) {
+	if (a_badSecurityIndex) {
+	    *a_badSecurityIndex = 1;
+	}
+	return 0;
+    }
+    pp = conn->peer;
+    if (rx_compare_sockaddr(&pp->saddr, sa, RXA_AP)) {
+	return 1;
+    }
+    if (type == RX_CLIENT_CONNECTION
+	&& rx_compare_sockaddr(&pp->saddr, sa, RXA_PORT)) {
+	/* For client conns, we allow packets from any host (of the same
+	 * family) to be associated with the conn. */
+	return 1;
+    }
+    if ((conn->epoch & 0x80000000)) {
+	/* If the epoch high bit is set, we ignore the host/port of any packets
+	 * coming in for the conn. */
+	return 1;
+    }
+    return 0;
+}
 
 /* Find the connection at (host, port) started at epoch, and with the
  * given connection id.  Creates the server connection if necessary.
@@ -3110,8 +3172,8 @@ rxi_FindPeer(afs_uint32 host, u_short port, int create)
  * server connection is created, it will be created using the supplied
  * index, if the index is valid for this service */
 static struct rx_connection *
-rxi_FindConnection(osi_socket socket, afs_uint32 host,
-		   u_short port, u_short serviceId, afs_uint32 cid,
+rxi_FindConnection(osi_socket socket, const struct rx_sockaddr *sa,
+		   u_short serviceId, afs_uint32 cid,
 		   afs_uint32 epoch, int type, u_int securityIndex,
                    int *unknownService)
 {
@@ -3119,31 +3181,24 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
     int code = 0;
     struct rx_connection *conn;
     *unknownService = 0;
-    hashindex = CONN_HASH(host, port, cid, epoch, type);
+    hashindex = CONN_HASH(0, 0, cid, epoch, type);
     MUTEX_ENTER(&rx_connHashTable_lock);
     rxLastConn ? (conn = rxLastConn, flag = 0) : (conn =
 						  rx_connHashTable[hashindex],
 						  flag = 1);
     for (; conn;) {
-	if ((conn->type == type) && ((cid & RX_CIDMASK) == conn->cid)
-	    && (epoch == conn->epoch)) {
-	    struct rx_peer *pp = conn->peer;
-	    if (securityIndex != conn->securityIndex) {
-		/* this isn't supposed to happen, but someone could forge a packet
-		 * like this, and there seems to be some CM bug that makes this
-		 * happen from time to time -- in which case, the fileserver
-		 * asserts. */
-		MUTEX_EXIT(&rx_connHashTable_lock);
-		return (struct rx_connection *)0;
-	    }
-	    if (pp->host == host && pp->port == port)
-		break;
-	    if (type == RX_CLIENT_CONNECTION && pp->port == port)
-		break;
-	    /* So what happens when it's a callback connection? */
-	    if (		/*type == RX_CLIENT_CONNECTION && */
-		   (conn->epoch & 0x80000000))
-		break;
+	int bad_sec = 0;
+	if (rxi_ConnectionMatch(conn, sa, cid, epoch, type,
+				securityIndex, &bad_sec)) {
+	    break;
+	}
+	if (bad_sec) {
+	    /*
+	     * This isn't supposed to happen, but someone could forge a packet
+	     * like this, and bugs causing such packets are not unheard of.
+	     */
+	    MUTEX_EXIT(&rx_connHashTable_lock);
+	    return NULL;
 	}
 	if (!flag) {
 	    /* the connection rxLastConn that was used the last time is not the
@@ -3172,7 +3227,8 @@ rxi_FindConnection(osi_socket socket, afs_uint32 host,
 	CV_INIT(&conn->conn_call_cv, "conn call cv", CV_DEFAULT, 0);
 	conn->next = rx_connHashTable[hashindex];
 	rx_connHashTable[hashindex] = conn;
-	conn->peer = rxi_FindPeer(host, port, 1);
+	conn->peer = rxi_FindPeer(sa, 1);
+	conn->socket = socket;
 	conn->type = RX_SERVER_CONNECTION;
 	conn->lastSendTime = clock_Sec();	/* don't GC immediately */
 	conn->epoch = epoch;
@@ -3225,7 +3281,7 @@ rxi_AbortIfServerBusy(osi_socket socket, struct rx_connection *conn,
 	MUTEX_ENTER(&conn->conn_data_lock);
 	serial = ++conn->serial;
 	MUTEX_EXIT(&conn->conn_data_lock);
-	rxi_SendRawAbort(socket, conn->peer->host, conn->peer->port,
+	rxi_SendRawAbort(socket, rx_HostOf(conn->peer), rx_PortOf(conn->peer),
 			 serial, rx_BusyError, np, 0);
 	if (rx_stats_active)
 	    rx_atomic_inc(&rx_stats.nBusies);
@@ -3415,7 +3471,7 @@ int (*rx_almostSent) (struct rx_packet *, struct sockaddr_in *) = 0;
 
 struct rx_packet *
 rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
-		  afs_uint32 host, u_short port, int *tnop,
+		  const struct rx_sockaddr *sa, int *tnop,
 		  struct rx_call **newcallp)
 {
     struct rx_call *call;
@@ -3427,6 +3483,17 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     char *packetType;
 #endif
     struct rx_packet *tnp;
+    struct rx_sockaddr peerAddr;
+    /* rxi_ReceiveVersionPacket/rxi_ReceiveDebugPacket and the debug log
+     * below are IPv4-only diagnostic paths for now; a v6-only sender's
+     * address collapses to host 0, matching how any host that fails the
+     * IPv4 projection is handled elsewhere. */
+    afs_uint32 host_dbg = 0;
+    u_short port_dbg;
+
+    rx_copy_sockaddr(sa, &peerAddr);
+    (void)rx_try_sockaddr_to_ipv4(&peerAddr, &host_dbg);
+    port_dbg = rx_get_sockaddr_port(&peerAddr);
 
 #ifdef RXDEBUG
 /* We don't print out the packet until now because (1) the time may not be
@@ -3436,7 +3503,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     packetType = (np->header.type > 0 && np->header.type < RX_N_PACKET_TYPES)
 	? rx_packetTypes[np->header.type - 1] : "*UNKNOWN*";
     dpf(("R %d %s: %x.%d.%d.%d.%d.%d.%d flags %d, packet %p\n",
-	 np->header.serial, packetType, ntohl(host), ntohs(port), np->header.serviceId,
+	 np->header.serial, packetType, ntohl(host_dbg), ntohs(port_dbg),
+	 np->header.serviceId,
 	 np->header.epoch, np->header.cid, np->header.callNumber,
 	 np->header.seq, np->header.flags, np));
 #endif
@@ -3448,7 +3516,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	struct rx_peer *peer;
 
 	/* Try to look up the peer structure, but don't create one */
-	peer = rxi_FindPeer(host, port, 0);
+	peer = rxi_FindPeer(&peerAddr, 0);
 
 	/* Since this may not be associated with a connection, it may have
 	 * no refCount, meaning we could race with ReapConnections
@@ -3467,21 +3535,22 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     }
 
     if (np->header.type == RX_PACKET_TYPE_VERSION) {
-	return rxi_ReceiveVersionPacket(np, socket, host, port, 1);
+	return rxi_ReceiveVersionPacket(np, socket, host_dbg, port_dbg, 1);
     }
 
     if (np->header.type == RX_PACKET_TYPE_DEBUG) {
-	return rxi_ReceiveDebugPacket(np, socket, host, port, 1);
+	return rxi_ReceiveDebugPacket(np, socket, host_dbg, port_dbg, 1);
     }
 #ifdef RXDEBUG
     /* If an input tracer function is defined, call it with the packet and
-     * network address.  Note this function may modify its arguments. */
-    if (rx_justReceived) {
+     * network address.  Note this function may modify its arguments.
+     * rx_justReceived is an IPv4-only debug hook; skip it for a v6 peer. */
+    if (rx_justReceived && peerAddr.rxsa_family == AF_INET) {
 	struct sockaddr_in addr;
 	int drop;
 	addr.sin_family = AF_INET;
-	addr.sin_port = port;
-	addr.sin_addr.s_addr = host;
+	addr.sin_port = peerAddr.rxsa_in_port;
+	addr.sin_addr.s_addr = peerAddr.rxsa_s_addr;
 	memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
 	addr.sin_len = sizeof(addr);
@@ -3490,8 +3559,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	/* drop packet if return value is non-zero */
 	if (drop)
 	    return np;
-	port = addr.sin_port;	/* in case fcn changed addr */
-	host = addr.sin_addr.s_addr;
+	peerAddr.rxsa_in_port = addr.sin_port;	/* in case fcn changed addr */
+	peerAddr.rxsa_s_addr = addr.sin_addr.s_addr;
     }
 #endif
 
@@ -3502,16 +3571,19 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     /* Find the connection (or fabricate one, if we're the server & if
      * necessary) associated with this packet */
     conn =
-	rxi_FindConnection(socket, host, port, np->header.serviceId,
+	rxi_FindConnection(socket, &peerAddr, np->header.serviceId,
 			   np->header.cid, np->header.epoch, type,
 			   np->header.securityIndex, &unknownService);
 
     /* To avoid having 2 connections just abort at each other,
        don't abort an abort. */
     if (!conn) {
-        if (unknownService && (np->header.type != RX_PACKET_TYPE_ABORT))
-	    rxi_SendRawAbort(socket, host, port, 0, RX_INVALID_OPERATION,
-                             np, 0);
+        if (unknownService && (np->header.type != RX_PACKET_TYPE_ABORT)) {
+	    afs_uint32 abortHost = 0;
+	    (void)rx_try_sockaddr_to_ipv4(&peerAddr, &abortHost);
+	    rxi_SendRawAbort(socket, abortHost, rx_get_sockaddr_port(&peerAddr),
+			     0, RX_INVALID_OPERATION, np, 0);
+	}
         return np;
     }
 
@@ -6503,7 +6575,7 @@ mtuout:
 	    newmtu = conn->lastPacketSize - 128 + RX_HEADER_SIZE;
 
 	/* minimum capped in SetPeerMtu */
-	rxi_SetPeerMtu(conn->peer, 0, 0, newmtu);
+	rxi_SetPeerMtu(conn->peer, NULL, newmtu);
 
 	/* clean up */
 	conn->lastPacketSize = conn->lastPacketSizeSeq = 0;
@@ -7587,8 +7659,9 @@ rx_PrintStats(FILE * file)
 void
 rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
 {
-    fprintf(file, "Peer %x.%d.\n",
-	    ntohl(peer->host), (int)ntohs(peer->port));
+    rx_inet_fmtbuf_t fmtbuf;
+
+    fprintf(file, "Peer %s.\n", rx_sockaddr2str(&peer->saddr, &fmtbuf));
 
     fprintf(file,
 	    "   Rtt %d, " "total sent %d, " "resent %d\n",
@@ -7995,12 +8068,19 @@ rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 {
 	struct rx_peer *tp;
 	afs_int32 error = 1; /* default to "did not succeed" */
-	afs_uint32 hashValue = PEER_HASH(peerHost, peerPort);
+	struct rx_sockaddr sa;
+	afs_uint32 hashValue;
+
+	rx_ipv4_to_sockaddr(peerHost, peerPort, 0, &sa);
+	hashValue = rx_hash_sockaddr(&sa, rx_hashTableSize);
 
 	MUTEX_ENTER(&rx_peerHashTable_lock);
 	for(tp = rx_peerHashTable[hashValue];
 	      tp != NULL; tp = tp->next) {
-		if (tp->host == peerHost)
+		/* rx_debugPeer is an IPv4-only wire struct (RX_DEBUGI_GETPEER);
+		 * matching on address alone (not port) mirrors the historical
+		 * behavior of this lookup. */
+		if (rx_compare_sockaddr(&tp->saddr, &sa, RXA_ADDR))
 			break;
 	}
 
@@ -8011,8 +8091,8 @@ rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 		error = 0;
 
                 MUTEX_ENTER(&tp->peer_lock);
-		peerStats->host = tp->host;
-		peerStats->port = tp->port;
+		peerStats->host = rx_HostOf(tp);
+		peerStats->port = rx_PortOf(tp);
 		peerStats->ifMTU = tp->ifMTU;
 		peerStats->idleWhen = tp->idleWhen;
 		peerStats->refCount = tp->refCount;
@@ -8481,11 +8561,13 @@ rx_ClearPeerRPCStats(afs_int32 rxInterface, afs_uint32 peerHost, afs_uint16 peer
     rx_interface_stat_p rpc_stat;
     int totalFunc, i;
     struct rx_peer * peer;
+    struct rx_sockaddr sa;
 
     if (rxInterface == -1)
         return;
 
-    peer = rxi_FindPeer(peerHost, peerPort, 0);
+    rx_ipv4_to_sockaddr(peerHost, peerPort, 0, &sa);
+    peer = rxi_FindPeer(&sa, 0);
     if (!peer)
         return;
 
@@ -8542,6 +8624,7 @@ rx_CopyPeerRPCStats(afs_uint64 op, afs_uint32 peerHost, afs_uint16 peerPort)
     int currentFunc = (op & MAX_AFS_UINT32);
     afs_int32 rxInterface = (op >> 32);
     struct rx_peer *peer;
+    struct rx_sockaddr sa;
 
     if (!rxi_monitor_peerStats)
         return NULL;
@@ -8552,7 +8635,8 @@ rx_CopyPeerRPCStats(afs_uint64 op, afs_uint32 peerHost, afs_uint16 peerPort)
     if (rpcop_stat == NULL)
         return NULL;
 
-    peer = rxi_FindPeer(peerHost, peerPort, 0);
+    rx_ipv4_to_sockaddr(peerHost, peerPort, 0, &sa);
+    peer = rxi_FindPeer(&sa, 0);
     if (!peer)
         return NULL;
 
@@ -8688,7 +8772,7 @@ rxi_IncrementTimeAndCount(struct rx_peer *peer, afs_uint32 rxInterface,
         MUTEX_ENTER(&peer->peer_lock);
 	rxi_AddRpcStat(&peer->rpcStats, rxInterface, currentFunc, totalFunc,
 		       queueTime, execTime, bytesSent, bytesRcvd, isServer,
-		       peer->host, peer->port, 1, &rxi_rpc_peer_stat_cnt);
+		       rx_HostOf(peer), rx_PortOf(peer), 1, &rxi_rpc_peer_stat_cnt);
         MUTEX_EXIT(&peer->peer_lock);
     }
 

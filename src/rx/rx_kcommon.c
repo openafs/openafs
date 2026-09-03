@@ -332,13 +332,14 @@ MyArrivalProc(struct rx_packet *ahandle,
 	      struct socket *arock,
 	      afs_int32 asize)
 {
+    struct rx_sockaddr sa;
+
     /* handle basic rx packet */
     ahandle->length = asize - RX_HEADER_SIZE;
     rxi_DecodePacketHeader(ahandle);
+    rx_ipv4_to_sockaddr(afrom->sin_addr.s_addr, afrom->sin_port, 0, &sa);
     ahandle =
-	rxi_ReceivePacket(ahandle, arock,
-			  afrom->sin_addr.s_addr, afrom->sin_port, NULL,
-			  NULL);
+	rxi_ReceivePacket(ahandle, arock, &sa, NULL, NULL);
 
     /* free the packet if it has been returned */
     if (ahandle)
@@ -364,13 +365,18 @@ void
 rxi_InitPeerParams(struct rx_peer *pp)
 {
     u_short rxmtu;
+    /* This interface-matching machinery is IPv4-only for now; a v6-only
+     * peer's address projects to 0, which simply never matches a local
+     * interface below. */
+    afs_uint32 ppaddr = 0;
+    (void)rx_try_sockaddr_to_ipv4(&pp->saddr, &ppaddr);
 
 #ifndef AFS_SUN5_ENV
 # ifdef AFS_USERSPACE_IP_ADDR
     afs_int32 i;
     afs_int32 mtu;
 
-    i = rxi_Findcbi(pp->host);
+    i = rxi_Findcbi(ppaddr);
     if (i == -1) {
 	rx_rto_setPeerTimeoutSecs(pp, 3);
 	pp->ifMTU = opr_min(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
@@ -396,7 +402,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	(void)rxi_GetIFInfo();
 #  endif
 
-    ifn = rxi_FindIfnet(pp->host, NULL);
+    ifn = rxi_FindIfnet(ppaddr, NULL);
     if (ifn) {
 	rx_rto_setPeerTimeoutSecs(pp, 2);
 	pp->ifMTU = opr_min(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
@@ -425,7 +431,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 #else /* AFS_SUN5_ENV */
     afs_int32 mtu;
 
-    mtu = rxi_FindIfMTU(pp->host);
+    mtu = rxi_FindIfMTU(ppaddr);
 
     if (mtu <= 0) {
 	rx_rto_setPeerTimeoutSecs(pp, 3);
@@ -1260,7 +1266,9 @@ rxk_Listener(void)
 		osi_Panic("rxk_Listener: No more Rx buffers!\n");
 	}
 	if (!(code = rxk_ReadPacket(rx_socket, rxp, &host, &port))) {
-	    rxp = rxi_ReceivePacket(rxp, rx_socket, host, port, 0, 0);
+	    struct rx_sockaddr sa;
+	    rx_ipv4_to_sockaddr(host, port, 0, &sa);
+	    rxp = rxi_ReceivePacket(rxp, rx_socket, &sa, 0, 0);
 	}
     }
 

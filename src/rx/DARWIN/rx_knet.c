@@ -791,7 +791,11 @@ rx_upcall_common(socket_t so, struct afs_pkt_hdr *pkt)
 	    rxi_TrimDataBufs(p, 1);
 #endif
 	    /* receive pcket */
-	    p = rxi_ReceivePacket(p, so, host, port, 0, 0);
+	    {
+		struct rx_sockaddr rxsa;
+		rx_ipv4_to_sockaddr(host, port, 0, &rxsa);
+		p = rxi_ReceivePacket(p, so, &rxsa, 0, 0);
+	    }
 	}
     }
     /* free packet? */

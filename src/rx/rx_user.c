@@ -700,8 +700,12 @@ rxi_InitPeerParams(struct rx_peer *pp)
     }
 
     /* try to second-guess IP, and identify which link is most likely to
-     * be used for traffic to/from this host. */
-    ppaddr = ntohl(pp->host);
+     * be used for traffic to/from this host. This interface-matching is
+     * IPv4-only for now; a v6-only peer's address projects to 0, which
+     * simply never matches any local interface below. */
+    ppaddr = 0;
+    (void)rx_try_sockaddr_to_ipv4(&pp->saddr, &ppaddr);
+    ppaddr = ntohl(ppaddr);
 
     pp->ifMTU = 0;
     rx_rto_setPeerTimeoutSecs(pp, 2);
@@ -812,8 +816,10 @@ osi_HandleSocketError(int socket, void *cmsgbuf, size_t cmsgbuf_len)
 
     for (cmsg = CMSG_FIRSTHDR(&msg); cmsg; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
 	if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_RECVERR) {
+	    struct rx_sockaddr sa;
 	    err = (struct sock_extended_err *)CMSG_DATA(cmsg);
-	    rxi_ProcessNetError(err, addr.sin_addr.s_addr, addr.sin_port);
+	    rx_ipv4_to_sockaddr(addr.sin_addr.s_addr, addr.sin_port, 0, &sa);
+	    rxi_ProcessNetError(err, &sa);
 	}
     }
 

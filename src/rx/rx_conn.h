@@ -16,6 +16,11 @@
 struct rx_connection {
     struct rx_connection *next;	/*  on hash chain _or_ free list */
     struct rx_peer *peer;
+    osi_socket socket;		/* the socket this conn sends/receives on;
+				 * matches peer->saddr's family. For a client
+				 * conn this is chosen when the conn is
+				 * created; for a server conn it is the
+				 * socket the first packet arrived on. */
 #ifdef	RX_ENABLE_LOCKS
     afs_kmutex_t conn_call_lock;	/* locks conn_call_cv */
     afs_kcondvar_t conn_call_cv;

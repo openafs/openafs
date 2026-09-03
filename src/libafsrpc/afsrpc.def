@@ -368,6 +368,8 @@ EXPORTS
 	rx_sockaddr_to_address                   @373
 	rx_try_address_to_ipv4                   @374
 	rx_try_sockaddr_to_ipv4                  @375
+	rx_SockaddrOf                            @376
+	rx_NewConnectionSA                       @377
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

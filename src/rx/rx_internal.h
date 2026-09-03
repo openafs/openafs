@@ -28,22 +28,23 @@ extern afs_uint32 rx_host;
 extern int rxi_IsRunning(void);
 extern void rxi_CancelDelayedAckEvent(struct rx_call *);
 extern void rxi_PacketsUnWait(void);
-extern void rxi_SetPeerMtu(struct rx_peer *peer, afs_uint32 host,
-			   afs_uint32 port, int mtu);
+extern void rxi_SetPeerMtu(struct rx_peer *peer,
+			   const struct rx_sockaddr *sa, int mtu);
 #ifdef AFS_RXERRQ_ENV
 extern void rxi_ProcessNetError(struct sock_extended_err *err,
-                                afs_uint32 addr, afs_uint16 port);
+                                const struct rx_sockaddr *sa);
 extern int osi_HandleSocketError(osi_socket sock, void *cmsgbuf,
 				 size_t cmsgbuf_len);
 extern void rxi_HandleSocketErrors(osi_socket sock);
 #else
 # define rxi_HandleSocketErrors(sock) do { } while (0)
 #endif
-extern struct rx_peer *rxi_FindPeer(afs_uint32 host, u_short port,
+extern struct rx_peer *rxi_FindPeer(const struct rx_sockaddr *sa,
 				    int create);
 extern struct rx_packet *rxi_ReceivePacket(struct rx_packet *np,
-					   osi_socket socket, afs_uint32 host,
-					   u_short port, int *tnop,
+					   osi_socket socket,
+					   const struct rx_sockaddr *sa,
+					   int *tnop,
 					   struct rx_call **newcallp);
 extern int rxi_IsConnInteresting(struct rx_connection *aconn);
 extern void rxi_PostDelayedAckEvent(struct rx_call *call, struct clock *now);

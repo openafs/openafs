@@ -56,6 +56,7 @@ rx_KeyCreate
 rx_MyMaxSendSize
 rx_NewCall
 rx_NewConnection
+rx_NewConnectionSA
 rx_NewService
 rx_NewServiceHost
 rx_PeerOf
@@ -93,6 +94,7 @@ rx_SetSecurityMaxTrailerSize
 rx_SetServiceSpecific
 rx_SetSpecific
 rx_SetThreadNum
+rx_SockaddrOf
 rx_SlowGetInt32
 rx_SlowPutInt32
 rx_SlowReadPacket

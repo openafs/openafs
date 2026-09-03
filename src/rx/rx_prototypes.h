@@ -36,6 +36,11 @@ extern struct rx_connection *rx_NewConnection(afs_uint32 shost,
 					      struct rx_securityClass
 					      *securityObject,
 					      int serviceSecurityIndex);
+extern struct rx_connection *rx_NewConnectionSA(const struct rx_sockaddr *saddr,
+						u_short sservice,
+						struct rx_securityClass
+						*securityObject,
+						int serviceSecurityIndex);
 extern void rx_SetConnDeadTime(struct rx_connection *conn,
 			       int seconds);
 extern void rx_SetConnHardDeadTime(struct rx_connection *conn, int seconds);
@@ -415,7 +420,7 @@ extern int rxi_FreePackets(int num_pkts, struct opr_queue *q);
 extern struct rx_packet *rxi_AllocSendPacket(struct rx_call *call,
 					     int want);
 extern int rxi_ReadPacket(osi_socket socket, struct rx_packet *p,
-			  afs_uint32 * host, u_short * port);
+			  struct rx_sockaddr *sa);
 extern struct rx_packet *rxi_SplitJumboPacket(struct rx_packet *p,
 					      afs_uint32 host, short port,
 					      int first);

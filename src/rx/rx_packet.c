@@ -1435,14 +1435,13 @@ CountFDs(int amax)
 
 /* This function reads a single packet from the interface into the
  * supplied packet buffer (*p).  Return 0 if the packet is bogus.  The
- * (host,port) of the sender are stored in the supplied variables, and
- * the data length of the packet is stored in the packet structure.
- * The header is decoded. */
+ * address of the sender is stored in *sa, and the data length of the
+ * packet is stored in the packet structure.  The header is decoded. */
 int
-rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
-	       u_short * port)
+rxi_ReadPacket(osi_socket socket, struct rx_packet *p,
+	       struct rx_sockaddr *sa)
 {
-    struct sockaddr_in from;
+    struct rx_sockaddr from;
     int nbytes;
     afs_int32 rlen;
     afs_uint32 tlen, savelen;
@@ -1472,11 +1471,14 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
     p->wirevec[p->niovecs - 1].iov_len += RX_EXTRABUFFERSIZE;
 
     memset(&msg, 0, sizeof(msg));
-    msg.msg_name = (char *)&from;
-    msg.msg_namelen = sizeof(struct sockaddr_in);
+    memset(&from, 0, sizeof(from));
+    msg.msg_name = (char *)&from.addr;
+    msg.msg_namelen = sizeof(from.addr);
     msg.msg_iov = p->wirevec;
     msg.msg_iovlen = p->niovecs;
     nbytes = rxi_Recvmsg(socket, &msg, 0);
+    from.addrlen = msg.msg_namelen;
+    from.socktype = SOCK_DGRAM;
 
     /* restore the vec to its correct state */
     p->wirevec[p->niovecs - 1].iov_len = savelen;
@@ -1487,25 +1489,29 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
             if (rx_stats_active)
                 rx_atomic_inc(&rx_stats.noPacketOnRead);
 	} else if (nbytes <= 0) {
+	    afs_uint32 bogusHost = 0;
             if (rx_stats_active) {
                 rx_atomic_inc(&rx_stats.bogusPacketOnRead);
-                rx_stats.bogusHost = from.sin_addr.s_addr;
+		(void)rx_try_sockaddr_to_ipv4(&from, &bogusHost);
+                rx_stats.bogusHost = bogusHost;
             }
-	    dpf(("B: bogus packet from [%x,%d] nb=%d\n", ntohl(from.sin_addr.s_addr),
-		 ntohs(from.sin_port), nbytes));
+	    dpf(("B: bogus packet from [%x,%d] nb=%d\n", ntohl(bogusHost),
+		 ntohs(rx_get_sockaddr_port(&from)), nbytes));
 	}
 	return 0;
     }
 #ifdef RXDEBUG
     else if ((rx_intentionallyDroppedOnReadPer100 > 0)
 		&& (random() % 100 < rx_intentionallyDroppedOnReadPer100)) {
+	afs_uint32 dbgHost = 0;
 	rxi_DecodePacketHeader(p);
 
-	*host = from.sin_addr.s_addr;
-	*port = from.sin_port;
+	rx_copy_sockaddr(&from, sa);
+	(void)rx_try_sockaddr_to_ipv4(&from, &dbgHost);
 
 	dpf(("Dropped %d %s: %x.%u.%u.%u.%u.%u.%u flags %d len %d\n",
-	      p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(*host), ntohs(*port), p->header.serial,
+	      p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(dbgHost),
+	      ntohs(rx_get_sockaddr_port(&from)), p->header.serial,
 	      p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags,
 	      p->length));
 #ifdef RX_TRIMDATABUFS
@@ -1518,8 +1524,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	/* Extract packet header. */
 	rxi_DecodePacketHeader(p);
 
-	*host = from.sin_addr.s_addr;
-	*port = from.sin_port;
+	rx_copy_sockaddr(&from, sa);
 	if (rx_stats_active
 	    && p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
 
@@ -1607,7 +1612,13 @@ rxi_SplitJumboPacket(struct rx_packet *p, afs_uint32 host, short port,
 }
 
 #ifndef KERNEL
-/* Send a udp datagram */
+/* Send a udp datagram.
+ *
+ * addr is void* rather than struct rx_sockaddr*, because this function is
+ * reached (via rxi_NetSend) from rxi_SendPacket() et al, which are shared
+ * with KERNEL builds and still address a struct sockaddr_in there; making
+ * this dual-stack-aware, together with the equivalent per-platform KERNEL
+ * osi_NetSend()s, is follow-on work. */
 int
 osi_NetSend(osi_socket socket, void *addr, struct iovec *dvec, int nvecs,
 	    int length, int istack)
@@ -1876,8 +1887,8 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 		    if ((all || rxi_IsConnInteresting(tc))
 			&& tin.index-- <= 0) {
 			int do_secstats = 0;
-			tconn.host = tc->peer->host;
-			tconn.port = tc->peer->port;
+			tconn.host = rx_HostOf(tc->peer);
+			tconn.port = rx_PortOf(tc->peer);
 			tconn.cid = htonl(tc->cid);
 			tconn.epoch = htonl(tc->epoch);
 			tconn.serial = htonl(tc->serial);
@@ -1996,8 +2007,8 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
                         MUTEX_EXIT(&rx_peerHashTable_lock);
 
                         MUTEX_ENTER(&tp->peer_lock);
-			tpeer.host = tp->host;
-			tpeer.port = tp->port;
+			tpeer.host = rx_HostOf(tp);
+			tpeer.port = rx_PortOf(tp);
 			tpeer.ifMTU = htons(tp->ifMTU);
 			tpeer.idleWhen = htonl(tp->idleWhen);
 			tpeer.refCount = htons(tp->refCount);
@@ -2233,11 +2244,14 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 #ifdef RXDEBUG
     char deliveryType = 'S';
 #endif
-    /* The address we're sending the packet to */
+    /* The address we're sending the packet to.
+     * TODO: peer->saddr may not be AF_INET once a peer can be IPv6; this
+     * send path is still IPv4-only, converted separately in a later
+     * change alongside the KERNEL per-platform osi_NetSend()s. */
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = peer->port;
-    addr.sin_addr.s_addr = peer->host;
+    addr.sin_port = rx_PortOf(peer);
+    addr.sin_addr.s_addr = rx_HostOf(peer);
     memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
 
     /* This stuff should be revamped, I think, so that most, if not
@@ -2354,8 +2368,8 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 #ifdef RXDEBUG
     }
     dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %p len %d\n",
-          deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
-          ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
+          deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(rx_HostOf(peer)),
+          ntohs(rx_PortOf(peer)), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
           p->header.seq, p->header.flags, p, p->length));
 #endif
     if (rx_stats_active) {
@@ -2388,10 +2402,11 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 #ifdef RXDEBUG
     char deliveryType = 'S';
 #endif
-    /* The address we're sending the packet to */
+    /* The address we're sending the packet to. TODO: see the note in
+     * rxi_SendPacket() above about IPv6 peers. */
     addr.sin_family = AF_INET;
-    addr.sin_port = peer->port;
-    addr.sin_addr.s_addr = peer->host;
+    addr.sin_port = rx_PortOf(peer);
+    addr.sin_addr.s_addr = rx_HostOf(peer);
     memset(&addr.sin_zero, 0, sizeof(addr.sin_zero));
 
     if (len + 1 > RX_MAXIOVECS) {
@@ -2547,8 +2562,8 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     osi_Assert(p != NULL);
 
     dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %p len %d\n",
-          deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
-          ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
+          deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(rx_HostOf(peer)),
+          ntohs(rx_PortOf(peer)), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
           p->header.seq, p->header.flags, p, p->length));
 
 #endif

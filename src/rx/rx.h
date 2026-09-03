@@ -41,6 +41,7 @@
 
 #include <opr/queue.h>
 
+#include "rx_addr.h"
 #include "rx_clock.h"
 #include "rx_event.h"
 #include "rx_misc.h"
@@ -97,6 +98,7 @@ extern void rx_GetCallStatus(struct rx_call *call,
 /* Peer management */
 extern afs_uint32 rx_HostOf(struct rx_peer *peer);
 extern u_short rx_PortOf(struct rx_peer *peer);
+extern const struct rx_sockaddr *rx_SockaddrOf(struct rx_peer *peer);
 
 /* Packets */
 

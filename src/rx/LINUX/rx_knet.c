@@ -137,8 +137,12 @@ osi_HandleSocketError(osi_socket so, void *cmsgbuf, size_t cmsgbuf_len)
 	    continue;
 	}
 
-	err = CMSG_DATA(cmsg);
-	rxi_ProcessNetError(err, addr.sin_addr.s_addr, addr.sin_port);
+	{
+	    struct rx_sockaddr sa;
+	    err = CMSG_DATA(cmsg);
+	    rx_ipv4_to_sockaddr(addr.sin_addr.s_addr, addr.sin_port, 0, &sa);
+	    rxi_ProcessNetError(err, &sa);
+	}
     }
 
     return 1;
