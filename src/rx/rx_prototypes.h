@@ -238,6 +238,9 @@ extern int rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[],
 			  	 afs_uint32 maskBuffer[],
 				 afs_uint32 mtuBuffer[],
 				 int maxSize);
+#if (!defined(KERNEL) || defined(UKERNEL)) && defined(HAVE_GETIFADDRS)
+extern int rx_getAllSockaddr(struct rx_sockaddr *buffer, int maxSize);
+#endif
 
 /* rx_globals.c */
 extern int rx_GetMaxReceiveWindow(void);

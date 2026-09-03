@@ -17,6 +17,9 @@
 # include <roken.h>
 # ifndef AFS_NT40_ENV
 # include <net/if.h>
+#  ifdef HAVE_IFADDRS_H
+#   include <ifaddrs.h>
+#  endif
 #  if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #   include <sys/sysctl.h>
 #   ifndef AFS_ARM_DARWIN_ENV
@@ -562,6 +565,64 @@ rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
 #endif /* AFS_USERSPACE_IP_ADDR */
 }
 #endif
+
+#ifdef HAVE_GETIFADDRS
+/*
+ * rx_getAllSockaddr - fill in a struct rx_sockaddr[] with every configured,
+ * up local interface address, IPv4 and (when HAVE_IPV6) IPv6.
+ *
+ * Unlike rx_getAllAddr()/rx_getAllAddrMaskMtu() above, which can only ever
+ * see IPv4 (struct ifreq, used by the SIOCGIFCONF path, is too small to
+ * hold an IPv6 address), this uses the portable getifaddrs(3) interface,
+ * which has no such limitation and needs no per-platform sysctl/ioctl
+ * dance.
+ *
+ * Returns the number of addresses written into buffer (capped at maxSize),
+ * or -1 on failure.
+ */
+int
+rx_getAllSockaddr(struct rx_sockaddr *buffer, int maxSize)
+{
+    struct ifaddrs *ifap, *ifa;
+    int count = 0;
+
+    if (getifaddrs(&ifap) < 0) {
+	return -1;
+    }
+
+    for (ifa = ifap; ifa != NULL && count < maxSize; ifa = ifa->ifa_next) {
+	struct rx_sockaddr *sa;
+
+	if (ifa->ifa_addr == NULL || !(ifa->ifa_flags & IFF_UP)) {
+	    continue;
+	}
+	if (ifa->ifa_addr->sa_family != AF_INET
+#ifdef HAVE_IPV6
+	    && ifa->ifa_addr->sa_family != AF_INET6
+#endif
+	    ) {
+	    continue;
+	}
+
+	sa = &buffer[count];
+	memset(sa, 0, sizeof(*sa));
+	if (ifa->ifa_addr->sa_family == AF_INET) {
+	    memcpy(&sa->addr.sin, ifa->ifa_addr, sizeof(struct sockaddr_in));
+	    sa->addrlen = sizeof(struct sockaddr_in);
+#ifdef HAVE_IPV6
+	} else {
+	    memcpy(&sa->addr.sin6, ifa->ifa_addr, sizeof(struct sockaddr_in6));
+	    sa->addrlen = sizeof(struct sockaddr_in6);
+#endif
+	}
+	sa->socktype = SOCK_DGRAM;
+	count++;
+    }
+
+    freeifaddrs(ifap);
+    return count;
+}
+#endif /* HAVE_GETIFADDRS */
 
 #endif /* ! AFS_NT40_ENV */
 #endif /* !KERNEL || UKERNEL */
