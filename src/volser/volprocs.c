@@ -95,6 +95,9 @@ static afs_int32 VolSetFlags(struct rx_call *, afs_int32, afs_int32 );
 static afs_int32 VolForward(struct rx_call *, afs_int32, afs_int32,
 			    struct destServer *destination, afs_int32,
 			    struct restoreCookie *cookie);
+static afs_int32 VolForwardSA(struct rx_call *, afs_int32, afs_int32,
+			      struct rx_sockaddr *destAddr, afs_int32,
+			      struct restoreCookie *cookie);
 static afs_int32 VolDump(struct rx_call *, afs_int32, afs_int32, afs_int32);
 static afs_int32 VolRestore(struct rx_call *, afs_int32, afs_int32,
 			    struct restoreCookie *);
@@ -1264,6 +1267,68 @@ SAFSVolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
     return code;
 }
 
+/* Unchanged entry point for the original IPv4-only Forward RPC - just
+ * projects destServer into an rx_sockaddr and hands off to the shared
+ * core, VolForwardSA. */
+static afs_int32
+VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
+	   struct destServer *destination, afs_int32 destTrans,
+	   struct restoreCookie *cookie)
+{
+    struct rx_sockaddr destAddr;
+
+    rx_ipv4_to_sockaddr(htonl(destination->destHost),
+			htons(destination->destPort), 0, &destAddr);
+    return VolForwardSA(acid, fromTrans, fromDate, &destAddr, destTrans,
+			cookie);
+}
+
+/*
+ * ForwardEndpoints's entry point: unpacks the typed volendpoint into
+ * an rx_sockaddr and hands off to the same shared core VolForward
+ * uses. An unrecognized endpoint type is rejected rather than
+ * silently ignored (unlike the "unrecognized type is skippable" rule
+ * for a *list* of endpoints elsewhere in this series) since there is
+ * only one destination here and nothing else to fall back to.
+ */
+afs_int32
+SAFSVolForwardEndpoints(struct rx_call *acid, afs_int32 fromTrans,
+			afs_int32 fromDate, struct volendpoint *destination,
+			afs_int32 destPort, afs_int32 destTrans,
+			struct restoreCookie *cookie)
+{
+    struct rx_sockaddr destAddr;
+    afs_int32 code;
+
+    memset(&destAddr, 0, sizeof(destAddr));
+    if (destination->type == VOLENDPOINT_IPV4) {
+	rx_ipv4_to_sockaddr(htonl(destination->value[0]), htons(destPort),
+			    0, &destAddr);
+#ifdef HAVE_IPV6
+    } else if (destination->type == VOLENDPOINT_IPV6) {
+	struct rx_address ra;
+	int i;
+
+	memset(&ra, 0, sizeof(ra));
+	ra.addrtype = AF_INET6;
+	for (i = 0; i < 4; i++) {
+	    afs_uint32 w = htonl(destination->value[i]);
+	    memcpy(((char *)&ra.rxa_in6_addr) + i * 4, &w, 4);
+	}
+	rx_address_to_sockaddr(&ra, 0, 0, &destAddr);
+	rx_set_sockaddr_port(&destAddr, htons(destPort));
+#endif
+    } else {
+	return VOLSERBADOP;
+    }
+
+    code =
+	VolForwardSA(acid, fromTrans, fromDate, &destAddr, destTrans, cookie);
+    osi_auditU(acid, VS_ForwardEvent, code, AUD_LONG, fromTrans, AUD_LONG,
+	       destTrans, AUD_END);
+    return code;
+}
+
 static_inline afs_int32
 MakeClient(struct rx_call *acid, struct rx_securityClass **securityObject,
 	   afs_int32 *securityIndex)
@@ -1293,10 +1358,17 @@ MakeClient(struct rx_call *acid, struct rx_securityClass **securityObject,
     return code;
 }
 
+/*
+ * Shared core of VolForward/VolForwardEndpoints: everything except
+ * building the destination rx_sockaddr, which the two callers do
+ * differently (destServer's IPv4-only destHost/destPort, vs.
+ * ForwardEndpoints' typed volendpoint+destPort). destAddr's port must
+ * already be set by the caller.
+ */
 static afs_int32
-VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
-	       struct destServer *destination, afs_int32 destTrans,
-	       struct restoreCookie *cookie)
+VolForwardSA(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
+	     struct rx_sockaddr *destAddr, afs_int32 destTrans,
+	     struct restoreCookie *cookie)
 {
     struct volser_trans *tt;
     afs_int32 code;
@@ -1331,9 +1403,8 @@ VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 
     /* make an rpc connection to the other server */
     tcon =
-	rx_NewConnection(htonl(destination->destHost),
-			 htons(destination->destPort), VOLSERVICE_ID,
-			 securityObject, securityIndex);
+	rx_NewConnectionSA(destAddr, VOLSERVICE_ID,
+			   securityObject, securityIndex);
 
     RXS_Close(securityObject); /* will be freed after connection destroyed */
 

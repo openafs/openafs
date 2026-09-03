@@ -60,6 +60,7 @@ statindex 16
 #define     VOLLISTOBJECTS      65546
 #define     VOLSPLIT            65547
 #define     VOLARCHCAND         65548
+#define     VOLFORWARDENDPOINTS 65549
 
 /* Bits for flags for DumpV2 */
 %#define     VOLDUMPV2_OMITDIRS 1
@@ -96,6 +97,23 @@ struct destServer {
     afs_int32 destHost;
     afs_int32 destPort;
     afs_int32 destSSID;
+};
+
+/* IPv6-capable destination address for Forward (below) - the volser
+ * sibling of the VLDB's vlendpoint/ubik's ubikendpoint (same shape,
+ * same "unrecognized type is skippable, not fatal" rule, kept as its
+ * own type rather than a cross-package dependency). No port field:
+ * carried alongside as a separate destPort parameter, matching
+ * destServer's shape, since a typed address list never carries a
+ * port in this series (a server's Rx port is a cell-wide constant,
+ * never per-address). */
+const VOLENDPOINT_IPV4 = 0;
+const VOLENDPOINT_IPV6 = 1;
+
+struct volendpoint {
+    afs_int32 type;
+    afs_int32 length;
+    afs_uint32 value[4];
 };
 
 
@@ -281,6 +299,25 @@ proc Forward(
   IN afs_int32 destTrans,
   IN struct restoreCookie *cookie
 ) = VOLFORWARD;
+
+/*
+ * ForwardEndpoints is Forward's IPv6-capable sibling: same purpose
+ * (start a volume dump/restore to a peer volserver), but the
+ * destination address is a typed volendpoint (v4 or v6) plus a
+ * separate port, instead of destServer's IPv4-only destHost. Callers
+ * try this first and fall back to Forward on RXGEN_OPCODE against a
+ * peer that predates it - the same pattern this series' VL_RegisterEndpoints
+ * (src/vlserver/vldbint.xg) and DISK_UpdateInterfaceEndpoints
+ * (src/ubik/ubik_int.xg) already established.
+ */
+proc ForwardEndpoints(
+  IN afs_int32 fromTrans,
+  IN afs_int32 fromDate,
+  IN struct volendpoint *destination,
+  IN afs_int32 destPort,
+  IN afs_int32 destTrans,
+  IN struct restoreCookie *cookie
+) = VOLFORWARDENDPOINTS;
 
 proc EndTrans(
   IN afs_int32 trans,
