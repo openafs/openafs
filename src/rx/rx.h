@@ -704,7 +704,7 @@ struct rx_debugIn {
 #define RX_DEBUGI_BADTYPE (-8)
 
 #define RX_DEBUGI_VERSION_MINIMUM ('L')	/* earliest real version */
-#define RX_DEBUGI_VERSION ('S')    		/* Latest version */
+#define RX_DEBUGI_VERSION ('T')    		/* Latest version */
     /* first version w/ secStats */
 #define RX_DEBUGI_VERSION_W_SECSTATS ('L')
     /* version M is first supporting GETALLCONN and RXSTATS type */
@@ -724,6 +724,12 @@ struct rx_debugIn {
 #define RX_DEBUGI_GETALLCONN	3	/* get even uninteresting conns */
 #define RX_DEBUGI_RXSTATS	4	/* get all rx stats */
 #define RX_DEBUGI_GETPEER	5	/* get all peer structs */
+    /* RX_DEBUGI_VERSION 'T' and later: like GETCONN/GETALLCONN/GETPEER
+     * above, but the reply carries a family-agnostic struct rx_debugAddr
+     * (rx_addr.h) instead of an IPv4-only afs_uint32 host. */
+#define RX_DEBUGI_GETCONN6	6	/* get connection info, any family */
+#define RX_DEBUGI_GETALLCONN6	7	/* get even uninteresting conns, any family */
+#define RX_DEBUGI_GETPEER6	8	/* get all peer structs, any family */
 
 struct rx_debugStats {
     afs_int32 nFreePackets;
@@ -784,6 +790,59 @@ struct rx_debugConn {
 struct rx_debugPeer {
     afs_uint32 host;
     u_short port;
+    u_short ifMTU;
+    afs_uint32 idleWhen;
+    short refCount;
+    u_char burstSize;
+    u_char burst;
+    struct clock burstWait;
+    afs_int32 rtt;
+    afs_int32 rtt_dev;
+    struct clock timeout;
+    afs_int32 nSent;
+    afs_int32 reSends;
+    afs_int32 inPacketSkew;
+    afs_int32 outPacketSkew;
+    afs_int32 rateFlag;
+    u_short natMTU;
+    u_short maxMTU;
+    u_short maxDgramPackets;
+    u_short ifDgramPackets;
+    u_short MTU;
+    u_short cwind;
+    u_short nDgramPackets;
+    u_short congestSeq;
+    afs_hyper_t bytesSent;
+    afs_hyper_t bytesReceived;
+    afs_int32 sparel[10];
+};
+
+/* Family-agnostic counterparts of rx_debugConn/rx_debugPeer, returned by
+ * RX_DEBUGI_GETCONN6/GETALLCONN6/GETPEER6 (RX_DEBUGI_VERSION 'T' and
+ * later): identical layout, except the leading host/port pair is replaced
+ * by a single struct rx_debugAddr. */
+struct rx_debugConn6 {
+    struct rx_debugAddr addr;
+    afs_int32 cid;
+    afs_int32 serial;
+    afs_int32 callNumber[RX_MAXCALLS];
+    afs_int32 error;
+    char flags;
+    char type;
+    char securityIndex;
+    char sparec[1];		/* force correct alignment */
+    char callState[RX_MAXCALLS];
+    char callMode[RX_MAXCALLS];
+    char callFlags[RX_MAXCALLS];
+    char callOther[RX_MAXCALLS];
+    struct rx_securityObjectStats secStats;
+    afs_int32 epoch;
+    afs_int32 natMTU;
+    afs_int32 sparel[9];
+};
+
+struct rx_debugPeer6 {
+    struct rx_debugAddr addr;
     u_short ifMTU;
     afs_uint32 idleWhen;
     short refCount;

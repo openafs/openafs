@@ -127,6 +127,19 @@ extern afs_int32 rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 				   afs_uint32 debugSupportedValues,
 				   struct rx_debugPeer *peer,
 				   afs_uint32 * supportedValues);
+extern afs_int32 rx_GetServerConnections6(osi_socket socket,
+					  const struct rx_sockaddr *remote,
+					  afs_int32 * nextConnection,
+					  int allConnections,
+					  afs_uint32 debugSupportedValues,
+					  struct rx_debugConn6 *conn,
+					  afs_uint32 * supportedValues);
+extern afs_int32 rx_GetServerPeers6(osi_socket socket,
+				    const struct rx_sockaddr *remote,
+				    afs_int32 * nextPeer,
+				    afs_uint32 debugSupportedValues,
+				    struct rx_debugPeer6 *peer,
+				    afs_uint32 * supportedValues);
 extern afs_int32 rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
 				      struct rx_debugPeer * peerStats);
 extern void shutdown_rx(void);
@@ -438,12 +451,12 @@ extern int rxi_NetSend(osi_socket socket, void *addr, struct iovec *dvec,
 		       int nvecs, int length, int istack);
 extern struct rx_packet *rxi_ReceiveDebugPacket(struct rx_packet *ap,
 						osi_socket asocket,
-						afs_uint32 ahost, short aport,
+						const struct rx_sockaddr *asa,
 						int istack);
 extern struct rx_packet *rxi_ReceiveVersionPacket(struct rx_packet
 						  *ap, osi_socket asocket,
-						  afs_uint32 ahost,
-						  short aport, int istack);
+						  const struct rx_sockaddr *asa,
+						  int istack);
 extern void rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 			   struct rx_packet *p, int istack);
 extern void rxi_SendPacketList(struct rx_call *call,

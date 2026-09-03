@@ -303,6 +303,52 @@ rx_ipv4_to_sockaddr(afs_uint32 ipv4, afs_uint16 port, rx_service_t service,
 #endif
 }
 
+void
+rx_sockaddr_to_debugAddr(const struct rx_sockaddr *sa, struct rx_debugAddr *da)
+{
+    memset(da, 0, sizeof(*da));
+    if (sa->rxsa_family == AF_INET) {
+	da->family = htons(RX_DEBUG_AF_INET);
+	da->port = sa->rxsa_in_port;
+	memcpy(da->addr, &sa->rxsa_s_addr, 4);
+    }
+#ifdef HAVE_IPV6
+    else if (sa->rxsa_family == AF_INET6) {
+	da->family = htons(RX_DEBUG_AF_INET6);
+	da->port = sa->rxsa_in6_port;
+	memcpy(da->addr, sa->rxsa_s6_addr, 16);
+    }
+#endif
+}
+
+int
+rx_debugAddr_to_sockaddr(const struct rx_debugAddr *da, struct rx_sockaddr *sa)
+{
+    afs_uint16 family = ntohs(da->family);
+
+    memset(sa, 0, sizeof(*sa));
+    if (family == RX_DEBUG_AF_INET) {
+	afs_uint32 addr;
+	memcpy(&addr, da->addr, 4);
+	rx_ipv4_to_sockaddr(addr, da->port, 0, sa);
+	return 0;
+    }
+#ifdef HAVE_IPV6
+    if (family == RX_DEBUG_AF_INET6) {
+	sa->rxsa_in6_family = AF_INET6;
+	memcpy(&sa->rxsa_s6_addr, da->addr, 16);
+	sa->rxsa_in6_port = da->port;
+	sa->addrlen = sizeof(struct sockaddr_in6);
+	sa->socktype = SOCK_DGRAM;
+# ifdef STRUCT_SOCKADDR_HAS_SA6_LEN
+	sa->rxsa_in6_len = sizeof(struct sockaddr_in6);
+# endif
+	return 0;
+    }
+#endif
+    return -1;
+}
+
 int
 rx_try_sockaddr_to_ipv4(const struct rx_sockaddr *a, afs_uint32 *ipv4)
 {

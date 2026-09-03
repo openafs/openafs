@@ -3599,10 +3599,11 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 #endif
     struct rx_packet *tnp;
     struct rx_sockaddr peerAddr;
-    /* rxi_ReceiveVersionPacket/rxi_ReceiveDebugPacket and the debug log
-     * below are IPv4-only diagnostic paths for now; a v6-only sender's
-     * address collapses to host 0, matching how any host that fails the
-     * IPv4 projection is handled elsewhere. */
+    /* host_dbg/port_dbg feed only the RXDEBUG trace line below, which
+     * stays an IPv4 projection (0 for a v6-only sender) purely to keep
+     * that log format unchanged; rxi_ReceiveVersionPacket/
+     * rxi_ReceiveDebugPacket themselves get the real family-agnostic
+     * peerAddr below, since their replies must reach the actual sender. */
     afs_uint32 host_dbg = 0;
     u_short port_dbg;
 
@@ -3650,11 +3651,11 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
     }
 
     if (np->header.type == RX_PACKET_TYPE_VERSION) {
-	return rxi_ReceiveVersionPacket(np, socket, host_dbg, port_dbg, 1);
+	return rxi_ReceiveVersionPacket(np, socket, &peerAddr, 1);
     }
 
     if (np->header.type == RX_PACKET_TYPE_DEBUG) {
-	return rxi_ReceiveDebugPacket(np, socket, host_dbg, port_dbg, 1);
+	return rxi_ReceiveDebugPacket(np, socket, &peerAddr, 1);
     }
 #ifdef RXDEBUG
     /* If an input tracer function is defined, call it with the packet and
@@ -7802,9 +7803,9 @@ rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
 
 #if defined(RXDEBUG) || defined(MAKEDEBUGCALL)
 static int
-MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
-	      u_char type, void *inputData, size_t inputLength,
-	      void *outputData, size_t outputLength)
+MakeDebugCallSA(osi_socket socket, const struct rx_sockaddr *remote,
+		u_char type, void *inputData, size_t inputLength,
+		void *outputData, size_t outputLength)
 {
     static afs_int32 counter = 100;
     time_t waitTime, waitCount;
@@ -7812,7 +7813,15 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
     char tbuffer[1500];
     afs_int32 code;
     struct timeval tv_now, tv_wake, tv_delta;
-    struct sockaddr_in taddr, faddr;
+    /* Big enough for whichever family the reply actually arrives on; its
+     * contents are never inspected below (the original IPv4-only version
+     * of this function didn't check the source address either - only
+     * that the reply's callNumber matches). */
+#ifdef HAVE_IPV6
+    struct sockaddr_in6 faddr;
+#else
+    struct sockaddr_in faddr;
+#endif
 #ifdef AFS_NT40_ENV
     int faddrLen;
 #else
@@ -7827,13 +7836,6 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
     counter++;
     UNLOCK_RX_DEBUG;
     tp = &tbuffer[sizeof(struct rx_header)];
-    taddr.sin_family = AF_INET;
-    taddr.sin_port = remotePort;
-    taddr.sin_addr.s_addr = remoteAddr;
-    memset(&taddr.sin_zero, 0, sizeof(taddr.sin_zero));
-#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
-    taddr.sin_len = sizeof(struct sockaddr_in);
-#endif
     while (1) {
 	memset(&theader, 0, sizeof(theader));
 	theader.epoch = htonl(999);
@@ -7849,7 +7851,7 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	memcpy(tp, inputData, inputLength);
 	code =
 	    sendto(socket, tbuffer, inputLength + sizeof(struct rx_header), 0,
-		   (struct sockaddr *)&taddr, sizeof(struct sockaddr_in));
+		   (const struct sockaddr *)&remote->addr, remote->addrlen);
 
 	/* see if there's a packet available */
 	gettimeofday(&tv_wake, NULL);
@@ -7881,7 +7883,7 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 #endif /* AFS_NT40_ENV */
 	    if (code == 1 && FD_ISSET(socket, &imask)) {
 		/* now receive a packet */
-		faddrLen = sizeof(struct sockaddr_in);
+		faddrLen = sizeof(faddr);
 		code =
 		    recvfrom(socket, tbuffer, sizeof(tbuffer), 0,
 			     (struct sockaddr *)&faddr, &faddrLen);
@@ -7909,6 +7911,18 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	code = outputLength;
     memcpy(outputData, tp, code);
     return code;
+}
+
+static int
+MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
+	      u_char type, void *inputData, size_t inputLength,
+	      void *outputData, size_t outputLength)
+{
+    struct rx_sockaddr sa;
+
+    rx_ipv4_to_sockaddr(remoteAddr, remotePort, 0, &sa);
+    return MakeDebugCallSA(socket, &sa, type, inputData, inputLength,
+			   outputData, outputLength);
 }
 #endif /* RXDEBUG */
 
@@ -8149,6 +8163,132 @@ rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 	 * NOTE:
 	 *    I don't convert host or port since we are most likely
 	 *    going to want these in NBO.
+	 */
+	peer->ifMTU = ntohs(peer->ifMTU);
+	peer->idleWhen = ntohl(peer->idleWhen);
+	peer->refCount = ntohs(peer->refCount);
+	peer->rtt = ntohl(peer->rtt);
+	peer->rtt_dev = ntohl(peer->rtt_dev);
+	peer->timeout.sec = 0;
+	peer->timeout.usec = 0;
+	peer->nSent = ntohl(peer->nSent);
+	peer->reSends = ntohl(peer->reSends);
+	peer->natMTU = ntohs(peer->natMTU);
+	peer->maxMTU = ntohs(peer->maxMTU);
+	peer->maxDgramPackets = ntohs(peer->maxDgramPackets);
+	peer->ifDgramPackets = ntohs(peer->ifDgramPackets);
+	peer->MTU = ntohs(peer->MTU);
+	peer->cwind = ntohs(peer->cwind);
+	peer->nDgramPackets = ntohs(peer->nDgramPackets);
+	peer->congestSeq = ntohs(peer->congestSeq);
+	peer->bytesSent.high = ntohl(peer->bytesSent.high);
+	peer->bytesSent.low = ntohl(peer->bytesSent.low);
+	peer->bytesReceived.high = ntohl(peer->bytesReceived.high);
+	peer->bytesReceived.low = ntohl(peer->bytesReceived.low);
+    }
+#else
+    afs_int32 rc = -1;
+#endif
+    return rc;
+}
+
+/*
+ * Family-agnostic counterparts of rx_GetServerConnections/rx_GetServerPeers:
+ * same protocol, but query RX_DEBUGI_GETCONN6/GETALLCONN6/GETPEER6 (only
+ * meaningful against a server whose rx_GetServerDebug() version is 'T' or
+ * later) and take/return a struct rx_sockaddr address instead of an
+ * IPv4-only afs_uint32/afs_uint16 pair.
+ */
+afs_int32
+rx_GetServerConnections6(osi_socket socket, const struct rx_sockaddr *remote,
+			 afs_int32 * nextConnection, int allConnections,
+			 afs_uint32 debugSupportedValues,
+			 struct rx_debugConn6 * conn,
+			 afs_uint32 * supportedValues)
+{
+#if defined(RXDEBUG) || defined(MAKEDEBUGCALL)
+    afs_int32 rc = 0;
+    struct rx_debugIn in;
+    int i;
+
+    /*
+     * supportedValues is currently unused, but added to allow future
+     * versioning of this function.
+     */
+
+    *supportedValues = 0;
+    if (allConnections) {
+	in.type = htonl(RX_DEBUGI_GETALLCONN6);
+    } else {
+	in.type = htonl(RX_DEBUGI_GETCONN6);
+    }
+    in.index = htonl(*nextConnection);
+    memset(conn, 0, sizeof(*conn));
+
+    rc = MakeDebugCallSA(socket, remote, RX_PACKET_TYPE_DEBUG,
+			 &in, sizeof(in), conn, sizeof(*conn));
+
+    if (rc >= 0) {
+	*nextConnection += 1;
+
+	/*
+	 * Do net to host conversion here
+	 * NOTE:
+	 *    I don't convert the address since we are most likely
+	 *    going to want it in NBO.
+	 */
+	conn->cid = ntohl(conn->cid);
+	conn->serial = ntohl(conn->serial);
+	for (i = 0; i < RX_MAXCALLS; i++) {
+	    conn->callNumber[i] = ntohl(conn->callNumber[i]);
+	}
+	conn->error = ntohl(conn->error);
+	conn->secStats.flags = ntohl(conn->secStats.flags);
+	conn->secStats.expires = ntohl(conn->secStats.expires);
+	conn->secStats.packetsReceived =
+	    ntohl(conn->secStats.packetsReceived);
+	conn->secStats.packetsSent = ntohl(conn->secStats.packetsSent);
+	conn->secStats.bytesReceived = ntohl(conn->secStats.bytesReceived);
+	conn->secStats.bytesSent = ntohl(conn->secStats.bytesSent);
+	conn->epoch = ntohl(conn->epoch);
+	conn->natMTU = ntohl(conn->natMTU);
+    }
+#else
+    afs_int32 rc = -1;
+#endif
+    return rc;
+}
+
+afs_int32
+rx_GetServerPeers6(osi_socket socket, const struct rx_sockaddr *remote,
+		   afs_int32 * nextPeer, afs_uint32 debugSupportedValues,
+		   struct rx_debugPeer6 * peer, afs_uint32 * supportedValues)
+{
+#if defined(RXDEBUG) || defined(MAKEDEBUGCALL)
+    afs_int32 rc = 0;
+    struct rx_debugIn in;
+
+    /*
+     * supportedValues is currently unused, but added to allow future
+     * versioning of this function.
+     */
+
+    *supportedValues = 0;
+    in.type = htonl(RX_DEBUGI_GETPEER6);
+    in.index = htonl(*nextPeer);
+    memset(peer, 0, sizeof(*peer));
+
+    rc = MakeDebugCallSA(socket, remote, RX_PACKET_TYPE_DEBUG,
+			 &in, sizeof(in), peer, sizeof(*peer));
+
+    if (rc >= 0) {
+	*nextPeer += 1;
+
+	/*
+	 * Do net to host conversion here
+	 * NOTE:
+	 *    I don't convert the address since we are most likely
+	 *    going to want it in NBO.
 	 */
 	peer->ifMTU = ntohs(peer->ifMTU);
 	peer->idleWhen = ntohl(peer->idleWhen);

@@ -96,7 +96,7 @@ extern char cml_version_number[];
 static int AllocPacketBufs(int class, int num_pkts, struct opr_queue *q);
 
 static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
-				afs_uint32 ahost, short aport,
+				const struct rx_sockaddr *dest,
 				afs_int32 istack);
 static struct rx_packet *rxi_AllocPacketNoLock(int class);
 
@@ -1798,7 +1798,7 @@ rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
 
 struct rx_packet *
 rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
-		       afs_uint32 ahost, short aport, int istack)
+		       const struct rx_sockaddr *asa, int istack)
 {
     struct rx_debugIn tin;
     afs_int32 tl;
@@ -1850,7 +1850,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 		rx_packetwrite(ap, 0, sizeof(struct rx_debugStats),
 			       (char *)&tstat);
 		ap->length = sizeof(struct rx_debugStats);
-		rxi_SendDebugPacket(ap, asocket, ahost, aport, istack);
+		rxi_SendDebugPacket(ap, asocket, asa, istack);
 		rx_computelen(ap, ap->length);
 	    }
 	    break;
@@ -1952,8 +1952,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 				       (char *)&tconn);
 			tl = ap->length;
 			ap->length = sizeof(struct rx_debugConn);
-			rxi_SendDebugPacket(ap, asocket, ahost, aport,
-					    istack);
+			rxi_SendDebugPacket(ap, asocket, asa, istack);
 			ap->length = tl;
 			return ap;
 		    }
@@ -1966,7 +1965,119 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			   (char *)&tconn);
 	    tl = ap->length;
 	    ap->length = sizeof(struct rx_debugConn);
-	    rxi_SendDebugPacket(ap, asocket, ahost, aport, istack);
+	    rxi_SendDebugPacket(ap, asocket, asa, istack);
+	    ap->length = tl;
+	    break;
+	}
+
+    case RX_DEBUGI_GETALLCONN6:
+    case RX_DEBUGI_GETCONN6:{
+            unsigned int i, j;
+	    struct rx_connection *tc;
+	    struct rx_call *tcall;
+	    struct rx_debugConn6 tconn6;
+	    int all = (tin.type == RX_DEBUGI_GETALLCONN6);
+
+	    tl = sizeof(struct rx_debugConn6) - ap->length;
+	    if (tl > 0)
+		tl = rxi_AllocDataBuf(ap, tl, RX_PACKET_CLASS_SEND_CBUF);
+	    if (tl > 0)
+		return ap;
+
+	    memset(&tconn6, 0, sizeof(tconn6));	/* make sure spares are zero */
+	    /* get N'th (maybe) "interesting" connection info */
+	    for (i = 0; i < rx_hashTableSize; i++) {
+#if !defined(KERNEL)
+		/* the time complexity of the algorithm used here
+		 * exponentially increses with the number of connections.
+		 */
+#ifdef AFS_PTHREAD_ENV
+		pthread_yield();
+#else
+		(void)IOMGR_Poll();
+#endif
+#endif
+		MUTEX_ENTER(&rx_connHashTable_lock);
+		/* We might be slightly out of step since we are not
+		 * locking each call, but this is only debugging output.
+		 */
+		for (tc = rx_connHashTable[i]; tc; tc = tc->next) {
+		    if ((all || rxi_IsConnInteresting(tc))
+			&& tin.index-- <= 0) {
+			int do_secstats = 0;
+			rx_sockaddr_to_debugAddr(&tc->peer->saddr, &tconn6.addr);
+			tconn6.cid = htonl(tc->cid);
+			tconn6.epoch = htonl(tc->epoch);
+			tconn6.serial = htonl(tc->serial);
+			for (j = 0; j < RX_MAXCALLS; j++) {
+			    tconn6.callNumber[j] = htonl(tc->callNumber[j]);
+			    if ((tcall = tc->call[j])) {
+				tconn6.callState[j] = tcall->state;
+				tconn6.callMode[j] = tcall->app.mode;
+				tconn6.callFlags[j] = tcall->flags;
+				if (!opr_queue_IsEmpty(&tcall->rq))
+				    tconn6.callOther[j] |= RX_OTHER_IN;
+				if (!opr_queue_IsEmpty(&tcall->tq))
+				    tconn6.callOther[j] |= RX_OTHER_OUT;
+			    } else
+				tconn6.callState[j] = RX_STATE_NOTINIT;
+			}
+
+			tconn6.natMTU = htonl(tc->peer->natMTU);
+			tconn6.error = htonl(tc->error);
+			tconn6.flags = (u_char) (tc->flags & 0xff);  /* compat. */
+			tconn6.type = tc->type;
+			tconn6.securityIndex = tc->securityIndex;
+			if (tc->securityObject) {
+			    int code;
+			    code = RXS_GetStats(tc->securityObject, tc,
+						&tconn6.secStats);
+			    if (code == 0) {
+				do_secstats = 1;
+			    }
+			}
+			if (do_secstats) {
+#define DOHTONL6(a) (tconn6.secStats.a = htonl(tconn6.secStats.a))
+#define DOHTONS6(a) (tconn6.secStats.a = htons(tconn6.secStats.a))
+			    DOHTONL6(flags);
+			    DOHTONL6(expires);
+			    DOHTONL6(packetsReceived);
+			    DOHTONL6(packetsSent);
+			    DOHTONL6(bytesReceived);
+			    DOHTONL6(bytesSent);
+			    for (i = 0;
+				 i <
+				 sizeof(tconn6.secStats.spares) /
+				 sizeof(short); i++)
+				DOHTONS6(spares[i]);
+			    for (i = 0;
+				 i <
+				 sizeof(tconn6.secStats.sparel) /
+				 sizeof(afs_int32); i++)
+				DOHTONL6(sparel[i]);
+			} else {
+			    memset(&tconn6.secStats, 0, sizeof(tconn6.secStats));
+			}
+
+			MUTEX_EXIT(&rx_connHashTable_lock);
+			rx_packetwrite(ap, 0, sizeof(struct rx_debugConn6),
+				       (char *)&tconn6);
+			tl = ap->length;
+			ap->length = sizeof(struct rx_debugConn6);
+			rxi_SendDebugPacket(ap, asocket, asa, istack);
+			ap->length = tl;
+			return ap;
+		    }
+		}
+		MUTEX_EXIT(&rx_connHashTable_lock);
+	    }
+	    /* if we make it here, there are no interesting packets */
+	    tconn6.cid = htonl(0xffffffff);	/* means end */
+	    rx_packetwrite(ap, 0, sizeof(struct rx_debugConn6),
+			   (char *)&tconn6);
+	    tl = ap->length;
+	    ap->length = sizeof(struct rx_debugConn6);
+	    rxi_SendDebugPacket(ap, asocket, asa, istack);
 	    ap->length = tl;
 	    break;
 	}
@@ -2051,8 +2162,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 				       (char *)&tpeer);
 			tl = ap->length;
 			ap->length = sizeof(struct rx_debugPeer);
-			rxi_SendDebugPacket(ap, asocket, ahost, aport,
-					    istack);
+			rxi_SendDebugPacket(ap, asocket, asa, istack);
 			ap->length = tl;
 			return ap;
 		    }
@@ -2065,7 +2175,94 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			   (char *)&tpeer);
 	    tl = ap->length;
 	    ap->length = sizeof(struct rx_debugPeer);
-	    rxi_SendDebugPacket(ap, asocket, ahost, aport, istack);
+	    rxi_SendDebugPacket(ap, asocket, asa, istack);
+	    ap->length = tl;
+	    break;
+	}
+
+	/*
+	 * Same as RX_DEBUGI_GETPEER, but with a family-agnostic address.
+	 */
+
+    case RX_DEBUGI_GETPEER6:{
+	    unsigned int i;
+	    struct rx_peer *tp;
+	    struct rx_debugPeer6 tpeer6;
+
+	    tl = sizeof(struct rx_debugPeer6) - ap->length;
+	    if (tl > 0)
+		tl = rxi_AllocDataBuf(ap, tl, RX_PACKET_CLASS_SEND_CBUF);
+	    if (tl > 0)
+		return ap;
+
+	    memset(&tpeer6, 0, sizeof(tpeer6));
+	    for (i = 0; i < rx_hashTableSize; i++) {
+#if !defined(KERNEL)
+#ifdef AFS_PTHREAD_ENV
+		pthread_yield();
+#else
+		(void)IOMGR_Poll();
+#endif
+#endif
+		MUTEX_ENTER(&rx_peerHashTable_lock);
+		for (tp = rx_peerHashTable[i]; tp; tp = tp->next) {
+		    if (tin.index-- <= 0) {
+                        tp->refCount++;
+                        MUTEX_EXIT(&rx_peerHashTable_lock);
+
+                        MUTEX_ENTER(&tp->peer_lock);
+			rx_sockaddr_to_debugAddr(&tp->saddr, &tpeer6.addr);
+			tpeer6.ifMTU = htons(tp->ifMTU);
+			tpeer6.idleWhen = htonl(tp->idleWhen);
+			tpeer6.refCount = htons(tp->refCount);
+			tpeer6.burstSize = 0;
+			tpeer6.burst = 0;
+			tpeer6.burstWait.sec = 0;
+			tpeer6.burstWait.usec = 0;
+			tpeer6.rtt = htonl(tp->rtt);
+			tpeer6.rtt_dev = htonl(tp->rtt_dev);
+			tpeer6.nSent = htonl(tp->nSent);
+			tpeer6.reSends = htonl(tp->reSends);
+			tpeer6.natMTU = htons(tp->natMTU);
+			tpeer6.maxMTU = htons(tp->maxMTU);
+			tpeer6.maxDgramPackets = htons(tp->maxDgramPackets);
+			tpeer6.ifDgramPackets = htons(tp->ifDgramPackets);
+			tpeer6.MTU = htons(tp->MTU);
+			tpeer6.cwind = htons(tp->cwind);
+			tpeer6.nDgramPackets = htons(tp->nDgramPackets);
+			tpeer6.congestSeq = htons(tp->congestSeq);
+			tpeer6.bytesSent.high =
+			    htonl(tp->bytesSent >> 32);
+			tpeer6.bytesSent.low =
+			    htonl(tp->bytesSent & MAX_AFS_UINT32);
+			tpeer6.bytesReceived.high =
+			    htonl(tp->bytesReceived >> 32);
+			tpeer6.bytesReceived.low =
+			    htonl(tp->bytesReceived & MAX_AFS_UINT32);
+                        MUTEX_EXIT(&tp->peer_lock);
+
+                        MUTEX_ENTER(&rx_peerHashTable_lock);
+                        tp->refCount--;
+			MUTEX_EXIT(&rx_peerHashTable_lock);
+
+			rx_packetwrite(ap, 0, sizeof(struct rx_debugPeer6),
+				       (char *)&tpeer6);
+			tl = ap->length;
+			ap->length = sizeof(struct rx_debugPeer6);
+			rxi_SendDebugPacket(ap, asocket, asa, istack);
+			ap->length = tl;
+			return ap;
+		    }
+		}
+		MUTEX_EXIT(&rx_peerHashTable_lock);
+	    }
+	    /* if we make it here, there are no interesting packets */
+	    tpeer6.addr.family = htons(0xffff);	/* means end */
+	    rx_packetwrite(ap, 0, sizeof(struct rx_debugPeer6),
+			   (char *)&tpeer6);
+	    tl = ap->length;
+	    ap->length = sizeof(struct rx_debugPeer6);
+	    rxi_SendDebugPacket(ap, asocket, asa, istack);
 	    ap->length = tl;
 	    break;
 	}
@@ -2091,7 +2288,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 	    ap->length = sizeof(rx_stats);
 	    if (rx_stats_active)
 		MUTEX_EXIT(&rx_stats_mutex);
-	    rxi_SendDebugPacket(ap, asocket, ahost, aport, istack);
+	    rxi_SendDebugPacket(ap, asocket, asa, istack);
 	    ap->length = tl;
 	    break;
 	}
@@ -2103,7 +2300,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 	rx_packetwrite(ap, 0, sizeof(struct rx_debugIn), (char *)&tin);
 	tl = ap->length;
 	ap->length = sizeof(struct rx_debugIn);
-	rxi_SendDebugPacket(ap, asocket, ahost, aport, istack);
+	rxi_SendDebugPacket(ap, asocket, asa, istack);
 	ap->length = tl;
 	break;
     }
@@ -2112,7 +2309,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 
 struct rx_packet *
 rxi_ReceiveVersionPacket(struct rx_packet *ap, osi_socket asocket,
-			 afs_uint32 ahost, short aport, int istack)
+			 const struct rx_sockaddr *asa, int istack)
 {
     afs_int32 tl;
 
@@ -2130,7 +2327,7 @@ rxi_ReceiveVersionPacket(struct rx_packet *ap, osi_socket asocket,
 	rx_packetwrite(ap, 0, 65, buf);
 	tl = ap->length;
 	ap->length = 65;
-	rxi_SendDebugPacket(ap, asocket, ahost, aport, istack);
+	rxi_SendDebugPacket(ap, asocket, asa, istack);
 	ap->length = tl;
     }
 
@@ -2141,10 +2338,8 @@ rxi_ReceiveVersionPacket(struct rx_packet *ap, osi_socket asocket,
 /* send a debug packet back to the sender */
 static void
 rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
-		    afs_uint32 ahost, short aport, afs_int32 istack)
+		    const struct rx_sockaddr *dest, afs_int32 istack)
 {
-    /* The rxdebug wire protocol is still IPv4-only, so ahost/aport (taken
-     * from the request packet) are always IPv4 here. */
     struct rx_sockaddr addr;
     unsigned int i, nbytes, savelen = 0;
     int saven = 0;
@@ -2152,7 +2347,7 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
     int waslocked = ISAFS_GLOCK();
 #endif
 
-    rx_ipv4_to_sockaddr(ahost, aport, 0, &addr);
+    rx_copy_sockaddr(dest, &addr);
 
     /* We need to trim the niovecs. */
     nbytes = apacket->length;

@@ -113,6 +113,7 @@ rx_compare_address
 rx_compare_sockaddr
 rx_copy_address
 rx_copy_sockaddr
+rx_debugAddr_to_sockaddr
 rx_hash_sockaddr
 rx_inet42str
 rx_ipv4_to_address
@@ -124,6 +125,7 @@ rx_print_address
 rx_print_sockaddr
 rx_sockaddr2str
 rx_sockaddr_to_address
+rx_sockaddr_to_debugAddr
 rx_try_address_to_ipv4
 rx_try_sockaddr_to_ipv4
 rx_clearPeerRPCStats

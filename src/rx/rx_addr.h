@@ -107,6 +107,28 @@ struct rx_address {
 # define rxa_in6_addr addr.in6
 #endif
 
+/*
+ * rx_debugAddr - the wire form of an address used by the RX_DEBUGI_GETCONN6/
+ * RX_DEBUGI_GETALLCONN6/RX_DEBUGI_GETPEER6 rxdebug replies (RX_DEBUGI_VERSION
+ * 'T' and later). A plain sa_family_t is not portable on the wire - Linux and
+ * Darwin/BSD disagree on the numeric value of AF_INET6 - so family is one of
+ * the RX_DEBUG_AF_* constants below, not the local AF_INET6. port and addr
+ * are in network byte order; addr holds all 16 bytes for an IPv6 address, or
+ * an IPv4 address in the first 4 bytes (the rest zero).
+ */
+struct rx_debugAddr {
+    afs_uint16 family;
+    afs_uint16 port;
+    unsigned char addr[16];
+};
+#define RX_DEBUG_AF_INET  2	/* matches AF_INET on every real platform */
+#define RX_DEBUG_AF_INET6 10	/* wire-protocol constant; not the local AF_INET6 */
+
+void rx_sockaddr_to_debugAddr(const struct rx_sockaddr *sa,
+			      struct rx_debugAddr *da);
+int rx_debugAddr_to_sockaddr(const struct rx_debugAddr *da,
+			     struct rx_sockaddr *sa);
+
 /* Masks for rx_compare_sockaddr() */
 #define RXA_ADDR      0x01
 #define RXA_PORT      0x02

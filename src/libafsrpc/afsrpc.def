@@ -372,6 +372,10 @@ EXPORTS
 	rx_NewConnectionSA                       @377
 	rx_Init2                                 @378
 	rx_InitHost2                             @379
+	rx_GetServerConnections6                 @380
+	rx_GetServerPeers6                       @381
+	rx_sockaddr_to_debugAddr                 @382
+	rx_debugAddr_to_sockaddr                 @383
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
