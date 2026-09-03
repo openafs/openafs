@@ -679,6 +679,7 @@ ubik_Call(ubik_call_func aproc, struct ubik_client *aclient,
 	if (!rcode) {		/* Remember the sync site - cmd successful */
 	    rxp = rx_PeerOf(aclient->conns[count]);
 	    aclient->syncSite = rx_HostOf(rxp);
+	    rx_copy_sockaddr(rx_SockaddrOf(rxp), &aclient->syncSiteAddr);
 	}
     }
     UNLOCK_UBIK_CLIENT(aclient);

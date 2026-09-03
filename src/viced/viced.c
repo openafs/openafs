@@ -1792,8 +1792,22 @@ Do_VLRegisterRPC(void)
     if (!endpoints.vlendpoints_val)
 	return Do_VLRegisterAddrsRPC();
     endpoints.vlendpoints_len = 0;
-    for (i = 0; i < naddrs; i++) {
+    for (i = 0; i < naddrs && endpoints.vlendpoints_len < VL_MAXENDPOINTS; i++) {
 	struct vlendpoint *ep = &endpoints.vlendpoints_val[endpoints.vlendpoints_len];
+
+	/* Loopback is never useful to register - a remote client could
+	 * never reach us there - and rx_getAllSockaddr() (unlike the old
+	 * rx_getAllAddr()-based path this replaces) does return it, so
+	 * skip it explicitly. Also enforces the vlendpoints<VL_MAXENDPOINTS>
+	 * wire bound (VL_MAXENDPOINTS=8): rx_getAllSockaddr() can return up
+	 * to ADDRSPERSITE=16 addresses on a host with several interfaces,
+	 * and unlike the server-side SVL_RegisterEndpoints, this client-side
+	 * XDR marshalling has no truncate-and-warn fallback - sending more
+	 * than VL_MAXENDPOINTS is a marshalling error (RX_INVALID_OPERATION),
+	 * not a graceful truncation, so it must be capped before the call.
+	 */
+	if (rx_is_loopback_sockaddr(&addrs[i]))
+	    continue;
 
 	memset(ep, 0, sizeof(*ep));
 	if (addrs[i].rxsa_family == AF_INET) {

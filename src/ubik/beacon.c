@@ -233,6 +233,52 @@ ubeacon_InitSecurityClass(void)
     }
 }
 
+/*!
+ * Create a new client connection to the VOTE service on the specified host.
+ * Ensure that the Rx dead time for this connection is compliant with the ubik
+ * invariant:
+ *
+ *    SMALLTIME 60s > (rpc timeout) + max(rpc timeout, POLLTIME 15s)
+ *
+ * Therefore the rx dead time for VOTE connections must be less than 30s.
+ *
+ * \param shost	    IPv4 address of db server, in network order
+ *
+ * \pre UBIK_ADDR_LOCK
+ */
+struct rx_connection *
+ubeacon_NewVOTEConnection(afs_uint32 shost)
+{
+    struct rx_connection *vote_conn;
+
+    vote_conn = rx_NewConnection(shost, ubik_callPortal, VOTE_SERVICE_ID,
+			         addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
+    opr_Assert(vote_conn != NULL);
+    rx_SetConnDeadTime(vote_conn, VOTE_RPCTIMEOUT);
+    rx_SetConnHardDeadTime(vote_conn, VOTE_RPCTIMEOUT);
+    return vote_conn;
+}
+
+/*!
+ * ubeacon_NewVOTEConnection()'s IPv6-capable sibling: same purpose and
+ * invariant, but takes the server's real primary address (either
+ * family) instead of a bare IPv4 afs_uint32. saddr's port is set to
+ * ubik_callPortal by the caller (see ubeacon_InitServerListCommon()).
+ *
+ * \pre UBIK_ADDR_LOCK
+ */
+struct rx_connection *
+ubeacon_NewVOTEConnectionSA(struct rx_sockaddr *saddr)
+{
+    struct rx_connection *vote_conn;
+
+    vote_conn = rx_NewConnectionSA(saddr, VOTE_SERVICE_ID,
+				   addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
+    opr_Assert(vote_conn != NULL);
+    rx_SetConnDeadTime(vote_conn, VOTE_RPCTIMEOUT);
+    rx_SetConnHardDeadTime(vote_conn, VOTE_RPCTIMEOUT);
+    return vote_conn;
+}
 void
 ubeacon_ReinitServer(struct ubik_server *ts)
 {
@@ -242,19 +288,20 @@ ubeacon_ReinitServer(struct ubik_server *ts)
 	struct rx_connection *tmp;
 	UBIK_ADDR_LOCK;
 	ubeacon_InitSecurityClass();
+
+	/* ts->addr_sa (either family) is the source of truth for this
+	 * server's address, not rx_HostOf()/rx_PeerOf() on the connection
+	 * being replaced - rx_HostOf() would silently collapse to 0 for
+	 * an IPv6 peer. */
 	disk_rxcid =
-	    rx_NewConnection(rx_HostOf(rx_PeerOf(ts->disk_rxcid)),
-			     ubik_callPortal, DISK_SERVICE_ID,
-			     addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
+	    rx_NewConnectionSA(&ts->addr_sa, DISK_SERVICE_ID,
+			       addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
 	if (disk_rxcid) {
 	    tmp = ts->disk_rxcid;
 	    ts->disk_rxcid = disk_rxcid;
 	    rx_PutConnection(tmp);
 	}
-	vote_rxcid =
-	    rx_NewConnection(rx_HostOf(rx_PeerOf(ts->vote_rxcid)),
-			     ubik_callPortal, VOTE_SERVICE_ID,
-			     addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
+	vote_rxcid = ubeacon_NewVOTEConnectionSA(&ts->addr_sa);
 	if (vote_rxcid) {
 	    tmp = ts->vote_rxcid;
 	    ts->vote_rxcid = vote_rxcid;
@@ -310,6 +357,17 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
     magicServer = (struct ubik_server *)0;
 
     if (info) {
+	/* magicAddr/haveMagic track the family-aware equivalent of
+	 * magicHost (which stays an IPv4-only afs_uint32 for compatibility
+	 * with anything else that still reads it) - a peer whose primary
+	 * address is IPv6 has magicHost==0 (info->hostAddr[i].rxsa_s_addr
+	 * is 0 for a non-IPv4 entry) and would otherwise always lose the
+	 * "!magicHost" no-magic-yet check below, silently excluding every
+	 * IPv6-primary peer from ever becoming magic. */
+	struct rx_sockaddr magicAddr;
+	int haveMagic = 0;
+
+	memset(&magicAddr, 0, sizeof(magicAddr));
 	for (i = 0; i < info->numServers; i++) {
 	    if (ntohl((afs_uint32) info->hostAddr[i].rxsa_s_addr) ==
 		ntohl((afs_uint32) ame)) {
@@ -328,27 +386,27 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 	    ts->next = ubik_servers;
 	    ubik_servers = ts;
 	    ts->addr[0] = info->hostAddr[i].rxsa_s_addr;
+	    rx_copy_sockaddr(&info->hostAddr[i], &ts->addr_sa);
+	    rx_set_sockaddr_port(&ts->addr_sa, ubik_callPortal);
 	    if (clones[i]) {
 		ts->isClone = 1;
 	    } else {
-		if (!magicHost
-		    || ntohl((afs_uint32) ts->addr[0]) <
-		    (afs_uint32) magicHost) {
+		if (!haveMagic
+		    || rx_order_sockaddr(&ts->addr_sa, &magicAddr) < 0) {
+		    magicAddr = ts->addr_sa;
+		    haveMagic = 1;
 		    magicHost = ntohl(ts->addr[0]);
 		    magicServer = ts;
 		}
 		++nServers;
 	    }
 	    /* for vote reqs */
-	    ts->vote_rxcid =
-		rx_NewConnection(info->hostAddr[i].rxsa_s_addr,
-				 ubik_callPortal, VOTE_SERVICE_ID,
-				 addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
+	    ts->vote_rxcid = ubeacon_NewVOTEConnectionSA(&ts->addr_sa);
+
 	    /* for disk reqs */
 	    ts->disk_rxcid =
-		rx_NewConnection(info->hostAddr[i].rxsa_s_addr,
-				 ubik_callPortal, DISK_SERVICE_ID,
-				 addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
+		rx_NewConnectionSA(&ts->addr_sa, DISK_SERVICE_ID,
+				   addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
 	    ts->up = 1;
 	}
     } else {
@@ -811,6 +869,17 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 	if (*ame != myAddr[j])
 	    ubik_host[i++] = myAddr[j];
 
+    /* ubik_host_sa is the family-aware mirror of ubik_host[0] that
+     * election ordering (src/ubik/vote.c) actually compares against -
+     * it must be kept in lockstep with ubik_host[0] here even though
+     * this function (and thus "my own identity") is still IPv4-only,
+     * or every self-nomination comparison in SVOTE_Beacon silently
+     * fails forever (rxsa_family stays 0, "unset"), and no server ever
+     * casts a yes vote for itself or anyone else - confirmed for real
+     * on this project's own test fleet: the whole 2-node quorum simply
+     * never elected a sync site until this was added. */
+    rx_ipv4_to_sockaddr(ubik_host[0], ubik_callPortal, 0, &ubik_host_sa);
+
     return 0;			/* return success */
 }
 
@@ -889,6 +958,82 @@ ubeacon_updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 	    }
 	}
 	multi_End;
+
+	/*
+	 * IPv6-capable sibling pass: same peers, but exchanging the real
+	 * typed (v4+v6) address list instead of the bare IPv4-only one
+	 * above. Deliberately a second, independent multi_Rx rather than
+	 * folded into the loop above - a peer that doesn't support this
+	 * RPC yet (RXGEN_OPCODE) already got everything it needs from the
+	 * DISK_UpdateInterfaceAddr pass above, so this pass can fail for
+	 * it with no functional loss, and the two passes never need to
+	 * agree on error handling for the same connection.
+	 */
+	{
+	    ubikendpoints inEp, outEp;
+	    struct ubikendpoint inEpBuf[UBIK_MAXENDPOINTS];
+	    int n = 0;
+
+	    memset(inEpBuf, 0, sizeof(inEpBuf));
+	    if (ubik_host_sa.rxsa_family == AF_INET6 && n < UBIK_MAXENDPOINTS) {
+		afs_uint32 words[4];
+
+		memcpy(words, &ubik_host_sa.rxsa_in6_addr, sizeof(words));
+		inEpBuf[n].type = UBIK_ENDPOINT_IPV6;
+		inEpBuf[n].length = 16;
+		inEpBuf[n].value[0] = ntohl(words[0]);
+		inEpBuf[n].value[1] = ntohl(words[1]);
+		inEpBuf[n].value[2] = ntohl(words[2]);
+		inEpBuf[n].value[3] = ntohl(words[3]);
+		n++;
+	    }
+	    for (j = 0; j < UBIK_MAX_INTERFACE_ADDR && n < UBIK_MAXENDPOINTS; j++) {
+		if (!ubik_host[j])
+		    continue;
+		inEpBuf[n].type = UBIK_ENDPOINT_IPV4;
+		inEpBuf[n].length = 4;
+		inEpBuf[n].value[0] = ntohl(ubik_host[j]);
+		n++;
+	    }
+	    inEp.ubikendpoints_len = n;
+	    inEp.ubikendpoints_val = inEpBuf;
+
+	    multi_Rx(conns, count) {
+		memset(&outEp, 0, sizeof(outEp));
+		multi_DISK_UpdateInterfaceEndpoints(&inEp, &outEp);
+		ts = server[multi_i];
+		if (!multi_error) {
+		    int k;
+
+		    UBIK_ADDR_LOCK;
+		    for (k = 0; k < outEp.ubikendpoints_len; k++) {
+			struct ubikendpoint *ep = &outEp.ubikendpoints_val[k];
+
+			if (ep->type == UBIK_ENDPOINT_IPV6) {
+			    struct rx_address ra;
+			    int m;
+
+			    memset(&ra, 0, sizeof(ra));
+			    ra.addrtype = AF_INET6;
+			    for (m = 0; m < 4; m++) {
+				afs_uint32 w = htonl(ep->value[m]);
+				memcpy(((char *)&ra.rxa_in6_addr) + m * 4,
+				       &w, 4);
+			    }
+			    rx_address_to_sockaddr(&ra, 0, 0, &ts->addr_sa);
+			    rx_set_sockaddr_port(&ts->addr_sa, ubik_callPortal);
+			    break;	/* one primary v6 address is enough */
+			}
+		    }
+		    UBIK_ADDR_UNLOCK;
+		    xdr_free((xdrproc_t) xdr_ubikendpoints, &outEp);
+		}
+		/* RXGEN_OPCODE (peer predates this RPC), UBADHOST, and any
+		 * other error are all silently ignored here - the pass
+		 * above already handled this connection's IPv4 addresses
+		 * and marked it down if truly unreachable. */
+	    } multi_End;
+	}
     }
     return code;
 }

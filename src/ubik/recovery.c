@@ -942,6 +942,17 @@ DoProbe(struct ubik_server *server)
 	    break;
 	}
     }
+    if (i == 0 && server->addr_sa.rxsa_family) {
+	/* server->addr[] (the legacy IPv4 multi-homed list) is empty -
+	 * true for any server whose primary address is IPv6, since only
+	 * an IPv4 primary/secondary ever lands in addr[] (see
+	 * ubeacon_InitServerListCommon() in beacon.c). Fall back to the
+	 * real primary address rather than asserting below - this is the
+	 * only address such a server has. */
+	conns[0] = rx_NewConnectionSA(&server->addr_sa, DISK_SERVICE_ID,
+				      addr_globals.ubikSecClass, addr_globals.ubikSecIndex);
+	i = 1;
+    }
     UBIK_ADDR_UNLOCK;
     nconns = i;
     opr_Assert(nconns);			/* at least one interface address for this server */
@@ -966,10 +977,14 @@ DoProbe(struct ubik_server *server)
 
 	/* make new connections */
 	server->disk_rxcid = conns[success_i];
-	server->vote_rxcid = rx_NewConnection(addr, ubik_callPortal,
-	                                      VOTE_SERVICE_ID, addr_globals.ubikSecClass,
-	                                      addr_globals.ubikSecIndex);
-
+	if (!addr && server->addr_sa.rxsa_family) {
+	    /* addr[success_i] is 0 - this was the addr_sa fallback
+	     * connection above (a server with no IPv4 address at all),
+	     * not a real entry in the legacy addr[] list. */
+	    server->vote_rxcid = ubeacon_NewVOTEConnectionSA(&server->addr_sa);
+	} else {
+	    server->vote_rxcid = ubeacon_NewVOTEConnection(addr);
+	}
 	connSuccess = conns[success_i];
 	strcpy(buffer, afs_inet_ntoa_r(server->addr[0], hoststr));
 

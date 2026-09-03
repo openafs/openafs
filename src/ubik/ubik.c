@@ -79,6 +79,7 @@ afs_int32 ubik_quorum = 0;
 struct ubik_dbase *ubik_dbase = 0;
 struct ubik_stats ubik_stats;
 afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR];
+struct rx_sockaddr ubik_host_sa;
 afs_int32 urecovery_state = 0;
 int (*ubik_SyncWriterCacheProc) (void);
 struct ubik_server *ubik_servers;
@@ -1402,6 +1403,43 @@ ubikGetPrimaryInterfaceAddr(afs_uint32 addr)
 	    }
     UBIK_ADDR_UNLOCK;
     return 0;			/* if not in server database, return error */
+}
+
+/*!
+ * ubikGetPrimaryInterfaceAddr()'s IPv6-capable sibling: takes a real
+ * address (either family) and returns the ubik_server it belongs to,
+ * or NULL if not found - used instead of the IPv4-only version
+ * anywhere the caller needs to distinguish two different IPv6-only
+ * peers, which would otherwise both look like "address 0" through the
+ * IPv4-projecting version. Checks addr_sa (the real primary) first,
+ * then falls back to the legacy addr[] list for an IPv4 match at a
+ * non-primary interface, matching ubikGetPrimaryInterfaceAddr()'s
+ * existing semantics for that case.
+ *
+ * \pre UBIK_ADDR_LOCK held by caller, NOT taken here (unlike
+ * ubikGetPrimaryInterfaceAddr()) - every call site already holds it
+ * for the comparisons it does around this lookup.
+ */
+struct ubik_server *
+ubikGetPrimaryInterfaceSA(const struct rx_sockaddr *addr)
+{
+    struct ubik_server *ts;
+    int j;
+
+    for (ts = ubik_servers; ts; ts = ts->next) {
+	if (ts->addr_sa.rxsa_family
+	    && rx_order_sockaddr(&ts->addr_sa, addr) == 0) {
+	    return ts;
+	}
+	if (addr->rxsa_family == AF_INET) {
+	    for (j = 0; j < UBIK_MAX_INTERFACE_ADDR; j++) {
+		if (ts->addr[j] && ts->addr[j] == addr->rxsa_s_addr) {
+		    return ts;
+		}
+	    }
+	}
+    }
+    return NULL;
 }
 
 int

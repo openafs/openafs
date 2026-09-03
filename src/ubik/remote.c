@@ -731,6 +731,141 @@ SDISK_UpdateInterfaceAddr(struct rx_call *rxcall,
     return 0;
 }
 
+/*!
+ * \brief SDISK_UpdateInterfaceAddr's IPv6-capable sibling.
+ *
+ * Same "trade interface address lists at startup" purpose, but a typed
+ * (v4+v6) list instead of a bare afs_int32[256] of IPv4 addresses.
+ * inAddr[0] is the caller's primary address (either family) - used to
+ * identify which ubik_server this is, via ubikGetPrimaryInterfaceSA()
+ * rather than a bare afs_uint32 comparison, so an IPv6-only caller is
+ * matched correctly instead of colliding with every other IPv6-only
+ * peer's IPv4 projection of 0. Any remaining entries populate the
+ * IPv4 subset of that server's legacy addr[] list, exactly as
+ * SDISK_UpdateInterfaceAddr does for its hostAddr[1..] - so a
+ * dual-stack peer talking to this RPC keeps every pre-existing IPv4
+ * multi-homing behavior working unchanged.
+ */
+afs_int32
+SDISK_UpdateInterfaceEndpoints(struct rx_call *rxcall,
+			       ubikendpoints *inAddr,
+			       ubikendpoints *outAddr)
+{
+    struct ubik_server *ts;
+    struct rx_sockaddr callerAddr;
+    afs_uint32 v4[UBIK_MAX_INTERFACE_ADDR];
+    int i, nv4 = 0;
+    char abuf[64];
+
+    if (inAddr->ubikendpoints_len < 1)
+	return UBADHOST;
+
+    memset(&callerAddr, 0, sizeof(callerAddr));
+    if (inAddr->ubikendpoints_val[0].type == UBIK_ENDPOINT_IPV4) {
+	rx_ipv4_to_sockaddr(htonl(inAddr->ubikendpoints_val[0].value[0]),
+			    0, 0, &callerAddr);
+#ifdef HAVE_IPV6
+    } else if (inAddr->ubikendpoints_val[0].type == UBIK_ENDPOINT_IPV6) {
+	struct rx_address ra;
+
+	memset(&ra, 0, sizeof(ra));
+	ra.addrtype = AF_INET6;
+	for (i = 0; i < 4; i++) {
+	    afs_uint32 w = htonl(inAddr->ubikendpoints_val[0].value[i]);
+	    memcpy(((char *)&ra.rxa_in6_addr) + i * 4, &w, 4);
+	}
+	rx_address_to_sockaddr(&ra, 0, 0, &callerAddr);
+#endif
+    } else {
+	return UBADHOST;
+    }
+
+    UBIK_ADDR_LOCK;
+
+    /* copy the output parameters: my own addresses */
+    outAddr->ubikendpoints_val =
+	malloc(UBIK_MAXENDPOINTS * sizeof(struct ubikendpoint));
+    if (!outAddr->ubikendpoints_val) {
+	UBIK_ADDR_UNLOCK;
+	return UNOMEM;
+    }
+    outAddr->ubikendpoints_len = 0;
+    if (ubik_host_sa.rxsa_family == AF_INET6) {
+	struct ubikendpoint *ep =
+	    &outAddr->ubikendpoints_val[outAddr->ubikendpoints_len];
+	afs_uint32 words[4];
+
+	memcpy(words, &ubik_host_sa.rxsa_in6_addr, sizeof(words));
+	ep->type = UBIK_ENDPOINT_IPV6;
+	ep->length = 16;
+	ep->value[0] = ntohl(words[0]);
+	ep->value[1] = ntohl(words[1]);
+	ep->value[2] = ntohl(words[2]);
+	ep->value[3] = ntohl(words[3]);
+	outAddr->ubikendpoints_len++;
+    }
+    for (i = 0; i < UBIK_MAX_INTERFACE_ADDR
+	 && outAddr->ubikendpoints_len < UBIK_MAXENDPOINTS; i++) {
+	struct ubikendpoint *ep;
+
+	if (!ubik_host[i])
+	    continue;
+	ep = &outAddr->ubikendpoints_val[outAddr->ubikendpoints_len];
+	memset(ep, 0, sizeof(*ep));
+	ep->type = UBIK_ENDPOINT_IPV4;
+	ep->length = 4;
+	ep->value[0] = ntohl(ubik_host[i]);
+	outAddr->ubikendpoints_len++;
+    }
+
+    ts = ubikGetPrimaryInterfaceSA(&callerAddr);
+    if (!ts) {
+	ViceLog(0, ("Inconsistent Cell Info from server: %s (unknown)\n",
+		    rx_print_sockaddr(&callerAddr, abuf, sizeof(abuf))));
+	free(outAddr->ubikendpoints_val);
+	outAddr->ubikendpoints_val = NULL;
+	outAddr->ubikendpoints_len = 0;
+	UBIK_ADDR_UNLOCK;
+	return UBADHOST;
+    }
+
+    /* update this server's real primary and its legacy IPv4 subset,
+     * exactly as SDISK_UpdateInterfaceAddr does for hostAddr[1..]. */
+    rx_copy_sockaddr(&callerAddr, &ts->addr_sa);
+    rx_set_sockaddr_port(&ts->addr_sa, ubik_callPortal);
+    for (i = 1; i < inAddr->ubikendpoints_len && nv4 < UBIK_MAX_INTERFACE_ADDR - 1; i++) {
+	if (inAddr->ubikendpoints_val[i].type == UBIK_ENDPOINT_IPV4) {
+	    v4[nv4++] = htonl(inAddr->ubikendpoints_val[i].value[0]);
+	}
+    }
+    if (callerAddr.rxsa_family == AF_INET) {
+	ts->addr[0] = callerAddr.rxsa_s_addr;
+    }
+    for (i = 0; i < nv4; i++)
+	ts->addr[i + (callerAddr.rxsa_family == AF_INET ? 1 : 0)] = v4[i];
+    for (i = nv4 + (callerAddr.rxsa_family == AF_INET ? 1 : 0);
+	 i < UBIK_MAX_INTERFACE_ADDR; i++)
+	ts->addr[i] = 0;
+
+    ViceLog(0, ("ubik: A remote server has address %s\n",
+		rx_print_sockaddr(&ts->addr_sa, abuf, sizeof(abuf))));
+
+    UBIK_ADDR_UNLOCK;
+
+    /*
+     * The most likely cause of a DISK_UpdateInterfaceEndpoints RPC
+     * is because the server was restarted.  Reset its state
+     * so that no DISK_Begin RPCs will be issued until the
+     * known database version is current.
+     */
+    UBIK_BEACON_LOCK;
+    ts->beaconSinceDown = 0;
+    ts->currentDB = 0;
+    urecovery_LostServer(ts);
+    UBIK_BEACON_UNLOCK;
+    return 0;
+}
+
 static void
 printServerInfo(void)
 {

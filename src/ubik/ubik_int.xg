@@ -27,6 +27,26 @@ struct ubik_tid {
 
 const UBIK_MAX_INTERFACE_ADDR =	256; /* max interfaces per server */
 
+/* IPv6-capable interface address exchange (DISK_UpdateInterfaceEndpoints,
+ * below), the ubik sibling of the VLDB's vlendpoint/VL_RegisterEndpoints
+ * (src/vlserver/vldbint.xg) - same layout, same "unrecognized type is
+ * skippable, not fatal" rule, kept as its own type in this package
+ * rather than shared across packages. type is UBIK_ENDPOINT_IPV4 or
+ * UBIK_ENDPOINT_IPV6; value carries the raw address, network byte
+ * order, left-justified (4 bytes for v4, 16 for v6) - no port, since
+ * a server's ubik call port is a cell-wide constant, never per-address. */
+const UBIK_ENDPOINT_IPV4 = 0;
+const UBIK_ENDPOINT_IPV6 = 1;
+const UBIK_MAXENDPOINTS = 32;	/* per-server cap, well above any real
+				   deployment's interface count */
+
+struct ubikendpoint {
+	afs_int32	type;
+	afs_int32	length;
+	afs_uint32	value[4];
+};
+typedef ubikendpoint ubikendpoints<UBIK_MAXENDPOINTS>;
+
 struct ubik_debug {
     /* variables from basic voting module */
     afs_int32 now;			/* time of day now */
@@ -214,6 +234,7 @@ statindex 12
 #define	DISK_WRITEV		20011
 #define DISK_INTERFACEADDR	20012
 #define	DISK_SETVERSION		20013
+#define DISK_INTERFACEENDPOINTS	20014
 
 /* Disk package interface calls - the order of
  * these declarations is important.
@@ -258,6 +279,17 @@ WriteV		(IN ubik_tid *tid,
 
 UpdateInterfaceAddr(IN  UbikInterfaceAddr* inAddr,
 		    OUT UbikInterfaceAddr* outAddr) multi = DISK_INTERFACEADDR;
+
+/*
+ * UpdateInterfaceEndpoints is UpdateInterfaceAddr's IPv6-capable
+ * sibling: same "trade interface address lists at startup" purpose,
+ * but a typed (v4+v6) list instead of a bare afs_int32[256] of IPv4
+ * addresses. Tried first by ubeacon_updateUbikNetworkAddress()
+ * (src/ubik/beacon.c), falling back to UpdateInterfaceAddr on
+ * RXGEN_OPCODE against a peer that predates this RPC.
+ */
+UpdateInterfaceEndpoints(IN  ubikendpoints* inAddr,
+			 OUT ubikendpoints* outAddr) multi = DISK_INTERFACEENDPOINTS;
 
 SetVersion      (IN ubik_tid     *tid,
                  IN ubik_version *OldVersion,

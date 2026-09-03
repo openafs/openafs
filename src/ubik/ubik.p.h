@@ -12,6 +12,7 @@
 
 #include <stdarg.h>
 
+#include <rx/rx_addr.h>
 #include <ubik_int.h>
 
 /*! \name ubik_trans types */
@@ -67,7 +68,12 @@ struct ubik_client {
     short initializationState;	/*!< ubik client init state */
     short states[MAXSERVERS];	/*!< state bits */
     struct rx_connection *conns[MAXSERVERS];
-    afs_int32 syncSite;
+    afs_int32 syncSite;		/*!< IPv4 projection of the sync site's
+				     primary address, 0 if it's IPv6-only;
+				     kept for existing callers - see
+				     syncSiteAddr for the real accessor */
+    struct rx_sockaddr syncSiteAddr;	/*!< sync site's real primary
+					     address, either family */
 #ifdef AFS_PTHREAD_ENV
     pthread_mutex_t cm;
 #endif
@@ -283,7 +289,15 @@ extern int (*ubik_SyncWriterCacheProc) (void);
  */
 struct ubik_server {
     struct ubik_server *next;	/*!< next ptr */
-    afs_uint32 addr[UBIK_MAX_INTERFACE_ADDR];	/*!< network order, addr[0] is primary */
+    afs_uint32 addr[UBIK_MAX_INTERFACE_ADDR];	/*!< network order, addr[0] is primary;
+						     IPv4 projection only - 0 for a
+						     server whose primary address is
+						     IPv6, see addr_sa */
+    struct rx_sockaddr addr_sa;	/*!< this server's real primary
+					     address, either family - the
+					     accessor election ordering
+					     (src/ubik/vote.c, beacon.c) and
+					     connection creation actually use */
     afs_int32 lastVoteTime;	/*!< last time yes vote received */
     afs_int32 lastBeaconSent;	/*!< last time beacon attempted */
     struct ubik_version version;	/*!< version, only used during recovery */
@@ -329,7 +343,11 @@ extern short ubik_callPortal;
 
 extern afs_int32 ubik_quorum;	/* min hosts in quorum */
 extern struct ubik_dbase *ubik_dbase;	/* the database handled by this server */
-extern afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR];	/* this host addr, in net order */
+extern afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR];	/* this host addr, in net order;
+							   IPv4 projection only, see
+							   ubik_host_sa */
+extern struct rx_sockaddr ubik_host_sa;	/* this host's real primary
+						   address, either family */
 extern int ubik_amSyncSite;	/* sleep on this waiting to be sync site */
 extern struct ubik_stats {	/* random stats */
     afs_int32 escapes;
@@ -384,15 +402,31 @@ struct vote_data {
     struct ubik_tid ubik_dbTid;		/* sync site's tid, or 0 if none */
     /* Used by all sites in nominating new sync sites */
     afs_int32 ubik_lastYesTime;		/* time we sent the last yes vote */
-    afs_uint32 lastYesHost;		/* host to which we sent yes vote */
+    afs_uint32 lastYesHost;		/* host to which we sent yes vote;
+					   IPv4 projection only, see
+					   lastYesAddr */
+    struct rx_sockaddr lastYesAddr;	/* real address (either family) to
+					   which we sent the last yes vote -
+					   election ordering uses this, not
+					   lastYesHost */
     /* Next is time sync site began this vote: guarantees sync site until this + SMALLTIME */
     afs_int32 lastYesClaim;
     int lastYesState;			/* did last site we voted for claim to be sync site? */
     /* Used to guarantee that nomination process doesn't loop */
     afs_int32 lowestTime;
-    afs_uint32 lowestHost;
+    afs_uint32 lowestHost;		/* IPv4 projection only, see
+					   lowestAddr */
+    struct rx_sockaddr lowestAddr;	/* real address (either family) of
+					   the current nominee - election
+					   ordering uses this, not
+					   lowestHost */
     afs_int32 syncTime;
-    afs_int32 syncHost;
+    afs_int32 syncHost;			/* IPv4 projection only, see
+					   syncAddr */
+    struct rx_sockaddr syncAddr;	/* real address (either family) of
+					   the believed sync site -
+					   election logic uses this, not
+					   syncHost */
 };
 
 #define UBIK_VOTE_LOCK opr_mutex_enter(&vote_globals.vote_lock)
@@ -474,6 +508,7 @@ extern void panic(char *format, ...)
     AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 
 extern afs_uint32 ubikGetPrimaryInterfaceAddr(afs_uint32 addr);
+extern struct ubik_server *ubikGetPrimaryInterfaceSA(const struct rx_sockaddr *addr);
 
 extern int ubik_CheckAuth(struct rx_call *);
 
@@ -490,6 +525,8 @@ extern int ubeacon_InitServerListByInfo(afs_uint32 ame,
 					struct afsconf_cell *info,
 					char clones[]);
 extern int ubeacon_InitServerList(afs_uint32 ame, afs_uint32 aservers[]);
+extern struct rx_connection *ubeacon_NewVOTEConnection(afs_uint32 host);
+extern struct rx_connection *ubeacon_NewVOTEConnectionSA(struct rx_sockaddr *saddr);
 extern void *ubeacon_Interact(void *);
 extern int ubeacon_updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR]);
 extern struct beacon_data beacon_globals;

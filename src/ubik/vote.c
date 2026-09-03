@@ -120,11 +120,14 @@ uvote_ShouldIRun(void)
     now = FT_ApproxTime();
     if (BIGTIME + vote_globals.ubik_lastYesTime < now)
 	goto done;
-    if (vote_globals.lastYesState && vote_globals.lastYesHost != ubik_host[0]) {
+    if (vote_globals.lastYesState
+	&& (vote_globals.lastYesAddr.rxsa_family == 0
+	    || rx_order_sockaddr(&vote_globals.lastYesAddr, &ubik_host_sa) != 0)) {
 	code = 0;		/* other guy is sync site, leave him alone */
 	goto done;
     }
-    if (ntohl((afs_uint32)vote_globals.lastYesHost) < ntohl((afs_uint32)ubik_host[0])) {
+    if (vote_globals.lastYesAddr.rxsa_family != 0
+	&& rx_order_sockaddr(&vote_globals.lastYesAddr, &ubik_host_sa) < 0) {
 	code = 0;		/* if someone is valid and better than us, don't run */
 	goto done;
     }
@@ -183,7 +186,11 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	     afs_int32 astart, struct ubik_version * avers,
 	     struct ubik_tid * atid)
 {
-    afs_int32 otherHost;
+    afs_int32 otherHost;	/* IPv4 projection of otherAddr, 0 for an
+				   IPv6-only peer - kept for logging/the
+				   old debug RPCs only; every real decision
+				   below is made from otherAddr instead */
+    struct rx_sockaddr otherAddr;
     afs_int32 now;
     afs_int32 vote;
     struct rx_connection *aconn;
@@ -195,25 +202,23 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
     if (rxcall) {		/* caller's host */
 	aconn = rx_ConnectionOf(rxcall);
 	rxp = rx_PeerOf(aconn);
-	otherHost = rx_HostOf(rxp);
 
-	/* get the primary interface address for this host.  */
-	/* This is the identifier that ubik uses. */
-	otherHost = ubikGetPrimaryInterfaceAddr(otherHost);
-	if (!otherHost) {
+	/* get the primary interface address for this host - this is the
+	 * identifier that ubik uses - via the real (possibly IPv6)
+	 * address, not rx_HostOf(), which collapses any IPv6 peer to 0
+	 * and would make every IPv6-only peer indistinguishable here. */
+	ts = ubikGetPrimaryInterfaceSA(rx_SockaddrOf(rxp));
+	if (!ts) {
+	    char abuf[64];
 	    ViceLog(5, ("Received beacon from unknown host %s\n",
-			afs_inet_ntoa_r(rx_HostOf(rxp), hoststr)));
+			rx_print_sockaddr(rx_SockaddrOf(rxp), abuf, sizeof(abuf))));
 	    return 0;		/* I don't know about you: vote no */
 	}
-	for (ts = ubik_servers; ts; ts = ts->next) {
-	    if (ts->addr[0] == otherHost)
-		break;
-	}
-	if (!ts)
-	    ViceLog(0, ("Unknown host %x has sent a beacon\n", otherHost));
-	if (ts && ts->isClone)
-	    isClone = 1;
+	otherAddr = ts->addr_sa;
+	otherHost = ts->addr[0];
+	isClone = ts->isClone;
     } else {
+	otherAddr = ubik_host_sa;
 	otherHost = ubik_host[0];	/* this host */
 	isClone = amIClone;
     }
@@ -243,10 +248,12 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
     UBIK_VOTE_LOCK;
     now = FT_ApproxTime();	/* close to current time */
     if (!isClone
-	&& (ntohl((afs_uint32)otherHost) <= ntohl((afs_uint32)vote_globals.lowestHost)
+	&& (vote_globals.lowestAddr.rxsa_family == 0
+	    || rx_order_sockaddr(&otherAddr, &vote_globals.lowestAddr) <= 0
 	    || vote_globals.lowestTime + BIGTIME < now)) {
 	vote_globals.lowestTime = now;
 	vote_globals.lowestHost = otherHost;
+	vote_globals.lowestAddr = otherAddr;
     }
     /* why do we need this next check?  Consider the case where each of two
      * servers decides the other is lowestHost.  Each stops sending beacons
@@ -256,23 +263,27 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
      * he's lowest, these loops don't occur.  because if someone knows he's
      * lowest, he will send out beacons telling others to vote for him. */
     if (!amIClone
-	&& (ntohl((afs_uint32) ubik_host[0]) <= ntohl((afs_uint32)vote_globals.lowestHost)
+	&& (vote_globals.lowestAddr.rxsa_family == 0
+	    || rx_order_sockaddr(&ubik_host_sa, &vote_globals.lowestAddr) <= 0
 	    || vote_globals.lowestTime + BIGTIME < now)) {
 	vote_globals.lowestTime = now;
 	vote_globals.lowestHost = ubik_host[0];
+	vote_globals.lowestAddr = ubik_host_sa;
     }
 
     /* tell if we've heard from a sync site recently (even if we're not voting
      * for this dude yet).  After a while, time the guy out. */
     if (astate) {		/* this guy is a sync site */
 	vote_globals.syncHost = otherHost;
+	vote_globals.syncAddr = otherAddr;
 	vote_globals.syncTime = now;
     } else if (vote_globals.syncTime + BIGTIME < now) {
-	if (vote_globals.syncHost) {
+	if (vote_globals.syncAddr.rxsa_family != 0) {
 	    ViceLog(0, ("Ubik: Lost contact with sync-site %s (NOT in quorum)\n",
 		 afs_inet_ntoa_r(vote_globals.syncHost, hoststr)));
 	}
 	vote_globals.syncHost = 0;
+	memset(&vote_globals.syncAddr, 0, sizeof(vote_globals.syncAddr));
     }
 
     /* decide how to vote */
@@ -285,24 +296,29 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	/* in here only if this guy doesn't claim to be a sync site */
 
 	/* lowestHost is also trying for our votes, then just say no. */
-	if (ntohl(vote_globals.lowestHost) != ntohl(otherHost)) {
+	if (vote_globals.lowestAddr.rxsa_family == 0
+	    || rx_order_sockaddr(&vote_globals.lowestAddr, &otherAddr) != 0) {
 	    goto done_zero;
 	}
 
 	/* someone else *is* a sync site, just say no */
-	if (vote_globals.syncHost && vote_globals.syncHost != otherHost)
+	if (vote_globals.syncAddr.rxsa_family != 0
+	    && rx_order_sockaddr(&vote_globals.syncAddr, &otherAddr) != 0)
 	    goto done_zero;
-    } else if (vote_globals.lastYesHost == 0xffffffff && otherHost == ubik_host[0]) {
+    } else if (vote_globals.lastYesAddr.rxsa_family == 0
+	       && rx_order_sockaddr(&otherAddr, &ubik_host_sa) == 0) {
 	/* fast startup if this is the only non-clone */
 	int i = 0;
 	for (ts = ubik_servers; ts; ts = ts->next) {
-	    if (ts->addr[0] == otherHost)
+	    if (rx_order_sockaddr(&ts->addr_sa, &otherAddr) == 0)
 		continue;
 	    if (!ts->isClone)
 		i++;
 	}
-	if (!i)
+	if (!i) {
 	    vote_globals.lastYesHost = otherHost;
+	    vote_globals.lastYesAddr = otherAddr;
+	}
     }
 
 
@@ -311,8 +327,12 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 
     /* Don't promise sync site support to more than one host every BIGTIME
      * seconds.  This is the heart of our invariants in this system. */
-    if (vote_globals.ubik_lastYesTime + BIGTIME < now || otherHost == vote_globals.lastYesHost) {
-	if ((vote_globals.ubik_lastYesTime + BIGTIME < now) || (otherHost != vote_globals.lastYesHost)
+    if (vote_globals.ubik_lastYesTime + BIGTIME < now
+	|| (vote_globals.lastYesAddr.rxsa_family != 0
+	    && rx_order_sockaddr(&otherAddr, &vote_globals.lastYesAddr) == 0)) {
+	if ((vote_globals.ubik_lastYesTime + BIGTIME < now)
+	    || (vote_globals.lastYesAddr.rxsa_family == 0
+		|| rx_order_sockaddr(&otherAddr, &vote_globals.lastYesAddr) != 0)
 	    || (vote_globals.lastYesState != astate)) {
 	    /* A new vote or a change in the vote or changed quorum */
 	    /* XXX This should be at loglevel 0, but the conditionals
@@ -327,6 +347,7 @@ SVOTE_Beacon(struct rx_call * rxcall, afs_int32 astate,
 	vote_globals.ubik_lastYesTime = now;	/* remember when we voted yes */
 	vote_globals.lastYesClaim = astart;	/* remember for computing when sync site expires */
 	vote_globals.lastYesHost = otherHost;	/* and who for */
+	vote_globals.lastYesAddr = otherAddr;
 	vote_globals.lastYesState = astate;	/* remember if site is a sync site */
 	vote_globals.ubik_dbVersion = *avers;	/* resync value */
 	vote_globals.ubik_dbTid = *atid;	/* transaction id, if any, of active trans */
