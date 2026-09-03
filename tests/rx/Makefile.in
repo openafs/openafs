@@ -10,9 +10,12 @@ MODULE_CFLAGS = -I$(TOP_OBJDIR)
 LIBS = ../tap/libtap.a \
        $(abs_top_builddir)/src/rx/liboafs_rx.la
 
-tests = event-t
+tests = addr-t event-t
 
 all check test tests: $(tests)
+
+addr-t: addr-t.o $(LIBS)
+	$(LT_LDRULE_static) addr-t.o $(LIBS) $(LIB_roken) $(XLIBS)
 
 event-t: event-t.o $(LIBS)
 	$(LT_LDRULE_static) event-t.o $(LIBS) $(LIB_roken) $(XLIBS)

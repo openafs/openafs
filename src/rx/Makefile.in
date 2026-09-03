@@ -17,7 +17,7 @@ LT_objs = xdr.lo xdr_array.lo xdr_rx.lo xdr_mem.lo xdr_len.lo xdr_afsuuid.lo \
 	  rx_clock.lo rx_call.lo rx_conn.lo rx_event.lo rx_user.lo rx_lwp.lo \
 	  rx_pthread.lo rx.lo rx_null.lo rx_globals.lo rx_getaddr.lo rx_misc.lo \
 	  rx_packet.lo rx_peer.lo rx_rdwr.lo rx_trace.lo rx_conncache.lo \
-	  rx_opaque.lo rx_identity.lo rx_stats.lo rx_multi.lo \
+	  rx_opaque.lo rx_identity.lo rx_stats.lo rx_multi.lo rx_addr.lo \
 	  AFS_component_version_number.lo
 LT_deps = $(top_builddir)/src/opr/liboafs_opr.la
 LT_libs = $(MT_LIBS)
@@ -37,6 +37,7 @@ rx.lo: rx.h rx_user.h rx_server.h rx_prototypes.h
 rx_conncache.lo: rx.h rx_prototypes.h
 rx_trace.lo: rx_trace.h
 rx_getaddr.lo: rx.h rx_getaddr.c rx_prototypes.h
+rx_addr.lo: rx.h rx_addr.c rx_addr.h
 rx_globals.lo: rx.h rx_user.h rx_globals.h rx_prototypes.h
 xdr_rx.lo: xdr.h rx.h xdr_prototypes.h rx_prototypes.h
 xdr_refernce.lo: xdr_refernce.c xdr.h xdr_prototypes.h
@@ -71,6 +72,7 @@ includes: \
 	${TOP_INCDIR}/rx/rx_null.h \
 	${TOP_INCDIR}/rx/rx_opaque.h \
 	${TOP_INCDIR}/rx/rx_identity.h \
+	${TOP_INCDIR}/rx/rx_addr.h \
 	${TOP_INCDIR}/rx/xdr.h \
 	${TOP_INCDIR}/rx/xdr_prototypes.h
 
@@ -125,6 +127,9 @@ ${TOP_INCDIR}/rx/rx_opaque.h: rx_opaque.h
 ${TOP_INCDIR}/rx/rx_identity.h: rx_identity.h
 	${INSTALL_DATA} $? $@
 
+${TOP_INCDIR}/rx/rx_addr.h: rx_addr.h
+	${INSTALL_DATA} $? $@
+
 ${TOP_INCDIR}/rx/xdr.h: xdr.h
 	${INSTALL_DATA} $? $@
 
@@ -153,6 +158,8 @@ install: librx.a
 	${INSTALL_DATA} ${srcdir}/rx_null.h ${DESTDIR}${includedir}/rx/rx_null.h
 	${INSTALL_DATA} ${srcdir}/rx_opaque.h \
 		${DESTDIR}${includedir}/rx/rx_opaque.h
+	${INSTALL_DATA} ${srcdir}/rx_addr.h \
+		${DESTDIR}${includedir}/rx/rx_addr.h
 	${INSTALL_DATA} ${srcdir}/xdr.h ${DESTDIR}${includedir}/rx/xdr.h
 	${INSTALL_DATA} ${srcdir}/xdr_prototypes.h ${DESTDIR}${includedir}/rx/xdr_prototypes.h
 
@@ -174,6 +181,7 @@ dest: librx.a
 	${INSTALL_DATA} ${srcdir}/rx_misc.h ${DEST}/include/rx/rx_misc.h
 	${INSTALL_DATA} ${srcdir}/rx_null.h ${DEST}/include/rx/rx_null.h
 	${INSTALL_DATA} ${srcdir}/rx_opaque.h ${DEST}/include/rx/rx_opaque.h
+	${INSTALL_DATA} ${srcdir}/rx_addr.h ${DEST}/include/rx/rx_addr.h
 	${INSTALL_DATA} ${srcdir}/xdr.h ${DEST}/include/rx/xdr.h
 	${INSTALL_DATA} ${srcdir}/xdr_prototypes.h ${DEST}/include/rx/xdr_prototypes.h
 

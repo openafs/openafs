@@ -102,6 +102,7 @@ LT_objs = \
 	rx_null.lo \
 	rx_opaque.lo \
 	rx_getaddr.lo \
+	rx_addr.lo \
 	rx_stats.lo \
 	rx_packet.lo \
 	rx_conncache.lo \
@@ -361,6 +362,8 @@ rx_opaque.lo: $(TOP_SRC_RX)/rx_opaque.c
 	$(LT_CCRULE) $(TOP_SRC_RX)/rx_opaque.c
 rx_getaddr.lo: $(TOP_SRC_RX)/rx_getaddr.c
 	$(LT_CCRULE) $(TOP_SRC_RX)/rx_getaddr.c
+rx_addr.lo: $(TOP_SRC_RX)/rx_addr.c
+	$(LT_CCRULE) $(TOP_SRC_RX)/rx_addr.c
 rx_stats.lo: $(TOP_SRC_RX)/rx_stats.c
 	$(LT_CCRULE) $(TOP_SRC_RX)/rx_stats.c
 rx_packet.lo: $(TOP_SRC_RX)/rx_packet.c

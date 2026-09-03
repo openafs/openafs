@@ -348,6 +348,26 @@ EXPORTS
 ;	xdr_Capabilities                        @353
 	xdr_rpcStats                            @354
 	rx_GetCallStatus                        @355
+	xdr_afs_time64                          @356
+	rx_addrinfo_to_sockaddr                  @357
+	rx_address_to_sockaddr                   @358
+	rx_compare_address                       @359
+	rx_compare_sockaddr                      @360
+	rx_copy_address                          @361
+	rx_copy_sockaddr                         @362
+	rx_hash_sockaddr                         @363
+	rx_inet42str                             @364
+	rx_ipv4_to_address                       @365
+	rx_ipv4_to_sockaddr                      @366
+	rx_is_loopback_address                   @367
+	rx_is_loopback_sockaddr                  @368
+	rx_order_sockaddr                        @369
+	rx_print_address                         @370
+	rx_print_sockaddr                        @371
+	rx_sockaddr2str                          @372
+	rx_sockaddr_to_address                   @373
+	rx_try_address_to_ipv4                   @374
+	rx_try_sockaddr_to_ipv4                  @375
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

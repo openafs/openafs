@@ -36,6 +36,7 @@ RXOBJS = $(OUT)\rx_event.obj $(OUT)\rx_clock_nt.obj $(OUT)\rx_user.obj \
 	 $(OUT)\rx_packet.obj $(OUT)\rx_rdwr.obj $(OUT)\rx_trace.obj \
 	 $(OUT)\rx_xmit_nt.obj $(OUT)\rx_conncache.obj \
 	 $(OUT)\rx_opaque.obj $(OUT)\rx_identity.obj $(OUT)\rx_stats.obj \
+	 $(OUT)\rx_addr.obj \
          $(OUT)\rx_call.obj $(OUT)\rx_conn.obj $(OUT)\rx_peer.obj
 
 MULTIOBJS = $(OUT)\rx_multi.obj
@@ -59,6 +60,7 @@ INCFILES  = \
 	$(INCFILEDIR)\rx_lwp.h \
 	$(INCFILEDIR)\rx_identity.h \
 	$(INCFILEDIR)\rx_opaque.h \
+	$(INCFILEDIR)\rx_addr.h \
 	$(INCFILEDIR)\rx_pthread.h \
 	$(INCFILEDIR)\rx_xmit_nt.h \
 	$(INCFILEDIR)\xdr_prototypes.h \
