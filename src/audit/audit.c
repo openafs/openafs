@@ -795,7 +795,7 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
  * enabled.
  * ************************************************************************** */
 
-int
+static int
 osi_audit_check(void)
 {
     FILE *fds;
