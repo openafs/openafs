@@ -21,6 +21,7 @@ statindex 15
 /* Current limitations on parameters that affect other packages (i.e. volume) */
 %#define VldbVersion "4"
 
+const	VLDBVERSION_5	=	5;
 const	VLDBVERSION_4	=	4;
 const	VLDBVERSION	=	3;
 const	OVLDBVERSION	=	2;
@@ -28,6 +29,24 @@ const	VL_MAXNAMELEN	=	65;
 const	OMAXNSERVERS	=	8;
 const	NMAXNSERVERS	=	13;
 const	MAXTYPES	=	3;
+
+/* IPv6-capable fileserver address list (GetEndpoints/RegisterEndpoints).
+ * type is VL_ENDPOINT_IPV4 or VL_ENDPOINT_IPV6; an unrecognized type is
+ * meant to be skippable rather than fatal, so a future address family
+ * doesn't need another opcode. value carries the raw address, network
+ * byte order, left-justified (4 bytes for v4, 16 for v6) - no port, since
+ * a fileserver's Rx service port has never varied per-address. Mirrors
+ * the on-disk Endpoint layout in doc/txt/vldb.txt exactly. */
+const	VL_ENDPOINT_IPV4	=	0;
+const	VL_ENDPOINT_IPV6	=	1;
+const	VL_MAXENDPOINTS		=	8;
+
+struct vlendpoint {
+	afs_int32	type;
+	afs_int32	length;
+	afs_uint32	value[4];
+};
+typedef vlendpoint vlendpoints<VL_MAXENDPOINTS>;
 
 /* Structure used by the VLUpdateEntry routine; multiple entries can be updated at once by setting the appropriate Mask bits. */
 struct VldbUpdateEntry {
@@ -270,6 +289,21 @@ GetAddrsU(
 ) = VLGETADDRSU;
 
 /*
+ * GetEndpoints is GetAddrsU's IPv6-capable sibling: same uuid/index/
+ * ipaddr lookup (inaddr), but returns the full typed address list
+ * (v4 and/or v6) instead of a bare bulkaddrs of IPv4-only afs_uint32s.
+ * Declared here, alongside GetAddrsU, so the kernel cache manager can
+ * call it directly; callers fall back to GetAddrsU on RXGEN_OPCODE
+ * against a peer that predates this RPC.
+ */
+GetEndpoints(
+  IN ListAddrByAttributes *inaddr,
+  OUT afsUUID *uuidp1,
+  OUT afs_int32 *uniquifier,
+  OUT vlendpoints *endpoints
+) = VLGETENDPOINTS;
+
+/*
  * The rest of the interfaces are not needed in the kernel
  */
 
@@ -428,6 +462,24 @@ RegisterAddrs(
   IN afs_int32 spare1,
   IN bulkaddrs *ipaddr
 ) = VLREGADDR;
+
+/*
+ * RegisterEndpoints is RegisterAddrs's IPv6-capable sibling: a
+ * fileserver reports its uuid plus its full typed address list. The
+ * vlserver writes the IPv4 subset into the same on-disk Multi-homed
+ * Entry a RegisterAddrs call would have (so GetAddrsU/GetEntryByName*
+ * and every pre-version-5 reader keep seeing exactly that subset), and
+ * the full v4+v6 list into a new Endpoint Extension Entry (see
+ * doc/txt/vldb.txt) referenced from it. A fileserver with no IPv4
+ * address at all still gets a (v4-empty) Multi-homed Entry, so older
+ * callers see it as addressless rather than erroring - the intended
+ * degradation, not a bug.
+ */
+RegisterEndpoints(
+  IN afsUUID *uuidp,
+  IN afs_int32 spare1,
+  IN vlendpoints *endpoints
+) = VLREGISTERENDPOINTS;
 
 ListAttributesN2(
   IN VldbListByAttributes *attributes,

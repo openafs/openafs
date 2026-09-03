@@ -1,6 +1,10 @@
 
-This document describes version 4 of the OpenAFS Volume Location Database
-(VLDB) file format.
+This document describes versions 4 and 5 of the OpenAFS Volume Location
+Database (VLDB) file format. Version 5 is additive over version 4 - see
+"Version 5 summary and compatibility" further down for what changed and
+why every structure below except the two sections explicitly marked
+"Endpoint Extension ..." (and the one repurposed field noted in
+"Multi-homed Entry") is unchanged from version 4.
 
 
 VLDB file layout
@@ -140,11 +144,13 @@ octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
         0                   1                   2                   3
 
 vldbversion is the vldb disk format version number. This document describes
-version 4.
+versions 4 and 5.
 
    Note: The OpenAFS vlserver creates empty vldb files as version 3, and
          converts the vldb to version 4 in place the first time a fileserver
-         UUID is registered.
+         UUID is registered, then to version 5 in place the first time a
+         fileserver registers an IPv6 address - see "Version 5 summary
+         and compatibility", further down, for the version 5 transition.
 
 headersize is the size in octets of the vldb header, currently 0x020418 (132120)
 
@@ -564,7 +570,316 @@ is modified.
 addrs[0..14] holds a list of IPv4 addresses for this fileserver, each in
 network byte order.  Zero indicates an empty slot.
 
+flags, as of version 5, has bit 0x00000001 (EXSRV_HAS_ENDPOINTS) meaning
+"this fileserver also has an Endpoint Extension entry giving its full,
+typed (IPv4 and/or IPv6) address list - addrs[0..14] above still holds
+the plain-IPv4 subset of that list, verbatim, for readers that predate
+version 5". A version-4-or-earlier reader, or a version 5 reader for a
+fileserver that only ever registered IPv4 addresses, always sees this
+bit clear and addrs[0..14] as the complete, authoritative list, exactly
+as in version 4. All other bits are reserved and must be zero.
+
+reserved[0..9] should always be zero when EXSRV_HAS_ENDPOINTS is clear.
+When EXSRV_HAS_ENDPOINTS is set, reserved[0] (the word at octet 84,
+immediately following flags) is repurposed as the Endpoint Reference
+described below; reserved[1..9] (octets 88-127) remain reserved and
+must be zero.
+
+
+Endpoint Reference
+
+When a Multi-homed Entry has the EXSRV_HAS_ENDPOINTS flag bit set, the
+word at octet 84 (the first octet of what is otherwise the entry's
+reserved tail) is an Endpoint Reference: a packed pointer to the
+Endpoint Extension Entry (see below) holding this fileserver's complete
+address list.
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |             base              |             index             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+base (high 16 bits) is which of the (up to 4) extension blocks chained
+from the vldb header's SIT field, and block 0's contaddr[0..3], holds
+the Endpoint Extension Entry - always 1, 2, or 3, never 0: block 0 is
+always a Multi-homed Extension Block (it is the root of the chain, read
+unconditionally at vldb startup, and existing deployments already have
+it in that format), so an Endpoint Extension Block can only occupy one
+of the three non-root chain slots.
+
+index (low 16 bits) is the zero-based entry slot number, 0-30, within
+that Endpoint Extension Block.
+
+This mirrors the existing IpMappedAddr 0xFF|base|index encoding used by
+the vldb header (see above) in spirit, but is a plain, unmasked
+base/index pair rather than a sentinel-tagged one, since this field has
+no other legitimate meaning to be confused with (unlike IpMappedAddr,
+which must also represent literal IPv4 addresses in the same word).
+
+
+Endpoint Extension Block
+
+Endpoint Extension Blocks were added in version 5 to hold, per
+fileserver, a complete typed address list that may include IPv6
+addresses - something a Multi-homed Entry's addrs[0..14] cannot
+represent, being a fixed array of bare 32-bit (IPv4) values.
+
+An Endpoint Extension Block is a second sub-type of the same 8192-octet
+extension-block record used for Multi-homed Extension Blocks, occupying
+one of the (up to 3) non-root slots in the same chain rooted at the
+vldb header's SIT field: the on-disk mechanism for locating, growing,
+and validating the chain of (up to 4) extension blocks is entirely
+shared between both sub-types (see "Multi-homed Extension Block"
+above) - only the interpretation of what follows each block's own
+128-octet-header-shaped first 32 octets differs, selected by the
+VLCONTBLOCK_ENDPOINTS bit described below. Because the chain has only
+3 non-root slots and every slot already competing with ordinary
+Multi-homed Extension Blocks, a vldb can hold at most 3 Endpoint
+Extension Blocks - see "Scaling limits" below.
+
+An Endpoint Extension Block is 8192 octets in size: a 256-octet header,
+followed by 31 endpoint entries, each 256 octets (32 + 31 = 32 slots of
+256 octets = 8192 octets exactly).
+
+
+Endpoint Extension Block Header
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     0 |                             count                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     4 |                           reserved[0]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     8 |                           reserved[1]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    12 |                             flags                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    16 |                           contaddr[0]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    20 |                           contaddr[1]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    24 |                           contaddr[2]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    28 |                           contaddr[3]                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    32 |                            reserved                           |
+       +                                                               +
+       |                                                               |
+       ~                              ...                              ~
+   252 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+The first 32 octets are laid out identically to a Multi-homed Extension
+Block Header (same field order and size), so that any reader can always
+interpret an unknown extension block's first 32 octets uniformly and
+inspect flags before deciding how to read the rest of the block.
+
+count is not used.
+
+reserved[0], reserved[1] should always be zero.
+
+flags must have both the VLCONTBLOCK bit (0x00000008, the same bit,
+at the same offset, that marks any 8192-octet extension block as such
+rather than a 148-octet VL Entry - see "VLDB Records" above) and the
+VLCONTBLOCK_ENDPOINTS bit (0x00000010) set, to indicate this is
+specifically an Endpoint Extension Block rather than a Multi-homed
+Extension Block. All other bits in this field should be zero.
+
+contaddr, when this block is the root block (SIT), is the same table
+described under "Multi-homed Extension Block Header" above; when this
+block is not the root, contaddr is not authoritative (the root block's
+copy is) but should still be kept consistent with it.
+
+reserved (octets 32-255) should always be zero.
+
+
+Endpoint Extension Entry
+
+Each Endpoint Extension Entry holds the complete, typed address list
+for a single fileserver, identified by the same uuid used in its
+corresponding Multi-homed Entry. Each entry is 256 octets in size.
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     0 |                         uuid.time_low                         |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     4 |         uuid.time_mid         |   uuid.time_hi_and_version    |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     8 | uuid.clock_hi | uuid.clock_lo |          uuid.node            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+                               +
+    12 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    16 |                           uniquifier                          |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    20 |                             count                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    24 |                         endpoints[0..7]                       |
+       ~     (8 entries x 24 octets each - see "Endpoint" below)       ~
+   216 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   216 |                             flags                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   220 |                            reserved                           |
+       ~                               ...                             ~
+   252 |                                                               |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+uuid and uniquifier have the same meaning as in a Multi-homed Entry,
+and are always kept equal to the uuid/uniquifier of the corresponding
+Multi-homed Entry that references this one (see Endpoint Reference,
+above) - the vlserver always writes both together, in the same ubik
+transaction.
+
+count is the number of valid entries in endpoints[0..7], starting from
+index 0. Unused trailing slots (index >= count) are zeroed.
+
+endpoints[0..7] holds up to 8 typed addresses for this fileserver - see
+"Endpoint" below for the layout of each. A fileserver registering more
+than 8 addresses has the excess silently dropped by the vlserver (the
+same anti-DoS posture as the pre-existing 15-address cap on a
+Multi-homed Entry's addrs[]).
+
 flags is reserved and should always be zero.
 
 reserved should always be zero.
+
+
+Endpoint
+
+Each endpoint is 24 octets:
+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+octets +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     0 |                              type                             |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     4 |                             length                            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     8 |                            value[0]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    12 |                            value[1]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    16 |                            value[2]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    20 |                            value[3]                           |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+type is VL_ENDPOINT_IPV4 (0) or VL_ENDPOINT_IPV6 (1). A reader
+encountering any other value skips the endpoint (treats it as absent)
+rather than failing - the same "unknown type is skippable, not fatal"
+extensibility rule the wire GetEndpoints/RegisterEndpoints RPCs use
+(see below), applied on disk too, so a future address family can be
+added without another version bump. type 0 (unused/empty slot) is
+likewise skipped; this is how trailing slots beyond count, above, are
+distinguished from real entries even if count were wrong.
+
+length is the meaningful byte length of value: 4 for VL_ENDPOINT_IPV4,
+16 for VL_ENDPOINT_IPV6.
+
+value holds the address itself, in network byte order, left-justified:
+for VL_ENDPOINT_IPV4 only the first 4 octets (value[0]) are meaningful
+and the rest are zero; for VL_ENDPOINT_IPV6 all 16 octets are the IPv6
+address. Ports are never stored here, on disk or on the wire - exactly
+as for a Multi-homed Entry's addrs[], the vlserver has never recorded a
+per-address Rx port for a fileserver, since fileservers only ever
+listen on the well-known AFS fileserver Rx service port.
+
+
+Version 5 summary and compatibility
+
+Version 5 is purely additive over version 4: every field, record, and
+indirection that existed in version 4 keeps exactly the same meaning
+and, for a fileserver that has only ever registered IPv4 addresses,
+exactly the same on-disk bytes. Nothing in a version 4 vldb is
+reinterpreted or moved by the upgrade to version 5; the two previously-
+reserved-and-always-zero fields this version gives meaning to (a
+Multi-homed Entry's flags word and the first reserved word following
+it) are additive precisely because version 4 code never set them to
+anything but zero, so a nonzero EXSRV_HAS_ENDPOINTS bit is unambiguous
+evidence of a version-5-aware write having happened.
+
+Note: mirroring the existing version 3 -> 4 transition (see "VLDB
+header" above), the OpenAFS vlserver converts a vldb in place from
+version 4 to version 5 the first time a fileserver registers an IPv6
+address (not merely the first time any fileserver is multi-homed, which
+is what triggers the 3 -> 4 transition) - a purely-IPv4 deployment that
+never registers an IPv6 address stays at version 4 indefinitely, and
+every record and field this version adds is additive: nothing in a
+version 4 vldb is reinterpreted or moved by the upgrade, and a
+fileserver that only ever registered IPv4 addresses is described by
+exactly the same bytes as under version 4.
+
+That byte-level additivity does NOT mean version 4 (or earlier) *code*
+can go on serving a version 5 vldb, though - it cannot, and this is by
+design, not an oversight: exactly as with every prior vldbversion gate
+in this file (see "VLDB header" above), CheckInit()/UpdateCache() in
+vlutils.c hard-reject any vldbversion their build does not explicitly
+list, returning VL_BADVERSION to every RPC caller ("Wrong vldb version"
+in vos/bos output) rather than attempting to interpret bytes their code
+was never taught the shape of - this project builds and verifies
+against the same OpenAFS source tree's pre-series behavior for exactly
+this reason (see the "compatibility gate" note in the approved plan).
+Concretely, once *any* fileserver in a shared cell registers an IPv6
+address:
+
+  - every vlserver in that cell's ubik quorum that predates version 5
+    keeps voting and replicating normally - ubik itself has no
+    awareness of vldbversion, it just replicates whatever bytes the
+    sync site holds - but STOPS being able to serve any VLDB RPC
+    locally (GetEntryByName, GetAddrsU, everything) with VL_BADVERSION,
+    confirmed for real on this project's own test fleet: an unmodified
+    vlserver, still an active, voting, otherwise-healthy member of a
+    mixed 3-node quorum that had just been bumped to version 5 by a
+    version-5-aware peer, answered `vos listvldb -server <itself>`
+    with exactly "vl: Wrong vldb version" the moment it tried to read
+    its own (correctly, fully replicated) copy of the database, while
+    `rxdebug`/`udebug` against that same process kept working
+    throughout - a clean, total read refusal, not a crash or corrupted
+    responses;
+  - a client whose vos/bos predates version 5 is unaffected by any of
+    the above as long as it happens to talk to a version-5-aware
+    quorum member - the RPCs themselves (GetAddrsU, GetEntryByName*)
+    are unchanged, so an old client and a new server interoperate
+    exactly as under version 4;
+  - a fileserver that did register an IPv6 address is visible, via
+    GetAddrsU/GetEntryByName* served by a version-5-aware quorum
+    member, as its IPv4 subset only (or as entirely addressless, if it
+    registered no IPv4 address at all) - this part *is* the ordinary,
+    expected "old code can't see the new capability" degradation, and
+    is why the Multi-homed Entry's addrs[0..14] must always be kept as
+    a faithful copy of the registered list's IPv4 subset, rather than
+    becoming a pointer-only stub once EXSRV_HAS_ENDPOINTS is set.
+
+Operationally, this means an unmodified vlserver should not be left as
+a standing member of a cell's ubik quorum once that cell has any
+IPv6-registering fileserver in it - it will not serve reads (or, per
+the existing VL_BADVERSION handling, most likely also stop voting usefully
+once its own CheckInit starts failing on every transaction) until it is
+upgraded or removed from the quorum. This is not a new failure mode
+this version introduces - it is the same hard version gate every prior
+vldbversion bump in this file has always had - but it is worth stating
+plainly because the rest of this section's additivity could otherwise
+read as "safe to leave old servers in the quorum indefinitely," which
+is true at the byte level and false at the served-request level.
+
+
+Scaling limits
+
+An Endpoint Extension Block can only occupy one of the (up to) 3
+non-root slots in the shared extension-block chain (see "Endpoint
+Reference" above), each holding 31 entries, so a vldb can describe at
+most 3 x 31 = 93 fileservers that have registered an IPv6 address -
+substantially fewer than the 252-fileserver ceiling version 4 already
+imposes on multi-homed IPv4-only fileservers, and the two ceilings
+share the same underlying 3-non-root-slot budget (an Endpoint Extension
+Block and a Multi-homed Extension Block compete for the same slots).
+This is a known, deliberate limit for this version - adequate for the
+test/reference deployment this was built and verified against - and not
+a fundamental one: a future version could lift it by widening
+VL_MAX_ADDREXTBLKS (and contaddr[] with it), which - unlike anything
+described in this version 5 section - does need a header layout change
+and so is deferred rather than attempted here.
 

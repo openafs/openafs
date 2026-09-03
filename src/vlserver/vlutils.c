@@ -270,8 +270,13 @@ readExtents(struct ubik_trans *trans)
 	    ERROR_EXIT(VL_IO);
 	}
 
-	/* After reading it in, check to see if its a real continuation block */
-	if (ntohl(rd_ex_addr[i]->ex_hdrflags) != VLCONTBLOCK) {
+	/* After reading it in, check to see if its a real continuation block.
+	 * Accept either sub-type: a plain Multi-homed Extension Block
+	 * (VLCONTBLOCK alone) or a version-5 Endpoint Extension Block
+	 * (VLCONTBLOCK|VLCONTBLOCK_ENDPOINTS, see vlserver.p.h) - checking
+	 * for exact equality with VLCONTBLOCK alone would wrongly treat
+	 * every Endpoint Extension Block as corrupt and zero it out. */
+	if (!(ntohl(rd_ex_addr[i]->ex_hdrflags) & VLCONTBLOCK)) {
 	    extent_mod = 1;
 	    rd_ex_addr[0]->ex_contaddrs[i] = 0;
 	    free(rd_ex_addr[i]);	/* Not the place to create it */
@@ -359,14 +364,14 @@ UpdateCache(struct ubik_trans *trans, void *rock)
     }
 
     if ((vldbversion != VLDBVERSION) && (vldbversion != OVLDBVERSION)
-        && (vldbversion != VLDBVERSION_4)) {
+        && (vldbversion != VLDBVERSION_4) && (vldbversion != VLDBVERSION_5)) {
 	VLog(0,
-	    ("VLDB version %d doesn't match this software version(%d, %d or %d), quitting!\n",
-	     vldbversion, VLDBVERSION_4, VLDBVERSION, OVLDBVERSION));
+	    ("VLDB version %d doesn't match this software version(%d, %d, %d or %d), quitting!\n",
+	     vldbversion, VLDBVERSION_5, VLDBVERSION_4, VLDBVERSION, OVLDBVERSION));
 	ERROR_EXIT(VL_BADVERSION);
     }
 
-    maxnservers = ((vldbversion == 3 || vldbversion == 4) ? 13 : 8);
+    maxnservers = ((vldbversion == 3 || vldbversion == 4 || vldbversion == 5) ? 13 : 8);
 
   error_exit:
     /* all done */
@@ -390,7 +395,7 @@ CheckInit(struct ubik_trans *trans, int builddb)
 	return VL_EMPTY;
     }
     if ((vldbversion != VLDBVERSION) && (vldbversion != OVLDBVERSION)
-        && (vldbversion != VLDBVERSION_4)) {
+        && (vldbversion != VLDBVERSION_4) && (vldbversion != VLDBVERSION_5)) {
 	return VL_BADVERSION;
     }
 
@@ -578,6 +583,187 @@ FindExtentBlock(struct vl_ctx *ctx, afsUUID *uuidp,
 	    }
 	}
 	ERROR_EXIT(VL_REPSFULL);	/* No reason to utilize a new error code */
+    }
+
+  error_exit:
+    return error;
+}
+
+/* Endpoint Extension Block support (version 5, see doc/txt/vldb.txt).
+ * Mirrors GetExtentBlock/FindExtentBlock above, but for the IPv6-capable
+ * sibling record type: an Endpoint Extension Block can only occupy one
+ * of the (up to VL_MAX_ADDREXTBLKS-1) non-root slots in the same
+ * extension-block chain - base 0 is always a Multi-homed Extension
+ * Block header (it is the chain's root, read unconditionally by
+ * readExtents(), and every pre-existing deployment already has it in
+ * that format), so callers here always pass base in
+ * 1..VL_MAX_ADDREXTBLKS-1. */
+afs_int32
+GetEndpointBlock(struct vl_ctx *ctx, afs_int32 base)
+{
+    afs_int32 blockindex, code, error = 0;
+    struct extentendpoints *exep;
+
+    if (base <= 0 || base >= VL_MAX_ADDREXTBLKS)
+	ERROR_EXIT(VL_CREATEFAIL);	/* internal error */
+    if (!ctx->ex_addr[0])
+	ERROR_EXIT(VL_CREATEFAIL);	/* internal error */
+
+    if (!ctx->ex_addr[0]->ex_contaddrs[base]) {
+	/* Create a new endpoint extension block */
+	if (!ctx->ex_addr[base]) {
+	    ctx->ex_addr[base] = malloc(VL_ADDREXTBLK_SIZE);
+	    if (!ctx->ex_addr[base])
+		ERROR_EXIT(VL_NOMEM);
+	}
+	memset(ctx->ex_addr[base], 0, VL_ADDREXTBLK_SIZE);
+
+	/* Write the full extension block at end of vldb */
+	exep = (struct extentendpoints *)ctx->ex_addr[base];
+	exep->exep_hdrflags = htonl(VLCONTBLOCK | VLCONTBLOCK_ENDPOINTS);
+	code = grow_eofPtr(ctx->cheader, VL_ADDREXTBLK_SIZE, &blockindex);
+	if (code)
+	    ERROR_EXIT(VL_IO);
+
+	code =
+	    vlwrite(ctx->trans, blockindex, (char *)ctx->ex_addr[base],
+		    VL_ADDREXTBLK_SIZE);
+	if (code)
+	    ERROR_EXIT(VL_IO);
+
+	code = write_vital_vlheader(ctx);
+	if (code)
+	    ERROR_EXIT(VL_IO);
+
+	/* Write the address of this extension block into the base (root)
+	 * extension block - same contaddrs table a Multi-homed Extension
+	 * Block would use; the root itself is always base 0. */
+	ctx->ex_addr[0]->ex_contaddrs[base] = htonl(blockindex);
+	code =
+	    vlwrite(ctx->trans, ntohl(ctx->cheader->SIT), ctx->ex_addr[0],
+		    sizeof(struct extentaddr));
+	if (code)
+	    ERROR_EXIT(VL_IO);
+    }
+
+  error_exit:
+    return error;
+}
+
+/**
+ * Find (or, if createit, allocate) the Endpoint Extension Entry for a
+ * given fileserver uuid.
+ *
+ * @param[in] ctx	vl_ctx for the current transaction
+ * @param[in] uuidp	fileserver uuid to look up
+ * @param[in] createit	if true, allocate a new entry when none is found
+ * @param[in] epref	the corresponding Multi-homed Entry's ex_epref
+ *			value if EXSRV_HAS_ENDPOINTS is already set on it
+ *			(pass 0 if not yet set / unknown - createit will
+ *			then scan for a free slot from scratch)
+ * @param[out] exepp	set to the found/created entry
+ * @param[out] eprefp	set to the packed base/index reference to *exepp,
+ *			suitable for writing into a Multi-homed Entry's
+ *			ex_epref
+ * @return VL error codes
+ */
+afs_int32
+FindEndpointBlock(struct vl_ctx *ctx, afsUUID *uuidp, afs_int32 createit,
+		   afs_int32 epref, struct extentendpoints **exepp,
+		   afs_int32 *eprefp)
+{
+    afsUUID tuuid;
+    struct extentendpoints *exep;
+    afs_int32 base, index, j, code, error = 0;
+
+    *exepp = NULL;
+    *eprefp = 0;
+
+    if (!ctx->cheader->SIT) {
+	code = GetExtentBlock(ctx, 0);
+	if (code)
+	    ERROR_EXIT(code);
+    }
+
+    if (epref) {
+	base = VLEPREF_BASE(epref);
+	index = VLEPREF_INDEX(epref);
+	if (base <= 0 || base >= VL_MAX_ADDREXTBLKS
+	    || index < 0 || index >= VL_EPSRV_PERBLK
+	    || !ctx->ex_addr[base]) {
+	    ERROR_EXIT(VL_INDEXERANGE);
+	}
+	exep = (struct extentendpoints *)ctx->ex_addr[base];
+	*exepp = &exep[index + 1];	/* +1: slot 0 is the block header */
+	*eprefp = epref;
+	ERROR_EXIT(0);
+    }
+
+    /* No known reference yet - scan every existing Endpoint Extension
+     * Block for this uuid, same shape as FindExtentBlock's scan. */
+    for (base = 1; base < VL_MAX_ADDREXTBLKS; base++) {
+	if (!ctx->ex_addr[0]->ex_contaddrs[base] || !ctx->ex_addr[base])
+	    continue;
+	exep = (struct extentendpoints *)ctx->ex_addr[base];
+	if (!(ntohl(exep->exep_hdrflags) & VLCONTBLOCK_ENDPOINTS))
+	    continue;	/* this chain slot is a Multi-homed Extension Block */
+	for (j = 0; j < VL_EPSRV_PERBLK; j++) {
+	    tuuid = exep[j + 1].exep_hostuuid;
+	    afs_ntohuuid(&tuuid);
+	    if (afs_uuid_equal(uuidp, &tuuid)) {
+		*exepp = &exep[j + 1];
+		*eprefp = VLEPREF_PACK(base, j);
+		ERROR_EXIT(0);
+	    }
+	}
+    }
+
+    if (createit) {
+	for (base = 1; base < VL_MAX_ADDREXTBLKS; base++) {
+	    if (!ctx->ex_addr[0]->ex_contaddrs[base]
+		|| !(ntohl(((struct extentendpoints *)
+			    ctx->ex_addr[base])->exep_hdrflags)
+		     & VLCONTBLOCK_ENDPOINTS)) {
+		/* Either this chain slot doesn't exist yet, or (rare) it
+		 * exists but is a Multi-homed Extension Block already -
+		 * either way it's not usable as an endpoint block, so
+		 * only actually create one if the slot is genuinely
+		 * empty. */
+		if (ctx->ex_addr[0]->ex_contaddrs[base])
+		    continue;
+		code = GetEndpointBlock(ctx, base);
+		if (code)
+		    ERROR_EXIT(code);
+	    }
+	    exep = (struct extentendpoints *)ctx->ex_addr[base];
+	    for (j = 0; j < VL_EPSRV_PERBLK; j++) {
+		tuuid = exep[j + 1].exep_hostuuid;
+		afs_ntohuuid(&tuuid);
+		if (afs_uuid_is_nil(&tuuid)) {
+		    tuuid = *uuidp;
+		    afs_htonuuid(&tuuid);
+		    exep[j + 1].exep_hostuuid = tuuid;
+		    code =
+			vlwrite(ctx->trans,
+				DOFFSET(ntohl(ctx->ex_addr[0]->ex_contaddrs[base]),
+					(char *)exep, (char *)&exep[j + 1]),
+				(char *)&tuuid, sizeof(tuuid));
+		    if (code)
+			ERROR_EXIT(VL_IO);
+		    *exepp = &exep[j + 1];
+		    *eprefp = VLEPREF_PACK(base, j);
+		    if (vldbversion != VLDBVERSION_5) {
+			ctx->cheader->vital_header.vldbversion =
+			    htonl(VLDBVERSION_5);
+			code = write_vital_vlheader(ctx);
+			if (code)
+			    ERROR_EXIT(VL_IO);
+		    }
+		    ERROR_EXIT(0);
+		}
+	    }
+	}
+	ERROR_EXIT(VL_REPSFULL);
     }
 
   error_exit:

@@ -2867,6 +2867,366 @@ abort:
     return code;
 }
 
+/*
+ * RegisterEndpoints is RegisterAddrs's IPv6-capable sibling. It:
+ *
+ *   1. Splits the incoming typed endpoint list into its IPv4 subset and
+ *      calls SVL_RegisterAddrs() directly (a plain C call, not another
+ *      RPC) with that subset, reusing all of its existing collision-
+ *      detection/entry-replacement logic unchanged - so a dual-stack
+ *      fileserver's v4 addresses end up in the Multi-homed Entry
+ *      exactly as if RegisterAddrs alone had been called with them,
+ *      and every reader that only understands version 4 keeps working.
+ *      A v6-only fileserver (empty v4 subset) instead gets a fresh,
+ *      empty Multi-homed Entry created directly here, since
+ *      SVL_RegisterAddrs itself rejects an empty address list.
+ *
+ *   2. In a second ubik transaction, writes the complete (v4+v6) list
+ *      into that fileserver's Endpoint Extension Entry (creating it on
+ *      first use), and marks the Multi-homed Entry with
+ *      EXSRV_HAS_ENDPOINTS plus a reference to it.
+ *
+ * These are deliberately two separate transactions rather than one -
+ * the collision-detection logic in step 1 isn't structured to be
+ * interleaved with step 2's writes. A crash between them leaves the
+ * fileserver registered with only its version-4-visible v4 subset
+ * until its next successful RegisterEndpoints call (the fileserver
+ * calls this periodically) - a transient degradation, not corruption.
+ */
+afs_int32
+SVL_RegisterEndpoints(struct rx_call *rxcall, afsUUID *uuidp,
+		       afs_int32 spare1, vlendpoints *endpoints)
+{
+    int this_op = VLREGISTERENDPOINTS;
+    afs_int32 code;
+    struct vl_ctx ctx;
+    afs_uint32 v4addrs[VL_MAXIPADDRS_PERMH];
+    int i, v4cnt, n;
+    bulkaddrs synthetic;
+    struct extentaddr *exp = 0;
+    struct extentendpoints *exep = 0;
+    afsUUID tuuid;
+    afs_int32 base, epref;
+
+    countRequest(this_op);
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))
+	return (VL_PERM);
+
+    /* Step 1: the IPv4 subset, via the existing RegisterAddrs logic
+     * (v4addrs[]/v4cnt is deliberately built the same way
+     * SVL_RegisterAddrs dedups addrsp->bulkaddrs_val itself, so passing
+     * it straight through doesn't change that function's behavior). */
+    for (v4cnt = 0, i = 0;
+	 i < endpoints->vlendpoints_len && v4cnt < VL_MAXIPADDRS_PERMH; i++) {
+	if (endpoints->vlendpoints_val[i].type == VL_ENDPOINT_IPV4
+	    && endpoints->vlendpoints_val[i].value[0] != 0) {
+	    v4addrs[v4cnt++] = endpoints->vlendpoints_val[i].value[0];
+	}
+    }
+
+    if (v4cnt > 0) {
+	synthetic.bulkaddrs_len = v4cnt;
+	synthetic.bulkaddrs_val = v4addrs;
+	code = SVL_RegisterAddrs(rxcall, uuidp, spare1, &synthetic);
+	if (code)
+	    return code;
+    } else {
+	/* No IPv4 address at all - RegisterAddrs itself refuses an empty
+	 * list, so create/find the (empty) Multi-homed Entry directly.
+	 * This is the "IPv6-only fileserver" case: old clients calling
+	 * GetAddrsU for this uuid correctly see zero addresses and skip
+	 * the server. */
+	if ((code = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
+	    return code;
+	code = FindExtentBlock(&ctx, uuidp, 1, -1, &exp, &base);
+	if (code || !exp) {
+	    if (!code)
+		code = VL_IO;
+	    countAbort(this_op);
+	    ubik_AbortTrans(ctx.trans);
+	    return code;
+	}
+	tuuid = *uuidp;
+	afs_htonuuid(&tuuid);
+	exp->ex_hostuuid = tuuid;
+	exp->ex_uniquifier = htonl(ntohl(exp->ex_uniquifier) + 1);
+	memset(exp->ex_addrs, 0, sizeof(exp->ex_addrs));
+	if (vlwrite
+	    (ctx.trans,
+	     DOFFSET(ntohl(ctx.ex_addr[0]->ex_contaddrs[base]),
+		     (char *)ctx.ex_addr[base], (char *)exp), (char *)exp,
+	     sizeof(*exp))) {
+	    countAbort(this_op);
+	    ubik_AbortTrans(ctx.trans);
+	    return VL_IO;
+	}
+	code = ubik_EndTrans(ctx.trans);
+	if (code)
+	    return code;
+    }
+
+    /* Step 2: the full typed list, into the Endpoint Extension Entry. */
+    if ((code = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
+	return code;
+
+    code = FindExtentBlock(&ctx, uuidp, 0, -1, &exp, &base);
+    if (code || !exp) {
+	/* Step 1 just created/updated this uuid's Multi-homed Entry, so
+	 * this should not happen - but if it somehow did (e.g. a
+	 * concurrent RegisterAddrs from a racing caller replaced it),
+	 * fail cleanly rather than writing an orphaned endpoint entry. */
+	if (!code)
+	    code = VL_IO;
+	goto abort;
+    }
+
+    epref = 0;
+    if (ntohl(exp->ex_srvflags) & EXSRV_HAS_ENDPOINTS)
+	epref = ntohl(exp->ex_epref);
+    code = FindEndpointBlock(&ctx, uuidp, 1, epref, &exep, &epref);
+    if (code || !exep) {
+	if (!code)
+	    code = VL_IO;
+	goto abort;
+    }
+
+    n = endpoints->vlendpoints_len;
+    if (n > VL_MAXENDPOINTS) {
+	VLog(0, ("Number of endpoints exceeds %d, truncating for uuid "
+		 "registration\n", VL_MAXENDPOINTS));
+	n = VL_MAXENDPOINTS;
+    }
+    for (i = 0; i < n; i++) {
+	exep->exep_endpoints[i].type =
+	    htonl(endpoints->vlendpoints_val[i].type);
+	exep->exep_endpoints[i].length =
+	    htonl(endpoints->vlendpoints_val[i].length);
+	exep->exep_endpoints[i].value[0] =
+	    htonl(endpoints->vlendpoints_val[i].value[0]);
+	exep->exep_endpoints[i].value[1] =
+	    htonl(endpoints->vlendpoints_val[i].value[1]);
+	exep->exep_endpoints[i].value[2] =
+	    htonl(endpoints->vlendpoints_val[i].value[2]);
+	exep->exep_endpoints[i].value[3] =
+	    htonl(endpoints->vlendpoints_val[i].value[3]);
+    }
+    for (; i < VL_MAXENDPOINTS; i++) {
+	memset(&exep->exep_endpoints[i], 0, sizeof(exep->exep_endpoints[i]));
+    }
+    exep->exep_count = htonl(n);
+    exep->exep_uniquifier = exp->ex_uniquifier;
+    if (vlwrite
+	(ctx.trans,
+	 DOFFSET(ntohl(ctx.ex_addr[0]->ex_contaddrs[VLEPREF_BASE(epref)]),
+		 (char *)ctx.ex_addr[VLEPREF_BASE(epref)], (char *)exep),
+	 (char *)exep, sizeof(*exep))) {
+	code = VL_IO;
+	goto abort;
+    }
+
+    if (!(ntohl(exp->ex_srvflags) & EXSRV_HAS_ENDPOINTS)
+	|| ntohl(exp->ex_epref) != epref) {
+	exp->ex_srvflags = htonl(ntohl(exp->ex_srvflags) | EXSRV_HAS_ENDPOINTS);
+	exp->ex_epref = htonl(epref);
+	if (vlwrite
+	    (ctx.trans,
+	     DOFFSET(ntohl(ctx.ex_addr[0]->ex_contaddrs[base]),
+		     (char *)ctx.ex_addr[base], (char *)exp), (char *)exp,
+	     sizeof(*exp))) {
+	    code = VL_IO;
+	    goto abort;
+	}
+    }
+
+    return (ubik_EndTrans(ctx.trans));
+
+abort:
+    countAbort(this_op);
+    ubik_AbortTrans(ctx.trans);
+    return code;
+}
+
+/*
+ * GetEndpoints is GetAddrsU's IPv6-capable sibling. It resolves to the
+ * same Multi-homed Entry GetAddrsU would (identical VLADDR_IPADDR/
+ * VLADDR_INDEX/VLADDR_UUID lookup modes), then:
+ *   - if that entry has an associated Endpoint Extension Entry
+ *     (EXSRV_HAS_ENDPOINTS set - i.e. RegisterEndpoints, not just
+ *     RegisterAddrs, was used to register this fileserver), returns
+ *     its full typed (v4+v6) list;
+ *   - otherwise synthesizes a v4-only typed list from the legacy
+ *     addrs[], deduped exactly like GetAddrsU - so GetEndpoints works
+ *     uniformly for every fileserver, however it registered.
+ */
+afs_int32
+SVL_GetEndpoints(struct rx_call *rxcall,
+		  struct ListAddrByAttributes *attributes,
+		  afsUUID *uuidpo,
+		  afs_int32 *uniquifier,
+		  vlendpoints *endpointsp)
+{
+    int this_op = VLGETENDPOINTS;
+    afs_int32 code, index;
+    struct vl_ctx ctx;
+    int i, j, base = 0, n;
+    struct extentaddr *exp = 0;
+    struct extentendpoints *exep = 0;
+    afsUUID tuuid;
+    afs_int32 epref;
+    char rxstr[AFS_RXINFO_LEN];
+
+    countRequest(this_op);
+    endpointsp->vlendpoints_len = 0;
+    endpointsp->vlendpoints_val = 0;
+    VLog(5, ("GetEndpoints %s\n", rxinfo(rxstr, rxcall)));
+    if ((code = Init_VLdbase(&ctx, LOCKREAD, this_op)))
+	return code;
+
+    if (attributes->Mask & VLADDR_IPADDR) {
+	if (attributes->Mask & (VLADDR_INDEX | VLADDR_UUID)) {
+	    code = VL_BADMASK;
+	    goto abort;
+	}
+	for (index = 0; index <= MAXSERVERID; index++) {
+	    code = multiHomedExtent(&ctx, index, &exp);
+	    if (code)
+		continue;
+	    if (exp) {
+		for (j = 0; j < VL_MAXIPADDRS_PERMH; j++) {
+		    if (exp->ex_addrs[j]
+			&& (ntohl(exp->ex_addrs[j]) == attributes->ipaddr)) {
+			break;
+		    }
+		}
+		if (j < VL_MAXIPADDRS_PERMH)
+		    break;
+	    }
+	}
+	if (index > MAXSERVERID) {
+	    code = VL_NOENT;
+	    goto abort;
+	}
+    } else if (attributes->Mask & VLADDR_INDEX) {
+	if (attributes->Mask & (VLADDR_IPADDR | VLADDR_UUID)) {
+	    code = VL_BADMASK;
+	    goto abort;
+	}
+	if (attributes->index < 1 || attributes->index > MAXSERVERID) {
+	    code = VL_INDEXERANGE;
+	    goto abort;
+	}
+	index = attributes->index - 1;
+	code = multiHomedExtent(&ctx, index, &exp);
+	if (code) {
+	    code = VL_NOENT;
+	    goto abort;
+	}
+    } else if (attributes->Mask & VLADDR_UUID) {
+	if (attributes->Mask & (VLADDR_IPADDR | VLADDR_INDEX)) {
+	    code = VL_BADMASK;
+	    goto abort;
+	}
+	if (!ctx.ex_addr[0]) {
+	    code = VL_NOENT;
+	    goto abort;
+	}
+	code = FindExtentBlock(&ctx, &attributes->uuid, 0, -1, &exp, &base);
+	if (code)
+	    goto abort;
+    } else {
+	code = VL_BADMASK;
+	goto abort;
+    }
+
+    if (exp == NULL) {
+	code = VL_NOENT;
+	goto abort;
+    }
+    tuuid = exp->ex_hostuuid;
+    afs_ntohuuid(&tuuid);
+    if (afs_uuid_is_nil(&tuuid)) {
+	code = VL_NOENT;
+	goto abort;
+    }
+    if (uuidpo)
+	*uuidpo = tuuid;
+    if (uniquifier)
+	*uniquifier = ntohl(exp->ex_uniquifier);
+
+    endpointsp->vlendpoints_val =
+	malloc(VL_MAXENDPOINTS * sizeof(struct vlendpoint));
+    if (!endpointsp->vlendpoints_val) {
+	code = VL_NOMEM;
+	goto abort;
+    }
+    endpointsp->vlendpoints_len = 0;
+
+    epref = 0;
+    if (ntohl(exp->ex_srvflags) & EXSRV_HAS_ENDPOINTS)
+	epref = ntohl(exp->ex_epref);
+    exep = NULL;
+    if (epref) {
+	code = FindEndpointBlock(&ctx, &tuuid, 0, epref, &exep, &epref);
+	if (code)
+	    exep = NULL;
+	code = 0;
+    }
+
+    if (exep) {
+	n = ntohl(exep->exep_count);
+	if (n < 0)
+	    n = 0;
+	if (n > VL_MAXENDPOINTS)
+	    n = VL_MAXENDPOINTS;
+	for (i = 0; i < n; i++) {
+	    struct vlendpoint *ep =
+		&endpointsp->vlendpoints_val[endpointsp->vlendpoints_len];
+	    ep->type = ntohl(exep->exep_endpoints[i].type);
+	    ep->length = ntohl(exep->exep_endpoints[i].length);
+	    ep->value[0] = ntohl(exep->exep_endpoints[i].value[0]);
+	    ep->value[1] = ntohl(exep->exep_endpoints[i].value[1]);
+	    ep->value[2] = ntohl(exep->exep_endpoints[i].value[2]);
+	    ep->value[3] = ntohl(exep->exep_endpoints[i].value[3]);
+	    endpointsp->vlendpoints_len++;
+	}
+    } else {
+	/* No endpoint extension for this uuid - synthesize a v4-only
+	 * typed list from the legacy addrs[], deduped like GetAddrsU. */
+	for (i = 0;
+	     i < VL_MAXIPADDRS_PERMH
+		 && endpointsp->vlendpoints_len < VL_MAXENDPOINTS; i++) {
+	    afs_uint32 taddr;
+	    int dup = 0;
+	    struct vlendpoint *ep;
+
+	    if (!exp->ex_addrs[i])
+		continue;
+	    taddr = ntohl(exp->ex_addrs[i]);
+	    for (j = 0; j < endpointsp->vlendpoints_len; j++) {
+		if (endpointsp->vlendpoints_val[j].type == VL_ENDPOINT_IPV4
+		    && endpointsp->vlendpoints_val[j].value[0] == taddr) {
+		    dup = 1;
+		    break;
+		}
+	    }
+	    if (dup)
+		continue;
+	    ep = &endpointsp->vlendpoints_val[endpointsp->vlendpoints_len];
+	    memset(ep, 0, sizeof(*ep));
+	    ep->type = VL_ENDPOINT_IPV4;
+	    ep->length = 4;
+	    ep->value[0] = taddr;
+	    endpointsp->vlendpoints_len++;
+	}
+    }
+    return (ubik_EndTrans(ctx.trans));
+
+abort:
+    countAbort(this_op);
+    ubik_AbortTrans(ctx.trans);
+    return code;
+}
+
 /* ============> End of Exported vldb RPC functions <============= */
 
 

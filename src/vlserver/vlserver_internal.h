@@ -36,6 +36,11 @@ extern afs_int32 AllocBlock(struct vl_ctx *ctx,
 extern afs_int32 FindExtentBlock(struct vl_ctx *ctx, afsUUID *uuidp,
 				 afs_int32 createit, afs_int32 hostslot,
 				 struct extentaddr **expp, afs_int32 *basep);
+extern afs_int32 GetEndpointBlock(struct vl_ctx *ctx, afs_int32 base);
+extern afs_int32 FindEndpointBlock(struct vl_ctx *ctx, afsUUID *uuidp,
+				 afs_int32 createit, afs_int32 epref,
+				 struct extentendpoints **exepp,
+				 afs_int32 *eprefp);
 extern afs_int32 FindByID(struct vl_ctx *ctx, afs_uint32 volid,
 		          afs_int32 voltype, struct nvlentry *tentry,
 			  afs_int32 *error);

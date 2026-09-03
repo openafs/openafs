@@ -1725,7 +1725,7 @@ WriteSysIdFile(void)
  * array called FS_HostAddrs_HBO is used here.
  */
 static afs_int32
-Do_VLRegisterRPC(void)
+Do_VLRegisterAddrsRPC(void)
 {
     int code;
     bulkaddrs addrs;
@@ -1754,6 +1754,94 @@ Do_VLRegisterRPC(void)
 		     code, errno));
 	    FS_registered = 1;	/* Retry in the gc daemon */
 	}
+    } else {
+	FS_registered = 2;	/* So we don't have to retry in the gc daemon */
+	WriteSysIdFile();
+    }
+
+    return 0;
+}
+
+/*
+ * Tries VL_RegisterEndpoints first, so a dual-stack or IPv6-only
+ * fileserver's real address set (not just its IPv4 subset) reaches the
+ * VLDB - see doc/txt/vldb.txt's "Version 5" section. Falls back to the
+ * plain, IPv4-only Do_VLRegisterAddrsRPC() on RXGEN_OPCODE, for a
+ * vlserver that predates VL_RegisterEndpoints.
+ *
+ * Note: this only makes the fileserver's true address set reachable
+ * *from the VLDB*. A client cannot yet act on the IPv6 half of it -
+ * that needs the cache manager's own host table (struct srvAddr,
+ * afs_GetServer()) to become address-family-agnostic too, which is
+ * later work; see the comment at LockAndInstallUVolumeEntry() in
+ * src/afs/afs_volume.c.
+ */
+static afs_int32
+Do_VLRegisterRPC(void)
+{
+    int code;
+    vlendpoints endpoints;
+    struct rx_sockaddr addrs[ADDRSPERSITE];
+    int naddrs, i;
+
+    naddrs = rx_getAllSockaddr(addrs, ADDRSPERSITE);
+    if (naddrs <= 0)
+	return Do_VLRegisterAddrsRPC();
+
+    endpoints.vlendpoints_val = malloc(naddrs * sizeof(struct vlendpoint));
+    if (!endpoints.vlendpoints_val)
+	return Do_VLRegisterAddrsRPC();
+    endpoints.vlendpoints_len = 0;
+    for (i = 0; i < naddrs; i++) {
+	struct vlendpoint *ep = &endpoints.vlendpoints_val[endpoints.vlendpoints_len];
+
+	memset(ep, 0, sizeof(*ep));
+	if (addrs[i].rxsa_family == AF_INET) {
+	    ep->type = VL_ENDPOINT_IPV4;
+	    ep->length = 4;
+	    ep->value[0] = ntohl(addrs[i].rxsa_s_addr);
+#ifdef HAVE_IPV6
+	} else if (addrs[i].rxsa_family == AF_INET6) {
+	    afs_uint32 v6[4];
+
+	    ep->type = VL_ENDPOINT_IPV6;
+	    ep->length = 16;
+	    memcpy(v6, &addrs[i].rxsa_in6_addr, sizeof(v6));
+	    ep->value[0] = ntohl(v6[0]);
+	    ep->value[1] = ntohl(v6[1]);
+	    ep->value[2] = ntohl(v6[2]);
+	    ep->value[3] = ntohl(v6[3]);
+#endif
+	} else {
+	    continue;
+	}
+	endpoints.vlendpoints_len++;
+    }
+
+    if (endpoints.vlendpoints_len == 0) {
+	free(endpoints.vlendpoints_val);
+	return Do_VLRegisterAddrsRPC();
+    }
+
+    code = ubik_VL_RegisterEndpoints(cstruct, 0, &FS_HostUUID, 0, &endpoints);
+    free(endpoints.vlendpoints_val);
+    if (code == RXGEN_OPCODE) {
+	ViceLog(0,
+		("vlserver doesn't support VL_RegisterEndpoints rpc; "
+		 "falling back to VL_RegisterAddrs (IPv4 only)\n"));
+	return Do_VLRegisterAddrsRPC();
+    } else if (code) {
+	if (code == VL_MULTIPADDR) {
+	    ViceLog(0,
+		    ("VL_RegisterEndpoints rpc failed; The IP address exists on a different server; repair it\n"));
+	    ViceLog(0,
+		    ("VL_RegisterEndpoints rpc failed; See VLLog for details\n"));
+	    return code;
+	}
+	ViceLog(0,
+		("VL_RegisterEndpoints rpc failed; will retry periodically (code=%d, err=%d)\n",
+		 code, errno));
+	FS_registered = 1;	/* Retry in the gc daemon */
     } else {
 	FS_registered = 2;	/* So we don't have to retry in the gc daemon */
 	WriteSysIdFile();
