@@ -80,13 +80,40 @@ internal_client_init(struct afsconf_dir *dir, struct afsconf_cell *info,
 		    progname, info->numServers, maxservers);
 	    return -1;
 	}
-	for (i = 0; i < info->numServers; i++) {
-	    if (!info->hostAddr[i].rxsa_in_port && port)
-		info->hostAddr[i].rxsa_in_port = port;
-	    serverconns[i] =
-		rx_NewConnection(info->hostAddr[i].rxsa_s_addr,
-				 info->hostAddr[i].rxsa_in_port, usrvid,
-				 sc, scIndex);
+	{
+	    int nconns = 0;
+	    for (i = 0; i < info->numServers; i++) {
+		afs_uint32 shost;
+
+		/* info->hostAddr[i] may be an IPv6 entry - client-side
+		 * multihoming discovery in _GetCellInfo() (cellconfig.c)
+		 * expands each CellServDB hostname into one entry per
+		 * getaddrinfo(AF_UNSPEC) result, v4 and v6 alike. This
+		 * function only speaks plain IPv4 (rx_NewConnection(),
+		 * ubik_ClientInit()'s serverconns[] array) - never converted
+		 * to rx_NewConnectionSA(), so skip anything that isn't
+		 * representable as IPv4 rather than reading .rxsa_s_addr
+		 * off a union that isn't actually a sockaddr_in: that read
+		 * is at the byte offset of sin6_flowinfo for a real IPv6
+		 * entry, which is conventionally zero, silently producing a
+		 * connection to 0.0.0.0 that ubik_ClientInit then picks
+		 * among its real servers at random - confirmed live via
+		 * strace/gdb as the cause of an intermittent VLDB-read hang
+		 * from a dual-stack cell's dbservers. */
+		if (rx_try_sockaddr_to_ipv4(&info->hostAddr[i], &shost) != 0)
+		    continue;
+		if (!info->hostAddr[i].rxsa_in_port && port)
+		    info->hostAddr[i].rxsa_in_port = port;
+		serverconns[nconns++] =
+		    rx_NewConnection(shost, info->hostAddr[i].rxsa_in_port,
+				     usrvid, sc, scIndex);
+	    }
+	    if (nconns == 0) {
+		fprintf(stderr,
+			"%s: no IPv4 address found for any server in this "
+			"cell.\n", progname);
+		return -1;
+	    }
 	}
     }
     /* Are we just setting up connections, or is this really ubik stuff? */
