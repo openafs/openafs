@@ -51,6 +51,7 @@ rx_Init
 rx_Init2
 rx_InitHost
 rx_InitHost2
+rx_InitHostDual
 rx_InterruptCall
 rx_IsServerConn
 rx_IsUsingPktCksum

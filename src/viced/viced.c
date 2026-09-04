@@ -2124,7 +2124,7 @@ main(int argc, char *argv[])
 
     ViceLog(0, ("File server binding rx to %s:%d\n",
             afs_inet_ntoa_r(rx_bindhost, hoststr), 7000));
-    if (rx_InitHost(rx_bindhost, (int)htons(7000)) < 0) {
+    if (rx_InitHostDual(rx_bindhost, (int)htons(7000)) < 0) {
 	ViceLog(0, ("Cannot initialize RX\n"));
 	exit(1);
     }

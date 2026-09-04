@@ -1172,7 +1172,7 @@ main(int argc, char **argv, char **envp)
 	host = GetRxBindAddress();
     }
     for (i = 0; i < 10; i++) {
-	code = rx_InitHost(host, htons(AFSCONF_NANNYPORT));
+	code = rx_InitHostDual(host, htons(AFSCONF_NANNYPORT));
 	if (code) {
 	    bozo_Log("can't initialize rx: code=%d\n", code);
 	    sleep(3);

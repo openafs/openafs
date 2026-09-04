@@ -551,7 +551,7 @@ main(int argc, char **argv)
 
     ViceLog(0, ("ptserver binding rx to %s:%d\n",
             afs_inet_ntoa_r(host, hoststr), AFSCONF_PROTPORT));
-    code = rx_InitHost(host, htons(AFSCONF_PROTPORT));
+    code = rx_InitHostDual(host, htons(AFSCONF_PROTPORT));
     if (code < 0) {
 	ViceLog(0, ("ptserver: Rx init failed: %d\n", code));
 	PT_EXIT(1);

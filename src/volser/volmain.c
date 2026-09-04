@@ -579,7 +579,7 @@ main(int argc, char **argv)
 
     Log("Volserver binding rx to %s:%d\n",
         afs_inet_ntoa_r(host, hoststr), AFSCONF_VOLUMEPORT);
-    code = rx_InitHost(host, (int)htons(AFSCONF_VOLUMEPORT));
+    code = rx_InitHostDual(host, (int)htons(AFSCONF_VOLUMEPORT));
     if (code) {
 	fprintf(stderr, "rx init failed on socket AFSCONF_VOLUMEPORT %u\n",
 		AFSCONF_VOLUMEPORT);

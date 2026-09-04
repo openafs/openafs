@@ -756,6 +756,35 @@ rx_Init2(u_int port)
 #endif
 }
 
+/*
+ * Like rx_InitHost(), but also opens an IPv6 listener (best-effort - see
+ * rx_InitHost2()) on the same port, bound to the IPv6 wildcard address (::)
+ * - there is no existing mechanism for an admin to request a v6-specific
+ * bind restriction (unlike host, which callers may have narrowed via their
+ * own -rxbind-style option), so wildcard is the only sensible default here.
+ * For every AFS server main() that still called plain rx_InitHost(): each
+ * one only ever restricts which *local* address it binds to, so widening
+ * just the listening socket (as opposed to touching how these servers
+ * track or dial *other* hosts, already handled elsewhere in this series)
+ * is the whole fix needed to make them reachable over IPv6 at all.
+ */
+int
+rx_InitHostDual(u_int host, u_int port)
+{
+    struct rx_sockaddr v4;
+#ifdef HAVE_IPV6
+    struct rx_sockaddr v6;
+#endif
+
+    rx_ipv4_to_sockaddr(host, (u_short) port, 0, &v4);
+#ifdef HAVE_IPV6
+    rxi_BuildIPv6AnySockaddr((u_short) port, &v6);
+    return rx_InitHost2(&v4, &v6);
+#else
+    return rx_InitHost2(&v4, NULL);
+#endif
+}
+
 /* RTT Timer
  * ---------
  *

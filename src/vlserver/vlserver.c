@@ -486,7 +486,7 @@ main(int argc, char **argv)
 
     VLog(0, ("vlserver binding rx to %s:%d\n",
          afs_inet_ntoa_r(host, hoststr), AFSCONF_VLDBPORT));
-    code = rx_InitHost(host, htons(AFSCONF_VLDBPORT));
+    code = rx_InitHostDual(host, htons(AFSCONF_VLDBPORT));
     if (code < 0) {
         VLog(0, ("vlserver: Rx init failed: %d\n", code));
         exit(1);

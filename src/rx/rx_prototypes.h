@@ -25,6 +25,7 @@ extern void rx_rto_setPeerTimeoutSecs(struct rx_peer *, int secs);
 extern int rx_Init(u_int port);
 extern int rx_Init2(u_int port);
 extern int rx_InitHost(u_int host, u_int port);
+extern int rx_InitHostDual(u_int host, u_int port);
 extern int rx_InitHost2(const struct rx_sockaddr *v4,
 			const struct rx_sockaddr *v6);
 
