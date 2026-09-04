@@ -513,7 +513,19 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 
 	if (glocked)
             AFS_GUNLOCK();
-	tc->id = rx_NewConnection(sap->sa_ip, aport, service, csec, isec);
+	{
+	    /* sap->sa_saddr is the server's real (v4 or v6) address, but
+	     * this connection's port is the caller's aport - not
+	     * necessarily sap->sa_portal, since the same srvAddr's address
+	     * is reused for both the vlserver and fileserver Rx services on
+	     * that host (see the service==52 vs 1 check above) - so start
+	     * from sa_saddr and override just the port. */
+	    struct rx_sockaddr csa;
+
+	    rx_copy_sockaddr(&sap->sa_saddr, &csa);
+	    rx_set_sockaddr_port(&csa, aport);
+	    tc->id = rx_NewConnectionSA(&csa, service, csec, isec);
+	}
 	if (glocked)
             AFS_GLOCK();
 	if (service == 52) {
