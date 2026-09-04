@@ -18,7 +18,7 @@ protected by the locking at a higher level function.
 
 To prevent people from using non-thread safe functions, platform
 specific methods are used to limit the functions exported by the
-library (using def files under NT and mapfiles under Solaris).  For
+library (using def files under NT and libtool .sym files under Unix). For
 most non-exported functions, it should be trivial to make the
 transformation to thread safe by simply locking/ unlocking the
 global mutex at the beginning/end of the function.
