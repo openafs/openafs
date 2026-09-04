@@ -359,18 +359,53 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
     code = verifyInterfaceAddress(&ame, info, aservers);
 #ifdef HAVE_IPV6
     /* verifyInterfaceAddress() above is IPv4-only throughout (see its
-     * sibling's own comment) - if it failed and this is the ByInfo path
-     * (a CellServDB, not a raw IPv4 address list), this may just be a
-     * v6-only server, which that function can never identify correctly
-     * regardless of what ame was. Try independently discovering "which
-     * CellServDB entry is me" via local IPv6 interfaces before giving
-     * up. Does not touch ubik_host[]/ubik_host_sa itself - that happens
-     * below, uniformly for both the v4 and v6 outcomes. */
-    if (code && info) {
-	code = verifyInterfaceAddressSA(&selfSA, info);
+     * sibling's own comment), and - real trap hit here, not just
+     * theoretical - a *nonzero return code is not a reliable signal
+     * that it failed*: AFSDIR_SERVER_NETRESTRICT_FILEPATH/
+     * NETINFO_FILEPATH are compile-time path constants, always
+     * "truthy" in that first `if` regardless of whether either file
+     * actually exists on this host, so its usednetfiles recovery path
+     * runs unconditionally - and that path's whole purpose is "just
+     * pick *some* local address, don't fail" (myAddr[0], whatever
+     * that happens to be). For afs-db3 (no NetInfo/NetRestrict
+     * configured) that meant it "succeeded" with code==0 and ame set
+     * to a local Lima management-network address that happens to
+     * exist but isn't reachable from any peer or listed in any
+     * CellServDB - silently wrong, not absent. So: check whether ame
+     * genuinely names one of this CellServDB's own AF_INET entries,
+     * not just whether the call returned 0; if it was v6-only, this
+     * may just be a v6-only server, which verifyInterfaceAddress()
+     * can never identify correctly regardless of what ame was - try
+     * independently discovering "which CellServDB entry is me" via
+     * local IPv6 interfaces instead. Does not touch ubik_host[]/
+     * ubik_host_sa itself - that happens below, uniformly for both
+     * the v4 and v6 outcomes. */
+    if (info) {
+	int meIsRealMember = 0;
+
 	if (!code) {
-	    haveSelfSA = 1;
-	    ame = 0;	/* IPv4 projection: unset for a v6-only self */
+	    int k;
+
+	    for (k = 0; k < info->numServers; k++) {
+		if (info->hostAddr[k].rxsa_family == AF_INET
+		    && (afs_uint32) info->hostAddr[k].rxsa_s_addr == ame) {
+		    meIsRealMember = 1;
+		    break;
+		}
+	    }
+	}
+	if (!meIsRealMember) {
+	    int code2 = verifyInterfaceAddressSA(&selfSA, info);
+	    if (!code2) {
+		haveSelfSA = 1;
+		ame = 0;	/* IPv4 projection: unset for a v6-only self */
+		code = 0;
+	    } else if (!code) {
+		/* verifyInterfaceAddress() "succeeded" with a bogus
+		 * address and the v6 fallback also couldn't identify us
+		 * - don't silently register the bogus one. */
+		code = UBADHOST;
+	    }
 	}
     }
 #endif
