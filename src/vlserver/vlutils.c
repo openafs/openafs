@@ -31,6 +31,34 @@ int vldbversion = 0;
 
 static int index_OK(struct vl_ctx *ctx, afs_int32 blockindex);
 
+/**
+ * Whether an operator has deliberately opted in to the one-way VLDB
+ * version 4 -> 5 upgrade that a fileserver's first VL_RegisterEndpoints
+ * call triggers (see FindEndpointBlock() below). Left ungated, that
+ * upgrade is a real compatibility break, not just an inherent cost of a
+ * new on-disk version: every *unmodified* vlserver replica still in the
+ * same ubik quorum keeps voting/replicating normally but refuses every
+ * VLDB read thereafter (VL_BADVERSION), cell-wide, the instant any one
+ * dual-stack fileserver registers - confirmed live on this fleet (see
+ * "Phase 3 done" / "KNOWN COMPATIBILITY REGRESSION" in the fleet
+ * README). This mirrors the existing -noauth/
+ * AFSDIR_SERVER_NOAUTH_FILEPATH marker-file pattern (src/auth/userok.c)
+ * rather than a config-file change or a new command-line flag: an
+ * operator creates this file once every dbserver replica in the quorum
+ * is confirmed running code that understands version 5, and every
+ * registration attempt checks for it fresh, so nothing needs a restart
+ * to pick up the opt-in - matching how NoAuth already behaves.
+ */
+static int
+V5UpgradeAllowed(void)
+{
+    char path[AFSDIR_PATH_MAX];
+
+    strcompose(path, sizeof(path), AFSDIR_SERVER_LOCAL_DIRPATH, "/",
+	       "VLDBAllowV5Upgrade", (char *)NULL);
+    return (access(path, 0) == 0);
+}
+
 #define ERROR_EXIT(code) do { \
     error = (code); \
     goto error_exit; \
@@ -719,6 +747,24 @@ FindEndpointBlock(struct vl_ctx *ctx, afsUUID *uuidp, afs_int32 createit,
     }
 
     if (createit) {
+	/* Creating the first-ever Endpoint Extension Entry is exactly the
+	 * event that bumps vldbversion to VLDBVERSION_5 below - refuse the
+	 * whole registration up front, before writing anything, rather
+	 * than allowing the entry to be written and then failing the
+	 * version bump (which would leave a half-migrated, inconsistent
+	 * database). Once the database is already at version 5, later
+	 * registrations for other fileservers are unaffected by this
+	 * check. */
+	if (vldbversion != VLDBVERSION_5 && !V5UpgradeAllowed()) {
+	    fprintf(stderr,
+		    "FindEndpointBlock: refusing to upgrade vldbversion "
+		    "to %d for a new endpoint registration - operator has "
+		    "not created %s/VLDBAllowV5Upgrade to acknowledge the "
+		    "migration (see KNOWN COMPATIBILITY REGRESSION in the "
+		    "fleet README)\n", VLDBVERSION_5,
+		    AFSDIR_SERVER_LOCAL_DIRPATH);
+	    ERROR_EXIT(VL_PERM);
+	}
 	for (base = 1; base < VL_MAX_ADDREXTBLKS; base++) {
 	    if (!ctx->ex_addr[0]->ex_contaddrs[base]
 		|| !(ntohl(((struct extentendpoints *)
