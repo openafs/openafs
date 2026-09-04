@@ -303,11 +303,13 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 		whoami);
 
     memset(serverconns, 0, sizeof(serverconns));	/* terminate list!!! */
+    /* info.hostAddr[i] is already a fully-formed struct rx_sockaddr (see
+     * the identical fix/comment in src/viced/viced.c's vl_Initialize()) -
+     * extracting just .rxsa_s_addr and calling the IPv4-only
+     * rx_NewConnection() reads garbage/zero for a v6 CellServDB entry. */
     for (i = 0; i < info.numServers; i++)
 	serverconns[i] =
-	    rx_NewConnection(info.hostAddr[i].rxsa_s_addr,
-			     info.hostAddr[i].rxsa_in_port, PRSRV, sc,
-			     scIndex);
+	    rx_NewConnectionSA(&info.hostAddr[i], PRSRV, sc, scIndex);
 
     code = ubik_ClientInit(serverconns, &pruclient);
     if (code) {

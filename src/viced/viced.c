@@ -1560,11 +1560,20 @@ vl_Initialize(struct afsconf_dir *dir)
 		 info.numServers, MAXSERVERS));
 	exit(1);
     }
+    /* info.hostAddr[i] is already a fully-formed struct rx_sockaddr
+     * (family, address, and port - see afsconf_GetCellInfo()/
+     * ParseHostLine() in src/auth/cellconfig.c), v4 or v6. Extracting
+     * just .rxsa_s_addr (the IPv4 union member) and passing it to the
+     * IPv4-only rx_NewConnection() - the previous code here - reads
+     * garbage/zero for a v6 CellServDB entry, since the union's active
+     * member is .sin6, not .sin: real bug hit here, not just theoretical
+     * - a v6-only fileserver's own VL_RegisterEndpoints/CPS-lookup
+     * connections to its (v6-addressed) db servers went to 0.0.0.0
+     * instead, timing out on every attempt rather than failing fast. */
     for (i = 0; i < info.numServers; i++)
 	serverconns[i] =
-	    rx_NewConnection(info.hostAddr[i].rxsa_s_addr,
-			     info.hostAddr[i].rxsa_in_port, USER_SERVICE_ID, sc,
-			     scIndex);
+	    rx_NewConnectionSA(&info.hostAddr[i], USER_SERVICE_ID, sc,
+			       scIndex);
     code = ubik_ClientInit(serverconns, &cstruct);
     if (code) {
 	ViceLog(0, ("vl_Initialize: ubik client init failed.\n"));
