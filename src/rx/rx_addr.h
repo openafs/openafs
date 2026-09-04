@@ -200,7 +200,7 @@ rx_set_sockaddr_port(struct rx_sockaddr *sa, afs_uint16 port)
 }
 
 /* rx_sockaddr */
-#ifndef KERNEL
+#if !defined(KERNEL) || defined(UKERNEL)
 # include <netdb.h>
 int rx_addrinfo_to_sockaddr(const struct addrinfo *ai, rx_service_t service,
 			    struct rx_sockaddr *sa);

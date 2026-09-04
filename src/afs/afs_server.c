@@ -784,6 +784,30 @@ afs_FindServer(afs_int32 aserver, afs_uint16 aport, afsUUID * uuidp,
 
 }				/*afs_FindServer */
 
+/*
+ * SHashSA() hashes a struct rx_sockaddr into the same afs_srvAddrs[]/
+ * NSERVERS buckets afs_FindServer()'s/afs_GetServer()'s IPv4-only SHash()
+ * macro uses. It is NOT simply rx_hash_sockaddr(saddr, NSERVERS): an IPv4
+ * srvAddr may be created by either the legacy SHash()-based path (via
+ * afs_GetServer()) or, going forward, by afs_GetServerSA() below - both
+ * MUST land in the same bucket for the same address, or a lookup through
+ * one path would silently miss a srvAddr created by the other. So for
+ * AF_INET this literally calls SHash() to guarantee bit-identical
+ * results; only AF_INET6 gets a real hash (rx_hash_sockaddr(), masked to
+ * NSERVERS - which, at 16 buckets, is coarse, but matches this table's
+ * existing IPv4 granularity).
+ */
+static unsigned int
+SHashSA(const struct rx_sockaddr *saddr)
+{
+    afs_uint32 v4addr;
+
+    if (rx_try_sockaddr_to_ipv4(saddr, &v4addr)) {
+	return SHash(v4addr);
+    }
+    return rx_hash_sockaddr(saddr, NSERVERS);
+}
+
 
 /* some code for creating new server structs and setting preferences follows
  * in the next few lines...
@@ -1728,6 +1752,7 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 	    /* Initialize the srvAddr Structure */
 	    newsa->sa_ip = aserverp[k];
 	    newsa->sa_portal = aport;
+	    rx_ipv4_to_sockaddr(aserverp[k], aport, 0, &newsa->sa_saddr);
 	}
 
 	/* Update the srvAddr Structure */
@@ -1816,6 +1841,223 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
     ReleaseWriteLock(&afs_xserver);
     return (newts);
 }				/* afs_GetServer */
+
+/*
+ * afs_GetServerSA() is afs_GetServer()'s IPv6-capable sibling, for a
+ * multihomed (UUID-identified) server's endpoint list as returned by
+ * VL_GetEndpoints - VLDB v5's per-UUID endpoint blocks always carry a
+ * UUID, so unlike afs_GetServer() this has no single-address,
+ * no-uuid legacy case to support; aservers/nservers replace
+ * afs_GetServer()'s aserverp/nservers, and aport is still a single port
+ * shared by every endpoint (matching afs_SearchServer()'s existing
+ * "one port for the whole uuid-identified server" assumption - real
+ * AFS3 fileservers use one port across all their interfaces).
+ *
+ * This is a close copy of afs_GetServer()'s multihomed branch rather
+ * than a shared refactor: afs_GetServer() has six external callers
+ * across three files, all IPv4-native, so widening its own signature
+ * would have meant touching every one of them just to pass a NULL - a
+ * new sibling function is the same shim pattern used throughout this
+ * series (rx_NewConnectionSA alongside rx_NewConnection, and so on).
+ */
+struct server *
+afs_GetServerSA(const struct rx_sockaddr *aservers, afs_int32 nservers,
+		afs_int32 acell, u_short aport, afs_int32 locktype,
+		afsUUID * uuidp, afs_int32 addr_uniquifier, struct volume *tv)
+{
+    struct server *oldts = 0, *ts, *newts, *orphts = 0;
+    struct srvAddr *oldsa, *newsa, *nextsa, *orphsa;
+    afs_int32 srvcount = 0;
+    unsigned int iphash, srvhash;
+    afs_int32 k;
+
+    AFS_STATCNT(afs_GetServer);
+
+    opr_Assert(uuidp);
+    if (nservers <= 0)
+	panic("afs_GetServerSA: incorrect count of servers");
+
+    ObtainSharedLock(&afs_xserver, 13);
+
+    ts = afs_SearchServer(aport, uuidp, locktype, &oldts, addr_uniquifier);
+    if (ts) {
+	ReleaseSharedLock(&afs_xserver);
+	return ts;
+    }
+
+    /*
+     * Lock hierarchy requires xvcb, then xserver. We *have* xserver.
+     * Do a little dance and see if we can grab xvcb. If not, we
+     * need to recheck that oldts is still right after a drop and reobtain.
+     */
+    if (EWOULDBLOCK == NBObtainWriteLock(&afs_xvcb, 300)) {
+	ReleaseSharedLock(&afs_xserver);
+	ObtainWriteLock(&afs_xvcb, 299);
+	ObtainWriteLock(&afs_xserver, 35);
+
+	/* we don't know what changed while we didn't hold the lock */
+	oldts = 0;
+	ts = afs_SearchServer(aport, uuidp, locktype, &oldts,
+			      addr_uniquifier);
+	if (ts) {
+	    ReleaseWriteLock(&afs_xserver);
+	    ReleaseWriteLock(&afs_xvcb);
+	    return ts;
+	}
+    } else {
+	UpgradeSToWLock(&afs_xserver, 36);
+    }
+    ObtainWriteLock(&afs_xsrvAddr, 116);
+    srvcount = afs_totalServers;
+
+    /* Reuse/allocate a new server structure */
+    if (oldts) {
+	newts = oldts;
+    } else {
+	newts = afs_osi_Calloc(sizeof(struct server));
+	if (!newts)
+	    panic("malloc of server struct");
+	afs_totalServers++;
+
+	/* Add the server struct to the afs_servers[] hash chain */
+	srvhash = afs_uuid_hash(uuidp) % NSERVERS;
+	newts->next = afs_servers[srvhash];
+	afs_servers[srvhash] = newts;
+    }
+
+    /* Initialize the server structure */
+    newts->sr_uuid = *uuidp;
+    newts->sr_addr_uniquifier = addr_uniquifier;
+    newts->flags |= SRVR_MULTIHOMED;
+    if (acell)
+	/* Use the afs_GetCellStale variant to avoid afs_GetServer recursion. */
+	newts->cell = afs_GetCellStale(acell, 0);
+
+    /* For each endpoint we are registering */
+    for (k = 0; k < nservers; k++) {
+	iphash = SHashSA(&aservers[k]);
+
+	/* Check if the srvAddr structure already exists. If so, remove
+	 * it from its server structure and add it to the new one.
+	 */
+	for (oldsa = afs_srvAddrs[iphash]; oldsa; oldsa = oldsa->next_bkt) {
+	    if (rx_compare_sockaddr(&oldsa->sa_saddr, &aservers[k], RXA_AP))
+		break;
+	}
+	if (oldsa && (oldsa->server != newts)) {
+	    afs_RemoveSrvAddr(oldsa, tv);	/* Remove from its server struct */
+	    oldsa->next_sa = newts->addr;	/* Add to the  new server struct */
+	    newts->addr = oldsa;
+	}
+
+	/* Reuse/allocate a new srvAddr structure */
+	if (oldsa) {
+	    newsa = oldsa;
+	} else {
+	    newsa = afs_osi_Calloc(sizeof(struct srvAddr));
+	    if (!newsa)
+		panic("malloc of srvAddr struct");
+	    afs_totalSrvAddrs++;
+
+	    /* Add the new srvAddr to the afs_srvAddrs[] hash chain */
+	    newsa->next_bkt = afs_srvAddrs[iphash];
+	    afs_srvAddrs[iphash] = newsa;
+
+	    /* Hang off of the server structure  */
+	    newsa->next_sa = newts->addr;
+	    newts->addr = newsa;
+
+	    /* Initialize the srvAddr Structure */
+	    rx_copy_sockaddr(&aservers[k], &newsa->sa_saddr);
+	    (void)rx_try_sockaddr_to_ipv4(&aservers[k], (afs_uint32 *)&newsa->sa_ip);
+	    newsa->sa_portal = aport;
+	}
+
+	/* Update the srvAddr Structure */
+	newsa->server = newts;
+	if (newts->flags & SRVR_ISDOWN)
+	    newsa->sa_flags |= SRVADDR_ISDOWN;
+	newsa->sa_flags |= SRVADDR_MH;
+
+	/* Compute preference values and resort. afs_SetServerPrefs() is
+	 * still IPv4-only (see the struct srvAddr.sa_saddr comment in
+	 * afs.h) - a v6-only srvAddr gets whatever default rank it
+	 * computes for sa_ip == 0, not yet a real v6 preference. */
+	if (!newsa->sa_iprank) {
+	    afs_SetServerPrefs(newsa);	/* new server rank */
+	}
+    }
+    afs_SortOneServer(newts);	/* Sort by rank */
+
+    /* If we reused the server struct, remove any of its srvAddr
+     * structs that will no longer be associated with this server.
+     */
+    if (oldts) {		/* reused the server struct */
+	for (orphsa = newts->addr; orphsa; orphsa = nextsa) {
+	    nextsa = orphsa->next_sa;
+	    for (k = 0; k < nservers; k++) {
+		if (rx_compare_sockaddr(&orphsa->sa_saddr, &aservers[k], RXA_AP))
+		    break;	/* belongs */
+	    }
+	    if (k < nservers)
+		continue;	/* belongs */
+
+	    /* Have a srvAddr struct. Now get a server struct (if not already) */
+	    if (!orphts) {
+		orphts = afs_osi_Calloc(sizeof(struct server));
+		if (!orphts)
+		    panic("malloc of lo server struct");
+		afs_totalServers++;
+
+		/* Add the orphaned server to the afs_servers[] hash chain.
+		 * Its iphash does not matter since we never look up the server
+		 * in the afs_servers table by its ip address (only by uuid -
+		 * which this has none).
+		 */
+		iphash = SHashSA(&orphsa->sa_saddr);
+		orphts->next = afs_servers[iphash];
+		afs_servers[iphash] = orphts;
+
+		if (acell)
+		    /* Use the afs_GetCellStale variant to avoid afs_GetServer recursion. */
+		    orphts->cell = afs_GetCellStale(acell, 0);
+	    }
+
+	    /* Hang the srvAddr struct off of the server structure. The server
+	     * may have multiple srvAddrs, but it won't be marked multihomed.
+	     */
+	    afs_RemoveSrvAddr(orphsa, tv);	/* remove */
+	    orphsa->next_sa = orphts->addr;	/* hang off server struct */
+	    orphts->addr = orphsa;
+	    orphsa->server = orphts;
+	    orphsa->sa_flags |= SRVADDR_NOUSE;	/* flag indicating not in use */
+	    orphsa->sa_flags &= ~SRVADDR_MH;	/* Not multihomed */
+	}
+    }
+    /* We can't need this below, and won't reacquire */
+    ReleaseWriteLock(&afs_xvcb);
+
+    srvcount = afs_totalServers - srvcount;	/* # servers added and removed */
+    if (srvcount) {
+	struct afs_stats_SrvUpDownInfo *upDownP;
+	/* With the introduction of this new record, we need to adjust the
+	 * proper individual & global server up/down info.
+	 */
+	upDownP = GetUpDownStats(newts);
+	upDownP->numTtlRecords += srvcount;
+	afs_stats_cmperf.srvRecords += srvcount;
+	if (afs_stats_cmperf.srvRecords > afs_stats_cmperf.srvRecordsHWM)
+	    afs_stats_cmperf.srvRecordsHWM = afs_stats_cmperf.srvRecords;
+    }
+
+    ReleaseWriteLock(&afs_xsrvAddr);
+
+    if ( aport == AFS_FSPORT && !(newts->flags & SCAPS_KNOWN))
+	afs_GetCapabilities(newts);
+
+    ReleaseWriteLock(&afs_xserver);
+    return (newts);
+}				/* afs_GetServerSA */
 
 void
 afs_ActivateServer(struct srvAddr *sap)

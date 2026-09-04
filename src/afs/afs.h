@@ -478,10 +478,23 @@ struct srvAddr {
     struct server *server;	/* back to parent */
     struct sa_conn_vector *conns;   /* All user connections to this server */
     struct afs_conn *natping;
-    afs_int32 sa_ip;		/* Host addr in network byte order */
+    afs_int32 sa_ip;		/* Host addr in network byte order. This is
+				 * the IPv4 projection of sa_saddr below (0
+				 * for a v6-only server) - kept for the many
+				 * existing IPv4-only readers; sa_saddr is
+				 * the real address. */
     u_short sa_iprank;		/* indiv ip address priority */
-    u_short sa_portal;		/* port addr in network byte order */
+    u_short sa_portal;		/* port addr in network byte order - IPv4
+				 * projection, see sa_ip above */
     u_char sa_flags;
+    struct rx_sockaddr sa_saddr; /* the server's real (v4 or v6) address,
+				 * as populated by afs_GetServer()/
+				 * afs_GetServerSA(). afs_SetServerPrefs()'s
+				 * local-interface-preference ranking still
+				 * only reads sa_ip (see afs_server.c), so a
+				 * v6-only srvAddr currently always gets the
+				 * unranked/default preference - not yet
+				 * converted. */
 };
 
 /*
@@ -514,17 +527,20 @@ struct server {
 	    afs_int32 addr_uniquifier;
 	    afs_int32 spares[2];
 	} _srvUuid;
-	struct {
-	    struct srvAddr haddr;
-	} _srvId;
     } _suid;
 #define sr_uuid		_suid._srvUuid.suuid
 #define sr_addr_uniquifier	_suid._srvUuid.addr_uniquifier
-#define sr_host		_suid._srvId.haddr.ip
-#define sr_portal	_suid._srvId.haddr.portal
-#define sr_rank		_suid._srvId.haddr.ip_rank
-#define sr_flags	_suid._srvId.haddr.flags
-#define sr_conns	_suid._srvId.haddr.conns
+    /* This union used to also carry an unused-in-practice
+     * "struct { struct srvAddr haddr; } _srvId" alternative (with dead
+     * sr_host/sr_portal/sr_rank/sr_flags/sr_conns macros referencing
+     * haddr.ip/.portal/.ip_rank/.flags - field names struct srvAddr has
+     * never actually had, only sa_ip/sa_portal/sa_iprank/sa_flags - so
+     * those four could never have compiled if ever used, and grepping
+     * the whole tree found zero uses of any of the five macros). Removed
+     * rather than converted, both because it was dead and because
+     * struct srvAddr now embeds a struct rx_sockaddr, which would have
+     * made this otherwise-unused union arm needlessly dominate
+     * sizeof(struct server). */
     struct server *next;	/* Ptr to next server in hash chain */
     struct cell *cell;		/* Cell in which this host resides */
     struct afs_cbr *cbrs;	/* Return list of callbacks */
