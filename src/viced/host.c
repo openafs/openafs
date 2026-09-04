@@ -81,7 +81,6 @@ struct enumclient_args {
 };
 
 static void h_SetupCallbackConn_r(struct host * host);
-static int h_threadquota(int);
 static int initInterfaceAddr_r(struct host *, struct interfaceAddr *);
 
 #define CESPERBLOCK 73
@@ -1858,7 +1857,11 @@ CacheTMAY(struct host *host, int skiptmay, int didtmay,
     host->z.n_tmays = 0;
 }
 
-static int
+/* exported (see host.h) so afsfileprocs.c's CallPreamble() can apply the
+ * same "don't pile up more waiters on a host whose WhoAreYou/reachability
+ * check is already in progress" guard that h_Lookup_r() below already
+ * uses, at its own, separate h_Lock_r() call site. */
+int
 h_threadquota(int waiting)
 {
     if (waiting > h_quota_limit) {

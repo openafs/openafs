@@ -157,6 +157,7 @@ extern int rxcon_client_key;
 extern char *h_UserName(struct client *client);
 #define h_Lock(host)    ObtainWriteLock(&(host)->lock)
 extern int h_Lock_r(struct host *host);
+extern int h_threadquota(int waiting);
 #define h_Unlock(host)  ReleaseWriteLock(&(host)->lock)
 #define h_Unlock_r(host)  ReleaseWriteLock(&(host)->lock)
 

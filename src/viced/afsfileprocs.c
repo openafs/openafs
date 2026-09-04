@@ -429,6 +429,32 @@ CallPreamble(struct rx_call *acall, int activecall, struct AFSFid *Fid,
     if (activecall)		/* For all but "GetTime", "GetStats", and "GetCaps" calls */
 	thost->z.ActiveCall = thost->z.LastCall;
 
+    /* h_Lookup_r() (host.c) already refuses to pile up more waiters on a
+     * host whose WhoAreYou/reachability check (HWHO_INPROGRESS) is
+     * already in progress, once too many threads are already waiting for
+     * its lock - h_Lock_r() here is a second, separate acquisition of
+     * the exact same per-host lock, for the exact same host, and needs
+     * the identical guard. Without it: BreakDelayedCallBacks_r() below
+     * holds this lock for as long as its reverse RXAFSCB_WhoAreYou/
+     * InitCallBackState callback to the client takes to return - which,
+     * if that callback never completes or times out (a real, confirmed
+     * scenario, not hypothetical - see the fleet README's writeup),
+     * previously meant every other request for the same host queued up
+     * on this h_Lock_r() forever, one at a time, until the fileserver's
+     * entire worker-thread pool was consumed and the server was
+     * deadlocked for every client, not just the one with the stuck
+     * callback. Failing fast with VBUSY here bounds that: at most
+     * h_quota_limit threads pile up before new ones are turned away
+     * instead of joining the queue indefinitely. */
+    if ((thost->z.hostFlags & HWHO_INPROGRESS) &&
+	h_threadquota(thost->lock.num_waiting)) {
+	h_ReleaseClient_r(tclient);
+	h_Release_r(thost);
+	H_UNLOCK;
+	LogClientError("CallPreamble: host busy (WhoAreYou in progress)", *tconn, viceid, Fid);
+	return VBUSY;
+    }
+
     h_Lock_r(thost);
     if (thost->z.hostFlags & HOSTDELETED) {
 	ViceLog(3,
