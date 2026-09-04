@@ -429,11 +429,22 @@ main(int argc, char **argv)
     gethostname(hostname, sizeof(hostname));
     th = gethostbyname(hostname);
     if (!th) {
-	VLog(0, ("vlserver: couldn't get address of this host (%s).\n",
-	       hostname));
-	exit(1);
+	/* gethostbyname() is IPv4-only - this is expected, not fatal, for
+	 * a v6-only host (no A record/no v4 address to find at all).
+	 * myHost stays 0; ubik_ServerInitByInfo()'s own IPv6 fallback
+	 * (verifyInterfaceAddressSA() in src/ubik/beacon.c) independently
+	 * discovers which CellServDB entry is this host by cross-
+	 * referencing local interfaces, without needing this resolved
+	 * first. If that fallback isn't available or also fails, the
+	 * existing "primary address does not exist"-style errors surface
+	 * from there instead. */
+	VLog(0, ("vlserver: couldn't get address of this host (%s) via "
+	       "gethostbyname(); will try again via ubik's own IPv6-capable "
+	       "self-identification.\n", hostname));
+	myHost = 0;
+    } else {
+	memcpy(&myHost, th->h_addr, sizeof(afs_uint32));
     }
-    memcpy(&myHost, th->h_addr, sizeof(afs_uint32));
 
 #if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV)
     signal(SIGXCPU, CheckSignal_Signal);

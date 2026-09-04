@@ -65,6 +65,10 @@ static int ubeacon_InitServerListCommon(afs_uint32 ame,
 					afs_uint32 aservers[]);
 static int verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 				  afs_uint32 aservers[]);
+#ifdef HAVE_IPV6
+static int verifyInterfaceAddressSA(struct rx_sockaddr *ame,
+				    struct afsconf_cell *info);
+#endif
 
 /*! \file
  * Module responsible for both deciding if we're currently the sync site,
@@ -346,10 +350,47 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
     afs_int32 i, code;
     afs_int32 magicHost;
     struct ubik_server *magicServer;
+    struct rx_sockaddr selfSA;
+    int haveSelfSA = 0;
+
+    memset(&selfSA, 0, sizeof(selfSA));
 
     /* verify that the addresses passed in are correct */
-    if ((code = verifyInterfaceAddress(&ame, info, aservers)))
+    code = verifyInterfaceAddress(&ame, info, aservers);
+#ifdef HAVE_IPV6
+    /* verifyInterfaceAddress() above is IPv4-only throughout (see its
+     * sibling's own comment) - if it failed and this is the ByInfo path
+     * (a CellServDB, not a raw IPv4 address list), this may just be a
+     * v6-only server, which that function can never identify correctly
+     * regardless of what ame was. Try independently discovering "which
+     * CellServDB entry is me" via local IPv6 interfaces before giving
+     * up. Does not touch ubik_host[]/ubik_host_sa itself - that happens
+     * below, uniformly for both the v4 and v6 outcomes. */
+    if (code && info) {
+	code = verifyInterfaceAddressSA(&selfSA, info);
+	if (!code) {
+	    haveSelfSA = 1;
+	    ame = 0;	/* IPv4 projection: unset for a v6-only self */
+	}
+    }
+#endif
+    if (code)
 	return code;
+
+    if (!haveSelfSA)
+	rx_ipv4_to_sockaddr(ame, ubik_callPortal, 0, &selfSA);
+
+    /* ubik_host[]/ubik_host_sa normally get set inside
+     * verifyInterfaceAddress() (the v4 case, already done by now); the
+     * v6 case (verifyInterfaceAddressSA() above) does not touch either,
+     * so set them here - ubik_host[0] stays the IPv4 projection (0 for
+     * a v6-only self, matching ame above), ubik_host_sa is the real
+     * primary address election ordering (vote.c) actually compares
+     * against. */
+    if (haveSelfSA) {
+	memset(ubik_host, 0, sizeof(afs_uint32) * UBIK_MAX_INTERFACE_ADDR);
+	rx_copy_sockaddr(&selfSA, &ubik_host_sa);
+    }
 
     ubeacon_InitSecurityClass();
 
@@ -369,8 +410,11 @@ ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
 
 	memset(&magicAddr, 0, sizeof(magicAddr));
 	for (i = 0; i < info->numServers; i++) {
-	    if (ntohl((afs_uint32) info->hostAddr[i].rxsa_s_addr) ==
-		ntohl((afs_uint32) ame)) {
+	    /* Compare by real address (selfSA), not the IPv4-only ame -
+	     * for a v6-only self, ame is always 0 here, which must not be
+	     * allowed to spuriously match a peer whose own rxsa_s_addr is
+	     * also 0 (any IPv6-primary peer). */
+	    if (rx_compare_sockaddr(&info->hostAddr[i], &selfSA, RXA_ADDR)) {
 		me = i;
 		if (clones[i]) {
 		    amIClone = 1;
@@ -882,6 +926,63 @@ verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 
     return 0;			/* return success */
 }
+
+#ifdef HAVE_IPV6
+/*!
+ * \brief verifyInterfaceAddress()'s fallback for a v6-only server.
+ *
+ * verifyInterfaceAddress() is IPv4-only throughout - rx_getAllAddr(),
+ * afs_uint32 comparisons, and (most consequentially) it writes
+ * ubik_host_sa via rx_ipv4_to_sockaddr(ubik_host[0], ...), which for a
+ * v6-only host produces a bogus 0.0.0.0-derived sockaddr regardless of
+ * what *ame was. So a v6-only server can never pass that function, no
+ * matter how *ame was resolved - not merely "doesn't try v6", actively
+ * wrong if patched to try.
+ *
+ * Unlike verifyInterfaceAddress(), this doesn't need a pre-resolved
+ * *ame hint at all (the caller, ubeacon_InitServerListCommon(), only
+ * has one to give when info's caller's own gethostbyname()-based
+ * self-lookup - IPv4-only itself - succeeded, which is exactly the
+ * case this function exists for the *absence* of): it independently
+ * discovers "which CellServDB entry is me" by cross-referencing every
+ * info->hostAddr[] entry against this host's real local interfaces.
+ * NetInfo/NetRestrict (afsconf_ParseNetFiles(), also IPv4-only) is not
+ * consulted - a v6-only server restricting which of several v6
+ * interfaces to register is a real gap, not attempted here; this
+ * covers the single-homed case, which is what this project's own
+ * v6-only dbserver (afs-db3) actually is.
+ */
+static int
+verifyInterfaceAddressSA(struct rx_sockaddr *ame, struct afsconf_cell *info)
+{
+    struct rx_sockaddr myAddr[UBIK_MAX_INTERFACE_ADDR];
+    int count, i, j;
+    rx_inet_fmtbuf_t fmtbuf;
+
+    count = rx_getAllSockaddr(myAddr, UBIK_MAX_INTERFACE_ADDR);
+    if (count <= 0) {
+	ViceLog(0, ("ubik: No network addresses found, aborting..\n"));
+	return UBADHOST;
+    }
+
+    for (i = 0; i < info->numServers; i++) {
+	if (info->hostAddr[i].rxsa_family != AF_INET6)
+	    continue;
+	for (j = 0; j < count; j++) {
+	    if (rx_compare_sockaddr(&info->hostAddr[i], &myAddr[j], RXA_ADDR)) {
+		rx_copy_sockaddr(&info->hostAddr[i], ame);
+		ViceLog(0, ("Using %s as my primary address\n",
+			   rx_sockaddr2str(ame, &fmtbuf)));
+		return 0;
+	    }
+	}
+    }
+
+    ViceLog(0, ("ubik: none of this cell's CellServDB entries match any "
+	       "local IPv6 interface, aborting..\n"));
+    return UBADHOST;
+}
+#endif /* HAVE_IPV6 */
 
 
 /*!

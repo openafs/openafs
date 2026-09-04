@@ -500,10 +500,19 @@ main(int argc, char **argv)
     gethostname(hostname, sizeof(hostname));
     th = gethostbyname(hostname);
     if (!th) {
-	fprintf(stderr, "ptserver: couldn't get address of this host.\n");
-	PT_EXIT(1);
+	/* gethostbyname() is IPv4-only - expected, not fatal, for a
+	 * v6-only host. See the identical situation/comment in
+	 * src/vlserver/vlserver.c: myHost stays 0, and
+	 * ubik_ServerInitByInfo()'s own IPv6 fallback
+	 * (verifyInterfaceAddressSA() in src/ubik/beacon.c) takes it from
+	 * here. */
+	fprintf(stderr, "ptserver: couldn't get address of this host via "
+		"gethostbyname(); will try again via ubik's own IPv6-capable "
+		"self-identification.\n");
+	myHost = 0;
+    } else {
+	memcpy(&myHost, th->h_addr, sizeof(afs_uint32));
     }
-    memcpy(&myHost, th->h_addr, sizeof(afs_uint32));
 
     /* get list of servers */
     code =
