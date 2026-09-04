@@ -99,8 +99,26 @@ internal_client_init(struct afsconf_dir *dir, struct afsconf_cell *info,
 		 * connection to 0.0.0.0 that ubik_ClientInit then picks
 		 * among its real servers at random - confirmed live via
 		 * strace/gdb as the cause of an intermittent VLDB-read hang
-		 * from a dual-stack cell's dbservers. */
-		if (rx_try_sockaddr_to_ipv4(&info->hostAddr[i], &shost) != 0)
+		 * from a dual-stack cell's dbservers.
+		 *
+		 * rx_try_sockaddr_to_ipv4() returns true (nonzero) on
+		 * success, like every other caller in the tree - get this
+		 * backwards (as an earlier version of this fix did, with
+		 * "!= 0 -> continue") and it's worse than the original bug:
+		 * it skips the *good* v4 entries and keeps the v6 ones,
+		 * whose extraction never writes shost - so shost is left
+		 * holding whatever was already on the stack, which in
+		 * practice is very often the previous loop iteration's
+		 * (skipped) real v4 address, silently pointing every
+		 * "wrong" connection at the *first* dbserver instead of the
+		 * one actually intended. Confirmed live via gdb
+		 * (instrumenting rxi_FindPeer()): every process had exactly
+		 * one genuinely-uninitialized connection and one connection
+		 * that was coincidentally correct-but-for-the-wrong-server,
+		 * and never a real connection to the second dbserver at
+		 * all - fixed by inverting the check back to match the
+		 * documented return convention. */
+		if (!rx_try_sockaddr_to_ipv4(&info->hostAddr[i], &shost))
 		    continue;
 		if (!info->hostAddr[i].rxsa_in_port && port)
 		    info->hostAddr[i].rxsa_in_port = port;
