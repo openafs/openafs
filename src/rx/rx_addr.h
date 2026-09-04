@@ -219,6 +219,12 @@ int rx_copy_sockaddr(const struct rx_sockaddr *src, struct rx_sockaddr *dst);
 void rx_ipv4_to_sockaddr(afs_uint32 ipv4, afs_uint16 port,
 			 rx_service_t service, struct rx_sockaddr *sa);
 int rx_try_sockaddr_to_ipv4(const struct rx_sockaddr *a, afs_uint32 *ipv4);
+#ifdef HAVE_IPV6
+/* For a caller that has decoded a raw 16-byte IPv6 address (network byte
+ * order) from some other wire format, e.g. the VLDB GetEndpoints RPC. */
+void rx_ipv6_to_sockaddr(const unsigned char addr[16], afs_uint16 port,
+			 rx_service_t service, struct rx_sockaddr *sa);
+#endif
 
 /* rx_address */
 #ifndef KERNEL

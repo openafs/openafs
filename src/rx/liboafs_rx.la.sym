@@ -118,6 +118,7 @@ rx_hash_sockaddr
 rx_inet42str
 rx_ipv4_to_address
 rx_ipv4_to_sockaddr
+rx_ipv6_to_sockaddr
 rx_is_loopback_address
 rx_is_loopback_sockaddr
 rx_order_sockaddr

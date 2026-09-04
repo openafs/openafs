@@ -1128,6 +1128,15 @@ LockAndInstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
 }				/*InstallNVolumeEntry */
 
 
+/*
+ * For a UUID-identified (multihomed) server, tries VL_GetEndpoints - the
+ * IPv6-capable sibling of VL_GetAddrsU - first, so a dual-stack or
+ * IPv6-only fileserver's real address set (not just its IPv4 subset)
+ * reaches the cache manager. Falls back to the plain, IPv4-only
+ * VL_GetAddrsU/afs_GetServer() on RXGEN_OPCODE, for a vlserver that
+ * predates VL_GetEndpoints - mirrors Do_VLRegisterRPC()'s fallback in
+ * src/viced/viced.c, the RPC's other end.
+ */
 void
 LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 			   struct cell *tcell, struct vrequest *areq)
@@ -1186,18 +1195,31 @@ LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 		&& ts->addr) {
 		/* uuid, uniquifier, and portal are the same */
 	    } else {
-		afs_uint32 *addrp, code;
-		afs_int32 nentries, unique;
-		bulkaddrs addrs;
+		afs_int32 code, unique;
 		ListAddrByAttributes attrs;
 		afsUUID uuid;
 		struct rx_connection *rxconn;
+		vlendpoints veps;
+		int useEndpoints = 1;
 
 		memset(&attrs, 0, sizeof(attrs));
 		attrs.Mask = VLADDR_UUID;
 		attrs.uuid = ve->serverNumber[i];
 		memset(&uuid, 0, sizeof(uuid));
-		memset(&addrs, 0, sizeof(addrs));
+		memset(&veps, 0, sizeof(veps));
+
+		/*
+		 * Try VL_GetEndpoints (the IPv6-capable sibling of
+		 * VL_GetAddrsU - see doc/txt/vldb.txt's "Version 5"
+		 * section) first. RXGEN_OPCODE means the vlserver
+		 * predates this RPC - that is a permanent property of
+		 * this peer, not a transient failure, so it stops the
+		 * retry loop immediately rather than being handed to
+		 * afs_Analyze() (which is for busy/restarting-server
+		 * conditions); useEndpoints drops to 0 and the existing
+		 * VL_GetAddrsU path below runs unchanged, exactly as it
+		 * did before this RPC existed.
+		 */
 		do {
 		    tconn =
 			afs_ConnByMHosts(tcell->cellHosts, tcell->vlport,
@@ -1205,40 +1227,146 @@ LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 					 0, &rxconn);
 		    if (tconn) {
 			RX_AFS_GUNLOCK();
-			xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
-			code =
-			    VL_GetAddrsU(rxconn, &attrs, &uuid, &unique,
-					 &nentries, &addrs);
+			xdrfree_vlendpoints(&veps);
+			memset(&veps, 0, sizeof(veps));
+			code = VL_GetEndpoints(rxconn, &attrs, &uuid, &unique,
+					       &veps);
 			RX_AFS_GLOCK();
+			if (code == RXGEN_OPCODE) {
+			    useEndpoints = 0;
+			    break;
+			}
 		    } else {
 			code = -1;
 		    }
 
 		    /* Handle corrupt VLDB (defect 7393) */
-		    if (code == 0 && nentries == 0)
+		    if (code == 0 && veps.vlendpoints_len == 0)
 			code = VL_NOENT;
 
 		} while (afs_Analyze
 			 (tconn, rxconn, code, NULL, areq, -1, SHARED_LOCK, tcell));
-		if (code) {
-		    /* Better handing of such failures; for now we'll simply retry this call */
-		    areq->volumeError = 1;
-		    return;
-		}
 
-		if (addrs.bulkaddrs_len < nentries) {
-		    nentries = addrs.bulkaddrs_len;
-		}
+		if (useEndpoints) {
+		    /* Heap-allocated, not a stack array: sizeof(struct
+		     * rx_sockaddr) is 144 bytes (it embeds a
+		     * sockaddr_storage-sized union for the IPv6 case), so
+		     * VL_MAXENDPOINTS (8) of them on the stack would be
+		     * over 1024 bytes by itself - too large a single frame
+		     * for a kernel stack (confirmed via a real build: this
+		     * tripped -Wframe-larger-than=1024 before switching to
+		     * afs_osi_Alloc()). */
+		    struct rx_sockaddr *endpoints;
+		    int nendpoints = 0;
 
-		addrp = addrs.bulkaddrs_val;
-		for (k = 0; k < nentries; k++) {
-		    addrp[k] = htonl(addrp[k]);
+		    if (code) {
+			areq->volumeError = VOLMISSING;
+			xdrfree_vlendpoints(&veps);
+			return;
+		    }
+
+		    endpoints = afs_osi_Alloc(VL_MAXENDPOINTS * sizeof(struct rx_sockaddr));
+		    if (!endpoints) {
+			areq->volumeError = VOLMISSING;
+			xdrfree_vlendpoints(&veps);
+			return;
+		    }
+
+		    for (k = 0; k < veps.vlendpoints_len
+				&& nendpoints < VL_MAXENDPOINTS; k++) {
+			struct vlendpoint *ep = &veps.vlendpoints_val[k];
+
+			/* See SVL_GetEndpoints()/Do_VLRegisterRPC(): each
+			 * value[] word is ntohl()'d before being sent, same
+			 * as bulkaddrs' addresses above - undo that here. */
+			if (ep->type == VL_ENDPOINT_IPV4) {
+			    rx_ipv4_to_sockaddr(htonl(ep->value[0]),
+						cellp->fsport, 0,
+						&endpoints[nendpoints]);
+			    nendpoints++;
+#ifdef HAVE_IPV6
+			} else if (ep->type == VL_ENDPOINT_IPV6) {
+			    afs_uint32 w[4];
+			    int b;
+
+			    for (b = 0; b < 4; b++)
+				w[b] = htonl(ep->value[b]);
+			    rx_ipv6_to_sockaddr((unsigned char *)w,
+						cellp->fsport, 0,
+						&endpoints[nendpoints]);
+			    nendpoints++;
+#endif
+			}
+			/* An unrecognized type is meant to be skippable,
+			 * not fatal (see vldbint.xg) - a future address
+			 * family doesn't need another opcode. */
+		    }
+		    xdrfree_vlendpoints(&veps);
+
+		    if (nendpoints == 0) {
+			/* Every endpoint was of a family we can't use (or
+			 * the RPC/disk record genuinely had none) - same
+			 * "corrupt/incomplete VLDB entry" outcome as
+			 * nentries==0 on the VL_GetAddrsU path below. */
+			afs_osi_Free(endpoints, VL_MAXENDPOINTS * sizeof(struct rx_sockaddr));
+			areq->volumeError = VOLMISSING;
+			return;
+		    }
+
+		    ts = afs_GetServerSA(endpoints, nendpoints, acell,
+					 cellp->fsport, WRITE_LOCK,
+					 &ve->serverNumber[i],
+					 ve->serverUnique[i], av);
+		    afs_osi_Free(endpoints, VL_MAXENDPOINTS * sizeof(struct rx_sockaddr));
+		} else {
+		    afs_uint32 *addrp;
+		    afs_int32 nentries;
+		    bulkaddrs addrs;
+
+		    memset(&addrs, 0, sizeof(addrs));
+		    do {
+			tconn =
+			    afs_ConnByMHosts(tcell->cellHosts, tcell->vlport,
+					     tcell->cellNum, areq, SHARED_LOCK,
+					     0, &rxconn);
+			if (tconn) {
+			    RX_AFS_GUNLOCK();
+			    xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
+			    code =
+				VL_GetAddrsU(rxconn, &attrs, &uuid, &unique,
+					     &nentries, &addrs);
+			    RX_AFS_GLOCK();
+			} else {
+			    code = -1;
+			}
+
+			/* Handle corrupt VLDB (defect 7393) */
+			if (code == 0 && nentries == 0)
+			    code = VL_NOENT;
+
+		    } while (afs_Analyze
+			     (tconn, rxconn, code, NULL, areq, -1, SHARED_LOCK, tcell));
+		    if (code) {
+			/* Better handing of such failures; for now we'll simply retry this call */
+			areq->volumeError = VOLMISSING;
+			xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
+			return;
+		    }
+
+		    if (addrs.bulkaddrs_len < nentries) {
+			nentries = addrs.bulkaddrs_len;
+		    }
+
+		    addrp = addrs.bulkaddrs_val;
+		    for (k = 0; k < nentries; k++) {
+			addrp[k] = htonl(addrp[k]);
+		    }
+		    ts = afs_GetServer(addrp, nentries, acell,
+				       cellp->fsport, WRITE_LOCK,
+				       &ve->serverNumber[i],
+				       ve->serverUnique[i], av);
+		    xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
 		}
-		ts = afs_GetServer(addrp, nentries, acell,
-				   cellp->fsport, WRITE_LOCK,
-				   &ve->serverNumber[i],
-				   ve->serverUnique[i], av);
-		xdr_free((xdrproc_t) xdr_bulkaddrs, &addrs);
 	    }
 	}
 	serverHost[j] = ts;

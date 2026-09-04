@@ -1769,12 +1769,12 @@ Do_VLRegisterAddrsRPC(void)
  * plain, IPv4-only Do_VLRegisterAddrsRPC() on RXGEN_OPCODE, for a
  * vlserver that predates VL_RegisterEndpoints.
  *
- * Note: this only makes the fileserver's true address set reachable
- * *from the VLDB*. A client cannot yet act on the IPv6 half of it -
- * that needs the cache manager's own host table (struct srvAddr,
- * afs_GetServer()) to become address-family-agnostic too, which is
- * later work; see the comment at LockAndInstallUVolumeEntry() in
- * src/afs/afs_volume.c.
+ * The cache manager's own host table (struct srvAddr,
+ * afs_GetServerSA()) and LockAndInstallUVolumeEntry() (src/afs/
+ * afs_volume.c) now consume VL_GetEndpoints' result on this same
+ * RXGEN_OPCODE-fallback pattern, so a client can act on the IPv6 half
+ * of what this registers - see the comment at
+ * LockAndInstallUVolumeEntry().
  */
 static afs_int32
 Do_VLRegisterRPC(void)

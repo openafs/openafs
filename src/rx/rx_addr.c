@@ -303,6 +303,28 @@ rx_ipv4_to_sockaddr(afs_uint32 ipv4, afs_uint16 port, rx_service_t service,
 #endif
 }
 
+#ifdef HAVE_IPV6
+/* For compatibility with callers that decode a raw 16-byte IPv6 address
+ * (network byte order) from some other wire format - e.g. the VLDB
+ * GetEndpoints RPC's vlendpoint.value[4] - rather than obtaining a
+ * struct rx_sockaddr from the OS or from Rx itself. */
+void
+rx_ipv6_to_sockaddr(const unsigned char addr[16], afs_uint16 port,
+		    rx_service_t service, struct rx_sockaddr *sa)
+{
+    memset(sa, 0, sizeof(*sa));
+    sa->rxsa_in6_family = AF_INET6;
+    memcpy(sa->rxsa_s6_addr, addr, 16);
+    sa->rxsa_in6_port = port;
+    sa->addrlen = sizeof(struct sockaddr_in6);
+    sa->socktype = SOCK_DGRAM;
+    sa->service = service;
+# ifdef STRUCT_SOCKADDR_HAS_SA6_LEN
+    sa->rxsa_in6_len = sizeof(struct sockaddr_in6);
+# endif
+}
+#endif /* HAVE_IPV6 */
+
 void
 rx_sockaddr_to_debugAddr(const struct rx_sockaddr *sa, struct rx_debugAddr *da)
 {
