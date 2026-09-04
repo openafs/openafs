@@ -824,7 +824,7 @@ ktc_ListTokens(int cellNum, int *cellNumP, struct ktc_principal *server)
 }
 
 int
-ktc_ForgetToken(struct ktc_principal *server)
+ktc_ForgetTokensByCell(const char *cell)
 {
     struct ViceIoctl iob;
     char tbuffer[TBUFFERSIZE];
@@ -832,9 +832,6 @@ ktc_ForgetToken(struct ktc_principal *server)
     int code;
     HANDLE ktcMutex = NULL;
 
-    if (strcmp(server->name, "afs")) {
-	return ForgetOneLocalToken(server);
-    }
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
     if (ktcMutex == NULL)
 	return KTC_TOKEN_MUTEX_FAIL;
@@ -848,7 +845,7 @@ ktc_ForgetToken(struct ktc_principal *server)
     tp = tbuffer;
 
     /* cell name */
-    strcpy(tp, server->cell);
+    strcpy(tp, cell);
     tp += strlen(tp) + 1;
 
     /* do pioctl */
@@ -875,6 +872,16 @@ ktc_ForgetToken(struct ktc_principal *server)
 	    return KTC_PIOCTLFAIL;
     }
     return 0;
+}
+
+int
+ktc_ForgetToken(struct ktc_principal *server)
+{
+    if (strcmp(server->name, "afs")) {
+	return ForgetOneLocalToken(server);
+    }
+
+    return ktc_ForgetTokensByCell(server->cell);
 }
 
 int
