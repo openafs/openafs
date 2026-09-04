@@ -213,3 +213,4 @@ EXPORTS
         ubik_CallRock					@212
 	token_FreeSetContents				@213
 	afsconf_PickClientLocalSecObj			@214
+	ktc_ForgetTokensByCell				@215
