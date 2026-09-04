@@ -188,8 +188,15 @@ static struct host *HTFree = 0;	/* first free file entry */
  */
 static struct h_AddrHashChain *hostAddrHashTable[h_HASHENTRIES];
 static struct h_UuidHashChain *hostUuidHashTable[h_HASHENTRIES];
-#define h_HashIndex(hostip) (ntohl(hostip) & (h_HASHENTRIES-1))
 #define h_UuidHashIndex(uuidp) (((int)(afs_uuid_hash(uuidp))) & (h_HASHENTRIES-1))
+
+static_inline int
+h_HashIndex(const struct rx_sockaddr *saddr)
+{
+    /* rx_hash_sockaddr() takes the table size (not a mask) and does
+     * hash % hashsize internally. */
+    return rx_hash_sockaddr(saddr, h_HASHENTRIES);
+}
 
 struct HTBlock {		/* block of HTSPERBLOCK file entries */
     struct host entry[h_HTSPERBLOCK];
@@ -640,9 +647,12 @@ void
 h_flushhostcps(afs_uint32 hostaddr, afs_uint16 hport)
 {
     struct host *host;
+    struct rx_sockaddr saddr;
+
+    rx_ipv4_to_sockaddr(hostaddr, hport, 0, &saddr);
 
     H_LOCK;
-    h_Lookup_r(hostaddr, hport, &host);
+    h_Lookup_r(&saddr, &host);
     if (host) {
 	host->z.hcpsfailed = 1;
 	h_Release_r(host);
@@ -677,8 +687,9 @@ h_Alloc_r(struct rx_connection *r_con)
 
     host->z.host = rxr_HostOf(r_con);
     host->z.port = rxr_PortOf(r_con);
+    rx_copy_sockaddr(rx_SockaddrOf(rx_PeerOf(r_con)), &host->z.saddr);
 
-    h_AddHostToAddrHashTable_r(host->z.host, host->z.port, host);
+    h_AddHostToAddrHashTable_r(&host->z.saddr, host);
 
     if (consolePort == 0) {	/* find the portal number for console */
 	serverentry = getservbyname("ropcons", 0);
@@ -724,7 +735,7 @@ h_SetupCallbackConn_r(struct host * host)
     if (!sc)
 	sc = rxnull_NewClientSecurityObject();
     host->z.callback_rxcon =
-	rx_NewConnection(host->z.host, host->z.port, 1, sc, 0);
+	rx_NewConnectionSA(&host->z.saddr, 1, sc, 0);
     rx_SetConnDeadTime(host->z.callback_rxcon, 50);
     rx_SetConnHardDeadTime(host->z.callback_rxcon, AFS_HARDDEADTIME);
 }
@@ -736,20 +747,20 @@ h_SetupCallbackConn_r(struct host * host)
  * On return, refCount is incremented.
  */
 int
-h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, struct host **hostp)
+h_Lookup_r(const struct rx_sockaddr *saddr, struct host **hostp)
 {
     afs_int32 now;
     struct host *host = NULL;
     struct h_AddrHashChain *chain;
-    int index = h_HashIndex(haddr);
+    int index = h_HashIndex(saddr);
     extern int hostaclRefresh;
 
   restart:
     for (chain = hostAddrHashTable[index]; chain; chain = chain->next) {
 	host = chain->hostPtr;
 	opr_Assert(host);
-	if (!(host->z.hostFlags & HOSTDELETED) && chain->addr == haddr
-	    && chain->port == hport) {
+	if (!(host->z.hostFlags & HOSTDELETED) &&
+	    rx_compare_sockaddr(&chain->saddr, saddr, RXA_AP)) {
 	    if ((host->z.hostFlags & HWHO_INPROGRESS) &&
 		h_threadquota(host->lock.num_waiting)) {
 		*hostp = 0;
@@ -922,10 +933,12 @@ h_TossStuff_r(struct host *host)
 
 	/* if alternate addresses do not exist */
 	if (!(host->z.interface)) {
-	    h_DeleteHostFromAddrHashTable_r(host->z.host, host->z.port, host);
+	    h_DeleteHostFromAddrHashTable_r(&host->z.saddr, host);
 	} else {
+	    struct rx_sockaddr altsa;
+
             h_DeleteHostFromUuidHashTable_r(host);
-	    h_DeleteHostFromAddrHashTable_r(host->z.host, host->z.port, host);
+	    h_DeleteHostFromAddrHashTable_r(&host->z.saddr, host);
 	    /* delete the hash entry for each valid alternate addresses */
 	    for (i = 0; i < host->z.interface->numberOfInterfaces; i++) {
 		hostAddrPort = host->z.interface->interface[i];
@@ -936,8 +949,10 @@ h_TossStuff_r(struct host *host)
                  */
                 if (hostAddrPort.valid &&
 		    (host->z.host != hostAddrPort.addr ||
-		     host->z.port != hostAddrPort.port))
-                    h_DeleteHostFromAddrHashTable_r(hostAddrPort.addr, hostAddrPort.port, host);
+		     host->z.port != hostAddrPort.port)) {
+		    rx_ipv4_to_sockaddr(hostAddrPort.addr, hostAddrPort.port, 0, &altsa);
+                    h_DeleteHostFromAddrHashTable_r(&altsa, host);
+		}
 	    }
 	    free(host->z.interface);
 	    host->z.interface = NULL;
@@ -1229,7 +1244,10 @@ invalidateInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 	if (interface->interface[i].addr == addr &&
 	    interface->interface[i].port == port) {
             if (interface->interface[i].valid) {
-                h_DeleteHostFromAddrHashTable_r(addr, port, host);
+		struct rx_sockaddr sa;
+
+		rx_ipv4_to_sockaddr(addr, port, 0, &sa);
+                h_DeleteHostFromAddrHashTable_r(&sa, host);
 		interface->interface[i].valid = 0;
 	    }
 	    return 0;
@@ -1287,7 +1305,8 @@ removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 			       ntohs(host->z.interface->interface[i].port)));
 		    host->z.host = host->z.interface->interface[i].addr;
 		    host->z.port = host->z.interface->interface[i].port;
-		    h_AddHostToAddrHashTable_r(host->z.host, host->z.port, host);
+		    rx_ipv4_to_sockaddr(host->z.host, host->z.port, 0, &host->z.saddr);
+		    h_AddHostToAddrHashTable_r(&host->z.saddr, host);
                     break;
                 }
             }
@@ -1300,6 +1319,7 @@ removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port)
                 /* addr/port was removed from the hash table */
 		host->z.host = 0;
 		host->z.port = 0;
+		memset(&host->z.saddr, 0, sizeof(host->z.saddr));
             } else {
 		rxconn = host->z.callback_rxcon;
 		host->z.callback_rxcon = NULL;
@@ -1321,10 +1341,10 @@ removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 }
 
 static void
-createHostAddrHashChain_r(int index, afs_uint32 addr, afs_uint16 port, struct host *host)
+createHostAddrHashChain_r(int index, const struct rx_sockaddr *saddr, struct host *host)
 {
     struct h_AddrHashChain *chain;
-    char hoststr[16];
+    rx_inet_fmtbuf_t fmtbuf;
 
     /* insert into beginning of list for this bucket */
     chain = malloc(sizeof(struct h_AddrHashChain));
@@ -1333,11 +1353,10 @@ createHostAddrHashChain_r(int index, afs_uint32 addr, afs_uint16 port, struct ho
     }
     chain->hostPtr = host;
     chain->next = hostAddrHashTable[index];
-    chain->addr = addr;
-    chain->port = port;
+    rx_copy_sockaddr(saddr, &chain->saddr);
     hostAddrHashTable[index] = chain;
-    ViceLog(125, ("h_AddHostToAddrHashTable_r: host %p added as %s:%d\n",
-		  host, afs_inet_ntoa_r(addr, hoststr), ntohs(port)));
+    ViceLog(125, ("h_AddHostToAddrHashTable_r: host %p added as %s\n",
+		  host, rx_sockaddr2str(saddr, &fmtbuf)));
 }
 
 /**
@@ -1349,7 +1368,7 @@ createHostAddrHashChain_r(int index, afs_uint32 addr, afs_uint16 port, struct ho
  * @param[in]	oldHost	the host previously added with this address
  */
 static void
-reconcileHosts_r(afs_uint32 addr, afs_uint16 port, struct host *newHost,
+reconcileHosts_r(const struct rx_sockaddr *saddr, struct host *newHost,
 		 struct host *oldHost)
 {
     struct rx_connection *cb = NULL;
@@ -1358,12 +1377,20 @@ reconcileHosts_r(afs_uint32 addr, afs_uint16 port, struct host *newHost,
     Capabilities caps;
     afsUUID *newHostUuid = &nulluuid;
     afsUUID *oldHostUuid = &nulluuid;
-    char hoststr[16];
+    rx_inet_fmtbuf_t fmtbuf;
+    /* removeAddress_r() below is still IPv4-only (it compares against
+     * host->z.host/z.port); for a v6-only collision this projects to
+     * 0/0, which happens to still do the right thing here (0/0 also
+     * matches a v6-only host's own IPv4 projection, so the "delete the
+     * loser" logic still applies) but is an approximation worth another
+     * look once removeAddress_r itself is converted. */
+    afs_uint32 addr;
+    afs_uint16 port = rx_get_sockaddr_port(saddr);
+    (void)rx_try_sockaddr_to_ipv4(saddr, &addr);
 
     ViceLog(125,
-	    ("reconcileHosts_r: addr %s:%d newHost %p oldHost %p\n",
-	     afs_inet_ntoa_r(addr, hoststr), ntohs(port),
-	     newHost, oldHost));
+	    ("reconcileHosts_r: addr %s newHost %p oldHost %p\n",
+	     rx_sockaddr2str(saddr, &fmtbuf), newHost, oldHost));
 
     opr_Assert(oldHost != newHost);
     caps.Capabilities_val = NULL;
@@ -1373,7 +1400,7 @@ reconcileHosts_r(afs_uint32 addr, afs_uint16 port, struct host *newHost,
 	sc = rxnull_NewClientSecurityObject();
     }
 
-    cb = rx_NewConnection(addr, port, 1, sc, 0);
+    cb = rx_NewConnectionSA(saddr, 1, sc, 0);
     rx_SetConnDeadTime(cb, 50);
     rx_SetConnHardDeadTime(cb, AFS_HARDDEADTIME);
 
@@ -1389,14 +1416,14 @@ reconcileHosts_r(afs_uint32 addr, afs_uint16 port, struct host *newHost,
     if (code == RXGEN_OPCODE ||
 	(code == 0 && afs_uuid_equal(&interf.uuid, &nulluuid))) {
 	ViceLog(0,
-		("reconcileHosts_r: WhoAreYou not supported for connection (%s:%d), error %d\n",
-		 afs_inet_ntoa_r(addr, hoststr), ntohs(port), code));
+		("reconcileHosts_r: WhoAreYou not supported for connection (%s), error %d\n",
+		 rx_sockaddr2str(saddr, &fmtbuf), code));
 	goto fail;
     }
     if (code != 0) {
 	ViceLog(0,
-		("reconcileHosts_r: WhoAreYou failed for connection (%s:%d), error %d\n",
-		 afs_inet_ntoa_r(addr, hoststr), ntohs(port), code));
+		("reconcileHosts_r: WhoAreYou failed for connection (%s), error %d\n",
+		 rx_sockaddr2str(saddr, &fmtbuf), code));
 	goto fail;
     }
 
@@ -1419,14 +1446,14 @@ reconcileHosts_r(afs_uint32 addr, afs_uint16 port, struct host *newHost,
     if (afs_uuid_equal(newHostUuid, &nulluuid) &&
 	afs_uuid_equal(oldHostUuid, &nulluuid)) {
 	ViceLog(0,
-		("reconcileHosts_r: Cannot reconcile hosts for connection (%s:%d), no uuids\n",
-		 afs_inet_ntoa_r(addr, hoststr), ntohs(port)));
+		("reconcileHosts_r: Cannot reconcile hosts for connection (%s), no uuids\n",
+		 rx_sockaddr2str(saddr, &fmtbuf)));
 	goto done;
     }
     if (afs_uuid_equal(newHostUuid, oldHostUuid)) {
 	ViceLog(0,
-		("reconcileHosts_r: Cannot reconcile hosts for connection (%s:%d), same uuids\n",
-		 afs_inet_ntoa_r(addr, hoststr), ntohs(port)));
+		("reconcileHosts_r: Cannot reconcile hosts for connection (%s), same uuids\n",
+		 rx_sockaddr2str(saddr, &fmtbuf)));
 	goto done;
     }
 
@@ -1437,15 +1464,15 @@ reconcileHosts_r(afs_uint32 addr, afs_uint16 port, struct host *newHost,
 	 * addresses. Walk the hash chain again since the hash table may have
 	 * been changed when the host lock was dropped to get the uuid. */
 	struct h_AddrHashChain *chain;
-	int index = h_HashIndex(addr);
+	int index = h_HashIndex(saddr);
 	for (chain = hostAddrHashTable[index]; chain; chain = chain->next) {
-	    if (chain->addr == addr && chain->port == port) {
+	    if (rx_compare_sockaddr(&chain->saddr, saddr, RXA_AP)) {
 		chain->hostPtr = newHost;
 		removeAddress_r(oldHost, addr, port);
 		goto done;
 	    }
 	}
-	createHostAddrHashChain_r(index, addr, port, newHost);
+	createHostAddrHashChain_r(index, saddr, newHost);
 	removeAddress_r(oldHost, addr, port);
 	goto done;
     }
@@ -1472,33 +1499,32 @@ reconcileHosts_r(afs_uint32 addr, afs_uint16 port, struct host *newHost,
 
 /* inserts a new HashChain structure corresponding to this address */
 void
-h_AddHostToAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host *host)
+h_AddHostToAddrHashTable_r(const struct rx_sockaddr *saddr, struct host *host)
 {
     int index;
     struct h_AddrHashChain *chain;
-    char hoststr[16];
+    rx_inet_fmtbuf_t fmtbuf;
 
     /* hash into proper bucket */
-    index = h_HashIndex(addr);
+    index = h_HashIndex(saddr);
 
     /* don't add the same address:port pair entry multiple times */
     for (chain = hostAddrHashTable[index]; chain; chain = chain->next) {
-	if (chain->addr == addr && chain->port == port) {
+	if (rx_compare_sockaddr(&chain->saddr, saddr, RXA_AP)) {
 	    if (chain->hostPtr == host) {
 	        ViceLog(125,
-			("h_AddHostToAddrHashTable_r: host %p (%s:%d) already hashed\n",
-	                  host, afs_inet_ntoa_r(chain->addr, hoststr),
-	                  ntohs(chain->port)));
+			("h_AddHostToAddrHashTable_r: host %p (%s) already hashed\n",
+	                  host, rx_sockaddr2str(&chain->saddr, &fmtbuf)));
 	        return;
 	    }
 	    if (!(chain->hostPtr->z.hostFlags & HOSTDELETED)) {
 		/* attempt to resolve host address collision */
-		reconcileHosts_r(addr, port, host, chain->hostPtr);
+		reconcileHosts_r(saddr, host, chain->hostPtr);
 		return;
 	    }
 	}
     }
-    createHostAddrHashChain_r(index, addr, port, host);
+    createHostAddrHashChain_r(index, saddr, host);
 }
 
 /*
@@ -1535,8 +1561,11 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 		     ", validating"));
 
 	    if (host->z.interface->interface[i].valid == 0) {
+		struct rx_sockaddr sa;
+
 		host->z.interface->interface[i].valid = 1;
-		h_AddHostToAddrHashTable_r(addr, port, host);
+		rx_ipv4_to_sockaddr(addr, port, 0, &sa);
+		h_AddHostToAddrHashTable_r(&sa, host);
 	    }
 	    return 0;
         }
@@ -1561,7 +1590,12 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     interface->interface[number].addr = addr;
     interface->interface[number].port = port;
     interface->interface[number].valid = 1;
-    h_AddHostToAddrHashTable_r(addr, port, host);
+    {
+	struct rx_sockaddr sa;
+
+	rx_ipv4_to_sockaddr(addr, port, 0, &sa);
+	h_AddHostToAddrHashTable_r(&sa, host);
+    }
     free(host->z.interface);
     host->z.interface = interface;
 
@@ -1599,8 +1633,12 @@ removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
     for (i = 0; i < number; i++) {
 	if (interface->interface[i].addr == addr &&
 	    interface->interface[i].port == port) {
-	    if (interface->interface[i].valid)
-		h_DeleteHostFromAddrHashTable_r(addr, port, host);
+	    if (interface->interface[i].valid) {
+		struct rx_sockaddr sa;
+
+		rx_ipv4_to_sockaddr(addr, port, 0, &sa);
+		h_DeleteHostFromAddrHashTable_r(&sa, host);
+	    }
 	    number--;
 	    for (; i < number; i++) {
 		interface->interface[i] = interface->interface[i+1];
@@ -1859,7 +1897,14 @@ h_GetHost_r(struct rx_connection *tcon)
     caps.Capabilities_len = 0;
 
     code = 0;
-    if (h_Lookup_r(haddr, hport, &host))
+    /* h_Lookup_r keys off the connection's real (v4 or v6) address, not
+     * haddr/hport - those are only the IPv4 projection (0 for a v6-only
+     * peer, per rxr_HostOf/rxr_PortOf), and every v6-only peer would
+     * otherwise collide on the same "address 0" hash bucket. The rest of
+     * this function still reads/compares haddr/hport for its alternate-
+     * address reconciliation logic below, which remains IPv4-oriented -
+     * see the struct host_to_zero.saddr comment in host.h. */
+    if (h_Lookup_r(rx_SockaddrOf(rx_PeerOf(tcon)), &host))
 	return 0;
     identP = (struct Identity *)rx_GetSpecific(tcon, rxcon_ident_key);
     if (host && !identP && !(host->z.Console & 1)) {
@@ -3372,9 +3417,15 @@ h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h,
     int ret = 0, found = 0;
     struct host *host = NULL;
     struct h_AddrHashChain *chain;
-    int index = h_HashIndex(addr);
+    struct rx_sockaddr saddr;
+    int index;
     char tmp[16];
     int chain_len = 0, maxHosts;
+
+    /* fsstate.dat is IPv4-only for now (see host_to_zero.saddr in host.h);
+     * addr/port here always come from the on-disk IPv4 record. */
+    rx_ipv4_to_sockaddr(addr, port, 0, &saddr);
+    index = h_HashIndex(&saddr);
 
     ret = h_stateVerifyMaxHosts(state, &maxHosts);
     if (ret != 0) {
@@ -3390,7 +3441,7 @@ h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h,
 	    ret = 1;
 	    goto done;
 	}
-	if ((chain->addr == addr) && (chain->port == port)) {
+	if (rx_compare_sockaddr(&chain->saddr, &saddr, RXA_AP)) {
 	    if (host != h) {
 		if (valid) {
 		    ViceLog(0, ("h_stateVerifyAddrHash: warning: addr hash entry "
@@ -3720,18 +3771,22 @@ h_stateRestoreHost(struct fs_dump_state * state)
     }
 
     h_diskEntryToHost_r(&hdsk, host);
+    /* fsstate.dat is IPv4-only for now (see host_to_zero.saddr in host.h) -
+     * host->z.host/z.port just came from the on-disk IPv4 record. */
+    rx_ipv4_to_sockaddr(host->z.host, host->z.port, 0, &host->z.saddr);
     h_SetupCallbackConn_r(host);
 
-    h_AddHostToAddrHashTable_r(host->z.host, host->z.port, host);
+    h_AddHostToAddrHashTable_r(&host->z.saddr, host);
     if (ifp) {
 	int i;
 	for (i = ifp->numberOfInterfaces-1; i >= 0; i--) {
             if (ifp->interface[i].valid &&
 		!(ifp->interface[i].addr == host->z.host &&
 		  ifp->interface[i].port == host->z.port)) {
-                h_AddHostToAddrHashTable_r(ifp->interface[i].addr,
-                                           ifp->interface[i].port,
-                                           host);
+		struct rx_sockaddr sa;
+
+		rx_ipv4_to_sockaddr(ifp->interface[i].addr, ifp->interface[i].port, 0, &sa);
+                h_AddHostToAddrHashTable_r(&sa, host);
             }
 	}
 	h_AddHostToUuidHashTable_r(&ifp->uuid, host);
@@ -4335,31 +4390,35 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 /* deleted a HashChain structure for this address and host */
 /* returns 1 on success */
 int
-h_DeleteHostFromAddrHashTable_r(afs_uint32 addr, afs_uint16 port,
+h_DeleteHostFromAddrHashTable_r(const struct rx_sockaddr *saddr,
 				struct host *host)
 {
-    char hoststr[16];
+    rx_inet_fmtbuf_t fmtbuf;
     struct h_AddrHashChain **hp, *th;
+    afs_uint32 v4addr = 0;
 
-    if (addr == 0 && port == 0)
+    /* Unset sentinel: either never initialized (family 0, from a memset
+     * struct - see removeAddress_r) or the explicit IPv4 0.0.0.0:0 that
+     * callers used to pass here directly. */
+    if (saddr->rxsa_family == 0 ||
+	(saddr->rxsa_family == AF_INET && rx_try_sockaddr_to_ipv4(saddr, &v4addr)
+	 && v4addr == 0 && rx_get_sockaddr_port(saddr) == 0))
 	return 1;
 
-    for (hp = &hostAddrHashTable[h_HashIndex(addr)]; (th = *hp);
+    for (hp = &hostAddrHashTable[h_HashIndex(saddr)]; (th = *hp);
 	 hp = &th->next) {
         opr_Assert(th->hostPtr);
-        if (th->hostPtr == host && th->addr == addr && th->port == port) {
-	    ViceLog(125, ("h_DeleteHostFromAddrHashTable_r: host %p (%s:%d)\n",
-			  host, afs_inet_ntoa_r(host->z.host, hoststr),
-			  ntohs(host->z.port)));
+        if (th->hostPtr == host && rx_compare_sockaddr(&th->saddr, saddr, RXA_AP)) {
+	    ViceLog(125, ("h_DeleteHostFromAddrHashTable_r: host %p (%s)\n",
+			  host, rx_sockaddr2str(saddr, &fmtbuf)));
             *hp = th->next;
             free(th);
 	    return 1;
         }
     }
     ViceLog(125,
-	    ("h_DeleteHostFromAddrHashTable_r: host %p (%s:%d) not found\n",
-	     host, afs_inet_ntoa_r(host->z.host, hoststr),
-	     ntohs(host->z.port)));
+	    ("h_DeleteHostFromAddrHashTable_r: host %p (%s) not found\n",
+	     host, rx_sockaddr2str(saddr, &fmtbuf)));
     return 0;
 }
 

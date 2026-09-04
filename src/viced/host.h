@@ -58,8 +58,21 @@ struct host_to_zero {
     afs_uint32 refCount;     	/* reference count */
     afs_uint32 host;	 	/* IP address of host interface that is
 				 * currently being used, in network
-				 * byte order */
-    afs_uint16 port;		/* port address of host */
+				 * byte order. This is the IPv4 projection
+				 * of saddr below (0 for a v6-only host) -
+				 * kept for the many existing IPv4-only
+				 * readers; saddr is the real address. */
+    afs_uint16 port;		/* port address of host - IPv4 projection,
+				 * see host above */
+    struct rx_sockaddr saddr;	/* the host's real (v4 or v6) primary
+				 * address/port, as connected from. This is
+				 * what the addr hash table, the callback
+				 * connection (h_SetupCallbackConn_r), and
+				 * h_Lookup_r/h_GetHost_r's initial lookup
+				 * key off of. host/port above remain the
+				 * IPv4-only fields most of the rest of this
+				 * file and afsfileprocs.c/callback.c read;
+				 * they are not yet converted. */
     char Console;		/* XXXX This host is a console */
     unsigned short hostFlags;	/*  bit map */
     char InSameNetwork;		/* Is host's addr in the same network as
@@ -95,8 +108,7 @@ struct host {
 struct h_AddrHashChain {
     struct host *hostPtr;
     struct h_AddrHashChain *next;
-    afs_uint32 addr;
-    afs_uint16 port;
+    struct rx_sockaddr saddr;
 };
 
 struct h_UuidHashChain {
@@ -205,8 +217,7 @@ extern int DumpCallBackState(void);
 extern int PrintCallBackStats(void);
 extern void ShutDownAndCore(int dopanic);
 
-extern int h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
-		      struct host **hostp);
+extern int h_Lookup_r(const struct rx_sockaddr *saddr, struct host **hostp);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
 extern void h_Enumerate(int (*proc) (struct host *, void *), void *param);
 extern void h_Enumerate_r(int (*proc) (struct host *, void *), struct host *enumstart, void *param);
@@ -231,9 +242,9 @@ extern int h_NBLock_r(struct host *host);
 extern void h_DumpHosts(void);
 extern void h_InitHostPackage(int hquota);
 extern void h_CheckHosts(void );
-extern void h_AddHostToAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host * host);
+extern void h_AddHostToAddrHashTable_r(const struct rx_sockaddr *saddr, struct host * host);
 extern void h_AddHostToUuidHashTable_r(afsUUID * uuid, struct host * host);
-extern int h_DeleteHostFromAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host *host);
+extern int h_DeleteHostFromAddrHashTable_r(const struct rx_sockaddr *saddr, struct host *host);
 extern int h_DeleteHostFromUuidHashTable_r(struct host *host);
 extern int addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
 extern int removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
