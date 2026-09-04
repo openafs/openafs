@@ -26,6 +26,8 @@
 
 #include <roken.h>
 
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <afs/afs_lock.h>
 #include <ubik.h>
 #include <rx/xdr.h>
@@ -185,6 +187,99 @@ CorrectUserName(char *name)
     return 1;
 }
 
+#ifdef HAVE_IPV6
+/*
+ * IPv6CPSGroupName - Recognizes an IPv6 host-CPS group name: any string
+ * inet_pton(AF_INET6, ...) accepts as a complete address (every legal
+ * RFC 4291 textual form - compressed, expanded, embedded-IPv4,
+ * arbitrary case, leading zeros, "::", etc. - deliberately deferring to
+ * the C library's own definition of "valid" rather than reinventing a
+ * narrower grammar), optionally followed by "/prefixlen" (0-128) for a
+ * subnet-wildcard group. A '%' zone/scope-id suffix (e.g. "fe80::1%eth0")
+ * is explicitly rejected: a zone index is only meaningful on the
+ * interface that assigned it, never something a remote peer's source
+ * address can be compared against, so it has no sensible meaning as a
+ * CPS group name.
+ *
+ * On a match, canonicalizes into *cname (a PR_MAXNAMELEN-sized buffer):
+ * the address is always re-rendered via inet_ntop, so any of the many
+ * equivalent textual forms above end up stored identically - matching
+ * exactly what getHostCPS()/addWildCards() (ptprocs.c) construct via
+ * the same inet_ntop call when looking a host up. A group created from
+ * unusual-but-equivalent input text must still be found by lookup, or
+ * this feature silently doesn't work. For a subnet, host bits beyond
+ * the prefix length are masked to zero before rendering, so e.g.
+ * "2001:db8::1/64" normalizes to "2001:db8::/64" - the network address
+ * a wildcard walk needs to look up, not whatever specific host address
+ * happened to be typed.
+ *
+ * Returns 1 (name recognized, *cname filled in) or 0 (not an IPv6
+ * address/subnet form at all - falls through to ordinary group-name
+ * handling, unchanged).
+ */
+static int
+IPv6CPSGroupName(const char *aname, char cname[PR_MAXNAMELEN])
+{
+    char buf[PR_MAXNAMELEN];
+    char *slash;
+    long prefixlen = 128;
+    struct in6_addr addr;
+    char printbuf[64];
+
+    if (strchr(aname, '%'))
+	return 0;
+    if (strlen(aname) >= sizeof(buf))
+	return 0;
+    strcpy(buf, aname);
+
+    slash = strchr(buf, '/');
+    if (slash) {
+	char *end;
+
+	*slash = '\0';
+	prefixlen = strtol(slash + 1, &end, 10);
+	if (*end != '\0' || end == slash + 1 || prefixlen < 0
+	    || prefixlen > 128)
+	    return 0;
+    }
+
+    if (inet_pton(AF_INET6, buf, &addr) != 1)
+	return 0;
+
+    if (slash) {
+	/* mask host bits beyond prefixlen to zero, so the stored name is
+	 * always the network address, not whatever host address (if any)
+	 * was typed alongside the /prefixlen. */
+	int i, bits = (int)prefixlen;
+
+	for (i = 0; i < 16; i++) {
+	    if (bits >= 8) {
+		bits -= 8;
+	    } else if (bits <= 0) {
+		addr.s6_addr[i] = 0;
+	    } else {
+		addr.s6_addr[i] &= (unsigned char)(0xff00 >> bits);
+		bits = 0;
+	    }
+	}
+    }
+
+    if (!inet_ntop(AF_INET6, &addr, printbuf, sizeof(printbuf)))
+	return 0;
+
+    if (slash) {
+	if (snprintf(cname, PR_MAXNAMELEN, "%s/%ld", printbuf, prefixlen)
+	    >= PR_MAXNAMELEN)
+	    return 0;
+    } else {
+	if (strlen(printbuf) >= PR_MAXNAMELEN)
+	    return 0;
+	strcpy(cname, printbuf);
+    }
+    return 1;
+}
+#endif /* HAVE_IPV6 */
+
 /* CorrectGroupName - Like the above but handles more complicated cases caused
  * by including the ownership in the name.  The interface works by calculating
  * the correct name based on a given name and owner.  This allows easy use by
@@ -205,6 +300,34 @@ CorrectGroupName(struct ubik_trans *ut, char aname[PR_MAXNAMELEN],	/* name for g
 
     if (strlen(aname) >= PR_MAXNAMELEN)
 	return PRBADNAM;
+
+#ifdef HAVE_IPV6
+    /* An IPv6 host-CPS group name (see IPv6CPSGroupName above) is taken
+     * verbatim (canonicalized), with no owner-prefix parsing/rewriting
+     * at all - ':' here is part of the address, not an owner separator,
+     * and there is no legitimate PTS owner whose name could ever make
+     * the rewritten prefix:suffix reconstruction below match an address
+     * like "2001:db8::1" anyway. Requires admin, matching the existing
+     * "sysadmin can make groups w/o ':'" rule for the classful IPv4
+     * dotted-quad case just below - creating a broad address/subnet-based
+     * ACL grant is a privileged operation either way. */
+    if (IPv6CPSGroupName(aname, cname)) {
+	if (!admin)
+	    return PRPERM;
+	/* Normalize aname itself (not just cname) to the same
+	 * canonical text: CreateEntry's caller does
+	 * "strcmp(aname, tentry.name) != 0 => PRBADNAM" right after this
+	 * call (tentry.name having been filled from cname), which would
+	 * otherwise reject e.g. an admin typing "2001:DB8::1" once we
+	 * canonicalize it to "2001:db8::1" - and CreateEntry's later
+	 * FindByName(at, aname, ...) duplicate check needs the canonical
+	 * form too, so retyping the same address in a different (but
+	 * equivalent) textual form correctly finds the existing group
+	 * instead of creating a confusing duplicate. */
+	strcpy(aname, cname);
+	return 0;
+    }
+#endif
 
     /* Determine the correct prefix for the name. */
     if (oid == SYSADMINID)
