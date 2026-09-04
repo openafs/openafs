@@ -45,6 +45,11 @@ LIBS=\
 	${TOP_LIBDIR}/libafsrfc3961.a \
 	${TOP_LIBDIR}/libafshcrypto_lwp.a
 
+RESTOREVOL_LIBS = \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libopr.a
+
 VOLDUMP_LIBS = \
 	../vol/ihandle.o \
 	../vol/physio.o \
@@ -98,9 +103,9 @@ ${TOP_INCDIR}/afs/volint.h: volint.h
 ${TOP_LIBDIR}/libvolser.a: libvolser.a
 	${INSTALL_DATA} $? $@
 
-restorevol: restorevol.o
-	$(AFS_LDRULE) restorevol.o ${TOP_LIBDIR}/libcmd.a \
-		${TOP_LIBDIR}/util.a $(LIB_roken) ${XLIBS}
+restorevol: restorevol.o ${RESTOREVOL_LIBS}
+	$(AFS_LDRULE) restorevol.o ${RESTOREVOL_LIBS} \
+		$(LIB_roken) ${XLIBS}
 
 vos: vos.o libvolser.a ${LIBS}
 	$(AFS_LDRULE) vos.o libvolser.a \
