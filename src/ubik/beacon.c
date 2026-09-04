@@ -1019,6 +1019,22 @@ ubeacon_updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 
     if (count > 0) {
 
+	/* ubik_host[0] is the IPv4 projection of our own primary address
+	 * (see the struct host_to_zero.saddr-style comment on
+	 * ubik_host_sa's own declaration) - 0 for a v6-only self. The
+	 * legacy DISK_UpdateInterfaceAddr pass just below has nothing
+	 * meaningful to say in that case (every hostAddr[] entry would be
+	 * 0), and worse, sending it anyway triggers real
+	 * "Inconsistent Cell Info" rejections on the receiving end - real
+	 * bug hit here, not hypothetical: a v6-only server otherwise
+	 * fails ubik_ServerInitByInfo() entirely over this, despite
+	 * having already correctly identified itself and despite the
+	 * IPv6-capable pass below (which does not depend on this one)
+	 * being perfectly able to carry its real address on its own. So
+	 * skip straight to that pass for a v6-only self.
+	 */
+	if (ubik_host[0] != 0) {
+
 	for (j = 0; j < UBIK_MAX_INTERFACE_ADDR; j++)
 	    inAddr.hostAddr[j] = ntohl(ubik_host[j]);
 
@@ -1059,6 +1075,8 @@ ubeacon_updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 	    }
 	}
 	multi_End;
+
+	} /* if (ubik_host[0] != 0) */
 
 	/*
 	 * IPv6-capable sibling pass: same peers, but exchanging the real
