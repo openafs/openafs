@@ -113,6 +113,25 @@ afs_init(void)
 static void __exit
 afs_cleanup(void)
 {
+    /* A clean `umount` already runs the full daemon-teardown sequence
+     * (osi_vfsops.c's unmount handler calls afs_shutdown(AFS_WARM), which
+     * walks afs_termState through every daemon in turn - background,
+     * rxcallback, checkserver, truncation, afsdb, rxevent, and finally
+     * the rx listener(s) via osi_StopListener()). But afsd starts most
+     * of those daemon kthreads well before it ever attempts the actual
+     * mount(2) syscall, so if that syscall fails (or nothing ever calls
+     * mount(8) at all), afs_shutdown() never runs and those threads are
+     * still alive and running - `rmmod` used to free the module's memory
+     * out from under them regardless, which oopsed a few seconds to a
+     * few minutes later, whenever one of them next touched now-freed
+     * code/data. afs_shutdown() already no-ops safely if a real unmount
+     * got here first (afs_shuttingdown != AFS_RUNNING), so it's always
+     * safe to make sure it has run, however this module is being
+     * removed, before anything below actually frees memory. */
+    if (afs_shuttingdown == AFS_RUNNING) {
+	afs_shutdown(AFS_COLD);
+    }
+
     afs_shutdown_pagecopy();
 
 #ifdef LINUX_KEYRING_SUPPORT
