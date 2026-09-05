@@ -282,6 +282,11 @@ extern int (*ubik_SyncWriterCacheProc) (void);
 #define RPCTIMEOUT 20
 #define BIGTIME 75
 #define SMALLTIME 60
+/* VOTE connections use a shorter Rx dead time than RPCTIMEOUT: SMALLTIME
+ * must be > (rpc timeout) + max(rpc timeout, POLLTIME), so the vote RPC's
+ * own timeout has to stay well under 30s (see ubeacon_NewVOTEConnection()
+ * in beacon.c). */
+#define VOTE_RPCTIMEOUT 12
 /*\}*/
 
 /*!
