@@ -1227,7 +1227,7 @@ LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 					 0, &rxconn);
 		    if (tconn) {
 			RX_AFS_GUNLOCK();
-			xdrfree_vlendpoints(&veps);
+			xdr_free((xdrproc_t) xdr_vlendpoints, &veps);
 			memset(&veps, 0, sizeof(veps));
 			code = VL_GetEndpoints(rxconn, &attrs, &uuid, &unique,
 					       &veps);
@@ -1261,14 +1261,14 @@ LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 
 		    if (code) {
 			areq->volumeError = VOLMISSING;
-			xdrfree_vlendpoints(&veps);
+			xdr_free((xdrproc_t) xdr_vlendpoints, &veps);
 			return;
 		    }
 
 		    endpoints = afs_osi_Alloc(VL_MAXENDPOINTS * sizeof(struct rx_sockaddr));
 		    if (!endpoints) {
 			areq->volumeError = VOLMISSING;
-			xdrfree_vlendpoints(&veps);
+			xdr_free((xdrproc_t) xdr_vlendpoints, &veps);
 			return;
 		    }
 
@@ -1301,7 +1301,7 @@ LockAndInstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 			 * not fatal (see vldbint.xg) - a future address
 			 * family doesn't need another opcode. */
 		    }
-		    xdrfree_vlendpoints(&veps);
+		    xdr_free((xdrproc_t) xdr_vlendpoints, &veps);
 
 		    if (nendpoints == 0) {
 			/* Every endpoint was of a family we can't use (or
