@@ -3611,9 +3611,10 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 #endif
     struct rx_packet *tnp;
     struct rx_sockaddr peerAddr;
-    /* host_dbg/port_dbg feed only the RXDEBUG trace line below, which
-     * stays an IPv4 projection (0 for a v6-only sender) purely to keep
-     * that log format unchanged; rxi_ReceiveVersionPacket/
+    /* host_dbg/port_dbg feed the RXDEBUG trace line below and the
+     * still-IPv4-only rxi_SplitJumboPacket() reassembly path (via
+     * rxi_ReceiveDataPacket()); both stay an IPv4 projection (0 for a
+     * v6-only sender) for now. rxi_ReceiveVersionPacket/
      * rxi_ReceiveDebugPacket themselves get the real family-agnostic
      * peerAddr below, since their replies must reach the actual sender. */
     afs_uint32 host_dbg = 0;
@@ -3800,8 +3801,8 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	if (type == RX_CLIENT_CONNECTION && !opr_queue_IsEmpty(&call->tq))
 	    rxi_AckAllInTransmitQueue(call);
 
-	np = rxi_ReceiveDataPacket(call, np, 1, socket, host, port, tnop,
-				   newcallp);
+	np = rxi_ReceiveDataPacket(call, np, 1, socket, host_dbg, port_dbg,
+				   tnop, newcallp);
 	break;
     case RX_PACKET_TYPE_ACK:
 	/* Respond immediately to ack packets requesting acknowledgement
