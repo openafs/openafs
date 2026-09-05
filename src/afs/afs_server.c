@@ -1914,10 +1914,11 @@ afs_GetServerSA(const struct rx_sockaddr *aservers, afs_int32 nservers,
     if (oldts) {
 	newts = oldts;
     } else {
-	newts = afs_osi_Calloc(sizeof(struct server));
+	newts = afs_osi_Alloc(sizeof(struct server));
 	if (!newts)
 	    panic("malloc of server struct");
 	afs_totalServers++;
+	memset(newts, 0, sizeof(struct server));
 
 	/* Add the server struct to the afs_servers[] hash chain */
 	srvhash = afs_uuid_hash(uuidp) % NSERVERS;
@@ -1954,10 +1955,11 @@ afs_GetServerSA(const struct rx_sockaddr *aservers, afs_int32 nservers,
 	if (oldsa) {
 	    newsa = oldsa;
 	} else {
-	    newsa = afs_osi_Calloc(sizeof(struct srvAddr));
+	    newsa = afs_osi_Alloc(sizeof(struct srvAddr));
 	    if (!newsa)
 		panic("malloc of srvAddr struct");
 	    afs_totalSrvAddrs++;
+	    memset(newsa, 0, sizeof(struct srvAddr));
 
 	    /* Add the new srvAddr to the afs_srvAddrs[] hash chain */
 	    newsa->next_bkt = afs_srvAddrs[iphash];
@@ -2004,10 +2006,11 @@ afs_GetServerSA(const struct rx_sockaddr *aservers, afs_int32 nservers,
 
 	    /* Have a srvAddr struct. Now get a server struct (if not already) */
 	    if (!orphts) {
-		orphts = afs_osi_Calloc(sizeof(struct server));
+		orphts = afs_osi_Alloc(sizeof(struct server));
 		if (!orphts)
 		    panic("malloc of lo server struct");
 		afs_totalServers++;
+		memset(orphts, 0, sizeof(struct server));
 
 		/* Add the orphaned server to the afs_servers[] hash chain.
 		 * Its iphash does not matter since we never look up the server
