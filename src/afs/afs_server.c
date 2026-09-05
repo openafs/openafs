@@ -1873,7 +1873,7 @@ afs_GetServerSA(const struct rx_sockaddr *aservers, afs_int32 nservers,
 
     AFS_STATCNT(afs_GetServer);
 
-    opr_Assert(uuidp);
+    osi_Assert(uuidp);
     if (nservers <= 0)
 	panic("afs_GetServerSA: incorrect count of servers");
 
