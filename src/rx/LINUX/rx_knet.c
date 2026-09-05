@@ -94,6 +94,66 @@ rxk_NewSocket(short aport)
     return rxk_NewSocketHost(htonl(INADDR_ANY), aport);
 }
 
+#if defined(HAVE_IPV6)
+/*
+ * rxk_NewSocketSA - open and bind an RX socket for either address family.
+ *
+ * Kept as a separate function from rxk_NewSocketHost() above (rather than
+ * widening that one in place) so every existing caller of
+ * rxk_NewSocketHost()/rxk_NewSocket() - the well-tested IPv4 rx_socket path
+ * - keeps working completely unchanged. Only the new IPv6 rx_socket6 path
+ * (rx_InitHost2(), src/rx/rx.c) calls this.
+ */
+osi_socket *
+rxk_NewSocketSA(struct rx_sockaddr *sa)
+{
+    struct socket *sockp;
+    int code;
+    int family = (sa->rxsa_family == AF_INET6) ? AF_INET6 : AF_INET;
+#ifdef AFS_ADAPT_PMTU
+    int pmtu = IP_PMTUDISC_WANT;
+#else
+    int pmtu = IP_PMTUDISC_DONT;
+#endif
+
+    if (family != AF_INET6) {
+	/* Not what this function is for - rxk_NewSocketHost() already
+	 * covers plain IPv4. */
+	return NULL;
+    }
+
+#ifdef HAVE_LINUX_SOCK_CREATE_KERN_NS
+    code = sock_create_kern(&init_net, AF_INET6, SOCK_DGRAM, IPPROTO_UDP, &sockp);
+#elif defined(HAVE_LINUX_SOCK_CREATE_KERN)
+    code = sock_create_kern(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, &sockp);
+#elif defined(LINUX_KERNEL_SOCK_CREATE_V)
+    code = sock_create(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, &sockp, 0);
+#else
+    code = sock_create(AF_INET6, SOCK_DGRAM, IPPROTO_UDP, &sockp);
+#endif
+    if (code < 0)
+	return NULL;
+
+    /* Never fall back to a v4-mapped address on this socket - a v4 peer
+     * is always reached via the separate, real IPv4 rx_socket instead
+     * (see the plan's D2). */
+    afs_linux_sock_set_v6only(sockp);
+
+    code = sockp->ops->bind(sockp, BIND_SOCKADDR(&sa->addr), sa->addrlen);
+    if (code < 0) {
+	sock_release(sockp);
+	return NULL;
+    }
+
+    afs_linux_sock_set_mtu_discover(sockp, pmtu);
+
+#ifdef AFS_RXERRQ_ENV
+    afs_linux_sock_set_recverr6(sockp);
+#endif
+    return (osi_socket *)sockp;
+}
+#endif /* HAVE_IPV6 */
+
 /* free socket allocated by osi_NetSocket */
 int
 rxk_FreeSocket(struct socket *asocket)
@@ -232,6 +292,60 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
     return code;
 }
 
+#if defined(HAVE_IPV6)
+/*
+ * osi_NetReceiveSA - osi_NetReceive()'s IPv6-capable sibling, used only by
+ * rxk_Listener6()/rx_socket6 (see rxk_ReadPacketSA() in rx_kcommon.c). Kept
+ * separate rather than widening osi_NetReceive() in place, matching
+ * rxk_NewSocketSA()'s own reasoning: the well-tested rx_socket/IPv4 path is
+ * completely unaffected.
+ *
+ * Unlike osi_NetReceive(), this sets msg_namelen going in (the size of the
+ * union member big enough for a sockaddr_in6) - not required for the v4
+ * path (whose caller never inspects it), but IPv6 addresses genuinely need
+ * the kernel to be told how much room it has to write sin6_addr/sin6_port
+ * into.
+ */
+int
+osi_NetReceiveSA(osi_socket so, struct rx_sockaddr *from, struct iovec *iov,
+		 int iovcnt, int *lengthp)
+{
+    struct msghdr msg;
+    int code;
+    struct iovec tmpvec[RX_MAXWVECS + 2];
+    struct socket *sop = (struct socket *)so;
+
+    if (iovcnt > RX_MAXWVECS + 2) {
+	osi_Panic("Too many (%d) iovecs passed to osi_NetReceiveSA\n", iovcnt);
+    }
+
+    memcpy(tmpvec, iov, iovcnt * sizeof(struct iovec));
+    memset(&msg, 0, sizeof(msg));
+    memset(from, 0, sizeof(*from));
+    msg.msg_name = &from->addr;
+    msg.msg_namelen = sizeof(from->addr);
+
+    code = kernel_recvmsg(sop, &msg, (struct kvec *)tmpvec, iovcnt,
+			  *lengthp, 0);
+    if (code < 0) {
+	afs_try_to_freeze();
+	flush_signals(current);	/* We don't want no stinkin' signals. */
+	rxk_lastSocketError = code;
+	rxk_nSocketErrors++;
+
+	rxi_HandleSocketErrors(so);
+    } else {
+	from->addrlen = msg.msg_namelen;
+	from->socktype = SOCK_DGRAM;
+	from->rxsa_in6_family = AF_INET6;
+	*lengthp = code;
+	code = 0;
+    }
+
+    return code;
+}
+#endif /* HAVE_IPV6 */
+
 void
 osi_StopListener(void)
 {
@@ -248,5 +362,35 @@ osi_StopListener(void)
     }
     sock_release(rx_socket);
     rx_socket = NULL;
+
+#if defined(HAVE_IPV6)
+    /*
+     * rxk_Listener6()'s own task handle - a genuinely separate wait, not
+     * folded into the loop above, since rxk_ListenerTask6 always gets
+     * cleared (rxk_Listener6() sets it unconditionally, even when
+     * rx_socket6 was never opened - see that function's own comment), so
+     * this is safe to always run rather than needing an
+     * "was IPv6 ever actually used" check first. Missing this originally
+     * meant `rmmod` could hang forever (or leave a live kernel thread
+     * pinning the module resident) any time a v6-capable client had
+     * actually run this thread - confirmed live: an early version of
+     * this patch reproduced exactly that hang against a real kernel.
+     */
+    {
+	extern struct task_struct *rxk_ListenerTask6;
+
+	while (rxk_ListenerTask6) {
+	    flush_signals(rxk_ListenerTask6);
+	    send_sig(SIGKILL, rxk_ListenerTask6, 1);
+	    if (!rxk_ListenerTask6)
+		break;
+	    afs_osi_Sleep(&rxk_ListenerTask6);
+	}
+	if (rx_socket6 != OSI_NULLSOCKET) {
+	    sock_release(rx_socket6);
+	    rx_socket6 = OSI_NULLSOCKET;
+	}
+    }
+#endif /* HAVE_IPV6 */
 }
 

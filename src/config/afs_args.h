@@ -58,6 +58,10 @@
 #define AFSOP_SET_VOLUME_TTL     47     /* set the vldb cache timeout */
 
 #define AFSOP_RXLISTENER_DAEMON  48	/* starts kernel RX listener */
+#define AFSOP_RXLISTENER_DAEMON6 49	/* starts kernel RX listener on the
+					 * IPv6 socket (rx_socket6), Linux
+					 * only for now - a no-op elsewhere or
+					 * if IPv6 is unavailable */
 
 #define AFSOP_CACHEBASEDIR	 50	/* cache base dir */
 #define AFSOP_CACHEDIRS		 51	/* number of files per dir */

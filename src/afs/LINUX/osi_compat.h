@@ -364,6 +364,27 @@ afs_linux_sock_set_recverr(struct socket *sockp)
 {
     ip_sock_set_recverr(sockp->sk);
 }
+# if defined(HAVE_IPV6)
+/* ip6_sock_set_* are the same-era (5.8+) IPv6 siblings of the ip_sock_set_*
+ * functions just above, from <net/ipv6.h> - used by rxk_NewSocketSA()
+ * (src/rx/LINUX/rx_knet.c). No separate autoconf probe for these exists
+ * yet; reusing HAVE_LINUX_IP_SOCK_SET is safe because both families were
+ * added to the kernel in the same commit series, so a kernel new enough
+ * for one has the other. */
+#  include <net/ipv6.h>
+static inline void
+afs_linux_sock_set_v6only(struct socket *sockp)
+{
+    ip6_sock_set_v6only(sockp->sk);
+}
+#  ifdef AFS_RXERRQ_ENV
+static inline void
+afs_linux_sock_set_recverr6(struct socket *sockp)
+{
+    ip6_sock_set_recverr(sockp->sk);
+}
+#  endif /* AFS_RXERRQ_ENV */
+# endif /* HAVE_IPV6 */
 #else
 # if !defined(HAVE_LINUX_KERNEL_SETSOCKOPT)
 /* Available from 2.6.19 */
@@ -394,6 +415,30 @@ afs_linux_sock_set_recverr(struct socket *sockp)
     kernel_setsockopt(sockp, SOL_IP, IP_RECVERR, (char *)&recverr,
 		      sizeof(recverr));
 }
+# if defined(HAVE_IPV6)
+/* Older-kernel (pre-5.8) counterparts of the two helpers just above, for
+ * rxk_NewSocketSA() (src/rx/LINUX/rx_knet.c) - SOL_IPV6/IPV6_V6ONLY/
+ * IPV6_RECVERR are available via setsockopt() on every kernel version this
+ * tree supports, so the compat kernel_setsockopt() shim just above (already
+ * in scope in this branch) covers this case with no separate probe needed.
+ */
+static inline void
+afs_linux_sock_set_v6only(struct socket *sockp)
+{
+    int v6only = 1;
+    kernel_setsockopt(sockp, SOL_IPV6, IPV6_V6ONLY, (char *)&v6only,
+		      sizeof(v6only));
+}
+#  ifdef AFS_RXERRQ_ENV
+static inline void
+afs_linux_sock_set_recverr6(struct socket *sockp)
+{
+    int recverr = 1;
+    kernel_setsockopt(sockp, SOL_IPV6, IPV6_RECVERR, (char *)&recverr,
+		      sizeof(recverr));
+}
+#  endif /* AFS_RXERRQ_ENV */
+# endif /* HAVE_IPV6 */
 #endif /* !HAVE_LINUX_IP_SOCK_SET */
 
 #ifdef HAVE_TRY_TO_FREEZE

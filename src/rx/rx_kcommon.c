@@ -1303,6 +1303,136 @@ osi_StopListener(void)
     soclose(rx_socket);
 }
 #  endif
+
+#  if defined(AFS_LINUX_ENV) && defined(HAVE_IPV6)
+/*
+ * rxk_ReadPacketSA()/rxk_Listener6() - rxk_ReadPacket()/rxk_Listener()'s
+ * IPv6-capable siblings, for the rx_socket6 listener thread
+ * (AFSOP_RXLISTENER_DAEMON6, src/afs/afs_call.c). Kept as separate
+ * functions targeting rx_socket6 specifically, rather than parameterizing
+ * the existing pair, so the well-tested rx_socket/IPv4 listener thread -
+ * still the only listener on every kernel platform besides Linux, and the
+ * primary one even here - is completely unaffected by this.
+ *
+ * rxk_ReadPacketSA() returns 1 on a valid packet, 0 on error - the
+ * opposite sense from rxk_ReadPacket() above, but matching
+ * rxi_ReadPacket()'s (src/rx/rx_packet.c, the userspace equivalent)
+ * return convention, since rxk_Listener6() otherwise mirrors that
+ * function's shape (see rx_pthread.c's rxi_ListenerProc()) rather than
+ * rxk_Listener()'s.
+ */
+static int
+rxk_ReadPacketSA(osi_socket so, struct rx_packet *p, struct rx_sockaddr *from)
+{
+    int code;
+    int nbytes;
+    afs_int32 rlen;
+    afs_int32 tlen;
+    afs_int32 savelen;
+    rx_computelen(p, tlen);
+    rx_SetDataSize(p, tlen);
+
+    tlen += RX_HEADER_SIZE;
+    rlen = rx_maxJumboRecvSize;
+    tlen = rlen - tlen;
+    if (tlen > 0) {
+	tlen = rxi_AllocDataBuf(p, tlen, RX_PACKET_CLASS_RECV_CBUF);
+	if (tlen > 0) {
+	    tlen = rlen - tlen;
+	} else
+	    tlen = rlen;
+    } else
+	tlen = rlen;
+
+    savelen = p->wirevec[p->niovecs - 1].iov_len;
+    p->wirevec[p->niovecs - 1].iov_len = savelen + RX_EXTRABUFFERSIZE;
+
+    nbytes = tlen + sizeof(afs_int32);
+    code = osi_NetReceiveSA(so, from, p->wirevec, p->niovecs, &nbytes);
+
+    p->wirevec[p->niovecs - 1].iov_len = savelen;
+
+    if (code) {
+	return 0;
+    }
+
+    p->length = nbytes - RX_HEADER_SIZE;
+    if ((nbytes > tlen) || (p->length & 0x8000)) {	/* Bogus packet */
+	if (nbytes <= 0) {
+	    if (rx_stats_active) {
+		rx_atomic_inc(&rx_stats.bogusPacketOnRead);
+	    }
+	    dpf(("B: bogus packet from IPv6 peer nb=%d\n", nbytes));
+	}
+	return 0;
+    }
+
+    rxi_DecodePacketHeader(p);
+    if (p->header.type > 0 && p->header.type <= RX_N_PACKET_TYPES) {
+	if (rx_stats_active) {
+	    rx_atomic_inc(&rx_stats.packetsRead[p->header.type - 1]);
+	}
+    }
+#   ifdef RX_TRIMDATABUFS
+    rxi_TrimDataBufs(p, 1);
+#   endif
+    return 1;
+}
+
+/* rxk_ListenerTask's own sibling, for rxk_Listener6() below - kept
+ * separate so osi_StopListener() (src/rx/LINUX/rx_knet.c) can signal and
+ * wait for each thread independently. Without this, killing/rmmod'ing the
+ * module would hang forever (or leave a live kernel thread pinning the
+ * module in memory) whenever a v6-capable client had ever actually run
+ * this thread - confirmed the hard way: an early version of this patch
+ * left rxk_Listener6() with no way to be signalled at all, and `rmmod`
+ * against a running instance hung indefinitely until the whole VM was
+ * power-cycled. */
+struct task_struct *rxk_ListenerTask6;
+
+void
+rxk_Listener6(void)
+{
+    struct rx_packet *rxp = NULL;
+    struct rx_sockaddr sa;
+
+    rxk_ListenerTask6 = current;
+    allow_signal(SIGKILL);    /* Allowed, but blocked until shutdown */
+
+    /* rx_socket6 is opened best-effort by rx_InitHost2() (src/rx/rx.c) -
+     * if it never came up (no IPv6 available on this host, or the bind
+     * failed), there is nothing for this thread to do. The caller
+     * (AFSOP_RXLISTENER_DAEMON6's handler in src/afs/afs_call.c) still
+     * starts this thread unconditionally - matching AFSOP_RXLISTENER_DAEMON's
+     * own always-forked-from-afsd shape - so the no-op check belongs here,
+     * not in whether the thread gets started at all. Still registers
+     * itself as rxk_ListenerTask6 and clears it on the way out (below)
+     * even in this no-op case, so osi_StopListener() never blocks
+     * waiting for a thread that was never going to do anything. */
+    if (rx_socket6 == OSI_NULLSOCKET) {
+	goto done;
+    }
+
+    while (afs_termState != AFSOP_STOP_RXK_LISTENER) {
+	rx_CheckPackets();
+
+	if (rxp) {
+	    rxi_RestoreDataBufs(rxp);
+	} else {
+	    rxp = rxi_AllocPacket(RX_PACKET_CLASS_RECEIVE);
+	    if (!rxp)
+		osi_Panic("rxk_Listener6: No more Rx buffers!\n");
+	}
+	if (rxk_ReadPacketSA(rx_socket6, rxp, &sa)) {
+	    rxp = rxi_ReceivePacket(rxp, rx_socket6, &sa, 0, 0);
+	}
+    }
+
+ done:
+    rxk_ListenerTask6 = 0;
+    osi_rxWakeup(&rxk_ListenerTask6);
+}
+#  endif /* AFS_LINUX_ENV && HAVE_IPV6 */
 # endif /* RXK_LISTENER_ENV */
 #endif /* !UKERNEL */
 

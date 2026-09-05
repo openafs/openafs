@@ -143,7 +143,12 @@ afs_InitSetup(int preallocs)
              (host >>  8) & 0xff,
              (host)       & 0xff,
              7001);
-    code = rx_InitHost(rx_bindhost, htons(7001));
+    /* rx_InitHostDual() is rx_InitHost() plus a best-effort rx_socket6 -
+     * currently only Linux's kernel listener socket pair understands it
+     * (rxk_NewSocketSA(), src/rx/LINUX/rx_knet.c); every other kernel
+     * platform's rx_InitHost2() still only ever gets a NULL v6 (see its
+     * own comment in src/rx/rx.c), so this is a no-op there. */
+    code = rx_InitHostDual(rx_bindhost, htons(7001));
     if (code) {
 	afs_warn("AFS: RX failed to initialize %d).\n", code);
 	return code;
@@ -438,6 +443,27 @@ afsd_thread(void *rock)
 	AFS_GUNLOCK();
 	kthread_complete_and_exit(0, 0);
 	break;
+# if defined(HAVE_IPV6)
+    case AFSOP_RXLISTENER_DAEMON6:
+	/* Always forked by afsd (see fork_rx_syscall() in src/afsd/afsd.c),
+	 * same as AFSOP_RXLISTENER_DAEMON above - whether there's actually
+	 * anything for it to do depends on whether rx_socket6 came up,
+	 * which rxk_Listener6() itself checks first thing and returns
+	 * immediately if not (best-effort, matching rx_InitHost2()). */
+	sprintf(current->comm, "afs_lsn6start");
+	AFS_GLOCK();
+	complete(arg->complete);
+	/* Wait for the v4 listener above to finish afs_InitSetup() (which
+	 * is what actually calls rx_InitHostDual() and so opens rx_socket6)
+	 * before touching it. */
+	while (afs_RX_Running != 2)
+	    afs_osi_Sleep(&afs_RX_Running);
+	sprintf(current->comm, "afs_rxlistener6");
+	rxk_Listener6();
+	AFS_GUNLOCK();
+	kthread_complete_and_exit(0, 0);
+	break;
+# endif /* HAVE_IPV6 */
 #endif
     default:
 	afs_warn("Unknown op %ld in StartDaemon()\n", (long)parm);
@@ -992,7 +1018,8 @@ afs_syscall_call(long parm, long parm2, long parm3,
     } else
 # endif /* AFS_NEW_BKG */
     if (parm < AFSOP_ADDCELL || parm == AFSOP_RXEVENT_DAEMON
-	|| parm == AFSOP_RXLISTENER_DAEMON) {
+	|| parm == AFSOP_RXLISTENER_DAEMON
+	|| parm == AFSOP_RXLISTENER_DAEMON6) {
 	afs_DaemonOp(parm, parm2, parm3, parm4, parm5, parm6);
     }
 #else /* !AFS_DAEMONOP_ENV */

@@ -548,10 +548,10 @@ rx_InitHost2(const struct rx_sockaddr *v4, const struct rx_sockaddr *v6)
     /* Allocate and initialize a socket for client and perhaps server
      * connections. rxi_GetHostUDPSocketSA() is a userspace-only API (see
      * rx_user.c); real KERNEL builds keep using the IPv4-only
-     * rxi_GetHostUDPSocket() from rx_kcommon.c until the per-platform
-     * kernel listener sockets are converted (v6 is simply never
-     * requested there yet, since only rx_Init2() ever passes a non-NULL
-     * v6, and that is itself unreachable from kernel code). */
+     * rxi_GetHostUDPSocket() from rx_kcommon.c - the v4 rx_socket itself
+     * is unaffected by this being dual-stack-aware below (only Linux's
+     * kernel listener socket pair has been converted so far; every
+     * other kernel platform stays exactly as it was). */
 #ifndef KERNEL
     rx_socket = rxi_GetHostUDPSocketSA(v4);
 #else
@@ -682,7 +682,7 @@ rx_InitHost2(const struct rx_sockaddr *v4, const struct rx_sockaddr *v6)
     rx_GetIFInfo();
 #endif
 
-#if defined(HAVE_IPV6) && !defined(KERNEL)
+#if defined(HAVE_IPV6) && (!defined(KERNEL) || defined(AFS_LINUX_ENV))
     if (v6) {
 	struct rx_sockaddr sa6;
 
@@ -692,13 +692,27 @@ rx_InitHost2(const struct rx_sockaddr *v4, const struct rx_sockaddr *v6)
 	 * still request a specific local v6 address rather than "::". */
 	rx_copy_sockaddr(v6, &sa6);
 	sa6.rxsa_in6_port = rx_port;
+#ifndef KERNEL
 	rx_socket6 = rxi_GetHostUDPSocketSA(&sa6);
+#else
+	/* Only Linux's kernel listener socket pair understands rx_socket6
+	 * so far (see rxk_NewSocketSA(), src/rx/LINUX/rx_knet.c) - every
+	 * other kernel platform still only ever passes v6 == NULL to this
+	 * function (rx_InitHostDual()'s v6-building is itself gated the
+	 * same way it always was), so this branch is unreachable there. */
+	/* rxk_NewSocketSA(), like rxk_NewSocketHost() it mirrors, is
+	 * declared to return osi_socket * but its actual value is the
+	 * osi_socket itself, reinterpreted through that type - matching
+	 * rxi_GetHostUDPSocket()'s own (osi_socket) cast of
+	 * rxk_NewSocketHost()'s result (rx_kcommon.c) exactly. */
+	rx_socket6 = (osi_socket)rxk_NewSocketSA(&sa6);
+#endif
 	if (rx_socket6 == OSI_NULLSOCKET) {
 	    osi_Msg("rx_InitHost2: unable to open IPv6 socket; "
 		    "continuing IPv4-only\n");
 	}
     }
-#endif /* HAVE_IPV6 && !KERNEL */
+#endif /* HAVE_IPV6 && (!KERNEL || AFS_LINUX_ENV) */
 
     /* Start listener process (exact function is dependent on the
      * implementation environment--kernel or user space) */

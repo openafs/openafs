@@ -2632,6 +2632,16 @@ afsd_run(void)
     fork_rx_syscall(rn, AFSOP_RXLISTENER_DAEMON, preallocs, enable_peer_stats,
                     enable_process_stats);
 # endif /* !AFS_SUN510_ENV */
+# if defined(AFS_LINUX_ENV) && defined(HAVE_IPV6)
+    /* Best-effort second listener for rx_socket6 - a no-op in-kernel if
+     * IPv6 never came up (see rxk_Listener6(), src/rx/rx_kcommon.c), so
+     * it's always forked here rather than needing this userspace code to
+     * somehow know in advance whether the kernel actually opened it. */
+    if (afsd_verbose)
+	printf("%s: Forking rx listener daemon (IPv6).\n", rn);
+    fork_rx_syscall(rn, AFSOP_RXLISTENER_DAEMON6, preallocs,
+		    enable_peer_stats, enable_process_stats);
+# endif /* AFS_LINUX_ENV && HAVE_IPV6 */
 #endif
     if (afsd_verbose)
 	printf("%s: Forking rx callback listener.\n", rn);
@@ -3197,6 +3207,7 @@ afsd_syscall_populate(struct afsd_syscall_args *args, int syscall, va_list ap)
 	params[2] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
 	break;
     case AFSOP_RXLISTENER_DAEMON:
+    case AFSOP_RXLISTENER_DAEMON6:
     case AFSOP_START_RXCALLBACK:
 	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, int)));
 	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, int)));

@@ -305,6 +305,14 @@ extern void osi_AssertFailK(const char *expr, const char *file, int line) AFS_NO
 # endif
 extern void rxk_ListenerProc(void);
 extern void rxk_Listener(void);
+# if defined(AFS_LINUX_ENV) && defined(HAVE_IPV6) && !defined(UKERNEL)
+/* ARCH/rx_knet.c (Linux only) - the IPv6 listener socket/thread pair,
+ * parallel to rxk_NewSocketHost()/rxk_Listener() above. See
+ * rxk_NewSocketSA()'s own comment for why this doesn't just widen the
+ * existing (IPv4-only) functions in place. */
+extern osi_socket *rxk_NewSocketSA(struct rx_sockaddr *sa);
+extern void rxk_Listener6(void);
+# endif
 # ifndef UKERNEL
 extern void afs_rxevent_daemon(void);
 # endif
@@ -341,6 +349,10 @@ extern void rx_upcall(socket_t so, void *arg, __unused int waitflag);
 # else
 extern int osi_NetReceive(osi_socket so, struct sockaddr_in *addr,
 			  struct iovec *dvec, int nvecs, int *lengthp);
+#  if defined(AFS_LINUX_ENV) && defined(HAVE_IPV6) && !defined(UKERNEL)
+extern int osi_NetReceiveSA(osi_socket so, struct rx_sockaddr *addr,
+			    struct iovec *dvec, int nvecs, int *lengthp);
+#  endif
 # endif
 # if defined(AFS_SUN510_ENV)
 extern void osi_StartNetIfPoller(void);
