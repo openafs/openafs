@@ -127,9 +127,17 @@ afs_cleanup(void)
      * code/data. afs_shutdown() already no-ops safely if a real unmount
      * got here first (afs_shuttingdown != AFS_RUNNING), so it's always
      * safe to make sure it has run, however this module is being
-     * removed, before anything below actually frees memory. */
+     * removed, before anything below actually frees memory.
+     *
+     * afs_shutdown() must be called with AFS_GLOCK held - its internal
+     * FlushAllVCBs()/afs_LoopServers() path asserts this
+     * (afs_vcache.c's "afs global lock not held") - matching how the
+     * VFS-unmount call site (afs_put_super(), osi_vfsops.c) already
+     * takes AFS_GLOCK() around its own afs_shutdown(AFS_WARM) call. */
     if (afs_shuttingdown == AFS_RUNNING) {
+	AFS_GLOCK();
 	afs_shutdown(AFS_COLD);
+	AFS_GUNLOCK();
     }
 
     afs_shutdown_pagecopy();
