@@ -1413,6 +1413,20 @@ rxk_Listener6(void)
 	goto done;
     }
 
+    /* rxk_Listener() (the v4 counterpart, above) drops AFS_GLOCK here and
+     * reacquires it only after its loop exits - "this thread is outside
+     * the AFS global lock for much of its existence", per its own
+     * comment - because it spends most of its life blocked in a kernel
+     * recvmsg() call. This thread does exactly the same blocking
+     * rxk_ReadPacketSA()/osi_NetReceiveSA() call and needs the same
+     * treatment: without dropping the lock here, an idle v6 listener
+     * (no IPv6 traffic yet, e.g. right after a fresh mount) sits in
+     * recvmsg() holding AFS_GLOCK indefinitely, starving every other
+     * thread/daemon that needs it for the module's entire lifetime.
+     */
+#  ifdef RX_ENABLE_LOCKS
+    AFS_GUNLOCK();
+#  endif
     while (afs_termState != AFSOP_STOP_RXK_LISTENER) {
 	rx_CheckPackets();
 
@@ -1427,6 +1441,9 @@ rxk_Listener6(void)
 	    rxp = rxi_ReceivePacket(rxp, rx_socket6, &sa, 0, 0);
 	}
     }
+#  ifdef RX_ENABLE_LOCKS
+    AFS_GLOCK();
+#  endif
 
  done:
     rxk_ListenerTask6 = 0;
