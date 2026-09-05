@@ -13,7 +13,14 @@ include @TOP_OBJDIR@/src/config/Makefile.libtool
 
 # Increment these according to libtool's versioning rules (look them up!)
 # The output library looks like libafsauthen.<current - age>.<revision>
-LT_current = 2
+#
+# Bumped current (2 -> 3), reset age to 0: struct afsconf_cell.hostAddr[]
+# widened from struct sockaddr_in[8] to struct rx_sockaddr[MAXHOSTSPERCELL]
+# (16) for IPv6 support (Phase 2) - a binary-incompatible layout change to
+# a struct returned by this library's public afsconf_GetCellInfo()/
+# afsconf_GetExtendedCellInfo() API, so an old binary linked against the
+# previous layout must not load this version as a drop-in replacement.
+LT_current = 3
 LT_revision = 0
 LT_age = 0
 
