@@ -12,6 +12,7 @@
 
 #include <roken.h>
 
+#include <afs/opr.h>
 #include <afs/afs_lock.h>
 #include <rx/xdr.h>
 #include <ubik.h>
