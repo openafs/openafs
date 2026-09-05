@@ -1427,7 +1427,45 @@ rxk_Listener6(void)
 #  ifdef RX_ENABLE_LOCKS
     AFS_GUNLOCK();
 #  endif
-    while (afs_termState != AFSOP_STOP_RXK_LISTENER) {
+    /*
+     * Loop until told to stop - but "told to stop" has to mean more than
+     * just "afs_termState == AFSOP_STOP_RXK_LISTENER" here, unlike
+     * rxk_Listener() (the v4 counterpart) above. rxk_Listener()'s own
+     * tail code (above) is the sole place that advances afs_termState
+     * from AFSOP_STOP_RXK_LISTENER to AFSOP_STOP_COMPLETE, once *it*
+     * notices the stop request - afs_call.c's shutdown sequence
+     * (afs_shutdown(), around osi_StopListener()) then waits for that
+     * AFSOP_STOP_COMPLETE transition before moving on. Both listener
+     * threads share that one afs_termState variable and the same
+     * AFSOP_STOP_RXK_LISTENER stop signal, but only rxk_Listener() ever
+     * advances it further - so if rxk_Listener() (v4) notices the stop
+     * request and makes that transition before this thread's own next
+     * loop check runs, afs_termState is already AFSOP_STOP_COMPLETE by
+     * then, this loop's original `!= AFSOP_STOP_RXK_LISTENER` condition
+     * is true again (COMPLETE != RXK_LISTENER), and it never sees a
+     * value it recognizes as "stop" - spinning forever calling
+     * recvmsg() on a socket osi_StopListener() has already shut down
+     * (so the call returns immediately instead of blocking), pegging a
+     * CPU core and tripping the soft-lockup watchdog. Confirmed live:
+     * once osi_StopListener()'s socket-shutdown wakeup (rx_knet.c, added
+     * alongside this fix) let this thread actually reach this check
+     * promptly instead of staying blocked in recvmsg() for minutes, it
+     * hit this exact race and soft-locked CPU#1 for 160s+ before being
+     * caught (`watchdog: BUG: soft lockup - CPU#1 stuck for Ns!
+     * [afs_rxlistener6:...]`) - v4 had already won the race and
+     * advanced afs_termState to AFSOP_STOP_COMPLETE first. This was
+     * always latent in c65731aab's shutdown design (two listener
+     * threads sharing one state variable and one recognized stop value,
+     * only one of which advances it), just never observable before: the
+     * SIGKILL-doesn't-wake-a-traffic-starved-recvmsg() bug this same
+     * commit fixes meant this thread essentially never got back around
+     * to re-checking its own loop condition in time to lose this race.
+     * Treating AFSOP_STOP_COMPLETE as an equally valid stop signal
+     * closes the race regardless of which listener thread notices the
+     * shutdown request first.
+     */
+    while (afs_termState != AFSOP_STOP_RXK_LISTENER &&
+	   afs_termState != AFSOP_STOP_COMPLETE) {
 	rx_CheckPackets();
 
 	if (rxp) {

@@ -351,6 +351,49 @@ osi_StopListener(void)
 {
     extern struct task_struct *rxk_ListenerTask;
 
+    /*
+     * Actively shut down the receive side of the socket, rather than
+     * relying solely on send_sig(SIGKILL, ...) below to interrupt the
+     * listener's blocking kernel_recvmsg(). Confirmed live (via
+     * instrumented printk of current->blocked immediately before/after
+     * allow_signal(SIGKILL) in rxk_Listener()/rxk_Listener6(),
+     * src/rx/rx_kcommon.c) that allow_signal(SIGKILL) does *not* actually
+     * clear SIGKILL from the target kthread's blocked-signal mask on this
+     * kernel (6.8) - SigBlk stays all-ones, SIGKILL's bit included, for
+     * both listener threads, identically. Because of that,
+     * complete_signal()'s normal (non-fatal-fast-path) delivery - which
+     * is the path SIGKILL actually takes here, since allow_signal()
+     * marks it "caught" rather than SIG_DFL, specifically to avoid the
+     * fast path that would otherwise unilaterally kill the thread - never
+     * calls an active wake_up_state() for a thread whose blocked mask
+     * still contains the signal (see wants_signal() in kernel/signal.c).
+     * A thread genuinely parked in schedule_timeout() (inside
+     * __skb_wait_for_more_packets()) therefore never gets an active
+     * wakeup from the signal at all; TIF_SIGPENDING is still set, but
+     * nothing ever schedules the thread back in to re-check it.
+     * rxk_Listener() (rx_socket, IPv4) has only ever appeared to work
+     * because rx_socket carries real ambient traffic (fileserver/
+     * dbserver keepalives etc.) that keeps cycling it through fresh
+     * prepare_to_wait()/signal_pending() checks on its own -
+     * signal_pending() itself doesn't consult the blocked mask, so one of
+     * those incidental, traffic-triggered checks always happens to catch
+     * the pending SIGKILL - not because the signal itself ever woke it.
+     * rxk_Listener6() (rx_socket6, IPv6) never gets that lucky
+     * traffic-driven recheck when rx_socket6 has carried zero packets for
+     * the module's entire lifetime (confirmed live: `umount -f` hung 6+
+     * minutes straight, zero D-state, SIGKILL recorded pending the whole
+     * time and never acted on), so it blocks forever. Shutting down the
+     * socket's receive side gets a portable, traffic-independent wakeup
+     * instead, via the socket's own wait queue (sk->sk_state_change()),
+     * completely unrelated to signal delivery - the same approach the
+     * NetBSD/FreeBSD osi_StopListener() implementations
+     * (src/rx/NBSD/rx_knet.c, src/rx/FBSD/rx_knet.c) already take with
+     * soshutdown(). The SIGKILL below is kept as a harmless
+     * belt-and-suspenders measure, not removed.
+     */
+    if (rx_socket != OSI_NULLSOCKET)
+	kernel_sock_shutdown((struct socket *)rx_socket, SHUT_RDWR);
+
     while (rxk_ListenerTask) {
         if (rxk_ListenerTask) {
 	    flush_signals(rxk_ListenerTask);
@@ -378,6 +421,13 @@ osi_StopListener(void)
      */
     {
 	extern struct task_struct *rxk_ListenerTask6;
+
+	/* See the long comment above, at the top of this function - this
+	 * is the specific case (a listener socket with zero ambient
+	 * traffic to ever incidentally re-trigger a signal_pending()
+	 * check) that SIGKILL alone was proven live not to recover from. */
+	if (rx_socket6 != OSI_NULLSOCKET)
+	    kernel_sock_shutdown((struct socket *)rx_socket6, SHUT_RDWR);
 
 	while (rxk_ListenerTask6) {
 	    flush_signals(rxk_ListenerTask6);
