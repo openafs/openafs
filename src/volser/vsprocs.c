@@ -172,13 +172,17 @@ static int DoVolClone(struct rx_connection *aconn, afs_uint32 avolid,
 		      char *typestring, char *pname, char *vname, char *suffix,
 		      struct volser_status *volstatus, afs_int32 *transPtr);
 static int DoVolDelete(struct rx_connection *aconn, afs_uint32 avolid,
-		       afs_int32 apart, char *typestring, afs_uint32 atoserver,
+		       afs_int32 apart, char *typestring,
+		       const struct rx_sockaddr *atoserver,
 		       struct volser_status *volstatus, char *pprefix);
-static afs_int32 CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver,
+static afs_int32 CheckVolume(volintInfo * volumeinfo,
+			     const struct rx_sockaddr *aserver,
 			     afs_int32 apart, afs_int32 * modentry,
 			     afs_uint32 * maxvolid, struct nvldbentry *aentry);
-static afs_int32 VolumeExists(afs_uint32 server, afs_int32 partition,
+static afs_int32 VolumeExists(const struct rx_sockaddr *server, afs_int32 partition,
                               afs_uint32 volumeid);
+static afs_int32 VolumeExistsIP(afs_uint32 server, afs_int32 partition,
+                                afs_uint32 volumeid);
 static afs_int32 CheckVldbRWBK(struct nvldbentry * entry,
                                afs_int32 * modified);
 static afs_int32 CheckVldbRO(struct nvldbentry *entry, afs_int32 * modified);
@@ -426,15 +430,33 @@ UV_SetSecurity(struct rx_securityClass *as, afs_int32 aindex)
 }
 
 /* bind to volser on <port> <aserver> */
-/* takes server address in network order, port in host order.  dumb */
+/* aserver is a fully-formed struct rx_sockaddr (v4 or v6); port is in
+ * host order and is applied to a local copy of *aserver before the
+ * connection is opened, since rx_NewConnectionSA() takes the port
+ * embedded in the sockaddr rather than as a separate argument. */
 struct rx_connection *
-UV_Bind(afs_uint32 aserver, afs_int32 port)
+UV_Bind(const struct rx_sockaddr *aserver, afs_int32 port)
 {
     struct rx_connection *tc;
+    struct rx_sockaddr sa;
 
-    tc = rx_NewConnection(aserver, htons(port), VOLSERVICE_ID, uvclass,
-			  uvindex);
+    rx_copy_sockaddr(aserver, &sa);
+    rx_set_sockaddr_port(&sa, htons(port));
+    tc = rx_NewConnectionSA(&sa, VOLSERVICE_ID, uvclass, uvindex);
     return tc;
+}
+
+/* Convenience wrapper for the many call sites that still only have a raw
+ * IPv4 address in hand - typically a VLDB entry's serverNumber[i], which
+ * (see the long comment in UV_CreateVolume3() above) can never be
+ * anything else. */
+static struct rx_connection *
+UV_BindIP(afs_uint32 aserver, afs_int32 port)
+{
+    struct rx_sockaddr sa;
+
+    rx_ipv4_to_sockaddr(aserver, 0, 0, &sa);
+    return UV_Bind(&sa, port);
 }
 
 static int
@@ -478,6 +500,87 @@ AFSVolTransCreate_retry(struct rx_connection *z_conn,
 #endif
     }
     return code;
+}
+
+/* Build a struct volendpoint (the wire type AFSVolForwardEndpoints takes -
+ * see the "IPv6-capable sibling of Forward" comment in volser/volint.xg)
+ * from a struct rx_sockaddr. Mirrors src/viced/viced.c's Do_VLRegisterRPC()
+ * encoding of the byte-for-byte-identical struct vlendpoint: each 32-bit
+ * word of the address is ntohl()'d before transmission. Returns 0 on
+ * success, -1 if the family isn't representable (should not happen for a
+ * real rx_sockaddr). */
+static int
+SockaddrToVolEndpoint(const struct rx_sockaddr *sa, struct volendpoint *ep)
+{
+    memset(ep, 0, sizeof(*ep));
+    if (sa->rxsa_family == AF_INET) {
+	ep->type = VOLENDPOINT_IPV4;
+	ep->length = 4;
+	ep->value[0] = ntohl(sa->rxsa_s_addr);
+	return 0;
+    }
+#ifdef HAVE_IPV6
+    if (sa->rxsa_family == AF_INET6) {
+	afs_uint32 v6[4];
+
+	ep->type = VOLENDPOINT_IPV6;
+	ep->length = 16;
+	memcpy(v6, &sa->rxsa_in6_addr, sizeof(v6));
+	ep->value[0] = ntohl(v6[0]);
+	ep->value[1] = ntohl(v6[1]);
+	ep->value[2] = ntohl(v6[2]);
+	ep->value[3] = ntohl(v6[3]);
+	return 0;
+    }
+#endif
+    return -1;
+}
+
+/* Family-agnostic wrapper around AFSVolForward/AFSVolForwardEndpoints -
+ * starts a volume dump/restore to a peer volserver at "toaddr". Tries the
+ * IPv6-capable ForwardEndpoints RPC first, falling back to the classic
+ * IPv4-only Forward on RXGEN_OPCODE (a volserver that predates
+ * ForwardEndpoints) - the same "try the typed RPC, fall back to the
+ * classic one" shape this series already uses for VL_GetEndpoints/
+ * VL_RegisterEndpoints. If toaddr itself has no IPv4 identity and the
+ * peer only understands the classic RPC, there is no way to reach it at
+ * all - that failure is reported as RXGEN_OPCODE's own error, not
+ * silently swallowed. */
+static afs_int32
+DoVolForward(struct rx_connection *fromconn, afs_int32 fromtid,
+	     afs_int32 fromdate, const struct rx_sockaddr *toaddr,
+	     afs_int32 totid, struct restoreCookie *cookie)
+{
+    struct volendpoint ep;
+    afs_int32 code;
+
+    /* destPort/destServer.destPort are always AFSCONF_VOLUMEPORT here, in
+     * host byte order - like the pre-existing UV_Bind()/destServer
+     * callers, toaddr itself carries no port (it comes straight from
+     * vos.c's GetServer(), which only ever resolves an address). */
+    if (SockaddrToVolEndpoint(toaddr, &ep) == 0) {
+	code = AFSVolForwardEndpoints(fromconn, fromtid, fromdate, &ep,
+				      AFSCONF_VOLUMEPORT, totid, cookie);
+	if (code != RXGEN_OPCODE)
+	    return code;
+    }
+
+    {
+	struct destServer destination;
+	afs_uint32 toaddr_ip;
+
+	if (!rx_try_sockaddr_to_ipv4(toaddr, &toaddr_ip)) {
+	    /* No IPv4 fallback address, and the peer doesn't speak
+	     * ForwardEndpoints - nothing more we can do. */
+	    return RXGEN_OPCODE;
+	}
+	memset(&destination, 0, sizeof(destination));
+	destination.destHost = ntohl(toaddr_ip);
+	destination.destPort = AFSCONF_VOLUMEPORT;
+	destination.destSSID = 1;
+	return AFSVolForward(fromconn, fromtid, fromdate, &destination,
+			     totid, cookie);
+    }
 }
 
 /* called by EmuerateEntry, show vldb entry in a reasonable format */
@@ -543,7 +646,7 @@ EnumerateEntry(struct nvldbentry *entry)
 
 /* forcibly remove a volume.  Very dangerous call */
 int
-UV_NukeVolume(afs_uint32 server, afs_int32 partid, afs_uint32 volid)
+UV_NukeVolume(const struct rx_sockaddr *server, afs_int32 partid, afs_uint32 volid)
 {
     struct rx_connection *tconn;
     afs_int32 code;
@@ -559,7 +662,7 @@ UV_NukeVolume(afs_uint32 server, afs_int32 partid, afs_uint32 volid)
 
 /* like df. Return usage of <pname> on <server> in <partition> */
 int
-UV_PartitionInfo64(afs_uint32 server, char *pname,
+UV_PartitionInfo64(const struct rx_sockaddr *server, char *pname,
 		   struct diskPartition64 *partition)
 {
     struct rx_connection *aconn;
@@ -590,7 +693,7 @@ UV_PartitionInfo64(afs_uint32 server, char *pname,
 
 /* old interface to create volumes */
 int
-UV_CreateVolume(afs_uint32 aserver, afs_int32 apart, char *aname,
+UV_CreateVolume(const struct rx_sockaddr *aserver, afs_int32 apart, char *aname,
 		afs_uint32 * anewid)
 {
     afs_int32 code;
@@ -601,7 +704,7 @@ UV_CreateVolume(afs_uint32 aserver, afs_int32 apart, char *aname,
 
 /* less old interface to create volumes */
 int
-UV_CreateVolume2(afs_uint32 aserver, afs_int32 apart, char *aname,
+UV_CreateVolume2(const struct rx_sockaddr *aserver, afs_int32 apart, char *aname,
 		 afs_int32 aquota, afs_int32 aspare1, afs_int32 aspare2,
 		 afs_int32 aspare3, afs_int32 aspare4, afs_uint32 * anewid)
 {
@@ -628,7 +731,7 @@ UV_CreateVolume2(afs_uint32 aserver, afs_int32 apart, char *aname,
  * @return 0 on success, error code otherwise.
  */
 int
-UV_CreateVolume3(afs_uint32 aserver, afs_int32 apart, char *aname,
+UV_CreateVolume3(const struct rx_sockaddr *aserver, afs_int32 apart, char *aname,
 		 afs_int32 aquota, afs_int32 aspare1, afs_int32 aspare2,
 		 afs_int32 aspare3, afs_int32 aspare4, afs_uint32 * anewid,
 		 afs_uint32 * aroid, afs_uint32 * abkid)
@@ -639,11 +742,35 @@ UV_CreateVolume3(afs_uint32 aserver, afs_int32 apart, char *aname,
     afs_int32 error;
     afs_int32 rcode, vcode;
     afs_int32 lastid;
+    afs_uint32 aserver_ip;
     struct nvldbentry entry, storeEntry;	/*the new vldb entry */
     struct volintInfo tstatus;
 
     tid = 0;
     error = 0;
+
+    /* struct nvldbentry's serverNumber[] (the classic VLDB entry format
+     * VLDB_CreateEntry()/VL_CreateEntryN write with, below) is a plain
+     * afs_int32 IPv4 address - it has no way to name a genuinely
+     * IPv6-only site. (The VLDB's UUID-keyed Multi-homed Entry
+     * mechanism - see VL_RegisterEndpoints/FindExtentBlock, Phase 3 -
+     * already supports registering such a host's *interface list*, but
+     * there is no matching UUID-keyed entry-*creation* RPC a caller
+     * like this one could use instead of VL_CreateEntryN.) Fail early
+     * and cleanly, before creating the physical volume, rather than
+     * silently writing a bogus/truncated address into the VLDB. A
+     * dual-stack or IPv4 target is unaffected. */
+    if (!rx_try_sockaddr_to_ipv4(aserver, &aserver_ip)) {
+	rx_inet_fmtbuf_t fmtbuf;
+
+	fprintf(STDERR,
+		"Cannot create a VLDB entry for volume %s: server %s has "
+		"no IPv4 address, and the VLDB entry format cannot yet "
+		"name an IPv6-only site as one (needs a new UUID-keyed "
+		"VLDB entry-creation RPC, not yet implemented)\n",
+		aname, rx_sockaddr2str(aserver, &fmtbuf));
+	return VL_BADSERVER;
+    }
 
     memset(&storeEntry, 0, sizeof(struct nvldbentry));
 
@@ -715,7 +842,7 @@ UV_CreateVolume3(afs_uint32 aserver, afs_int32 apart, char *aname,
     /* set up the vldb entry for this volume */
     strncpy(entry.name, aname, VOLSER_OLDMAXVOLNAME);
     entry.nServers = 1;
-    entry.serverNumber[0] = aserver;	/* this should have another
+    entry.serverNumber[0] = aserver_ip;	/* this should have another
 					 * level of indirection later */
     entry.serverPartition[0] = apart;	/* this should also have
 					 * another indirection level */
@@ -769,12 +896,13 @@ UV_CreateVolume3(afs_uint32 aserver, afs_int32 apart, char *aname,
 /* create a volume, given a server, partition number, volume name --> sends
 * back new vol id in <anewid>*/
 int
-UV_AddVLDBEntry(afs_uint32 aserver, afs_int32 apart, char *aname,
+UV_AddVLDBEntry(const struct rx_sockaddr *aserver, afs_int32 apart, char *aname,
 		afs_uint32 aid)
 {
     struct rx_connection *aconn;
     afs_int32 error;
     afs_int32 vcode;
+    afs_uint32 aserver_ip;
     struct nvldbentry entry, storeEntry;	/*the new vldb entry */
 
     memset(&storeEntry, 0, sizeof(struct nvldbentry));
@@ -782,10 +910,23 @@ UV_AddVLDBEntry(afs_uint32 aserver, afs_int32 apart, char *aname,
     aconn = (struct rx_connection *)0;
     error = 0;
 
+    /* See the identical comment in UV_CreateVolume3() above: the classic
+     * VLDB entry format cannot name an IPv6-only site. */
+    if (!rx_try_sockaddr_to_ipv4(aserver, &aserver_ip)) {
+	rx_inet_fmtbuf_t fmtbuf;
+
+	fprintf(STDERR,
+		"Cannot create a VLDB entry for volume %s: server %s has "
+		"no IPv4 address, and the VLDB entry format cannot yet "
+		"name an IPv6-only site as one\n",
+		aname, rx_sockaddr2str(aserver, &fmtbuf));
+	return VL_BADSERVER;
+    }
+
     /* set up the vldb entry for this volume */
     strncpy(entry.name, aname, VOLSER_OLDMAXVOLNAME);
     entry.nServers = 1;
-    entry.serverNumber[0] = aserver;	/* this should have another
+    entry.serverNumber[0] = aserver_ip;	/* this should have another
 					 * level of indirection later */
     entry.serverPartition[0] = apart;	/* this should also have
 					 * another indirection level */
@@ -821,7 +962,7 @@ UV_AddVLDBEntry(afs_uint32 aserver, afs_int32 apart, char *aname,
  * becomes zero
  */
 int
-UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
+UV_DeleteVolume(const struct rx_sockaddr *aserver, afs_int32 apart, afs_uint32 avolid)
 {
     struct rx_connection *aconn = (struct rx_connection *)0;
     afs_int32 ttid = 0;
@@ -833,6 +974,33 @@ UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
     int notondisk = 0, notinvldb = 0;
 
     memset(&storeEntry, 0, sizeof(struct nvldbentry));
+
+    /* The VLDB-update step below (Lp_Match()/Lp_ROMatch() against
+     * aserver, followed by Lp_SetRWValue()/Lp_SetROValue() writing
+     * aserver into entry.serverNumber[]) cannot work for a server with
+     * no IPv4 identity - struct nvldbentry's serverNumber[] is a plain
+     * afs_int32 IPv4 address (see the longer comment in
+     * UV_CreateVolume3() above). Without this guard, DoVolDelete() below
+     * would physically delete the volume and then the VLDB-match would
+     * fail for the same family-mismatch reason, falling into the lenient
+     * notinvldb=2 path (meant for "this really isn't in the VLDB") and
+     * reporting success while leaving a stale, corrupted VLDB entry
+     * behind. Fail before doing anything physical instead. */
+    {
+	afs_uint32 aserver_ip;
+
+	if (!rx_try_sockaddr_to_ipv4(aserver, &aserver_ip)) {
+	    rx_inet_fmtbuf_t fmtbuf;
+
+	    fprintf(STDERR,
+		    "Cannot delete volume %u on server %s: it has no IPv4 "
+		    "address, and the VLDB entry format cannot yet name an "
+		    "IPv6-only site as one (needs a new UUID-keyed VLDB "
+		    "entry-update RPC, not yet implemented)\n",
+		    avolid, rx_sockaddr2str(aserver, &fmtbuf));
+	    return VL_BADSERVER;
+	}
+    }
 
     /* Find and read bhe VLDB entry for this volume */
     code = ubik_VL_SetLock(cstruct, 0, avolid, avoltype, VLOP_DELETE);
@@ -857,7 +1025,7 @@ UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
     /* Whether volume is in the VLDB or not. Delete the volume on disk */
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
 
-    code = DoVolDelete(aconn, avolid, apart, "the", 0, NULL, NULL);
+    code = DoVolDelete(aconn, avolid, apart, "the", NULL, NULL, NULL);
     if (code) {
 	if (code == VNOVOL)
 	    notondisk = 1;
@@ -905,9 +1073,9 @@ UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
 		    "Marking the readonly volume %lu deleted in the VLDB\n",
 		    (unsigned long)avolid);
 
-	Lp_SetROValue(&entry, aserver, apart, 0, 0);	/* delete the site */
+	Lp_SetROValue(&entry, aserver, apart, NULL, 0);	/* delete the site */
 	entry.nServers--;
-	if (!Lp_ROMatch(0, 0, &entry))
+	if (!Lp_ROMatch(NULL, 0, &entry))
 	    entry.flags &= ~VLF_ROEXISTS;	/* This was the last ro volume */
 	vtype = ROVOL;
     }
@@ -925,7 +1093,7 @@ UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
 	if (entry.volumeId[BACKVOL]) {
 	    /* Delete backup if it exists */
 	    code = DoVolDelete(aconn, entry.volumeId[BACKVOL], apart,
-	                       "the backup", 0, NULL, NULL);
+	                       "the backup", NULL, NULL, NULL);
 	    if (code && code != VNOVOL) {
 		error = code;
 		goto error_exit;
@@ -940,7 +1108,7 @@ UV_DeleteVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
 		      flags & VLF_BACKEXISTS) ? ", and its backup volume," :
 		     ""));
 
-	Lp_SetRWValue(&entry, aserver, apart, 0L, 0L);
+	Lp_SetRWValue(&entry, aserver, apart, NULL, 0L);
 	entry.nServers--;
 	entry.flags &= ~(VLF_BACKEXISTS | VLF_RWEXISTS);
 	vtype = RWVOL;
@@ -1070,7 +1238,8 @@ sigint_handler(int x)
 
 static int
 DoVolDelete(struct rx_connection *aconn, afs_uint32 avolid,
-	    afs_int32 apart, char *ptypestring, afs_uint32 atoserver,
+	    afs_int32 apart, char *ptypestring,
+	    const struct rx_sockaddr *atoserver,
 	    struct volser_status *volstatus, char *pprefix)
 {
     afs_int32 ttid = 0, code, rcode, error = 0;
@@ -1117,9 +1286,21 @@ DoVolDelete(struct rx_connection *aconn, afs_uint32 avolid,
 	   prefix, avolid);
 
     if (atoserver) {
-	VPRINT1("%sSetting volume forwarding pointer ...", prefix);
-	AFSVolSetForwarding(aconn, ttid, atoserver);
-	VDONE;
+	afs_uint32 atoserver_ip;
+
+	/* AFSVolSetForwarding's wire format (SetForwarding() in
+	 * volint.xg) is still a plain afs_int32 IPv4 address - unlike
+	 * AFSVolForward/AFSVolForwardEndpoints (the actual move/copy
+	 * data-path RPC, already IPv6-capable), this advisory
+	 * "redirect stale requests" RPC was not part of that
+	 * conversion. Best-effort: skip it silently for a v6-only
+	 * destination rather than failing the whole delete over a
+	 * cosmetic feature. */
+	if (rx_try_sockaddr_to_ipv4(atoserver, &atoserver_ip)) {
+	    VPRINT1("%sSetting volume forwarding pointer ...", prefix);
+	    AFSVolSetForwarding(aconn, ttid, atoserver_ip);
+	    VDONE;
+	}
     }
 
     code = AFSVolDeleteVolume(aconn, ttid);
@@ -1267,7 +1448,7 @@ cfail:
  */
 
 int
-UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
+UV_ConvertRO(const struct rx_sockaddr *server, afs_uint32 partition, afs_uint32 volid,
 		struct nvldbentry *entry)
 {
     afs_int32 code, i, same;
@@ -1277,9 +1458,23 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
     afs_uint32 rwserver = 0;
     afs_int32 roindex = 0;
     afs_uint32 roserver = 0;
+    afs_uint32 server_ip;
     struct rx_connection *aconn;
 
     memset(&storeEntry, 0, sizeof(struct nvldbentry));
+
+    /* The classic VLDB entry format cannot name an IPv6-only site - see
+     * the longer comment in UV_CreateVolume3() above. */
+    if (!rx_try_sockaddr_to_ipv4(server, &server_ip)) {
+	rx_inet_fmtbuf_t fmtbuf;
+
+	fprintf(STDERR,
+		"Cannot convert RO to RW on server %s: it has no IPv4 "
+		"address, and the VLDB entry format cannot yet name an "
+		"IPv6-only site as one\n",
+		rx_sockaddr2str(server, &fmtbuf));
+	return VL_BADSERVER;
+    }
 
     vcode =
 	ubik_VL_SetLock(cstruct, 0, entry->volumeId[RWVOL], RWVOL,
@@ -1323,11 +1518,11 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
 	    if (roserver)
 		break;
 	} else if ((entry->serverFlags[i] & VLSF_ROVOL) && !roserver) {
-	    same = VLDB_IsSameAddrs(server, entry->serverNumber[i], &code);
+	    same = VLDB_SockaddrMatchesIP(server, entry->serverNumber[i], &code);
 	    if (code) {
 		fprintf(STDERR,
 			"Failed to get info about server's %d address(es) from vlserver (err=%d); aborting call!\n",
-			server, code);
+			server_ip, code);
 		code = ENOENT;
 		goto error_exit;
 	    }
@@ -1382,7 +1577,7 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
 	 */
 	afs_int32 newrwindex = entry->nServers;
 	(entry->nServers)++;
-	entry->serverNumber[newrwindex] = server;
+	entry->serverNumber[newrwindex] = server_ip;
 	entry->serverPartition[newrwindex] = partition;
 	entry->serverFlags[newrwindex] = VLSF_RWVOL;
     }
@@ -1442,8 +1637,9 @@ UV_ConvertRO(afs_uint32 server, afs_uint32 partition, afs_uint32 volid,
  */
 
 int
-UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
-	       afs_uint32 atoserver, afs_int32 atopart, int flags)
+UV_MoveVolume2(afs_uint32 afromvol, const struct rx_sockaddr *afromserver,
+	       afs_int32 afrompart, const struct rx_sockaddr *atoserver,
+	       afs_int32 atopart, int flags)
 {
     /* declare stuff 'volatile' that may be used from setjmp/longjmp and may
      * be changing during the move */
@@ -1468,7 +1664,6 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     struct restoreCookie cookie;
     afs_int32 vcode, code;
     struct volser_status tstatus;
-    struct destServer destination;
 
     struct nvldbentry entry, storeEntry;
     int i;
@@ -1488,6 +1683,57 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     pntg = 0;
     backupId = 0;
     newVol = 0;
+
+    /* The actual data move (below, via DoVolForward()/AFSVolForwardEndpoints)
+     * is fully IPv6-capable, but the VLDB site-list update at the end of a
+     * successful move (Lp_SetRWValue(), which writes atoserver into
+     * entry.serverNumber[]) is not - struct nvldbentry's serverNumber[] is
+     * a plain afs_int32 IPv4 address (see the longer comment in
+     * UV_CreateVolume3() above). Rather than move all the volume's data
+     * and only then discover the VLDB can't be updated, fail early and
+     * cleanly if the destination has no IPv4 identity at all. */
+    {
+	afs_uint32 atoserver_ip;
+
+	if (!rx_try_sockaddr_to_ipv4(atoserver, &atoserver_ip)) {
+	    rx_inet_fmtbuf_t fmtbuf;
+
+	    fprintf(STDERR,
+		    "Cannot move volume %u to server %s: it has no IPv4 "
+		    "address, and the VLDB entry format cannot yet name an "
+		    "IPv6-only site as one (needs a new UUID-keyed VLDB "
+		    "entry-update RPC, not yet implemented)\n",
+		    afromvol, rx_sockaddr2str(atoserver, &fmtbuf));
+	    return VL_BADSERVER;
+	}
+    }
+
+    /* Likewise, afromserver must be IPv4-convertible before we go any
+     * further. Lp_Match(afromserver, ...) below falls back, via
+     * VLDB_IsSameServer()'s family-mismatch path, to a blunt
+     * rx_compare_sockaddr() against the VLDB's always-IPv4 synthesized
+     * comparison address - which always reports "not equal" for a
+     * genuinely IPv6-only afromserver, even when it correctly names the
+     * real source server. If atoserver then also happens to match (e.g.
+     * because it names the same physical host via its v4 identity), the
+     * code below would conclude the move already happened and delete the
+     * only real copy of the volume on afromserver. Fail early and
+     * cleanly instead. */
+    {
+	afs_uint32 afromserver_ip;
+
+	if (!rx_try_sockaddr_to_ipv4(afromserver, &afromserver_ip)) {
+	    rx_inet_fmtbuf_t fmtbuf;
+
+	    fprintf(STDERR,
+		    "Cannot move volume %u from server %s: it has no IPv4 "
+		    "address, and the VLDB entry format cannot yet name an "
+		    "IPv6-only site as one (needs a new UUID-keyed VLDB "
+		    "entry-update RPC, not yet implemented)\n",
+		    afromvol, rx_sockaddr2str(afromserver, &fmtbuf));
+	    return VL_BADSERVER;
+	}
+    }
 
     /* support control-c processing */
     if (setjmp(env))
@@ -1575,14 +1821,14 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	pntg = 1;
 
 	code = DoVolDelete(fromconn, afromvol, afrompart,
-			   "leftover", 0, NULL, NULL);
+			   "leftover", NULL, NULL, NULL);
 	if (code && code != VNOVOL) {
 	    error = code;
 	    goto mfail;
 	}
 
 	code = DoVolDelete(fromconn, backupId, afrompart,
-			   "leftover backup", 0, NULL, NULL);
+			   "leftover backup", NULL, NULL, NULL);
 	if (code && code != VNOVOL) {
 	    error = code;
 	    goto mfail;
@@ -1598,10 +1844,10 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
      * on the old site is deleted in the process
      */
     if (afrompart == atopart) {
-	same = VLDB_IsSameAddrs(afromserver, atoserver, &error);
-	EGOTO2(mfail, error,
-	       "Failed to get info about server's %d address(es) from vlserver (err=%d); aborting call!\n",
-	       afromserver, error);
+	same = VLDB_IsSameServer(afromserver, atoserver, &error);
+	EGOTO1(mfail, error,
+	       "Failed to get info about the server's address(es) from vlserver (err=%d); aborting call!\n",
+	       error);
 
 	if (same) {
 	    EGOTO1(mfail, VOLSERVOLMOVED,
@@ -1708,7 +1954,7 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     /* create a volume on the target machine */
     volid = afromvol;
     code = DoVolDelete(toconn, volid, atopart,
-		       "pre-existing destination", 0, NULL, NULL);
+		       "pre-existing destination", NULL, NULL, NULL);
     if (code && code != VNOVOL) {
 	error = code;
 	goto mfail;
@@ -1741,10 +1987,6 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
      * Now dump the clone to the new volume
      ***/
 
-    destination.destHost = ntohl(atoserver);
-    destination.destPort = AFSCONF_VOLUMEPORT;
-    destination.destSSID = 1;
-
     strncpy(cookie.name, tmpName, VOLSER_OLDMAXVOLNAME);
     cookie.type = RWVOL;
     cookie.parent = entry.volumeId[RWVOL];
@@ -1755,7 +1997,7 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	VPRINT2("Dumping from clone %u on source to volume %u on destination ...",
 		newVol, afromvol);
 	code =
-	    AFSVolForward(fromconn, clonetid, 0, &destination, totid,
+	    DoVolForward(fromconn, clonetid, 0, atoserver, totid,
 			  &cookie);
 	EGOTO1(mfail, code, "Failed to move data for the volume %u\n", volid);
 	VDONE;
@@ -1790,7 +2032,7 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	 (flags & RV_NOCLONE) ? "" : " incremental",
 	 afromvol);
     code =
-	AFSVolForward(fromconn, fromtid, fromDate, &destination, totid,
+	DoVolForward(fromconn, fromtid, fromDate, atoserver, totid,
 		      &cookie);
     EGOTO1(mfail, code,
 	   "Failed to do the%s dump from rw volume on old site to rw volume on newsite\n",
@@ -1881,10 +2123,17 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	}
 	/* or drop through */
     }
-    if (atoserver != afromserver) {
-	/* set forwarding pointer for moved volumes */
+    if (!rx_compare_sockaddr(atoserver, afromserver, RXA_ADDR)) {
+	/* set forwarding pointer for moved volumes. AFSVolSetForwarding's
+	 * wire format is still IPv4-only (see the comment in DoVolDelete()
+	 * above) - atoserver is guaranteed convertible here, since this
+	 * function already rejected a non-IPv4-convertible destination
+	 * before starting the move. */
+	afs_uint32 atoserver_ip;
+
 	VPRINT1("Setting forwarding pointer for volume %u ...", afromvol);
-	code = AFSVolSetForwarding(fromconn, fromtid, atoserver);
+	rx_try_sockaddr_to_ipv4(atoserver, &atoserver_ip);
+	code = AFSVolSetForwarding(fromconn, fromtid, atoserver_ip);
 	EGOTO1(mfail, code,
 	       "Failed to set the forwarding pointer for the volume %u\n",
 	       afromvol);
@@ -1909,7 +2158,7 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     VDONE;
 
     code = DoVolDelete(fromconn, backupId, afrompart,
-		       "source backup", 0, NULL, NULL);
+		       "source backup", NULL, NULL, NULL);
     if (code && code != VNOVOL) {
 	error = code;
 	goto mfail;
@@ -1920,7 +2169,7 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     fromtid = 0;
     if (!(flags & RV_NOCLONE)) {
 	code = DoVolDelete(fromconn, newVol, afrompart,
-			   "cloned", 0, NULL, NULL);
+			   "cloned", NULL, NULL, NULL);
 	if (code && code != VNOVOL) {
 	    error = code;
 	    goto mfail;
@@ -2087,7 +2336,7 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 
 	if (volid && toconn) {
 	    code = DoVolDelete(toconn, volid, atopart,
-			       "destination", 0, NULL, "Recovery:");
+			       "destination", NULL, NULL, "Recovery:");
 	    if (code == VNOVOL) {
 		EPRINT1(code, "Recovery: Failed to start transaction on %u\n", volid);
 	    }
@@ -2131,13 +2380,14 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 	/* delete backup volume */
 	if (fromconn) {
 	    code = DoVolDelete(fromconn, backupId, afrompart,
-			       "backup", 0, NULL, "Recovery:");
+			       "backup", NULL, NULL, "Recovery:");
 	    if (code == VNOVOL) {
 		EPRINT1(code, "Recovery: Failed to start transaction on %u\n", backupId);
 	    }
 
 	    code = DoVolDelete(fromconn, afromvol, afrompart, "source",
-			       (atoserver != afromserver)?atoserver:0,
+			       rx_compare_sockaddr(atoserver, afromserver, RXA_ADDR)
+				   ? NULL : atoserver,
 			NULL, NULL);
 	    if (code == VNOVOL) {
 		EPRINT1(code, "Failed to start transaction on %u\n", afromvol);
@@ -2148,7 +2398,7 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     /* common cleanup - delete local clone */
     if (newVol) {
 	code = DoVolDelete(fromconn, newVol, afrompart,
-		           "clone", 0, NULL, "Recovery:");
+		           "clone", NULL, NULL, "Recovery:");
 	if (code == VNOVOL) {
 	    EPRINT1(code, "Recovery: Failed to start transaction on %u\n", newVol);
 	}
@@ -2179,8 +2429,9 @@ UV_MoveVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 
 
 int
-UV_MoveVolume(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
-	      afs_uint32 atoserver, afs_int32 atopart)
+UV_MoveVolume(afs_uint32 afromvol, const struct rx_sockaddr *afromserver,
+	      afs_int32 afrompart, const struct rx_sockaddr *atoserver,
+	      afs_int32 atopart)
 {
     return UV_MoveVolume2(afromvol, afromserver, afrompart,
 			  atoserver, atopart, 0);
@@ -2199,8 +2450,9 @@ UV_MoveVolume(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
  *     RV_NOCLONE - don't use a copy clone
  */
 int
-UV_CopyVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
-	       char *atovolname, afs_uint32 atoserver, afs_int32 atopart,
+UV_CopyVolume2(afs_uint32 afromvol, const struct rx_sockaddr *afromserver,
+	       afs_int32 afrompart,
+	       char *atovolname, const struct rx_sockaddr *atoserver, afs_int32 atopart,
 	       afs_uint32 atovolid, int flags)
 {
     /* declare stuff 'volatile' that may be used from setjmp/longjmp and may
@@ -2221,7 +2473,6 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
     afs_uint32 newVol;
     afs_int32 volflag;
     struct volser_status tstatus;
-    struct destServer destination;
     struct nvldbentry entry, newentry, storeEntry;
     afs_int32 error;
     afs_int32 tmp;
@@ -2426,10 +2677,6 @@ UV_CopyVolume2(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
 
 cpincr:
 
-    destination.destHost = ntohl(atoserver);
-    destination.destPort = AFSCONF_VOLUMEPORT;
-    destination.destSSID = 1;
-
     strncpy(cookie.name, atovolname, VOLSER_OLDMAXVOLNAME);
     cookie.type = (flags & RV_RDONLY) ? ROVOL : RWVOL;
     cookie.parent = 0;
@@ -2448,7 +2695,7 @@ cpincr:
 	VPRINT2("Dumping from clone %u on source to volume %u on destination ...",
 	    cloneVol, newVol);
 	code =
-	    AFSVolForward(fromconn, clonetid, cloneFromDate, &destination,
+	    DoVolForward(fromconn, clonetid, cloneFromDate, atoserver,
 			  totid, &cookie);
 	EGOTO1(mfail, code, "Failed to move data for the volume %u\n",
 	       newVol);
@@ -2484,7 +2731,7 @@ cpincr:
 	 (flags & RV_NOCLONE) ? "" : " incremental",
 	 afromvol);
     code =
-	AFSVolForward(fromconn, fromtid, fromDate, &destination, totid,
+	DoVolForward(fromconn, fromtid, fromDate, atoserver, totid,
 		      &cookie);
     EGOTO1(mfail, code,
 	   "Failed to do the%s dump from old site to new site\n",
@@ -2523,7 +2770,7 @@ cpincr:
 
     if (!(flags & RV_NOCLONE)) {
 	code = DoVolDelete(fromconn, cloneVol, afrompart,
-			   "cloned", 0, NULL, NULL);
+			   "cloned", NULL, NULL, NULL);
 	if (code && code != VNOVOL) {
 	    error = code;
 	    goto mfail;
@@ -2533,10 +2780,32 @@ cpincr:
     }
 
     if (!(flags & RV_NOVLDB)) {
+	afs_uint32 atoserver_ip;
+
+	/* The classic VLDB entry format cannot name an IPv6-only site -
+	 * see the longer comment in UV_CreateVolume3() above. Unlike
+	 * UV_MoveVolume2(), this is only fatal when a VLDB entry is
+	 * actually going to be written (RV_NOVLDB skips this entirely,
+	 * e.g. "vos copy -novldb" equivalents), so the check lives here
+	 * rather than at function entry. */
+	if (!rx_try_sockaddr_to_ipv4(atoserver, &atoserver_ip)) {
+	    rx_inet_fmtbuf_t fmtbuf;
+
+	    fprintf(STDERR,
+		    "Cannot create a VLDB entry for volume %s: server %s "
+		    "has no IPv4 address, and the VLDB entry format cannot "
+		    "yet name an IPv6-only site as one\n",
+		    atovolname, rx_sockaddr2str(atoserver, &fmtbuf));
+	    VPRINT1("Deleting the newly created volume %u\n", newVol);
+	    AFSVolDeleteVolume(toconn, totid);
+	    error = VL_BADSERVER;
+	    goto mfail;
+	}
+
 	/* create the vldb entry for the copied volume */
 	strncpy(newentry.name, atovolname, VOLSER_OLDMAXVOLNAME);
 	newentry.nServers = 1;
-	newentry.serverNumber[0] = atoserver;
+	newentry.serverNumber[0] = atoserver_ip;
 	newentry.serverPartition[0] = atopart;
 	newentry.flags = (flags & RV_RDONLY) ? VLF_ROEXISTS : VLF_RWEXISTS;
 	newentry.serverFlags[0] = (flags & RV_RDONLY) ? VLSF_ROVOL : VLSF_RWVOL;
@@ -2653,7 +2922,7 @@ cpincr:
 
     /* common cleanup - delete local clone */
     if (cloneVol) {
-	DoVolDelete(fromconn, cloneVol, afrompart, "clone", 0, NULL,
+	DoVolDelete(fromconn, cloneVol, afrompart, "clone", NULL, NULL,
 		    "Recovery:");
     }
 
@@ -2672,8 +2941,9 @@ cpincr:
 
 
 int
-UV_CopyVolume(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
-	      char *atovolname, afs_uint32 atoserver, afs_int32 atopart)
+UV_CopyVolume(afs_uint32 afromvol, const struct rx_sockaddr *afromserver,
+	      afs_int32 afrompart,
+	      char *atovolname, const struct rx_sockaddr *atoserver, afs_int32 atopart)
 {
     return UV_CopyVolume2(afromvol, afromserver, afrompart,
                           atovolname, atoserver, atopart, 0, 0);
@@ -2686,7 +2956,7 @@ UV_CopyVolume(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
  */
 
 int
-UV_BackupVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid)
+UV_BackupVolume(const struct rx_sockaddr *aserver, afs_int32 apart, afs_uint32 avolid)
 {
     struct rx_connection *aconn = (struct rx_connection *)0;
     afs_int32 ttid = 0, btid = 0;
@@ -2888,7 +3158,7 @@ ListOneVolume(struct rx_connection *aconn, afs_int32 apart, afs_uint32 avolid,
  */
 
 int
-UV_CloneVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 avolid,
+UV_CloneVolume(const struct rx_sockaddr *aserver, afs_int32 apart, afs_uint32 avolid,
 	       afs_uint32 acloneid, char *aname, int flags)
 {
     struct rx_connection *aconn = (struct rx_connection *)0;
@@ -3045,7 +3315,7 @@ GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
     *uptimePtr = 0;
 
     /* get connection to the replication site */
-    *connPtr = UV_Bind(vldbEntryPtr->serverNumber[index], AFSCONF_VOLUMEPORT);
+    *connPtr = UV_BindIP(vldbEntryPtr->serverNumber[index], AFSCONF_VOLUMEPORT);
     if (!*connPtr)
 	goto fail;		/* server is down */
 
@@ -3337,7 +3607,7 @@ PutTrans(afs_int32 *vldbindex, struct replica *replicas,
  *                            REL_FULLDUMPS - force full dumps
  */
 int
-UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
+UV_ReleaseVolume(afs_uint32 afromvol, const struct rx_sockaddr *afromserver,
 		 afs_int32 afrompart, int flags)
 {
     char vname[64];
@@ -3496,9 +3766,12 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
     roexists = ((code == ENODEV) ? 0 : 1);
 
     fromconn = UV_Bind(afromserver, AFSCONF_VOLUMEPORT);
-    if (!fromconn)
-	ONERROR(-1, afromserver,
-		"Cannot establish connection with server 0x%x\n");
+    if (!fromconn) {
+	rx_inet_fmtbuf_t fmtbuf;
+
+	ONERROR(-1, rx_sockaddr2str(afromserver, &fmtbuf),
+		"Cannot establish connection with server %s\n");
+    }
 
     if (!complete_release) {
 	if (!roexists) {
@@ -3604,7 +3877,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	    && (!roclone || (entry.serverFlags[roindex] & VLSF_DONTUSE))) {
 	    code = DoVolDelete(fromconn,
 			       cloneVolId,
-			       afrompart, "the", 0, NULL, NULL);
+			       afrompart, "the", NULL, NULL, NULL);
 	    if (code && (code != VNOVOL))
 		ERROREXIT(code);
 	    roexists = 0;
@@ -3623,7 +3896,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 		if ((entry.serverFlags[vldbindex] & VLSF_DONTUSE)) {
 		    continue;
 		}
-		conn = UV_Bind(entry.serverNumber[vldbindex], AFSCONF_VOLUMEPORT);
+		conn = UV_BindIP(entry.serverNumber[vldbindex], AFSCONF_VOLUMEPORT);
 		if (!conn) {
 		    fprintf(STDERR, "Cannot establish connection to server %s\n",
 		                    hostutil_GetNameByINet(entry.serverNumber[vldbindex]));
@@ -3663,9 +3936,13 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 	    volumeInfo.volEntries_len = 0;
 	    code = ListOneVolume(fromconn, afrompart, afromvol, &volumeInfo);
 	    if (code) {
-		fprintf(STDERR, "Could not fetch information about RW vol %lu from server %s\n",
-		                (unsigned long)afromvol,
-		                hostutil_GetNameByINet(afromserver));
+		{
+		    rx_inet_fmtbuf_t fmtbuf;
+
+		    fprintf(STDERR, "Could not fetch information about RW vol %lu from server %s\n",
+				    (unsigned long)afromvol,
+				    rx_sockaddr2str(afromserver, &fmtbuf));
+		}
 		PrintError("", code);
 		justnewsites = 0;
 	    } else {
@@ -4106,7 +4383,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_uint32 afromserver,
 		    (unsigned long)cloneVolId);
 	    fflush(STDOUT);
 	}
-	code = DoVolDelete(fromconn, cloneVolId, afrompart, NULL, 0, NULL,
+	code = DoVolDelete(fromconn, cloneVolId, afrompart, NULL, NULL, NULL,
 			   NULL);
 	if (code && code != VNOVOL)
 	    ONERROR(code, cloneVolId, "Failed to delete volume %u.\n");
@@ -4212,7 +4489,7 @@ dump_sig_handler(int x)
  * extracting parameters from the rock
  */
 int
-UV_DumpVolume(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
+UV_DumpVolume(afs_uint32 afromvol, const struct rx_sockaddr *afromserver, afs_int32 afrompart,
 	      afs_int32 fromdate,
 	      afs_int32(*DumpFunction) (struct rx_call *, void *), void *rock,
 	      afs_int32 flags)
@@ -4305,7 +4582,7 @@ UV_DumpVolume(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
  * extracting parameters from the rock
  */
 int
-UV_DumpClonedVolume(afs_uint32 afromvol, afs_uint32 afromserver,
+UV_DumpClonedVolume(afs_uint32 afromvol, const struct rx_sockaddr *afromserver,
 		    afs_int32 afrompart, afs_int32 fromdate,
 		    afs_int32(*DumpFunction) (struct rx_call *, void *),
 		    void *rock, afs_int32 flags)
@@ -4468,7 +4745,7 @@ UV_DumpClonedVolume(afs_uint32 afromvol, afs_uint32 afromserver,
  * after extracting params from the rock
  */
 int
-UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
+UV_RestoreVolume2(const struct rx_sockaddr *toserver, afs_int32 topart, afs_uint32 tovolid,
 		  afs_uint32 toparentid, char tovolname[], int flags,
 		  afs_int32(*WriteData) (struct rx_call *, void *),
 		  void *rock)
@@ -4494,6 +4771,11 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
     int index, same, errcode;
     char apartName[10];
     char hoststr[16];
+    afs_uint32 toserver_ip = 0;
+    int toserver_has_ipv4;
+    rx_inet_fmtbuf_t fmtbuf;
+
+    toserver_has_ipv4 = rx_try_sockaddr_to_ipv4(toserver, &toserver_ip);
 
     memset(&cookie, 0, sizeof(cookie));
     islocked = 0;
@@ -4568,8 +4850,7 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
     MapPartIdIntoName(topart, partName);
     fprintf(STDOUT, "Restoring volume %s Id %lu on server %s partition %s ..",
 	    tovolreal, (unsigned long)pvolid,
-            noresolve ? afs_inet_ntoa_r(toserver, hoststr) :
-	    hostutil_GetNameByINet(toserver), partName);
+	    rx_sockaddr2str(toserver, &fmtbuf), partName);
     fflush(STDOUT);
 
     /*
@@ -4579,7 +4860,7 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
     memset(&tstatus, 0, sizeof(tstatus));
     if ((flags & RV_FULLRST) != 0) {
 	/* Full restore: Delete existing volume then create anew. */
-	code = DoVolDelete(toconn, pvolid, topart, "the previous", 0, &tstatus, NULL);
+	code = DoVolDelete(toconn, pvolid, topart, "the previous", NULL, &tstatus, NULL);
 	if (code && code != VNOVOL) {
 	    error = code;
 	    goto refail;
@@ -4702,8 +4983,23 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
     fflush(STDOUT);
     if (!reuseID || (flags & RV_FULLRST)) {
 	/* Volume was restored on the file server, update the
-	 * VLDB to reflect the change.
-	 */
+	 * VLDB to reflect the change. The classic VLDB entry format
+	 * cannot name an IPv6-only site - see the longer comment in
+	 * UV_CreateVolume3() above. The volume's data has already been
+	 * fully restored to toserver by this point (the transport itself
+	 * is fully IPv6-capable) - only this bookkeeping VLDB write is
+	 * blocked, so fail cleanly here rather than mid-restore. */
+	if (!toserver_has_ipv4) {
+	    fprintf(STDERR,
+		    "Cannot update the VLDB entry for volume %s: server %s "
+		    "has no IPv4 address, and the VLDB entry format cannot "
+		    "yet name an IPv6-only site as one (the volume itself "
+		    "was restored successfully - run a VLDB sync manually "
+		    "once this is supported)\n",
+		    tovolname, rx_sockaddr2str(toserver, &fmtbuf));
+	    error = VL_BADSERVER;
+	    goto refail;
+	}
 	vcode = VLDB_GetEntryByID(pvolid, voltype, &entry);
 	if (vcode && vcode != VL_NOENT && vcode != VL_ENTDELETED) {
 	    fprintf(STDERR,
@@ -4719,7 +5015,7 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 	    VPRINT("------- Creating a new VLDB entry ------- \n");
 	    strcpy(entry.name, tovolname);
 	    entry.nServers = 1;
-	    entry.serverNumber[0] = toserver;	/*should be indirect */
+	    entry.serverNumber[0] = toserver_ip;	/*should be indirect */
 	    entry.serverPartition[0] = topart;
 	    entry.serverFlags[0] = (flags & RV_RDONLY) ? VLSF_ROVOL : VLSF_RWVOL;
 	    entry.flags = (flags & RV_RDONLY) ? VLF_ROEXISTS : VLF_RWEXISTS;
@@ -4775,7 +5071,7 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 		index = Lp_GetRwIndex(&entry);
 	    if (index == -1) {
 		/* Add the new site for the volume being restored */
-		entry.serverNumber[entry.nServers] = toserver;
+		entry.serverNumber[entry.nServers] = toserver_ip;
 		entry.serverPartition[entry.nServers] = topart;
 		entry.serverFlags[entry.nServers] =
 		    (flags & RV_RDONLY) ? VLSF_ROVOL : VLSF_RWVOL;
@@ -4785,12 +5081,12 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 		 * if its different from new site.
 		 */
 		same =
-		    VLDB_IsSameAddrs(toserver, entry.serverNumber[index],
+		    VLDB_SockaddrMatchesIP(toserver, entry.serverNumber[index],
 				     &errcode);
 		if (errcode)
 		    EPRINT2(errcode,
 			    "Failed to get info about server's %d address(es) from vlserver (err=%d)\n",
-			    toserver, errcode);
+			    toserver_ip, errcode);
 		if ((!errcode && !same)
 		    || (entry.serverPartition[index] != topart)) {
 		    if (flags & RV_NODEL) {
@@ -4801,7 +5097,7 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 			     hostutil_GetNameByINet(entry.serverNumber[index]));
 		    } else {
 			tempconn =
-			    UV_Bind(entry.serverNumber[index],
+			    UV_BindIP(entry.serverNumber[index],
 				    AFSCONF_VOLUMEPORT);
 
 			MapPartIdIntoName(entry.serverPartition[index],
@@ -4814,7 +5110,7 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 			     apartName);
 			code = DoVolDelete(tempconn, pvolid,
 					   entry.serverPartition[index],
-					   "the", 0, NULL, NULL);
+					   "the", NULL, NULL, NULL);
 			if (code && code != VNOVOL) {
 			    error = code;
 			    goto refail;
@@ -4823,7 +5119,7 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 					  partName);
 		    }
 		}
-		entry.serverNumber[index] = toserver;
+		entry.serverNumber[index] = toserver_ip;
 		entry.serverPartition[index] = topart;
 	    }
 
@@ -4896,7 +5192,7 @@ UV_RestoreVolume2(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
 }
 
 int
-UV_RestoreVolume(afs_uint32 toserver, afs_int32 topart, afs_uint32 tovolid,
+UV_RestoreVolume(const struct rx_sockaddr *toserver, afs_int32 topart, afs_uint32 tovolid,
 		 char tovolname[], int flags,
 		 afs_int32(*WriteData) (struct rx_call *, void *),
 		 void *rock)
@@ -4930,7 +5226,7 @@ UV_LockRelease(afs_uint32 volid)
 
 /* old interface to add rosites */
 int
-UV_AddSite(afs_uint32 server, afs_int32 part, afs_uint32 volid,
+UV_AddSite(const struct rx_sockaddr *server, afs_int32 part, afs_uint32 volid,
 	   afs_int32 valid)
 {
     return UV_AddSite2(server, part, volid, 0, valid);
@@ -4939,13 +5235,31 @@ UV_AddSite(afs_uint32 server, afs_int32 part, afs_uint32 volid,
 /*adds <server> and <part> as a readonly replication site for <volid>
 *in vldb */
 int
-UV_AddSite2(afs_uint32 server, afs_int32 part, afs_uint32 volid,
+UV_AddSite2(const struct rx_sockaddr *server, afs_int32 part, afs_uint32 volid,
 	    afs_uint32 rovolid, afs_int32 valid)
 {
     int j, nro = 0, islocked = 0;
     struct nvldbentry entry, storeEntry, entry2;
     afs_int32 vcode, error = 0;
     char apartName[10];
+    afs_uint32 server_ip;
+
+    /* The classic VLDB entry format cannot name an IPv6-only site - see
+     * the longer comment in UV_CreateVolume3() above. Unlike most of the
+     * other functions with this same guard, this one has no physical
+     * side effect to clean up on failure (adding a site is pure VLDB
+     * bookkeeping - the actual RO volume isn't created until a later
+     * "vos release"), so reject before even locking the VLDB entry. */
+    if (!rx_try_sockaddr_to_ipv4(server, &server_ip)) {
+	rx_inet_fmtbuf_t fmtbuf;
+
+	fprintf(STDERR,
+		"Cannot add site on server %s: it has no IPv4 address, and "
+		"the VLDB entry format cannot yet name an IPv6-only site as "
+		"one\n",
+		rx_sockaddr2str(server, &fmtbuf));
+	return VL_BADSERVER;
+    }
 
     error = ubik_VL_SetLock(cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
     if (error) {
@@ -4985,11 +5299,11 @@ UV_AddSite2(afs_uint32 server, afs_int32 part, afs_uint32 volid,
     for (j = 0; j < entry.nServers; j++) {
 	if (entry.serverFlags[j] & VLSF_ROVOL) {
 	    nro++;
-	    if (VLDB_IsSameAddrs(server, entry.serverNumber[j], &error)) {
+	    if (VLDB_SockaddrMatchesIP(server, entry.serverNumber[j], &error)) {
 		if (error) {
 		    fprintf(STDERR,
 			    "Failed to get info about server's %d address(es) from vlserver (err=%d); aborting call!\n",
-			    server, error);
+			    server_ip, error);
 		} else {
 		    MapPartIdIntoName(entry.serverPartition[j], apartName);
 		    fprintf(STDERR,
@@ -5030,7 +5344,7 @@ UV_AddSite2(afs_uint32 server, afs_int32 part, afs_uint32 volid,
     }
 
     VPRINT("Adding a new site ...");
-    entry.serverNumber[entry.nServers] = server;
+    entry.serverNumber[entry.nServers] = server_ip;
     entry.serverPartition[entry.nServers] = part;
     if (!valid) {
 	entry.serverFlags[entry.nServers] = (VLSF_ROVOL | VLSF_DONTUSE);
@@ -5070,10 +5384,33 @@ UV_AddSite2(afs_uint32 server, afs_int32 part, afs_uint32 volid,
 
 /*removes <server> <part> as read only site for <volid> from the vldb */
 int
-UV_RemoveSite(afs_uint32 server, afs_int32 part, afs_uint32 volid)
+UV_RemoveSite(const struct rx_sockaddr *server, afs_int32 part, afs_uint32 volid)
 {
     afs_int32 vcode;
     struct nvldbentry entry, storeEntry;
+    afs_uint32 server_ip;
+
+    /* The classic VLDB entry format cannot name an IPv6-only site - see
+     * the longer comment in UV_CreateVolume3() above. Without this
+     * guard, Lp_ROMatch(server, ...) below would always report "no
+     * match" for a genuinely IPv6-only server (family-mismatch against
+     * the VLDB's always-IPv4 comparison address), and this function
+     * would misleadingly report "This site is not a replication site"
+     * for a server that may well be a real, valid RO site's address -
+     * just one this VLDB entry format can't yet represent. This path has
+     * no physical side effect to clean up on failure (it only releases a
+     * lock and returns an error code), so reject before even locking the
+     * VLDB entry. */
+    if (!rx_try_sockaddr_to_ipv4(server, &server_ip)) {
+	rx_inet_fmtbuf_t fmtbuf;
+
+	fprintf(STDERR,
+		"Cannot remove site on server %s: it has no IPv4 address, "
+		"and the VLDB entry format cannot yet name an IPv6-only "
+		"site as one\n",
+		rx_sockaddr2str(server, &fmtbuf));
+	return VL_BADSERVER;
+    }
 
     vcode = ubik_VL_SetLock(cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
     if (vcode) {
@@ -5107,7 +5444,7 @@ UV_RemoveSite(afs_uint32 server, afs_int32 part, afs_uint32 volid)
 	}
 	return VOLSERBADOP;
     } else {			/*remove the rep site */
-	Lp_SetROValue(&entry, server, part, 0, 0);
+	Lp_SetROValue(&entry, server, part, NULL, 0);
 	entry.nServers--;
 	if ((entry.nServers == 1) && (entry.flags & VLF_RWEXISTS))
 	    entry.flags &= ~VLF_ROEXISTS;
@@ -5149,11 +5486,27 @@ UV_RemoveSite(afs_uint32 server, afs_int32 part, afs_uint32 volid)
 
 /*sets <server> <part> as read/write site for <volid> in the vldb */
 int
-UV_ChangeLocation(afs_uint32 server, afs_int32 part, afs_uint32 volid)
+UV_ChangeLocation(const struct rx_sockaddr *server, afs_int32 part, afs_uint32 volid)
 {
     afs_int32 vcode;
     struct nvldbentry entry, storeEntry;
     int index;
+    afs_uint32 server_ip;
+
+    /* The classic VLDB entry format cannot name an IPv6-only site - see
+     * the longer comment in UV_CreateVolume3() above. This is pure VLDB
+     * bookkeeping (no physical volume action), so reject before locking
+     * the VLDB entry. */
+    if (!rx_try_sockaddr_to_ipv4(server, &server_ip)) {
+	rx_inet_fmtbuf_t fmtbuf;
+
+	fprintf(STDERR,
+		"Cannot change location to server %s: it has no IPv4 "
+		"address, and the VLDB entry format cannot yet name an "
+		"IPv6-only site as one\n",
+		rx_sockaddr2str(server, &fmtbuf));
+	return VL_BADSERVER;
+    }
 
     vcode = ubik_VL_SetLock(cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
     if (vcode) {
@@ -5188,7 +5541,7 @@ UV_ChangeLocation(afs_uint32 server, afs_int32 part, afs_uint32 volid)
 	}
 	return VOLSERBADOP;
     } else {			/* change the RW site */
-	entry.serverNumber[index] = server;
+	entry.serverNumber[index] = server_ip;
 	entry.serverPartition[index] = part;
 	MapNetworkToHost(&entry, &storeEntry);
 	vcode =
@@ -5210,7 +5563,7 @@ UV_ChangeLocation(afs_uint32 server, afs_int32 part, afs_uint32 volid)
 
 /*list all the partitions on <aserver> */
 int
-UV_ListPartitions(afs_uint32 aserver, struct partList *ptrPartList,
+UV_ListPartitions(const struct rx_sockaddr *aserver, struct partList *ptrPartList,
 		  afs_int32 * cntp)
 {
     struct rx_connection *aconn;
@@ -5268,7 +5621,7 @@ UV_ListPartitions(afs_uint32 aserver, struct partList *ptrPartList,
 /*zap the list of volumes specified by volPtrArray (the volCloneId field).
  This is used by the backup system */
 int
-UV_ZapVolumeClones(afs_uint32 aserver, afs_int32 apart,
+UV_ZapVolumeClones(const struct rx_sockaddr *aserver, afs_int32 apart,
 		   struct volDescription *volPtr, afs_int32 arraySize)
 {
     struct rx_connection *aconn;
@@ -5285,7 +5638,7 @@ UV_ZapVolumeClones(afs_uint32 aserver, afs_int32 apart,
 	    success = 1;
 
 	    code = DoVolDelete(aconn, curPtr->volCloneId, apart,
-			       "clone", 0, NULL, NULL);
+			       "clone", NULL, NULL, NULL);
 	    if (code)
 		success = 0;
 
@@ -5308,7 +5661,7 @@ UV_ZapVolumeClones(afs_uint32 aserver, afs_int32 apart,
 /*return a list of clones of the volumes specified by volPtrArray. Used by the
  backup system */
 int
-UV_GenerateVolumeClones(afs_uint32 aserver, afs_int32 apart,
+UV_GenerateVolumeClones(const struct rx_sockaddr *aserver, afs_int32 apart,
 			struct volDescription *volPtr, afs_int32 arraySize)
 {
     struct rx_connection *aconn;
@@ -5395,7 +5748,7 @@ UV_GenerateVolumeClones(afs_uint32 aserver, afs_int32 apart,
 /*list all the volumes on <aserver> and <apart>. If all = 1, then all the
 * relevant fields of the volume are also returned. This is a heavy weight operation.*/
 int
-UV_ListVolumes(afs_uint32 aserver, afs_int32 apart, int all,
+UV_ListVolumes(const struct rx_sockaddr *aserver, afs_int32 apart, int all,
 	       struct volintInfo **resultPtr, afs_int32 * size)
 {
     struct rx_connection *aconn;
@@ -5458,7 +5811,7 @@ UV_ListVolumes(afs_uint32 aserver, afs_int32 apart, int all,
  *------------------------------------------------------------------------*/
 
 int
-UV_XListVolumes(afs_uint32 a_serverID, afs_int32 a_partID, int a_all,
+UV_XListVolumes(const struct rx_sockaddr *a_serverID, afs_int32 a_partID, int a_all,
 		struct volintXInfo **a_resultPP,
 		afs_int32 * a_numEntsInResultP)
 {
@@ -5505,7 +5858,7 @@ UV_XListVolumes(afs_uint32 a_serverID, afs_int32 a_partID, int a_all,
 
 /* get all the information about volume <volid> on <aserver> and <apart> */
 int
-UV_ListOneVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 volid,
+UV_ListOneVolume(const struct rx_sockaddr *aserver, afs_int32 apart, afs_uint32 volid,
 		 struct volintInfo **resultPtr)
 {
     struct rx_connection *aconn;
@@ -5562,7 +5915,7 @@ UV_ListOneVolume(afs_uint32 aserver, afs_int32 apart, afs_uint32 volid,
  *------------------------------------------------------------------------*/
 
 int
-UV_XListOneVolume(afs_uint32 a_serverID, afs_int32 a_partID, afs_uint32 a_volID,
+UV_XListOneVolume(const struct rx_sockaddr *a_serverID, afs_int32 a_partID, afs_uint32 a_volID,
 		  struct volintXInfo **a_resultPP)
 {
     struct rx_connection *rxConnP;	/*Rx connection to Volume Server */
@@ -5626,7 +5979,7 @@ UV_XListOneVolume(afs_uint32 a_serverID, afs_int32 a_partID, afs_uint32 a_volID,
  *    Output changed to look a lot like the "vos syncserv" otuput.
  */
 static afs_int32
-CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
+CheckVolume(volintInfo * volumeinfo, const struct rx_sockaddr *aserver, afs_int32 apart,
 	    afs_int32 * modentry, afs_uint32 * maxvolid,
             struct nvldbentry *aentry)
 {
@@ -5637,7 +5990,25 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
     char pname[10];
     int pass = 0, createentry, addvolume, modified, mod, doit = 1;
     afs_uint32 rwvolid;
+    afs_uint32 aserver_ip;
     char hoststr[16];
+
+    /* The classic VLDB entry format cannot name an IPv6-only site - see
+     * the longer comment in UV_CreateVolume3() above. CheckVolume() is
+     * vos syncvldb/syncserver's core repair routine and only ever deals
+     * in the always-IPv4 entry.serverNumber[] field, so there is no
+     * partial-success path here worth threading through - reject
+     * up front. */
+    if (!rx_try_sockaddr_to_ipv4(aserver, &aserver_ip)) {
+	rx_inet_fmtbuf_t fmtbuf;
+
+	fprintf(STDERR,
+		"Cannot sync VLDB entries for server %s: it has no IPv4 "
+		"address, and the VLDB entry format cannot yet name an "
+		"IPv6-only site as one\n",
+		rx_sockaddr2str(aserver, &fmtbuf));
+	return VL_BADSERVER;
+    }
 
     if (modentry) {
 	if (*modentry == 1)
@@ -5730,8 +6101,8 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 				    "*** Warning: Orphaned RW volume %lu exists on %s %s\n",
 				    (unsigned long)rwvolid,
                                     noresolve ?
-                                    afs_inet_ntoa_r(aserver, hoststr) :
-				    hostutil_GetNameByINet(aserver), pname);
+                                    afs_inet_ntoa_r(aserver_ip, hoststr) :
+				    hostutil_GetNameByINet(aserver_ip), pname);
 			    MapPartIdIntoName(entry.serverPartition[idx],
 					      pname);
 			    fprintf(STDERR,
@@ -5765,8 +6136,8 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 					"    VLDB reports its RW volume %lu exists on %s %s\n",
 					(unsigned long)rwvolid,
                                         noresolve ?
-                                        afs_inet_ntoa_r(aserver, hoststr) :
-					hostutil_GetNameByINet(aserver),
+                                        afs_inet_ntoa_r(aserver_ip, hoststr) :
+					hostutil_GetNameByINet(aserver_ip),
 					pname);
 			    }
 			}
@@ -5794,7 +6165,7 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 		entry.volumeId[ROVOL] = volumeinfo->cloneID;
 
 	    entry.serverFlags[idx] = VLSF_RWVOL;
-	    entry.serverNumber[idx] = aserver;
+	    entry.serverNumber[idx] = aserver_ip;
 	    entry.serverPartition[idx] = apart;
 	    strncpy(entry.name, volumeinfo->name, VOLSER_OLDMAXVOLNAME);
 
@@ -5837,8 +6208,8 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 				"*** Warning: Orphaned BK volume %lu exists on %s %s\n",
 				(unsigned long)volumeinfo->volid,
                                 noresolve ?
-                                afs_inet_ntoa_r(aserver, hoststr) :
-				hostutil_GetNameByINet(aserver), pname);
+                                afs_inet_ntoa_r(aserver_ip, hoststr) :
+				hostutil_GetNameByINet(aserver_ip), pname);
 			MapPartIdIntoName(entry.serverPartition[idx], pname);
 			fprintf(STDERR,
 				"    VLDB reports its RW/BK volume %lu exists on %s %s\n",
@@ -5864,8 +6235,8 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 					"*** Warning: Orphaned BK volume %u exists on %s %s\n",
 					entry.volumeId[BACKVOL],
                                         noresolve ?
-                                        afs_inet_ntoa_r(aserver, hoststr) :
-					hostutil_GetNameByINet(aserver),
+                                        afs_inet_ntoa_r(aserver_ip, hoststr) :
+					hostutil_GetNameByINet(aserver_ip),
 					pname);
 				fprintf(STDERR,
 					"    VLDB reports its BK volume ID is %lu\n",
@@ -5879,8 +6250,8 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 					"*** Warning: Orphaned BK volume %lu exists on %s %s\n",
                                         (unsigned long)volumeinfo->volid,
                                         noresolve ?
-                                        afs_inet_ntoa_r(aserver, hoststr) :
-                                        hostutil_GetNameByINet(aserver),
+                                        afs_inet_ntoa_r(aserver_ip, hoststr) :
+                                        hostutil_GetNameByINet(aserver_ip),
 					pname);
 				fprintf(STDERR,
 					"    VLDB reports its BK volume ID is %u\n",
@@ -5898,7 +6269,7 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 	    entry.volumeId[RWVOL] = rwvolid;
 	    entry.volumeId[BACKVOL] = volumeinfo->volid;
 
-	    entry.serverNumber[idx] = aserver;
+	    entry.serverNumber[idx] = aserver_ip;
 	    entry.serverPartition[idx] = apart;
 	    entry.serverFlags[idx] = VLSF_RWVOL;
 
@@ -5960,8 +6331,14 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 				    (unsigned long)volumeinfo->volid);
 			}
 
-			Lp_SetRWValue(&entry, entry.serverNumber[idx],
-				      entry.serverPartition[idx], 0L, 0L);
+			{
+			    struct rx_sockaddr tmp_sa;
+
+			    rx_ipv4_to_sockaddr(entry.serverNumber[idx], 0, 0,
+						&tmp_sa);
+			    Lp_SetRWValue(&entry, &tmp_sa,
+					  entry.serverPartition[idx], NULL, 0L);
+			}
 			entry.nServers--;
 			modified++;
 			j--;
@@ -5981,8 +6358,8 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 			    "*** Warning: Orphaned RO volume %lu exists on %s %s\n",
                             (unsigned long)volumeinfo->volid,
                             noresolve ?
-                            afs_inet_ntoa_r(aserver, hoststr) :
-                            hostutil_GetNameByINet(aserver), pname);
+                            afs_inet_ntoa_r(aserver_ip, hoststr) :
+                            hostutil_GetNameByINet(aserver_ip), pname);
 		    fprintf(STDERR,
 			    "    VLDB reports its RO volume ID is %u\n",
 			    entry.volumeId[ROVOL]);
@@ -6006,7 +6383,7 @@ CheckVolume(volintInfo * volumeinfo, afs_uint32 aserver, afs_int32 apart,
 	    entry.volumeId[RWVOL] = rwvolid;
 	    entry.volumeId[ROVOL] = volumeinfo->volid;
 
-	    entry.serverNumber[idx] = aserver;
+	    entry.serverNumber[idx] = aserver_ip;
 	    entry.serverPartition[idx] = apart;
 	    entry.serverFlags[idx] = VLSF_ROVOL;
 
@@ -6115,7 +6492,7 @@ sortVolumes(const void *a, const void *b)
  *      if the volume exists on specified servers (similar to syncvldb).
  */
 int
-UV_SyncVolume(afs_uint32 aserver, afs_int32 apart, char *avolname, int flags)
+UV_SyncVolume(const struct rx_sockaddr *aserver, afs_int32 apart, char *avolname, int flags)
 {
     struct rx_connection *aconn = 0;
     afs_int32 j, k, code, vcode, error = 0;
@@ -6334,7 +6711,7 @@ UV_SyncVolume(afs_uint32 aserver, afs_int32 apart, char *avolname, int flags)
  *      optionally, <apart>.
  */
 int
-UV_SyncVldb(afs_uint32 aserver, afs_int32 apart, int flags, int force)
+UV_SyncVldb(const struct rx_sockaddr *aserver, afs_int32 apart, int flags, int force)
 {
     struct rx_connection *aconn;
     afs_int32 code, error = 0;
@@ -6348,7 +6725,7 @@ UV_SyncVldb(afs_uint32 aserver, afs_int32 apart, int flags, int force)
     afs_int32 failures = 0, modifications = 0, tentries = 0;
     afs_int32 modified;
     afs_uint32 maxvolid = 0;
-    char hoststr[16];
+    rx_inet_fmtbuf_t fmtbuf;
 
     volumeInfo.volEntries_val = (volintInfo *) 0;
     volumeInfo.volEntries_len = 0;
@@ -6400,9 +6777,7 @@ UV_SyncVldb(afs_uint32 aserver, afs_int32 apart, int flags, int force)
 		fprintf(STDOUT,
 			"Processing volume entry %d: %s (%lu) on server %s %s...\n",
 			j + 1, vi->name, (unsigned long)vi->volid,
-                        noresolve ?
-                        afs_inet_ntoa_r(aserver, hoststr) :
-                        hostutil_GetNameByINet(aserver), pname);
+			rx_sockaddr2str(aserver, &fmtbuf), pname);
 		fflush(STDOUT);
 	    }
 
@@ -6431,9 +6806,7 @@ UV_SyncVldb(afs_uint32 aserver, afs_int32 apart, int flags, int force)
 	if (pfail) {
 	    fprintf(STDERR,
 		    "Could not process entries on server %s partition %s\n",
-                    noresolve ?
-                    afs_inet_ntoa_r(aserver, hoststr) :
-                    hostutil_GetNameByINet(aserver), pname);
+		    rx_sockaddr2str(aserver, &fmtbuf), pname);
 	}
 	if (volumeInfo.volEntries_val) {
 	    free(volumeInfo.volEntries_val);
@@ -6488,8 +6861,19 @@ UV_SyncVldb(afs_uint32 aserver, afs_int32 apart, int flags, int force)
  *      Some error codes mean the volume is unavailable but
  *      still exists - so we catch these error codes.
  */
+/* Convenience wrapper for VolumeExists() callers that only have a raw
+ * IPv4 address in hand - see UV_BindIP()'s identical rationale above. */
 static afs_int32
-VolumeExists(afs_uint32 server, afs_int32 partition, afs_uint32 volumeid)
+VolumeExistsIP(afs_uint32 server, afs_int32 partition, afs_uint32 volumeid)
+{
+    struct rx_sockaddr sa;
+
+    rx_ipv4_to_sockaddr(server, 0, 0, &sa);
+    return VolumeExists(&sa, partition, volumeid);
+}
+
+static afs_int32
+VolumeExists(const struct rx_sockaddr *server, afs_int32 partition, afs_uint32 volumeid)
 {
     struct rx_connection *conn = (struct rx_connection *)0;
     afs_int32 code = -1;
@@ -6535,7 +6919,7 @@ CheckVldbRWBK(struct nvldbentry * entry, afs_int32 * modified)
 	}
     } else {
 	code =
-	    VolumeExists(entry->serverNumber[idx],
+	    VolumeExistsIP(entry->serverNumber[idx],
 			 entry->serverPartition[idx], entry->volumeId[RWVOL]);
 	if (code == 0) {	/* RW volume exists */
 	    if (!(entry->flags & VLF_RWEXISTS)) {	/* ... yet entry says RW does not exist */
@@ -6573,7 +6957,7 @@ CheckVldbRWBK(struct nvldbentry * entry, afs_int32 * modified)
 	}
     } else {			/* Found a RW entry */
 	code =
-	    VolumeExists(entry->serverNumber[idx],
+	    VolumeExistsIP(entry->serverNumber[idx],
 			 entry->serverPartition[idx],
 			 entry->volumeId[BACKVOL]);
 	if (code == 0) {	/* BK volume exists */
@@ -6607,8 +6991,13 @@ CheckVldbRWBK(struct nvldbentry * entry, afs_int32 * modified)
      */
     if ((idx != -1) && !(entry->flags & VLF_RWEXISTS)
 	&& !(entry->flags & VLF_BACKEXISTS)) {
-	Lp_SetRWValue(entry, entry->serverNumber[idx],
-		      entry->serverPartition[idx], 0L, 0L);
+	{
+	    struct rx_sockaddr tmp_sa;
+
+	    rx_ipv4_to_sockaddr(entry->serverNumber[idx], 0, 0, &tmp_sa);
+	    Lp_SetRWValue(entry, &tmp_sa,
+			  entry->serverPartition[idx], NULL, 0L);
+	}
 	entry->nServers--;
 	modentry++;
     }
@@ -6640,13 +7029,18 @@ CheckVldbRO(struct nvldbentry *entry, afs_int32 * modified)
 	}
 
 	code =
-	    VolumeExists(entry->serverNumber[idx],
+	    VolumeExistsIP(entry->serverNumber[idx],
 			 entry->serverPartition[idx], entry->volumeId[ROVOL]);
 	if (code == 0) {	/* RO volume exists */
 	    foundro++;
 	} else if (code == ENODEV) {	/* RW volume does not exist */
-	    Lp_SetROValue(entry, entry->serverNumber[idx],
-			  entry->serverPartition[idx], 0L, 0L);
+	    {
+		struct rx_sockaddr tmp_sa;
+
+		rx_ipv4_to_sockaddr(entry->serverNumber[idx], 0, 0, &tmp_sa);
+		Lp_SetROValue(entry, &tmp_sa,
+			      entry->serverPartition[idx], NULL, 0L);
+	    }
 	    entry->nServers--;
 	    idx--;
 	    modentry++;
@@ -6832,7 +7226,7 @@ CheckVldb(struct nvldbentry * entry, afs_int32 * modified, afs_int32 * deleted)
  *      Synchronise <aserver> <apart>(if flags = 1) with the VLDB.
  */
 int
-UV_SyncServer(afs_uint32 aserver, afs_int32 apart, int flags, int force)
+UV_SyncServer(const struct rx_sockaddr *aserver, afs_int32 apart, int flags, int force)
 {
     struct rx_connection *aconn;
     afs_int32 code, error = 0;
@@ -6842,6 +7236,24 @@ UV_SyncServer(afs_uint32 aserver, afs_int32 apart, int flags, int force)
     afs_int32 failures = 0, modified, modifications = 0;
     struct nvldbentry *vlentry;
     afs_int32 si, nsi, j;
+    afs_uint32 aserver_ip;
+
+    /* UV_SyncServer() filters the VLDB by a specific server's IPv4
+     * address (VldbListByAttributes.server, below) - the classic VLDB
+     * entry format cannot name an IPv6-only site (see the longer
+     * comment in UV_CreateVolume3() above), so no entry could ever
+     * match one anyway. Reject up front rather than silently listing
+     * nothing. */
+    if (!rx_try_sockaddr_to_ipv4(aserver, &aserver_ip)) {
+	rx_inet_fmtbuf_t fmtbuf;
+
+	fprintf(STDERR,
+		"Cannot sync VLDB entries for server %s: it has no IPv4 "
+		"address, and the VLDB entry format cannot yet name an "
+		"IPv6-only site as one\n",
+		rx_sockaddr2str(aserver, &fmtbuf));
+	return VL_BADSERVER;
+    }
 
     if (flags & 2)
 	verbose = 1;
@@ -6850,7 +7262,7 @@ UV_SyncServer(afs_uint32 aserver, afs_int32 apart, int flags, int force)
 
     /* Set up attributes to search VLDB  */
     memset(&attributes, 0, sizeof(attributes));
-    attributes.server = ntohl(aserver);
+    attributes.server = ntohl(aserver_ip);
     attributes.Mask = VLLIST_SERVER;
     if ((flags & 1)) {
 	attributes.partition = apart;
@@ -7017,7 +7429,7 @@ UV_RenameVolume(struct nvldbentry *entry, char oldname[], char newname[])
 	    error = VOLSERVLDB_ERROR;
 	    goto rvfail;
 	}
-	aconn = UV_Bind(entry->serverNumber[index], AFSCONF_VOLUMEPORT);
+	aconn = UV_BindIP(entry->serverNumber[index], AFSCONF_VOLUMEPORT);
 	code =
 	    AFSVolTransCreate_retry(aconn, entry->volumeId[RWVOL],
 			      entry->serverPartition[index], ITOffline, &tid);
@@ -7067,7 +7479,7 @@ UV_RenameVolume(struct nvldbentry *entry, char oldname[], char newname[])
 	    error = VOLSERVLDB_ERROR;
 	    goto rvfail;
 	}
-	aconn = UV_Bind(entry->serverNumber[index], AFSCONF_VOLUMEPORT);
+	aconn = UV_BindIP(entry->serverNumber[index], AFSCONF_VOLUMEPORT);
 	code =
 	    AFSVolTransCreate_retry(aconn, entry->volumeId[BACKVOL],
 			      entry->serverPartition[index], ITOffline, &tid);
@@ -7117,7 +7529,7 @@ UV_RenameVolume(struct nvldbentry *entry, char oldname[], char newname[])
     if (entry->flags & VLF_ROEXISTS) {	/*process the ro volumes */
 	for (i = 0; i < entry->nServers; i++) {
 	    if (entry->serverFlags[i] & VLSF_ROVOL) {
-		aconn = UV_Bind(entry->serverNumber[i], AFSCONF_VOLUMEPORT);
+		aconn = UV_BindIP(entry->serverNumber[i], AFSCONF_VOLUMEPORT);
 		code =
 		    AFSVolTransCreate_retry(aconn, entry->volumeId[ROVOL],
 				      entry->serverPartition[i], ITOffline,
@@ -7204,7 +7616,7 @@ UV_RenameVolume(struct nvldbentry *entry, char oldname[], char newname[])
 
 /*report on all the active transactions on volser */
 int
-UV_VolserStatus(afs_uint32 server, transDebugInfo ** rpntr, afs_int32 * rcount)
+UV_VolserStatus(const struct rx_sockaddr *server, transDebugInfo ** rpntr, afs_int32 * rcount)
 {
     struct rx_connection *aconn;
     transDebugEntries transInfo;
@@ -7236,14 +7648,14 @@ UV_VolserStatus(afs_uint32 server, transDebugInfo ** rpntr, afs_int32 * rcount)
 
 /*delete the volume without interacting with the vldb */
 int
-UV_VolumeZap(afs_uint32 server, afs_int32 part, afs_uint32 volid)
+UV_VolumeZap(const struct rx_sockaddr *server, afs_int32 part, afs_uint32 volid)
 {
     afs_int32 error;
     struct rx_connection *aconn;
 
     aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
     error = DoVolDelete(aconn, volid, part,
-			"the", 0, NULL, NULL);
+			"the", NULL, NULL, NULL);
     if (error == VNOVOL) {
 	EPRINT1(error, "Failed to start transaction on %u\n", volid);
     }
@@ -7255,7 +7667,7 @@ UV_VolumeZap(afs_uint32 server, afs_int32 part, afs_uint32 volid)
 }
 
 int
-UV_SetVolume(afs_uint32 server, afs_int32 partition, afs_uint32 volid,
+UV_SetVolume(const struct rx_sockaddr *server, afs_int32 partition, afs_uint32 volid,
 	     afs_int32 transflag, afs_int32 setflag, int sleeptime)
 {
     struct rx_connection *conn = 0;
@@ -7305,7 +7717,7 @@ UV_SetVolume(afs_uint32 server, afs_int32 partition, afs_uint32 volid,
 }
 
 int
-UV_SetVolumeInfo(afs_uint32 server, afs_int32 partition, afs_uint32 volid,
+UV_SetVolumeInfo(const struct rx_sockaddr *server, afs_int32 partition, afs_uint32 volid,
 		 volintInfo * infop)
 {
     struct rx_connection *conn = 0;
@@ -7347,7 +7759,7 @@ UV_SetVolumeInfo(afs_uint32 server, afs_int32 partition, afs_uint32 volid,
 }
 
 int
-UV_GetSize(afs_uint32 afromvol, afs_uint32 afromserver, afs_int32 afrompart,
+UV_GetSize(afs_uint32 afromvol, const struct rx_sockaddr *afromserver, afs_int32 afrompart,
 	   afs_int32 fromdate, struct volintSize *vol_size)
 {
     struct rx_connection *aconn = (struct rx_connection *)0;

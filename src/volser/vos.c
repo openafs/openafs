@@ -203,84 +203,176 @@ IsNumeric(char *name)
 }
 
 /*
- * Parse a server dotted address and return the address in network byte order
+ * Parse a literal server address - dotted-quad IPv4 or (when built with
+ * IPv6 support) an IPv6 literal - without doing any name resolution, and
+ * return it as a family-agnostic struct rx_sockaddr. A zeroed-out
+ * rx_sockaddr (rxsa_family == 0, never a real family) marks failure -
+ * either aname isn't a literal address at all, or it parsed to a
+ * loopback address (never useful as "the server to talk to").
  */
-static afs_uint32
+static struct rx_sockaddr
 GetServerNoresolve(char *aname)
 {
+    struct rx_sockaddr sa;
     int b1, b2, b3, b4;
-    afs_uint32 addr;
     afs_int32 code;
+
+    memset(&sa, 0, sizeof(sa));
 
     code = sscanf(aname, "%d.%d.%d.%d", &b1, &b2, &b3, &b4);
     if (code == 4) {
+	afs_uint32 addr;
+
 	addr = (b1 << 24) | (b2 << 16) | (b3 << 8) | b4;
 	addr = htonl(addr);	/* convert to network byte order */
-	return addr;
-    } else
-	return 0;
-}
-/*
- * Parse a server name/address and return a non-loopback address in network byte order
- */
-static afs_uint32
-GetServer(char *aname)
-{
-    struct hostent *th;
-    afs_uint32 addr; /* in network byte order */
-    afs_int32 code;
-    char hostname[MAXHOSTCHARS];
-    afs_uint32 **addr_list;
-    int i;
-
-    addr = GetServerNoresolve(aname);
-    if (addr != 0) {
-	if (!rx_IsLoopbackAddr(ntohl(addr)))
-	    return addr;
-	else
-	    return 0;
+	/* Reject the literal 0.0.0.0 the same way the old "return 0"
+	 * afs_uint32 convention did - it's the invalid/unspecified
+	 * address, never a real server to talk to, and
+	 * rx_ipv4_to_sockaddr() would otherwise happily stamp
+	 * rxsa_family = AF_INET on it, making it look "valid" under this
+	 * function's new rxsa_family-nonzero convention. */
+	if (addr != 0 && !rx_IsLoopbackAddr(ntohl(addr)))
+	    rx_ipv4_to_sockaddr(addr, 0, 0, &sa);
+	return sa;
     }
 
-    th = gethostbyname(aname);
-    if (th != NULL && th->h_addrtype == AF_INET) {
-	addr_list = (afs_uint32 **)th->h_addr_list;
-	for(i = 0; addr_list[i] != NULL; i++) {
-	    if (!rx_IsLoopbackAddr(ntohl(*addr_list[i]))) {
-		memcpy(&addr, addr_list[i], sizeof(addr));
-		return addr;
-	    }
+#ifdef HAVE_IPV6
+    {
+	struct in6_addr v6addr;
+	static const struct in6_addr v6addr_unspecified;	/* all-zero */
+
+	if (inet_pton(AF_INET6, aname, &v6addr) == 1
+	    && memcmp(&v6addr, &v6addr_unspecified, sizeof(v6addr)) != 0) {
+	    /* Reject "::" the same way 0.0.0.0 is rejected above -
+	     * rx_is_loopback_sockaddr() doesn't consider the all-zero
+	     * address loopback, so without this explicit check it would
+	     * slip through as a "valid" resolved address. */
+	    rx_ipv6_to_sockaddr((unsigned char *)&v6addr, 0, 0, &sa);
+	    if (rx_is_loopback_sockaddr(&sa))
+		memset(&sa, 0, sizeof(sa));
 	}
+    }
+#endif
+    return sa;
+}
+
+/*
+ * Resolve a non-loopback rx_sockaddr for the first address family found
+ * in *res that isn't loopback, preferring IPv4 - matching this function's
+ * pre-IPv6 behavior exactly for every v4-only or dual-stack host (which
+ * is by far the common case), and only falling through to IPv6 for a
+ * genuinely v6-only host (no A record at all). Returns 1 and fills *sa
+ * on success, 0 if every address in *res was loopback (or of an
+ * unsupported family).
+ */
+static int
+PickNonLoopbackAddr(struct addrinfo *res, struct rx_sockaddr *sa)
+{
+    struct addrinfo *rp, *v4 = NULL, *v6 = NULL;
+
+    for (rp = res; rp != NULL; rp = rp->ai_next) {
+	struct rx_sockaddr tmp;
+
+	if (rx_addrinfo_to_sockaddr(rp, 0, &tmp) != 0)
+	    continue;
+	if (rx_is_loopback_sockaddr(&tmp))
+	    continue;
+	if (rp->ai_family == AF_INET) {
+	    if (!v4)
+		v4 = rp;
+#ifdef HAVE_IPV6
+	} else if (rp->ai_family == AF_INET6) {
+	    if (!v6)
+		v6 = rp;
+#endif
+	}
+    }
+
+    rp = v4 ? v4 : v6;
+    if (!rp)
+	return 0;
+    return rx_addrinfo_to_sockaddr(rp, 0, sa) == 0;
+}
+
+/*
+ * Parse a server name/address and return a non-loopback address as a
+ * family-agnostic struct rx_sockaddr (v4 or v6) - a zeroed-out
+ * rx_sockaddr (rxsa_family == 0) marks failure, matching
+ * GetServerNoresolve()'s own sentinel.
+ */
+static struct rx_sockaddr
+GetServer(char *aname)
+{
+    struct rx_sockaddr sa;
+    struct addrinfo hints, *res = NULL;
+    afs_int32 code;
+    char hostname[MAXHOSTCHARS];
+
+    sa = GetServerNoresolve(aname);
+    if (sa.rxsa_family != 0)
+	return sa;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_DGRAM;
+
+    code = getaddrinfo(aname, NULL, &hints, &res);
+    if (code == 0) {
+	int found = PickNonLoopbackAddr(res, &sa);
+	freeaddrinfo(res);
+	if (found)
+	    return sa;
 
 	/*
-	 * If we reach this point all of the addresses returned by
-	 * gethostbyname() are loopback addresses.  We assume that means
-	 * that the name is supposed to describe the machine this code
-	 * is executing on.  Try gethostname() to and check to see if
-	 * that name can provide us a non-loopback address.
+	 * If we reach this point every address returned for 'aname' was a
+	 * loopback address.  We assume that means that the name is
+	 * supposed to describe the machine this code is executing on.
+	 * Try gethostname() and check to see if that name can provide us
+	 * a non-loopback address.
 	 */
 	code = gethostname(hostname, MAXHOSTCHARS);
-	if (code == 0) {
-	    th = gethostbyname(hostname);
-	    if (th != NULL && th->h_addrtype == AF_INET) {
-		addr_list = (afs_uint32 **)th->h_addr_list;
-		for (i=0; addr_list[i] != NULL; i++) {
-		    if (!rx_IsLoopbackAddr(ntohl(*addr_list[i]))) {
-			memcpy(&addr, addr_list[i], sizeof(addr));
-			return addr;
-		    }
-		}
-	    }
+	if (code == 0
+	    && getaddrinfo(hostname, NULL, &hints, &res) == 0) {
+	    found = PickNonLoopbackAddr(res, &sa);
+	    freeaddrinfo(res);
+	    if (found)
+		return sa;
 	}
     }
 
     /*
      * No non-loopback address could be obtained for 'aname'.
      */
-    return 0;
+    memset(&sa, 0, sizeof(sa));
+    return sa;
+}
+
+/*
+ * IPv4-only wrapper around GetServer()/GetServerNoresolve(), for the VLDB
+ * address-registration commands (ChangeAddr/SetAddrs/ListAddrs below) -
+ * those deal with a fileserver's own multi-homed *interface list* stored
+ * in the VLDB (a different, still-IPv4-only concept from "which server
+ * do I connect this RPC to"), which is a separate, larger piece of work
+ * not needed for making vos itself IPv6-capable. Returns 0 (matching
+ * the pre-existing "invalid address" sentinel) if aname has no IPv4
+ * identity at all.
+ */
+static afs_uint32
+GetServerIPv4(char *aname)
+{
+    struct rx_sockaddr sa;
+    afs_uint32 ip;
+
+    sa = noresolve ? GetServerNoresolve(aname) : GetServer(aname);
+    if (!sa.rxsa_family)
+	return 0;
+    if (!rx_try_sockaddr_to_ipv4(&sa, &ip))
+	return 0;
+    return ip;
 }
 
 static int
-IsPartValid(afs_int32 partId, afs_uint32 server, afs_int32 *code)
+IsPartValid(afs_int32 partId, const struct rx_sockaddr *server, afs_int32 *code)
 {
     struct partList dummyPartList;
     int i, success, cnt;
@@ -1513,11 +1605,11 @@ NukeVolume(struct cmd_syndesc *as)
     afs_uint32 volID;
     afs_int32  err;
     afs_int32 partID;
-    afs_uint32 server;
+    struct rx_sockaddr server;
     char *tp;
 
     server = GetServer(tp = as->parms[0].items->data);
-    if (!server) {
+    if (!server.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n", tp);
 	return 1;
     }
@@ -1542,7 +1634,7 @@ NukeVolume(struct cmd_syndesc *as)
 	    "vos: forcibly removing all traces of volume %d, please wait...",
 	    volID);
     fflush(STDOUT);
-    code = UV_NukeVolume(server, partID, volID);
+    code = UV_NukeVolume(&server, partID, volID);
     if (code == 0)
 	fprintf(STDOUT, "done.\n");
     else
@@ -1644,10 +1736,15 @@ ExamineVolume(struct cmd_syndesc *as, void *arock)
 		    hostutil_GetNameByINet(aserver));
 	    fflush(STDOUT);
 	}
-	if (wantExtendedInfo)
-	    code = UV_XListOneVolume(aserver, apart, volid, &xInfoP);
-	else
-	    code = UV_ListOneVolume(aserver, apart, volid, &pntr);
+	{
+	    struct rx_sockaddr aserver_sa;
+
+	    rx_ipv4_to_sockaddr(aserver, 0, 0, &aserver_sa);
+	    if (wantExtendedInfo)
+		code = UV_XListOneVolume(&aserver_sa, apart, volid, &xInfoP);
+	    else
+		code = UV_ListOneVolume(&aserver_sa, apart, volid, &pntr);
+	}
 	if (verbose)
 	    fprintf(STDOUT, "done\n");
 
@@ -1789,7 +1886,12 @@ SetFields(struct cmd_syndesc *as, void *arock)
 	fprintf(STDERR,"Nothing to set.\n");
 	return (1);
     }
-    code = UV_SetVolumeInfo(aserver, apart, volid, &info);
+    {
+	struct rx_sockaddr aserver_sa;
+
+	rx_ipv4_to_sockaddr(aserver, 0, 0, &aserver_sa);
+	code = UV_SetVolumeInfo(&aserver_sa, apart, volid, &info);
+    }
     if (code)
 	fprintf(STDERR,
 		"Could not update volume info fields for volume number %lu\n",
@@ -1819,13 +1921,13 @@ SetFields(struct cmd_syndesc *as, void *arock)
 static int
 volOnline(struct cmd_syndesc *as, void *arock)
 {
-    afs_uint32 server;
+    struct rx_sockaddr server;
     afs_int32 partition;
     afs_uint32 volid;
     afs_int32 code, err = 0;
 
     server = GetServer(as->parms[0].items->data);
-    if (server == 0) {
+    if (!server.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[0].items->data);
 	return -1;
@@ -1848,7 +1950,7 @@ volOnline(struct cmd_syndesc *as, void *arock)
 	return -1;
     }
 
-    code = UV_SetVolume(server, partition, volid, ITOffline, 0 /*online */ ,
+    code = UV_SetVolume(&server, partition, volid, ITOffline, 0 /*online */ ,
 			0 /*sleep */ );
     if (code) {
 	fprintf(STDERR, "Failed to set volume. Code = %d\n", code);
@@ -1880,14 +1982,14 @@ volOnline(struct cmd_syndesc *as, void *arock)
 static int
 volOffline(struct cmd_syndesc *as, void *arock)
 {
-    afs_uint32 server;
+    struct rx_sockaddr server;
     afs_int32 partition;
     afs_uint32 volid;
     afs_int32 code, err = 0;
     afs_int32 transflag, sleeptime, transdone;
 
     server = GetServer(as->parms[0].items->data);
-    if (server == 0) {
+    if (!server.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[0].items->data);
 	return -1;
@@ -1919,7 +2021,7 @@ volOffline(struct cmd_syndesc *as, void *arock)
     }
 
     code =
-	UV_SetVolume(server, partition, volid, transflag, transdone,
+	UV_SetVolume(&server, partition, volid, transflag, transdone,
 		     sleeptime);
     if (code) {
 	fprintf(STDERR, "Failed to set volume. Code = %d\n", code);
@@ -1940,13 +2042,13 @@ CreateVolume(struct cmd_syndesc *as, void *arock)
     struct nvldbentry entry;
     afs_int32 vcode;
     afs_int32 quota;
-    afs_uint32 tserver;
+    struct rx_sockaddr tserver;
 
     arovolid = &rovolid;
 
     quota = 5000;
     tserver = GetServer(as->parms[0].items->data);
-    if (!tserver) {
+    if (!tserver.rxsa_family) {
 	fprintf(STDERR, "vos: host '%s' not found in host table\n",
 		as->parms[0].items->data);
 	return ENOENT;
@@ -1957,7 +2059,7 @@ CreateVolume(struct cmd_syndesc *as, void *arock)
 		as->parms[1].items->data);
 	return ENOENT;
     }
-    if (!IsPartValid(pnum, tserver, &code)) {	/*check for validity of the partition */
+    if (!IsPartValid(pnum, &tserver, &code)) {	/*check for validity of the partition */
 	if (code)
 	    PrintError("", code);
 	else
@@ -2032,7 +2134,7 @@ CreateVolume(struct cmd_syndesc *as, void *arock)
     }
 
     code =
-	UV_CreateVolume3(tserver, pnum, as->parms[2].items->data, quota, 0,
+	UV_CreateVolume3(&tserver, pnum, as->parms[2].items->data, quota, 0,
 			 0, 0, 0, &volid, arovolid, &bkvolid);
     if (code) {
 	PrintDiagnostics("create", code);
@@ -2049,17 +2151,37 @@ static int
 DeleteVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 err, code = 0;
-    afs_uint32 server = 0;
+    struct rx_sockaddr server;
+    afs_uint32 server_ip = 0;
+    int have_server = 0;
     afs_int32 partition = -1;
     afs_uint32 volid;
     char pname[10];
     afs_int32 idx, j;
+    rx_inet_fmtbuf_t fmtbuf;
+
+    memset(&server, 0, sizeof(server));
 
     if (as->parms[0].items) {
 	server = GetServer(as->parms[0].items->data);
-	if (!server) {
+	if (!server.rxsa_family) {
 	    fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		    as->parms[0].items->data);
+	    return ENOENT;
+	}
+	have_server = 1;
+	/* The VLDB entry format cannot name an IPv6-only site (see the
+	 * longer comment in UV_CreateVolume3(), src/volser/vsprocs.c), so
+	 * this can never succeed for a non-IPv4-convertible server. Fail
+	 * here with a clear diagnostic instead of silently leaving
+	 * server_ip at 0 - which, left unchecked, would fall through to
+	 * the "-server only" VLDB-lookup path below and print a
+	 * confusing, unrelated "VLDB: Volume ... no match" instead. */
+	if (!rx_try_sockaddr_to_ipv4(&server, &server_ip)) {
+	    fprintf(STDERR,
+		    "vos: server %s has no IPv4 address, and the VLDB entry "
+		    "format cannot yet name an IPv6-only site as one\n",
+		    rx_sockaddr2str(&server, &fmtbuf));
 	    return ENOENT;
 	}
     }
@@ -2073,7 +2195,7 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 	}
 
 	/* Check for validity of the partition */
-	if (!IsPartValid(partition, server, &code)) {
+	if (!IsPartValid(partition, &server, &code)) {
 	    if (code) {
 		PrintError("", code);
 	    } else {
@@ -2097,7 +2219,7 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
     /* If the server or partition option are not complete, try to fill
      * them in from the VLDB entry.
      */
-    if ((partition == -1) || !server) {
+    if ((partition == -1) || !have_server) {
 	struct nvldbentry entry;
 
 	code = VLDB_GetEntryByID(volid, -1, &entry);
@@ -2113,7 +2235,7 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 	    || ((volid == entry.volumeId[BACKVOL])
 		&& (entry.flags & VLF_BACKEXISTS))) {
 	    idx = Lp_GetRwIndex(&entry);
-	    if ((idx == -1) || (server && (server != entry.serverNumber[idx]))
+	    if ((idx == -1) || (have_server && (server_ip != entry.serverNumber[idx]))
 		|| ((partition != -1)
 		    && (partition != entry.serverPartition[idx]))) {
 		fprintf(STDERR, "VLDB: Volume '%s' no match\n",
@@ -2126,7 +2248,7 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 		if (!(entry.serverFlags[j] & VLSF_ROVOL))
 		    continue;
 
-		if (((server == 0) || (server == entry.serverNumber[j]))
+		if (((!have_server) || (server_ip == entry.serverNumber[j]))
 		    && ((partition == -1)
 			|| (partition == entry.serverPartition[j]))) {
 		    if (idx != -1) {
@@ -2149,11 +2271,12 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 	    return ENOENT;
 	}
 
-	server = htonl(entry.serverNumber[idx]);
+	server_ip = htonl(entry.serverNumber[idx]);
+	rx_ipv4_to_sockaddr(server_ip, 0, 0, &server);
 	partition = entry.serverPartition[idx];
     }
 
-    code = UV_DeleteVolume(server, partition, volid);
+    code = UV_DeleteVolume(&server, partition, volid);
     if (code) {
 	PrintDiagnostics("remove", code);
 	return code;
@@ -2161,7 +2284,7 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 
     MapPartIdIntoName(partition, pname);
     fprintf(STDOUT, "Volume %lu on partition %s server %s deleted\n",
-	    (unsigned long)volid, pname, hostutil_GetNameByINet(server));
+	    (unsigned long)volid, pname, rx_sockaddr2str(&server, &fmtbuf));
     return 0;
 }
 
@@ -2171,7 +2294,7 @@ MoveVolume(struct cmd_syndesc *as, void *arock)
 {
 
     afs_uint32 volid;
-    afs_uint32 fromserver, toserver;
+    struct rx_sockaddr fromserver, toserver;
     afs_int32 frompart, topart;
     afs_int32 flags, code, err;
     char fromPartName[10], toPartName[10];
@@ -2189,13 +2312,13 @@ MoveVolume(struct cmd_syndesc *as, void *arock)
 	return ENOENT;
     }
     fromserver = GetServer(as->parms[1].items->data);
-    if (fromserver == 0) {
+    if (!fromserver.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[1].items->data);
 	return ENOENT;
     }
     toserver = GetServer(as->parms[3].items->data);
-    if (toserver == 0) {
+    if (!toserver.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[3].items->data);
 	return ENOENT;
@@ -2206,7 +2329,7 @@ MoveVolume(struct cmd_syndesc *as, void *arock)
 		as->parms[2].items->data);
 	return EINVAL;
     }
-    if (!IsPartValid(frompart, fromserver, &code)) {	/*check for validity of the partition */
+    if (!IsPartValid(frompart, &fromserver, &code)) {	/*check for validity of the partition */
 	if (code)
 	    PrintError("", code);
 	else
@@ -2221,7 +2344,7 @@ MoveVolume(struct cmd_syndesc *as, void *arock)
 		as->parms[4].items->data);
 	return EINVAL;
     }
-    if (!IsPartValid(topart, toserver, &code)) {	/*check for validity of the partition */
+    if (!IsPartValid(topart, &toserver, &code)) {	/*check for validity of the partition */
 	if (code)
 	    PrintError("", code);
 	else
@@ -2245,7 +2368,7 @@ MoveVolume(struct cmd_syndesc *as, void *arock)
      * check target partition for space to move volume
      */
 
-    code = UV_PartitionInfo64(toserver, toPartName, &partition);
+    code = UV_PartitionInfo64(&toserver, toPartName, &partition);
     if (code) {
 	fprintf(STDERR, "vos: cannot access partition %s\n", toPartName);
 	exit(1);
@@ -2255,7 +2378,7 @@ MoveVolume(struct cmd_syndesc *as, void *arock)
 		partition.free);
 
     p = (volintInfo *) 0;
-    code = UV_ListOneVolume(fromserver, frompart, volid, &p);
+    code = UV_ListOneVolume(&fromserver, frompart, volid, &p);
     if (code) {
 	fprintf(STDERR, "vos:cannot access volume %lu\n",
 		(unsigned long)volid);
@@ -2281,7 +2404,7 @@ MoveVolume(struct cmd_syndesc *as, void *arock)
     /* successful move still not guaranteed but shoot for it */
 
     code =
-	UV_MoveVolume2(volid, fromserver, frompart, toserver, topart, flags);
+	UV_MoveVolume2(volid, &fromserver, frompart, &toserver, topart, flags);
     if (code) {
 	PrintDiagnostics("move", code);
 	return code;
@@ -2299,7 +2422,7 @@ static int
 CopyVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 volid;
-    afs_uint32 fromserver, toserver;
+    struct rx_sockaddr fromserver, toserver;
     afs_int32 frompart, topart, code, err, flags;
     char fromPartName[10], toPartName[10], *tovolume;
     struct nvldbentry entry;
@@ -2316,14 +2439,14 @@ CopyVolume(struct cmd_syndesc *as, void *arock)
 	return ENOENT;
     }
     fromserver = GetServer(as->parms[1].items->data);
-    if (fromserver == 0) {
+    if (!fromserver.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[1].items->data);
 	return ENOENT;
     }
 
     toserver = GetServer(as->parms[4].items->data);
-    if (toserver == 0) {
+    if (!toserver.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[4].items->data);
 	return ENOENT;
@@ -2360,7 +2483,7 @@ CopyVolume(struct cmd_syndesc *as, void *arock)
 		as->parms[2].items->data);
 	return EINVAL;
     }
-    if (!IsPartValid(frompart, fromserver, &code)) {	/*check for validity of the partition */
+    if (!IsPartValid(frompart, &fromserver, &code)) {	/*check for validity of the partition */
 	if (code)
 	    PrintError("", code);
 	else
@@ -2376,7 +2499,7 @@ CopyVolume(struct cmd_syndesc *as, void *arock)
 		as->parms[5].items->data);
 	return EINVAL;
     }
-    if (!IsPartValid(topart, toserver, &code)) {	/*check for validity of the partition */
+    if (!IsPartValid(topart, &toserver, &code)) {	/*check for validity of the partition */
 	if (code)
 	    PrintError("", code);
 	else
@@ -2398,7 +2521,7 @@ CopyVolume(struct cmd_syndesc *as, void *arock)
      * check target partition for space to move volume
      */
 
-    code = UV_PartitionInfo64(toserver, toPartName, &partition);
+    code = UV_PartitionInfo64(&toserver, toPartName, &partition);
     if (code) {
 	fprintf(STDERR, "vos: cannot access partition %s\n", toPartName);
 	exit(1);
@@ -2408,7 +2531,7 @@ CopyVolume(struct cmd_syndesc *as, void *arock)
 		partition.free);
 
     p = (volintInfo *) 0;
-    code = UV_ListOneVolume(fromserver, frompart, volid, &p);
+    code = UV_ListOneVolume(&fromserver, frompart, volid, &p);
     if (code) {
 	fprintf(STDERR, "vos:cannot access volume %lu\n",
 		(unsigned long)volid);
@@ -2427,7 +2550,7 @@ CopyVolume(struct cmd_syndesc *as, void *arock)
     /* successful copy still not guaranteed but shoot for it */
 
     code =
-	UV_CopyVolume2(volid, fromserver, frompart, tovolume, toserver,
+	UV_CopyVolume2(volid, &fromserver, frompart, tovolume, &toserver,
 		       topart, 0, flags);
     if (code) {
 	PrintDiagnostics("copy", code);
@@ -2446,7 +2569,7 @@ static int
 ShadowVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 volid, tovolid;
-    afs_uint32 fromserver, toserver;
+    struct rx_sockaddr fromserver, toserver;
     afs_int32 frompart, topart;
     afs_int32 code, err, flags;
     char fromPartName[10], toPartName[10], toVolName[32], *tovolume;
@@ -2466,14 +2589,14 @@ ShadowVolume(struct cmd_syndesc *as, void *arock)
 	return ENOENT;
     }
     fromserver = GetServer(as->parms[1].items->data);
-    if (fromserver == 0) {
+    if (!fromserver.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[1].items->data);
 	return ENOENT;
     }
 
     toserver = GetServer(as->parms[3].items->data);
-    if (toserver == 0) {
+    if (!toserver.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[3].items->data);
 	return ENOENT;
@@ -2485,7 +2608,7 @@ ShadowVolume(struct cmd_syndesc *as, void *arock)
 		as->parms[2].items->data);
 	return EINVAL;
     }
-    if (!IsPartValid(frompart, fromserver, &code)) {	/*check for validity of the partition */
+    if (!IsPartValid(frompart, &fromserver, &code)) {	/*check for validity of the partition */
 	if (code)
 	    PrintError("", code);
 	else
@@ -2501,7 +2624,7 @@ ShadowVolume(struct cmd_syndesc *as, void *arock)
 		as->parms[4].items->data);
 	return EINVAL;
     }
-    if (!IsPartValid(topart, toserver, &code)) {	/*check for validity of the partition */
+    if (!IsPartValid(topart, &toserver, &code)) {	/*check for validity of the partition */
 	if (code)
 	    PrintError("", code);
 	else
@@ -2533,7 +2656,7 @@ ShadowVolume(struct cmd_syndesc *as, void *arock)
 	}
     } else {
 	/* use actual name of source volume */
-	code = UV_ListOneVolume(fromserver, frompart, volid, &p);
+	code = UV_ListOneVolume(&fromserver, frompart, volid, &p);
 	if (code) {
 	    fprintf(STDERR, "vos:cannot access volume %lu\n",
 		(unsigned long)volid);
@@ -2583,7 +2706,7 @@ ShadowVolume(struct cmd_syndesc *as, void *arock)
      * check target partition for space to move volume
      */
 
-    code = UV_PartitionInfo64(toserver, toPartName, &partition);
+    code = UV_PartitionInfo64(&toserver, toPartName, &partition);
     if (code) {
 	fprintf(STDERR, "vos: cannot access partition %s\n", toPartName);
 	exit(1);
@@ -2594,7 +2717,7 @@ ShadowVolume(struct cmd_syndesc *as, void *arock)
 
     /* Don't do this again if we did it above */
     if (!p) {
-	code = UV_ListOneVolume(fromserver, frompart, volid, &p);
+	code = UV_ListOneVolume(&fromserver, frompart, volid, &p);
 	if (code) {
 	    fprintf(STDERR, "vos:cannot access volume %lu\n",
 		(unsigned long)volid);
@@ -2603,7 +2726,7 @@ ShadowVolume(struct cmd_syndesc *as, void *arock)
     }
 
     /* OK if this fails */
-    code = UV_ListOneVolume(toserver, topart, tovolid, &q);
+    code = UV_ListOneVolume(&toserver, topart, tovolid, &q);
 
     /* Treat existing volume size as "free" */
     if (q)
@@ -2623,7 +2746,7 @@ ShadowVolume(struct cmd_syndesc *as, void *arock)
     /* successful copy still not guaranteed but shoot for it */
 
     code =
-	UV_CopyVolume2(volid, fromserver, frompart, tovolume, toserver,
+	UV_CopyVolume2(volid, &fromserver, frompart, tovolume, &toserver,
 		       topart, tovolid, flags);
     if (code) {
 	PrintDiagnostics("shadow", code);
@@ -2642,7 +2765,8 @@ static int
 CloneVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 volid, cloneid;
-    afs_uint32 server;
+    struct rx_sockaddr server;
+    afs_uint32 server_ip;
     afs_int32 part, voltype;
     char partName[10], *volname;
     afs_int32 code, err, flags;
@@ -2665,7 +2789,7 @@ CloneVolume(struct cmd_syndesc *as, void *arock)
 	    return -1;
 	}
 	server = GetServer(as->parms[1].items->data);
-	if (server == 0) {
+	if (!server.rxsa_family) {
 	    fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		    as->parms[1].items->data);
 	    return ENOENT;
@@ -2676,7 +2800,7 @@ CloneVolume(struct cmd_syndesc *as, void *arock)
 		    as->parms[2].items->data);
 	    return EINVAL;
 	}
-	if (!IsPartValid(part, server, &code)) {	/*check for validity of the partition */
+	if (!IsPartValid(part, &server, &code)) {	/*check for validity of the partition */
 	    if (code)
 		PrintError("", code);
 	    else
@@ -2686,9 +2810,10 @@ CloneVolume(struct cmd_syndesc *as, void *arock)
 	    return ENOENT;
 	}
     } else {
-	code = GetVolumeInfo(volid, &server, &part, &voltype, &entry);
+	code = GetVolumeInfo(volid, &server_ip, &part, &voltype, &entry);
 	if (code)
 	    return code;
+	rx_ipv4_to_sockaddr(server_ip, 0, 0, &server);
     }
 
     volname = 0;
@@ -2731,7 +2856,7 @@ CloneVolume(struct cmd_syndesc *as, void *arock)
     if (as->parms[7].items) flags |= RV_RWONLY;
 
     code =
-	UV_CloneVolume(server, part, volid, cloneid, volname, flags);
+	UV_CloneVolume(&server, part, volid, cloneid, volname, flags);
 
     if (code) {
 	PrintDiagnostics("clone", code);
@@ -2805,7 +2930,12 @@ BackupVolume(struct cmd_syndesc *as, void *arock)
 
     /* nope, carry on */
 
-    code = UV_BackupVolume(aserver, apart, avolid);
+    {
+	struct rx_sockaddr aserver_sa;
+
+	rx_ipv4_to_sockaddr(aserver, 0, 0, &aserver_sa);
+	code = UV_BackupVolume(&aserver_sa, apart, avolid);
+    }
 
     if (code) {
 	PrintDiagnostics("backup", code);
@@ -2860,7 +2990,12 @@ ReleaseVolume(struct cmd_syndesc *as, void *arock)
 	return E2BIG;
     }
 
-    code = UV_ReleaseVolume(avolid, aserver, apart, flags);
+    {
+	struct rx_sockaddr aserver_sa;
+
+	rx_ipv4_to_sockaddr(aserver, 0, 0, &aserver_sa);
+	code = UV_ReleaseVolume(avolid, &aserver_sa, apart, flags);
+    }
 
     if (code) {
 	PrintDiagnostics("release", code);
@@ -2875,7 +3010,8 @@ static int
 DumpVolumeCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
-    afs_uint32 aserver;
+    struct rx_sockaddr aserver;
+    afs_uint32 aserver_ip;
     afs_int32 apart, voltype, fromdate = 0, code, err, i, flags;
     char filename[MAXPATHLEN];
     struct nvldbentry entry;
@@ -2907,7 +3043,7 @@ DumpVolumeCmd(struct cmd_syndesc *as, void *arock)
 	    return -1;
 	}
 	aserver = GetServer(as->parms[3].items->data);
-	if (aserver == 0) {
+	if (!aserver.rxsa_family) {
 	    fprintf(STDERR, "Invalid server name\n");
 	    return -1;
 	}
@@ -2917,9 +3053,10 @@ DumpVolumeCmd(struct cmd_syndesc *as, void *arock)
 	    return -1;
 	}
     } else {
-	code = GetVolumeInfo(avolid, &aserver, &apart, &voltype, &entry);
+	code = GetVolumeInfo(avolid, &aserver_ip, &apart, &voltype, &entry);
 	if (code)
 	    return code;
+	rx_ipv4_to_sockaddr(aserver_ip, 0, 0, &aserver);
     }
 
     if (as->parms[1].items && strcmp(as->parms[1].items->data, "0")) {
@@ -2940,11 +3077,11 @@ DumpVolumeCmd(struct cmd_syndesc *as, void *arock)
 retry_dump:
     if (as->parms[5].items) {
 	code =
-	    UV_DumpClonedVolume(avolid, aserver, apart, fromdate,
+	    UV_DumpClonedVolume(avolid, &aserver, apart, fromdate,
 				DumpFunction, filename, flags);
     } else {
 	code =
-	    UV_DumpVolume(avolid, aserver, apart, fromdate, DumpFunction,
+	    UV_DumpVolume(avolid, &aserver, apart, fromdate, DumpFunction,
 			  filename, flags);
     }
     if ((code == RXGEN_OPCODE) && (as->parms[6].items)) {
@@ -2977,7 +3114,7 @@ static int
 RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid, aparentid;
-    afs_uint32 aserver;
+    struct rx_sockaddr aserver;
     afs_int32 apart, code, vcode, err;
     afs_int32 aoverwrite = ASK;
     afs_int32 acreation = 0, alastupdate = 0;
@@ -3061,7 +3198,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
     }
 
     aserver = GetServer(as->parms[0].items->data);
-    if (aserver == 0) {
+    if (!aserver.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[0].items->data);
 	exit(1);
@@ -3072,7 +3209,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 		as->parms[1].items->data);
 	exit(1);
     }
-    if (!IsPartValid(apart, aserver, &code)) {	/*check for validity of the partition */
+    if (!IsPartValid(apart, &aserver, &code)) {	/*check for validity of the partition */
 	if (code)
 	    PrintError("", code);
 	else
@@ -3116,7 +3253,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
     }
 
     else if ((!readonly && Lp_GetRwIndex(&entry) == -1)	/* RW volume does not exist - do a full */
-	     ||(readonly && !Lp_ROMatch(0, 0, &entry))) {	/* RO volume does not exist - do a full */
+	     ||(readonly && !Lp_ROMatch(NULL, 0, &entry))) {	/* RO volume does not exist - do a full */
 	restoreflags = RV_FULLRST;
 	if ((aoverwrite == INC) || (aoverwrite == ABORT))
 	    fprintf(STDERR,
@@ -3151,7 +3288,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
 	if (vcode)
 	    exit(1);
 
-	vcode = VLDB_IsSameAddrs(Oserver, aserver, &err);
+	vcode = VLDB_SockaddrMatchesIP(&aserver, Oserver, &err);
 	if (err) {
 	    fprintf(STDERR,
 		    "Failed to get info about server's %d address(es) from vlserver (err=%d); aborting call!\n",
@@ -3250,7 +3387,7 @@ RestoreVolumeCmd(struct cmd_syndesc *as, void *arock)
     }
 
     code =
-	UV_RestoreVolume2(aserver, apart, avolid, aparentid,
+	UV_RestoreVolume2(&aserver, apart, avolid, aparentid,
 			  avolname, restoreflags, WriteData, afilename);
     if (code) {
 	PrintDiagnostics("restore", code);
@@ -3293,7 +3430,7 @@ static int
 AddSite(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
-    afs_uint32 aserver;
+    struct rx_sockaddr aserver;
     afs_int32 apart, code, err, arovolid, valid = 0;
     char apartName[10], avolname[VOLSER_MAXVOLNAME + 1];
 
@@ -3318,7 +3455,7 @@ AddSite(struct cmd_syndesc *as, void *arock)
 	}
     }
     aserver = GetServer(as->parms[0].items->data);
-    if (aserver == 0) {
+    if (!aserver.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[0].items->data);
 	exit(1);
@@ -3329,7 +3466,7 @@ AddSite(struct cmd_syndesc *as, void *arock)
 		as->parms[1].items->data);
 	exit(1);
     }
-    if (!IsPartValid(apart, aserver, &code)) {	/*check for validity of the partition */
+    if (!IsPartValid(apart, &aserver, &code)) {	/*check for validity of the partition */
 	if (code)
 	    PrintError("", code);
 	else
@@ -3341,7 +3478,7 @@ AddSite(struct cmd_syndesc *as, void *arock)
     if (as->parms[4].items) {
 	valid = 1;
     }
-    code = UV_AddSite2(aserver, apart, avolid, arovolid, valid);
+    code = UV_AddSite2(&aserver, apart, avolid, arovolid, valid);
     if (code) {
 	PrintDiagnostics("addsite", code);
 	exit(1);
@@ -3357,7 +3494,7 @@ RemoveSite(struct cmd_syndesc *as, void *arock)
 {
 
     afs_uint32 avolid;
-    afs_uint32 aserver;
+    struct rx_sockaddr aserver;
     afs_int32 apart, code, err;
     char apartName[10], avolname[VOLSER_MAXVOLNAME + 1];
 
@@ -3372,7 +3509,7 @@ RemoveSite(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
     aserver = GetServer(as->parms[0].items->data);
-    if (aserver == 0) {
+    if (!aserver.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[0].items->data);
 	exit(1);
@@ -3388,7 +3525,7 @@ RemoveSite(struct cmd_syndesc *as, void *arock)
      * partition has already been decomissioned.
      */
 
-    code = UV_RemoveSite(aserver, apart, avolid);
+    code = UV_RemoveSite(&aserver, apart, avolid);
     if (code) {
 	PrintDiagnostics("remsite", code);
 	exit(1);
@@ -3403,7 +3540,7 @@ static int
 ChangeLocation(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
-    afs_uint32 aserver;
+    struct rx_sockaddr aserver;
     afs_int32 apart, code, err;
     char apartName[10];
 
@@ -3417,7 +3554,7 @@ ChangeLocation(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
     aserver = GetServer(as->parms[0].items->data);
-    if (aserver == 0) {
+    if (!aserver.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[0].items->data);
 	exit(1);
@@ -3428,7 +3565,7 @@ ChangeLocation(struct cmd_syndesc *as, void *arock)
 		as->parms[1].items->data);
 	exit(1);
     }
-    if (!IsPartValid(apart, aserver, &code)) {	/*check for validity of the partition */
+    if (!IsPartValid(apart, &aserver, &code)) {	/*check for validity of the partition */
 	if (code)
 	    PrintError("", code);
 	else
@@ -3437,7 +3574,7 @@ ChangeLocation(struct cmd_syndesc *as, void *arock)
 		    as->parms[1].items->data);
 	exit(1);
     }
-    code = UV_ChangeLocation(aserver, apart, avolid);
+    code = UV_ChangeLocation(&aserver, apart, avolid);
     if (code) {
 	PrintDiagnostics("changeloc", code);
 	exit(1);
@@ -3451,7 +3588,7 @@ ChangeLocation(struct cmd_syndesc *as, void *arock)
 static int
 ListPartitions(struct cmd_syndesc *as, void *arock)
 {
-    afs_uint32 aserver;
+    struct rx_sockaddr aserver;
     afs_int32 code;
     struct partList dummyPartList;
     int i;
@@ -3459,13 +3596,13 @@ ListPartitions(struct cmd_syndesc *as, void *arock)
     int total, cnt;
 
     aserver = GetServer(as->parms[0].items->data);
-    if (aserver == 0) {
+    if (!aserver.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[0].items->data);
 	exit(1);
     }
 
-    code = UV_ListPartitions(aserver, &dummyPartList, &cnt);
+    code = UV_ListPartitions(&aserver, &dummyPartList, &cnt);
     if (code) {
 	PrintDiagnostics("listpart", code);
 	exit(1);
@@ -3610,7 +3747,8 @@ static int
 ListVolumes(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart, int32list, fast;
-    afs_uint32 aserver;
+    struct rx_sockaddr aserver;
+    afs_uint32 aserver_ip;
     afs_int32 code;
     volintInfo *pntr;
     volintInfo *oldpntr = NULL;
@@ -3671,14 +3809,20 @@ ListVolumes(struct cmd_syndesc *as, void *arock)
 	cnt = 1;
     }
     aserver = GetServer(as->parms[0].items->data);
-    if (aserver == 0) {
+    if (!aserver.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[0].items->data);
 	exit(1);
     }
+    /* aserver_ip only feeds the pre-existing IPv4-only display helpers
+     * (DisplayVolumes/XDisplayVolumes below) - it stays 0 for a
+     * genuinely IPv6-only server, which those helpers already print as
+     * "0.0.0.0" via hostutil_GetNameByINet(); the actual RPCs above use
+     * the real (possibly v6) aserver throughout. */
+    rx_try_sockaddr_to_ipv4(&aserver, &aserver_ip);
 
     if (apart != -1) {
-	if (!IsPartValid(apart, aserver, &code)) {	/*check for validity of the partition */
+	if (!IsPartValid(apart, &aserver, &code)) {	/*check for validity of the partition */
 	    if (code)
 		PrintError("", code);
 	    else
@@ -3688,7 +3832,7 @@ ListVolumes(struct cmd_syndesc *as, void *arock)
 	    exit(1);
 	}
     } else {
-	code = UV_ListPartitions(aserver, &dummyPartList, &cnt);
+	code = UV_ListPartitions(&aserver, &dummyPartList, &cnt);
 	if (code) {
 	    PrintDiagnostics("listvol", code);
 	    exit(1);
@@ -3698,11 +3842,11 @@ ListVolumes(struct cmd_syndesc *as, void *arock)
 	if (dummyPartList.partFlags[i] & PARTVALID) {
 	    if (wantExtendedInfo)
 		code =
-		    UV_XListVolumes(aserver, dummyPartList.partId[i], all,
+		    UV_XListVolumes(&aserver, dummyPartList.partId[i], all,
 				    &xInfoP, &count);
 	    else
 		code =
-		    UV_ListVolumes(aserver, dummyPartList.partId[i], all,
+		    UV_ListVolumes(&aserver, dummyPartList.partId[i], all,
 				   &pntr, &count);
 	    if (code) {
 		PrintDiagnostics("listvol", code);
@@ -3735,20 +3879,20 @@ ListVolumes(struct cmd_syndesc *as, void *arock)
 			(unsigned long)count);
 	    if (wantExtendedInfo) {
 		if (as->parms[6].items)
-		    XDisplayVolumes2(aserver, dummyPartList.partId[i], origxInfoP,
+		    XDisplayVolumes2(aserver_ip, dummyPartList.partId[i], origxInfoP,
 				count, int32list, fast, quiet);
 		else
-		    XDisplayVolumes(aserver, dummyPartList.partId[i], origxInfoP,
+		    XDisplayVolumes(aserver_ip, dummyPartList.partId[i], origxInfoP,
 				count, int32list, fast, quiet);
 		if (xInfoP)
 		    free(xInfoP);
 		xInfoP = (volintXInfo *) 0;
 	    } else {
 		if (as->parms[6].items)
-		    DisplayVolumes2(aserver, dummyPartList.partId[i], oldpntr,
+		    DisplayVolumes2(aserver_ip, dummyPartList.partId[i], oldpntr,
 				    count);
 		else
-		    DisplayVolumes(aserver, dummyPartList.partId[i], oldpntr,
+		    DisplayVolumes(aserver_ip, dummyPartList.partId[i], oldpntr,
 				   count, int32list, fast, quiet);
 		if (pntr)
 		    free(pntr);
@@ -3766,12 +3910,12 @@ SyncVldb(struct cmd_syndesc *as, void *arock)
     char part[10];
     int flags = 0;
     char *volname = 0;
-    afs_uint32 tserver;
+    struct rx_sockaddr tserver;
 
-    tserver = 0;
+    memset(&tserver, 0, sizeof(tserver));
     if (as->parms[0].items) {
 	tserver = GetServer(as->parms[0].items->data);
-	if (!tserver) {
+	if (!tserver.rxsa_family) {
 	    fprintf(STDERR, "vos: host '%s' not found in host table\n",
 		    as->parms[0].items->data);
 	    exit(1);
@@ -3785,7 +3929,7 @@ SyncVldb(struct cmd_syndesc *as, void *arock)
 		    as->parms[1].items->data);
 	    exit(1);
 	}
-	if (!IsPartValid(pnum, tserver, &code)) {	/*check for validity of the partition */
+	if (!IsPartValid(pnum, &tserver, &code)) {	/*check for validity of the partition */
 	    if (code)
 		PrintError("", code);
 	    else
@@ -3796,7 +3940,7 @@ SyncVldb(struct cmd_syndesc *as, void *arock)
 	}
 	flags = 1;
 
-	if (!tserver) {
+	if (!tserver.rxsa_family) {
 	    fprintf(STDERR,
 		    "The -partition option requires a -server option\n");
 	    exit(1);
@@ -3810,14 +3954,14 @@ SyncVldb(struct cmd_syndesc *as, void *arock)
     if (as->parms[2].items) {
 	/* Synchronize an individual volume */
 	volname = as->parms[2].items->data;
-	code = UV_SyncVolume(tserver, pnum, volname, flags);
+	code = UV_SyncVolume(tserver.rxsa_family ? &tserver : NULL, pnum, volname, flags);
     } else {
-	if (!tserver) {
+	if (!tserver.rxsa_family) {
 	    fprintf(STDERR,
 		    "Without a -volume option, the -server option is required\n");
 	    exit(1);
 	}
-	code = UV_SyncVldb(tserver, pnum, flags, 0 /*unused */ );
+	code = UV_SyncVldb(&tserver, pnum, flags, 0 /*unused */ );
     }
 
     if (code) {
@@ -3830,7 +3974,7 @@ SyncVldb(struct cmd_syndesc *as, void *arock)
 	fprintf(STDOUT, "VLDB volume %s synchronized", volname);
     else
 	fprintf(STDOUT, "VLDB synchronized");
-    if (tserver) {
+    if (tserver.rxsa_family) {
 	fprintf(STDOUT, " with state of server %s", as->parms[0].items->data);
     }
     if (flags & 1) {
@@ -3847,12 +3991,12 @@ SyncServer(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 pnum, code;	/* part name */
     char part[10];
-    afs_uint32 tserver;
+    struct rx_sockaddr tserver;
 
     int flags = 0;
 
     tserver = GetServer(as->parms[0].items->data);
-    if (!tserver) {
+    if (!tserver.rxsa_family) {
 	fprintf(STDERR, "vos: host '%s' not found in host table\n",
 		as->parms[0].items->data);
 	exit(1);
@@ -3864,7 +4008,7 @@ SyncServer(struct cmd_syndesc *as, void *arock)
 		    as->parms[1].items->data);
 	    exit(1);
 	}
-	if (!IsPartValid(pnum, tserver, &code)) {	/*check for validity of the partition */
+	if (!IsPartValid(pnum, &tserver, &code)) {	/*check for validity of the partition */
 	    if (code)
 		PrintError("", code);
 	    else
@@ -3881,7 +4025,7 @@ SyncServer(struct cmd_syndesc *as, void *arock)
     if (as->parms[2].items) {
 	flags |= 2; /* don't update */
     }
-    code = UV_SyncServer(tserver, pnum, flags, 0 /*unused */ );
+    code = UV_SyncServer(&tserver, pnum, flags, 0 /*unused */ );
     if (code) {
 	PrintDiagnostics("syncserv", code);
 	exit(1);
@@ -3928,7 +4072,8 @@ VolumeZap(struct cmd_syndesc *as, void *arock)
 {
     struct nvldbentry entry;
     afs_uint32 volid, zapbackupid = 0, backupid = 0;
-    afs_int32 code, server, part, err;
+    afs_int32 code, part, err;
+    struct rx_sockaddr server;
 
     if (as->parms[3].items) {
 	/* force flag is on, use the other version */
@@ -3955,12 +4100,12 @@ VolumeZap(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
     server = GetServer(as->parms[0].items->data);
-    if (!server) {
+    if (!server.rxsa_family) {
 	fprintf(STDERR, "vos: host '%s' not found in host table\n",
 		as->parms[0].items->data);
 	exit(1);
     }
-    if (!IsPartValid(part, server, &code)) {	/*check for validity of the partition */
+    if (!IsPartValid(part, &server, &code)) {	/*check for validity of the partition */
 	if (code)
 	    PrintError("", code);
 	else
@@ -3981,7 +4126,7 @@ VolumeZap(struct cmd_syndesc *as, void *arock)
 	volintInfo *pntr = (volintInfo *) 0;
 
 	if (!backupid) {
-	    code = UV_ListOneVolume(server, part, volid, &pntr);
+	    code = UV_ListOneVolume(&server, part, volid, &pntr);
 	    if (!code) {
 		if (volid == pntr->parentID)
 		    backupid = pntr->backupID;
@@ -3990,7 +4135,7 @@ VolumeZap(struct cmd_syndesc *as, void *arock)
 	    }
 	}
 	if (backupid) {
-	    code = UV_VolumeZap(server, part, backupid);
+	    code = UV_VolumeZap(&server, part, backupid);
 	    if (code) {
 		PrintDiagnostics("zap", code);
 		exit(1);
@@ -3999,7 +4144,7 @@ VolumeZap(struct cmd_syndesc *as, void *arock)
 		    (unsigned long)backupid);
 	}
     }
-    code = UV_VolumeZap(server, part, volid);
+    code = UV_VolumeZap(&server, part, volid);
     if (code) {
 	PrintDiagnostics("zap", code);
 	exit(1);
@@ -4012,7 +4157,7 @@ VolumeZap(struct cmd_syndesc *as, void *arock)
 static int
 VolserStatus(struct cmd_syndesc *as, void *arock)
 {
-    afs_uint32 server;
+    struct rx_sockaddr server;
     afs_int32 code;
     transDebugInfo *pntr, *oldpntr;
     afs_int32 count;
@@ -4021,12 +4166,12 @@ VolserStatus(struct cmd_syndesc *as, void *arock)
     time_t t;
 
     server = GetServer(as->parms[0].items->data);
-    if (!server) {
+    if (!server.rxsa_family) {
 	fprintf(STDERR, "vos: host '%s' not found in host table\n",
 		as->parms[0].items->data);
 	exit(1);
     }
-    code = UV_VolserStatus(server, &pntr, &count);
+    code = UV_VolserStatus(&server, &pntr, &count);
     if (code) {
 	PrintDiagnostics("status", code);
 	exit(1);
@@ -4315,14 +4460,29 @@ DeleteEntry(struct cmd_syndesc *as, void *arock)
     }
 
     if (as->parms[2].items) {	/* -server */
-	afs_uint32 aserver;
+	struct rx_sockaddr aserver;
+	afs_uint32 aserver_ip;
+
 	aserver = GetServer(as->parms[2].items->data);
-	if (aserver == 0) {
+	if (!aserver.rxsa_family) {
 	    fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		    as->parms[2].items->data);
 	    exit(-1);
 	}
-	attributes.server = ntohl(aserver);
+	/* VldbListByAttributes.server (below) can only ever hold an IPv4
+	 * address - the classic VLDB entry format has no way to name an
+	 * IPv6-only site (see the longer comment in UV_CreateVolume3(),
+	 * src/volser/vsprocs.c), so no entry could ever match one anyway. */
+	if (!rx_try_sockaddr_to_ipv4(&aserver, &aserver_ip)) {
+	    rx_inet_fmtbuf_t fmtbuf;
+
+	    fprintf(STDERR,
+		    "vos: server %s has no IPv4 address, and the VLDB entry "
+		    "format cannot yet name an IPv6-only site as one\n",
+		    rx_sockaddr2str(&aserver, &fmtbuf));
+	    exit(-1);
+	}
+	attributes.server = ntohl(aserver_ip);
 	attributes.Mask |= VLLIST_SERVER;
     }
 
@@ -4470,15 +4630,27 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 
     /* Server specified */
     if (as->parms[1].items) {
-	afs_uint32 aserver;
+	struct rx_sockaddr aserver;
+	afs_uint32 aserver_ip;
 
 	aserver = GetServer(as->parms[1].items->data);
-	if (aserver == 0) {
+	if (!aserver.rxsa_family) {
 	    fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		    as->parms[1].items->data);
 	    exit(1);
 	}
-	attributes.server = ntohl(aserver);
+	/* See the identical comment in DeleteEntry() above: the classic
+	 * VLDB entry format cannot name an IPv6-only site. */
+	if (!rx_try_sockaddr_to_ipv4(&aserver, &aserver_ip)) {
+	    rx_inet_fmtbuf_t fmtbuf;
+
+	    fprintf(STDERR,
+		    "vos: server %s has no IPv4 address, and the VLDB entry "
+		    "format cannot yet name an IPv6-only site as one\n",
+		    rx_sockaddr2str(&aserver, &fmtbuf));
+	    exit(1);
+	}
+	attributes.server = ntohl(aserver_ip);
 	attributes.Mask |= VLLIST_SERVER;
     }
 
@@ -4604,7 +4776,8 @@ BackSys(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
     afs_int32 apart = 0;
-    afs_uint32 aserver = 0, aserver1;
+    struct rx_sockaddr aserver;
+    afs_uint32 aserver_ip = 0, aserver1;
     afs_int32 code, apart1;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
@@ -4627,6 +4800,7 @@ BackSys(struct cmd_syndesc *as, void *arock)
 
     memset(&attributes, 0, sizeof(struct VldbListByAttributes));
     attributes.Mask = 0;
+    memset(&aserver, 0, sizeof(aserver));
 
     seenprefix = (as->parms[0].items ? 1 : 0);
     exclude = (as->parms[3].items ? 1 : 0);
@@ -4635,12 +4809,23 @@ BackSys(struct cmd_syndesc *as, void *arock)
 
     if (as->parms[1].items) {	/* -server */
 	aserver = GetServer(as->parms[1].items->data);
-	if (aserver == 0) {
+	if (!aserver.rxsa_family) {
 	    fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		    as->parms[1].items->data);
 	    exit(1);
 	}
-	attributes.server = ntohl(aserver);
+	/* See the identical comment in DeleteEntry() above: the classic
+	 * VLDB entry format cannot name an IPv6-only site. */
+	if (!rx_try_sockaddr_to_ipv4(&aserver, &aserver_ip)) {
+	    rx_inet_fmtbuf_t fmtbuf;
+
+	    fprintf(STDERR,
+		    "vos: server %s has no IPv4 address, and the VLDB entry "
+		    "format cannot yet name an IPv6-only site as one\n",
+		    rx_sockaddr2str(&aserver, &fmtbuf));
+	    exit(1);
+	}
+	attributes.server = ntohl(aserver_ip);
 	attributes.Mask |= VLLIST_SERVER;
     }
 
@@ -4888,17 +5073,17 @@ BackSys(struct cmd_syndesc *as, void *arock)
 	    totalFail++;
 	    continue;
 	}
-	if (aserver) {
-	    same = VLDB_IsSameAddrs(aserver, aserver1, &error);
+	if (aserver.rxsa_family) {
+	    same = VLDB_IsSameAddrs(aserver_ip, aserver1, &error);
 	    if (error) {
 		fprintf(STDERR,
 			"Failed to get info about server's %d address(es) from vlserver (err=%d); aborting call!\n",
-			aserver, error);
+			aserver_ip, error);
 		totalFail++;
 		continue;
 	    }
 	}
-	if ((aserver && !same) || (apart && (apart != apart1))) {
+	if ((aserver.rxsa_family && !same) || (apart && (apart != apart1))) {
 	    if (verbose) {
 		fprintf(STDOUT,
 			"Omitting to backup %s since the RW is in a different location\n",
@@ -4913,7 +5098,12 @@ BackSys(struct cmd_syndesc *as, void *arock)
 	    fflush(STDOUT);
 	}
 
-	code = UV_BackupVolume(aserver1, apart1, avolid);
+	{
+	    struct rx_sockaddr aserver1_sa;
+
+	    rx_ipv4_to_sockaddr(aserver1, 0, 0, &aserver1_sa);
+	    code = UV_BackupVolume(&aserver1_sa, apart1, avolid);
+	}
 	if (code) {
 	    fprintf(STDOUT, "Could not backup %s\n", vllist->name);
 	    totalFail++;
@@ -4936,7 +5126,8 @@ static int
 UnlockVLDB(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
-    afs_uint32 aserver = 0;
+    struct rx_sockaddr aserver;
+    afs_uint32 aserver_ip = 0;
     afs_int32 code;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
@@ -4951,15 +5142,27 @@ UnlockVLDB(struct cmd_syndesc *as, void *arock)
     apart = -1;
     totalE = 0;
     memset(&attributes, 0, sizeof(attributes));
+    memset(&aserver, 0, sizeof(aserver));
 
     if (as->parms[0].items) {	/* server specified */
 	aserver = GetServer(as->parms[0].items->data);
-	if (aserver == 0) {
+	if (!aserver.rxsa_family) {
 	    fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		    as->parms[0].items->data);
 	    exit(1);
 	}
-	attributes.server = ntohl(aserver);
+	/* See the identical comment in DeleteEntry() above: the classic
+	 * VLDB entry format cannot name an IPv6-only site. */
+	if (!rx_try_sockaddr_to_ipv4(&aserver, &aserver_ip)) {
+	    rx_inet_fmtbuf_t fmtbuf;
+
+	    fprintf(STDERR,
+		    "vos: server %s has no IPv4 address, and the VLDB entry "
+		    "format cannot yet name an IPv6-only site as one\n",
+		    rx_sockaddr2str(&aserver, &fmtbuf));
+	    exit(1);
+	}
+	attributes.server = ntohl(aserver_ip);
 	attributes.Mask |= VLLIST_SERVER;
     }
     if (as->parms[1].items) {	/* partition specified */
@@ -4969,7 +5172,7 @@ UnlockVLDB(struct cmd_syndesc *as, void *arock)
 		    as->parms[1].items->data);
 	    exit(1);
 	}
-	if (!IsPartValid(apart, aserver, &code)) {	/*check for validity of the partition */
+	if (!IsPartValid(apart, &aserver, &code)) {	/*check for validity of the partition */
 	    if (code)
 		PrintError("", code);
 	    else
@@ -5065,7 +5268,7 @@ static int
 PartitionInfo(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
-    afs_uint32 aserver;
+    struct rx_sockaddr aserver;
     afs_int32 code;
     char pname[10];
     struct diskPartition64 partition;
@@ -5078,7 +5281,7 @@ PartitionInfo(struct cmd_syndesc *as, void *arock)
     ZeroInt64(sumStorage);
     apart = -1;
     aserver = GetServer(as->parms[0].items->data);
-    if (aserver == 0) {
+    if (!aserver.rxsa_family) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
 		as->parms[0].items->data);
 	exit(1);
@@ -5098,7 +5301,7 @@ PartitionInfo(struct cmd_syndesc *as, void *arock)
 	printSummary = 1;
     }
     if (apart != -1) {
-	if (!IsPartValid(apart, aserver, &code)) {	/*check for validity of the partition */
+	if (!IsPartValid(apart, &aserver, &code)) {	/*check for validity of the partition */
 	    if (code)
 		PrintError("", code);
 	    else
@@ -5108,7 +5311,7 @@ PartitionInfo(struct cmd_syndesc *as, void *arock)
 	    exit(1);
 	}
     } else {
-	code = UV_ListPartitions(aserver, &dummyPartList, &cnt);
+	code = UV_ListPartitions(&aserver, &dummyPartList, &cnt);
 	if (code) {
 	    PrintDiagnostics("listpart", code);
 	    exit(1);
@@ -5117,7 +5320,7 @@ PartitionInfo(struct cmd_syndesc *as, void *arock)
     for (i = 0; i < cnt; i++) {
 	if (dummyPartList.partFlags[i] & PARTVALID) {
 	    MapPartIdIntoName(dummyPartList.partId[i], pname);
-	    code = UV_PartitionInfo64(aserver, pname, &partition);
+	    code = UV_PartitionInfo64(&aserver, pname, &partition);
 	    if (code) {
 		fprintf(STDERR, "Could not get information on partition %s\n",
 			pname);
@@ -5151,10 +5354,7 @@ ChangeAddr(struct cmd_syndesc *as, void *arock)
     int remove = 0;
     int force = 0;
 
-    if (noresolve)
-	ip1 = GetServerNoresolve(as->parms[0].items->data);
-    else
-	ip1 = GetServer(as->parms[0].items->data);
+    ip1 = GetServerIPv4(as->parms[0].items->data);
     if (!ip1) {
 	fprintf(STDERR, "vos: invalid host address\n");
 	return (EINVAL);
@@ -5172,10 +5372,7 @@ ChangeAddr(struct cmd_syndesc *as, void *arock)
     }
 
     if (as->parms[1].items) {
-	if (noresolve)
-	    ip2 = GetServerNoresolve(as->parms[1].items->data);
-	else
-	    ip2 = GetServer(as->parms[1].items->data);
+	ip2 = GetServerIPv4(as->parms[1].items->data);
 	if (!ip2) {
 	    fprintf(STDERR, "vos: invalid host address\n");
 	    return (EINVAL);
@@ -5420,10 +5617,7 @@ SetAddrs(struct cmd_syndesc *as, void *arock)
 
 	for (ti = as->parms[1].items; ti && i < ADDRSPERSITE; ti = ti->next) {
 
-	    if (noresolve)
-		saddr = GetServerNoresolve(ti->data);
-	    else
-		saddr = GetServer(ti->data);
+	    saddr = GetServerIPv4(ti->data);
 
 	    if (!saddr) {
 		fprintf(STDERR, "vos: Can't get host info for '%s'\n",
@@ -5551,7 +5745,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 partition = -1;
     afs_uint32 volid;
-    afs_uint32 server;
+    struct rx_sockaddr server;
     afs_int32 code, i, same;
     struct nvldbentry entry;
     afs_int32 vcode;
@@ -5563,7 +5757,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
     int c, dc;
 
     server = GetServer(as->parms[0].items->data);
-    if (!server) {
+    if (!server.rxsa_family) {
 	fprintf(STDERR, "vos: host '%s' not found in host table\n",
 		as->parms[0].items->data);
 	return ENOENT;
@@ -5574,7 +5768,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 		as->parms[1].items->data);
 	return ENOENT;
     }
-    if (!IsPartValid(partition, server, &code)) {
+    if (!IsPartValid(partition, &server, &code)) {
 	if (code)
 	    PrintError("", code);
 	else
@@ -5617,11 +5811,13 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 	    if (roserver)
 		break;
 	} else if ((entry.serverFlags[i] & VLSF_ROVOL) && !roserver) {
-	    same = VLDB_IsSameAddrs(server, entry.serverNumber[i], &code);
+	    same = VLDB_SockaddrMatchesIP(&server, entry.serverNumber[i], &code);
 	    if (code) {
+		rx_inet_fmtbuf_t fmtbuf;
+
 		fprintf(STDERR,
-			"Failed to get info about server's %d address(es) from vlserver (err=%d); aborting call!\n",
-			server, code);
+			"Failed to get info about server's %s address(es) from vlserver (err=%d); aborting call!\n",
+			rx_sockaddr2str(&server, &fmtbuf), code);
 		return ENOENT;
 	    }
 	    if (same) {
@@ -5658,7 +5854,7 @@ ConvertRO(struct cmd_syndesc *as, void *arock)
 	}
     }
 
-    code = UV_ConvertRO(server, partition, volid, &entry);
+    code = UV_ConvertRO(&server, partition, volid, &entry);
 
     return code;
 }
@@ -5667,7 +5863,8 @@ static int
 Sizes(struct cmd_syndesc *as, void *arock)
 {
     afs_uint32 avolid;
-    afs_uint32 aserver;
+    struct rx_sockaddr aserver;
+    afs_uint32 aserver_ip;
     afs_int32 apart, voltype, fromdate = 0, code, err, i;
     struct nvldbentry entry;
     volintSize vol_size;
@@ -5699,7 +5896,7 @@ Sizes(struct cmd_syndesc *as, void *arock)
 	    return -1;
 	}
 	aserver = GetServer(as->parms[2].items->data);
-	if (aserver == 0) {
+	if (!aserver.rxsa_family) {
 	    fprintf(STDERR, "Invalid server name\n");
 	    return -1;
 	}
@@ -5709,9 +5906,10 @@ Sizes(struct cmd_syndesc *as, void *arock)
 	    return -1;
 	}
     } else {
-	code = GetVolumeInfo(avolid, &aserver, &apart, &voltype, &entry);
+	code = GetVolumeInfo(avolid, &aserver_ip, &apart, &voltype, &entry);
 	if (code)
 	    return code;
+	rx_ipv4_to_sockaddr(aserver_ip, 0, 0, &aserver);
     }
 
     fromdate = 0;
@@ -5729,7 +5927,7 @@ Sizes(struct cmd_syndesc *as, void *arock)
 
     if (as->parms[3].items) {	/* do the dump estimate */
 	vol_size.dump_size = 0;
-	code = UV_GetSize(avolid, aserver, apart, fromdate, &vol_size);
+	code = UV_GetSize(avolid, &aserver, apart, fromdate, &vol_size);
 	if (code) {
 	    PrintDiagnostics("size", code);
 	    return code;
@@ -5748,12 +5946,12 @@ Sizes(struct cmd_syndesc *as, void *arock)
 static int
 EndTrans(struct cmd_syndesc *as, void *arock)
 {
-    afs_uint32 server;
+    struct rx_sockaddr server;
     afs_int32 code, tid, rcode;
     struct rx_connection *aconn;
 
     server = GetServer(as->parms[0].items->data);
-    if (!server) {
+    if (!server.rxsa_family) {
 	fprintf(STDERR, "vos: host '%s' not found in host table\n",
 		as->parms[0].items->data);
 	return EINVAL;
@@ -5765,7 +5963,7 @@ EndTrans(struct cmd_syndesc *as, void *arock)
 	return code;
     }
 
-    aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
+    aconn = UV_Bind(&server, AFSCONF_VOLUMEPORT);
     code = AFSVolEndTrans(aconn, tid, &rcode);
     if (!code) {
 	code = rcode;

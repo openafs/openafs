@@ -47,7 +47,18 @@ internal_client_init(struct afsconf_dir *dir, struct afsconf_cell *info,
     if (progname == NULL)
 	progname = "<unknown>";
 
-    code = rx_Init(0);
+    /* rx_Init2(), not plain rx_Init(): this is the generic CLI-tool
+     * ubik-connect helper shared by vos/pts/and friends, and it needs a
+     * real local IPv6 UDP socket (rx_socket6) open before it can ever
+     * reach a v6-only peer - rx_NewConnectionSA() (src/rx/rx.c) silently
+     * falls back to the IPv4-only rx_socket whenever rx_socket6 isn't
+     * open, which for a v6-destined connection means the packet never
+     * actually goes out on the wire at all (confirmed live: a
+     * plain-rx_Init() vos hung/failed against a real v6-only fileserver
+     * with zero packets ever leaving the host). Opening the v6 socket
+     * here is best-effort and purely additive - see rx_InitHost2()'s own
+     * comment - so this changes nothing for a v4-only host or peer. */
+    code = rx_Init2(0);
     if (code) {
 	fprintf(stderr, "%s: could not initialize rx.\n", progname);
 	return code;

@@ -38,7 +38,7 @@
  * Zero is a valid partition field.
  */
 static int
-FindIndex(struct nvldbentry *entry, afs_uint32 server, afs_int32 part, afs_int32 type)
+FindIndex(struct nvldbentry *entry, const struct rx_sockaddr *server, afs_int32 part, afs_int32 type)
 {
     int e;
     afs_int32 error = 0;
@@ -47,8 +47,8 @@ FindIndex(struct nvldbentry *entry, afs_uint32 server, afs_int32 part, afs_int32
 	if (!type || (entry->serverFlags[e] & type)) {
 	    if ((!server || (entry->serverPartition[e] == part))
 		&& (!server
-		    || VLDB_IsSameAddrs(entry->serverNumber[e], server,
-					&error)))
+		    || VLDB_SockaddrMatchesIP(server, entry->serverNumber[e],
+					     &error)))
 		break;
 	    if (type == VLSF_RWVOL)
 		return -1;	/* quit when we are looking for RW entry (there's only 1) */
@@ -68,22 +68,40 @@ FindIndex(struct nvldbentry *entry, afs_uint32 server, afs_int32 part, afs_int32
     return e;			/* return the index */
 }
 
-/* Changes the rw site only */
+/* Changes the rw site only.
+ *
+ * nserver == NULL (with npart == 0) means "delete this site" - matching
+ * every existing caller's old nserver==0/npart==0 sentinel. A non-NULL
+ * nserver that has no IPv4 identity (a genuinely IPv6-only address)
+ * cannot be written into entry->serverNumber[e] (see the comment on
+ * VLDB_IsSameServer() in vsutils.c, and the longer one in vsprocs.c's
+ * UV_CreateVolume3()) - callers are expected to have already rejected
+ * that case before reaching here (UV_MoveVolume2() and friends do), so
+ * this only has a defensive fallback (leave the site's address alone)
+ * rather than a real recovery path. */
 static void
-SetAValue(struct nvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
-          afs_uint32 nserver, afs_int32 npart, afs_int32 type)
+SetAValue(struct nvldbentry *entry, const struct rx_sockaddr *oserver, afs_int32 opart,
+          const struct rx_sockaddr *nserver, afs_int32 npart, afs_int32 type)
 {
     int e;
+    afs_uint32 nserver_ip = 0;
 
     e = FindIndex(entry, oserver, opart, type);
     if (e == -1)
 	return;			/* If didn't find it, just return */
 
-    entry->serverNumber[e] = nserver;
+    if (nserver && !rx_try_sockaddr_to_ipv4(nserver, &nserver_ip)) {
+	fprintf(STDERR,
+		"internal error: cannot store an IPv6-only server address "
+		"in a VLDB site entry - caller should have checked first\n");
+	return;
+    }
+
+    entry->serverNumber[e] = nserver_ip;
     entry->serverPartition[e] = npart;
 
     /* Now move rest of entries up */
-    if ((nserver == 0L) && (npart == 0L)) {
+    if ((nserver_ip == 0L) && (npart == 0L)) {
 	for (e++; e < entry->nServers; e++) {
 	    entry->serverNumber[e - 1] = entry->serverNumber[e];
 	    entry->serverPartition[e - 1] = entry->serverPartition[e];
@@ -94,23 +112,23 @@ SetAValue(struct nvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
 
 /* Changes the RW site only */
 void
-Lp_SetRWValue(struct nvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
-              afs_uint32 nserver, afs_int32 npart)
+Lp_SetRWValue(struct nvldbentry *entry, const struct rx_sockaddr *oserver, afs_int32 opart,
+              const struct rx_sockaddr *nserver, afs_int32 npart)
 {
     SetAValue(entry, oserver, opart, nserver, npart, VLSF_RWVOL);
 }
 
 /* Changes the RO site only */
 void
-Lp_SetROValue(struct nvldbentry *entry, afs_uint32 oserver,
-              afs_int32 opart, afs_uint32 nserver, afs_int32 npart)
+Lp_SetROValue(struct nvldbentry *entry, const struct rx_sockaddr *oserver,
+              afs_int32 opart, const struct rx_sockaddr *nserver, afs_int32 npart)
 {
     SetAValue(entry, oserver, opart, nserver, npart, VLSF_ROVOL);
 }
 
 /* Returns success if this server and partition matches the RW entry */
 int
-Lp_Match(afs_uint32 server, afs_int32 part,
+Lp_Match(const struct rx_sockaddr *server, afs_int32 part,
          struct nvldbentry *entry)
 {
     if (FindIndex(entry, server, part, VLSF_RWVOL) == -1)
@@ -120,7 +138,7 @@ Lp_Match(afs_uint32 server, afs_int32 part,
 
 /* Return the index of the RO entry (plus 1) if it exists, else return 0 */
 int
-Lp_ROMatch(afs_uint32 server, afs_int32 part, struct nvldbentry *entry)
+Lp_ROMatch(const struct rx_sockaddr *server, afs_int32 part, struct nvldbentry *entry)
 {
     return (FindIndex(entry, server, part, VLSF_ROVOL) + 1);
 }
@@ -129,7 +147,7 @@ Lp_ROMatch(afs_uint32 server, afs_int32 part, struct nvldbentry *entry)
 int
 Lp_GetRwIndex(struct nvldbentry *entry)
 {
-    return (FindIndex(entry, 0, 0, VLSF_RWVOL));
+    return (FindIndex(entry, NULL, 0, VLSF_RWVOL));
 }
 
 /*initialize queue pointed by <ahead>*/

@@ -1515,10 +1515,19 @@ xbsaRestoreVolume(afs_uint32 taskId, struct tc_restoreDesc *restoreInfo,
 	ERROR_EXIT(TC_ABORTEDBYREQUEST);
 
     /* Start the restore of the volume data. This is the code we want to return */
-    code =
-	UV_RestoreVolume(htonl(newServer), newPart, newVolId, newVolName,
-			 restoreflags, xbsaRestoreVolumeData,
-			 (char *)rparamsPtr);
+    {
+	/* butc's own restore-catalog server address (restoreInfo->hostAddr)
+	 * is still IPv4-only - out of scope for this conversion. Wrap it
+	 * in an rx_sockaddr so it can still be passed to the now
+	 * family-agnostic UV_RestoreVolume(). */
+	struct rx_sockaddr newServer_sa;
+
+	rx_ipv4_to_sockaddr(htonl(newServer), 0, 0, &newServer_sa);
+	code =
+	    UV_RestoreVolume(&newServer_sa, newPart, newVolId, newVolName,
+			     restoreflags, xbsaRestoreVolumeData,
+			     (char *)rparamsPtr);
+    }
   error_exit:
     if (startread) {
 	rc = xbsa_ReadObjectEnd(&butxInfo);
@@ -1602,9 +1611,15 @@ restoreVolume(afs_uint32 taskId, struct tc_restoreDesc *restoreInfo,
     /* Start the restore of the volume data. This is the code we
      * want to return.
      */
-    code =
-	UV_RestoreVolume(htonl(newServer), newPart, newVolId, newVolName,
-			 restoreflags, restoreVolumeData, (char *)rparamsPtr);
+    {
+	/* See the identical comment in the xbsa restore path above. */
+	struct rx_sockaddr newServer_sa;
+
+	rx_ipv4_to_sockaddr(htonl(newServer), 0, 0, &newServer_sa);
+	code =
+	    UV_RestoreVolume(&newServer_sa, newPart, newVolId, newVolName,
+			     restoreflags, restoreVolumeData, (char *)rparamsPtr);
+    }
 
     /* Read the FileEnd marker for the volume and step to next FM */
     rc = butm_ReadFileEnd(tapeInfoPtr);

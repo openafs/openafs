@@ -644,7 +644,17 @@ uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
 	printf("%s: Creating volume on srv 0x%x, part %d, vol name '%s'\n",
 	       rn, saddr, pname, a_volname);
 #endif /* USS_VOL_DB */
-	code = UV_CreateVolume(saddr, pname, a_volname, &volid);
+	{
+	    /* uss's own server lookup (uss_vol_GetServer(), above) is
+	     * still IPv4-only - out of scope for this conversion (see
+	     * src/volser's own IPv6 addressing work). Wrap its result in
+	     * an rx_sockaddr so it can still be passed to UV_CreateVolume(),
+	     * which is now family-agnostic. */
+	    struct rx_sockaddr saddr_sa;
+
+	    rx_ipv4_to_sockaddr(saddr, 0, 0, &saddr_sa);
+	    code = UV_CreateVolume(&saddr_sa, pname, a_volname, &volid);
+	}
 	if (code) {
 	    if (code == VL_NAMEEXIST) {
 		VolExistFlag = 1;
@@ -855,7 +865,14 @@ uss_vol_DeleteVol(char *a_volName, afs_int32 a_volID, char *a_servName,
 	     a_partID);
 #endif /* USS_VOL_DB */
 
-	code = UV_DeleteVolume(a_servID, a_partID, a_volID);
+	{
+	    /* a_servID (from this file's own GetServerAndPart(), below) is
+	     * still IPv4-only - out of scope for this conversion. */
+	    struct rx_sockaddr a_servID_sa;
+
+	    rx_ipv4_to_sockaddr(a_servID, 0, 0, &a_servID_sa);
+	    code = UV_DeleteVolume(&a_servID_sa, a_partID, a_volID);
+	}
 	if (code)
 	    printf("%s: Can't delete volume '%s'\n", uss_whoami, a_volName);
     } else

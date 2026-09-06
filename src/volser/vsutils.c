@@ -397,6 +397,46 @@ VLDB_IsSameAddrs(afs_uint32 serv1, afs_uint32 serv2, afs_int32 *errorp)
 }
 
 /*
+ * Family-agnostic siblings of VLDB_IsSameAddrs(), for callers that now
+ * hold a struct rx_sockaddr (v4 or v6) rather than a raw IPv4 address -
+ * e.g. src/volser/vos.c's GetServer()/vsprocs.c's UV_* functions, since
+ * their own IPv6 conversion.
+ *
+ * VLDB_IsSameAddrs() itself stays IPv4-only: the multi-homed-equivalence
+ * lookup it performs (ubik_VL_GetAddrsU(), keyed by a plain afs_uint32)
+ * has no v6-capable sibling yet (that would need a UUID- or
+ * VL_GetEndpoints-based equivalent - out of scope here, see the longer
+ * comment in vsprocs.c's UV_CreateVolume3()). So when either side of the
+ * comparison is a genuinely non-v4-mappable address, these fall back to
+ * plain address equality, which is correct except for the narrow case of
+ * two different addresses of the same v6-only multi-homed server - a
+ * real but small gap, not a silent wrong answer (a v6-only server can
+ * never spuriously match an unrelated VLDB v4 site this way).
+ */
+int
+VLDB_IsSameServer(const struct rx_sockaddr *sa1, const struct rx_sockaddr *sa2,
+		  afs_int32 *errorp)
+{
+    afs_uint32 ip1, ip2;
+
+    *errorp = 0;
+    if (rx_try_sockaddr_to_ipv4(sa1, &ip1) && rx_try_sockaddr_to_ipv4(sa2, &ip2))
+	return VLDB_IsSameAddrs(ip1, ip2, errorp);
+    return rx_compare_sockaddr(sa1, sa2, RXA_ADDR);
+}
+
+/* Same as VLDB_IsSameServer(), but the second address is a raw IPv4
+ * address already in hand (typically a VLDB entry's serverNumber[]). */
+int
+VLDB_SockaddrMatchesIP(const struct rx_sockaddr *sa, afs_uint32 ip, afs_int32 *errorp)
+{
+    struct rx_sockaddr ipsa;
+
+    rx_ipv4_to_sockaddr(ip, 0, 0, &ipsa);
+    return VLDB_IsSameServer(sa, &ipsa, errorp);
+}
+
+/*
   Get the appropriate type of ubik client structure out from the system.
 */
 int

@@ -1,11 +1,11 @@
 #ifndef	_LOCKPROCS_PROTOTYPES_H
 #define _LOCKPROCS_PROTOTYPES_H
-extern void Lp_SetRWValue(struct nvldbentry *entry, afs_uint32 oserver, afs_int32 opart,
-              afs_uint32 nserver, afs_int32 npart);
-extern void Lp_SetROValue(struct nvldbentry *entry, afs_uint32 oserver,
-              afs_int32 opart, afs_uint32 nserver, afs_int32 npart);
-extern int Lp_Match(afs_uint32 server, afs_int32 part, struct nvldbentry *entry);
-extern int Lp_ROMatch(afs_uint32 server, afs_int32 part, struct nvldbentry *entry);
+extern void Lp_SetRWValue(struct nvldbentry *entry, const struct rx_sockaddr *oserver,
+              afs_int32 opart, const struct rx_sockaddr *nserver, afs_int32 npart);
+extern void Lp_SetROValue(struct nvldbentry *entry, const struct rx_sockaddr *oserver,
+              afs_int32 opart, const struct rx_sockaddr *nserver, afs_int32 npart);
+extern int Lp_Match(const struct rx_sockaddr *server, afs_int32 part, struct nvldbentry *entry);
+extern int Lp_ROMatch(const struct rx_sockaddr *server, afs_int32 part, struct nvldbentry *entry);
 extern int Lp_GetRwIndex(struct nvldbentry *entry);
 extern void Lp_QInit(struct qHead *ahead);
 extern void Lp_QAdd(struct qHead *ahead, struct aqueue *elem);

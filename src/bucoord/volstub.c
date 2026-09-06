@@ -13,6 +13,7 @@
 #include <roken.h>
 
 #include <rx/xdr.h>
+#include <rx/rx.h>
 #include <afs/vlserver.h>	/*Misc server-side Volume Location stuff */
 #include <ubik.h>
 #include <afs/afsint.h>
@@ -57,13 +58,21 @@ volImageTime(afs_uint32 serv, afs_int32 part, afs_uint32 volid,
 {
     afs_int32 code = 0;
     struct volintInfo *viptr;
+    struct rx_sockaddr sa;
 
     if (voltype == RWVOL) {
 	*clDatePtr = time(0);
 	return (0);
     }
 
-    code = UV_ListOneVolume(htonl(serv), part, volid, &viptr);
+    /* UV_ListOneVolume() takes a family-agnostic struct rx_sockaddr, not
+     * a raw afs_uint32 - build one here instead of reinterpreting the
+     * integer as a pointer (undefined behavior; used to compile with
+     * only a -Wint-conversion warning). serv is host byte order here,
+     * same as every other caller of this function - htonl() it into
+     * network byte order the way the old direct call did. */
+    rx_ipv4_to_sockaddr(htonl(serv), 0, 0, &sa);
+    code = UV_ListOneVolume(&sa, part, volid, &viptr);
     if (code) {
 	afs_com_err(whoami, code,
 		"Warning: Can't get clone time of volume %u - using 0",

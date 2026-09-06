@@ -165,7 +165,14 @@ Bind(afs_uint32 server)
     }
 
     if (server) {
-	curr_fromconn = UV_Bind(server, AFSCONF_VOLUMEPORT);	/* Establish new connection */
+	/* butc's own server bookkeeping (curr_bserver/this function's
+	 * "server" parameter) is still IPv4-only - out of scope for this
+	 * conversion. Wrap it in an rx_sockaddr so it can still be passed
+	 * to the now family-agnostic UV_Bind(). */
+	struct rx_sockaddr server_sa;
+
+	rx_ipv4_to_sockaddr(server, 0, 0, &server_sa);
+	curr_fromconn = UV_Bind(&server_sa, AFSCONF_VOLUMEPORT);	/* Establish new connection */
 	if (curr_fromconn)
 	    curr_bserver = server;
     }

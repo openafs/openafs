@@ -10,6 +10,10 @@ extern int VLDB_ListAttributes(VldbListByAttributes *attrp, afs_int32 *entriesp,
 extern int VLDB_ListAttributesN2(VldbListByAttributes *attrp, char *name, afs_int32 thisindex,
            afs_int32 *nentriesp, nbulkentries *blkentriesp, afs_int32 *nextindexp);
 extern int VLDB_IsSameAddrs(afs_uint32 serv1, afs_uint32 serv2, afs_int32 *errorp);
+extern int VLDB_IsSameServer(const struct rx_sockaddr *sa1,
+			     const struct rx_sockaddr *sa2, afs_int32 *errorp);
+extern int VLDB_SockaddrMatchesIP(const struct rx_sockaddr *sa, afs_uint32 ip,
+				  afs_int32 *errorp);
 extern int vsu_ExtractName(char rname[], char name[]);
 extern afs_uint32 vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp);
 #endif
