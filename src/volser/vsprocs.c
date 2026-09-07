@@ -743,6 +743,8 @@ UV_CreateVolume3(const struct rx_sockaddr *aserver, afs_int32 apart, char *aname
     afs_int32 rcode, vcode;
     afs_int32 lastid;
     afs_uint32 aserver_ip;
+    afsUUID aserver_uuid;
+    int use_uuid_site = 0;
     struct nvldbentry entry, storeEntry;	/*the new vldb entry */
     struct volintInfo tstatus;
 
@@ -752,24 +754,37 @@ UV_CreateVolume3(const struct rx_sockaddr *aserver, afs_int32 apart, char *aname
     /* struct nvldbentry's serverNumber[] (the classic VLDB entry format
      * VLDB_CreateEntry()/VL_CreateEntryN write with, below) is a plain
      * afs_int32 IPv4 address - it has no way to name a genuinely
-     * IPv6-only site. (The VLDB's UUID-keyed Multi-homed Entry
-     * mechanism - see VL_RegisterEndpoints/FindExtentBlock, Phase 3 -
-     * already supports registering such a host's *interface list*, but
-     * there is no matching UUID-keyed entry-*creation* RPC a caller
-     * like this one could use instead of VL_CreateEntryN.) Fail early
-     * and cleanly, before creating the physical volume, rather than
-     * silently writing a bogus/truncated address into the VLDB. A
-     * dual-stack or IPv4 target is unaffected. */
+     * IPv6-only site directly. When the target has no IPv4 address at
+     * all, fall back to VLDB_CreateEntryU()/VL_CreateEntryU below, which
+     * names such a site by the server's VLDB-registered uuid instead
+     * (see VLDB_GetUuidByAddr()/uvldbentry_to_vlentry() in
+     * vsutils.c/src/vlserver/vlprocs.c). That uuid lookup itself only
+     * succeeds against a server that has already self-registered via
+     * RegisterAddrs/RegisterEndpoints (true for any fileserver that has
+     * ever started up, well before it could hold any volume) and a
+     * vlserver new enough to support GetEndpoints; either failing there,
+     * or the vlserver being too old for CreateEntryU itself
+     * (RXGEN_OPCODE), falls through to the same hard failure this always
+     * gave. A dual-stack or IPv4 target is unaffected either way. */
     if (!rx_try_sockaddr_to_ipv4(aserver, &aserver_ip)) {
 	rx_inet_fmtbuf_t fmtbuf;
+	afs_int32 ucode;
 
-	fprintf(STDERR,
-		"Cannot create a VLDB entry for volume %s: server %s has "
-		"no IPv4 address, and the VLDB entry format cannot yet "
-		"name an IPv6-only site as one (needs a new UUID-keyed "
-		"VLDB entry-creation RPC, not yet implemented)\n",
-		aname, rx_sockaddr2str(aserver, &fmtbuf));
-	return VL_BADSERVER;
+	ucode = VLDB_GetUuidByAddr(aserver, &aserver_uuid);
+	if (ucode) {
+	    fprintf(STDERR,
+		    "Cannot create a VLDB entry for volume %s: server %s has "
+		    "no IPv4 address, and %s\n",
+		    aname, rx_sockaddr2str(aserver, &fmtbuf),
+		    (ucode == RXGEN_OPCODE)
+			? "the vlserver is too old to resolve its VLDB uuid "
+			  "(GetEndpoints unsupported)"
+			: "its VLDB uuid could not be resolved (has it "
+			  "registered with the vlserver yet?)");
+	    return (ucode == RXGEN_OPCODE) ? VL_BADSERVER : ucode;
+	}
+	use_uuid_site = 1;
+	aserver_ip = 0;
     }
 
     memset(&storeEntry, 0, sizeof(struct nvldbentry));
@@ -856,7 +871,16 @@ UV_CreateVolume3(const struct rx_sockaddr *aserver, afs_int32 apart, char *aname
      * byte order. Xdr converts it into network order */
     MapNetworkToHost(&entry, &storeEntry);
     /* create the vldb entry */
-    vcode = VLDB_CreateEntry(&storeEntry);
+    if (use_uuid_site) {
+	struct uvldbentry ustoreEntry;
+
+	VLDB_NvldbentryToUvldbentry(&storeEntry, &ustoreEntry);
+	ustoreEntry.serverNumber[0] = aserver_uuid;
+	ustoreEntry.serverFlags[0] |= VLSF_UUID;
+	vcode = VLDB_CreateEntryU(&ustoreEntry);
+    } else {
+	vcode = VLDB_CreateEntry(&storeEntry);
+    }
     if (vcode) {
 	fprintf(STDERR,
 		"Could not create a VLDB entry for the volume %s %lu\n",
@@ -5243,22 +5267,38 @@ UV_AddSite2(const struct rx_sockaddr *server, afs_int32 part, afs_uint32 volid,
     afs_int32 vcode, error = 0;
     char apartName[10];
     afs_uint32 server_ip;
+    afsUUID server_uuid;
+    int use_uuid_site = 0;
 
-    /* The classic VLDB entry format cannot name an IPv6-only site - see
-     * the longer comment in UV_CreateVolume3() above. Unlike most of the
-     * other functions with this same guard, this one has no physical
-     * side effect to clean up on failure (adding a site is pure VLDB
+    /* The classic VLDB entry format cannot name an IPv6-only site
+     * directly - see the longer comment in UV_CreateVolume3() above.
+     * When the target has no IPv4 address at all, resolve its VLDB uuid
+     * instead and use that below (VLDB_ReplaceEntryU()/VL_ReplaceEntryU),
+     * exactly as UV_CreateVolume3() now does. Unlike most of the other
+     * functions with this same guard, this one has no physical side
+     * effect to clean up on failure (adding a site is pure VLDB
      * bookkeeping - the actual RO volume isn't created until a later
-     * "vos release"), so reject before even locking the VLDB entry. */
+     * "vos release"), so resolve/reject before even locking the VLDB
+     * entry. */
     if (!rx_try_sockaddr_to_ipv4(server, &server_ip)) {
 	rx_inet_fmtbuf_t fmtbuf;
+	afs_int32 ucode;
 
-	fprintf(STDERR,
-		"Cannot add site on server %s: it has no IPv4 address, and "
-		"the VLDB entry format cannot yet name an IPv6-only site as "
-		"one\n",
-		rx_sockaddr2str(server, &fmtbuf));
-	return VL_BADSERVER;
+	ucode = VLDB_GetUuidByAddr(server, &server_uuid);
+	if (ucode) {
+	    fprintf(STDERR,
+		    "Cannot add site on server %s: it has no IPv4 address, "
+		    "and %s\n",
+		    rx_sockaddr2str(server, &fmtbuf),
+		    (ucode == RXGEN_OPCODE)
+			? "the vlserver is too old to resolve its VLDB uuid "
+			  "(GetEndpoints unsupported)"
+			: "its VLDB uuid could not be resolved (has it "
+			  "registered with the vlserver yet?)");
+	    return (ucode == RXGEN_OPCODE) ? VL_BADSERVER : ucode;
+	}
+	use_uuid_site = 1;
+	server_ip = 0;
     }
 
     error = ubik_VL_SetLock(cstruct, 0, volid, RWVOL, VLOP_ADDSITE);
@@ -5344,19 +5384,35 @@ UV_AddSite2(const struct rx_sockaddr *server, afs_int32 part, afs_uint32 volid,
     }
 
     VPRINT("Adding a new site ...");
-    entry.serverNumber[entry.nServers] = server_ip;
-    entry.serverPartition[entry.nServers] = part;
-    if (!valid) {
-	entry.serverFlags[entry.nServers] = (VLSF_ROVOL | VLSF_DONTUSE);
-    } else {
-	entry.serverFlags[entry.nServers] = (VLSF_ROVOL);
-    }
-    entry.nServers++;
+    {
+	int newidx = entry.nServers;
 
-    MapNetworkToHost(&entry, &storeEntry);
-    error =
-	VLDB_ReplaceEntry(volid, RWVOL, &storeEntry,
-			  LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
+	entry.serverNumber[newidx] = server_ip;
+	entry.serverPartition[newidx] = part;
+	if (!valid) {
+	    entry.serverFlags[newidx] = (VLSF_ROVOL | VLSF_DONTUSE);
+	} else {
+	    entry.serverFlags[newidx] = (VLSF_ROVOL);
+	}
+	entry.nServers++;
+
+	MapNetworkToHost(&entry, &storeEntry);
+	if (use_uuid_site) {
+	    struct uvldbentry ustoreEntry;
+
+	    VLDB_NvldbentryToUvldbentry(&storeEntry, &ustoreEntry);
+	    ustoreEntry.serverNumber[newidx] = server_uuid;
+	    ustoreEntry.serverFlags[newidx] |= VLSF_UUID;
+	    error =
+		VLDB_ReplaceEntryU(volid, RWVOL, &ustoreEntry,
+				   LOCKREL_OPCODE | LOCKREL_AFSID
+				       | LOCKREL_TIMESTAMP);
+	} else {
+	    error =
+		VLDB_ReplaceEntry(volid, RWVOL, &storeEntry,
+				  LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
+	}
+    }
     if (error) {
 	fprintf(STDERR, "Could not update entry for volume %lu \n",
 		(unsigned long)volid);

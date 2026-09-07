@@ -432,6 +432,32 @@ ReplaceEntryN(
   afs_int32 ReleaseType
 ) = VLREPLACEENTRYN;
 
+/*
+ * CreateEntryU/ReplaceEntryU are CreateEntryN/ReplaceEntryN's UUID-capable
+ * siblings: same shape, but a uvldbentry names each site's server by
+ * afsUUID (VLSF_UUID set in serverFlags[]) instead of requiring a raw
+ * IPv4 address for it, closing the one remaining gap that kept a
+ * genuinely IPv6-only fileserver from ever being named as a VLDB site -
+ * every other site in the entry may still use the classic IPv4-in-
+ * time_low representation vlentry_to_uvldbentry()/GetEntryByNameU already
+ * produce. VLCREATEENTRYU/VLREPLACEENTRYU (525/528) were already
+ * reserved alongside the rest of the "U" opcode family below
+ * (VLGETENTRYBYIDU/VLGETENTRYBYNAMEU/VLREGADDR/VLGETADDRSU) but were
+ * never wired to an RPC until now. A caller falls back to
+ * CreateEntryN/ReplaceEntryN on RXGEN_OPCODE against a vlserver that
+ * predates these two - never sniff, never guess.
+ */
+CreateEntryU(
+  IN uvldbentry *newentry
+) = VLCREATEENTRYU;
+
+ReplaceEntryU(
+  IN afs_uint32 Volid,
+  afs_int32 voltype,
+  uvldbentry *newentry,
+  afs_int32 ReleaseType
+) = VLREPLACEENTRYU;
+
 ListEntryN(
   IN afs_int32 previous_index,
   OUT afs_int32 *count,

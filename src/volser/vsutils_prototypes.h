@@ -14,6 +14,12 @@ extern int VLDB_IsSameServer(const struct rx_sockaddr *sa1,
 			     const struct rx_sockaddr *sa2, afs_int32 *errorp);
 extern int VLDB_SockaddrMatchesIP(const struct rx_sockaddr *sa, afs_uint32 ip,
 				  afs_int32 *errorp);
+extern int VLDB_GetUuidByAddr(const struct rx_sockaddr *aserver, afsUUID *uuidp);
+extern void VLDB_NvldbentryToUvldbentry(struct nvldbentry *entryp,
+					struct uvldbentry *uentryp);
+extern int VLDB_CreateEntryU(struct uvldbentry *entryp);
+extern int VLDB_ReplaceEntryU(afs_uint32 volid, afs_int32 voltype,
+			      struct uvldbentry *entryp, afs_int32 releasetype);
 extern int vsu_ExtractName(char rname[], char name[]);
 extern afs_uint32 vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp);
 #endif

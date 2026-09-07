@@ -77,11 +77,16 @@ static int vlentry_to_nvldbentry(struct vl_ctx *ctx,
 static int vlentry_to_uvldbentry(struct vl_ctx *ctx,
 				 struct nvlentry *VlEntry,
 				 struct uvldbentry *VldbEntry);
+static int check_uvldbentry(struct uvldbentry *aentry);
+static int uvldbentry_to_vlentry(struct vl_ctx *ctx,
+				 struct uvldbentry *VldbEntry,
+				 struct nvlentry *VlEntry);
 static int InvalidVolname(char *volname);
 static int InvalidVoltype(afs_int32 voltype);
 static int InvalidOperation(afs_int32 voloper);
 static int InvalidReleasetype(afs_int32 releasetype);
 static int IpAddrToRelAddr(struct vl_ctx *ctx, afs_uint32 ipaddr, int create);
+static int UuidToRelAddr(struct vl_ctx *ctx, afsUUID *uuidp);
 static int ChangeIPAddr(struct vl_ctx *ctx, afs_uint32 ipaddr1,
                         afs_uint32 ipaddr2);
 
@@ -415,6 +420,93 @@ SVL_CreateEntryN(struct rx_call *rxcall, struct nvldbentry *newentry)
     afs_int32 code;
 
     code = CreateEntryN(rxcall, newentry);
+    osi_auditU(rxcall, VLCreateEntryEvent, code, AUD_STR,
+	       (newentry ? newentry->name : NULL), AUD_END);
+    return code;
+}
+
+/*
+ * CreateEntryU is CreateEntryN's UUID-capable sibling: identical in every
+ * respect except that it flattens the incoming entry via
+ * uvldbentry_to_vlentry() (which can resolve a site by the server's VLDB
+ * UUID, via UuidToRelAddr(), instead of requiring an IPv4 address for
+ * every site) rather than nvldbentry_to_vlentry(). This is the RPC a
+ * caller like vos needs in order to create a volume with a site on a
+ * genuinely IPv6-only fileserver - see uvldbentry_to_vlentry()'s comment.
+ */
+static afs_int32
+CreateEntryU(struct rx_call *rxcall, struct uvldbentry *newentry)
+{
+    int this_op = VLCREATEENTRYU;
+    struct vl_ctx ctx;
+    afs_int32 code, blockindex;
+    struct nvlentry tentry;
+    char rxstr[AFS_RXINFO_LEN];
+
+    countRequest(this_op);
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL)) {
+	return VL_PERM;
+    }
+
+    /* Do some validity tests on new entry */
+    if ((code = check_uvldbentry(newentry))
+	|| (code = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
+	return code;
+
+    VLog(1,
+	 ("Create Volume %d %s\n", newentry->volumeId[RWVOL],
+	  rxinfo(rxstr, rxcall)));
+    if (EntryIDExists(&ctx, newentry->volumeId, MAXTYPES, &code)) {
+	/* at least one of the specified IDs already exists; we fail */
+	code = VL_IDEXIST;
+	goto abort;
+    } else if (code) {
+	goto abort;
+    }
+
+    /* Is this following check (by volume name) necessary?? */
+    /* If entry already exists, we fail */
+    if (FindByName(&ctx, newentry->name, &tentry, &code)) {
+	code = VL_NAMEEXIST;
+	goto abort;
+    } else if (code) {
+	goto abort;
+    }
+
+    blockindex = AllocBlock(&ctx, &tentry);
+    if (blockindex == 0) {
+	code = VL_CREATEFAIL;
+	goto abort;
+    }
+
+    memset(&tentry, 0, sizeof(struct nvlentry));
+    /* Convert to its internal representation; both in host byte order */
+    if ((code = uvldbentry_to_vlentry(&ctx, newentry, &tentry))) {
+	FreeBlock(&ctx, blockindex);
+	goto abort;
+    }
+
+    /* Actually insert the entry in vldb */
+    code = ThreadVLentry(&ctx, blockindex, &tentry);
+    if (code) {
+	FreeBlock(&ctx, blockindex);
+	goto abort;
+    } else {
+	return ubik_EndTrans(ctx.trans);
+    }
+
+  abort:
+    countAbort(this_op);
+    ubik_AbortTrans(ctx.trans);
+    return code;
+}
+
+afs_int32
+SVL_CreateEntryU(struct rx_call *rxcall, struct uvldbentry *newentry)
+{
+    afs_int32 code;
+
+    code = CreateEntryU(rxcall, newentry);
     osi_auditU(rxcall, VLCreateEntryEvent, code, AUD_STR,
 	       (newentry ? newentry->name : NULL), AUD_END);
     return code;
@@ -987,6 +1079,121 @@ SVL_ReplaceEntryN(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
     afs_int32 code;
 
     code = ReplaceEntryN(rxcall, volid, voltype, newentry, releasetype);
+    osi_auditU(rxcall, VLReplaceVLEntryEvent, code, AUD_LONG, volid, AUD_END);
+    return code;
+}
+
+/*
+ * ReplaceEntryU is ReplaceEntryN's UUID-capable sibling - see
+ * CreateEntryU's comment. This is the RPC UV_AddSite2()/UV_MoveVolume2()/
+ * UV_ChangeLocation() (vsprocs.c) use to give an existing VLDB entry a
+ * site on a genuinely IPv6-only fileserver.
+ */
+static afs_int32
+ReplaceEntryU(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
+	      struct uvldbentry *newentry, afs_int32 releasetype)
+{
+    int this_op = VLREPLACEENTRYU;
+    struct vl_ctx ctx;
+    afs_int32 blockindex, code, typeindex;
+    int hashnewname;
+    int hashVol[MAXTYPES];
+    struct nvlentry tentry;
+    char rxstr[AFS_RXINFO_LEN];
+
+    countRequest(this_op);
+    for (typeindex = 0; typeindex < MAXTYPES; typeindex++)
+	hashVol[typeindex] = 0;
+    hashnewname = 0;
+    if (!afsconf_SuperUser(vldb_confdir, rxcall, NULL))
+	return VL_PERM;
+
+    if ((code = check_uvldbentry(newentry)))
+	return code;
+
+    if (voltype != -1 && InvalidVoltype(voltype))
+	return VL_BADVOLTYPE;
+
+    if (releasetype && InvalidReleasetype(releasetype))
+	return VL_BADRELLOCKTYPE;
+    if ((code = Init_VLdbase(&ctx, LOCKWRITE, this_op)))
+	return code;
+
+    VLog(1, ("Replace Volume %u %s\n", volid, rxinfo(rxstr, rxcall)));
+    /* find vlentry we're changing */
+    blockindex = FindByID(&ctx, volid, voltype, &tentry, &code);
+    if (blockindex == 0) {	/* entry not found */
+	if (!code)
+	    code = VL_NOENT;
+	goto abort;
+    }
+
+    /* check that we're not trying to change the RW vol ID */
+    if (newentry->volumeId[RWVOL] != tentry.volumeId[RWVOL]) {
+	ABORT(VL_BADENTRY);
+    }
+
+    /* unhash volid entries if they're disappearing or changing.
+     * Remember if we need to hash in the new value (we don't have to
+     * rehash if volid stays same */
+    for (typeindex = ROVOL; typeindex <= BACKVOL; typeindex++) {
+	if (tentry.volumeId[typeindex] != newentry->volumeId[typeindex]) {
+	    if (tentry.volumeId[typeindex])
+		if ((code =
+		    UnhashVolid(&ctx, typeindex, blockindex, &tentry))) {
+		    goto abort;
+		}
+	    /* we must rehash new id if the id is different and the ID is nonzero */
+	    hashVol[typeindex] = 1;	/* must rehash this guy if he exists */
+	}
+    }
+
+    /* Rehash volname if it changes */
+    if (strcmp(newentry->name, tentry.name)) {	/* Name changes; redo hashing */
+	if ((code = UnhashVolname(&ctx, blockindex, &tentry))) {
+	    goto abort;
+	}
+	hashnewname = 1;
+    }
+
+    /* after this, tentry is new entry, not old one.  uvldbentry_to_vlentry
+     * doesn't touch hash chains */
+    if ((code = uvldbentry_to_vlentry(&ctx, newentry, &tentry))) {
+	goto abort;
+    }
+
+    for (typeindex = ROVOL; typeindex <= BACKVOL; typeindex++) {
+	if (hashVol[typeindex] && tentry.volumeId[typeindex]) {
+	    if ((code = HashVolid(&ctx, typeindex, blockindex, &tentry))) {
+		goto abort;
+	    }
+	}
+    }
+
+    if (hashnewname)
+	HashVolname(&ctx, blockindex, &tentry);
+
+    if (releasetype)
+	ReleaseEntry(&tentry, releasetype);	/* Unlock entry if necessary */
+    if (vlentrywrite(ctx.trans, blockindex, &tentry, sizeof(tentry))) {
+	ABORT(VL_IO);
+    }
+
+    return ubik_EndTrans(ctx.trans);
+
+  abort:
+    countAbort(this_op);
+    ubik_AbortTrans(ctx.trans);
+    return code;
+}
+
+afs_int32
+SVL_ReplaceEntryU(struct rx_call *rxcall, afs_uint32 volid, afs_int32 voltype,
+		  struct uvldbentry *newentry, afs_int32 releasetype)
+{
+    afs_int32 code;
+
+    code = ReplaceEntryU(rxcall, volid, voltype, newentry, releasetype);
     osi_auditU(rxcall, VLReplaceVLEntryEvent, code, AUD_LONG, volid, AUD_END);
     return code;
 }
@@ -3394,6 +3601,26 @@ check_nvldbentry(struct nvldbentry *aentry)
     return 0;
 }
 
+static int
+check_uvldbentry(struct uvldbentry *aentry)
+{
+    afs_int32 i;
+
+    if (InvalidVolname(aentry->name))
+	return VL_BADNAME;
+    if (aentry->nServers <= 0 || aentry->nServers > NMAXNSERVERS)
+	return VL_BADSERVER;
+    for (i = 0; i < aentry->nServers; i++) {
+	if (aentry->serverPartition[i] < 0
+	    || aentry->serverPartition[i] > MAXPARTITIONID)
+	    return VL_BADPARTITION;
+	if (aentry->serverFlags[i] < 0
+	    || aentry->serverFlags[i] > MAXSERVERFLAG)
+	    return VL_BADSERVERFLAG;
+    }
+    return 0;
+}
+
 
 /* Convert from the external vldb entry representation to its internal
    (more compact) form.  This call should not change the hash chains! */
@@ -3440,6 +3667,53 @@ nvldbentry_to_vlentry(struct vl_ctx *ctx,
 	VlEntry->serverNumber[i] = serverindex;
 	VlEntry->serverPartition[i] = VldbEntry->serverPartition[i];
 	VlEntry->serverFlags[i] = VldbEntry->serverFlags[i];
+    }
+    for (; i < NMAXNSERVERS; i++)
+	VlEntry->serverNumber[i] = VlEntry->serverPartition[i] =
+	    VlEntry->serverFlags[i] = BADSERVERID;
+    for (i = 0; i < MAXTYPES; i++)
+	VlEntry->volumeId[i] = VldbEntry->volumeId[i];
+    VlEntry->cloneId = VldbEntry->cloneId;
+    VlEntry->flags = VldbEntry->flags;
+    return 0;
+}
+
+/*
+ * uvldbentry_to_vlentry is nvldbentry_to_vlentry's UUID-capable sibling.
+ * uvldbentry's serverNumber[] is an afsUUID rather than a raw IPv4
+ * address, but that field is only actually treated as a UUID for a site
+ * whose serverFlags[] carries VLSF_UUID (set by vlentry_to_uvldbentry()
+ * for a site with a Multi-homed Entry, i.e. one that has ever called
+ * RegisterAddrs/RegisterEndpoints - the only way a genuinely IPv6-only
+ * site can be named at all, via UuidToRelAddr()); every other site keeps
+ * the classic representation, an IPv4 address stashed in the UUID's
+ * time_low field (also matching vlentry_to_uvldbentry()'s output), so a
+ * caller building a uvldbentry doesn't need to resolve a UUID for sites
+ * it already knows by address. VLSF_UUID itself is a wire-only
+ * annotation - like every other VlEntry->serverFlags[] value, it is not
+ * stored internally, so it is stripped here.
+ */
+static int
+uvldbentry_to_vlentry(struct vl_ctx *ctx,
+		      struct uvldbentry *VldbEntry,
+		      struct nvlentry *VlEntry)
+{
+    int i, serverindex;
+
+    if (strcmp(VlEntry->name, VldbEntry->name))
+	strncpy(VlEntry->name, VldbEntry->name, sizeof(VlEntry->name));
+    for (i = 0; i < VldbEntry->nServers; i++) {
+	if (VldbEntry->serverFlags[i] & VLSF_UUID) {
+	    serverindex = UuidToRelAddr(ctx, &VldbEntry->serverNumber[i]);
+	} else {
+	    serverindex =
+		IpAddrToRelAddr(ctx, VldbEntry->serverNumber[i].time_low, 1);
+	}
+	if (serverindex == -1)
+	    return VL_BADSERVER;
+	VlEntry->serverNumber[i] = serverindex;
+	VlEntry->serverPartition[i] = VldbEntry->serverPartition[i];
+	VlEntry->serverFlags[i] = VldbEntry->serverFlags[i] & ~VLSF_UUID;
     }
     for (; i < NMAXNSERVERS; i++)
 	VlEntry->serverNumber[i] = VlEntry->serverPartition[i] =
@@ -3894,6 +4168,44 @@ IpAddrToRelAddr(struct vl_ctx *ctx, afs_uint32 ipaddr, int create)
 		    return -1;
 		return i;
 	    }
+	}
+    }
+    return -1;
+}
+
+/*
+ * UuidToRelAddr is IpAddrToRelAddr's UUID-keyed sibling, for a site whose
+ * server has no IPv4 address at all to look up by. It scans the same
+ * Multi-homed Entry chain (via multiHomedExtent()), matching on
+ * exp->ex_hostuuid - the field SVL_RegisterAddrs/SVL_RegisterEndpoints
+ * already populate and FindExtentBlock() already compares - instead of a
+ * raw IP.
+ *
+ * Unlike IpAddrToRelAddr, this never allocates a new relative-id slot for
+ * an unknown UUID: a server must already have self-registered (via
+ * RegisterAddrs or RegisterEndpoints) before any volume can reference it
+ * by UUID, which in practice is always true by the time a volume
+ * operation could name it - a fileserver registers at startup, well
+ * before serving any volume. Returns -1, matching IpAddrToRelAddr, if no
+ * registered server's uuid matches.
+ */
+static int
+UuidToRelAddr(struct vl_ctx *ctx, afsUUID *uuidp)
+{
+    int i;
+    afs_int32 code;
+    struct extentaddr *exp;
+    afsUUID tuuid;
+
+    for (i = 0; i <= MAXSERVERID; i++) {
+	code = multiHomedExtent(ctx, i, &exp);
+	if (code)
+	    return -1;
+	if (exp) {
+	    tuuid = exp->ex_hostuuid;
+	    afs_ntohuuid(&tuuid);
+	    if (afs_uuid_equal(uuidp, &tuuid))
+		return i;
 	}
     }
     return -1;
