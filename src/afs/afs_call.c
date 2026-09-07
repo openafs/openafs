@@ -97,6 +97,31 @@ extern struct interfaceAddr afs_cb_interface;
 #ifdef RXK_LISTENER_ENV
 static int afs_RX_Running = 0;
 #endif
+/* Guard AFSOP_START_CS and AFSOP_RXEVENT_DAEMON the same way afs_RX_Running
+ * guards AFSOP_RXLISTENER_DAEMON above: once either daemon has been forked
+ * for this module load, never fork a second one. Unlike afs_CB_Running/
+ * AFS_Running, these are never reset back to 0 (not even by
+ * shutdown_afstest() - see afs_shutdown() below), because the shutdown
+ * state machine both of these daemons participate in (afs_termState's
+ * single-flight AFSOP_STOP_CS/AFSOP_STOP_RXEVENT handshake in
+ * afs_CheckServerDaemon()/afs_rxevent_daemon()) only knows how to
+ * terminate one instance of each: a second, duplicate instance - forked
+ * by a second "afsd -verbose" issued against an already-initialized
+ * module without an intervening rmmod/insmod - would consume none of
+ * that handshake, sail past shutdown as a permanently orphaned kernel
+ * thread still resident in this module's .text, and fault the next time
+ * its periodic timer fires after rmmod frees that memory out from under
+ * it (observed live: real, reproducible "afs_rxevent"/"afs_checkserver"
+ * kernel oopses at freed addresses, and rmmod itself hanging forever in
+ * afs_cleanup() waiting on a thread that can now never notice it should
+ * exit). Silently no-op'ing the repeat request here - matching how
+ * AFSOP_START_RXCALLBACK/AFSOP_RXLISTENER_DAEMON/AFSOP_START_AFS already
+ * treat their own re-invocation - closes the gap at its source instead
+ * of trying to teach the shutdown handshake to track more than one
+ * instance.
+ */
+static int afs_CS_Running = 0;
+static int afs_RxEvent_Running = 0;
 static int afs_InitSetup_done = 0;
 afs_int32 afs_numcachefiles = -1;
 afs_int32 afs_numfilesperdir = -1;
@@ -206,6 +231,14 @@ daemonOp_common(long parm, long parm2, long parm3, long parm4, long parm5,
     } else if (parm == AFSOP_START_AFS) {
 	if (AFS_Running)
 	    return -1;
+    } else if (parm == AFSOP_START_CS) {
+	if (afs_CS_Running)
+	    return -1;
+	afs_CS_Running = 1;
+    } else if (parm == AFSOP_RXEVENT_DAEMON) {
+	if (afs_RxEvent_Running)
+	    return -1;
+	afs_RxEvent_Running = 1;
     }				/* other functions don't need setup in the parent */
     return 0;
 }
