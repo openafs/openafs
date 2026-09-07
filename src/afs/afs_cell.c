@@ -1051,6 +1051,169 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
     return code;
 }
 
+/*!
+ * afs_NewCellSA() is afs_NewCell()'s IPv6-capable sibling: a close copy,
+ * identical in locking, cell-record creation/update, linked-cell handling
+ * and timeout handling, differing only in how each cell host is resolved
+ * to a struct server - acellHosts carries real struct rx_sockaddr entries
+ * (as ConfigCell() builds directly from a CellServDB entry's own
+ * afsconf_cell.hostAddr[], which has been dual-stack-capable since Phase 2
+ * of this series) instead of afs_NewCell()'s plain-IPv4 afs_int32 array,
+ * and afs_GetServerSA() (this file's afs_server.c neighbor, called here
+ * with uuidp NULL for its single-address, no-uuid mode - the same mode
+ * afs_GetServer() itself supports) replaces afs_GetServer() for resolving
+ * each one. A zero rxsa_family (mirroring auth/cellconfig.c's own
+ * VerifyEntries()'s "no address spec'd" test) marks the end of the list,
+ * the same role an all-zero afs_int32 entry plays for afs_NewCell().
+ *
+ * A new sibling function, not a widened afs_NewCell(), for the same
+ * reason afs_GetServerSA() is a sibling of afs_GetServer(): afs_NewCell()
+ * has several other callers (AFSOP_ADDCELL's own handler, the AFSDB
+ * lookup path, the dynroot placeholder cell, the "fs newcell" pioctl) that
+ * all still legitimately deal in plain IPv4-only host lists and have
+ * nothing to do with CellServDB parsing - only ConfigCell() needed this.
+ *
+ * \param acellName Name of cell.
+ * \param acellHosts Array of AFS_MAXCELLHOSTS host addresses for this cell;
+ *      a zero rxsa_family entry terminates the list early, same as
+ *      afs_NewCell()'s all-zero afs_int32 entry.
+ * \param aflags Cell flags.
+ * \param linkedcname
+ * \param fsport File server port.
+ * \param vlport Volume server port.
+ * \param timeout Cell timeout value, 0 means static AFSDB entry.
+ * \return
+ */
+afs_int32
+afs_NewCellSA(char *acellName, const struct rx_sockaddr *acellHosts,
+	      int aflags, char *linkedcname, u_short fsport, u_short vlport,
+	      int timeout)
+{
+    struct cell *tc, *tcl = 0;
+    afs_int32 i, newc = 0, code = 0;
+    struct md5 m;
+
+    AFS_STATCNT(afs_NewCell);
+
+    ObtainWriteLock(&afs_xcell, 103);
+
+    tc = afs_FindCellByName_nl(acellName, READ_LOCK);
+    if (tc) {
+	aflags &= ~CNoSUID;
+    } else {
+	tc = afs_osi_Alloc(sizeof(struct cell));
+	osi_Assert(tc != NULL);
+	memset(tc, 0, sizeof(*tc));
+	tc->cellName = afs_strdup(acellName);
+	tc->fsport = AFS_FSPORT;
+	tc->vlport = AFS_VLPORT;
+	MD5_Init(&m);
+	MD5_Update(&m, tc->cellName, strlen(tc->cellName));
+	MD5_Final(tc->cellHandle, &m);
+	AFS_RWLOCK_INIT(&tc->lock, "cell lock");
+	newc = 1;
+	aflags |= CNoSUID;
+    }
+    ObtainWriteLock(&tc->lock, 688);
+
+    /* If the cell we've found has the correct name but no timeout,
+     * and we're called with a non-zero timeout, bail out:  never
+     * override static configuration entries with AFSDB ones.
+     * One exception: if the original cell entry had no servers,
+     * it must get servers from AFSDB.
+     */
+    if (timeout && !tc->timeout && tc->cellHosts[0]) {
+	code = EEXIST;		/* This code is checked for in afs_LookupAFSDB */
+	goto bad;
+    }
+
+    /* we don't want to keep pinging old vlservers which were down,
+     * since they don't matter any more.  It's easier to do this than
+     * to remove the server from its various hash tables. */
+    for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
+	if (!tc->cellHosts[i])
+	    break;
+	tc->cellHosts[i]->flags &= ~SRVR_ISDOWN;
+	tc->cellHosts[i]->flags |= SRVR_ISGONE;
+    }
+
+    if (fsport)
+	tc->fsport = fsport;
+    if (vlport)
+	tc->vlport = vlport;
+
+    if (aflags & CLinkedCell) {
+	if (!linkedcname) {
+	    code = EINVAL;
+	    goto bad;
+	}
+	tcl = afs_FindCellByName_nl(linkedcname, READ_LOCK);
+	if (!tcl) {
+	    code = ENOENT;
+	    goto bad;
+	}
+	if (tcl->lcellp) {	/* XXX Overwriting if one existed before! XXX */
+	    tcl->lcellp->lcellp = (struct cell *)0;
+	    tcl->lcellp->states &= ~CLinkedCell;
+	}
+	tc->lcellp = tcl;
+	tcl->lcellp = tc;
+    }
+    tc->states |= aflags;
+    tc->timeout = timeout;
+
+    memset(tc->cellHosts, 0, sizeof(tc->cellHosts));
+    for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
+	/* Get server for each host and link this cell in.*/
+	struct server *ts;
+	if (acellHosts[i].rxsa_family == 0)
+	    break;
+	ts = afs_GetServerSA(&acellHosts[i], 1, 0, tc->vlport, WRITE_LOCK,
+			      NULL, 0, NULL);
+	ts->cell = tc;
+	ts->flags &= ~SRVR_ISGONE;
+	/* Set the server as a host of the new cell. */
+	tc->cellHosts[i] = ts;
+	afs_PutServer(ts, WRITE_LOCK);
+    }
+    afs_SortServers(tc->cellHosts, AFS_MAXCELLHOSTS);	/* randomize servers */
+
+    /* New cell: Build and add to LRU cell queue. */
+    if (newc) {
+	struct cell_name *cn;
+
+	cn = afs_cellname_lookup_name(acellName);
+	if (!cn)
+	    cn = afs_cellname_new(acellName, 0);
+
+	tc->cnamep = cn;
+	tc->cellNum = cn->cellnum;
+	tc->cellIndex = afs_cellindex++;
+	afs_stats_cmperf.numCellsVisible++;
+	QAdd(&CellLRU, &tc->lruq);
+    }
+
+    ReleaseWriteLock(&tc->lock);
+    ReleaseWriteLock(&afs_xcell);
+    afs_PutCell(tc, 0);
+    if (!(aflags & CHush))
+	afs_DynrootInvalidate();
+    return 0;
+
+  bad:
+    ReleaseWriteLock(&tc->lock);
+
+    if (newc) {
+	/* If we're a new cell, nobody else can see us, so doing this
+	 * after lock release is safe */
+	afs_osi_FreeStr(tc->cellName);
+	afs_osi_Free(tc, sizeof(struct cell));
+    }
+
+    ReleaseWriteLock(&afs_xcell);
+    return code;
+}
+
 /*
  * Miscellaneous stuff
  *

@@ -60,6 +60,22 @@ struct afsop_cell {
     char cellName[100];
 };
 
+/*
+ * afsop_cell_sa is AFSOP_ADDCELL3's IPv6-capable sibling of afsop_cell:
+ * a real struct rx_sockaddr per host instead of a plain afs_int32. This
+ * is a same-machine userspace-to-kernel syscall (afsd and the kernel
+ * module it's talking to are always built and deployed together in this
+ * tree), not an actual network wire protocol, so - unlike the VLDB
+ * vlendpoint {type,length,value[4]} encoding this series uses for the
+ * real VL_GetEndpoints/VL_RegisterEndpoints RPCs - a direct struct copy
+ * is the simplest, most direct choice here, with no cross-version or
+ * cross-architecture wire-format concern to design around.
+ */
+struct afsop_cell_sa {
+    struct rx_sockaddr hosts[AFS_MAXCELLHOSTS];
+    char cellName[100];
+};
+
 char afs_zeros[AFS_ZEROS];
 char afs_rootVolumeName[64] = "";
 afs_uint32 rx_bindhost;
@@ -1246,6 +1262,50 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    }
 	}
 	afs_osi_Free(tcell, sizeof(struct afsop_cell));
+	osi_FreeSmallSpace(tbuffer);
+	osi_FreeSmallSpace(tbuffer1);
+    } else if (parm == AFSOP_ADDCELL3) {
+	/* IPv6-capable sibling of AFSOP_ADDCELL2, modeled directly on it:
+	 * same parm layout (parm2 = host array, parm3 = cell name, parm4 =
+	 * flags [+ linked-cell/hush bits], parm5 = linked cell name), just
+	 * with parm2 pointing at struct afsop_cell_sa's real rx_sockaddr
+	 * array instead of afsop_cell's afs_int32 one, and afs_NewCellSA()
+	 * instead of afs_NewCell() to resolve them. */
+	struct afsop_cell_sa *tcell = afs_osi_Alloc(sizeof(struct afsop_cell_sa));
+	char *tbuffer = osi_AllocSmallSpace(AFS_SMALLOCSIZ), *lcnamep = 0;
+	char *tbuffer1 = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+	int cflags = parm4;
+
+	osi_Assert(tcell != NULL);
+	osi_Assert(tbuffer != NULL);
+	osi_Assert(tbuffer1 != NULL);
+	code = afs_InitDynroot();
+	if (!code) {
+	    AFS_COPYIN(AFSKPTR(parm2), (caddr_t)tcell->hosts,
+		       sizeof(tcell->hosts), code);
+	}
+	if (!code) {
+	    AFS_COPYINSTR(AFSKPTR(parm3), tbuffer1, AFS_SMALLOCSIZ,
+			  &bufferSize, code);
+	    if (!code) {
+		if (parm4 & 4) {
+		    AFS_COPYINSTR(AFSKPTR(parm5), tbuffer, AFS_SMALLOCSIZ,
+				  &bufferSize, code);
+		    if (!code) {
+			lcnamep = tbuffer;
+			cflags |= CLinkedCell;
+		    }
+		}
+		if (parm4 & 8) {
+		    cflags |= CHush;
+		}
+		if (!code)
+		    code =
+			afs_NewCellSA(tbuffer1, tcell->hosts, cflags, lcnamep,
+				      0, 0, 0);
+	    }
+	}
+	afs_osi_Free(tcell, sizeof(struct afsop_cell_sa));
 	osi_FreeSmallSpace(tbuffer);
 	osi_FreeSmallSpace(tbuffer1);
     } else if (parm == AFSOP_ADDCELLALIAS) {

@@ -67,6 +67,19 @@
 #define AFSOP_CACHEDIRS		 51	/* number of files per dir */
 #define AFSOP_CACHEFILES	 52	/* number of files */
 
+#define AFSOP_ADDCELL3		 53	/* 3rd add cell protocol interface -
+					 * IPv6-capable: parm 2 is an array of
+					 * AFS_MAXCELLHOSTS real struct
+					 * rx_sockaddr host entries (a zero
+					 * rxsa_family entry terminates the
+					 * list early) instead of
+					 * AFSOP_ADDCELL2's plain afs_int32s.
+					 * Same-machine userspace/kernel
+					 * syscall, not a network wire
+					 * protocol, so a direct struct copy
+					 * is used rather than a typed
+					 * {type,length,value[]} encoding. */
+
 #define AFSOP_SETINT		 60	/* set key/value pairs for ints */
 
 #define AFSOP_GO		100	/* whether settime is being done */

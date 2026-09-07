@@ -1416,7 +1416,7 @@ ConfigCell(struct afsconf_cell *aci, void *arock, struct afsconf_dir *adir)
     int isHomeCell;
     int i, code;
     int cellFlags = 0;
-    afs_int32 hosts[MAXHOSTSPERCELL];
+    struct rx_sockaddr hostAddr[MAXHOSTSPERCELL];
 
     /* figure out if this is the home cell */
     isHomeCell = (strcmp(aci->name, LclCellName) == 0);
@@ -1425,16 +1425,22 @@ ConfigCell(struct afsconf_cell *aci, void *arock, struct afsconf_dir *adir)
 	if (enable_dynroot == 2)
 	    cellFlags |= 8; /* don't display foreign cells until looked up */
     }
-    /* build address list */
+    /* Build the address list: the full, already dual-stack-capable
+     * struct rx_sockaddr entry for each host, not just its IPv4 union
+     * member (rxsa_in_addr) the way AFSOP_ADDCELL2's plain afs_int32
+     * array required. AFSOP_ADDCELL3 carries real rx_sockaddr entries
+     * into the kernel, so a v6-literal CellServDB entry - the only kind
+     * of entry a v6-only client's cell can use - now actually makes it
+     * through instead of reading back as all-zero. */
     for (i = 0; i < MAXHOSTSPERCELL; i++)
-	memcpy(&hosts[i], &aci->hostAddr[i].rxsa_in_addr, sizeof(afs_int32));
+	hostAddr[i] = aci->hostAddr[i];
 
     if (aci->linkedCell)
 	cellFlags |= 4;		/* Flag that linkedCell arg exists,
 				 * for upwards compatibility */
 
     /* configure one cell */
-    code = afsd_syscall(AFSOP_ADDCELL2, hosts,	/* server addresses */
+    code = afsd_syscall(AFSOP_ADDCELL3, hostAddr,	/* server addresses */
 			aci->name,	/* cell name */
 			cellFlags,	/* is this the home cell? */
 			aci->linkedCell);	/* Linked cell, if any */
@@ -3220,6 +3226,7 @@ afsd_syscall_populate(struct afsd_syscall_args *args, int syscall, va_list ap)
 	params[3] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
 	break;
     case AFSOP_ADDCELL2:
+    case AFSOP_ADDCELL3:
 	params[0] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
 	params[1] = CAST_SYSCALL_PARAM((va_arg(ap, void *)));
 	params[2] = CAST_SYSCALL_PARAM((va_arg(ap, afs_int32)));

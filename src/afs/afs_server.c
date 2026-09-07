@@ -1843,22 +1843,55 @@ afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers, afs_int32 acell,
 }				/* afs_GetServer */
 
 /*
- * afs_GetServerSA() is afs_GetServer()'s IPv6-capable sibling, for a
- * multihomed (UUID-identified) server's endpoint list as returned by
- * VL_GetEndpoints - VLDB v5's per-UUID endpoint blocks always carry a
- * UUID, so unlike afs_GetServer() this has no single-address,
- * no-uuid legacy case to support; aservers/nservers replace
- * afs_GetServer()'s aserverp/nservers, and aport is still a single port
- * shared by every endpoint (matching afs_SearchServer()'s existing
- * "one port for the whole uuid-identified server" assumption - real
- * AFS3 fileservers use one port across all their interfaces).
+ * afs_FindServerSA() is afs_FindServer()'s non-uuid branch, sockaddr-ized:
+ * given a single address (no uuid - a multihomed, UUID-identified server
+ * is never looked up this way), find the existing struct server that owns
+ * it, if any. Mirrors afs_FindServer()'s "else" branch exactly (SHash()
+ * becomes SHashSA(), the sa_ip comparison becomes rx_compare_sockaddr()
+ * over RXA_ADDR alone - aport is still compared against sa->sa_portal
+ * directly, not against whatever port happened to be embedded in the
+ * looked-up address, matching afs_FindServer()'s own "the srvAddr's real
+ * port is sa_portal" convention).
+ */
+static struct server *
+afs_FindServerSA(const struct rx_sockaddr *aserver, afs_uint16 aport,
+		  afs_int32 locktype)
+{
+    struct srvAddr *sa;
+    unsigned int i = SHashSA(aserver);
+
+    for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
+	if (rx_compare_sockaddr(&sa->sa_saddr, aserver, RXA_ADDR)
+	    && sa->sa_portal == aport)
+	    return sa->server;
+    }
+    return NULL;
+}
+
+/*
+ * afs_GetServerSA() is afs_GetServer()'s IPv6-capable sibling.
  *
- * This is a close copy of afs_GetServer()'s multihomed branch rather
- * than a shared refactor: afs_GetServer() has six external callers
- * across three files, all IPv4-native, so widening its own signature
- * would have meant touching every one of them just to pass a NULL - a
- * new sibling function is the same shim pattern used throughout this
- * series (rx_NewConnectionSA alongside rx_NewConnection, and so on).
+ * Two modes, exactly mirroring afs_GetServer()'s own two modes:
+ *
+ *  - uuidp set: a multihomed (UUID-identified) server's endpoint list as
+ *    returned by VL_GetEndpoints - VLDB v5's per-UUID endpoint blocks
+ *    always carry a UUID. aservers/nservers replace afs_GetServer()'s
+ *    aserverp/nservers, and aport is still a single port shared by every
+ *    endpoint (matching afs_SearchServer()'s existing "one port for the
+ *    whole uuid-identified server" assumption - real AFS3 fileservers use
+ *    one port across all their interfaces).
+ *
+ *  - uuidp NULL: a single, non-multihomed address (nservers must be 1) -
+ *    the same "legacy" case afs_GetServer() supports for its IPv4-only
+ *    callers, needed here too once a CellServDB entry (afs_NewCellSA(),
+ *    afs_cell.c) can itself be a v6 literal with no uuid at all.
+ *
+ * This is a close copy of afs_GetServer() rather than a shared refactor:
+ * afs_GetServer() has six external callers across three files, all
+ * IPv4-native, so widening its own signature would have meant touching
+ * every one of them just to pass a NULL - a new sibling function is the
+ * same shim pattern used throughout this series (rx_NewConnectionSA
+ * alongside rx_NewConnection, and so on).
  */
 struct server *
 afs_GetServerSA(const struct rx_sockaddr *aservers, afs_int32 nservers,
@@ -1873,16 +1906,29 @@ afs_GetServerSA(const struct rx_sockaddr *aservers, afs_int32 nservers,
 
     AFS_STATCNT(afs_GetServer);
 
-    osi_Assert(uuidp);
-    if (nservers <= 0)
-	panic("afs_GetServerSA: incorrect count of servers");
-
     ObtainSharedLock(&afs_xserver, 13);
 
-    ts = afs_SearchServer(aport, uuidp, locktype, &oldts, addr_uniquifier);
-    if (ts) {
-	ReleaseSharedLock(&afs_xserver);
-	return ts;
+    /* Check if the server struct exists and is up to date */
+    if (!uuidp) {
+	if (nservers != 1)
+	    panic("afs_GetServerSA: incorrect count of servers");
+	ObtainReadLock(&afs_xsrvAddr);
+	ts = afs_FindServerSA(&aservers[0], aport, locktype);
+	ReleaseReadLock(&afs_xsrvAddr);
+	if (ts && !(ts->flags & SRVR_MULTIHOMED)) {
+	    /* Found a server struct that is not multihomed and has the
+	     * address associated with it. A correct match. */
+	    ReleaseSharedLock(&afs_xserver);
+	    return ts;
+	}
+    } else {
+	if (nservers <= 0)
+	    panic("afs_GetServerSA: incorrect count of servers");
+	ts = afs_SearchServer(aport, uuidp, locktype, &oldts, addr_uniquifier);
+	if (ts) {
+	    ReleaseSharedLock(&afs_xserver);
+	    return ts;
+	}
     }
 
     /*
@@ -1921,15 +1967,18 @@ afs_GetServerSA(const struct rx_sockaddr *aservers, afs_int32 nservers,
 	memset(newts, 0, sizeof(struct server));
 
 	/* Add the server struct to the afs_servers[] hash chain */
-	srvhash = afs_uuid_hash(uuidp) % NSERVERS;
+	srvhash =
+	    (uuidp ? (afs_uuid_hash(uuidp) % NSERVERS) : SHashSA(&aservers[0]));
 	newts->next = afs_servers[srvhash];
 	afs_servers[srvhash] = newts;
     }
 
     /* Initialize the server structure */
-    newts->sr_uuid = *uuidp;
-    newts->sr_addr_uniquifier = addr_uniquifier;
-    newts->flags |= SRVR_MULTIHOMED;
+    if (uuidp) {		/* Multihomed */
+	newts->sr_uuid = *uuidp;
+	newts->sr_addr_uniquifier = addr_uniquifier;
+	newts->flags |= SRVR_MULTIHOMED;
+    }
     if (acell)
 	/* Use the afs_GetCellStale variant to avoid afs_GetServer recursion. */
 	newts->cell = afs_GetCellStale(acell, 0);
@@ -1979,7 +2028,10 @@ afs_GetServerSA(const struct rx_sockaddr *aservers, afs_int32 nservers,
 	newsa->server = newts;
 	if (newts->flags & SRVR_ISDOWN)
 	    newsa->sa_flags |= SRVADDR_ISDOWN;
-	newsa->sa_flags |= SRVADDR_MH;
+	if (uuidp)
+	    newsa->sa_flags |= SRVADDR_MH;
+	else
+	    newsa->sa_flags &= ~SRVADDR_MH;
 
 	/* Compute preference values and resort. afs_SetServerPrefs() is
 	 * still IPv4-only (see the struct srvAddr.sa_saddr comment in
