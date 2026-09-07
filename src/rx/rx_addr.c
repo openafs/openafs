@@ -255,6 +255,78 @@ rx_is_linklocal_sockaddr(const struct rx_sockaddr *a)
     return 0;
 }
 
+/*
+ * Genuine bit-level prefix comparison of two address byte strings, each
+ * totalbits long, matching the leading prefixlen bits. Not just a
+ * byte-level check - a caller-supplied prefixlen that isn't a multiple of
+ * 8 (e.g. /64 is fine, but /21 or /127 must work too) still has to compare
+ * only the bits that are actually part of the prefix, in the partial byte
+ * straddling the boundary. Clamped so an out-of-range prefixlen (<0 or
+ * >totalbits) is treated as 0 or totalbits respectively, rather than
+ * reading past either buffer.
+ */
+static int
+bytes_prefix_match(const unsigned char *a, const unsigned char *b,
+		    int prefixlen, int totalbits)
+{
+    int fullbytes, remainder_bits;
+
+    if (prefixlen < 0)
+	prefixlen = 0;
+    if (prefixlen > totalbits)
+	prefixlen = totalbits;
+    if (prefixlen == 0)
+	return 1;
+
+    fullbytes = prefixlen / 8;
+    if (fullbytes && memcmp(a, b, fullbytes) != 0)
+	return 0;
+
+    remainder_bits = prefixlen % 8;
+    if (remainder_bits) {
+	unsigned char mask = (unsigned char)(0xff << (8 - remainder_bits));
+	if ((a[fullbytes] & mask) != (b[fullbytes] & mask))
+	    return 0;
+    }
+    return 1;
+}
+
+/*
+ * Is address 'a' within the prefixlen-bit prefix of 'net'? A byte-for-byte
+ * generalization of rx_compare_sockaddr(a, net, RXA_ADDR): prefixlen==32
+ * (v4) or prefixlen==128 (v6) is defined to compare every address bit, so
+ * it behaves identically to an exact rx_compare_sockaddr() match - this is
+ * what lets a caller (netrestrict.c's exact-match NetRestrict entries,
+ * an implicit /128) switch to this function without changing behavior for
+ * any address that has no explicit /N in the config file.
+ *
+ * Different families never match, same as rx_compare_sockaddr(). v4's
+ * rxsa_s_addr and v6's rxsa_s6_addr are both already stored in network
+ * byte order (the whole point of struct in_addr/in6_addr), so comparing
+ * them as raw byte strings, most-significant byte (and, within the final
+ * partial byte, most-significant bit) first, is exactly the bit order a
+ * prefix length is conventionally written in.
+ */
+int
+rx_prefix_match_sockaddr(const struct rx_sockaddr *a,
+			 const struct rx_sockaddr *net, int prefixlen)
+{
+    if (a->rxsa_family != net->rxsa_family) {
+	return 0;
+    }
+    if (a->rxsa_family == AF_INET) {
+	return bytes_prefix_match((const unsigned char *)&a->rxsa_s_addr,
+				  (const unsigned char *)&net->rxsa_s_addr,
+				  prefixlen, 32);
+#ifdef HAVE_IPV6
+    } else if (a->rxsa_family == AF_INET6) {
+	return bytes_prefix_match(a->rxsa_s6_addr, net->rxsa_s6_addr,
+				  prefixlen, 128);
+#endif
+    }
+    return 0;
+}
+
 int
 rx_copy_sockaddr(const struct rx_sockaddr *src, struct rx_sockaddr *dst)
 {

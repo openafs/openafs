@@ -1794,14 +1794,15 @@ Do_VLRegisterAddrsRPC(void)
  * local virtualization/network setup, not the operator's intended
  * address) gets registered as equally valid. So, below, an operator can
  * write one or more IPv6 literals into NetRestrict to say "register only
- * these v6 addresses" - exact-match only (no prefix/CIDR matching, see
- * netrestrict.c's extract_Addr6()); this is strictly additive/opt-in,
- * exactly mirroring the existing v4 code's own behavior: if NetRestrict
- * has no v6 entries at all (the file doesn't exist, or every line in it
- * is IPv4), nothing is filtered and every non-loopback address
- * rx_getAllSockaddr() found is still registered, unchanged from before
- * this was added. IPv4 addresses are never touched by this - they still
- * go through exactly as rx_getAllSockaddr() returned them, same as
+ * these v6 addresses" - either an exact address (an implicit /128) or a
+ * real CIDR prefix such as fd00:af5:1::/64 (see netrestrict.c's
+ * extract_Addr6()/rx_prefix_match_sockaddr()); this is strictly
+ * additive/opt-in, exactly mirroring the existing v4 code's own behavior:
+ * if NetRestrict has no v6 entries at all (the file doesn't exist, or
+ * every line in it is IPv4), nothing is filtered and every non-loopback
+ * address rx_getAllSockaddr() found is still registered, unchanged from
+ * before this was added. IPv4 addresses are never touched by this - they
+ * still go through exactly as rx_getAllSockaddr() returned them, same as
  * always.
  */
 static afs_int32
@@ -1813,6 +1814,7 @@ Do_VLRegisterRPC(void)
     int naddrs, i;
 #ifdef HAVE_IPV6
     struct rx_sockaddr restrict_sa[ADDRSPERSITE];
+    afs_uint32 restrict_prefixlens[ADDRSPERSITE];
     int n_restrict6 = 0;
 
     if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
@@ -1824,13 +1826,16 @@ Do_VLRegisterRPC(void)
 	 * in its result matter here - the v4 ones are just discarded,
 	 * FS_HostAddrs[]/the VL_RegisterAddrs fallback already handle v4
 	 * on their own path. */
-	n_restrict = afsconf_ParseNetFilesSA(restrict_sa, ADDRSPERSITE,
-					     reason,
+	n_restrict = afsconf_ParseNetFilesSA(restrict_sa, restrict_prefixlens,
+					     ADDRSPERSITE, reason,
 					     AFSDIR_SERVER_NETINFO_FILEPATH,
 					     AFSDIR_SERVER_NETRESTRICT_FILEPATH);
 	for (j = 0; j < n_restrict; j++) {
-	    if (restrict_sa[j].rxsa_family == AF_INET6)
-		restrict_sa[n_restrict6++] = restrict_sa[j];
+	    if (restrict_sa[j].rxsa_family == AF_INET6) {
+		restrict_sa[n_restrict6] = restrict_sa[j];
+		restrict_prefixlens[n_restrict6] = restrict_prefixlens[j];
+		n_restrict6++;
+	    }
 	}
     }
 #endif /* HAVE_IPV6 */
@@ -1862,16 +1867,23 @@ Do_VLRegisterRPC(void)
 
 #ifdef HAVE_IPV6
 	/* Opt-in NetRestrict filtering: only applies when the operator
-	 * actually configured at least one IPv6 exact-match address above.
+	 * actually configured at least one IPv6 address/prefix above.
 	 * When n_restrict6 is 0 (the common case - no such configuration),
 	 * this is a no-op and every non-loopback v6 address still gets
 	 * registered, exactly as before. IPv4 addresses are never
-	 * filtered here. */
+	 * filtered here.
+	 *
+	 * rx_prefix_match_sockaddr() with restrict_prefixlens[j]==128 (a
+	 * bare address, no "/" in NetRestrict) behaves identically to the
+	 * exact rx_compare_sockaddr(..., RXA_ADDR) check this used to be -
+	 * so existing NetRestrict files with no CIDR entries at all keep
+	 * registering exactly the same address set as before. */
 	if (addrs[i].rxsa_family == AF_INET6 && n_restrict6 > 0) {
 	    int j, keep = 0;
 
 	    for (j = 0; j < n_restrict6; j++) {
-		if (rx_compare_sockaddr(&addrs[i], &restrict_sa[j], RXA_ADDR)) {
+		if (rx_prefix_match_sockaddr(&addrs[i], &restrict_sa[j],
+					     restrict_prefixlens[j])) {
 		    keep = 1;
 		    break;
 		}

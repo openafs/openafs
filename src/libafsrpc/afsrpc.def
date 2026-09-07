@@ -362,6 +362,7 @@ EXPORTS
 	rx_is_loopback_address                   @367
 	rx_is_loopback_sockaddr                  @368
 	rx_is_linklocal_sockaddr                 @384
+	rx_prefix_match_sockaddr                 @385
 	rx_order_sockaddr                        @369
 	rx_print_address                         @370
 	rx_print_sockaddr                        @371

@@ -301,10 +301,14 @@ extern int afsconf_ParseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[],
 				 const char *nrFileName);
 
 /* Like afsconf_ParseNetFiles(), but returns struct rx_sockaddr[] so IPv6
- * addresses can be represented. The v4 half wraps afsconf_ParseNetFiles()
- * unchanged; the v6 half is a much narrower exact-match-only NetRestrict
- * mechanism - see the implementation comment in netrestrict.c. */
-extern int afsconf_ParseNetFilesSA(struct rx_sockaddr addrbuf[], afs_uint32 max,
+ * addresses can be represented, plus a parallel prefixbuf[] giving each
+ * entry's prefix length (32 for IPv4, 128 for an IPv6 exact-match entry,
+ * or the parsed "/N" for an IPv6 CIDR entry). The v4 half wraps
+ * afsconf_ParseNetFiles() unchanged; the v6 half is a narrower
+ * NetRestrict-only mechanism - see the implementation comment in
+ * netrestrict.c. */
+extern int afsconf_ParseNetFilesSA(struct rx_sockaddr addrbuf[],
+				   afs_uint32 prefixbuf[], afs_uint32 max,
 				   char reason[], const char *niFileName,
 				   const char *nrFileName);
 
