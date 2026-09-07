@@ -334,7 +334,7 @@ extern void afs_cv_timedwait(afs_kcondvar_t * cv, afs_kmutex_t * l,
 
 /* ARCH/rx_knet.c */
 # if !defined(AFS_SGI_ENV)
-extern int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
+extern int osi_NetSend(osi_socket asocket, struct rx_sockaddr *addr,
 		       struct iovec *dvec, int nvecs, afs_int32 asize,
 		       int istack);
 # endif

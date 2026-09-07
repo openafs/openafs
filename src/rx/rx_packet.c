@@ -2374,14 +2374,11 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 	AFS_GUNLOCK();
 #endif
 #endif
-    /* debug packets are not reliably delivered, hence the cast below. */
-#ifdef KERNEL
-    (void)rxi_NetSend(asocket, &addr.addr, apacket->wirevec, apacket->niovecs,
-		      apacket->length + RX_HEADER_SIZE, istack);
-#else
+    /* debug packets are not reliably delivered, hence the cast below.
+     * osi_NetSend() (every platform, including KERNEL) now takes a real
+     * struct rx_sockaddr *, so every caller passes the full &addr. */
     (void)rxi_NetSend(asocket, &addr, apacket->wirevec, apacket->niovecs,
 		      apacket->length + RX_HEADER_SIZE, istack);
-#endif
 #ifdef KERNEL
 #ifdef RX_KERNEL_TRACE
     if (ICL_SETACTIVE(afs_iclSetp)) {
@@ -2529,13 +2526,8 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	    AFS_GUNLOCK();
 #endif
 #endif
-#ifdef KERNEL
-	code = rxi_NetSend(socket, &addr.addr, p->wirevec, p->niovecs,
-			   p->length + RX_HEADER_SIZE, istack);
-#else
 	code = rxi_NetSend(socket, &addr, p->wirevec, p->niovecs,
 			   p->length + RX_HEADER_SIZE, istack);
-#endif
 	if (code != 0) {
 	    /* send failed, so let's hurry up the resend, eh? */
             if (rx_stats_active)
@@ -2730,13 +2722,8 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 	if (!istack && waslocked)
 	    AFS_GUNLOCK();
 #endif
-#ifdef KERNEL
-	code = rxi_NetSend(socket, &addr.addr, &wirevec[0], len + 1, length,
-			   istack);
-#else
 	code = rxi_NetSend(socket, &addr, &wirevec[0], len + 1, length,
 			   istack);
-#endif
 	if (code != 0) {
 	    /* send failed, so let's hurry up the resend, eh? */
             if (rx_stats_active)
@@ -2815,13 +2802,8 @@ rxi_SendRawAbort(osi_socket socket, afs_uint32 host, u_short port,
 
     rx_ipv4_to_sockaddr(host, port, 0, &addr);
 
-#ifdef KERNEL
-    rxi_NetSend(socket, &addr.addr, iov, 2,
-		sizeof(struct rx_header) + sizeof(error), istack);
-#else
     rxi_NetSend(socket, &addr, iov, 2,
 		sizeof(struct rx_header) + sizeof(error), istack);
-#endif
 }
 
 /* Send a "special" packet to the peer connection.  If call is

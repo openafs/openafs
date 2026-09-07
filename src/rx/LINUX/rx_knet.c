@@ -214,17 +214,38 @@ osi_HandleSocketError(osi_socket so, void *cmsgbuf, size_t cmsgbuf_len)
  * Return codes:
  * 0 = success
  * non-zero = failure
+ *
+ * `to` used to be a plain struct sockaddr_in *, unconditionally sized via
+ * sizeof(*to) - a v6 destination was silently, structurally unsendable:
+ * building a full struct sockaddr_in6 there and passing sizeof(struct
+ * sockaddr_in) as msg_namelen truncates the address the kernel actually
+ * sends to, so kernel_sendmsg() either errors out or, worse, sends to a
+ * garbage/truncated destination - never a real packet to the intended v6
+ * peer. Confirmed live: a v6-only client's afs_root() got real,
+ * correctly-resolved dbserver addresses (via AFSOP_ADDCELL3/
+ * afs_NewCellSA()) but timed out (code 110) with a wide tcpdump showing
+ * zero packets ever leaving the machine - this function, the only kernel
+ * Rx send path, is why. Its receive-side counterpart already gained a
+ * dual-stack-capable sibling (osi_NetReceiveSA()) alongside the original
+ * osi_NetReceive() when the kernel v6 listener was added; this widens
+ * osi_NetSend() itself in place instead of adding a third function,
+ * since - unlike the receive side, which needs two different callers
+ * (rxk_Listener/rx_socket vs rxk_Listener6/rx_socket6) - every kernel
+ * Rx send call site already carries a real struct rx_sockaddr by the
+ * time it reaches here (rxi_SendPacket() et al, src/rx/rx_packet.c,
+ * rx.c) and only ever narrowed it to a plain sockaddr_in immediately
+ * before this specific call.
  */
 int
-osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
+osi_NetSend(osi_socket sop, struct rx_sockaddr *to, struct iovec *iovec,
 	    int iovcnt, afs_int32 size, int istack)
 {
     struct msghdr msg;
     int code;
 
     memset(&msg, 0, sizeof(msg));
-    msg.msg_name = to;
-    msg.msg_namelen = sizeof(*to);
+    msg.msg_name = &to->addr;
+    msg.msg_namelen = to->addrlen;
 
     code = kernel_sendmsg(sop, &msg, (struct kvec *) iovec, iovcnt, size);
 

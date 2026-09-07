@@ -6801,11 +6801,7 @@ rxi_NatKeepAliveEvent(struct rxevent *event, void *arg1,
     tmpiov[0].iov_base = tbuffer;
     tmpiov[0].iov_len = 1 + sizeof(struct rx_header);
 
-#ifdef KERNEL
-    rxi_NetSend(socket, &taddr.addr, tmpiov, 1, 1 + sizeof(struct rx_header), 1);
-#else
     rxi_NetSend(socket, &taddr, tmpiov, 1, 1 + sizeof(struct rx_header), 1);
-#endif
 
     MUTEX_ENTER(&conn->conn_data_lock);
     /* We ran, so the handle is no longer needed to try to cancel ourselves. */
