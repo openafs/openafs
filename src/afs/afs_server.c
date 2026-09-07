@@ -1000,6 +1000,25 @@ afs_SortServers(struct server *aservers[], int count)
 #define MED 30000
 #define LO DEFRANK
 #define PPWEIGHT 4096
+/*
+ * IPv6's own preference tier (see afs_SetServerPrefs() below) -
+ * deliberately between TOPR and HI, not equal to HI. An ordinary IPv4
+ * same-subnet/broadcast match (the IFF_BROADCAST case a few lines
+ * below, and its Sun5/SGI-platform equivalents above) also computes to
+ * exactly HI, so a v6 candidate ranked at HI itself would tie with,
+ * not beat, an incidental same-subnet IPv4 address for the same
+ * server - confirmed live as a real bug, not just a theoretical
+ * concern: a v6-only client with some incidental IPv4 reachability
+ * (afs-cli6, via this fleet's shared management network - not
+ * something a real v6-only deployment would have at all) sometimes
+ * lost the resulting jitter-broken tie badly enough to try a
+ * genuinely unreachable IPv4 address outright and fail to mount, not
+ * just succeed via a suboptimal path. IPV6PREF still correctly loses
+ * to TOPR (a genuine local-interface/loopback match on some other,
+ * IPv4 candidate for the same server) - it only needs to strictly beat
+ * an ordinary same-subnet IPv4 match, not override a real local one.
+ */
+#define IPV6PREF 15000
 
 #define	USEIFADDR
 
@@ -1202,22 +1221,24 @@ afs_SetServerPrefs(struct srvAddr *const sa)
      * address family, give a v6 srvAddr its own small, explicit rule
      * up front and skip the rest of the function entirely for it.
      *
-     * The rule: rank it HI - distinctly better than this function's own
-     * generic "real address, nothing special found" default (LO/DEFRANK,
-     * defined below) - whenever this client can actually use IPv6 at all
-     * (rx_socket6 has been opened; the same already-established,
-     * already-safe signal rxk_Listener6() itself uses for "is this
-     * family available to me"), and the worst possible rank
-     * (MAXDEFRANK) otherwise. Confirmed live as the actual cause of a
-     * real bug: a v6-only client (afs-cli6) successfully resolving
-     * root.afs's site on a genuinely dual-stack fileserver (afs-fs6) via
-     * VL_GetEndpoints, receiving both its real IPv6 address and an
-     * incidental IPv4 alias as candidate srvAddrs for the same server,
-     * then choosing the IPv4 alias - which only happened to be reachable
-     * through this fleet's separate management network, not anything a
-     * real v6-only deployment could rely on - because the alias's local-
-     * interface match ranked it above the IPv6 address's unhandled,
-     * un-ranked default. HI still loses to TOPR (a genuine local/
+     * The rule: rank it IPV6PREF - distinctly better than this
+     * function's own generic "real address, nothing special found"
+     * default (LO/DEFRANK, defined below) - whenever this client can
+     * actually use IPv6 at all (rx_socket6 has been opened; the same
+     * already-established, already-safe signal rxk_Listener6() itself
+     * uses for "is this family available to me"), and the worst
+     * possible rank (MAXDEFRANK) otherwise. Confirmed live as the
+     * actual cause of a real bug: a v6-only client (afs-cli6)
+     * successfully resolving root.afs's site on a genuinely dual-stack
+     * fileserver (afs-fs6) via VL_GetEndpoints, receiving both its real
+     * IPv6 address and an incidental IPv4 alias as candidate srvAddrs
+     * for the same server, then choosing the IPv4 alias - which only
+     * happened to be reachable through this fleet's separate
+     * management network, not anything a real v6-only deployment could
+     * rely on - because the alias's local-interface match ranked it
+     * above the IPv6 address's unhandled, un-ranked default.
+     * IPV6PREF (not HI - see IPV6PREF's own comment above for why
+     * plain HI isn't enough) still loses to TOPR (a genuine local/
      * loopback match on some other, IPv4 srvAddr for the same server),
      * which is correct - this only needs to beat ordinary non-local IPv4
      * candidates, not override a real local match.
@@ -1247,7 +1268,7 @@ afs_SetServerPrefs(struct srvAddr *const sa)
     if (sa->sa_saddr.rxsa_family == AF_INET6) {
 	sa->sa_iprank = (rx_socket6 != OSI_NULLSOCKET
 			 && !rx_is_linklocal_sockaddr(&sa->sa_saddr))
-	    ? HI : MAXDEFRANK;
+	    ? IPV6PREF : MAXDEFRANK;
 	sa->sa_iprank += afs_randomMod15();
 	return 0;
     }
