@@ -667,12 +667,40 @@ SDISK_UpdateInterfaceAddr(struct rx_call *rxcall,
     for (i = 0; i < UBIK_MAX_INTERFACE_ADDR; i++)
 	outAddr->hostAddr[i] = ntohl(ubik_host[i]);
 
-    remoteAddr = htonl(inAddr->hostAddr[0]);
-    for (ts = ubik_servers; ts; ts = ts->next)
-	if (ts->addr[0] == remoteAddr) {	/* both in net byte order */
+    /* Identify the calling server. Prefer the RPC's real transport-level
+     * source address (via ubikGetPrimaryInterfaceSA(), matched against
+     * addr_sa) exactly as SVOTE_Beacon (vote.c) and
+     * SDISK_UpdateInterfaceEndpoints below already do - this is required,
+     * not just an improvement, whenever OUR OWN CellServDB happens to
+     * list a real, dual-stack caller by its IPv6 literal (that peer's
+     * addr[0] then stays 0 forever, a legacy-IPv4-projection field, so
+     * the plain hostAddr[0] payload match just below can never recognize
+     * it, even though the caller's own hostAddr[0] is a real, correct
+     * IPv4 address - confirmed live: this is exactly what made afs-db1/
+     * afs-db2 (real IPv4 selves) unable to complete ubik_ServerInit()
+     * against afs-db3 (whose own CellServDB records every peer, afs-db1/
+     * afs-db2 included, by v6 literal only) - afs-db3 rejected their
+     * legacy interface-exchange call as "Inconsistent Cell Info" on
+     * every single attempt, which afs-db1/afs-db2 then surfaced as a
+     * hard ubik_ServerInit() failure and crash-looped over. Falls back
+     * to the historical hostAddr[0]-based scan when the peer lookup
+     * doesn't resolve (e.g. no rxcall). */
+    if (rxcall) {
+	struct rx_connection *tconn = rx_ConnectionOf(rxcall);
+	struct rx_peer *tpeer = rx_PeerOf(tconn);
+
+	ts = ubikGetPrimaryInterfaceSA(rx_SockaddrOf(tpeer));
+	if (ts)
 	    probableMatch = 1;
-	    break;
-	}
+    }
+    if (!probableMatch) {
+	remoteAddr = htonl(inAddr->hostAddr[0]);
+	for (ts = ubik_servers; ts; ts = ts->next)
+	    if (ts->addr[0] == remoteAddr) {	/* both in net byte order */
+		probableMatch = 1;
+		break;
+	    }
+    }
 
     if (probableMatch) {
 	/* verify that all addresses in the incoming RPC are
