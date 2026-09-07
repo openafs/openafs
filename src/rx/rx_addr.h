@@ -213,6 +213,7 @@ int rx_compare_sockaddr(const struct rx_sockaddr *a,
 int rx_order_sockaddr(const struct rx_sockaddr *a,
 		      const struct rx_sockaddr *b);
 int rx_is_loopback_sockaddr(const struct rx_sockaddr *a);
+int rx_is_linklocal_sockaddr(const struct rx_sockaddr *a);
 int rx_copy_sockaddr(const struct rx_sockaddr *src, struct rx_sockaddr *dst);
 
 /* For compatibility with IPv4-only interfaces. */

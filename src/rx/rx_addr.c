@@ -63,6 +63,29 @@ is_loopback_v6(const struct in6_addr *a)
 #endif
 }
 
+/*
+ * A link-local address (fe80::/10) is only ever dialable qualified with
+ * the specific interface it was observed on (a zone/scope id neither the
+ * VLDB's endpoint list nor struct rx_sockaddr carries anywhere in this
+ * tree) - unlike a loopback or a real global/ULA address, it is never a
+ * meaningful candidate to just connect() to standalone. A multi-homed
+ * server's self-registered endpoint list can absolutely contain one
+ * (any host with IPv6 enabled always has at least one, on every
+ * interface, entirely automatically) alongside its real, useful
+ * addresses - confirmed live in this project: afs-fs6's own endpoint
+ * list mixed real usable addresses with link-local ones from the same
+ * registration.
+ */
+static int
+is_linklocal_v6(const struct in6_addr *a)
+{
+#ifdef IN6_IS_ADDR_LINKLOCAL
+    return IN6_IS_ADDR_LINKLOCAL(a);
+#else
+    return (a->s6_addr[0] == 0xfe) && ((a->s6_addr[1] & 0xc0) == 0x80);
+#endif
+}
+
 static int
 is_v4_mapped(const struct in6_addr *a)
 {
@@ -209,6 +232,24 @@ rx_is_loopback_sockaddr(const struct rx_sockaddr *a)
 	    return is_loopback_v4(ntohl(v4));
 	}
 	return 0;
+    }
+#endif
+    return 0;
+}
+
+/*
+ * IPv4 has no real equivalent worth checking here (169.254.0.0/16 exists,
+ * but nothing in this tree currently registers/dials one) - only IPv6
+ * link-local addresses are what this predicate actually needs to catch,
+ * so AF_INET always returns false rather than growing a parallel check
+ * nothing exercises.
+ */
+int
+rx_is_linklocal_sockaddr(const struct rx_sockaddr *a)
+{
+#ifdef HAVE_IPV6
+    if (a->rxsa_family == AF_INET6) {
+	return is_linklocal_v6(&a->rxsa_in6_addr);
     }
 #endif
     return 0;

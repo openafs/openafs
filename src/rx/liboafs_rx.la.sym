@@ -122,6 +122,7 @@ rx_ipv4_to_sockaddr
 rx_ipv6_to_sockaddr
 rx_is_loopback_address
 rx_is_loopback_sockaddr
+rx_is_linklocal_sockaddr
 rx_order_sockaddr
 rx_print_address
 rx_print_sockaddr

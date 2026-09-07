@@ -361,6 +361,7 @@ EXPORTS
 	rx_ipv4_to_sockaddr                      @366
 	rx_is_loopback_address                   @367
 	rx_is_loopback_sockaddr                  @368
+	rx_is_linklocal_sockaddr                 @384
 	rx_order_sockaddr                        @369
 	rx_print_address                         @370
 	rx_print_sockaddr                        @371

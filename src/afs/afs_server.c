@@ -1231,9 +1231,23 @@ afs_SetServerPrefs(struct srvAddr *const sa)
      * afs-cli4 on the very first live test. That approach was reverted
      * in full; this simpler rule was chosen specifically to avoid ever
      * calling into networking-stack internals like that again.
+     *
+     * One refinement on top of "is IPv6 usable at all": a link-local
+     * address (fe80::/10) is never a meaningful HI candidate even when
+     * rx_socket6 is open, since it can only ever be dialed qualified
+     * with a specific interface/zone id that nothing in this call chain
+     * carries. A multi-homed server's self-registered endpoint list can
+     * (and, confirmed live on afs-fs6, does) mix real usable addresses
+     * with automatic link-local ones from the same registration - give
+     * those the worst rank too, the same as "IPv6 unusable here",
+     * rather than letting them tie with (and, via afs_randomMod15()'s
+     * jitter below, sometimes beat) the one address actually worth
+     * dialing.
      */
     if (sa->sa_saddr.rxsa_family == AF_INET6) {
-	sa->sa_iprank = (rx_socket6 != OSI_NULLSOCKET) ? HI : MAXDEFRANK;
+	sa->sa_iprank = (rx_socket6 != OSI_NULLSOCKET
+			 && !rx_is_linklocal_sockaddr(&sa->sa_saddr))
+	    ? HI : MAXDEFRANK;
 	sa->sa_iprank += afs_randomMod15();
 	return 0;
     }
