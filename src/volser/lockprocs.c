@@ -36,12 +36,62 @@
  * If type is zero, will match first index of ANY type (RW, BK, or RO).
  * If server is zero, will match first index of ANY server and partition
  * Zero is a valid partition field.
+ *
+ * A genuinely IPv6-only site can be a real match here even though the
+ * classic VLDB_SockaddrMatchesIP() comparison below can never succeed
+ * for it: that helper only ever matches a real IPv4 address (see the
+ * long comment on VLDB_GetUuidByAddr(), vsutils.c). Such a site is
+ * registered by uuid instead (VLDB_CreateEntryU()/VLDB_ReplaceEntryU(),
+ * see UV_CreateVolume3()/UV_AddSite2() in vsprocs.c) - but the
+ * *classic* nvldbentry this function actually receives can't show
+ * that directly: vlentry_to_nvldbentry() (src/vlserver/vlprocs.c),
+ * which builds every nvldbentry this code ever sees, never sets
+ * VLSF_UUID in serverFlags[e] (that flag is wire-only for the U
+ * interface, uvldbentry) and picks *some* address to report for
+ * serverNumber[e] if the site's underlying Multi-homed Entry has any
+ * IPv4 endpoint at all - not necessarily 0, and not necessarily one
+ * that matches what the caller supplied. (Verified live against this
+ * project's own fleet: a fileserver meant to be "IPv6-only" for
+ * testing purposes can still end up with an incidental IPv4-family
+ * endpoint from its own multi-homed registration - e.g. a management
+ * network alias - which this classic view then reports instead of the
+ * fabric address a caller actually asked for, even though the site
+ * itself is genuinely uuid-registered.) So there is no reliable
+ * classic-side signal ("serverNumber[e] == 0" or otherwise) that a
+ * site here *might* be one this format can't precisely represent -
+ * the only sound rule is "the classic comparison didn't match, and the
+ * caller itself has no IPv4 address of its own to have matched with in
+ * the first place".
+ *
+ * Below, the classic scan runs exactly as before and returns
+ * immediately on any real match - no extra cost on the common,
+ * all-classic path, and this second pass isn't attempted at all for a
+ * NULL server (Lp_GetRwIndex()'s "any server" query - the classic scan
+ * alone always settles those) or for a `server` that does have a real
+ * IPv4 address (which would have matched classically already, if this
+ * really were the same site). Only when the classic scan comes up
+ * completely empty AND server is IPv4-less does this pay for two live
+ * RPCs: resolve the caller's own uuid (VLDB_GetUuidByAddr()), then
+ * re-fetch this same entry through the U interface
+ * (VLDB_GetEntryByNameU(), which - unlike this classic view - does
+ * preserve every multi-homed site's real uuid), and check every
+ * type/partition-matching site's real uuid against it, index for
+ * index (both views are built from the same underlying per-site array
+ * in the same order, so index e means the same site in both).
+ *
+ * The one imprecision worth naming: the confirming re-fetch is a
+ * separate RPC from whatever earlier call produced `entry`, so it is
+ * not perfectly atomic with it - a concurrent VLDB write between the
+ * two could in principle shift site ordering. This matches the same
+ * class of small, already-accepted gap VLDB_IsSameServer() documents
+ * in vsutils.c, not a new one.
  */
 static int
 FindIndex(struct nvldbentry *entry, const struct rx_sockaddr *server, afs_int32 part, afs_int32 type)
 {
     int e;
     afs_int32 error = 0;
+    afs_uint32 server_ip;
 
     for (e = 0; (e < entry->nServers) && !error; e++) {
 	if (!type || (entry->serverFlags[e] & type)) {
@@ -49,9 +99,10 @@ FindIndex(struct nvldbentry *entry, const struct rx_sockaddr *server, afs_int32 
 		&& (!server
 		    || VLDB_SockaddrMatchesIP(server, entry->serverNumber[e],
 					     &error)))
-		break;
+		return e;	/* direct classic match */
+
 	    if (type == VLSF_RWVOL)
-		return -1;	/* quit when we are looking for RW entry (there's only 1) */
+		break;		/* only one RW site - quit scanning either way */
 	}
     }
 
@@ -62,10 +113,36 @@ FindIndex(struct nvldbentry *entry, const struct rx_sockaddr *server, afs_int32 
 	return -1;
     }
 
-    if (e >= entry->nServers)
-	return -1;		/* Didn't find it */
+    if (server && !rx_try_sockaddr_to_ipv4(server, &server_ip)) {
+	afsUUID server_uuid;
+	afs_int32 ucode;
 
-    return e;			/* return the index */
+	ucode = VLDB_GetUuidByAddr(server, &server_uuid);
+	if (!ucode) {
+	    struct uvldbentry uentry;
+
+	    ucode = VLDB_GetEntryByNameU(entry->name, &uentry);
+	    if (!ucode) {
+		for (e = 0; e < entry->nServers && e < uentry.nServers; e++) {
+		    if (type && !(entry->serverFlags[e] & type))
+			continue;
+		    if (entry->serverPartition[e] != part)
+			continue;
+		    if ((uentry.serverFlags[e] & VLSF_UUID)
+			&& afs_uuid_equal(&uentry.serverNumber[e], &server_uuid))
+			return e;
+		    if (type == VLSF_RWVOL)
+			break;	/* only one RW site */
+		}
+	    }
+	}
+	/* ucode, if set, is a genuine RPC error - but this is a
+	 * best-effort confirmation on top of an already-failed classic
+	 * match, so fall through to "not found" either way rather than
+	 * turning a fallback attempt into a hard failure. */
+    }
+
+    return -1;			/* Didn't find it */
 }
 
 /* Changes the rw site only.

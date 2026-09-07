@@ -592,6 +592,111 @@ VLDB_ReplaceEntryU(afs_uint32 volid, afs_int32 voltype,
 }
 
 /*
+ * GetEntryByNameU's thin client wrapper - VLDB_GetEntryByName()'s
+ * uuid-preserving sibling, for a caller (FindIndex(), lockprocs.c) that
+ * needs the *real* per-site uuid of an entry's sites, not just the
+ * classic IPv4-or-nothing view VLDB_GetEntryByName()/GetEntryByNameN
+ * give.
+ *
+ * This gap is real and not just a style choice: vlentry_to_nvldbentry()
+ * (src/vlserver/vlprocs.c), the server-side function backing
+ * GetEntryByNameN/VLDB_GetEntryByName(), silently reports a genuinely
+ * IPv6-only site (one with a Multi-homed Entry but no IPv4 address in
+ * it) with serverNumber[i] left at 0 and *never* sets VLSF_UUID in
+ * serverFlags[i] - that annotation is wire-only for the U interface
+ * (see the big comment on uvldbentry_to_vlentry() there). So an
+ * nvldbentry can *see* that such a site exists (it's still counted in
+ * nServers) but cannot identify *which* server it is - not even the
+ * flag survives the trip, let alone a usable address. Only
+ * vlentry_to_uvldbentry() (backing this RPC) preserves both: every
+ * multi-homed site gets VLSF_UUID and its real afsUUID, address family
+ * of its other endpoints notwithstanding.
+ *
+ * Like VLDB_CreateEntryU()/VLDB_ReplaceEntryU() above, this has no
+ * less-capable fallback of its own - GetEntryByNameU is a stock,
+ * long-reserved opcode (VLGETENTRYBYNAMEU), but a caller reaching for
+ * it specifically wants uuid fidelity an old vlserver (RXGEN_OPCODE)
+ * simply cannot provide, so it is the caller's job to decide what "no
+ * match" means in that case.
+ */
+int
+VLDB_GetEntryByNameU(char *namep, struct uvldbentry *uentryp)
+{
+    memset(uentryp, 0, sizeof(*uentryp));	    /* ensure padding is cleared */
+    return ubik_VL_GetEntryByNameU(cstruct, 0, namep, uentryp);
+}
+
+/*
+ * Confirms whether entryp's site at index idx - already known not to
+ * match `server` via the classic, address-based comparison
+ * (VLDB_SockaddrMatchesIP()) - is nonetheless actually `server`'s own
+ * registered site: resolves server's uuid (VLDB_GetUuidByAddr()) and
+ * re-checks that same index in a fresh uuid-preserving fetch of the
+ * same entry (VLDB_GetEntryByNameU()). Deliberately does not key off
+ * entryp's own serverNumber[idx] value (e.g. "is it 0") - the classic
+ * view can report *any* address for a multi-homed site depending on
+ * what else that server happens to be registered under (see
+ * VLDB_GetEntryByNameU()'s own comment above), so there is no reliable
+ * classic-side signal that a given index is or isn't worth checking
+ * this way; callers instead gate on whether `server` itself has an
+ * IPv4 address at all (a caller that does would already have matched
+ * classically, if this really were the same site).
+ *
+ * This is the one piece of matching logic every caller that needs to
+ * recognize an existing genuinely-IPv6-only VLDB site shares - directly,
+ * here, from vsprocs.c's UV_ConvertRO()/UV_RestoreVolume2(); indirectly,
+ * every Lp_Match()/Lp_ROMatch() caller with a non-NULL server (e.g.
+ * CheckVolume(), UV_MoveVolume2(), UV_DeleteVolume(), UV_RemoveSite())
+ * gets the same confirmation via FindIndex()'s own equivalent inline
+ * logic (lockprocs.c).
+ *
+ * Returns 1 on a confirmed match, 0 otherwise - including any RPC
+ * failure, or `server` simply not being uuid-resolvable at all (e.g. it
+ * has a real IPv4 address, so this whole question doesn't apply to it).
+ * *errorp is set only for a genuine RPC error worth reporting to the
+ * user (not for "old vlserver" or "not a uuid site"/"no match", which
+ * are both routine, silent "0" outcomes here - exactly as
+ * VLDB_SockaddrMatchesIP()'s own *errorp convention already works).
+ *
+ * Not attempted on the hot, all-classic path: like
+ * VLDB_GetUuidByAddr(), this is only ever worth two extra RPCs once a
+ * classic match has already failed and a real placeholder candidate
+ * exists - callers are expected to gate on that themselves, same as
+ * FindIndex() does.
+ */
+int
+VLDB_UuidSiteMatches(struct nvldbentry *entryp, int idx,
+		     const struct rx_sockaddr *server, afs_int32 type,
+		     afs_int32 *errorp)
+{
+    afsUUID server_uuid;
+    struct uvldbentry uentry;
+    afs_int32 code;
+
+    *errorp = 0;
+    if (idx < 0 || idx >= entryp->nServers)
+	return 0;
+
+    code = VLDB_GetUuidByAddr(server, &server_uuid);
+    if (code) {
+	if (code != RXGEN_OPCODE && code != VL_NOENT)
+	    *errorp = code;
+	return 0;
+    }
+    code = VLDB_GetEntryByNameU(entryp->name, &uentry);
+    if (code) {
+	if (code != RXGEN_OPCODE)
+	    *errorp = code;
+	return 0;
+    }
+    if (idx >= uentry.nServers || !(uentry.serverFlags[idx] & VLSF_UUID))
+	return 0;
+    if (type && !(uentry.serverFlags[idx] & type))
+	return 0;
+    return afs_uuid_equal(&uentry.serverNumber[idx], &server_uuid);
+}
+
+/*
   Get the appropriate type of ubik client structure out from the system.
 */
 int
