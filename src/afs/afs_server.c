@@ -1188,6 +1188,56 @@ afsi_enum_set_rank(struct hashbucket *h, caddr_t mkey, caddr_t arg1,
 static int
 afs_SetServerPrefs(struct srvAddr *const sa)
 {
+#ifdef HAVE_IPV6
+    /*
+     * Every ranking rule below this point is IPv4-only - it was written
+     * long before struct rx_sockaddr existed, and it looks for a locally-
+     * assigned interface whose IPv4 address matches sa->sa_ip. For an
+     * IPv6 srvAddr, sa_ip is always 0 (there is no IPv4 union member to
+     * project it from - see the srvAddr.sa_ip comment, afs.h), so every
+     * one of these rules either matches nothing (falling through to
+     * whatever the function's own initial default happens to be) or, on
+     * at least one platform, could spuriously treat 0 as if it meant a
+     * real local address. Rather than teach that legacy code a second
+     * address family, give a v6 srvAddr its own small, explicit rule
+     * up front and skip the rest of the function entirely for it.
+     *
+     * The rule: rank it HI - distinctly better than this function's own
+     * generic "real address, nothing special found" default (LO/DEFRANK,
+     * defined below) - whenever this client can actually use IPv6 at all
+     * (rx_socket6 has been opened; the same already-established,
+     * already-safe signal rxk_Listener6() itself uses for "is this
+     * family available to me"), and the worst possible rank
+     * (MAXDEFRANK) otherwise. Confirmed live as the actual cause of a
+     * real bug: a v6-only client (afs-cli6) successfully resolving
+     * root.afs's site on a genuinely dual-stack fileserver (afs-fs6) via
+     * VL_GetEndpoints, receiving both its real IPv6 address and an
+     * incidental IPv4 alias as candidate srvAddrs for the same server,
+     * then choosing the IPv4 alias - which only happened to be reachable
+     * through this fleet's separate management network, not anything a
+     * real v6-only deployment could rely on - because the alias's local-
+     * interface match ranked it above the IPv6 address's unhandled,
+     * un-ranked default. HI still loses to TOPR (a genuine local/
+     * loopback match on some other, IPv4 srvAddr for the same server),
+     * which is correct - this only needs to beat ordinary non-local IPv4
+     * candidates, not override a real local match.
+     *
+     * This intentionally makes no live kernel networking calls (no
+     * on-link/prefix lookup, nothing beyond reading the already-set
+     * rx_socket6 global) - a prior attempt at a fuller fix in this exact
+     * function called ipv6_chk_prefix(addr, NULL) expecting a NULL dev
+     * to mean "check every interface", which is not what that kernel
+     * API does - it unconditionally dereferences dev - and it oopsed
+     * afs-cli4 on the very first live test. That approach was reverted
+     * in full; this simpler rule was chosen specifically to avoid ever
+     * calling into networking-stack internals like that again.
+     */
+    if (sa->sa_saddr.rxsa_family == AF_INET6) {
+	sa->sa_iprank = (rx_socket6 != OSI_NULLSOCKET) ? HI : MAXDEFRANK;
+	sa->sa_iprank += afs_randomMod15();
+	return 0;
+    }
+#endif /* HAVE_IPV6 */
 #if defined(AFS_USERSPACE_IP_ADDR)
     int i;
 

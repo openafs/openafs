@@ -494,7 +494,24 @@ struct srvAddr {
 				 * only reads sa_ip (see afs_server.c), so a
 				 * v6-only srvAddr currently always gets the
 				 * unranked/default preference - not yet
-				 * converted. */
+				 * converted. (A same-kernel-version-specific
+				 * ipv6_chk_prefix()-based attempt at closing
+				 * this gap was tried and reverted: passing
+				 * dev=NULL to ipv6_chk_prefix() - meant as
+				 * "check every local interface" - is not a
+				 * supported "search all" case on a 6.8
+				 * kernel; it unconditionally dereferences
+				 * dev and null-derefs. A correct fix needs
+				 * to iterate real net_devices (e.g. under
+				 * dev_base_lock, both EXPORT_SYMBOL and thus
+				 * usable from this non-GPL module) and call
+				 * ipv6_chk_prefix() once per device, never
+				 * with dev=NULL - left for whoever picks
+				 * this up next, with real kernel source on
+				 * hand to verify against, rather than
+				 * shipped here from header-only inspection
+				 * after this attempt actually crashed a live
+				 * test client.) */
 };
 
 /*
