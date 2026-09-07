@@ -1784,6 +1784,25 @@ Do_VLRegisterAddrsRPC(void)
  * RXGEN_OPCODE-fallback pattern, so a client can act on the IPv6 half
  * of what this registers - see the comment at
  * LockAndInstallUVolumeEntry().
+ *
+ * Unlike the classic VL_RegisterAddrs/FS_HostAddrs[] path (populated by
+ * SetupVL() via afsconf_ParseNetFiles(), which does honor NetInfo/
+ * NetRestrict for IPv4), rx_getAllSockaddr() above is a raw interface
+ * enumerator - it has no idea NetInfo/NetRestrict exist. On a
+ * multi-homed IPv6 host that's a real gap: every non-link-local address
+ * the kernel happens to have (including ones that are artifacts of the
+ * local virtualization/network setup, not the operator's intended
+ * address) gets registered as equally valid. So, below, an operator can
+ * write one or more IPv6 literals into NetRestrict to say "register only
+ * these v6 addresses" - exact-match only (no prefix/CIDR matching, see
+ * netrestrict.c's extract_Addr6()); this is strictly additive/opt-in,
+ * exactly mirroring the existing v4 code's own behavior: if NetRestrict
+ * has no v6 entries at all (the file doesn't exist, or every line in it
+ * is IPv4), nothing is filtered and every non-loopback address
+ * rx_getAllSockaddr() found is still registered, unchanged from before
+ * this was added. IPv4 addresses are never touched by this - they still
+ * go through exactly as rx_getAllSockaddr() returned them, same as
+ * always.
  */
 static afs_int32
 Do_VLRegisterRPC(void)
@@ -1792,6 +1811,29 @@ Do_VLRegisterRPC(void)
     vlendpoints endpoints;
     struct rx_sockaddr addrs[ADDRSPERSITE];
     int naddrs, i;
+#ifdef HAVE_IPV6
+    struct rx_sockaddr restrict_sa[ADDRSPERSITE];
+    int n_restrict6 = 0;
+
+    if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
+	char reason[1024];
+	int n_restrict, j;
+
+	/* afsconf_ParseNetFilesSA() returns v4 addresses too (wrapping
+	 * afsconf_ParseNetFiles(), unchanged); only the AF_INET6 entries
+	 * in its result matter here - the v4 ones are just discarded,
+	 * FS_HostAddrs[]/the VL_RegisterAddrs fallback already handle v4
+	 * on their own path. */
+	n_restrict = afsconf_ParseNetFilesSA(restrict_sa, ADDRSPERSITE,
+					     reason,
+					     AFSDIR_SERVER_NETINFO_FILEPATH,
+					     AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+	for (j = 0; j < n_restrict; j++) {
+	    if (restrict_sa[j].rxsa_family == AF_INET6)
+		restrict_sa[n_restrict6++] = restrict_sa[j];
+	}
+    }
+#endif /* HAVE_IPV6 */
 
     naddrs = rx_getAllSockaddr(addrs, ADDRSPERSITE);
     if (naddrs <= 0)
@@ -1817,6 +1859,27 @@ Do_VLRegisterRPC(void)
 	 */
 	if (rx_is_loopback_sockaddr(&addrs[i]))
 	    continue;
+
+#ifdef HAVE_IPV6
+	/* Opt-in NetRestrict filtering: only applies when the operator
+	 * actually configured at least one IPv6 exact-match address above.
+	 * When n_restrict6 is 0 (the common case - no such configuration),
+	 * this is a no-op and every non-loopback v6 address still gets
+	 * registered, exactly as before. IPv4 addresses are never
+	 * filtered here. */
+	if (addrs[i].rxsa_family == AF_INET6 && n_restrict6 > 0) {
+	    int j, keep = 0;
+
+	    for (j = 0; j < n_restrict6; j++) {
+		if (rx_compare_sockaddr(&addrs[i], &restrict_sa[j], RXA_ADDR)) {
+		    keep = 1;
+		    break;
+		}
+	    }
+	    if (!keep)
+		continue;
+	}
+#endif /* HAVE_IPV6 */
 
 	memset(ep, 0, sizeof(*ep));
 	if (addrs[i].rxsa_family == AF_INET) {

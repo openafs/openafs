@@ -40,6 +40,7 @@ afsconf_IsLocalRealmMatch
 afsconf_IsSuperIdentity
 afsconf_Open
 afsconf_ParseNetFiles
+afsconf_ParseNetFilesSA
 afsconf_PickClientSecObj
 afsconf_PutTypedKeyList
 afsconf_SetLocalRealm

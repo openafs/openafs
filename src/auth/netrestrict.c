@@ -34,6 +34,108 @@ static int ParseNetInfoFile_int(afs_uint32 *, afs_uint32 *, afs_uint32 *,
                          int, char reason[], const char *,
                          int);
 
+#ifdef HAVE_IPV6
+/**
+ * Parse a single NetRestrict-file line for an IPv6 literal address.
+ *
+ * This is deliberately much narrower than extract_Addr()'s IPv4 handling:
+ * no subnet/prefix length, no interface-exclusion semantics - a v6 line in
+ * NetRestrict names exactly one address, taken as an exact (/128) match.
+ * General IPv6 CIDR support (matching extract_Addr()'s w.x.y.z[/n] mask
+ * handling) is a real, larger feature left for a future pass; this only
+ * has to answer "is this the one address the operator wants registered."
+ *
+ * @param[in] line
+ *     Pointer to a string of bytes, same convention as extract_Addr()
+ * @param[in] maxSize
+ *     Length to search in line for an address
+ * @param[out] addr
+ *     The parsed IPv6 address, on success
+ *
+ * @return
+ *      @retval 0 success
+ *      @retval AFS_IPINVALID the token is not a valid IPv6 literal
+ *      @retval AFS_IPINVALIDIGNORE blank line that can be ignored
+ */
+static int
+extract_Addr6(char *line, int maxSize, struct in6_addr *addr)
+{
+    char token[128];
+    int i = 0;
+
+    /* skip empty spaces, same convention as extract_Addr() */
+    while (isspace((unsigned char)*line) && maxSize) {
+	line++;
+	maxSize--;
+    }
+    /* skip empty lines */
+    if (!maxSize || !*line)
+	return AFS_IPINVALIDIGNORE;
+
+    while (maxSize && *line && !isspace((unsigned char)*line)) {
+	if (i > (int)sizeof(token) - 2)
+	    return AFS_IPINVALID;	/* far too long for a real v6 literal */
+	token[i++] = *line++;
+	maxSize--;
+    }
+    token[i] = '\0';
+
+    if (inet_pton(AF_INET6, token, addr) != 1)
+	return AFS_IPINVALID;
+    return 0;
+}
+
+/**
+ * Scan a NetRestrict file for IPv6-literal lines and return each as a
+ * struct rx_sockaddr, treating every v6 entry as "include exactly this
+ * address" - the exact-match simplification described at extract_Addr6().
+ * A v4 entry, a blank line, or any other unparseable line is silently
+ * skipped here (extract_Addr()/parseNetRestrictFile_int() already handle
+ * v4 lines; this pass only looks for v6 ones).
+ *
+ * Unlike parseNetRestrictFile_int(), a missing/unreadable file, or a file
+ * with no v6 lines, is not an error - IPv6 entries in NetRestrict are
+ * entirely optional, and the caller's job is to tell "an operator
+ * configured this" from "nothing was configured" apart.
+ *
+ * @param[out] outAddrs
+ *     IPv6 addresses found, as struct rx_sockaddr
+ * @param[in] maxAddrs
+ *     Length of outAddrs[]
+ * @param[in] fileName
+ *     NetRestrict file to scan (may be NULL)
+ *
+ * @return
+ *     The number of v6 addresses found (0 if none, ever)
+ */
+static int
+parseNetRestrictFileV6_int(struct rx_sockaddr outAddrs[], afs_uint32 maxAddrs,
+			   const char *fileName)
+{
+    FILE *fp;
+    char line[MAX_NETFILE_LINE];
+    afs_uint32 n = 0;
+    struct in6_addr v6addr;
+
+    if (!fileName || maxAddrs == 0)
+	return 0;
+
+    if ((fp = fopen(fileName, "r")) == NULL)
+	return 0;
+
+    while (n < maxAddrs && fgets(line, MAX_NETFILE_LINE, fp) != NULL) {
+	if (extract_Addr6(line, strlen(line), &v6addr) != 0)
+	    continue;		/* not a v6 literal - fine, e.g. a v4 line */
+
+	memset(&outAddrs[n], 0, sizeof(outAddrs[n]));
+	rx_ipv6_to_sockaddr((unsigned char *)&v6addr, 0, 0, &outAddrs[n]);
+	n++;
+    }
+    fclose(fp);
+    return (int)n;
+}
+#endif /* HAVE_IPV6 */
+
 /**
  * The line parameter is a pointer to a buffer containing a string of
  * bytes of the form:
@@ -567,4 +669,78 @@ afsconf_ParseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[],
 	return i;
     }
     return 0;
+}
+
+/**
+ * Like afsconf_ParseNetFiles(), but returns struct rx_sockaddr[] instead
+ * of a bare afs_uint32[] address list, so IPv6 addresses can be
+ * represented too.
+ *
+ * The IPv4 half of this is exactly afsconf_ParseNetFiles()'s own,
+ * unchanged result (interface enumeration, NetInfo inclusion, NetRestrict
+ * exclusion, mask-based intersection - all of it), just converted to
+ * struct rx_sockaddr entries; nothing about how a v4 address is selected
+ * changes here.
+ *
+ * IPv6 gets a deliberately much smaller answer, appended after the v4
+ * addresses: only NetRestrict is consulted (there's no v6 NetInfo
+ * concept here), and only for exact-match address literals - see
+ * extract_Addr6()/parseNetRestrictFileV6_int() above for why. If
+ * nrFileName doesn't exist, can't be read, or has no v6-literal lines,
+ * zero v6 addresses are returned - not an error, and callers that care
+ * whether an operator actually configured a v6 restriction (as opposed
+ * to "no configuration at all") should treat "zero v6 addresses back"
+ * as exactly that signal.
+ *
+ * @param[out] addrbuf
+ *     Addresses found: IPv4 first (from afsconf_ParseNetFiles()), then
+ *     any IPv6 exact-match entries from NetRestrict
+ * @param[in] max
+ *     Length of addrbuf[]
+ * @param[out] reason
+ *     Reason (if any) for an afsconf_ParseNetFiles() parsing failure
+ * @param[in] niFileName
+ *     NetInfo file to parse (IPv4 only)
+ * @param[in] nrFileName
+ *     NetRestrict file to parse (IPv4 exclusion, plus IPv6 exact-match
+ *     inclusion)
+ *
+ * @return
+ *     The total number of addresses (IPv4 + IPv6) on success, or a
+ *     negative value if afsconf_ParseNetFiles()'s own IPv4 pass fails
+ *     fatally (matching its own return convention - a v6-only NetRestrict
+ *     entry can never make the v4 half's own failure non-fatal, since the
+ *     two are independent concerns).
+ */
+int
+afsconf_ParseNetFilesSA(struct rx_sockaddr addrbuf[], afs_uint32 max,
+			char reason[], const char *niFileName,
+			const char *nrFileName)
+{
+    afs_uint32 addrbuf4[MAXIPADDRS];
+    afs_uint32 max4 = (max < MAXIPADDRS) ? max : MAXIPADDRS;
+    afs_uint32 ntotal = 0;
+    int code, i;
+
+    code = afsconf_ParseNetFiles(addrbuf4, NULL, NULL, max4, reason,
+				 niFileName, nrFileName);
+    if (code < 0)
+	return code;
+
+    for (i = 0; (afs_uint32)i < (afs_uint32) code && ntotal < max; i++) {
+	memset(&addrbuf[ntotal], 0, sizeof(addrbuf[ntotal]));
+	rx_ipv4_to_sockaddr(addrbuf4[i], 0, 0, &addrbuf[ntotal]);
+	ntotal++;
+    }
+
+#ifdef HAVE_IPV6
+    if (ntotal < max) {
+	int n6 = parseNetRestrictFileV6_int(&addrbuf[ntotal], max - ntotal,
+					    nrFileName);
+	if (n6 > 0)
+	    ntotal += (afs_uint32) n6;
+    }
+#endif
+
+    return (int) ntotal;
 }

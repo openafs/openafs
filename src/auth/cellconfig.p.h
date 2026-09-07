@@ -300,6 +300,14 @@ extern int afsconf_ParseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[],
 				 char reason[], const char *niFileName,
 				 const char *nrFileName);
 
+/* Like afsconf_ParseNetFiles(), but returns struct rx_sockaddr[] so IPv6
+ * addresses can be represented. The v4 half wraps afsconf_ParseNetFiles()
+ * unchanged; the v6 half is a much narrower exact-match-only NetRestrict
+ * mechanism - see the implementation comment in netrestrict.c. */
+extern int afsconf_ParseNetFilesSA(struct rx_sockaddr addrbuf[], afs_uint32 max,
+				   char reason[], const char *niFileName,
+				   const char *nrFileName);
+
 /* some well-known ports and their names; new additions to table in cellconfig.c, too */
 #define	AFSCONF_FILESERVICE		"afs"
 #define	AFSCONF_FILEPORT		7000
