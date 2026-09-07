@@ -2170,20 +2170,12 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 	    return ENOENT;
 	}
 	have_server = 1;
-	/* The VLDB entry format cannot name an IPv6-only site (see the
-	 * longer comment in UV_CreateVolume3(), src/volser/vsprocs.c), so
-	 * this can never succeed for a non-IPv4-convertible server. Fail
-	 * here with a clear diagnostic instead of silently leaving
-	 * server_ip at 0 - which, left unchecked, would fall through to
-	 * the "-server only" VLDB-lookup path below and print a
-	 * confusing, unrelated "VLDB: Volume ... no match" instead. */
-	if (!rx_try_sockaddr_to_ipv4(&server, &server_ip)) {
-	    fprintf(STDERR,
-		    "vos: server %s has no IPv4 address, and the VLDB entry "
-		    "format cannot yet name an IPv6-only site as one\n",
-		    rx_sockaddr2str(&server, &fmtbuf));
-	    return ENOENT;
-	}
+	/* server_ip is left at 0 for a genuinely IPv6-only -server - the
+	 * match logic below uses VLDB_SockaddrMatchesIP() (family-agnostic,
+	 * and uuid-aware via FindIndex()'s own fallback where it applies),
+	 * not a raw comparison against this value, so no guard is needed
+	 * here any more. */
+	rx_try_sockaddr_to_ipv4(&server, &server_ip);
     }
 
     if (as->parms[1].items) {
@@ -2234,8 +2226,20 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 	if (((volid == entry.volumeId[RWVOL]) && (entry.flags & VLF_RWEXISTS))
 	    || ((volid == entry.volumeId[BACKVOL])
 		&& (entry.flags & VLF_BACKEXISTS))) {
+	    afs_int32 mcode = 0;
+	    int matches = 0;
+
 	    idx = Lp_GetRwIndex(&entry);
-	    if ((idx == -1) || (have_server && (server_ip != entry.serverNumber[idx]))
+	    if (have_server && idx != -1)
+		matches = VLDB_SockaddrMatchesIP(&server, entry.serverNumber[idx],
+						 &mcode);
+	    if (mcode) {
+		fprintf(STDERR,
+			"Failed to get info about server's %d address(es) "
+			"from vlserver (err=%d)\n", server_ip, mcode);
+		PrintError("", mcode);
+	    }
+	    if ((idx == -1) || (have_server && !matches)
 		|| ((partition != -1)
 		    && (partition != entry.serverPartition[idx]))) {
 		fprintf(STDERR, "VLDB: Volume '%s' no match\n",
@@ -2244,11 +2248,23 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 	    }
 	} else if ((volid == entry.volumeId[ROVOL])
 		   && (entry.flags & VLF_ROEXISTS)) {
+	    afs_int32 mcode = 0;
+	    int matches;
+
 	    for (idx = -1, j = 0; j < entry.nServers; j++) {
 		if (!(entry.serverFlags[j] & VLSF_ROVOL))
 		    continue;
 
-		if (((!have_server) || (server_ip == entry.serverNumber[j]))
+		matches = !have_server
+		    || VLDB_SockaddrMatchesIP(&server, entry.serverNumber[j],
+					     &mcode);
+		if (mcode) {
+		    fprintf(STDERR,
+			    "Failed to get info about server's %d address(es) "
+			    "from vlserver (err=%d)\n", server_ip, mcode);
+		    PrintError("", mcode);
+		}
+		if (matches
 		    && ((partition == -1)
 			|| (partition == entry.serverPartition[j]))) {
 		    if (idx != -1) {
