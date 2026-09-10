@@ -1,5 +1,49 @@
                        User-Visible OpenAFS Changes
 
+OpenAFS 1.8.17pre1
+
+  All platforms
+
+    * The Rx RPC call statistics code now checks that a call's function
+      number fits within the statistics storage allocated for its RPC
+      package before recording it. Previously, if two RPC packages were
+      tracked under the same statistics slot but declared different
+      numbers of functions, a call could write past the end of that
+      storage and corrupt unrelated memory. The RPC packages shipped in
+      OpenAFS do not currently collide this way; this is a safety check
+      for adding new Rx services in the future (16229).
+
+    * A change from OpenAFS 1.8.10 has been reverted, which previously made
+      "vos convertROtoRW" take the RO volume offline from the client side. The
+      reverted change is obviated by a server side implementation (in change
+      14433) previously introduced in OpenAFS 1.8.8 (16895).
+
+  All UNIX clients
+
+    * The "unlog -cell" command no longer discards tokens for cells other than
+      the one given on the command line. Previously, on UNIX clients, it
+      removed all tokens and then re-registered tokens for the other cells
+      (16896, 16897, 16898, 16910, 16988, 17006).
+
+    * A potential bug (with no known path to trigger it) has been fixed where
+      various code paths did not properly obtain references to unixuser structs
+      when traversing over all unixusers in the system, potentially leading to
+      memory corruption (17007, 17008).
+
+  Linux client
+
+    * Support for Linux 7.2 has been added (16928).
+
+    * The OpenAFS directory name lookup cache (DNLC) is now disabled by default
+      on Linux, since the Linux kernel's own dentry cache already serves this
+      purpose.  This avoids the overhead and possible issues of maintaining a
+      redundant cache.  The DNLC can be re-enabled with the `afs.afs_usednlc`
+      sysctl (16927).
+
+  MacOS client
+
+    * Support for macOS 27 has been added (Golden Gate) (16953, 16954, 16955).
+
 OpenAFS 1.8.16.1
 
   All UNIX clients
