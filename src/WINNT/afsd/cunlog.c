@@ -22,15 +22,11 @@ static int
 CommandProc (struct cmd_syndesc *as, void *arock)
 {
   afs_int32 code, ecode=0;
-  struct ktc_principal server;
   struct cmd_item *itp;
 
   if (as->parms[0].items) {	/* A cell is provided */
      for (itp=as->parms[0].items; itp; itp = itp->next) {
-	strcpy(server.cell, itp->data);
-	server.instance[0] = '\0';
-	strcpy(server.name, "afs");
-	code = ktc_ForgetToken(&server);
+	code = ktc_ForgetTokensByCell(itp->data);
 	if (code) {
 	   printf("unlog: could not discard tickets for cell %s, code %d\n",
 		  itp->data, code);
