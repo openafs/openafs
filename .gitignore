@@ -23,6 +23,8 @@
 *.so.*
 *.dylib.*
 *.dSYM
+*.pyc
+__pycache__/
 *.xdr.c
 *.cs.c
 *.ss.c
