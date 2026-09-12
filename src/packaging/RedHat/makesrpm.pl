@@ -60,6 +60,20 @@ die "Unable to find unpacked source code\n" if !$vdir;
 
 my $srcdir = $tmpdir."/".$vdir;
 
+# Old releases do not have SPECS and SOURCES directories in the packaging
+# directory embedded in the source archive. Move the files in the temp
+# directory to the modern layout.
+my $packaging = "$srcdir/src/packaging/RedHat";
+File::Path::mkpath(["$packaging/SOURCES", "$packaging/SPECS"], 0, 0755);
+if (-e "$packaging/openafs.spec.in") {
+    File::Copy::move("$packaging/openafs.spec.in", "$packaging/SPECS/openafs.spec")
+        or die "Unable to move openafs.spec.in: $!\n";
+}
+foreach my $source (glob "$packaging/openafs*") {
+    File::Copy::move($source, "$packaging/SOURCES/")
+        or die "Unable to move $source: $!\n";
+}
+
 # Work out which version we're dealing with from git-version script
 # (which may use a .version file)
 my $afsversion;
@@ -122,21 +136,19 @@ if ($docball) {
 
 # Populate it with all the stuff in the packaging directory, except the 
 # specfile
-my $pkgdirh = IO::Dir->new($srcdir."/src/packaging/RedHat")
+my $pkgdirh = IO::Dir->new("$packaging/SOURCES")
   or die "Unable to find RedHat packaging directory\n";
 my $file;
 while (defined($file = $pkgdirh->read)) {
-  if (-f $srcdir."/src/packaging/RedHat/".$file) {
-     next if $file eq "openafs.spec.in";
-
+  if (-f "$packaging/SOURCES/$file") {
      print "Copying $file into place\n";
-     File::Copy::copy($srcdir."/src/packaging/RedHat/".$file, 
-		      $tmpdir."/rpmdir/SOURCES/".$file);
+     File::Copy::copy("$packaging/SOURCES/$file",
+		      "$tmpdir/rpmdir/SOURCES/$file");
   }
 }
 undef $dirh;
 
-my $spec_template = "$srcdir/src/packaging/RedHat/openafs.spec.in";
+my $spec_template = "$packaging/SPECS/openafs.spec";
 my $cellservdb_substitute = "";
 if ($cellservdb_url) {
     # Set the CellServDB source URL in the generated the spec file.
@@ -256,7 +268,7 @@ Place the generated SRPM file in I<path> instead of the current directory.
 The URL of the CellServDB file to be downloaded when B<cellservdb> is not
 specified, and the URL to be set in the C<Source20> source directive in the
 generated F<openafs.spec> RPM spec file.  When not specified, I<URL> is is read
-from the F<openafs.spec.in> file extracted from the source archive.
+from the F<openafs.spec> file extracted from the source archive.
 
 =back
 
