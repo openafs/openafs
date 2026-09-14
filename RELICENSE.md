@@ -123,35 +123,77 @@ Consent/Disapproval List
 ========================
 
 - [Y] Alistair Ferguson <alistair.ferguson@morganstanley.com> (Morgan Stanley)
+- [?] Anders Kaseorg <andersk@mit.edu>
 - [Y] Andrei Keis <Andrei.Keis@morganstanley.com> (Morgan Stanley)
 - [Y] Andrew Deason <adeason@dson.org>
 - [Y] Andrew Deason <adeason@sinenomine.net> (SNA)
+- [?] Arno Schuring <aelschuring@hotmail.com>
+- [?] Benjamin Kaduk <kaduk@mit.edu>
 - [Y] Carsten Jacobi <jacobi@de.ibm.com> (IBM)
 - [Y] Cesar Garcia <cesarg@ms.com> (Morgan Stanley)
+- [?] Chas Williams (CONTRACTOR) <chas@cmf.nrl.navy.mil> (USN)
+- [?] chas williams - CONTRACTOR <chas@cmf.nrl.navy.mil> (USN)
+- [?] Chas Williams <3chas3@gmail.com>
+- [?] Chas Williams <chas@cmf.nrl.navy.mil> (USN)
+- [?] Chaskiel Grundman <cg2v@andrew.cmu.edu>
+- [?] Chaskiel M Grundman <cg2v@andrew.cmu.edu>
+- [?] Chaz Chandler <clc31@inbox.com>
+- [?] Cheyenne Wills <cwills@sinenomine.net> (SNA)
+- [?] Dan Hyde <drh@umich.edu>
 - [Y] Daria Phoebe Brashear <shadow@andrew.cmu.edu>
 - [Y] Daria Phoebe Brashear <shadow@dementia.org>
 - [Y] Daria Phoebe Brashear <shadow@dementix.org>
 - [Y] Daria Phoebe Brashear <shadow@gmail.com>
+- [?] David Howells <bartbanter@hotmail.com>
+- [?] Derek Atkins <warlord@mit.edu>
+- [?] Ed Moy <emoy@apple.com> (Apple Inc.)
 - [Y] Erik J. Burckart <ejburcka@us.ibm.com> (IBM)
+- [?] Felix Frank <Felix.Frank@Alumni.TU-Berlin.de>
 - [Y] Ganesh Chaudhari <gangovind@in.ibm.com> (IBM)
+- [?] Garrett Wollman <wollman@csail.mit.edu>
+- [?] Hartmut Reuter <reuter@rzg.mpg.de>
 - [Y] Indira Sawant <indira.sawant@ibm.com> (IBM)
 - [Y] James Peterson <jimpeter@us.ibm.com> (IBM)
 - [Y] Jeff Riegel <riegel@almaden.ibm.com> (IBM)
+- [?] Jeffrey Altman <jaltman@grand.central.org>
+- [?] Jeffrey Altman <jaltman@mit.edu>
+- [?] Jeffrey Altman <jaltman@secure-endpoints.com>
+- [?] Jeffrey Altman <jaltman@your-file-system.com> (YFS)
+- [?] Jeffrey Hutzelman <jhutz@cmu.edu>
 - [Y] Jeremy Stribling <jstribl@us.ibm.com> (IBM)
+- [?] Jim Rees <rees@umich.edu>
 - [Y] Kailas Zadbuke <kailashsz@in.ibm.com> (IBM)
+- [?] Kevin Coffman <kwc@citi.umich.edu>
 - [Y] Laura Stentz <stentz@us.ibm.com> (IBM)
+- [?] Love Hörnquist-Åstrand <lha@e.kth.se>
 - [Y] Manuel Pereira <mpereira@almaden.ibm.com> (IBM)
 - [Y] Manuel Pereira <mpereira@us.ibm.com> (IBM)
+- [?] Marc Dionne <marc.c.dionne@gmail.com>
+- [?] Marcio Barbosa <mbarbosa@sinenomine.net> (SNA)
+- [?] Marcus Watts <mdw@umich.edu>
+- [?] Mark Vitale <mvitale@sinenomine.net> (SNA)
+- [?] Matt Benjamin <matt@linuxbox.com>
+- [?] Matt Smith <matt.j.sm@gmail.com>
 - [Y] Matthew A. Bacchi <mbacchi@btv.ibm.com> (IBM)
+- [?] Michael Meffie <mmeffie@sinenomine.net> (SNA)
 - [Y] Michael Niksch <nik@zurich.ibm.com> (IBM)
+- [?] Nathan Neulinger <nneul@umr.edu>
 - [Y] Omkar Sathe <somkar@in.ibm.com> (IBM)
 - [Y] Paul Smeddle <paul.smeddle@morganstanley.com> (Morgan Stanley)
+- [?] Rainer Schöpf <rainer.schoepf@proteosys.com>
+- [?] Rainer Toebbicke <rtb@pclella.cern.ch>
+- [?] Rolf Sattler <rolf@multi-os-net.de>
+- [?] Russ Allbery <rra@stanford.edu> (Stanford)
 - [Y] Satish Kumar <ksatish@in.ibm.com> (IBM)
 - [Y] Shyh-Wei Luan <luan@almaden.ibm.com> (IBM)
+- [?] Simon Wilkinson <sxw@inf.ed.ac.uk>
+- [?] Simon Wilkinson <sxw@your-file-system.com> (YFS)
 - [Y] Srikanth Vishwanathan <vsrikanth@in.ibm.com> (IBM)
 - [Y] Sven Oehme <oehmes@de.ibm.com> (IBM)
 - [Y] Ted Anderson <ota@transarc.com> (IBM)
 - [Y] Todd DeSantis <atd@us.ibm.com> (IBM)
+- [?] Tom Maher <tardis@ece.cmu.edu>
+- [?] Walter Wong <wcw@cmu.edu>
 - [Y] Yadav Yadavendra <yadayada@in.ibm.com> (IBM)
 - [Y] Yadavendra Yadav <yadayada@in.ibm.com> (IBM)
 
@@ -163,6 +205,10 @@ that holds the copyright. This list tracks such legal entities. The contributor
 list above indicates (in parentheses) if a contributor provided code for a
 legal entity here.
 
+- [?] Apple Inc.
 - [Y] International Business Machines Corporation (IBM)
+- [?] Leland Stanford Junior University (Stanford)
 - [Y] Morgan Stanley
 - [?] Sine Nomine Associates, Inc. (SNA)
+- [?] United States Navy (USN)
+- [?] Your File System, Inc. (YFS)
