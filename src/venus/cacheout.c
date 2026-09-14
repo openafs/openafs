@@ -39,29 +39,29 @@ static struct ubik_client *client;
 static struct rx_securityClass *sc;
 static int scindex;
 
-/*
-Obtain list of file servers as known to VLDB. These may
-not actually be configured as file servers in the cell.
+/*!
+ * Obtain list of file servers as known to VLDB. These may
+ * not actually be configured as file servers in the cell.
+ *
+ * \retval 0	success
+ *
+ * \post    globals server_count and server_id[] are updated.
 */
-
 static afs_int32
 ListServers(void)
 {
     afs_int32 code;
     int i;
     struct VLCallBack vlcb;
-    struct VLCallBack spare3;
     bulkaddrs addrs, m_addrs;
     afs_uint32 ip;
-    afs_int32 base, index;
     afsUUID m_uuid;
     afs_int32 m_uniq = 0;
     afs_int32 m_nentries;
     ListAddrByAttributes m_attrs;
+    int server_ix = 0;	/* current index into server_id[] */
 
-    memset(&m_attrs, 0, sizeof(m_attrs));
     memset(&addrs, 0, sizeof(addrs));
-    memset(&spare3, 0, sizeof(spare3));
     code =
 	ubik_VL_GetAddrs(client, 0, 0, 0, &vlcb,
 		  &server_count, &addrs);
@@ -73,49 +73,68 @@ ListServers(void)
     if (addrs.bulkaddrs_len < server_count) {
 	server_count = addrs.bulkaddrs_len;
     }
-
+    /* Record any legacy IPv4 entries first.. */
     for (i = 0; i < server_count; ++i) {
 	ip = addrs.bulkaddrs_val[i];
 
 	if (((ip & 0xff000000) == 0xff000000) && (ip & 0xffff)) {
-	    base = (ip >> 16) & 0xff;
-	    index = ip & 0xffff;
-
-	    /* server is a multihomed host; query the vldb for its addresses,
-	     * and just pick the first one */
-
-	    if ((base >= 0) && (base <= VL_MAX_ADDREXTBLKS) && (index >= 1)
-	        && (index <= VL_MHSRV_PERBLK)) {
-
-	        m_attrs.Mask = VLADDR_INDEX;
-		m_attrs.index = (base * VL_MHSRV_PERBLK) + index;
-		m_nentries = 0;
-		m_addrs.bulkaddrs_val = 0;
-		m_addrs.bulkaddrs_len = 0;
-
-		code = ubik_VL_GetAddrsU(client, 0, &m_attrs, &m_uuid, &m_uniq,
-		                         &m_nentries, &m_addrs);
-
-		if (code || m_addrs.bulkaddrs_len == 0) {
-		    printf("Error %d getting multihomed addresses for server "
-			   "index %ld\n",
-			   code,
-			   afs_printable_int32_ld(m_attrs.index));
-		    server_id[i] = 0;
-		    if (code == 0) {
-			return 1;
-		    }
-		    return code;
-
-		} else {
-		    server_id[i] = htonl(m_addrs.bulkaddrs_val[0]);
-		}
-	    }
-	} else {
-	    server_id[i] = htonl(addrs.bulkaddrs_val[i]);
+	    continue;	/* MH entries will be recorded later */
 	}
+	/* Record an IPv4 entry now. */
+	server_id[server_ix++] = htonl(ip);
     }
 
+    /*
+     * We do NOT know if there were any interleaved unoccupied slots in the
+     * VLDB fileserver list due to previous 'vos remaddr' commands.
+     * Unfortunately, VL_GetAddrsU does not distinguish between empty slots and
+     * legacy IPv4 slots - it returns VL_NOENT for both.
+     *
+     * m_attrs.index is an index into the VLDB fileserver list, which is
+     * indexed by one.
+     */
+    for (i = 1; server_ix < server_count; ++i) {
+	memset(&m_attrs, 0, sizeof(m_attrs));
+	memset(&m_addrs, 0, sizeof(m_addrs));
+
+	m_attrs.Mask = VLADDR_INDEX;
+	m_attrs.index = i;
+	m_nentries = 0;
+
+	code = ubik_VL_GetAddrsU(client, 0, &m_attrs, &m_uuid, &m_uniq,
+				 &m_nentries, &m_addrs);
+
+	switch (code) {
+	case 0:
+	    if (m_addrs.bulkaddrs_len == 0) {
+		printf("Slot %d: Error %d getting multihomed addresses for server %d\n",
+		       i, code, server_ix);
+		code = 1;
+		goto done;
+	    }
+	    /* Success - we found an MH entry.  Use its first IPv4 address. */
+	    server_id[server_ix++] = htonl(m_addrs.bulkaddrs_val[0]);
+	    break;
+	case VL_NOENT:
+	    /*
+	     * Ignore this; it's either a blank or legacy IPv4 entry in the
+	     * VLDB server list.
+	     */
+	    code = 0;	/* not an error */
+	    continue;
+	case VL_INDEXERANGE:
+	    /* We've reached The end of the server list. */
+	    server_count = server_ix;  /* adjust count of found MH entries */
+	    code = 0;   /* not an error */
+	    goto done;
+	default:
+	    printf("Slot %d: Error %d getting multihomed addresses for server %d\n",
+		   i, code, server_ix);
+	    goto done;
+	}
+    }
+    server_count = server_ix;
+  done:
     return code;
 }
 
