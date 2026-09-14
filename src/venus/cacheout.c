@@ -360,6 +360,8 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("listservers", GetServerList, NULL, 0,
 			  "list servers in the cell");
+    cmd_Seek(ts, 2);
+    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_CreateAlias(ts, "ls");
 
     code = cmd_Dispatch(argc, argv);
