@@ -829,7 +829,6 @@ ktc_ForgetTokensByCell(const char *cell)
 {
     struct ViceIoctl iob;
     char tbuffer[TBUFFERSIZE];
-    char *tp;
     int code;
     HANDLE ktcMutex = NULL;
 
@@ -843,15 +842,9 @@ ktc_ForgetTokensByCell(const char *cell)
 	}
     }
 
-    tp = tbuffer;
-
-    /* cell name */
-    strcpy(tp, cell);
-    tp += strlen(tp) + 1;
-
     /* do pioctl */
-    iob.in = tbuffer;
-    iob.in_size = (long)(tp - tbuffer);
+    iob.in = cell;
+    iob.in_size = strlen(cell) + 1;
     iob.out = tbuffer;
     iob.out_size = sizeof(tbuffer);
 
