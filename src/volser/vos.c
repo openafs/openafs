@@ -5383,6 +5383,7 @@ ListAddrs(struct cmd_syndesc *as, void *arock)
     ListAddrByAttributes m_attrs;
     afsUUID m_uuid, askuuid;
     afs_int32 m_nentries;
+    int num_MH;	    /* number of MH entries */
 
     if (as->parms[0].items && as->parms[1].items) {
 	fprintf(STDERR, "vos: Can't use the -uuid and -host flags together\n");
@@ -5434,7 +5435,16 @@ ListAddrs(struct cmd_syndesc *as, void *arock)
 	goto out;
     }
 
-    for (i = 1, m_nentries = 0; nentries; i++) {
+    /* Count only the MH entries. */
+    for (i = 0, num_MH = 0; i < nentries; i++) {
+	afs_uint32 ip = m_addrs.bulkaddrs_val[i];
+
+	if (((ip & 0xff000000) == 0xff000000) && ((ip & 0xffff) != 0)) {
+	    num_MH++;
+	}
+    }
+
+    for (i = 1, m_nentries = 0; num_MH > 0; i++) {
 	m_attrs.index = i;
 
 	xdr_free((xdrproc_t)xdr_bulkaddrs, &m_addrs); /* reset addr list */
@@ -5444,7 +5454,7 @@ ListAddrs(struct cmd_syndesc *as, void *arock)
 	switch (vcode) {
 	case 0: /* success */
 	    print_addrs(&m_addrs, &m_uuid, m_nentries, printuuid);
-	    nentries--;
+	    num_MH--;
 	    break;
 
 	case VL_NOENT:
