@@ -123,7 +123,7 @@ Consent/Disapproval List
 ========================
 
 - [Y] Alistair Ferguson <alistair.ferguson@morganstanley.com> (Morgan Stanley)
-- [?] Anders Kaseorg <andersk@mit.edu>
+- [Y] Anders Kaseorg <andersk@mit.edu>
 - [Y] Andrei Keis <Andrei.Keis@morganstanley.com> (Morgan Stanley)
 - [Y] Andrew Deason <adeason@dson.org>
 - [Y] Andrew Deason <adeason@sinenomine.net> (SNA)
