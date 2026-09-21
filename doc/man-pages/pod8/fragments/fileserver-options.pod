@@ -38,6 +38,71 @@ and L<msgrcv(2)>). The C<sysvmq> interface writes to the key C<ftok(msgqpath, 1)
 where C<msqpath> is specified by the I<path to log file> parameter. There are no
 optional parameters to the sysvmq interface.
 
+=item B<pipe>
+
+The C<pipe> interface creates a message buffer and writes audit messages
+to a named pipe (see L<fifo(7)>) specified by the I<path to log file>. This is
+similar to using the B<file> audit interface when pointed to a named pipe, with
+the following differences:
+
+=over 4
+
+=item *
+
+If the given path does not exist, a named pipe is created (instead of a regular
+file).
+
+=item *
+
+If we encounter an error while writing to the pipe (for example, if the process
+reading from the pipe terminates), the server will reopen the pipe and retry
+writing the message data that encountered the error.
+
+=item *
+
+Audit messages written to the pipe are prefixed with a message sequence number,
+to help in determining what messages may have been dropped or duplicated. The
+message sequence number is 0 when the service is started.
+
+=item *
+
+Audit messages are buffered and written to the pipe asynchronously by a
+background thread, so slow or nonexistent readers will not impact performance.
+Details on the buffering behavior are discussed below.
+
+=back
+
+An optional parameter B<buf=I<N>> sets the size for a pair of buffers. The
+value can have a suffix (K, M, G). The default suffix is K.  The default size is
+4M and can range from 1K to 8G. The total memory used for buffers will be twice
+the value of I<N> (for example, buf=4M will use 8M of memory). See below for
+examples of this syntax.
+
+A process must connect to the named pipe to retrieve the audit messages.
+If a process is not connected, or if the process is unable to retrieve the audit
+messages quickly, the buffers can become full. When the buffer is full, new
+audit messages cannot be added, and the new messages are dropped. If messages
+are dropped, an event audit message (EVENT AFS_Aud_Pipe_Dropped) will be present
+in the audit message stream indicating the message sequence number and time
+stamp of the first dropped message, the message sequence number and time stamp
+of the last dropped message, and a count of dropped messages.
+
+When the reading process closes its end of the pipe (for example, because the
+process terminates), we will reopen the pipe and retransmit the messages we were
+trying to write when we encountered the error. This reduces the likelihood
+that messages will be silently dropped, but it does introduce the possibility
+that an already-sent message will be sent again to the next reader, resulting
+effectively in a duplicate audit message. Such duplicate messages can be
+detected by examining the message sequence number (and timestamp) of the
+message.
+
+Example output:
+
+    [1129] Fri May  3 15:02:53 2019 [131] EVENT AFS_SRX_RmFile CODE 0 NAME admin HOST 192.51.100.198 ID 1 FID 536870918:123:14047 STR xt_cpu.h
+    [1141] Fri May  3 15:02:53 2019 [131] EVENT AFS_Priv CODE 0 ID 1 INT 18
+    [3340] Fri May  3 15:02:53 2019 EVENT AFS_Aud_Pipe_Dropped COUNT 2209 FIRST 1556917373 FIRSTID 1130 LAST 1556917374 LASTID 3339
+    [3341] Fri May  3 15:03:59 2019 [131] EVENT AFS_SRX_FchData CODE 0 NAME admin HOST 192.51.100.198 ID 1 FID 536870918:159:13577
+
 =back
 
 Multiple audit logs can be set up with different interfaces or different
@@ -47,8 +112,10 @@ Examples:
 
     -auditlog /path/to/file
     -auditlog file:/path/to/file
+    -auditlog pipe:/path/to/pipe:buf=8M
+    -auditlog pipe:/path/to/pipe:buf=6
     -auditlog sysvmq:/path/to/sysvmq
-    -auditlog /path/to/file -auditlog /path/to/file2
+    -auditlog /path/to/file -auditlog /path/to/file2 -auditlog pipe:/path/to/pipe
 
 =item B<-audit-interface> <I<default interface>>
 

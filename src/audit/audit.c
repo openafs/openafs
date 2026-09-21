@@ -38,6 +38,9 @@ extern struct osi_audit_ops audit_file_ops;
 #ifdef HAVE_SYS_IPC_H
 extern struct osi_audit_ops audit_sysvmq_ops;
 #endif
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+extern struct osi_audit_ops audit_pipe_ops;
+#endif
 
 struct audit_user_check {
     void *rock;
@@ -51,6 +54,9 @@ static struct {
 } audit_interfaces[] = {
 
     { "file", &audit_file_ops },
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+    { "pipe", &audit_pipe_ops},
+#endif
 #ifdef HAVE_SYS_IPC_H
     { "sysvmq", &audit_sysvmq_ops },
 #endif

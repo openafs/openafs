@@ -17,7 +17,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include @TOP_OBJDIR@/src/config/Makefile.lwp
 include @TOP_OBJDIR@/src/config/Makefile.lwptool
 
-LT_objs=audit.lo audit-file.lo audit-sysvmq.lo
+LT_objs=audit.lo audit-file.lo audit-sysvmq.lo audit-pipe.lo
 LT_deps = $(top_builddir)/src/rxkad/liboafs_rxkad.la \
 	  $(top_builddir)/src/util/liboafs_util.la
 
@@ -41,6 +41,8 @@ libaudit_pic.la: $(LT_objs)
 audit.lo: audit.c audit.h audit-api.h
 audit-file.lo: audit-file.c audit.h audit-api.h
 audit-sysvmq.lo: audit-sysvmq.c audit.h audit-api.h
+
+audit-pipe.lo: audit-pipe.c audit.h audit-api.h
 
 # XXX-INST: where to install the AIX audit files?
 install: audit.h libaudit.a
