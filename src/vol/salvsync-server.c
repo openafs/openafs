@@ -1009,10 +1009,18 @@ AddToSalvageQueue(struct SalvageQueueNode * node)
 
     id = volutil_GetPartitionID(node->command.sop.partName);
     if (id < 0 || id > VOLMAXPARTS) {
+	Log("AddToSalvageQueue: error: partition invalid: volume:%" AFS_VOLID_FMT " partname:%s partid:%d\n",
+		afs_printable_VolumeId_lu(node->command.sop.volume),
+		node->command.sop.partName,
+		id);
 	return 1;
     }
     if (!VGetPartitionById_r(id, 0)) {
 	/* don't enqueue salvage requests for unmounted partitions */
+	Log("AddToSalvageQueue: error: partition not mounted: volume:%" AFS_VOLID_FMT " partname:%s partid:%d\n",
+		afs_printable_VolumeId_lu(node->command.sop.volume),
+		node->command.sop.partName,
+		id);
 	return 1;
     }
     if (queue_IsOnQueue(node)) {
