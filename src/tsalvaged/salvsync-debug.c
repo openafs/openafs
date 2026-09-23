@@ -105,15 +105,28 @@ static int OpQuery(struct cmd_syndesc * as, void * rock);
     cmd_AddParm(ts, "-programtype", CMD_SINGLE, CMD_OPTIONAL, "program type code")
 
 #define COMMON_SALV_PARMS_OFFSET    10
-#define COMMON_SALV_PARMS(ts) \
+/* -partition optional */
+#define COMMON_SALV_OPTPART_PARMS(ts) \
     cmd_Seek(ts, COMMON_SALV_PARMS_OFFSET); \
     cmd_AddParm(ts, "-volumeid", CMD_SINGLE, 0, "volume id"); \
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name"); \
     cmd_AddParm(ts, "-priority", CMD_SINGLE, CMD_OPTIONAL, "priority")
 
-#define SALV_PARMS_DECL(ts) \
-    COMMON_SALV_PARMS(ts); \
+/* -partition required */
+#define COMMON_SALV_REQPART_PARMS(ts) \
+    cmd_Seek(ts, COMMON_SALV_PARMS_OFFSET); \
+    cmd_AddParm(ts, "-volumeid", CMD_SINGLE, 0, "volume id"); \
+    cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name"); \
+    cmd_AddParm(ts, "-priority", CMD_SINGLE, CMD_OPTIONAL, "priority")
+
+#define SALV_PARMS_OPTPART_DECL(ts) \
+    COMMON_SALV_OPTPART_PARMS(ts); \
     COMMON_PARMS(ts)
+
+#define SALV_PARMS_REQPART_DECL(ts) \
+    COMMON_SALV_REQPART_PARMS(ts); \
+    COMMON_PARMS(ts)
+
 
 #define COMMON_PARMS_DECL(ts) \
     COMMON_PARMS(ts)
@@ -140,17 +153,17 @@ main(int argc, char **argv)
     cmd_CreateAlias(ts, "nop");
 
     ts = cmd_CreateSyntax("salvage", OpSalvage, NULL, 0, "schedule a salvage (SALVSYNC_SALVAGE opcode)");
-    SALV_PARMS_DECL(ts);
+    SALV_PARMS_REQPART_DECL(ts);	/* -partition required */
 
     ts = cmd_CreateSyntax("cancel", OpCancel, NULL, 0, "cancel a salvage (SALVSYNC_CANCEL opcode)");
-    SALV_PARMS_DECL(ts);
+    SALV_PARMS_OPTPART_DECL(ts);
 
     ts = cmd_CreateSyntax("raiseprio", OpRaisePrio, NULL, 0, "raise a salvage priority (SALVSYNC_RAISEPRIO opcode)");
-    SALV_PARMS_DECL(ts);
+    SALV_PARMS_REQPART_DECL(ts);	/* -partition required */
     cmd_CreateAlias(ts, "rp");
 
     ts = cmd_CreateSyntax("query", OpQuery, NULL, 0, "query salvage status (SALVSYNC_QUERY opcode)");
-    SALV_PARMS_DECL(ts);
+    SALV_PARMS_OPTPART_DECL(ts);
     cmd_CreateAlias(ts, "qry");
 
     ts = cmd_CreateSyntax("kill", OpCancelAll, NULL, 0, "cancel all scheduled salvages (SALVSYNC_CANCELALL opcode)");
