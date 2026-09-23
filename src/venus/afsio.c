@@ -330,7 +330,6 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
     cmd_AddParm(ts, "-readlock", CMD_FLAG, CMD_OPTIONAL, "read lock only");
@@ -344,7 +343,6 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
     cmd_AddParm(ts, "-readlock", CMD_FLAG, CMD_OPTIONAL, "read lock only");
@@ -357,7 +355,6 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
     common_parms(ts);
@@ -370,7 +367,6 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
     cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_Seek(ts, 4);
     cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
     cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
     common_parms(ts);
