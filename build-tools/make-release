@@ -78,10 +78,16 @@ $suffix =~ s/openafs-[^-]*-//;
 $suffix =~ s/_/./g;
 my $name = "openafs-$suffix";
 
-# Grab the tagged code into a temporary directory
+# Get the top-level project directory.
+my $toplevel = `git rev-parse --show-toplevel`;
+chomp $toplevel;
+if (!$toplevel) {
+    die "Unable to find the git top-level directory.";
+}
 
+# Grab the tagged code into a temporary directory
 my $tempDir = File::Temp::tempdir(CLEANUP => 1);
-system ("git archive --format=tar --prefix=$name/ $tagName ".
+system ("git -C $toplevel archive --format=tar --prefix=$name/ $tagName ".
         " | tar -C $tempDir -x") == 0
     or die "Git archive failed with: $?";
 
