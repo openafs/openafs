@@ -122,6 +122,8 @@ that git author.
 Consent/Disapproval List
 ========================
 
+- [Y] Adam Thornton <adam@sinenomine.net> (SNA)
+- [Y] Alexander Redinger <aredinger@sinenomine.net> (SNA)
 - [Y] Alistair Ferguson <alistair.ferguson@morganstanley.com> (Morgan Stanley)
 - [Y] Anders Kaseorg <andersk@mit.edu>
 - [Y] Andrei Keis <Andrei.Keis@morganstanley.com> (Morgan Stanley)
@@ -129,6 +131,8 @@ Consent/Disapproval List
 - [Y] Andrew Deason <adeason@sinenomine.net> (SNA)
 - [?] Arno Schuring <aelschuring@hotmail.com>
 - [?] Benjamin Kaduk <kaduk@mit.edu>
+- [Y] Brandon S Allbery <ballbery@sinenomine.net> (SNA)
+- [Y] Caitlyn Marko <cmarko@sinenomine.net> (SNA)
 - [Y] Carsten Jacobi <jacobi@de.ibm.com> (IBM)
 - [Y] Cesar Garcia <cesarg@ms.com> (Morgan Stanley)
 - [?] Chas Williams (CONTRACTOR) <chas@cmf.nrl.navy.mil> (USN)
@@ -138,7 +142,8 @@ Consent/Disapproval List
 - [?] Chaskiel Grundman <cg2v@andrew.cmu.edu>
 - [?] Chaskiel M Grundman <cg2v@andrew.cmu.edu>
 - [?] Chaz Chandler <clc31@inbox.com>
-- [?] Cheyenne Wills <cwills@sinenomine.net> (SNA)
+- [Y] Cheyenne Wills <cwills@sinenomine.net> (SNA)
+- [Y] Damien Diederen <ddiederen@sinenomine.net> (SNA)
 - [?] Dan Hyde <drh@umich.edu>
 - [Y] Daria Phoebe Brashear <shadow@andrew.cmu.edu>
 - [Y] Daria Phoebe Brashear <shadow@dementia.org>
@@ -151,13 +156,16 @@ Consent/Disapproval List
 - [?] Felix Frank <Felix.Frank@Alumni.TU-Berlin.de>
 - [Y] Ganesh Chaudhari <gangovind@in.ibm.com> (IBM)
 - [?] Garrett Wollman <wollman@csail.mit.edu>
+- [Y] Gaurav Saxena <gsaxena@sinenomine.net> (SNA)
 - [?] Hartmut Reuter <reuter@rzg.mpg.de>
 - [Y] Indira Sawant <indira.sawant@ibm.com> (IBM)
 - [Y] James Peterson <jimpeter@us.ibm.com> (IBM)
+- [Y] Jason Rogers <jrogers@sinenomine.net> (SNA)
 - [Y] Jeff Riegel <riegel@almaden.ibm.com> (IBM)
 - [?] Jeffrey Altman <jaltman@grand.central.org>
 - [?] Jeffrey Altman <jaltman@mit.edu>
 - [?] Jeffrey Altman <jaltman@secure-endpoints.com>
+- [Y] Jeffrey Altman <jaltman@sinenomine.net> (SNA)
 - [?] Jeffrey Altman <jaltman@your-file-system.com> (YFS)
 - [?] Jeffrey Hutzelman <jhutz@cmu.edu>
 - [Y] Jeremy Stribling <jstribl@us.ibm.com> (IBM)
@@ -165,22 +173,27 @@ Consent/Disapproval List
 - [Y] Junsouh Hong <junsouh@gmail.com>
 - [Y] Kailas Zadbuke <kailashsz@in.ibm.com> (IBM)
 - [?] Kevin Coffman <kwc@citi.umich.edu>
+- [Y] Kris Van Hees <aedil@sinenomine.net> (SNA)
+- [Y] Kris Van Hees <kvanhees@sinenomine.net> (SNA)
 - [Y] Laura Stentz <stentz@us.ibm.com> (IBM)
 - [?] Love Hörnquist-Åstrand <lha@e.kth.se>
 - [Y] Manuel Pereira <mpereira@almaden.ibm.com> (IBM)
 - [Y] Manuel Pereira <mpereira@us.ibm.com> (IBM)
 - [?] Marc Dionne <marc.c.dionne@gmail.com>
-- [?] Marcio Barbosa <mbarbosa@sinenomine.net> (SNA)
+- [Y] Marcio Barbosa <mbarbosa@sinenomine.net> (SNA)
 - [?] Marcus Watts <mdw@umich.edu>
-- [?] Mark Vitale <mvitale@sinenomine.net> (SNA)
+- [Y] Mark Vitale <mvitale@sinenomine.net> (SNA)
 - [?] Matt Benjamin <matt@linuxbox.com>
 - [Y] Matt Smith <matt.j.sm@gmail.com>
 - [Y] Matthew A. Bacchi <mbacchi@btv.ibm.com> (IBM)
-- [?] Michael Meffie <mmeffie@sinenomine.net> (SNA)
+- [Y] Michael Meffie <mmeffie@sinenomine.net> (SNA)
 - [Y] Michael Niksch <nik@zurich.ibm.com> (IBM)
+- [Y] Mickey Lane <mlane@sinenomine.net> (SNA)
 - [?] Nathan Neulinger <nneul@umr.edu>
+- [Y] Neale Ferguson <neale@sinenomine.net> (SNA)
 - [Y] Omkar Sathe <somkar@in.ibm.com> (IBM)
 - [Y] Paul Smeddle <paul.smeddle@morganstanley.com> (Morgan Stanley)
+- [Y] Perry Ruiter <pruiter@sinenomine.net> (SNA)
 - [?] Rainer Schöpf <rainer.schoepf@proteosys.com>
 - [?] Rainer Toebbicke <rtb@pclella.cern.ch>
 - [?] Rolf Sattler <rolf@multi-os-net.de>
@@ -190,9 +203,12 @@ Consent/Disapproval List
 - [?] Simon Wilkinson <sxw@inf.ed.ac.uk>
 - [?] Simon Wilkinson <sxw@your-file-system.com> (YFS)
 - [Y] Srikanth Vishwanathan <vsrikanth@in.ibm.com> (IBM)
+- [Y] Steve McIntosh <stevemac@sinenomine.net> (SNA)
+- [Y] Steven Jenkins <sjenkins@sinenomine.net> (SNA)
 - [Y] Sven Oehme <oehmes@de.ibm.com> (IBM)
 - [Y] Ted Anderson <ota@transarc.com> (IBM)
 - [Y] Todd DeSantis <atd@us.ibm.com> (IBM)
+- [Y] Tom Keiser <tkeiser@sinenomine.net> (SNA)
 - [?] Tom Maher <tardis@ece.cmu.edu>
 - [?] Walter Wong <wcw@cmu.edu>
 - [Y] Yadav Yadavendra <yadayada@in.ibm.com> (IBM)
@@ -210,6 +226,6 @@ legal entity here.
 - [Y] International Business Machines Corporation (IBM)
 - [?] Leland Stanford Junior University (Stanford)
 - [Y] Morgan Stanley
-- [?] Sine Nomine Associates, Inc. (SNA)
+- [Y] Sine Nomine Associates, Inc. (SNA)
 - [?] United States Navy (USN)
 - [?] Your File System, Inc. (YFS)
