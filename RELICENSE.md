@@ -130,7 +130,7 @@ Consent/Disapproval List
 - [Y] Andrew Deason <adeason@dson.org>
 - [Y] Andrew Deason <adeason@sinenomine.net> (SNA)
 - [?] Arno Schuring <aelschuring@hotmail.com>
-- [?] Benjamin Kaduk <kaduk@mit.edu>
+- [Y] Benjamin Kaduk <kaduk@mit.edu>
 - [Y] Brandon S Allbery <ballbery@sinenomine.net> (SNA)
 - [Y] Caitlyn Marko <cmarko@sinenomine.net> (SNA)
 - [Y] Carsten Jacobi <jacobi@de.ibm.com> (IBM)
