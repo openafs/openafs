@@ -113,6 +113,24 @@ struct wbuf {
     char buf[BUFFLEN];
 };
 
+enum optionsList {
+    OPT_file,
+    OPT_fid,
+    OPT_vnode,
+    OPT_dir,
+    OPT_cell,
+    OPT_verbose,
+    OPT_clear,
+    OPT_crypt,
+    OPT_md5,
+    OPT_force,
+    OPT_synthesize,
+    OPT_realm,
+    OPT_waitseconds,
+    OPT_readlock,
+    OPT_as_user,
+};
+
 /*!
  *  returns difference in seconds between two times
  *
@@ -290,7 +308,18 @@ CmdProlog(struct cmd_syndesc *as, char **cellp, char **realmp,
 static void
 common_parms(struct cmd_syndesc *as)
 {
-    cmd_AddParm(as, "-as-user", CMD_SINGLE, CMD_OPTIONAL, "username");
+    cmd_AddParmAtOffset(as, OPT_cell, "-cell", CMD_SINGLE, CMD_OPTIONAL,
+			"cellname");
+    cmd_AddParmAtOffset(as, OPT_verbose, "-verbose", CMD_FLAG, CMD_OPTIONAL,
+			NULL);
+    cmd_AddParmAtOffset(as, OPT_clear, "-clear", CMD_FLAG, CMD_OPTIONAL,
+			NULL);
+    cmd_AddParmAtOffset(as, OPT_crypt, "-crypt", CMD_FLAG, CMD_OPTIONAL,
+			NULL);
+    cmd_AddParmAtOffset(as, OPT_realm, "-realm", CMD_SINGLE, CMD_OPTIONAL,
+			"REALMNAME");
+    cmd_AddParmAtOffset(as, OPT_as_user, "-as-user", CMD_SINGLE, CMD_OPTIONAL,
+			"username");
 }
 
 int
@@ -325,148 +354,109 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("lock", lockFile, (void *)LockWrite, 0,
 			  "lock a file in AFS");
-    cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
-    cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
-    cmd_AddParm(ts, "-readlock", CMD_FLAG, CMD_OPTIONAL, "read lock only");
+    cmd_AddParmAtOffset(ts, OPT_file, "-file", CMD_SINGLE, CMD_REQUIRED,
+			"AFS-filename");
+    cmd_AddParmAtOffset(ts, OPT_waitseconds, "-waitseconds", CMD_SINGLE,
+			CMD_OPTIONAL, "seconds to wait before giving up");
+    cmd_AddParmAtOffset(ts, OPT_readlock, "-readlock", CMD_FLAG, CMD_OPTIONAL,
+			"read lock only");
     common_parms(ts);
 
     ts = cmd_CreateSyntax("fidlock", lockFile, (void *)LockWrite, 0,
 			  "lock by FID a file from AFS");
-    cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
-		"volume.vnode.uniquifier");
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
-    cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
-    cmd_AddParm(ts, "-readlock", CMD_FLAG, CMD_OPTIONAL, "read lock only");
+    cmd_AddParmAtOffset(ts, OPT_fid, "-fid", CMD_SINGLE, CMD_REQUIRED,
+			"volume.vnode.uniquifier");
+    cmd_AddParmAtOffset(ts, OPT_waitseconds, "-waitseconds", CMD_SINGLE,
+			CMD_OPTIONAL, "seconds to wait before giving up");
+    cmd_AddParmAtOffset(ts, OPT_readlock, "-readlock", CMD_FLAG, CMD_OPTIONAL,
+			"read lock only");
     common_parms(ts);
 
     ts = cmd_CreateSyntax("unlock", lockFile, (void *)LockRelease, 0,
 			  "unlock a file in AFS");
-    cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
-    cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
+    cmd_AddParmAtOffset(ts, OPT_file, "-file", CMD_SINGLE, CMD_REQUIRED,
+			"AFS-filename");
+    cmd_AddParmAtOffset(ts, OPT_waitseconds, "-waitseconds", CMD_SINGLE,
+			CMD_OPTIONAL, "seconds to wait before giving up");
     common_parms(ts);
 
     ts = cmd_CreateSyntax("fidunlock", lockFile, (void *)LockRelease, 0,
 			  "unlock by FID a file from AFS");
-    cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
-		"volume.vnode.uniquifier");
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
-    cmd_AddParm(ts, "-waitseconds", CMD_SINGLE, CMD_OPTIONAL, "seconds to wait before giving up");
+    cmd_AddParmAtOffset(ts, OPT_fid, "-fid", CMD_SINGLE, CMD_REQUIRED,
+			"volume.vnode.uniquifier");
+    cmd_AddParmAtOffset(ts, OPT_waitseconds, "-waitseconds", CMD_SINGLE,
+			CMD_OPTIONAL, "seconds to wait before giving up");
     common_parms(ts);
 
-    ts = cmd_CreateSyntax("read", readFile, NULL, 0,
-			  "read a file from AFS");
-    cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
-    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    ts = cmd_CreateSyntax("read", readFile, NULL, 0, "read a file from AFS");
+    cmd_AddParmAtOffset(ts, OPT_file, "-file", CMD_SINGLE, CMD_REQUIRED,
+			"AFS-filename");
+    cmd_AddParmAtOffset(ts, OPT_md5, "-md5", CMD_FLAG, CMD_OPTIONAL,
+			"calculate md5 checksum");
     common_parms(ts);
 
     ts = cmd_CreateSyntax("fidread", readFile, CMD_REQUIRED, 0,
 			  "read on a non AFS-client a file from AFS");
-    cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
-		"volume.vnode.uniquifier");
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
-    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    cmd_AddParmAtOffset(ts, OPT_fid, "-fid", CMD_SINGLE, CMD_REQUIRED,
+			"volume.vnode.uniquifier");
+    cmd_AddParmAtOffset(ts, OPT_md5, "-md5", CMD_FLAG, CMD_OPTIONAL,
+			"calculate md5 checksum");
     common_parms(ts);
 
     ts = cmd_CreateSyntax("readdir", readFile, CMD_REQUIRED, 0,
 			  "read a directory from AFS");
-    cmd_AddParm(ts, "-dir", CMD_SINGLE, CMD_REQUIRED, "AFS-dirname");
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
-    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    cmd_AddParmAtOffset(ts, OPT_dir, "-dir", CMD_SINGLE, CMD_REQUIRED,
+			"AFS-dirname");
+    cmd_AddParmAtOffset(ts, OPT_md5, "-md5", CMD_FLAG, CMD_OPTIONAL,
+			"calculate md5 checksum");
     common_parms(ts);
 
     ts = cmd_CreateSyntax("fidreaddir", readFile, CMD_REQUIRED, 0,
 			  "read on a non AFS-client a directory from AFS");
-    cmd_AddParm(ts, "-fid", CMD_SINGLE, CMD_REQUIRED,
-		"volume.vnode.uniquifier");
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
-    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    cmd_AddParmAtOffset(ts, OPT_fid, "-fid", CMD_SINGLE, CMD_REQUIRED,
+			"volume.vnode.uniquifier");
+    cmd_AddParmAtOffset(ts, OPT_md5, "-md5", CMD_FLAG, CMD_OPTIONAL,
+			"calculate md5 checksum");
     common_parms(ts);
 
     ts = cmd_CreateSyntax("write", writeFile, NULL, 0,
 			  "write a file into AFS");
-    cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
-    cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
-		"overwrite existing file");
-    cmd_AddParm(ts, "-synthesize", CMD_SINGLE, CMD_OPTIONAL, "length");
-    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    cmd_AddParmAtOffset(ts, OPT_file, "-file", CMD_SINGLE, CMD_REQUIRED,
+			"AFS-filename");
+    cmd_AddParmAtOffset(ts, OPT_md5, "-md5", CMD_FLAG, CMD_OPTIONAL,
+			"calculate md5 checksum");
+    cmd_AddParmAtOffset(ts, OPT_force, "-force", CMD_FLAG, CMD_OPTIONAL,
+			"overwrite existing file");
+    cmd_AddParmAtOffset(ts, OPT_synthesize, "-synthesize", CMD_SINGLE,
+			CMD_OPTIONAL, "length");
     common_parms(ts);
 
     ts = cmd_CreateSyntax("fidwrite", writeFile, CMD_REQUIRED, 0,
 			  "write a file into AFS");
-    cmd_AddParm(ts, "-vnode", CMD_SINGLE, CMD_REQUIRED,
-		"volume.vnode.uniquifier");
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-md5", CMD_FLAG, CMD_OPTIONAL, "calculate md5 checksum");
-    cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL,
-		"overwrite existing file");
-    cmd_AddParm(ts, "-synthesize", CMD_SINGLE, CMD_OPTIONAL, "length");
-    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    cmd_AddParmAtOffset(ts, OPT_vnode, "-vnode", CMD_SINGLE, CMD_REQUIRED,
+			"volume.vnode.uniquifier");
+    cmd_AddParmAtOffset(ts, OPT_md5, "-md5", CMD_FLAG, CMD_OPTIONAL,
+			"calculate md5 checksum");
+    cmd_AddParmAtOffset(ts, OPT_force, "-force", CMD_FLAG, CMD_OPTIONAL,
+			"overwrite existing file");
+    cmd_AddParmAtOffset(ts, OPT_synthesize, "-synthesize", CMD_SINGLE,
+			CMD_OPTIONAL, "length");
     common_parms(ts);
 
     ts = cmd_CreateSyntax("append", writeFile, NULL, 0,
 			  "append to a file in AFS");
-    cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_REQUIRED, "AFS-filename");
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-synthesize", CMD_SINGLE, CMD_OPTIONAL, "length");
-    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    cmd_AddParmAtOffset(ts, OPT_file, "-file", CMD_SINGLE, CMD_REQUIRED,
+			"AFS-filename");
+    cmd_AddParmAtOffset(ts, OPT_synthesize, "-synthesize", CMD_SINGLE,
+			CMD_OPTIONAL, "length");
     common_parms(ts);
 
     ts = cmd_CreateSyntax("fidappend", writeFile, NULL, 0,
 			  "append to a file in AFS");
-    cmd_AddParm(ts, "-vnode", CMD_SINGLE, CMD_REQUIRED,
-		"volume.vnode.uniquifier");
-    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cellname");
-    cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-crypt", CMD_FLAG, CMD_OPTIONAL, (char *)0);
-    cmd_AddParm(ts, "-synthesize", CMD_SINGLE, CMD_OPTIONAL, "length");
-    cmd_AddParm(ts, "-realm", CMD_SINGLE, CMD_OPTIONAL, "REALMNAME");
+    cmd_AddParmAtOffset(ts, OPT_vnode, "-vnode", CMD_SINGLE, CMD_REQUIRED,
+			"volume.vnode.uniquifier");
+    cmd_AddParmAtOffset(ts, OPT_synthesize, "-synthesize", CMD_SINGLE,
+			CMD_OPTIONAL, "length");
     common_parms(ts);
 
     if (afscp_Init(NULL) != 0)
