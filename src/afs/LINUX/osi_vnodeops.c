@@ -1797,7 +1797,11 @@ struct dentry_operations afs_dentry_operations = {
  * name is in kernel space at this point.
  */
 
-#if defined(IOP_TAKES_MNT_IDMAP)
+#if defined(HAVE_LINUX_INODE_OPERATIONS_CREATE_NOEXCL)
+static int
+afs_linux_create(struct mnt_idmap *idmap, struct inode *dip,
+		 struct dentry *dp, umode_t mode)
+#elif defined(IOP_TAKES_MNT_IDMAP)
 static int
 afs_linux_create(struct mnt_idmap *idmap, struct inode *dip,
 		 struct dentry *dp, umode_t mode, bool excl)
