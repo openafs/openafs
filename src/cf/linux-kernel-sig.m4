@@ -36,11 +36,6 @@ AC_CHECK_LINUX_OPERATION([inode_operations], [create], [mnt_idmap],
                          [struct mnt_idmap *idmap,
                          struct inode *inode, struct dentry *dentry,
                          umode_t umode, bool flag])
-dnl if HAVE_LINUX_INODE_OPERATIONS_CREATE_MNT_IDMAP, create a more generic
-dnl define.
-AS_IF([test AS_VAR_GET([ac_cv_linux_operation_inode_operations_create_mnt_idmap]) = yes],
-      [AC_DEFINE([IOP_TAKES_MNT_IDMAP], 1,
-                 [define if inodeops require struct mnt_idmap])])
 
 dnl Linux 6.15 changed the return value for inode_operations.mkdir to a struct dentry *
 AC_CHECK_LINUX_OPERATION([inode_operations], [mkdir], [return_dentry],
@@ -49,5 +44,20 @@ AC_CHECK_LINUX_OPERATION([inode_operations], [mkdir], [return_dentry],
                          [struct mnt_idmap *idmap,
                          struct inode *inode, struct dentry *dentry,
                          umode_t umode])
+
+dnl Linux 7.3 removed the excl flag from inodeop create operations
+AC_CHECK_LINUX_OPERATION([inode_operations], [create], [noexcl],
+                         [#include <linux/fs.h>],
+                         [int],
+                         [struct mnt_idmap *idmap,
+                         struct inode *inode, struct dentry *dentry,
+                         umode_t umode])
+
+dnl if either HAVE_LINUX_INODE_OPERATIONS_CREATE_MNT_IDMAP or
+dnl HAVE_LINUX_INODE_OPERATIONS_CREATE_NOEXCL then create a more generic define.
+AS_IF([test "$ac_cv_linux_operation_inode_operations_create_mnt_idmap" = "yes" || \
+       test "$ac_cv_linux_operation_inode_operations_create_noexcl" = "yes"],
+      [AC_DEFINE([IOP_TAKES_MNT_IDMAP], 1,
+                 [define if inodeops require struct mnt_idmap])])
 
 ])
