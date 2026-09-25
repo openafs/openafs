@@ -186,6 +186,7 @@ afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	char procname[256];
 	osi_procname(procname, 256);
+	procname[255] = '\0';
 
 	afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
 		     MyPidxx2Pid(MyPidxx), procname);

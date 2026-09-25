@@ -670,6 +670,7 @@ afs_AtSys_SetType(afs_uint32 type)
     default:
 	pid = MyPidxx2Pid(MyPidxx);
 	osi_procname(procname, sizeof(procname));
+	procname[255] = '\0';
 	afs_warn("afs: pid %d (%s) tried to set invalid atsys type %d\n", pid,
 		 procname, type);
 	return EINVAL;
@@ -678,6 +679,7 @@ afs_AtSys_SetType(afs_uint32 type)
     if (afs_globalVFS != NULL) {
 	pid = MyPidxx2Pid(MyPidxx);
 	osi_procname(procname, sizeof(procname));
+	procname[255] = '\0';
 	afs_warn("afs: pid %d (%s) tried to set atsys type to %d after AFS is "
 		 "mounted\n", pid, procname, type);
 	return EBUSY;
