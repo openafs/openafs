@@ -173,7 +173,7 @@ Consent/Disapproval List
 - [?] Marcus Watts <mdw@umich.edu>
 - [?] Mark Vitale <mvitale@sinenomine.net> (SNA)
 - [?] Matt Benjamin <matt@linuxbox.com>
-- [?] Matt Smith <matt.j.sm@gmail.com>
+- [Y] Matt Smith <matt.j.sm@gmail.com>
 - [Y] Matthew A. Bacchi <mbacchi@btv.ibm.com> (IBM)
 - [?] Michael Meffie <mmeffie@sinenomine.net> (SNA)
 - [Y] Michael Niksch <nik@zurich.ibm.com> (IBM)
