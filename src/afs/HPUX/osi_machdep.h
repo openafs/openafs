@@ -119,7 +119,7 @@ extern caddr_t kmem_alloc();
 #include <vfs_vm.h>
 #endif
 
-#define osi_procname(procname, size) strncpy(procname, "", size)
+#define afs_osi_procname(procname, size) strncpy(procname, "", size)
 
 static_inline void
 osi_GetTime(osi_timeval32_t *atv)

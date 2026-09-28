@@ -332,3 +332,24 @@ afs_calc_inum(afs_int32 cell, afs_int32 volume, afs_int32 vnode)
     ino &= 0x7fffffff;      /* Assumes 32 bit ino_t ..... */
     return ino;
 }
+
+/*
+ * Get the name of the current process, using 'buf' as buffer space. The
+ * returned string is guaranteed to be NUL-terminated, but is not guaranteed to
+ * use the given 'buf' as buffer space.
+ */
+const char *
+afs_procname(struct afs_procname_buf *buf)
+{
+    opr_StaticAssert(sizeof(*buf) == AFS_SIZEOF_PROCNAME);
+    opr_StaticAssert(sizeof(*buf) <= AFS_SMALLOCSIZ);
+
+    if (buf == NULL) {
+	return "";
+    }
+
+    afs_osi_procname(buf->buf, AFS_SIZEOF_PROCNAME);
+    buf->buf[AFS_SIZEOF_PROCNAME - 1] = '\0';
+
+    return buf->buf;
+}

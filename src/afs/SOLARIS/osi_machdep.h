@@ -123,7 +123,7 @@ struct afs_ifinfo {
 };
 #endif /* AFS_SUN510_ENV */
 
-#define osi_procname(procname, size) strncpy(procname, PTOU(ttoproc(curthread))->u_comm, size)
+#define afs_osi_procname(procname, size) strncpy(procname, PTOU(ttoproc(curthread))->u_comm, size)
 
 static_inline void
 osi_GetTime(osi_timeval32_t *atv)

@@ -80,7 +80,7 @@ extern int afs_suser(afs_ucred_t *credp);
 #define getuerror(erval) get_user_struct()->u_error
 #define osi_curcred()    get_user_struct()->u_cred
 
-#define osi_procname(procname, size) strncpy(procname, "(unknown)", size)
+#define afs_osi_procname(procname, size) strncpy(procname, "(unknown)", size)
 
 static_inline void
 osi_GetTime(osi_timeval32_t *atv)

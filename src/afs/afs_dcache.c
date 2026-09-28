@@ -3067,7 +3067,7 @@ static void
 LogCacheError(int aslot, int off, int code, int target_size)
 {
     struct osi_stat tstat;
-    char *procname;
+    struct afs_procname_buf *procname;
 
     if (!afs_ShouldLogCacheError(code)) {
 	return;
@@ -3077,17 +3077,13 @@ LogCacheError(int aslot, int off, int code, int target_size)
 	tstat.size = -1;
     }
 
-    procname = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
-    if (procname != NULL) {
-	osi_procname(procname, AFS_SMALLOCSIZ);
-	procname[AFS_SMALLOCSIZ-1] = '\0';
-    }
+    procname = osi_AllocSmallSpace(sizeof(*procname));
 
     afs_warn("afs: disk cache read error in CacheItems slot %d "
 	     "off %d/%d code %d/%d pid %d (%s)\n",
 	     aslot, off, (int)tstat.size, code, target_size,
 	     (int)MyPidxx2Pid(MyPidxx),
-	     procname ? procname : "");
+	     afs_procname(procname));
 
     if (procname != NULL) {
 	osi_FreeSmallSpace(procname);

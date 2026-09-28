@@ -240,7 +240,7 @@ extern int (**afs_vnodeop_p) ();
 #define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
 #define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
 
-#define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
+#define afs_osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
 
 static_inline void
 osi_GetTime(osi_timeval32_t *atv)

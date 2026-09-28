@@ -230,9 +230,9 @@ extern int (**afs_vnodeop_p) ();
 #endif
 
 #ifdef AFS_DARWIN80_ENV
-#define osi_procname(procname, size) proc_selfname(procname, size)
+#define afs_osi_procname(procname, size) proc_selfname(procname, size)
 #else
-#define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
+#define afs_osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
 #endif
 
 static_inline void

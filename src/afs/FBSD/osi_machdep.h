@@ -132,7 +132,7 @@ extern struct thread *afs_global_owner;
 #undef USERPRI
 #define USERPRI
 
-#define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
+#define afs_osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
 
 static_inline void
 osi_GetTime(osi_timeval32_t *atv)

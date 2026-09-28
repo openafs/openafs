@@ -229,7 +229,7 @@ extern flid_t osi_flid;
 #undef OSI_VFS_CONVERT
 #define OSI_VFS_CONVERT(V) struct vfs * V = (struct vfs*)bhvtovfs(bhv_##V)
 
-#define osi_procname(procname, size) strncpy(procname, proc_name(curproc()), size)
+#define afs_osi_procname(procname, size) strncpy(procname, proc_name(curproc()), size)
 
 static_inline void
 osi_GetTime(osi_timeval32_t *atv)

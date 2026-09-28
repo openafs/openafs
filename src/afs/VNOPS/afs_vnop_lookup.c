@@ -658,7 +658,7 @@ int
 afs_AtSys_SetType(afs_uint32 type)
 {
     int pid;
-    char procname[256];
+    struct afs_procname_buf procname;
 
     switch (type) {
     case AFS_ATSYS_INTERNAL:
@@ -669,19 +669,15 @@ afs_AtSys_SetType(afs_uint32 type)
 	break;
     default:
 	pid = MyPidxx2Pid(MyPidxx);
-	osi_procname(procname, sizeof(procname));
-	procname[255] = '\0';
 	afs_warn("afs: pid %d (%s) tried to set invalid atsys type %d\n", pid,
-		 procname, type);
+		 afs_procname(&procname), type);
 	return EINVAL;
     }
 
     if (afs_globalVFS != NULL) {
 	pid = MyPidxx2Pid(MyPidxx);
-	osi_procname(procname, sizeof(procname));
-	procname[255] = '\0';
 	afs_warn("afs: pid %d (%s) tried to set atsys type to %d after AFS is "
-		 "mounted\n", pid, procname, type);
+		 "mounted\n", pid, afs_procname(&procname), type);
 	return EBUSY;
     }
 

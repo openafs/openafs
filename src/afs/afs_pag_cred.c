@@ -184,12 +184,9 @@ afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
     if (!tcell) return ESRCH;
     if (set_parent_pag) {
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-	char procname[256];
-	osi_procname(procname, 256);
-	procname[255] = '\0';
-
+	struct afs_procname_buf procname;
 	afs_warnuser("Process %d (%s) tried to change pags in PSetTokens\n",
-		     MyPidxx2Pid(MyPidxx), procname);
+		     MyPidxx2Pid(MyPidxx), afs_procname(&procname));
 	setpag(osi_curproc(), acred, -1, &pag, 1);
 #else
 	setpag(acred, -1, &pag, 1);

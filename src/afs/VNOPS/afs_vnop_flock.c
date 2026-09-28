@@ -500,7 +500,7 @@ DoLockWarning(struct vcache *avc, afs_ucred_t * acred)
 
     afs_uint32 now;
     pid_t pid = MyPidxx2Pid(MyPidxx);
-    char *procname;
+    struct afs_procname_buf *procname;
     const char *message;
 
     now = osi_Time();
@@ -515,14 +515,7 @@ DoLockWarning(struct vcache *avc, afs_ucred_t * acred)
 	return;
     }
 
-    procname = afs_osi_Alloc(256);
-
-    if (!procname)
-	return;
-
-    /* Copies process name to allocated procname, see osi_machdeps for details of macro */
-    osi_procname(procname, 256);
-    procname[255] = '\0';
+    procname = afs_osi_Alloc(sizeof(*procname));
 
     lastWarnTime = avc->lastBRLWarnTime = now;
     lastWarnPid = pid;
@@ -534,12 +527,14 @@ DoLockWarning(struct vcache *avc, afs_ucred_t * acred)
 #endif
 
     afs_warnuser("afs: %s (pid %d (%s), user %ld, fid %lu.%lu.%lu).\n",
-                 message, pid, procname, (long)afs_cr_uid(acred),
+		 message, pid, afs_procname(procname), (long)afs_cr_uid(acred),
                  (unsigned long)avc->f.fid.Fid.Volume,
                  (unsigned long)avc->f.fid.Fid.Vnode,
                  (unsigned long)avc->f.fid.Fid.Unique);
 
-    afs_osi_Free(procname, 256);
+    if (procname != NULL) {
+	afs_osi_Free(procname, sizeof(*procname));
+    }
 }
 
 

@@ -997,6 +997,12 @@ extern int afs_badop(void);
 extern int afs_noop(void);
 extern afs_int32 afs_data_pointer_to_int32(const void *p);
 
+#define AFS_SIZEOF_PROCNAME 32
+struct afs_procname_buf {
+    char buf[AFS_SIZEOF_PROCNAME];
+};
+extern const char *afs_procname(struct afs_procname_buf *buf);
+
 /* afs_warn.c */
 
 #ifdef AFS_AIX_ENV

@@ -77,7 +77,7 @@ struct afs_sysargs {
 typedef struct lwp afs_proc_t;
 #define osi_curproc()	curlwp
 #define getpid()	(osi_curproc())->l_proc->p_pid
-#define osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
+#define afs_osi_procname(procname, size) strncpy(procname, curproc->p_comm, size)
 
 typedef struct kauth_cred afs_ucred_t;
 #define osi_curcred()	(kauth_cred_get())
