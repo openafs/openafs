@@ -57,7 +57,6 @@ ListServers(void)
     afsUUID m_uuid;
     afs_int32 m_uniq = 0;
     afs_int32 m_nentries;
-    char hoststr[16];
     ListAddrByAttributes m_attrs;
 
     memset(&m_attrs, 0, sizeof(m_attrs));
@@ -98,11 +97,16 @@ ListServers(void)
 		                         &m_nentries, &m_addrs);
 
 		if (code || m_addrs.bulkaddrs_len == 0) {
-		    printf("Error getting multihomed addresses for server "
-		           "%s (index %ld)\n",
-			   afs_inet_ntoa_r(m_addrs.bulkaddrs_val[0], hoststr),
+		    printf("Error %d getting multihomed addresses for server "
+			   "index %ld\n",
+			   code,
 			   afs_printable_int32_ld(m_attrs.index));
 		    server_id[i] = 0;
+		    if (code == 0) {
+			return 1;
+		    }
+		    return code;
+
 		} else {
 		    server_id[i] = htonl(m_addrs.bulkaddrs_val[0]);
 		}
