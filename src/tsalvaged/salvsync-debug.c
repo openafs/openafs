@@ -96,40 +96,42 @@ static int OpQuery(struct cmd_syndesc * as, void * rock);
 #ifndef AFS_NT40_ENV
 #include "AFS_component_version_number.c"
 #endif
-#define MAX_ARGS 128
 
-#define COMMON_PARMS_OFFSET    13
-#define COMMON_PARMS(ts) \
-    cmd_Seek(ts, COMMON_PARMS_OFFSET); \
-    cmd_AddParm(ts, "-reason", CMD_SINGLE, CMD_OPTIONAL, "sync protocol reason code"); \
-    cmd_AddParm(ts, "-programtype", CMD_SINGLE, CMD_OPTIONAL, "program type code")
+enum {
+    OPT_volumeid,
+    OPT_partition,
+    OPT_priority,
+    OPT_reason,
+    OPT_programtype,
+};
 
-#define COMMON_SALV_PARMS_OFFSET    10
-/* -partition optional */
-#define COMMON_SALV_OPTPART_PARMS(ts) \
-    cmd_Seek(ts, COMMON_SALV_PARMS_OFFSET); \
-    cmd_AddParm(ts, "-volumeid", CMD_SINGLE, 0, "volume id"); \
-    cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name"); \
-    cmd_AddParm(ts, "-priority", CMD_SINGLE, CMD_OPTIONAL, "priority")
+static void
+common_parms(struct cmd_syndesc *as)
+{
+    cmd_AddParmAtOffset(as, OPT_reason, "-reason", CMD_SINGLE, CMD_OPTIONAL,
+			"sync protocol reason code");
+    cmd_AddParmAtOffset(as, OPT_programtype, "-programtype", CMD_SINGLE,
+			CMD_OPTIONAL, "program type code");
+}
 
-/* -partition required */
-#define COMMON_SALV_REQPART_PARMS(ts) \
-    cmd_Seek(ts, COMMON_SALV_PARMS_OFFSET); \
-    cmd_AddParm(ts, "-volumeid", CMD_SINGLE, 0, "volume id"); \
-    cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name"); \
-    cmd_AddParm(ts, "-priority", CMD_SINGLE, CMD_OPTIONAL, "priority")
+static void
+common_parms_salv(struct cmd_syndesc *as, int partition_required)
+{
+    afs_int32 partition_flags = CMD_REQUIRED;
 
-#define SALV_PARMS_OPTPART_DECL(ts) \
-    COMMON_SALV_OPTPART_PARMS(ts); \
-    COMMON_PARMS(ts)
+    if (!partition_required) {
+	partition_flags = CMD_OPTIONAL;
+    }
 
-#define SALV_PARMS_REQPART_DECL(ts) \
-    COMMON_SALV_REQPART_PARMS(ts); \
-    COMMON_PARMS(ts)
+    common_parms(as);
 
-
-#define COMMON_PARMS_DECL(ts) \
-    COMMON_PARMS(ts)
+    cmd_AddParmAtOffset(as, OPT_volumeid, "-volumeid", CMD_SINGLE,
+			CMD_REQUIRED, "volume id");
+    cmd_AddParmAtOffset(as, OPT_partition, "-partition", CMD_SINGLE,
+			partition_flags, "partition name");
+    cmd_AddParmAtOffset(as, OPT_priority, "-priority", CMD_SINGLE,
+			CMD_OPTIONAL, "priority");
+}
 
 int
 main(int argc, char **argv)
@@ -149,25 +151,25 @@ main(int argc, char **argv)
 
 
     ts = cmd_CreateSyntax("stats", OpStats, NULL, 0, "get salvageserver statistics (SALVSYNC_NOP opcode)");
-    COMMON_PARMS_DECL(ts);
+    common_parms(ts);
     cmd_CreateAlias(ts, "nop");
 
     ts = cmd_CreateSyntax("salvage", OpSalvage, NULL, 0, "schedule a salvage (SALVSYNC_SALVAGE opcode)");
-    SALV_PARMS_REQPART_DECL(ts);	/* -partition required */
+    common_parms_salv(ts, 1);
 
     ts = cmd_CreateSyntax("cancel", OpCancel, NULL, 0, "cancel a salvage (SALVSYNC_CANCEL opcode)");
-    SALV_PARMS_OPTPART_DECL(ts);
+    common_parms_salv(ts, 0);
 
     ts = cmd_CreateSyntax("raiseprio", OpRaisePrio, NULL, 0, "raise a salvage priority (SALVSYNC_RAISEPRIO opcode)");
-    SALV_PARMS_REQPART_DECL(ts);	/* -partition required */
+    common_parms_salv(ts, 1);
     cmd_CreateAlias(ts, "rp");
 
     ts = cmd_CreateSyntax("query", OpQuery, NULL, 0, "query salvage status (SALVSYNC_QUERY opcode)");
-    SALV_PARMS_OPTPART_DECL(ts);
+    common_parms_salv(ts, 0);
     cmd_CreateAlias(ts, "qry");
 
     ts = cmd_CreateSyntax("kill", OpCancelAll, NULL, 0, "cancel all scheduled salvages (SALVSYNC_CANCELALL opcode)");
-    COMMON_PARMS_DECL(ts);
+    common_parms(ts);
 
     err = cmd_Dispatch(argc, argv);
     exit(err);
@@ -176,8 +178,8 @@ main(int argc, char **argv)
 static int
 common_prolog(struct cmd_syndesc * as, struct fssync_state * state)
 {
-    struct cmd_item *ti;
     VolumePackageOptions opts;
+    char *pt_string = NULL;
 
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0) {
@@ -198,31 +200,32 @@ common_prolog(struct cmd_syndesc * as, struct fssync_state * state)
     state->sop = calloc(1, sizeof(state->sop[0]));
     assert(state->sop != NULL);
 
-    if ((ti = as->parms[COMMON_PARMS_OFFSET].items)) {	/* -reason */
-	state->reason = atoi(ti->data);
-    } else {
-	state->reason = SALVSYNC_REASON_WHATEVER;
-    }
+    state->reason = SALVSYNC_REASON_WHATEVER;
+    cmd_OptionAsInt(as, OPT_reason, &state->reason);
 
-    if ((ti = as->parms[COMMON_PARMS_OFFSET+1].items)) {	/* -programtype */
-	if (!strcmp(ti->data, "fileServer")) {
+    if (cmd_OptionAsString(as, OPT_programtype, &pt_string) == 0) {
+	if (strcmp(pt_string, "fileServer") == 0) {
 	    programType = fileServer;
-	} else if (!strcmp(ti->data, "volumeUtility")) {
+	} else if (strcmp(pt_string, "volumeUtility") == 0) {
 	    programType = volumeUtility;
-	} else if (!strcmp(ti->data, "salvager")) {
+	} else if (strcmp(pt_string, "salvager") == 0) {
 	    programType = salvager;
-	} else if (!strcmp(ti->data, "salvageServer")) {
+	} else if (strcmp(pt_string, "salvageServer") == 0) {
 	    programType = salvageServer;
-	} else if (!strcmp(ti->data, "volumeServer")) {
+	} else if (strcmp(pt_string, "volumeServer") == 0) {
 	    programType = volumeServer;
-	} else if (!strcmp(ti->data, "volumeSalvager")) {
+	} else if (strcmp(pt_string, "volumeSalvager") == 0) {
 	    programType = volumeSalvager;
 	} else {
-	    programType = (ProgramType) atoi(ti->data);
+	    int pt = 0;
+	    opr_Verify(cmd_OptionAsInt(as, OPT_programtype, &pt) == 0);
+	    programType = pt;
 	}
     }
 
     VConnectSALV();
+
+    free(pt_string);
 
     return 0;
 }
@@ -230,27 +233,23 @@ common_prolog(struct cmd_syndesc * as, struct fssync_state * state)
 static int
 common_salv_prolog(struct cmd_syndesc * as, struct fssync_state * state)
 {
-    struct cmd_item *ti;
+    char *part = NULL;
 
     assert(state->sop != NULL);
 
-    if ((ti = as->parms[COMMON_SALV_PARMS_OFFSET].items)) {	/* -volumeid */
-	state->sop->volume = atoi(ti->data);
-    } else {
+    if (cmd_OptionAsUint(as, OPT_volumeid, &state->sop->volume) != 0) {
 	fprintf(stderr, "required argument -volumeid not given\n");
     }
 
-    if ((ti = as->parms[COMMON_SALV_PARMS_OFFSET+1].items)) {	/* -partition */
-	strlcpy(state->sop->partName, ti->data, sizeof(state->sop->partName));
-    } else {
-	memset(state->sop->partName, 0, sizeof(state->sop->partName));
+    memset(state->sop->partName, 0, sizeof(state->sop->partName));
+    if (cmd_OptionAsString(as, OPT_partition, &part) == 0) {
+	strlcpy(state->sop->partName, part, sizeof(state->sop->partName));
     }
 
-    if ((ti = as->parms[COMMON_SALV_PARMS_OFFSET+2].items)) {	/* -prio */
-	state->sop->prio = atoi(ti->data);
-    } else {
-	state->sop->prio = 0;
-    }
+    state->sop->prio = 0;
+    cmd_OptionAsUint(as, OPT_priority, &state->sop->prio);
+
+    free(part);
 
     return 0;
 }
