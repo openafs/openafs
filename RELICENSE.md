@@ -162,6 +162,7 @@ Consent/Disapproval List
 - [?] Jeffrey Hutzelman <jhutz@cmu.edu>
 - [Y] Jeremy Stribling <jstribl@us.ibm.com> (IBM)
 - [?] Jim Rees <rees@umich.edu>
+- [Y] Junsouh Hong <junsouh@gmail.com>
 - [Y] Kailas Zadbuke <kailashsz@in.ibm.com> (IBM)
 - [?] Kevin Coffman <kwc@citi.umich.edu>
 - [Y] Laura Stentz <stentz@us.ibm.com> (IBM)
