@@ -1862,10 +1862,7 @@ pr_BeginTrans(struct pt_ctx *ctx, afs_int32 transMode, int *a_valid)
 
  done:
     if (code != 0) {
-	if (ctx->trans != NULL) {
-	    ubik_AbortTrans(ctx->trans);
-	}
-	ctx->trans = NULL;
+	return pr_AbortTrans(ctx, code);
     }
 
     return code;
@@ -1891,19 +1888,18 @@ pr_SyncCache(void)
 
 /*
  * Convenience wrapper around pr_BeginTrans() that first ends the transaction
- * in ctx->trans (if not NULL) before creating a new transaction.
+ * in ctx->trans before creating a new transaction.
  */
 static afs_int32
 pr_EndAndBeginTrans(struct pt_ctx *ctx, afs_int32 transMode, int *a_valid)
 {
+    afs_int32 code;
+
     *a_valid = 0;
 
-    if (ctx->trans != NULL) {
-	afs_int32 code = ubik_EndTrans(ctx->trans);
-	ctx->trans = NULL;
-	if (code != 0) {
-	    return code;
-	}
+    code = pr_EndTrans(ctx);
+    if (code != 0) {
+	return code;
     }
 
     return pr_BeginTrans(ctx, transMode, a_valid);
@@ -2068,13 +2064,67 @@ pr_Preamble(struct pt_ctx *ctx, afs_int32 transMode, int noinitdb)
 
  done:
     if (code != 0) {
-	if (ctx->trans != NULL) {
-	    ubik_AbortTrans(ctx->trans);
-	}
-	ctx->trans = NULL;
+	return pr_AbortTrans(ctx, code);
     }
 
     return code;
+}
+
+/**
+ * Abort the transaction in the given pt_ctx. If there is no active
+ * transaction, do nothing.
+ *
+ * @param[in] ctx   Our pt_ctx.
+ * @param[in] code  An error code to return, for convenience.
+ *
+ * @returns 'code' if 'code' is non-zero. If 'code' is 0 and ubik_AbortTrans()
+ *	    returns an error, we return the error from ubik_AbortTrans().
+ */
+afs_int32
+pr_AbortTrans(struct pt_ctx *ctx, afs_int32 code)
+{
+    struct ubik_trans *trans;
+
+    trans = ctx->trans;
+    ctx->trans = NULL;
+    ctx->cheader = NULL;
+
+    if (trans != NULL) {
+	int u_code = ubik_AbortTrans(trans);
+	if (code == 0) {
+	    code = u_code;
+	}
+    }
+    return code;
+}
+
+/**
+ * Commit the transaction in the given pt_ctx. If there is no active
+ * transaction, return an error (PRINTERNAL).
+ */
+afs_int32
+pr_EndTrans(struct pt_ctx *ctx)
+{
+    struct ubik_trans *trans;
+
+    trans = ctx->trans;
+    ctx->trans = NULL;
+    ctx->cheader = NULL;
+
+    if (trans != NULL) {
+	return ubik_EndTrans(trans);
+    }
+
+    /*
+     * If we don't have a transaction, don't just return success! This could
+     * mean that someone intended to commit a change to the db, but we can't
+     * commit the change because it was already aborted (or committed earlier
+     * than expected).
+     */
+    ViceLog_limit(0, ("pr_EndTrans: Internal error: called with a NULL "
+		  "transaction, returning error PRINTERNAL (%ld)\n",
+		  PRINTERNAL));
+    return PRINTERNAL;
 }
 
 afs_int32

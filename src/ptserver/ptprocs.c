@@ -144,7 +144,7 @@ static afs_int32 WhoIsThisWithName(struct rx_call *acall,
  * header on the next call.
  * Abort the transaction and return the code.
  */
-#define ABORT_WITH(ctx,code) return(ubik_AbortTrans((ctx)->trans),code)
+#define ABORT_WITH(ctx,code) return pr_AbortTrans((ctx), code)
 
 static int
 CreateOK(struct pt_ctx *ctx, afs_int32 cid, afs_int32 oid, afs_int32 flag,
@@ -261,7 +261,7 @@ iNewEntry(struct rx_call *call, char aname[], afs_int32 aid, afs_int32 oid,
 	ABORT_WITH(ctx, code);
 
     /* finally, commit transaction */
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -334,7 +334,7 @@ newEntry(struct rx_call *call, char aname[], afs_int32 flag, afs_int32 oid,
     if (code != PRSUCCESS)
 	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -379,7 +379,7 @@ whereIsIt(struct rx_call *call, afs_int32 aid, afs_int32 *apos, afs_int32 *cid)
     if (!temp)
 	ABORT_WITH(ctx, PRNOENT);
     *apos = temp;
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -423,7 +423,7 @@ dumpEntry(struct rx_call *call, afs_int32 apos, struct prdebugentry *aentry,
     if (!AccessOK(ctx, *cid, 0, PRP_STATUS_MEM, 0))
 	ABORT_WITH(ctx, PRPERM);
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -506,7 +506,7 @@ addToGroup(struct rx_call *call, afs_int32 aid, afs_int32 gid, afs_int32 *cid)
 	code = AddToEntry(ctx, &uentry, tempu, gid);
     if (code != PRSUCCESS)
 	ABORT_WITH(ctx, code);
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -596,7 +596,7 @@ nameToID(struct rx_call *call, namelist *aname, idlist *aid)
     }
     aid->idlist_len = aname->namelist_len;
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -674,7 +674,7 @@ idToName(struct rx_call *call, idlist *aid, namelist *aname, afs_int32 *cid)
     }
     aname->namelist_len = aid->idlist_len;
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -803,7 +803,7 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 	    ABORT_WITH(ctx, code);
 
 	/* end this trans and start a new one */
-	code = ubik_EndTrans(ctx->trans);
+	code = pr_EndTrans(ctx);
 	if (code)
 	    return code;
 #ifndef AFS_PTHREAD_ENV
@@ -860,7 +860,7 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 		ABORT_WITH(ctx, code);
 
 	    /* end this trans and start a new one */
-	    code = ubik_EndTrans(ctx->trans);
+	    code = pr_EndTrans(ctx);
 	    if (code)
 		return code;
 #ifndef AFS_PTHREAD_ENV
@@ -915,7 +915,7 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 	    ABORT_WITH(ctx, code);
 
 	/* end this trans and start a new one */
-	code = ubik_EndTrans(ctx->trans);
+	code = pr_EndTrans(ctx);
 	if (code)
 	    return code;
 #ifndef AFS_PTHREAD_ENV
@@ -941,7 +941,7 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
     if (code != PRSUCCESS)
 	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -1025,7 +1025,7 @@ UpdateEntry(struct rx_call *call, afs_int32 aid, char *name,
 	    ABORT_WITH(ctx, code);
     }
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -1101,7 +1101,7 @@ removeFromGroup(struct rx_call *call, afs_int32 aid, afs_int32 gid,
     if (code != PRSUCCESS)
 	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -1160,7 +1160,7 @@ getCPS(struct rx_call *call, afs_int32 aid, prlist *alist, afs_int32 *over,
     if (code != PRSUCCESS)
 	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     return code;
 }
 
@@ -1254,7 +1254,7 @@ getCPS2(struct rx_call *call, afs_int32 aid, afs_uint32 ahost, prlist *alist,
     if (code != PRSUCCESS)
 	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     return code;
 }
 
@@ -1321,7 +1321,7 @@ getHostCPS(struct rx_call *call, afs_uint32 ahost, prlist *alist,
     if (code != PRSUCCESS)
 	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     return code;
 }
 
@@ -1361,7 +1361,7 @@ listMax(struct rx_call *call, afs_int32 *uid, afs_int32 *gid, afs_int32 *cid)
     if (code != PRSUCCESS)
 	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -1405,7 +1405,7 @@ setMax(struct rx_call *call, afs_int32 aid, afs_int32 gflag, afs_int32 *cid)
     if (code != PRSUCCESS)
 	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -1468,7 +1468,7 @@ listEntry(struct rx_call *call, afs_int32 aid, struct prcheckentry *aentry,
     aentry->nusers = tentry.nusers;
     aentry->count = tentry.count;
     memset(aentry->reserved, 0, sizeof(aentry->reserved));
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     if (code)
 	return code;
     return PRSUCCESS;
@@ -1563,7 +1563,7 @@ listEntries(struct rx_call *call, afs_int32 flag, afs_int32 startindex,
 	bulkentries->prentries_len = 0;
 	ABORT_WITH(ctx, code);
     } else {
-	code = ubik_EndTrans(ctx->trans);
+	code = pr_EndTrans(ctx);
     }
     if (code)
 	return code;
@@ -1643,7 +1643,7 @@ changeEntry(struct rx_call *call, afs_int32 aid, char *name, afs_int32 oid,
     if (code != PRSUCCESS)
 	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     return code;
 }
 
@@ -1739,7 +1739,7 @@ setFieldsEntry(struct rx_call *call,
     if (code)
 	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     return code;
 }
 
@@ -1793,7 +1793,7 @@ listElements(struct rx_call *call, afs_int32 aid, prlist *alist,
     if (code != PRSUCCESS)
 	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     return code;
 }
 
@@ -1857,7 +1857,7 @@ listSuperGroups(struct rx_call *call, afs_int32 aid, prlist *alist,
     else if (code != PRSUCCESS)
 	ABORT_WITH(ctx, code);
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
 
     return code;
 }
@@ -1946,7 +1946,7 @@ listOwned(struct rx_call *call, afs_int32 aid, prlist *alist, afs_int32 *lastP,
 	    ABORT_WITH(ctx, code);
     }
 
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     return code;
 }
 
@@ -2007,7 +2007,7 @@ isAMemberOf(struct rx_call *call, afs_int32 uid, afs_int32 gid, afs_int32 *flag,
     }
 
     *flag = IsAMemberOf(ctx, uid, gid);
-    code = ubik_EndTrans(ctx->trans);
+    code = pr_EndTrans(ctx);
     return code;
 }
 
