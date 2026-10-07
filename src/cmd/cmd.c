@@ -91,8 +91,6 @@ FindType(struct cmd_syndesc *as, char *aname)
 	    continue;		/* this slot not set (seeked over) */
 	if (strcmp(as->parms[i].name, aname) == 0)
 	    return i;
-	if (strlen(as->parms[i].name) < cmdlen)
-	    continue;
 
 	/* Check for aliases, which must be full matches */
 	alias = as->parms[i].aliases;

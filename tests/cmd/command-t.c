@@ -97,7 +97,7 @@ main(int argc, char **argv)
     char *path;
     char *retstring = NULL;
 
-    plan(109);
+    plan(113);
 
     initialize_CMD_error_table();
 
@@ -293,6 +293,26 @@ main(int argc, char **argv)
     is_string("tup", retstring, " ... and we have the correct value");
     free(retstring);
     retstring = NULL;
+
+    cmd_FreeOptions(&retopts);
+    cmd_FreeArgv(tv);
+
+    /* Add an alias which is longer than the option name */
+    code = cmd_AddParmAlias(opts, copt_first, "-firstalias");
+    is_int(0, code, "cmd_AddParmAlias succeeds for long alias");
+
+    code = cmd_ParseLine("-firstalias 1 -second 2", tv, &tc, 100);
+    is_int(0, code, "cmd_ParseLine succeeds");
+    code = cmd_Parse(tc, tv, &retopts);
+    is_int(0, code, "cmd_Parse succeeds for long alias");
+    if (code != 0) {
+	skip("cmd_Parse failed");
+    } else {
+	cmd_OptionAsString(retopts, copt_first, &retstring);
+	is_string("1", retstring, " ... and we have the correct value");
+	free(retstring);
+	retstring = NULL;
+    }
 
     cmd_FreeOptions(&retopts);
     cmd_FreeArgv(tv);
