@@ -116,7 +116,6 @@ struct wbuf {
 enum optionsList {
     OPT_file,
     OPT_fid,
-    OPT_vnode,
     OPT_dir,
     OPT_cell,
     OPT_verbose,
@@ -279,8 +278,7 @@ CmdProlog(struct cmd_syndesc *as, char **cellp, char **realmp,
 #ifdef AFS_NT40_ENV
                 ConvertAFSPath(fnp);
 #endif /* AFS_NT40_ENV */
-            } else if ( (strcmp(pdp->name, "-fid") == 0) ||
-                        (strcmp(pdp->name, "-vnode") == 0) ) {
+            } else if (strcmp(pdp->name, "-fid") == 0) {
 		*fnp = pdp->items->data;
             } else if (strcmp(pdp->name, "-force") == 0)
 		force = 1;	/* global */
@@ -366,6 +364,7 @@ main(int argc, char **argv)
 			  "lock by FID a file from AFS");
     cmd_AddParmAtOffset(ts, OPT_fid, "-fid", CMD_SINGLE, CMD_REQUIRED,
 			"volume.vnode.uniquifier");
+    cmd_AddParmAlias(ts, OPT_fid, "-vnode");
     cmd_AddParmAtOffset(ts, OPT_waitseconds, "-waitseconds", CMD_SINGLE,
 			CMD_OPTIONAL, "seconds to wait before giving up");
     cmd_AddParmAtOffset(ts, OPT_readlock, "-readlock", CMD_FLAG, CMD_OPTIONAL,
@@ -384,6 +383,7 @@ main(int argc, char **argv)
 			  "unlock by FID a file from AFS");
     cmd_AddParmAtOffset(ts, OPT_fid, "-fid", CMD_SINGLE, CMD_REQUIRED,
 			"volume.vnode.uniquifier");
+    cmd_AddParmAlias(ts, OPT_fid, "-vnode");
     cmd_AddParmAtOffset(ts, OPT_waitseconds, "-waitseconds", CMD_SINGLE,
 			CMD_OPTIONAL, "seconds to wait before giving up");
     common_parms(ts);
@@ -399,6 +399,7 @@ main(int argc, char **argv)
 			  "read on a non AFS-client a file from AFS");
     cmd_AddParmAtOffset(ts, OPT_fid, "-fid", CMD_SINGLE, CMD_REQUIRED,
 			"volume.vnode.uniquifier");
+    cmd_AddParmAlias(ts, OPT_fid, "-vnode");
     cmd_AddParmAtOffset(ts, OPT_md5, "-md5", CMD_FLAG, CMD_OPTIONAL,
 			"calculate md5 checksum");
     common_parms(ts);
@@ -415,6 +416,7 @@ main(int argc, char **argv)
 			  "read on a non AFS-client a directory from AFS");
     cmd_AddParmAtOffset(ts, OPT_fid, "-fid", CMD_SINGLE, CMD_REQUIRED,
 			"volume.vnode.uniquifier");
+    cmd_AddParmAlias(ts, OPT_fid, "-vnode");
     cmd_AddParmAtOffset(ts, OPT_md5, "-md5", CMD_FLAG, CMD_OPTIONAL,
 			"calculate md5 checksum");
     common_parms(ts);
@@ -433,8 +435,9 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("fidwrite", writeFile, CMD_REQUIRED, 0,
 			  "write a file into AFS");
-    cmd_AddParmAtOffset(ts, OPT_vnode, "-vnode", CMD_SINGLE, CMD_REQUIRED,
+    cmd_AddParmAtOffset(ts, OPT_fid, "-fid", CMD_SINGLE, CMD_REQUIRED,
 			"volume.vnode.uniquifier");
+    cmd_AddParmAlias(ts, OPT_fid, "-vnode");
     cmd_AddParmAtOffset(ts, OPT_md5, "-md5", CMD_FLAG, CMD_OPTIONAL,
 			"calculate md5 checksum");
     cmd_AddParmAtOffset(ts, OPT_force, "-force", CMD_FLAG, CMD_OPTIONAL,
@@ -453,8 +456,9 @@ main(int argc, char **argv)
 
     ts = cmd_CreateSyntax("fidappend", writeFile, NULL, 0,
 			  "append to a file in AFS");
-    cmd_AddParmAtOffset(ts, OPT_vnode, "-vnode", CMD_SINGLE, CMD_REQUIRED,
+    cmd_AddParmAtOffset(ts, OPT_fid, "-fid", CMD_SINGLE, CMD_REQUIRED,
 			"volume.vnode.uniquifier");
+    cmd_AddParmAlias(ts, OPT_fid, "-vnode");
     cmd_AddParmAtOffset(ts, OPT_synthesize, "-synthesize", CMD_SINGLE,
 			CMD_OPTIONAL, "length");
     common_parms(ts);
