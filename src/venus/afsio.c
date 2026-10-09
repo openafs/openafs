@@ -270,7 +270,7 @@ CmdProlog(struct cmd_syndesc *as, char **cellp, char **realmp,
 		*slp = pdp->items->data;
             else if (strcmp(pdp->name, "-realm") == 0)
 		*realmp = pdp->items->data;
-            else if (strcmp(pdp->name, "-wait") == 0)
+            else if (strcmp(pdp->name, "-waitseconds") == 0)
 		waittime = atoi(pdp->items->data);
             else if (strcmp(pdp->name, "-readlock") == 0)
 		readlock = 1;
