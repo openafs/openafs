@@ -45,11 +45,11 @@ if (! -f $srcball) {
 
 my $tmpdir = File::Temp::tempdir(CLEANUP => 1);
 
-system("tar -C $tmpdir -xvjf $srcball --wildcards ".
+system("tar -C $tmpdir -xf $srcball --wildcards ".
        "'\*/configure.ac' ".
        "'\*/src/packaging/RedHat' ".
        "'\*/.version' ".
-       "'\*/build-tools' > /dev/null")==0
+       "'\*/build-tools'")==0
   or die "Unable to unpack src tar ball\n";
 
 my $dirh = IO::Dir->new($tmpdir);
