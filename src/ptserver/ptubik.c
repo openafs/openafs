@@ -18,6 +18,8 @@
 extern int dbase_fd;
 struct ubik_dbase *dbase;
 
+static struct ubik_trans dummy_trans;
+
 int
 ubik_ServerInit(afs_uint32 myHost, short myPort, afs_uint32 serverList[],
                 const char *pathName, struct ubik_dbase **dbase)
@@ -50,6 +52,9 @@ ubik_BeginTrans(struct ubik_dbase *dbase, afs_int32 transMode,
 	    return errno;
 	init = 1;
     }
+
+    *transPtr = &dummy_trans;
+
     return (0);
 }
 
@@ -57,6 +62,7 @@ int
 ubik_BeginTransReadAny(struct ubik_dbase *dbase, afs_int32 transMode,
                        struct ubik_trans **transPtr)
 {
+    *transPtr = &dummy_trans;
     return (0);
 }
 
@@ -64,6 +70,7 @@ int
 ubik_BeginTransReadAnyWrite(struct ubik_dbase *dbase, afs_int32 transMode,
 			    struct ubik_trans **transPtr)
 {
+    *transPtr = &dummy_trans;
     return (0);
 }
 
