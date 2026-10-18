@@ -18,6 +18,12 @@ my $relnotes = 0;
 my $outDir = ".";
 my $errorCount = 0;
 my $noDocTarball = 0;
+my @compress = ();
+
+my %compressors = (
+    "gz" => "gzip",
+    "bz2" => "bzip2",
+);
 
 # Find a command in the PATH.
 sub which {
@@ -46,10 +52,20 @@ GetOptions(
     "relnotes" => \$relnotes,
     "dir=s" => \$outDir,
     "no-doc-tarball" => \$noDocTarball,
+    "compress=s" => \@compress,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
 pod2usage(-exitstatus => 0, -verbose => 2, -noperldoc => 1) if $man;
+
+if (!@compress) {
+    @compress = ("gz", "bz2");
+}
+foreach my $format (@compress) {
+    if (!exists($compressors{$format})) {
+        pod2usage(-exitval => 2, -message => "Unknown compression format: $format");
+    }
+}
 
 my $tagName = shift;
 my $notused = shift;  # Used to be "version".
@@ -137,7 +153,7 @@ system ("cd $tempDir/$name && ./regen.sh") == 0
 # A list of files to compress
 my @toCompress;
 
-# Create the source tarball (both .gz and .bz2)
+# Create the source tarball.
 system("tar -cf $outDir/$name-src.tar -C $tempDir $name") == 0
     or die "Unable to create source code tarball : $!";
 push @toCompress, "$outDir/$name-src.tar";
@@ -169,13 +185,13 @@ my @toMD;
 # Compress everything that needs squashing,
 # and also set up a list for checksumming.
 foreach my $file (@toCompress) {
-    system("gzip < $file > $file.gz") == 0
-        or die "Unable to create gzip file of '$file' : $!";
-    push @toMD, "$file.gz";
-
-    system("bzip2 < $file > $file.bz2") == 0
-        or die "Unable to create bzip file of '$file' : $!";
-    push @toMD, "$file.bz2";
+    foreach my $format (@compress) {
+        my $program = $compressors{$format};
+        print "$program < $file > $file.$format\n";
+        system("$program < $file > $file.$format") == 0
+            or die "Unable to create $format file of '$file' : $!";
+        push @toMD, "$file.$format";
+    }
 
     # Delete the uncompressed tar files.
     if ($file =~ /\.tar$/) {
@@ -260,13 +276,14 @@ make-release [options] <tag>
     --relnotes           generate release notes from NEWS file
     --dir <dir>          output results into this directory
     --no-doc-tarball     do not create a doc.tar archive
+    --compress <format>  compression format(s) of output archives
 
 =head1 DESCRIPTION
 
 make-release constructs an OpenAFS release from a local git clone. If run
 with just the standard arguments, it will extract the contents of the
 specified tag into the current directory, creating src and doc tarballs,
-gzipping and bzipping them, and generating digest files. It will also create a
+compressing them, and generating digest files. It will also create a
 ChangeLog file, listing all of the changes in that release.
 
 This standard behaviour may be modified by the following options
@@ -299,6 +316,13 @@ push it into gerrit.
 =item B<--no-doc-tarball>
 
 Do not create a doc.tar archive.
+
+=item B<--compress> I<format>
+
+Specifies the compression format of the compressed archive(s).  Valid I<format>
+values are B<gz> and B<bz2>. This option may be given more than once to create
+multiple compressed archives. The default is to create B<gz> and B<bz2>
+compressed archives.
 
 =back
 
