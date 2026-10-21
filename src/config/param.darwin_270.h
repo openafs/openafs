@@ -150,7 +150,42 @@
 # endif /* !defined(UKERNEL) */
 
 /* Machine / Operating system information */
-# if defined(__arm64__)
+# if defined(__amd64__)
+
+#  define AFS_X86_ENV                 1
+#  define AFS_64BITUSERPOINTER_ENV    1
+
+#  define sys_x86_darwin_12           1
+#  define sys_x86_darwin_13           1
+#  define sys_x86_darwin_14           1
+#  define sys_x86_darwin_60           1
+#  define sys_x86_darwin_70           1
+#  define sys_x86_darwin_80           1
+#  define sys_x86_darwin_90           1
+#  define sys_x86_darwin_100          1
+#  define sys_amd64_darwin_100        1
+#  define sys_amd64_darwin_110        1
+#  define sys_amd64_darwin_120        1
+#  define sys_amd64_darwin_130        1
+#  define sys_amd64_darwin_140        1
+#  define sys_amd64_darwin_150        1
+#  define sys_amd64_darwin_160        1
+#  define sys_amd64_darwin_170        1
+#  define sys_amd64_darwin_180        1
+#  define sys_amd64_darwin_190        1
+#  define sys_amd64_darwin_200        1
+#  define sys_amd64_darwin_210        1
+#  define sys_amd64_darwin_220        1
+#  define sys_amd64_darwin_230        1
+#  define sys_amd64_darwin_240        1
+#  define sys_amd64_darwin_250        1
+#  define sys_amd64_darwin_270        1
+
+#  define SYS_NAME                    "amd64_darwin_270"
+#  define SYS_NAME_ID                 SYS_NAME_ID_amd64_darwin_270
+#  define AFSLITTLE_ENDIAN            1
+
+# elif defined(__arm64__)
 
 #  define AFS_ARM_ENV                 1
 #  define AFS_ARM64_DARWIN_ENV        1
@@ -169,6 +204,6 @@
 
 # else
 #  error Unsupported architecture
-# endif /* __arm64__ */
+# endif /* __amd64__ */
 
 #endif /* AFS_PARAM_H */
