@@ -23,6 +23,7 @@ my @compress = ();
 my %compressors = (
     "gz" => "gzip",
     "bz2" => "bzip2",
+    "xz" => "xz",
 );
 
 # Find a command in the PATH.
@@ -59,7 +60,7 @@ pod2usage(1) if $help;
 pod2usage(-exitstatus => 0, -verbose => 2, -noperldoc => 1) if $man;
 
 if (!@compress) {
-    @compress = ("gz", "bz2");
+    @compress = ("gz", "bz2");  # xz is not created by default.
 }
 foreach my $format (@compress) {
     if (!exists($compressors{$format})) {
@@ -320,9 +321,9 @@ Do not create a doc.tar archive.
 =item B<--compress> I<format>
 
 Specifies the compression format of the compressed archive(s).  Valid I<format>
-values are B<gz> and B<bz2>. This option may be given more than once to create
-multiple compressed archives. The default is to create B<gz> and B<bz2>
-compressed archives.
+values are B<gz>, B<bz2>, and B<xz>. This option may be given more than once to
+create multiple compressed archives. The default is to create B<gz> and B<bz2>
+compressed archives (and not B<xz>).
 
 =back
 
