@@ -47,7 +47,7 @@ GetOptions(
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
-pod2usage(-exitstatus => 0, -verbose => 2) if $man;
+pod2usage(-exitstatus => 0, -verbose => 2, -noperldoc => 1) if $man;
 
 my $tagName = shift;
 my $notused = shift;  # Used to be "version".
