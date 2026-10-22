@@ -310,8 +310,11 @@ ktc_SetTokenEx(struct ktc_setTokenData *token) {
 	return ENOMEM;
 
     xdrmem_create(&xdrs, iob.in, iob.in_size, XDR_ENCODE);
-    if (!xdr_ktc_setTokenData(&xdrs, token))
+    if (!xdr_ktc_setTokenData(&xdrs, token)) {
+	xdr_destroy(&xdrs);
+	free(iob.in);
 	return KTC_INVAL;
+    }
     xdr_destroy(&xdrs);
 
     iob.out = NULL;
