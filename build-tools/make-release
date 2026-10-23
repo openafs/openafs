@@ -51,6 +51,103 @@ sub which {
     return undef;
 }
 
+# Run a command.
+#
+# Arguments:
+#   args - array reference of command line arguments
+#   opts - options:
+#      chdir   => directory to change to before running the command
+#      stdin   => file name to redirect stdin from
+#      stdout  => file name to redirect stdout to, or a scalar
+#                 reference to store the output in, without the
+#                 trailing newline
+#      warn    => if true, warn instead of die if the command fails
+#      quiet   => do not print the command before running it
+#
+# Returns true if the command succeeds. Dies with an error message if the
+# command fails, unless the 'warn' option is given, in which case it prints
+# the error message and returns false.
+#
+sub run {
+    my ($args, %opts) = @_;
+    my $command = join(' ', @$args);
+
+    # Construct a command string for info and error messages.
+    if (defined $opts{chdir}) {
+        $command = "cd $opts{chdir} && $command";
+    }
+    if (defined $opts{stdin}) {
+        $command .= " < $opts{stdin}";
+    }
+    if (defined $opts{stdout} && !ref $opts{stdout}) {
+        $command .= " > $opts{stdout}";
+    }
+
+    # Print the command to be run, unless in quiet mode.
+    if (!$opts{quiet}) {
+        print "make-release: $command\n";
+    }
+
+    # Fork the process and execute the command. Create a pipe to read
+    # the command's stdout when capturing output.
+    my $fh;
+    my $pid;
+    if (defined $opts{stdout} && ref $opts{stdout}) {
+        $pid = open($fh, '-|');
+    } else {
+        $pid = fork();
+    }
+    if (!defined $pid) {
+        die "Failed to fork: $!\n";
+    }
+    if ($pid == 0) {
+        # Child process.
+        if (defined $opts{chdir}) {
+            if (!chdir($opts{chdir})) {
+                warn "Failed to change directory to $opts{chdir}: $!\n";
+                exit 127;
+            }
+        }
+        if (defined $opts{stdin}) {
+            if (!open(STDIN, '<', $opts{stdin})) {
+                warn "Failed to open $opts{stdin}: $!\n";
+                exit 127;
+            }
+        }
+        if (defined $opts{stdout} && !ref $opts{stdout}) {
+            if (!open(STDOUT, '>', $opts{stdout})) {
+                warn "Failed to open $opts{stdout}: $!\n";
+                exit 127;
+            }
+        }
+        exec { $args->[0] } @$args;
+        warn "Failed to execute '$args->[0]': $!\n";
+        exit 127;
+    }
+    # Parent process.
+    if (defined $opts{stdout} && ref $opts{stdout}) {
+        ${$opts{stdout}} = do { local $/; <$fh> };  # Slurp the output.
+        chomp ${$opts{stdout}};
+        close($fh);  # Waits for the child and sets $?.
+    } else {
+        waitpid($pid, 0);
+    }
+
+    my $error;
+    if ($? & 127) {
+        $error = "'$command' died with signal " . ($? & 127) . " ($?)\n";
+    } elsif ($? != 0) {
+        $error = "'$command' exited with code " . ($? >> 8) . " ($?)\n";
+    } else {
+        return 1;   # success
+    }
+    if ($opts{warn}) {
+        warn $error;
+        return 0;   # failed with warning
+    }
+    die $error;     # fatal
+}
+
 GetOptions(
     "help|?" => \$help,
     "man" => \$man,
@@ -85,16 +182,14 @@ if (defined $notused) {
 # Tag the repository
 
 if ($tagPoint) {
-    system ("git tag -s $tagName $tagPoint") == 0
-        or die "git tag failed with : $!";
+    run(["git", "tag", "-s", $tagName, $tagPoint]);
 
     # Push the tag upstream
-    system ("git push ssh://gerrit.openafs.org:29418/openafs tag $tagName") == 0
-        or die "git push failed with : $!";
+    run(["git", "push", "ssh://gerrit.openafs.org:29418/openafs", "tag", $tagName]);
 }
 
-my $version = `git describe --abbrev=4 $tagName`;
-chomp $version;
+my $version;
+run(["git", "describe", "--abbrev=4", $tagName], stdout => \$version, quiet => 1);
 if (!$version) {
     die "Failed to describe $tagName.\n";
 }
@@ -104,26 +199,27 @@ $suffix =~ s/_/./g;
 my $name = "openafs-$suffix";
 
 # Get the top-level project directory.
-my $toplevel = `git rev-parse --show-toplevel`;
-chomp $toplevel;
+my $toplevel;
+run(["git", "rev-parse", "--show-toplevel"], stdout => \$toplevel, quiet => 1);
 if (!$toplevel) {
     die "Unable to find the git top-level directory.";
 }
 
 # Grab the tagged code into a temporary directory
 my $tempDir = File::Temp::tempdir(CLEANUP => 1);
-system ("git -C $toplevel archive --format=tar --prefix=$name/ $tagName ".
-        " | tar -C $tempDir -x") == 0
-    or die "Git archive failed with: $?";
+run(["git", "-C", $toplevel, "archive", "--format=tar", "--prefix=$name/", $tagName],
+    stdout => "$tempDir/$name.tar");
+run(["tar", "-C", $tempDir, "-xf", "$tempDir/$name.tar"]);
+unlink("$tempDir/$name.tar");
 
 # Make the output path, if not already present.
 File::Path::mkpath($outDir);
 
 # Construct the ChangeLog
 if ($last) {
-    system("git log $last..$tagName > $outDir/ChangeLog");
+    run(["git", "log", "$last..$tagName"], stdout => "$outDir/ChangeLog");
 } else {
-    system("git log $tagName > $outDir/ChangeLog");
+    run(["git", "log", $tagName], stdout => "$outDir/ChangeLog");
 }
 
 if ($relnotes) {
@@ -154,36 +250,29 @@ print $fh "$version\n";
 close($fh);
 
 # Run regen.sh to create the rest of the tree
-system ("cd $tempDir/$name && ./regen.sh") == 0
-    or die $!;
+run(["./regen.sh"], chdir => "$tempDir/$name");
 
 # A list of files to compress
 my @toCompress;
 
 # Create the source tarball.
-system("tar -cf $outDir/$name-src.tar -C $tempDir $name") == 0
-    or die "Unable to create source code tarball : $!";
+run(["tar", "-cf", "$outDir/$name-src.tar", "-C", $tempDir, $name]);
 push @toCompress, "$outDir/$name-src.tar";
 
 if (!$noDocTarball) {
-    print "cp $tempDir/$name/LICENSE $tempDir/$name/doc/\n";
+    print "make-release: cp $tempDir/$name/LICENSE $tempDir/$name/doc/\n";
     copy("$tempDir/$name/LICENSE", "$tempDir/$name/doc/")
         or die "Unable to copy LICENSE file to doc directory: $!";
-    print "cd $tempDir/$name && ./configure -q --enable-transarc-paths --disable-kernel-module";
-    system ("cd $tempDir/$name && ./configure -q --enable-transarc-paths --disable-kernel-module") == 0
-        or die "$!";
-    print "cd $tempDir/$name && make man-pages";
-    system ("cd $tempDir/$name && make man-pages") == 0
-        or die "$!";
-    system("tar -cf $outDir/$name-doc.tar -C $tempDir $name/doc") == 0
-        or die "Unable to create documentation tarball : $!";
+    run(["./configure", "-q", "--enable-transarc-paths", "--disable-kernel-module"],
+        chdir => "$tempDir/$name");
+    run(["make", "man-pages"], chdir => "$tempDir/$name");
+    run(["tar", "-cf", "$outDir/$name-doc.tar", "-C", $tempDir, "$name/doc"]);
     push @toCompress, "$outDir/$name-doc.tar";
 }
 
 # Construct the diffs, and zip them
 if ($last) {
-    system("git diff $last..$tagName > $outDir/$name.diff") == 0
-       or die "Unable to create diff : $!";
+    run(["git", "diff", "$last..$tagName"], stdout => "$outDir/$name.diff");
     push @toCompress, "$outDir/$name.diff";
 }
 
@@ -194,9 +283,7 @@ my @toMD;
 foreach my $file (@toCompress) {
     foreach my $format (@compress) {
         my $program = $compressors{$format};
-        print "$program < $file > $file.$format\n";
-        system("$program < $file > $file.$format") == 0
-            or die "Unable to create $format file of '$file' : $!";
+        run([$program], stdin => $file, stdout => "$file.$format");
         push @toMD, "$file.$format";
     }
 
@@ -220,39 +307,26 @@ my $sha256sum = which("sha256sum");
 foreach my $pathname (@toMD) {
     my $directory = dirname($pathname);
     my $file = basename($pathname);
-    my $rc;
 
     chdir($directory) or die "Failed cd $directory: $!";
 
     if ($md5) {
-        $rc = system("$md5 -q $file > $file.md5");
-        if ($rc != 0) {
-            warn "Command failed: $md5 -q $file, code=$rc";
-            $errorCount += 1;
-        }
+        run([$md5, "-q", $file], stdout => "$file.md5", warn => 1)
+            or $errorCount += 1;
     } elsif ($md5sum) {
-        $rc = system("$md5sum $file > $file.md5");
-        if ($rc != 0) {
-            warn "Command failed: md5sum $file, code=$rc";
-            $errorCount += 1;
-        }
+        run([$md5sum, $file], stdout => "$file.md5", warn => 1)
+            or $errorCount += 1;
     } else {
         warn "MD5 utility not found. Not producing $file.md5";
         $errorCount += 1;
     }
 
     if ($shasum) {
-        $rc = system("$shasum -a 256 $file > $file.sha256");
-        if ($rc != 0) {
-            warn "Command failed: $shasum -a 256 $file, code=$rc";
-            $errorCount += 1;
-        }
+        run([$shasum, "-a", "256", $file], stdout => "$file.sha256", warn => 1)
+            or $errorCount += 1;
     } elsif ($sha256sum) {
-        $rc = system("$sha256sum $file > $file.sha256");
-        if ($rc != 0) {
-            warn "Command failed: $sha256sum $file, code=$rc";
-            $errorCount += 1;
-        }
+        run([$sha256sum, $file], stdout => "$file.sha256", warn => 1)
+            or $errorCount += 1;
     } else {
         warn "SHA256 utility program not found. Not producing $file.sha256";
         $errorCount += 1;
