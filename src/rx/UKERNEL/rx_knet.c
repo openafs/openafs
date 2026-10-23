@@ -155,6 +155,7 @@ rx_ServerProc(void *unused)
      * number of threads handling incoming calls */
     threadID = rxi_availProcs++;
 
+    AFS_GUNLOCK();
     while (1) {
 	sock = OSI_NULLSOCKET;
 	rxi_ServerProc(threadID, newcall, &sock);
@@ -167,6 +168,7 @@ rx_ServerProc(void *unused)
 	/* assert(threadID != -1); */
 	/* assert(newcall != NULL); */
     }
+    AFS_GLOCK();
     return NULL;
 }
 
