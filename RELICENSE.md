@@ -186,6 +186,7 @@ Consent/Disapproval List
 - [?] Matt Benjamin <matt@linuxbox.com>
 - [Y] Matt Smith <matt.j.sm@gmail.com>
 - [Y] Matthew A. Bacchi <mbacchi@btv.ibm.com> (IBM)
+- [Y] Michael Laß <lass@mail.uni-paderborn.de>
 - [Y] Michael Meffie <mmeffie@sinenomine.net> (SNA)
 - [Y] Michael Niksch <nik@zurich.ibm.com> (IBM)
 - [Y] Mickey Lane <mlane@sinenomine.net> (SNA)
