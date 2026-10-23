@@ -151,7 +151,7 @@ sub run {
 GetOptions(
     "help|?" => \$help,
     "man" => \$man,
-    "tagpoint=s" => \$tagPoint,
+    "tagpoint=s" => \$tagPoint,  # not used
     "last=s" => \$last,
     "relnotes" => \$relnotes,
     "dir=s" => \$outDir,
@@ -178,14 +178,8 @@ pod2usage(2) if !defined($tagName);
 if (defined $notused) {
     warn "argument '$notused' is ignored.\n";
 }
-
-# Tag the repository
-
-if ($tagPoint) {
-    run(["git", "tag", "-s", $tagName, $tagPoint]);
-
-    # Push the tag upstream
-    run(["git", "push", "ssh://gerrit.openafs.org:29418/openafs", "tag", $tagName]);
+if (defined $tagPoint) {
+    warn "option --tagpoint '$tagPoint' is ignored.\n";
 }
 
 my $version;
@@ -343,7 +337,7 @@ __END__
 
 =head1 NAME
 
-make-release - Make an OpenAFS release from git
+make-release - Make OpenAFS release files from git
 
 =head1 SYNOPSIS
 
@@ -352,7 +346,6 @@ make-release [options] <tag>
  Options:
     --help               brief help message
     --man                full documentation
-    --tagpoint <object>  create new tag
     --last <object>      generate changelog and diffs from this point
     --relnotes           generate release notes from NEWS file
     --dir <dir>          output results into this directory
@@ -361,13 +354,12 @@ make-release [options] <tag>
 
 =head1 DESCRIPTION
 
-make-release constructs an OpenAFS release from a local git clone. If run
-with just the standard arguments, it will extract the contents of the
-specified tag into the current directory, creating src and doc tarballs,
-compressing them, and generating digest files. It will also create a
-ChangeLog file, listing all of the changes in that release.
-
-This standard behaviour may be modified by the following options
+B<make-release> constructs a set of OpenAFS source distribution files from a
+local git clone for a given release. It extracts the contents of the specified
+tag, creating the source and doc tarballs, compressing them, and generating
+digest files. It will also create a ChangeLog file, listing all of the changes
+in that release, and optionally extract lines from the NEWS file to create
+release notes.
 
 =head1 OPTIONS
 
@@ -390,9 +382,7 @@ in <directory>, which is created if it does not already exist.
 
 =item B<--tagpoint> I<commit|branch>
 
-Rather than using an existing tag, create a new one on the specified commit,
-or on the tip of the specified branch. This will GPG sign the new tag, and
-push it into gerrit.
+Not used.
 
 =item B<--no-doc-tarball>
 
