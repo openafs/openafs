@@ -26,6 +26,12 @@ my %compressors = (
     "xz" => "xz",
 );
 
+# Format warn messages.
+$SIG{__WARN__} = sub {
+    my $msg = shift;
+    warn "warning: $msg";
+};
+
 # Find a command in the PATH.
 sub which {
     my $command = shift;
@@ -73,7 +79,7 @@ my $notused = shift;  # Used to be "version".
 
 pod2usage(2) if !defined($tagName);
 if (defined $notused) {
-    warn "Warning: argument '$notused' is ignored.\n";
+    warn "argument '$notused' is ignored.\n";
 }
 
 # Tag the repository
