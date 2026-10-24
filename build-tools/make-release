@@ -16,6 +16,7 @@ my $tagPoint;
 my $last;
 my $relnotes = 0;
 my $outDir = ".";
+my $perVersionDir = 0;
 my $errorCount = 0;
 my $noDocTarball = 0;
 my @compress = ();
@@ -155,6 +156,7 @@ GetOptions(
     "last=s" => \$last,
     "relnotes" => \$relnotes,
     "destdir|dir=s" => \$outDir,
+    "per-version-dir" => \$perVersionDir,
     "no-doc-tarball" => \$noDocTarball,
     "compress=s" => \@compress,
 ) or pod2usage(2);
@@ -208,6 +210,9 @@ run(["tar", "-C", $tempDir, "-xf", "$tempDir/$name.tar"]);
 unlink("$tempDir/$name.tar");
 
 # Make the output path, if not already present.
+if ($perVersionDir) {
+    $outDir .= "/$suffix";
+}
 File::Path::mkpath($outDir);
 
 # Construct the ChangeLog
@@ -349,7 +354,8 @@ make-release [options] [I<commit>]
     --man                full documentation
     --last <object>      generate changelog and diffs from this point
     --relnotes           generate release notes from NEWS file
-    --destdir <dir>      output results into this directory
+    --destdir <dir>      base directory to output files
+    --per-version-dir    output files into a version subdirectory
     --no-doc-tarball     do not create a doc.tar archive
     --compress <format>  compression format(s) of output archives
 
@@ -385,6 +391,12 @@ Extract the most recent NEWS items to create the release notes file.
 
 Instead of generating all of the output in the current directory, place it
 in <directory>, which is created if it does not already exist.
+
+=item B<--per-version-dir>
+
+Place the output in a subdirectory named after the release version, under the
+directory given by B<--destdir> (or the current directory if B<--destdir> is
+not given).  The subdirectory is created if it does not already exist.
 
 =item B<--tagpoint> I<commit|branch>
 
