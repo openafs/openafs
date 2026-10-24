@@ -154,7 +154,7 @@ GetOptions(
     "tagpoint=s" => \$tagPoint,  # not used
     "last=s" => \$last,
     "relnotes" => \$relnotes,
-    "dir=s" => \$outDir,
+    "destdir|dir=s" => \$outDir,
     "no-doc-tarball" => \$noDocTarball,
     "compress=s" => \@compress,
 ) or pod2usage(2);
@@ -349,7 +349,7 @@ make-release [options] [I<commit>]
     --man                full documentation
     --last <object>      generate changelog and diffs from this point
     --relnotes           generate release notes from NEWS file
-    --dir <dir>          output results into this directory
+    --destdir <dir>      output results into this directory
     --no-doc-tarball     do not create a doc.tar archive
     --compress <format>  compression format(s) of output archives
 
@@ -381,7 +381,7 @@ changes between I<object> and I<commit>.
 
 Extract the most recent NEWS items to create the release notes file.
 
-=item B<--dir> I<directory>
+=item B<--destdir> I<directory>, B<--dir> I<directory>
 
 Instead of generating all of the output in the current directory, place it
 in <directory>, which is created if it does not already exist.
