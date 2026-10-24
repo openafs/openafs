@@ -172,9 +172,10 @@ foreach my $format (@compress) {
 }
 
 my $tagName = shift;
+if (!$tagName) {
+    $tagName = "HEAD";
+}
 my $notused = shift;  # Used to be "version".
-
-pod2usage(2) if !defined($tagName);
 if (defined $notused) {
     warn "argument '$notused' is ignored.\n";
 }
@@ -341,7 +342,7 @@ make-release - Make OpenAFS release files from git
 
 =head1 SYNOPSIS
 
-make-release [options] <tag>
+make-release [options] [I<commit>]
 
  Options:
     --help               brief help message
@@ -356,7 +357,7 @@ make-release [options] <tag>
 
 B<make-release> constructs a set of OpenAFS source distribution files from a
 local git clone for a given release. It extracts the contents of the specified
-tag, creating the source and doc tarballs, compressing them, and generating
+I<commit>, creating the source and doc tarballs, compressing them, and generating
 digest files. It will also create a ChangeLog file, listing all of the changes
 in that release, and optionally extract lines from the NEWS file to create
 release notes.
@@ -365,11 +366,16 @@ release notes.
 
 =over 8
 
+=item I<commit>
+
+The branch or tag name (defaults to HEAD) of the commit to be used to
+generate the release files.
+
 =item B<--last> I<object>
 
 Generate the ChangeLog starting from I<object>. Also generate a
 openafs-$version.diff file in the output directory containing all of the
-changes between I<object> and the current tag
+changes between I<object> and I<commit>.
 
 =item B<--relnotes>
 
