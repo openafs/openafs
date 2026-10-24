@@ -202,7 +202,7 @@ my $name = "openafs-$suffix";
 my $toplevel;
 run(["git", "rev-parse", "--show-toplevel"], stdout => \$toplevel, quiet => 1);
 if (!$toplevel) {
-    die "Unable to find the git top-level directory.";
+    die "Unable to find the git top-level directory.\n";
 }
 
 # Grab the tagged code into a temporary directory
@@ -262,7 +262,7 @@ push @toCompress, "$outDir/$name-src.tar";
 if (!$noDocTarball) {
     print "make-release: cp $tempDir/$name/LICENSE $tempDir/$name/doc/\n";
     copy("$tempDir/$name/LICENSE", "$tempDir/$name/doc/")
-        or die "Unable to copy LICENSE file to doc directory: $!";
+        or die "Unable to copy LICENSE file to doc directory: $!\n";
     run(["./configure", "-q", "--enable-transarc-paths", "--disable-kernel-module"],
         chdir => "$tempDir/$name");
     run(["make", "man-pages"], chdir => "$tempDir/$name");
@@ -298,7 +298,7 @@ foreach my $file (@toCompress) {
 
 # Generate message digest files.
 
-my $cwd = getcwd() or die "Failed getcwd(): $!";
+my $cwd = getcwd() or die "Failed getcwd(): $!\n";
 my $md5 = which('md5');
 my $md5sum = which('md5sum');
 my $shasum = which("shasum");
@@ -308,7 +308,7 @@ foreach my $pathname (@toMD) {
     my $directory = dirname($pathname);
     my $file = basename($pathname);
 
-    chdir($directory) or die "Failed cd $directory: $!";
+    chdir($directory) or die "Failed cd $directory: $!\n";
 
     if ($md5) {
         run([$md5, "-q", $file], stdout => "$file.md5", warn => 1)
@@ -317,7 +317,7 @@ foreach my $pathname (@toMD) {
         run([$md5sum, $file], stdout => "$file.md5", warn => 1)
             or $errorCount += 1;
     } else {
-        warn "MD5 utility not found. Not producing $file.md5";
+        warn "MD5 utility not found. Not producing $file.md5\n";
         $errorCount += 1;
     }
 
@@ -328,15 +328,15 @@ foreach my $pathname (@toMD) {
         run([$sha256sum, $file], stdout => "$file.sha256", warn => 1)
             or $errorCount += 1;
     } else {
-        warn "SHA256 utility program not found. Not producing $file.sha256";
+        warn "SHA256 utility program not found. Not producing $file.sha256\n";
         $errorCount += 1;
     }
 
-    chdir($cwd) or die "Failed cd $cwd: $!";
+    chdir($cwd) or die "Failed cd $cwd: $!\n";
 }
 
 if ($errorCount != 0) {
-    die "Failed to create all files; $errorCount errors encountered.";
+    die "Failed to create all files; $errorCount errors encountered.\n";
 }
 
 __END__
