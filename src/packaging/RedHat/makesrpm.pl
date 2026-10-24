@@ -13,7 +13,7 @@ use File::Temp;
 use File::Basename;
 use File::Spec;
 
-# Build an SRPM for OpenAFS, given a src tarball, release notes,
+# Build an SRPM for OpenAFS, given a src and doc tarball, release notes,
 # and ChangeLog.
 
 my $help = 0;
@@ -31,11 +31,12 @@ pod2usage(-exitval => 0, -verbose => 1) if $help;
 pod2usage(-exitval => 0, -verbose => 2, -noperldoc => 1) if $man;
 
 my $srcball = shift;
+my $docball = shift;  # Required for old spec files. May be an empty placeholder.
 my $relnotes = shift;
 my $changelog = shift;
 my $cellservdb = shift;
 
-if (!defined($srcball)) {
+if (!defined($srcball) || !defined($docball)) {
     pod2usage(-exitval => 1, -verbose => 1);
 }
 
@@ -111,6 +112,14 @@ File::Path::mkpath([ $tmpdir."/rpmdir/SPECS",
 File::Copy::copy($srcball, 
 		 $tmpdir."/rpmdir/SOURCES/openafs-$afsversion-src.tar.bz2")
   or die "Unable to copy $srcball into position\n";
+
+if ($docball) {
+  # Old spec files required a tarball for docs. Skip this if the caller
+  # specified an empty string as a placeholder.
+  File::Copy::copy($docball,
+                   $tmpdir."/rpmdir/SOURCES/openafs-$afsversion-doc.tar.bz2")
+    or die "Unable to copy $docball into position\n";
+}
 
 # Populate it with all the stuff in the packaging directory, except the 
 # specfile
