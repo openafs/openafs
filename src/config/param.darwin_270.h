@@ -198,6 +198,8 @@
 #  define sys_arm_darwin_250          1
 #  define sys_arm_darwin_270          1
 
+#  define USE_UCONTEXT
+
 #  define SYS_NAME                    "arm_darwin_270"
 #  define SYS_NAME_ID                 SYS_NAME_ID_arm_darwin_270
 #  define AFSLITTLE_ENDIAN            1

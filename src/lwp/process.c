@@ -112,6 +112,8 @@ returnto(struct lwp_context *savearea)
 #endif
 #elif   defined(AFS_X86_FBSD_ENV)
 #define LWP_SP 4
+#elif   defined(sys_arm_darwin_270)
+# error setjmp not supported on darwin arm
 #elif   defined(AFS_DARWIN_ENV)
 #define LWP_SP 16
 #else
