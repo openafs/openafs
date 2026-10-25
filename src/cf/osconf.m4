@@ -584,6 +584,21 @@ case $AFS_SYSNAME in
 	;;
 esac
 
+dnl On DARWIN, we need to define _XOPEN_SOURCE if we want to use ucontext.h.
+dnl Define _XOPEN_SOURCE for *_darwin_270 and newer, so we can use
+dnl ucontext.h on those platforms for LWP. This can be removed when LWP has
+dnl finally gone away.
+dnl
+dnl We cannot do this in param.h, because we need to define _XOPEN_SOURCE very
+dnl early, before anything else is included.
+AS_CASE([$AFS_SYSNAME],
+  [*_darwin_*],
+    [vers=`echo "$AFS_SYSNAME" | cut -d_ -f3`
+     AS_IF([test "$vers" -ge 270],
+      [AC_MSG_NOTICE([Ensuring _XOPEN_SOURCE is defined so ucontext.h is usable])
+       AC_DEFINE([_XOPEN_SOURCE], [500],
+        [Define on macOS 27+ so we can use ucontext.h for LWP.])])])
+
 dnl Disable the default for debugging/optimization if not enabled
 if test "x$enable_debug_kernel" = "xno"; then
   KERN_DBG=
