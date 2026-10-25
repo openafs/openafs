@@ -1050,6 +1050,17 @@ Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
 #if defined(__hp9000s800)
     if (temp->stack != NULL)
 	temp->stackcheck = *(int *)((temp->stack) + stacksize - 4);
+#elif defined(AFS_DARWIN_ENV) && defined(USE_UCONTEXT) && defined(HAVE_UCONTEXT_H)
+    /*
+     * On DARWIN, makecontext() blanks the stack buffer. If
+     * *(int *)(lwp_cpptr->stack) is non-zero right now, then later on when we
+     * check ->stackcheck it will look like the front of the stack has changed,
+     * indicating a stack overflow. Set the front of the stack to 0 now, so
+     * blanking the entire stack later doesn't matter.
+     */
+    if (temp->stack != NULL) {
+	temp->stackcheck = *(int *)(temp->stack) = 0;
+    }
 #else
     if (temp->stack != NULL)
 	temp->stackcheck = *(int *)(temp->stack);
