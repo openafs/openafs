@@ -19,6 +19,7 @@ my $outDir = ".";
 my $perVersionDir = 0;
 my $errorCount = 0;
 my $docTarball = 1;
+my $allowDirty = 1;
 my @compress = ();
 
 my %compressors = (
@@ -225,6 +226,9 @@ sub find_version {
             die "Failed to determine version of $commit.\n";
         }
         if ($version =~ s/-dirty$// || $dirty) {
+            if (!$allowDirty) {
+                die "Uncommitted changes found. Commit or stash your changes.\n";
+            }
             warn "Uncommitted changes found. " .
                  "These will not be included in the release.\n";
         }
@@ -251,6 +255,7 @@ GetOptions(
     "per-version-dir" => \$perVersionDir,
     "doc-tarball!" => \$docTarball,
     "compress=s" => \@compress,
+    "allow-dirty!" => \$allowDirty,
 ) or pod2usage(2);
 
 pod2usage(1) if $help;
@@ -450,6 +455,7 @@ make-release [options] [I<commit>]
     --per-version-dir    output files into a version subdirectory
     --[no-]doc-tarball   create a doc.tar archive (default)
     --compress <format>  compression format(s) of output archives
+    --[no-]allow-dirty   build even when uncommitted changes exist (default)
 
 =head1 DESCRIPTION
 
@@ -526,6 +532,16 @@ Specifies the compression format of the compressed archive(s).  Valid I<format>
 values are B<gz>, B<bz2>, and B<xz>. This option may be given more than once to
 create multiple compressed archives. The default is to create B<gz> and B<bz2>
 compressed archives (and not B<xz>).
+
+=item B<--allow-dirty>, B<--no-allow-dirty>
+
+Specifies how B<make-release> handles uncommitted changes in the index or work
+tree. When B<--allow-dirty> is specified, B<make-release> prints a warning and
+continues. The uncommitted changes are not included in the source archive.
+When B<--no-allow-dirty> is specified, B<make-release> exits with an error
+message instead. B<--allow-dirty> is the default.
+
+This option has no effect when a I<commit> other than B<HEAD> is given.
 
 =back
 
