@@ -18,7 +18,7 @@ my $relnotes = 0;
 my $outDir = ".";
 my $perVersionDir = 0;
 my $errorCount = 0;
-my $noDocTarball = 0;
+my $docTarball = 1;
 my @compress = ();
 
 my %compressors = (
@@ -157,7 +157,7 @@ GetOptions(
     "relnotes" => \$relnotes,
     "destdir|dir=s" => \$outDir,
     "per-version-dir" => \$perVersionDir,
-    "no-doc-tarball" => \$noDocTarball,
+    "doc-tarball!" => \$docTarball,
     "compress=s" => \@compress,
 ) or pod2usage(2);
 
@@ -259,7 +259,7 @@ my @toCompress;
 run(["tar", "-cf", "$outDir/$name-src.tar", "-C", $tempDir, $name]);
 push @toCompress, "$outDir/$name-src.tar";
 
-if (!$noDocTarball) {
+if ($docTarball) {
     print "make-release: cp $tempDir/$name/LICENSE $tempDir/$name/doc/\n";
     copy("$tempDir/$name/LICENSE", "$tempDir/$name/doc/")
         or die "Unable to copy LICENSE file to doc directory: $!\n";
@@ -356,7 +356,7 @@ make-release [options] [I<commit>]
     --relnotes           generate release notes from NEWS file
     --destdir <dir>      base directory to output files
     --per-version-dir    output files into a version subdirectory
-    --no-doc-tarball     do not create a doc.tar archive
+    --[no-]doc-tarball   create a doc.tar archive (default)
     --compress <format>  compression format(s) of output archives
 
 =head1 DESCRIPTION
@@ -402,9 +402,10 @@ not given).  The subdirectory is created if it does not already exist.
 
 Not used.
 
-=item B<--no-doc-tarball>
+=item B<--doc-tarball>, B<--no-doc-tarball>
 
-Do not create a doc.tar archive.
+Create, or do not create, a doc.tar archive. B<--doc-tarball> is the
+default.
 
 =item B<--compress> I<format>
 
