@@ -57,17 +57,23 @@ sub which {
 # Arguments:
 #   args - array reference of command line arguments
 #   opts - options:
-#      chdir   => directory to change to before running the command
-#      stdin   => file name to redirect stdin from
-#      stdout  => file name to redirect stdout to, or a scalar
-#                 reference to store the output in, without the
-#                 trailing newline
-#      warn    => if true, warn instead of die if the command fails
-#      quiet   => do not print the command before running it
+#      chdir    => directory to change to before running the command
+#      stdin    => file name to redirect stdin from
+#      stdout   => file name to redirect stdout to, or a scalar
+#                  reference to store the output in, without the
+#                  trailing newline
+#      exitcode => if true, return the exit code instead of dying or
+#                  warning when the command fails
+#      warn     => if true, warn instead of die if the command fails
+#                  (this option is ignored when exitcode is true)
+#      quiet    => do not print the command before running it
 #
-# Returns true if the command succeeds. Dies with an error message if the
-# command fails, unless the 'warn' option is given, in which case it prints
-# the error message and returns false.
+# Returns the command exitcode (or -1 if terminated by a signal) when
+# 'exitcode' option is true.
+#
+# Otherwise, returns true if the command succeeds. Dies with an error message
+# if the command fails, unless the 'warn' option is given, in which case it
+# prints the error message and returns false.
 #
 sub run {
     my ($args, %opts) = @_;
@@ -135,11 +141,26 @@ sub run {
     }
 
     my $error;
+    my $signal;
+    my $exitcode;
     if ($? & 127) {
-        $error = "'$command' died with signal " . ($? & 127) . " ($?)\n";
+        $signal = $? & 127;
+        $exitcode = -1;
+        $error = "'$command' died with signal $signal ($?)\n";
     } elsif ($? != 0) {
-        $error = "'$command' exited with code " . ($? >> 8) . " ($?)\n";
+        $exitcode = $? >> 8;
+        $error = "'$command' exited with code $exitcode ($?)\n";
     } else {
+        $exitcode = 0;
+    }
+
+    if ($opts{exitcode}) {
+        if (defined($signal)) {
+            warn $error;
+        }
+        return $exitcode;
+    }
+    if ($exitcode == 0) {
         return 1;   # success
     }
     if ($opts{warn}) {
@@ -147,6 +168,77 @@ sub run {
         return 0;   # failed with warning
     }
     die $error;     # fatal
+}
+
+# Check for uncommitted changes
+#
+# Arguments:
+#   toplevel - top-level git directory
+#
+# Returns true if uncommitted changes are found in the git index or worktree.
+#
+sub git_is_dirty {
+    my $toplevel = shift;
+    my $code;
+
+    $code = run(["git", "diff-index", "--quiet", "--cached", "HEAD"],
+                 chdir => $toplevel, quiet => 1, exitcode => 1);
+    if ($code == 1) {
+        return 1;  # dirty
+    }
+    if ($code != 0) {
+        die "git diff-index failed with code $code\n";
+    }
+    $code = run(["git", "diff-files", "--quiet"],
+                 chdir => $toplevel, quiet => 1, exitcode => 1);
+    if ($code == 1) {
+        return 1;  # dirty
+    }
+    if ($code != 0) {
+        die "git diff-files failed with code $code\n";
+    }
+    return 0;  # clean
+}
+
+# Determine release version.
+#
+# Arguments:
+#   toplevel - top-level git directory
+#   commit   - commit reference
+#
+# Returns the release version of the named commit. Use the in-tree git-version
+# script to find the version of HEAD, otherwise fall back to git describe.
+#
+sub find_version {
+    my ($toplevel, $commit) = @_;
+    my $version;
+
+    if ($commit eq "HEAD") {
+        my $dirty = 0;
+        if (-f "$toplevel/.version") {
+            warn "Using $toplevel/.version to determine version.\n";
+            $dirty = git_is_dirty($toplevel);
+        }
+        run(["$toplevel/build-tools/git-version", $toplevel],
+             stdout => \$version, quiet => 1);
+        if (!$version or $version eq "UNKNOWN") {
+            die "Failed to determine version of $commit.\n";
+        }
+        if ($version =~ s/-dirty$// || $dirty) {
+            warn "Uncommitted changes found. " .
+                 "These will not be included in the release.\n";
+        }
+    } else {
+        run(["git", "describe", "--abbrev=4", $commit],
+             stdout => \$version, quiet => 1);
+        if (!$version) {
+            die "Failed to describe $commit.\n";
+        }
+        $version =~ s/openafs-[^-]*-//;
+        $version =~ s/_/./g;
+    }
+    print "Version is $version\n";
+    return $version;
 }
 
 GetOptions(
@@ -173,9 +265,15 @@ foreach my $format (@compress) {
     }
 }
 
-my $tagName = shift;
-if (!$tagName) {
-    $tagName = "HEAD";
+my $commit = shift;
+if (!$commit) {
+    $commit = "HEAD";
+} elsif ($commit eq "HEAD") {
+    warn "The commit argument 'HEAD' is deprecated; " .
+         "run make-release without it.\n";
+} else {
+    warn "The commit argument '$commit' is deprecated; check out the commit " .
+         "and run make-release without it.\n";
 }
 my $notused = shift;  # Used to be "version".
 if (defined $notused) {
@@ -185,16 +283,6 @@ if (defined $tagPoint) {
     warn "option --tagpoint '$tagPoint' is ignored.\n";
 }
 
-my $version;
-run(["git", "describe", "--abbrev=4", $tagName], stdout => \$version, quiet => 1);
-if (!$version) {
-    die "Failed to describe $tagName.\n";
-}
-my $suffix = $version;
-$suffix =~ s/openafs-[^-]*-//;
-$suffix =~ s/_/./g;
-my $name = "openafs-$suffix";
-
 # Get the top-level project directory.
 my $toplevel;
 run(["git", "rev-parse", "--show-toplevel"], stdout => \$toplevel, quiet => 1);
@@ -202,24 +290,28 @@ if (!$toplevel) {
     die "Unable to find the git top-level directory.\n";
 }
 
-# Grab the tagged code into a temporary directory
+# Determine the version.
+my $version = find_version($toplevel, $commit);
+my $name = "openafs-$version";
+
+# Grab the code into a temporary directory
 my $tempDir = File::Temp::tempdir(CLEANUP => 1);
-run(["git", "-C", $toplevel, "archive", "--format=tar", "--prefix=$name/", $tagName],
+run(["git", "-C", $toplevel, "archive", "--format=tar", "--prefix=$name/", $commit],
     stdout => "$tempDir/$name.tar");
 run(["tar", "-C", $tempDir, "-xf", "$tempDir/$name.tar"]);
 unlink("$tempDir/$name.tar");
 
 # Make the output path, if not already present.
 if ($perVersionDir) {
-    $outDir .= "/$suffix";
+    $outDir .= "/$version";
 }
 File::Path::mkpath($outDir);
 
 # Construct the ChangeLog
 if ($last) {
-    run(["git", "log", "$last..$tagName"], stdout => "$outDir/ChangeLog");
+    run(["git", "log", "$last..$commit"], stdout => "$outDir/ChangeLog");
 } else {
-    run(["git", "log", $tagName], stdout => "$outDir/ChangeLog");
+    run(["git", "log", $commit], stdout => "$outDir/ChangeLog");
 }
 
 if ($relnotes) {
@@ -228,7 +320,7 @@ if ($relnotes) {
     # with "OpenAFS ...", and then all the lines until the start of the next
     # release, which is the next line that starts with "OpenAFS ..."
     my $news = "$tempDir/$name/NEWS";
-    my $relnotes = "$outDir/RELNOTES-$suffix";
+    my $relnotes = "$outDir/RELNOTES-$version";
     open(my $in_fh, '<', $news) or die "Could not open file '$news' $!\n";
     open(my $out_fh, '>', $relnotes) or die "Could not open file '$relnotes' $!\n";
     my $in_release = 0;
@@ -272,7 +364,7 @@ if ($docTarball) {
 
 # Construct the diffs, and zip them
 if ($last) {
-    run(["git", "diff", "$last..$tagName"], stdout => "$outDir/$name.diff");
+    run(["git", "diff", "$last..$commit"], stdout => "$outDir/$name.diff");
     push @toCompress, "$outDir/$name.diff";
 }
 
@@ -362,11 +454,23 @@ make-release [options] [I<commit>]
 =head1 DESCRIPTION
 
 B<make-release> constructs a set of OpenAFS source distribution files from a
-local git clone for a given release. It extracts the contents of the specified
-I<commit>, creating the source and doc tarballs, compressing them, and generating
-digest files. It will also create a ChangeLog file, listing all of the changes
-in that release, and optionally extract lines from the NEWS file to create
-release notes.
+local git clone for a given release. It extracts the contents of a commit (the
+default is B<HEAD>) with B<git archive> to create the source tarball, and
+optionally the doc tarball. The tarballs are then compressed and message
+digests are generated for each.
+
+B<make-release> will also create a ChangeLog file, listing all of the changes
+in that release, and optionally extract lines from the NEWS file to create a
+release notes file.
+
+When the I<commit> is not specified (or is specified as B<HEAD>), the version
+of the release files is determined by the B<git-version> script (the same way
+the build system determines the version). If a B<.version> file is present in
+the top-level project directory, B<git-version> uses its contents as the
+version instead of running B<git describe>.
+
+Uncommitted changes in the index or work tree are not included in the release
+files, so B<make-release> prints a warning when uncommitted changes are found.
 
 =head1 OPTIONS
 
@@ -374,14 +478,23 @@ release notes.
 
 =item I<commit>
 
-The branch or tag name (defaults to HEAD) of the commit to be used to
-generate the release files.
+The branch or tag name of the commit to be used to generate the release files.
+The default is B<HEAD>.  B<git archive> is run for this commit to create to
+create a temporary work tree to create the source archive (and optionally, the
+doc archive.)
+
+When I<commit> is given (and is not B<HEAD>) the version is determined by B<git
+describe> a B<.version> file is not used and uncommitted changes are not
+checked.
+
+Deprecated: Check out the commit and run B<make-release> without this argument
+instead.
 
 =item B<--last> I<object>
 
 Generate the ChangeLog starting from I<object>. Also generate a
 openafs-$version.diff file in the output directory containing all of the
-changes between I<object> and I<commit>.
+changes between I<object> and the release commit.
 
 =item B<--relnotes>
 
