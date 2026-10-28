@@ -64,8 +64,6 @@
 %define depmod /sbin/depmod
 %endif
 
-%define kmod_name openafs
-
 %if 0%{!?kernel_version:1}
 %if 0%{?kernvers:1}
 # kernvers is the deprecated name for kernel_version.
@@ -402,16 +400,16 @@ krb4 lookalike services.
 %global kepoch 1
 %endif
 
-%package -n kmod-%{kmod_name}
-Summary:          %{kmod_name} kernel module
+%package -n kmod-%{name}
+Summary:          %{name} kernel module
 Group:            System Environment/Kernel
 %if ! (0%{?fedora} >= 27 || 0%{?rhel} >= 8 || 0%{?amzn} >= 2023)
 Provides:         kernel-modules = %{?kepoch:%{kepoch}:}%{kernel_version}
 %endif
-Provides:         %{kmod_name}-kmod = %{?epoch:%{epoch}:}%{version}-%{release}
+Provides:         %{name}-kmod = %{?epoch:%{epoch}:}%{version}-%{release}
 Provides:         openafs-kernel = %{version}
 Requires:         kernel-%{_target_cpu} = %{?kepoch:%{kepoch}:}%{kverrel}
-Requires:         %{kmod_name}-kmod-common >= %{?epoch:%{epoch}:}%{version}
+Requires:         %{name}-kmod-common >= %{?epoch:%{epoch}:}%{version}
 Requires(post):   %{depmod}
 Requires(postun): %{depmod}
 Release:          %{pkgrel}.%(echo %{kverrel} | tr - _)
@@ -420,19 +418,19 @@ BuildRequires:    kernel-devel-%{_target_cpu} = %{?kepoch:%{kepoch}:}%{kverrel}
 BuildRequires: elfutils-devel
 %endif
 
-%description -n kmod-%{kmod_name}
-This package provides the %{kmod_name} kernel modules built for the Linux
+%description -n kmod-%{name}
+This package provides the %{name} kernel modules built for the Linux
 kernel %{kernel_version}.
 
 %if ! ( 0%{?fedora} >= 28 || 0%{?rhel} >= 8 || 0%{?amzn} >= 2023 )
-%package -n kmod-%{kmod_name}-debuginfo
-Summary:          Debug information for %{kmod_name} kernel modules
+%package -n kmod-%{name}-debuginfo
+Summary:          Debug information for %{name} kernel modules
 Group:            Development/Debug
 Release:          %{pkgrel}.%(echo %{kverrel} | tr - _)
 AutoReqProv:      no
 
-%description   -n kmod-%{kmod_name}-debuginfo
-This package provides debug information for the %{kmod_name} kernel modules
+%description   -n kmod-%{name}-debuginfo
+This package provides debug information for the %{name} kernel modules
 built for the Linux kernel %{kernel_version}.
 %endif
 
@@ -954,10 +952,10 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %endif
 
 %if %{build_modules}
-%post -n kmod-%{kmod_name}
+%post -n kmod-%{name}
 %{depmod} -aeF /boot/System.map-%{kernel_version} %{kernel_version} > /dev/null || :
 
-%postun -n kmod-%{kmod_name}
+%postun -n kmod-%{name}
 %{depmod} -aF /boot/System.map-%{kernel_version} %{kernel_version} &> /dev/null || :
 %endif
 
@@ -1326,12 +1324,12 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 
 %if %{build_modules}
 
-%files -n kmod-%{kmod_name}
+%files -n kmod-%{name}
 %defattr(644,root,root,755)
-/lib/modules/%{kernel_version}/extra/%{kmod_name}/
+/lib/modules/%{kernel_version}/extra/%{name}/
 
 %if ! ( 0%{?fedora} >= 28 || 0%{?rhel} >= 8 || 0%{?amzn} >= 2023 )
-%files -n kmod-%{kmod_name}-debuginfo -f kmod-debuginfo.list
+%files -n kmod-%{name}-debuginfo -f kmod-debuginfo.list
 %endif
 
 %endif
