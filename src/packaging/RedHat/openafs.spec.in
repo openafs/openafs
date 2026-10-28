@@ -73,6 +73,11 @@
 %endif
 %endif
 
+# The path to the kernel headers for the target kernel version.
+%if 0%{!?kernel_headers:1}
+%global kernel_headers %{_usrsrc}/kernels/%{kernel_version}
+%endif
+
 %if ! ( 0%{?fedora} >= 28 || 0%{?rhel} >= 8 || 0%{?amzn} >= 2023 )
 %global _find_debuginfo_opts %{?_find_debuginfo_opts} -p '.*openafs\.ko.*' -o kmod-debuginfo.list
 %endif
@@ -147,6 +152,10 @@ The OpenAFS SRPM can be rebuilt with the following options:
                                   to build modules against. The default is
                                   to build against the currently-running
                                   kernel.
+
+ --define "kernel_headers <path>" Specify the path to the kernel headers
+                                  for kernel_version. The default is
+                                  /usr/src/kernels/<kernel_version>.
 
  --without authlibs               Disable authlibs package (default: with authlibs)
  --without krb5                   Disable krb5 support (default: with krb5)
@@ -482,9 +491,6 @@ config_opts="%{?_with_kauth:--enable-kauth} \
 
 # Configure AFS
 
-# The path to the kernel headers for the target kernel version.
-ksrc=%{_usrsrc}/kernels/%{kernel_version}
-
 CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
 
 %if %{krb5support}
@@ -503,7 +509,7 @@ export KRB5_CONFIG
        --enable-debug \
        --with-linux-kernel-packaging \
 %if %{build_modules}
-       --with-linux-kernel-headers=${ksrc} \
+       --with-linux-kernel-headers=%{kernel_headers} \
 %else
        --disable-kernel-module \
 %endif
