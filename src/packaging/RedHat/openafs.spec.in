@@ -67,7 +67,15 @@
 %define kmodtool bash %{_sourcedir}/openafs-kmodtool
 
 %define kmod_name openafs
-%define kverrel %(%{kmodtool} verrel %{?kernvers} 2>/dev/null)
+
+%if 0%{!?kernel_version:1}
+%if 0%{?kernvers:1}
+# kernvers is the deprecated name for kernel_version.
+%global kernel_version %{kernvers}
+%else
+%global kernel_version %(uname -r)
+%endif
+%endif
 
 %define dkms_version %{pkgvers}-%{pkgrel}%{?dist}
 
@@ -135,7 +143,7 @@ The OpenAFS SRPM can be rebuilt with the following options:
  --define "source_date_epoch 1712832000"  Specify the build timestamp. The default
                                           is the current system time.
 
- --define "kernvers 3.19.3-100.fc20.i686" Specify the specific kernel version
+ --define "kernel_version <version>" Specify the specific kernel version
                                   to build modules against. The default is
                                   to build against the currently-running
                                   kernel.
@@ -384,7 +392,7 @@ krb4 lookalike services.
 ##############################################################################
 %if %{build_modules}
 
-%{expand:%(%{kmodtool} rpmtemplate %{kmod_name} %{kverrel} %{depmod} '' 2>/dev/null)}
+%{expand:%(%{kmodtool} rpmtemplate %{kmod_name} %{kernel_version} %{depmod} '' 2>/dev/null)}
 
 %endif
 
@@ -398,12 +406,11 @@ krb4 lookalike services.
 
 : @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 : @@@
-: @@@ kernel version:     %{kverrel}
+: @@@ kernel version:     %{kernel_version}
 : @@@ PAM modules dir:    %{pamdir}
 : @@@ build userspace:    %{build_userspace}
 : @@@ build modules:      %{build_modules}
 : @@@ arch:               %{_arch}
-: @@@ target cpu:         %{_target_cpu}
 : @@@
 : @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -435,7 +442,7 @@ config_opts="%{?_with_kauth:--enable-kauth} \
 # Configure AFS
 
 # The path to the kernel headers for the target kernel version.
-ksrc=%{_usrsrc}/kernels/%{kverrel}.%{_target_cpu}
+ksrc=%{_usrsrc}/kernels/%{kernel_version}
 
 CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
 
@@ -705,10 +712,10 @@ install -m 644 %{SOURCE11} $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
 ##############################################################################
 %if %{build_modules}
 
-mkdir -p $RPM_BUILD_ROOT/lib/modules/%{kverrel}.%{_target_cpu}/extra/openafs
+mkdir -p $RPM_BUILD_ROOT/lib/modules/%{kernel_version}/extra/openafs
 install -m 755 \
-    src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}/openafs.ko \
-    $RPM_BUILD_ROOT/lib/modules/%{kverrel}.%{_target_cpu}/extra/openafs/openafs.ko
+    src/libafs/MODLOAD-%{kernel_version}/openafs.ko \
+    $RPM_BUILD_ROOT/lib/modules/%{kernel_version}/extra/openafs/openafs.ko
 
 %endif
 
