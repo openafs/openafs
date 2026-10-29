@@ -89,6 +89,13 @@ unsupported_fedora_release: %{fedora}
 %global have_auto_debuginfo 0
 %endif
 
+# Distributions that provide a kernel-modules package.
+%if 0%{?rhel} >= 8 || 0%{?fedora} >= 27 || 0%{?amzn} >= 2023
+%global have_kernel_modules_pkg 1
+%else
+%global have_kernel_modules_pkg 0
+%endif
+
 %if %{have_usr_merged}
 %define depmod /usr/sbin/depmod
 %else
@@ -461,7 +468,7 @@ krb4 lookalike services.
 %package -n kmod-%{name}
 Summary:          %{name} kernel module
 Group:            System Environment/Kernel
-%if ! (0%{?fedora} >= 27 || 0%{?rhel} >= 8 || 0%{?amzn} >= 2023)
+%if !%{have_kernel_modules_pkg}
 Provides:         kernel-modules = %{?kepoch:%{kepoch}:}%{kernel_version}
 %endif
 Provides:         %{name}-kmod = %{?epoch:%{epoch}:}%{version}-%{release}
