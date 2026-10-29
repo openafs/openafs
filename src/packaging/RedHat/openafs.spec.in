@@ -111,6 +111,13 @@ unsupported_fedora_release: %{fedora}
 %global have_systemd 0
 %endif
 
+# Distributions which provide swig, to build the perl ukernel bindings.
+%if 0%{?rhel} >= 6 || 0%{?fedora} || 0%{?amzn} >= 1
+%global have_swig 1
+%else
+%global have_swig 0
+%endif
+
 %if %{have_usr_merged}
 %define depmod /usr/sbin/depmod
 %else
@@ -164,7 +171,7 @@ BuildRequires: pam-devel, ncurses-devel, make, flex, bison
 %if %{have_systemd}
 BuildRequires: systemd-units
 %endif
-%if 0%{?fedora} || 0%{?rhel} >= 6 || 0%{?amzn} >= 1
+%if %{have_swig}
 BuildRequires: perl-devel, swig
 %endif
 BuildRequires: perl(ExtUtils::Embed)
@@ -587,7 +594,7 @@ export KRB5_CONFIG
 %if %{krb5support}
        --with-krb5 \
 %endif
-%if 0%{?fedora} || 0%{?rhel} >= 6 || 0%{?amzn} >= 1
+%if %{have_swig}
        --with-swig \
 %else
        --without-swig \
@@ -743,7 +750,7 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man1/tokens.krb.1
 rm -f $RPM_BUILD_ROOT%{_mandir}/man5/AuthLog.5
 rm -f $RPM_BUILD_ROOT%{_mandir}/man5/AuthLog.dir.5
 %endif
-%if !(0%{?fedora} || 0%{?rhel} >= 6 || 0%{?amzn} >= 1)
+%if !%{have_swig}
 rm -f $RPM_BUILD_ROOT%{_mandir}/man3/AFS::ukernel.3
 %endif
 
@@ -1287,7 +1294,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_libdir}/libubik.a
 %{_mandir}/man1/rxgen.1.gz
 %{_mandir}/man1/afs_compile_et.1.gz
-%if 0%{?fedora} || 0%{?rhel} >= 6 || 0%{?amzn} >= 1
+%if %{have_swig}
 %{_libdir}/perl/AFS/ukernel.pm
 %{_libdir}/perl/ukernel.so
 %{_mandir}/man3/AFS::ukernel.3.gz
