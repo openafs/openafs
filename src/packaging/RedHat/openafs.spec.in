@@ -96,6 +96,14 @@ unsupported_fedora_release: %{fedora}
 %global have_kernel_modules_pkg 0
 %endif
 
+# Distributions with kernels built with the ORC unwinder (CONFIG_UNWINDER_ORC),
+# which requires libelf to build kernel modules.
+%if 0%{?rhel} >= 8 || 0%{?fedora} >= 28 || 0%{?amzn} >= 2023
+%global have_orc_unwinder 1
+%else
+%global have_orc_unwinder 0
+%endif
+
 %if %{have_usr_merged}
 %define depmod /usr/sbin/depmod
 %else
@@ -479,8 +487,8 @@ Requires(post):   %{depmod}
 Requires(postun): %{depmod}
 Release:          %{pkgrel}.%(echo %{kverrel} | tr - _)
 BuildRequires:    kernel-devel-%{_target_cpu} = %{?kepoch:%{kepoch}:}%{kverrel}
-%if 0%{?rhel} >= 8 || 0%{?amzn} >= 2023
-BuildRequires: elfutils-devel
+%if %{have_orc_unwinder}
+BuildRequires:    elfutils-devel
 %endif
 
 %description -n kmod-%{name}
