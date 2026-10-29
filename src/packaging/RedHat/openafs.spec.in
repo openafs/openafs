@@ -82,6 +82,13 @@ unsupported_fedora_release: %{fedora}
 %global have_usr_merged 0
 %endif
 
+# Distributions where rpm generates the debuginfo subpackages automatically.
+%if 0%{?rhel} >= 8 || 0%{?fedora} >= 28 || 0%{?amzn} >= 2023
+%global have_auto_debuginfo 1
+%else
+%global have_auto_debuginfo 0
+%endif
+
 %if %{have_usr_merged}
 %define depmod /usr/sbin/depmod
 %else
@@ -111,7 +118,7 @@ unsupported_fedora_release: %{fedora}
 %endif
 %endif
 
-%if ! ( 0%{?fedora} >= 28 || 0%{?rhel} >= 8 || 0%{?amzn} >= 2023 )
+%if !%{have_auto_debuginfo}
 %global _find_debuginfo_opts %{?_find_debuginfo_opts} -p '.*openafs\.ko.*' -o kmod-debuginfo.list
 %endif
 
@@ -473,7 +480,7 @@ BuildRequires: elfutils-devel
 This package provides the %{name} kernel modules built for the Linux
 kernel %{kernel_version}.
 
-%if ! ( 0%{?fedora} >= 28 || 0%{?rhel} >= 8 || 0%{?amzn} >= 2023 )
+%if !%{have_auto_debuginfo}
 %package -n kmod-%{name}-debuginfo
 Summary:          Debug information for %{name} kernel modules
 Group:            Development/Debug
@@ -1364,7 +1371,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %defattr(644,root,root,755)
 %{kernel_modules}/extra/%{name}/
 
-%if ! ( 0%{?fedora} >= 28 || 0%{?rhel} >= 8 || 0%{?amzn} >= 2023 )
+%if !%{have_auto_debuginfo}
 %files -n kmod-%{name}-debuginfo -f kmod-debuginfo.list
 %endif
 
