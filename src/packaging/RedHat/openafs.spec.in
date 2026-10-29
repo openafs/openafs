@@ -58,7 +58,15 @@
 #
 # Definitions
 #
-%if 0%{?fedora} >= 17 || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
+
+# Distributions with a merged /usr (/bin, /sbin, and /lib are symlinks.)
+%if 0%{?rhel} >= 7 || 0%{?fedora} >= 17 || 0%{?amzn} >= 2
+%global have_usr_merged 1
+%else
+%global have_usr_merged 0
+%endif
+
+%if %{have_usr_merged}
 %define depmod /usr/sbin/depmod
 %else
 %define depmod /sbin/depmod
