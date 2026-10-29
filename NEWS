@@ -1,6 +1,6 @@
                        User-Visible OpenAFS Changes
 
-OpenAFS 1.8.17pre1
+OpenAFS 1.8.17pre2
 
   All platforms
 
@@ -30,9 +30,21 @@ OpenAFS 1.8.17pre1
       when traversing over all unixusers in the system, potentially leading to
       memory corruption (17007, 17008).
 
+    * A deadlock has been fixed in the user-space client (libuafs, as used by
+      afsd.fuse and the AFS::ukernel Perl bindings). Since OpenAFS 1.8.11,
+      these clients hung on the first callback RPC received from a
+      fileserver (17048).
+
   Linux client
 
     * Support for Linux 7.2 has been added (16928).
+
+    * Support for Linux 7.3 has been added (17049).
+
+    * A configure failure has been fixed when building the kernel module
+      against some Linux kernels, such as the Arch Linux 7.0 kernels built
+      with GCC 16, where the kernel build fails while generating BTF type
+      information for the configure tests (17051).
 
     * The OpenAFS directory name lookup cache (DNLC) is now disabled by default
       on Linux, since the Linux kernel's own dentry cache already serves this
@@ -43,6 +55,24 @@ OpenAFS 1.8.17pre1
   MacOS client
 
     * Support for macOS 27 has been added (Golden Gate) (16953, 16954, 16955).
+
+    * The installer ReadMe now documents a bug in the macOS Installer app,
+      and a workaround.  The bug, present in some recent versions of macOS 27,
+      26, and 15, prevents the OpenAFS cell configuration plugin from running.
+      When affected, the installer does not prompt for the local cell, and the
+      client is configured with the default cell (grand.central.org) (17050).
+
+    * Universal (x86_64 and arm64) builds and packages are now supported on
+      macOS 27. To build Universal binaries, set the ARCHFLAGS environment
+      variable to "-arch x86_64 -arch arm64".  Note: The x86_64 binaries
+      require Rosetta 2 on macOS 27, which is not installed by default (17074).
+
+    * MD5 and SHA-512 checksum files are now generated for the .dmg file
+      created by "make packages" (17041, 17042).
+
+    * A bug has been fixed where several commands (bos, cmdebug, fs,
+      xstat_cm_test, xstat_fs_test, and backup) could experience segfaults
+      or bus errors in LWP code on arm64 with macOS 27 (17126, 17127).
 
 OpenAFS 1.8.16.1
 
