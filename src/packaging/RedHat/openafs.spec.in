@@ -104,6 +104,13 @@ unsupported_fedora_release: %{fedora}
 %global have_orc_unwinder 0
 %endif
 
+# Distributions which use systemd instead of SysV init scripts.
+%if 0%{?rhel} >= 7 || 0%{?fedora} || 0%{?amzn} >= 2
+%global have_systemd 1
+%else
+%global have_systemd 0
+%endif
+
 %if %{have_usr_merged}
 %define depmod /usr/sbin/depmod
 %else
@@ -154,7 +161,7 @@ URL: https://www.openafs.org
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Group: Networking/Filesystems
 BuildRequires: pam-devel, ncurses-devel, make, flex, bison
-%if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
+%if %{have_systemd}
 BuildRequires: systemd-units
 %endif
 %if 0%{?fedora} || 0%{?rhel} >= 6 || 0%{?amzn} >= 1
@@ -240,7 +247,7 @@ To build a kernel module for your running kernel, just run:
 
 %package client
 Requires: binutils, openafs = %{version}
-%if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
+%if %{have_systemd}
 Requires: systemd-units
 Requires(post): systemd-units
 Requires(preun): systemd-units
@@ -269,7 +276,7 @@ AFS.
 Requires: openafs = %{version}
 Summary: OpenAFS Filesystem Server
 Group: Networking/Filesystems
-%if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
+%if %{have_systemd}
 Requires: systemd-units
 Requires(post): systemd-units
 Requires(preun): systemd-units
@@ -745,7 +752,7 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man3/AFS::ukernel.3
 #-----------------------------------------------------------------------------
 mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
 install -m 755 %{SOURCE38} $RPM_BUILD_ROOT/etc/sysconfig/openafs
-%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
+%if !%{have_systemd}
 mkdir -p $RPM_BUILD_ROOT%{initdir}
 install -m 755 %{SOURCE31} $RPM_BUILD_ROOT%{initdir}/openafs-client
 install -m 755 %{SOURCE36} $RPM_BUILD_ROOT%{initdir}/openafs-server
@@ -833,7 +840,7 @@ install -m 755 \
 %if %{build_userspace}
 
 %post client
-%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
+%if !%{have_systemd}
 chkconfig --add openafs-client
 %else
 if [ $1 -eq 1 ] ; then
@@ -859,8 +866,8 @@ fi
   chmod 644 CellServDB )
 
 %post server
+%if !%{have_systemd}
 #on an upgrade, don't enable if we were disabled
-%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
 if [ $1 = 1 ] ; then
     chkconfig --add openafs-server
 fi
@@ -942,7 +949,7 @@ if [ $1 = 0 ] ; then
 fi
 
 %preun client
-%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
+%if !%{have_systemd}
 if [ $1 = 0 ] ; then
     %{initdir}/openafs-client stop
     chkconfig --del openafs-client
@@ -956,7 +963,7 @@ fi
 %endif
 
 %preun server
-%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
+%if !%{have_systemd}
 if [ $1 = 0 ] ; then
     %{initdir}/openafs-server stop
     chkconfig --del openafs-server
@@ -968,10 +975,12 @@ if [ $1 -eq 0 ] ; then
 fi
 %endif
 
-%if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
+%if %{have_systemd}
 %postun client
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
+%endif
 
+%if %{have_systemd}
 %postun server
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 %endif
@@ -1126,7 +1135,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/vice/etc/C/afszcm.cat
 %{_libdir}/libuafs.a
 %{_libdir}/libuafs_pic.a
-%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
+%if !%{have_systemd}
 %{initdir}/openafs-client
 %else
 %{_unitdir}/openafs-client.service
@@ -1174,7 +1183,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_sbindir}/vldb_check
 %{_sbindir}/vldb_convert
 %{_sbindir}/voldump
-%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
+%if !%{have_systemd}
 %{initdir}/openafs-server
 %else
 %{_unitdir}/openafs-server.service
