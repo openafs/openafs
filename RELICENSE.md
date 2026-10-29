@@ -157,6 +157,7 @@ Consent/Disapproval List
 - [Y] Ganesh Chaudhari <gangovind@in.ibm.com> (IBM)
 - [?] Garrett Wollman <wollman@csail.mit.edu>
 - [Y] Gaurav Saxena <gsaxena@sinenomine.net> (SNA)
+- [Y] Harald Barth <haba@kth.se>
 - [?] Hartmut Reuter <reuter@rzg.mpg.de>
 - [Y] Indira Sawant <indira.sawant@ibm.com> (IBM)
 - [Y] James Peterson <jimpeter@us.ibm.com> (IBM)
