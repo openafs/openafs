@@ -59,6 +59,14 @@
 # Definitions
 #
 
+# Minimum supported RHEL release.
+%if 0%{?rhel}
+%if 0%{?rhel} < 6
+# Stop the build with an invalid tag.
+unsupported_rhel_release: %{rhel}
+%endif
+%endif
+
 # Distributions with a merged /usr (/bin, /sbin, and /lib are symlinks.)
 %if 0%{?rhel} >= 7 || 0%{?fedora} >= 17 || 0%{?amzn} >= 2
 %global have_usr_merged 1
