@@ -27,6 +27,10 @@ For macOS, the following conversions are done:
 
 Note: The MACOS_VERSION point release continues the next minor's dev cycle.
 
+Newer source trees derive MACOS_VERSION from the git version when regen.sh
+is run and do not have a MACOS_VERSION line; the macOS update is skipped
+for those trees.
+
 For Microsoft Windows, the version information is set in the
 AFSPRODUCT_VER_MAJOR, AFSPRODUCT_VER_MINOR, and AFSPRODUCT_VER_PATCH macros.
 
@@ -126,6 +130,15 @@ def repo_root():
     return Path(out.stdout.strip())
 
 
+def has_macos_version(root):
+    """Return True if the macOS build files have a MACOS_VERSION line."""
+    for file in MACOS_FILES:
+        path = root / file
+        if MACOS_VERSION_RE.search(path.read_text()):
+            return True
+    return False
+
+
 def change_macos_version(root, version):
     """Update MACOS_VERSION in the macOS build files for the release."""
 
@@ -138,6 +151,10 @@ def change_macos_version(root, version):
         macos_version = f"{version.major}.{version.minor}.{version.patch + 1}d{version.n}"
     else:
         raise AssertionError(version.kind)
+
+    # Newer trees set MACOS_VERSION when regen.sh is run.
+    if not has_macos_version(root):
+        return
 
     # Write the new version string.
     for file in MACOS_FILES:

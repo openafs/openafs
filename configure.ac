@@ -5,9 +5,8 @@ AC_CONFIG_MACRO_DIR([src/cf])
 AC_CONFIG_SRCDIR([src/config/stds.h])
 
 AC_CONFIG_HEADERS([src/config/afsconfig.h])
-MACOS_VERSION=1.9.2
-
-AC_SUBST([MACOS_VERSION])
+AC_SUBST([MACOS_VERSION],
+	 [m4_esyscmd(build-tools/mac-version.sh AC_PACKAGE_VERSION)])
 
 AC_PATH_PROGS([PATH_CPP], [cpp], [${CC-cc} -E], [$PATH:/lib:/usr/ccs/lib])
 AC_SUBST([PATH_CPP])

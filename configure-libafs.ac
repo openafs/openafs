@@ -4,9 +4,8 @@ AC_CONFIG_AUX_DIR([build-tools])
 AC_CONFIG_SRCDIR([src/libafs/Makefile.common.in])
 
 AC_CONFIG_HEADERS([src/config/afsconfig.h])
-MACOS_VERSION=1.9.2
-
-AC_SUBST([MACOS_VERSION])
+AC_SUBST([MACOS_VERSION],
+	 [m4_esyscmd(build-tools/mac-version.sh AC_PACKAGE_VERSION)])
 
 OPENAFS_PATH_CC
 OPENAFS_CONFIGURE_COMMON

@@ -3,5 +3,6 @@ config.sub
 git-version
 install-sh
 ltmain.sh
+mac-version.sh
 missing
 mkinstalldirs
