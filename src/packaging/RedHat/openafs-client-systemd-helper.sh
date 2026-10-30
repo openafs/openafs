@@ -21,6 +21,9 @@ case $1 in
 	    echo AFS client appears to be running -- skipping startup
 	    exit 0
 	fi
+	if [ -h /usr/vice/etc/CellServDB ]; then
+	    rm -f /usr/vice/etc/CellServDB
+	fi
 	sed -n 'w/usr/vice/etc/CellServDB' /usr/vice/etc/CellServDB.local /usr/vice/etc/CellServDB.dist
 	chmod 0644 /usr/vice/etc/CellServDB
 
