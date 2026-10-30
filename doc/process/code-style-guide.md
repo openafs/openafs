@@ -6,10 +6,13 @@ Makefiles must use literal tabs to indent rule bodies, but use spaces for any
 additional indentation needed.
 
 Plain text files should use spaces for indentation, with a 4-space indent as
-the default when one is needed.
+the default when one is needed.  Existing non-C files are not consistent in
+their use of tabs; when changing one, follow the style already used in that
+file.
 
-The rest of this file concerns the style used for C code, since that is most of
-the code in the tree.
+The rest of this file concerns the style used for "C and C-like" code
+(`.c`, `.h`, `.cpp`, `.m`, `.xg`, `.et`, `.y` and `.l` files), since that is
+most of the code in the tree.
 
 ## C Style
 
@@ -55,6 +58,23 @@ operating on existing files.  It is often suitable to do an initial style
 cleanup commit before making sweeping changes to a given file, and otherwise
 try to accommodate the prevailing style in the file when making minor changes.
 
+GNU indent does not preserve the code style used for preprocessor indentation as
+described below; restore the indentation by hand after running indent.
+
+### Indentation
+
+* Indent 4 columns per level.
+* Tabs for each full 8 columns, then spaces for the remaining 1-7 columns:
+    * level 1 = 4 spaces, level 2 = 1 tab, level 3 = 1 tab + 4 spaces,
+      level 4 = 2 tabs.
+
+The code examples within this document will show tab characters as `>-------`
+so that indentation is visible.  The marker is not part of the code.  Where
+an example shows `>-------`, the source file contains a single tab character.
+Do not copy the marker into code.  Statement examples are shown as they appear
+inside a function body, at one level of indentation.  Complete function
+examples start in column 1.
+
 ## C Standard
 
 All cross-platform code adheres to C89, plus a few extensions. (Or, you can
@@ -75,6 +95,34 @@ Some post-C89 features we do not allow:
 Code in platform-specific sections or source files can use additional features,
 as long as you know they are supported for that platform. Linux-specific kernel
 code frequently uses other features, for example.
+
+## Preprocessor directives
+
+* `#` always in column 1
+* Use one space indentation between the `#` and the preprocessor keyword for
+  each nesting level, with the exception that include guard defines do not count
+  as a level of nesting.
+* Add a comment to an `#endif` naming the condition it closes when the matching
+  `#if`, `#ifdef` or `#ifndef` is not easy to see, for example when the block
+  is long or contains additional conditionals.  A `#else` can be commented in
+  the same way if it helps readability.
+
+  ```
+  #ifndef HEADER_H
+  #define HEADER_H
+  ...
+  #if defined(foo)
+  # if defined(bar)
+  #  include <headera.h>
+  # endif
+  #elif define(xyzzy)
+  # include <headerb.h>
+  #else
+  # include <headerc.h>
+  #endif /* foo */
+  ...
+  #endif /* HEADER_H */
+  ```
 
 ## Prototypes
 
@@ -151,7 +199,7 @@ Doxygen comments in a comment block before the implementing function. Example:
      *                      caller must free this when done.
      *
      * @returns errno error codes
-     * @retval EINVAL	The given foo is invalid.
+     * @retval EINVAL The given foo is invalid.
      */
     int
     foo_bar(struct foo *foo_in, struct bar **bar_out)
@@ -166,40 +214,40 @@ the risk of bugs.
 
 Use:
 
-    if (some_condition) {
-        do_some_action();
-    } else {
-        do_something_else();
-    }
+        if (some_condition) {
+    >-------do_some_action();
+        } else {
+    >-------do_something_else();
+        }
 
-    while (some_condition) {
-        do_something();
-    }
+        while (some_condition) {
+    >-------do_something();
+        }
 
 Instead of:
 
-    if (some_condition)
-        do_some_action();
-    else
-        do_something_else();
+        if (some_condition)
+    >-------do_some_action();
+        else
+    >-------do_something_else();
 
-    while (some_condition)
-        do_something();
+        while (some_condition)
+    >-------do_something();
 
 If a conditional or loop has an empty body, still show the braces on separate
 lines, possibly with a comment. That is, do this:
 
-    while (do_something()) {
-        /* empty body */
-    }
+        while (do_something()) {
+    >-------/* empty body */
+        }
 
 Not this:
 
-    while (do_something);
+        while (do_something);
 
 Nor this:
 
-    while (do_something) {}
+        while (do_something) {}
 
 ## Switch
 
@@ -212,41 +260,41 @@ Indent the `case` statements aligned with the parent `switch`.
 
 Use:
 
-    switch (x) {
-    case 1:
-        do_something();
-        break;
-    case 2:
-        do_something_else();
-        AFS_FALLTHROUGH;
-    default:
-        do_some_action();
-    }
+        switch (x) {
+        case 1:
+    >-------do_something();
+    >-------break;
+        case 2:
+    >-------do_something_else();
+    >-------AFS_FALLTHROUGH;
+        default:
+    >-------do_some_action();
+        }
 
 Instead of using fallthrough comments:
 
-    switch (x) {
-    case 1:
-        do_something();
-        break;
-    case 2:
-        do_something_else();
-        /* fallthrough */
-    default:
-        do_some_action();
-    }
+        switch (x) {
+        case 1:
+    >-------do_something();
+    >-------break;
+        case 2:
+    >-------do_something_else();
+    >-------/* fallthrough */
+        default:
+    >-------do_some_action();
+        }
 
 Or not marking the fall through:
 
-    switch (x) {
-    case 1:
-        do_something();
-	break;
-    case 2:
-        do_something_else();
-    default:
-        do_some_action();
-    }
+        switch (x) {
+        case 1:
+    >-------do_something();
+    >-------break;
+        case 2:
+    >-------do_something_else();
+        default:
+    >-------do_some_action();
+        }
 
 ## Labels
 
@@ -263,7 +311,7 @@ Use:
     func(void)
     {
         if (code != 0) {
-            goto done;
+    >-------goto done;
         }
      done:
         return code;
@@ -275,7 +323,7 @@ Instead of:
     func(void)
     {
         if (code != 0) {
-            goto done;
+    >-------goto done;
         }
     done:
         return code;
@@ -289,34 +337,34 @@ for you.
 
 Use:
 
-    int var, *ptr;
-    if (var != 0) {
-        use_var();
-    }
-    if (ptr == NULL) {
-        no_ptr();
-    }
+        int var, *ptr;
+        if (var != 0) {
+    >-------use_var();
+        }
+        if (ptr == NULL) {
+    >-------no_ptr();
+        }
 
 Instead of:
 
-    int var, *ptr;
-    if (var) {
-        use_var();
-    }
-    if (!ptr) {
-        no_ptr();
-    }
+        int var, *ptr;
+        if (var) {
+    >-------use_var();
+        }
+        if (!ptr) {
+    >-------no_ptr();
+        }
 
 If a value is of type `int` but actually represents a boolean value, then use
 the value directly. For example:
 
-    int foo_exists = 0;
-    if (result == 0) {
-        foo_exists = 1;
-    }
-    if (foo_exists) {
-        use_foo();
-    }
+        int foo_exists = 0;
+        if (result == 0) {
+    >-------foo_exists = 1;
+        }
+        if (foo_exists) {
+    >-------use_foo();
+        }
 
 This helps make it immediately obvious when reading a section of code whether a
 value actually represents an integer or pointer, or is a boolean value.
