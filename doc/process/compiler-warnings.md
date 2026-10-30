@@ -19,7 +19,7 @@ is only useful for developers attempting to clean up compiler warnings.)
 ## Disabling warnings
 
 If warnings are unavoidable in a particular part of the build, they may be
-disabled in an number of ways.
+disabled in a number of ways.
 
 You can disable a single warning type in a particular file by using GCC
 pragmas. If a warning can be disabled with a pragma, then the switch to use
@@ -45,7 +45,7 @@ the fix is to mark that warning as ignored, but only for clang. For example:
 
 If the source cannot be changed to add a pragma, you might be able to use the
 autoconf function `AX_APPEND_COMPILE_FLAGS` to create a new macro that disables
-the warning and then use macro for the build options for that file. For an
+the warning and then use the macro for the build options for that file. For an
 example, see how the autoconf macro `CFLAGS_NOIMPLICIT_FALLTHROUGH` is defined and
 used.
 
@@ -74,7 +74,7 @@ If you add a new warning inhibition, also add it to the table below.
 | `external/heimdal/hcrypto/validate.c`     | all                | statement with empty body                      |
 | `external/heimdal/hcrypto/evp.c`          | cast-function-type | Linux kernel build uses `-Wcast-function-type` |
 | `external/heimdal/hcrypto/evp-algs.c`     | cast-function-type | Linux kernel build uses `-Wcast-function-type` |
-| `external/heimdal/krb5/crypto.c`          | use-after-free     | False postive on certain GCC compilers         |
+| `external/heimdal/krb5/crypto.c`          | use-after-free     | False positive on certain GCC compilers        |
 | `libadmin/samples/rxstat_query_peer.c`    | all                | `util_RPCStatsStateGet` types                  |
 | `libadmin/samples/rxstat_query_process.c` | all                | `util_RPCStatsStateGet` types                  |
 | `libadmin/test/client.c`                  | all                | `util_RPCStatsStateGet` types                  |
@@ -82,7 +82,7 @@ If you add a new warning inhibition, also add it to the table below.
 | `rxkad/ticket5.c`                         | format-truncation  | See Note 2.                                    |
 | `rxkad/ticket5.c`                         | deprecated         | hcrypto single-DES                             |
 | `lwp/process.c`                           | dangling-pointer   | See Note 3.                                    |
-| `src/rxkad/test/stress_c.c`               | deprecated         | hcrypto single-DES                             |
+| `rxkad/test/stress_c.c`                   | deprecated         | hcrypto single-DES                             |
 | `auth/authcon.c`                          | deprecated         | hcrypto single-DES                             |
 | `kauth/kaprocs.c`                         | deprecated         | hcrypto single-DES                             |
 | `kauth/krb_udp.c`                         | deprecated         | hcrypto single-DES                             |

@@ -35,7 +35,7 @@ software to use correctly, or were clearly never intended to be used outside of
 OpenAFS.
 
 We also provide a few shared libraries, for example: `libkopenafs.so`,
-`libafsauthent,so`, and `libafsrpc.so`. Public symbols for these must also be
+`libafsauthent.so`, and `libafsrpc.so`. Public symbols for these must also be
 declared in the corresponding `.sym` file for most platforms, as well as the
 `.def` file for WINNT. If we remove a public symbol, it should be removed from
 the `.sym`, and commented out of the `.def`.

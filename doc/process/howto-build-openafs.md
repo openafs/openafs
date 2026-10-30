@@ -484,12 +484,12 @@ end
 EOF
 ```
 
-**2. Create the AFS service principal and keytab**
+**3. Create the AFS service principal and keytab**
 
 First, create the Kerberos principal that the OpenAFS services will use for
 authentication. Then, export the keys for this principal into a keytab file.
 
-Run `kadmin` to create the service key, it you did not already do this when the
+Run `kadmin` to create the service key, if you did not already do this when the
 Kerberos server was setup.  This command will prompt for the `root/admin`
 password you set when the `root/admin` principal was created during the
 Kerberos setup.
@@ -509,7 +509,7 @@ sudo kadmin -p root/admin@EXAMPLE.COM ktadd \
     afs/example.com@EXAMPLE.COM
 ```
 
-**3. Generate the OpenAFS KeyFileExt**
+**4. Generate the OpenAFS KeyFileExt**
 
 Use the `akeyconvert` utility to convert the Kerberos keytab into the
 `KeyFileExt` format that OpenAFS services use internally.
@@ -681,8 +681,8 @@ located at `/var/cache/openafs`. The `/var/cache` directory should already
 exist. For a production system, the cache directory should be a mount point to
 a dedicated disk partition, but that is not required for a test system.
 
-The `-blocks 1000000` option specifies a disk cache size of 1000000 1K block
-(about 100MB).  If you are using a dedicated partition for the cache, this
+The `-blocks 1000000` option specifies a disk cache size of 1000000 1K blocks
+(about 1GB).  If you are using a dedicated partition for the cache, this
 should be about 90% of its size.  Since this guide uses a directory on the root
 filesystem, we set a reasonable limit to prevent the cache from consuming all
 available disk space.
@@ -693,7 +693,7 @@ complete the root volume setup in the next section.
 Example output:
 
 ```
-$ sudo /opt/openafs/sbin/afsd -mountdir /afs -cachedir /var/cache/openfs -blocks 1000000
+$ sudo /opt/openafs/sbin/afsd -mountdir /afs -cachedir /var/cache/openafs -blocks 1000000
 afsd: All AFS daemons started.
 ```
 

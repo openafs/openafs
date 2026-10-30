@@ -47,11 +47,12 @@ changes get accepted more quickly.
 
 ### Code Style
 
-Try to follow the official style guide in [code-style-guide](code-style-guide)
-for new code.  Sometimes old existing code doesn't follow all of the styling
-rules, and adding strictly-conforming code right next to old code looks odd or
-confusing. In these cases, you can try to update the old code and fix the
-styling, or just adhere to the prevailing surrounding style.
+Try to follow the official style guide in
+[code-style-guide](code-style-guide.md) for new code.  Sometimes old existing
+code doesn't follow all of the styling rules, and adding strictly-conforming
+code right next to old code looks odd or confusing. In these cases, you can try
+to update the old code and fix the styling, or just adhere to the prevailing
+surrounding style.
 
 If you are changing a line of code that has incorrect styling, update the style
 at the same time. Whether to fix incorrect styling on nearby lines is a

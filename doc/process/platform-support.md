@@ -301,7 +301,7 @@ An AFS sysname is a standardized identifier intended to identify a specific
 combination of a CPU architecture and operating system release (though some
 sysnames don't fit this definition exactly).
 
-AFS synames are used for at least two purposes:
+AFS sysnames are used for at least two purposes:
 
 1. At build-time, to designate the combination of hardware architecture and
    operating system on which a particular set of binaries are targeted.

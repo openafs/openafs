@@ -34,7 +34,7 @@ Put autoconf M4 macros in the `src/cf` directory.
 
 ## Makefile guidelines
 
-Do not add GNU Make specific features.  We attempt support `make`
+Do not add GNU Make specific features.  We attempt to support `make`
 implementations which comply with the POSIX make specification.
 
 Do not use `$<` for non-pattern rules in any cross-platform dir as it

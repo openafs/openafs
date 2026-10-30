@@ -68,7 +68,7 @@ places that need to change.  It can take a bit of creativity to be able
 to write an efficient check for this -- sometimes just searching on the
 API name is sufficient, but maybe there is a specific constant (for port
 number, AFS service number, a given data field's length, etc.) that
-would apply,  This is probably going to require a lot of manual
+would apply.  This is probably going to require a lot of manual
 inspection; `${PAGER} $(git grep -l ${PATTERN})` followed by a search in
 each file to find the relevant instance(s) is a useful technique.
 

@@ -103,7 +103,7 @@ parameters can keep things easier for a reader to understand. For example,
 this can be hard to understand:
 
     is_int(0, myfunc(0, 0xdeadb33f, "user@EXAMPLE.COM", FLAG_FOO | FLAG_BAR),
-          "myfunc(0, 0xdeadb33f, user@EXAMPLE.COM, FLAG_FOO | FLAB_BAR)");
+          "myfunc(0, 0xdeadb33f, user@EXAMPLE.COM, FLAG_FOO | FLAG_BAR)");
 
 Even if the function doesn't accept a struct argument, it can make things
 easier to make your own struct and pass it to a small wrapper function:

@@ -88,7 +88,7 @@ Ensure your system is up to date and install build requirements:
     $ sudo apt-get install build-essential fakeroot devscripts lintian
     $ sudo apt-get build-dep openafs
 
-## Build debs
+### Build debs
 
 Download the OpenAFS source and packaging from the **salsa** repository.
 
@@ -108,5 +108,5 @@ To also build the source package, generate the original tarball and omit
 the -b option.
 
     $ debian/rules get-orig-source
-    $ mv openafs-<version>tar.gz ..
+    $ mv openafs-<version>.tar.gz ..
     $ dpkg-buildpackage -us -uc -rfakeroot

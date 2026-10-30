@@ -153,7 +153,7 @@ considered legacy and are just as cumbersome to use.
 
 **afsload**
 
-`afsload` is a perl program in `src/libafs/afsload` that was used to simulate
+`afsload` is a perl program in `src/libuafs/afsload` that was used to simulate
 large numbers of scriptable AFS clients for testing purposes, using MPI and the
 perl SWIG bindings for libuafs.
 

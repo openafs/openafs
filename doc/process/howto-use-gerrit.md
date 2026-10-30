@@ -18,7 +18,7 @@ of reviewing and accepting changes.  This collaborative platform enables teams
 to work together on software development projects by supporting peer review and
 approval of patches before they are merged into the main codebase.
 
-* **Change submission**: A developer creates one or more a commits in their
+* **Change submission**: A developer creates one or more commits in their
   local Git repository.
 * **Patch upload**: The developer uploads the commits to Gerrit for review
   using `git push`.
@@ -75,9 +75,9 @@ Start by cloning the OpenAFS git repository:
     $ git clone git://git.openafs.org/openafs.git
     $ cd openafs
 
-Gerrit requires a user name and email for registration, so be sure your
-`user.name` and `user.email` in your git configuration Gerrit uses the `user.name` and
-`user.email` in your git configuration
+Gerrit requires a user name and email for registration, and uses the
+`user.name` and `user.email` from your git configuration, so be sure both are
+set.
 
 Verify your name and email are in the git configuration. Run the following in
 your local OpenAFS git repository:
@@ -102,7 +102,7 @@ Once you have an OpenID account, navigate to <https://gerrit.openafs.org> and
 select **Sign In**. You will be redirected to a page where you can select your
 OpenID account.  Choose your OpenID provider, e.g., **Launchpad ID**.
 
-After signing in, access the **Settings** menu and then click on **Contract
+After signing in, access the **Settings** menu and then click on **Contact
 Information**. If the email associated with your Gerrit account does not match
 the email in your Git configuration, select **Register New Email...** to update
 your settings.
@@ -176,7 +176,7 @@ download the hook:
 See [submitting-changes](submitting-changes.md) for general guidelines on
 creating commits to be submitted to OpenAFS.
 
-This section describes how to to submit changes to the Git `master` branch.
+This section describes how to submit changes to the Git `master` branch.
 Changes must normally be accepted on the `master` branch before being
 backported to the release branches.
 
@@ -189,7 +189,7 @@ Be sure your change is currently checked out and is based on the OpenAFS
     $ git log -p origin/master..HEAD
 
 Review your change locally before pushing to Gerrit with `git show`.  Be sure
-the commit messages contains the Gerrit `Change-Id` in the Git commit message.
+the commit message contains the Gerrit `Change-Id`.
 
     $ git show
 
@@ -252,7 +252,7 @@ just like you did originally.
 
     $ git push gerrit HEAD:refs/for/master
 
-If your change consist of multiple commits, then use `git rebase -i` to
+If your change consists of multiple commits, then use `git rebase -i` to
 interactively edit each commit that needs to be updated.
 
 You may also need to rebase (or cherry-pick) your changes to an updated master

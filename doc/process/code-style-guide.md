@@ -66,10 +66,6 @@ include:
 * A trailing comma for the last element of an `enum`
 * The `__func__` predefined macro
 
-The prototypes should be a full prototype, with argument and return
-types. (That is, they should not generate a warning with
-`gcc -Wstrict-prototypes`.)
-
 Some post-C89 features we do not allow:
 
 * Declaring variables in the middle of a block (all declarations must go at the
@@ -162,7 +158,7 @@ Doxygen comments in a comment block before the implementing function. Example:
     {
     }
 
-# Conditional/Loop Braces
+## Conditional/Loop Braces
 
 Always use braces for the bodies of conditionals and loops. This makes it
 easier to follow the logic flow for complicated nested constructs, and reduces

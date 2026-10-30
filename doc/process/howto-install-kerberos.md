@@ -1,3 +1,5 @@
+# How to Install Kerberos for Testing
+
 OpenAFS requires a Kerberos Key Distribution Center (KDC) for authentication.
 This guide provides OpenAFS developers with a straightforward process for
 setting up a KDC for **development and testing**.
@@ -85,7 +87,7 @@ realm.  A minimal configuration looks like this:
         example.com = EXAMPLE.COM
 
 Replace `EXAMPLE.COM` with your realm name, `example.com` with your domain
-name, `kdc.example.com` with the fully qualified hostname name of your KDC
+name, `kdc.example.com` with the fully qualified hostname of your KDC
 server.
 
 ## Step 3: Configure the Kerberos KDC

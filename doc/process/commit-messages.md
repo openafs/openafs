@@ -27,7 +27,7 @@ The subject line consists of a scope prefix and a change summary.
 The scope prefix indicates which component is changed when the commit is
 applied. This should normally be the directory name of the component. For
 example, the `afs:` component is the cache manager under `src/afs`. If the
-change effects multiple components, the scope prefix should be omitted.
+change affects multiple components, the scope prefix should be omitted.
 
 Alternatively, the scope prefix can also be a platform, if the change is a
 platform-specific change. For example, the scope prefix can be `LINUX:` for a

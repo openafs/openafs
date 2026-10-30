@@ -7,15 +7,15 @@ If you think you have found a security bug, do **NOT** submit a bug report to
 Gerrit. Instead, please report it privately to the OpenAFS security team.  See
 [security-bugs](security-bugs.md) for details.
 
-When reporting a bug, include a complete description of the issue and how it
-different than what you expected.
+When reporting a bug, include a complete description of the issue and how it is
+different from what you expected.
 
 Let us know which version of OpenAFS was running when the issue was
 encountered, the operating systems and operating system version. If the issue
 is related to the cache manager, be sure to let us know the specific kernel
 version.
 
-If you are reporting a build issue, in addition the the version information,
+If you are reporting a build issue, in addition to the version information,
 please include the relevant error messages from the build output.
 
 Please do not include sensitive information, such as passwords, key values,
