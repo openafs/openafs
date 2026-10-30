@@ -67,8 +67,16 @@ unsupported_rhel_release: %{rhel}
 %endif
 %endif
 
+# Minimum supported Fedora release.
+%if 0%{?fedora}
+%if 0%{?fedora} < 18
+# Stop the build with an invalid tag.
+unsupported_fedora_release: %{fedora}
+%endif
+%endif
+
 # Distributions with a merged /usr (/bin, /sbin, and /lib are symlinks.)
-%if 0%{?rhel} >= 7 || 0%{?fedora} >= 17 || 0%{?amzn} >= 2
+%if 0%{?rhel} >= 7 || 0%{?fedora} || 0%{?amzn} >= 2
 %global have_usr_merged 1
 %else
 %global have_usr_merged 0
@@ -124,10 +132,10 @@ URL: https://www.openafs.org
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Group: Networking/Filesystems
 BuildRequires: pam-devel, ncurses-devel, make, flex, bison
-%if 0%{?fedora} >= 15 || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
+%if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
 BuildRequires: systemd-units
 %endif
-%if 0%{?fedora} >= 15 || 0%{?rhel} >= 6 || 0%{?amzn} >= 1
+%if 0%{?fedora} || 0%{?rhel} >= 6 || 0%{?amzn} >= 1
 BuildRequires: perl-devel, swig
 %endif
 BuildRequires: perl(ExtUtils::Embed)
@@ -210,7 +218,7 @@ To build a kernel module for your running kernel, just run:
 
 %package client
 Requires: binutils, openafs = %{version}
-%if 0%{?fedora} >= 15 || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
+%if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
 Requires: systemd-units
 Requires(post): systemd-units, systemd-sysv
 Requires(preun): systemd-units
@@ -236,7 +244,7 @@ AFS.
 Requires: openafs = %{version}
 Summary: OpenAFS Filesystem Server
 Group: Networking/Filesystems
-%if 0%{?fedora} >= 15 || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
+%if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
 Requires: systemd-units
 Requires(post): systemd-units, systemd-sysv
 Requires(preun): systemd-units
@@ -544,7 +552,7 @@ export KRB5_CONFIG
 %if %{krb5support}
        --with-krb5 \
 %endif
-%if 0%{?fedora} >= 15 || 0%{?rhel} >= 6 || 0%{?amzn} >= 1
+%if 0%{?fedora} || 0%{?rhel} >= 6 || 0%{?amzn} >= 1
        --with-swig \
 %else
        --without-swig \
@@ -700,7 +708,7 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man1/tokens.krb.1
 rm -f $RPM_BUILD_ROOT%{_mandir}/man5/AuthLog.5
 rm -f $RPM_BUILD_ROOT%{_mandir}/man5/AuthLog.dir.5
 %endif
-%if !(0%{?fedora} >= 15 || 0%{?rhel} >= 6 || 0%{?amzn} >= 1)
+%if !(0%{?fedora} || 0%{?rhel} >= 6 || 0%{?amzn} >= 1)
 rm -f $RPM_BUILD_ROOT%{_mandir}/man3/AFS::ukernel.3
 %endif
 
@@ -709,7 +717,7 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man3/AFS::ukernel.3
 #-----------------------------------------------------------------------------
 mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
 install -m 755 %{SOURCE38} $RPM_BUILD_ROOT/etc/sysconfig/openafs
-%if 0%{?fedora} < 15 && 0%{?rhel} < 7 && 0%{?amzn} < 2
+%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
 mkdir -p $RPM_BUILD_ROOT%{initdir}
 install -m 755 %{SOURCE31} $RPM_BUILD_ROOT%{initdir}/openafs-client
 install -m 755 %{SOURCE36} $RPM_BUILD_ROOT%{initdir}/openafs-server
@@ -797,7 +805,7 @@ install -m 755 \
 %if %{build_userspace}
 
 %post client
-%if 0%{?fedora} < 15 && 0%{?rhel} < 7 && 0%{?amzn} < 2
+%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
 chkconfig --add openafs-client
 %else
 if [ $1 -eq 1 ] ; then
@@ -824,7 +832,7 @@ fi
 
 %post server
 #on an upgrade, don't enable if we were disabled
-%if 0%{?fedora} < 15 && 0%{?rhel} < 7 && 0%{?amzn} < 2
+%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
 if [ $1 = 1 ] ; then
     chkconfig --add openafs-server
 fi
@@ -906,7 +914,7 @@ if [ $1 = 0 ] ; then
 fi
 
 %preun client
-%if 0%{?fedora} < 15 && 0%{?rhel} < 7 && 0%{?amzn} < 2
+%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
 if [ $1 = 0 ] ; then
     %{initdir}/openafs-client stop
     chkconfig --del openafs-client
@@ -920,7 +928,7 @@ fi
 %endif
 
 %preun server
-%if 0%{?fedora} < 15 && 0%{?rhel} < 7 && 0%{?amzn} < 2
+%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
 if [ $1 = 0 ] ; then
     %{initdir}/openafs-server stop
     chkconfig --del openafs-server
@@ -932,7 +940,7 @@ if [ $1 -eq 0 ] ; then
 fi
 %endif
 
-%if 0%{?fedora} >= 15 || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
+%if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
 %postun client
 /bin/systemctl daemon-reload >/dev/null 2>&1 || :
 
@@ -951,7 +959,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %endif
 %endif
 
-%if 0%{?fedora} >= 15 || 0%{?rhel} >= 7
+%if 0%{?fedora} || 0%{?rhel} >= 7
 %triggerun -- openafs-client < 1.6.0-1
 # Save the current service runlevel info
 # User must manually run systemd-sysv-convert --apply httpd
@@ -1088,7 +1096,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/vice/etc/C/afszcm.cat
 %{_libdir}/libuafs.a
 %{_libdir}/libuafs_pic.a
-%if 0%{?fedora} < 15 && 0%{?rhel} < 7 && 0%{?amzn} < 2
+%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
 %{initdir}/openafs-client
 %else
 %{_unitdir}/openafs-client.service
@@ -1136,7 +1144,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_sbindir}/vldb_check
 %{_sbindir}/vldb_convert
 %{_sbindir}/voldump
-%if 0%{?fedora} < 15 && 0%{?rhel} < 7 && 0%{?amzn} < 2
+%if !0%{?fedora} && 0%{?rhel} < 7 && 0%{?amzn} < 2
 %{initdir}/openafs-server
 %else
 %{_unitdir}/openafs-server.service
@@ -1240,7 +1248,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_libdir}/libubik.a
 %{_mandir}/man1/rxgen.1.gz
 %{_mandir}/man1/afs_compile_et.1.gz
-%if 0%{?fedora} >= 15 || 0%{?rhel} >= 6 || 0%{?amzn} >= 1
+%if 0%{?fedora} || 0%{?rhel} >= 6 || 0%{?amzn} >= 1
 %{_libdir}/perl/AFS/ukernel.pm
 %{_libdir}/perl/ukernel.so
 %{_mandir}/man3/AFS::ukernel.3.gz
