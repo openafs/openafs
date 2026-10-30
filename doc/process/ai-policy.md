@@ -23,6 +23,15 @@ the OpenAFS coding standards.
 
 All contributions must comply with OpenAFS’s licensing requirements.
 
+## Using AI coding agents
+
+The top-level AGENTS.md file gives AI coding agents instructions for
+following this policy, the coding style, and the commit message
+requirements. Most agents read it automatically; if yours does not,
+provide it to the agent. Agents do not always follow these instructions,
+so check the results yourself, especially indentation, coding style, and
+the commit message trailers.
+
 ## Disclosure Requirements
 
 While the use of AI tools is permitted, the use of an AI tool to create
