@@ -877,13 +877,13 @@ if [ ! -d /afs ]; then
     [ -x /sbin/restorecon ] && /sbin/restorecon /afs
 fi
 
-# Create the CellServDB
-( cd /usr/vice/etc ; \
-  if [ -h CellServDB ]; then \
-    rm -f CellServDB; \
-  fi; \
-  cat CellServDB.local CellServDB.dist > CellServDB ; \
-  chmod 644 CellServDB )
+# Create the CellServDB from the local and distributed CellServDB files.
+if [ -h %{_prefix}/vice/etc/CellServDB ]; then
+    rm -f %{_prefix}/vice/etc/CellServDB
+fi
+cat %{_prefix}/vice/etc/CellServDB.local %{_prefix}/vice/etc/CellServDB.dist \
+    > %{_prefix}/vice/etc/CellServDB
+chmod 644 %{_prefix}/vice/etc/CellServDB
 
 %if %{have_systemd}
 %systemd_post openafs-client.service
