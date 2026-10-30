@@ -14,7 +14,7 @@ Each component makefile should have the standard targets:
 
 * all
 * install
-* dest (legacy installation paths)
+* dest (deprecated, legacy installation paths)
 * clean
 
 A top-level Makefile provides the targets to build the entire tree, or just

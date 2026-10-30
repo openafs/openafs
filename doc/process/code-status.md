@@ -2,10 +2,12 @@
 
 ## Introduction
 
-This document tracks the status of features and systems within the OpenAFS
-project. The purpose is to provide a clear understanding of which features are
-actively maintained and which are considered obsolete. This policy helps to
-focus development resources.
+This document tracks the status of code for features and systems within the
+OpenAFS project. The purpose is to provide a clear understanding of which
+features are actively maintained and which are experimental, legacy or
+deprecated. This policy helps to focus development resources.  The support
+status of entire platforms (operating systems, versions and architectures) is
+described in [platform-support](platform-support.md).
 
 Code that is not actively maintained falls into one of the following
 categories:
@@ -77,9 +79,10 @@ the future.
 
 ## Legacy
 
-**Legacy platform support**
+**Older platform-specific code**
 
-See platform-support.md for the list of legacy platforms.
+Code for older platforms is covered by the
+[platform-support](platform-support.md) policy.
 
 **Inode Fileserver Backend**
 

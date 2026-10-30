@@ -69,10 +69,15 @@ make suggestions.
 ### Whitespace
 
 Whitespace errors can be conveniently detected by git (`git show --check`), and
-are highlighted in gerrit. We use one additional whitespace check that is not
-enabled by default in git:
+are highlighted in gerrit. C and C-like files are indented with tabs
+(see [code-style-guide](code-style-guide.md)), and for those we use one
+additional whitespace check that can be enabled with:
 
     $ git config core.whitespace indent-with-non-tab
+
+This check also produces warnings for files outside the scope of these rules,
+such as plain text; for those, check that the indentation is consistent with
+the rest of the file.
 
 Otherwise, the defaults should suffice. Please use `git show --check` or
 similar commands before you push a commit to gerrit.
@@ -121,9 +126,11 @@ some general guidelines:
   can be subjective, so try to use your best judgement.
 
 * Do not make breaking changes in a commit, even if the breaking changes are
-  fixed in a subsequent commit. You should be able to build OpenAFS on all
-  supported platforms with `./configure --enable-checking` after applying each
-  change.
+  fixed in a subsequent commit. Commits must build on supported platforms
+  (see [platform-support](platform-support.md)) with
+  `./configure --enable-checking` after applying each change.  Gerrit performs
+  build verifications (via buildbot) for many of the supported platforms, and
+  comments for the commit on gerrit will contain a verification report.
 
 * Do not add code that is not used ("dead code"). An exception is
   when you are adding new functions or RPCs. In this situation, dead code is

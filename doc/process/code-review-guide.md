@@ -130,12 +130,8 @@ bugfixes, it's probably time for a separate cleanup commit.  It's also
 important to think about whether the change conforms to the language
 specification; we officially target C89 plus a handful of extensions
 (though it may be simpler to reason about it as C99 minus a handful of
-features).  The precise list of extensions over C89 that we use is a
-work in progress, but includes (and will be updated as encountered):
-
-- the long long int type
-- designated initializers
-- the `__func__` predefined macro
+features).  See [code-style-guide](code-style-guide.md) for a list of
+extensions over C89 that are allowed.
 
 If we're using additional language extensions or more modern
 features, they need to be scoped to a file/situation where we can
@@ -147,10 +143,10 @@ existing cases where we do potentially trigger it).
 Our network and userspace/kernel APIs need to conform to any relevant
 standards or specifications that apply.  We cannot unilaterally change
 existing RPC-L (the .xg files processed by rxgen), and the scope for
-adding new things is limited.  When we add new pioctls, they have to
-come from the OpenAFS-specific range (i.e., be 'O' pioctls).  `Com_err`
-codes in .et files are generally managed by the central.org registrar,
-etc.
+adding new things is limited.  New pioctls should normally come from the
+OpenAFS-specific 'O' range; other ranges, `com_err` codes in `.et` files,
+and new RPCs are coordinated with the central.org registrar.  See
+[standards-compliance](standards-compliance.md) for details.
 
 ## Documentation
 

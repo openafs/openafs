@@ -9,7 +9,8 @@ There are various bits of old testing-related code in the tree (for example:
 `src/tests/`, `src/rx/test/`). Most of these are not useful anymore for
 testing, and should be ignored. Over time, the useful pieces should be
 converted to unit tests in `tests/`, and the not-useful pieces should be
-removed.
+removed.  Tool-related code in `src/tests` should over time be migrated to
+`src/tools`.
 
 ## Running Tests
 

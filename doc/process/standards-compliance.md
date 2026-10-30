@@ -58,6 +58,20 @@ commits that define a new RPC before the RPC has been registered, but just be
 clear about it. The RPC must be registered before the commit can be accepted,
 but it can be reviewed and discussed before that.
 
+## Error Codes
+
+The `.et` files define `com_err` error tables, which are used to return error
+codes over the network and between programs. The value of each error code is
+determined by its table and its position in the table, so existing entries must
+not be removed, reordered, or have new entries inserted before them.  Add new
+error codes only at the end of a table.
+
+New `com_err` codes in `.et` files require assigning the error code with
+<https://registrar.central.org/>. You can submit commits that define a new error
+code before it has been registered, but just be clear about it. The error code
+must be registered before the commit can be accepted, but it can be reviewed and
+discussed before that.
+
 ## Volume Dump Tags
 
 The format used by `vos dump` and `vos restore` is a public file format and
