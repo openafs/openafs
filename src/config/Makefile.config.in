@@ -178,10 +178,11 @@ LWPTOOL = ${TOP_SRCDIR}/config/lwptool $(LWPTOOL_FLAGS_V$(V))
 # "Pretty" build line stuff
 #
 
-# Default to disabling the "pretty" build lines
-# If the user specifies 'V=0', the variables below expand to their _V0
-# variants, which enable the "pretty" build lines
-V=1
+# The default is chosen at configure time with --enable-silent-rules or
+# --disable-silent-rules. The default may be overridden by running make with
+# 'V=0' or 'V=1'. When V=0, the variables below expand to their _V0 variants,
+# which enable the "pretty" build lines.
+V=@DEFAULT_V@
 
 RUNCMD=RUNCMD () { \
 	echo "  $$1  $$2"; \

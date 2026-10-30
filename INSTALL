@@ -304,6 +304,16 @@ I  Other configure options
        migrations more difficult.  If none of the above made any sense to
        you, don't bother with this flag.
 
+   --enable-silent-rules
+       Show short build lines, such as "  CC  /path/to/foo.o", instead of
+       the full compiler and linker command lines.  If a command fails,
+       the full command line and the command's working directory are shown.
+       The configured default can be overridden when running make: use
+       "make V=1" for the full command lines, or "make V=0" for the short
+       build lines.  Some makes (such as /usr/ccs/bin/make on Solaris and
+       HP-UX) do not pass command line variables to sub-makes; with those
+       makes, use this configure option instead of "make V=0" or "make V=1".
+
    --enable-supergroups
        Enables support of nested groups in the ptserver.  WARNING: Once
        you make use of this option by nesting one group inside another,

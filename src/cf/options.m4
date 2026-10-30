@@ -187,6 +187,12 @@ AC_ARG_ENABLE([optimize-pam],
          enabled)])],
     [],
     [enable_optimize_pam="yes"])
+AC_ARG_ENABLE([silent-rules],
+    [AS_HELP_STRING([--enable-silent-rules],
+        [less verbose build output (defaults to disabled; override with
+         make V=0 or V=1)])],
+    [],
+    [enable_silent_rules="no"])
 AC_ARG_ENABLE([linux-syscall-probing],
     [AS_HELP_STRING([--enable-linux-syscall-probing],
         [enable Linux syscall probing (defaults to autodetect)])],
@@ -406,4 +412,8 @@ AS_IF([test x"$enable_shared" = xyes],
  [IF_SHARED=#])
 AC_SUBST([IF_SHARED])
 
+AS_IF([test "x$enable_silent_rules" = "xyes"],
+      [DEFAULT_V=0],
+      [DEFAULT_V=1])
+AC_SUBST(DEFAULT_V)
 ])
