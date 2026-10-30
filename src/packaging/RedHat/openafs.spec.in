@@ -220,9 +220,12 @@ To build a kernel module for your running kernel, just run:
 Requires: binutils, openafs = %{version}
 %if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
 Requires: systemd-units
-Requires(post): systemd-units, systemd-sysv
+Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
+%endif
+%if 0%{?rhel} == 7
+Requires(post): systemd-sysv
 %endif
 
 Requires: %{name}-kmod >= %{version}
@@ -246,9 +249,12 @@ Summary: OpenAFS Filesystem Server
 Group: Networking/Filesystems
 %if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?amzn} >= 2
 Requires: systemd-units
-Requires(post): systemd-units, systemd-sysv
+Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
+%endif
+%if 0%{?rhel} == 7
+Requires(post): systemd-sysv
 %endif
 
 %description server
@@ -959,19 +965,21 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %endif
 %endif
 
-%if 0%{?fedora} || 0%{?rhel} >= 7
+%if 0%{?rhel} == 7
 %triggerun -- openafs-client < 1.6.0-1
 # Save the current service runlevel info
-# User must manually run systemd-sysv-convert --apply httpd
+# User must manually run systemd-sysv-convert --apply openafs-client
 # to migrate them to systemd targets
 /usr/bin/systemd-sysv-convert --save openafs-client >/dev/null 2>&1 ||:
 
 # Run this because the SysV package being removed won't do it
 /sbin/chkconfig --del openafs-client >/dev/null 2>&1 || :
+%endif
 
+%if 0%{?rhel} == 7
 %triggerun -- openafs-server < 1.6.0-1
 # Save the current service runlevel info
-# User must manually run systemd-sysv-convert --apply httpd
+# User must manually run systemd-sysv-convert --apply openafs-server
 # to migrate them to systemd targets
 /usr/bin/systemd-sysv-convert --save openafs-server >/dev/null 2>&1 ||:
 
