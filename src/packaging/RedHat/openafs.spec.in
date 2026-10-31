@@ -585,6 +585,7 @@ export KRB5_CONFIG="%{krb5config}"
        --disable-strip-binaries \
        --enable-debug \
        --enable-transarc-paths \
+       --disable-fuse-client \
        --with-linux-kernel-packaging \
 %if %{build_modules}
        --enable-kernel-module \
