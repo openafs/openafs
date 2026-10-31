@@ -570,20 +570,10 @@ built for the Linux kernel %{kernel_version}.
 %build
 
 export SOURCE_DATE_EPOCH=%{source_date_epoch}
-
-config_opts="%{?_with_kauth:--enable-kauth} \
-        %{?_with_bitmap_later:--enable-bitmap-later} \
-        %{?_with_supergroups:--enable-supergroups} \
-        --enable-transarc-paths"
-
-# Configure AFS
-
-CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
-
+export CFLAGS="$RPM_OPT_FLAGS"
 %if %{krb5support}
 %if %{?krb5config:1}%{!?krb5config:0}
-KRB5_CONFIG="%{krb5config}"
-export KRB5_CONFIG
+export KRB5_CONFIG="%{krb5config}"
 %endif
 %endif
 
@@ -594,6 +584,7 @@ export KRB5_CONFIG
        --sbindir=%{_sbindir} \
        --disable-strip-binaries \
        --enable-debug \
+       --enable-transarc-paths \
        --with-linux-kernel-packaging \
 %if %{build_modules}
        --enable-kernel-module \
@@ -609,28 +600,25 @@ export KRB5_CONFIG
 %else
        --without-swig \
 %endif
-       $config_opts \
-       || exit 1
-
-# Build the libafs tree
-make %{_smp_mflags} only_libafs_tree || exit 1
-
-%if %{krb5support}
-%if %{?krb5config:1}%{!?krb5config:0}
-KRB5_CONFIG="%{krb5config}"
-export KRB5_CONFIG
+%if %{kauth_support}
+       --enable-kauth \
 %endif
+%if 0%{?_with_bitmap_later:1}
+       --enable-bitmap-later \
 %endif
+%if 0%{?_with_supergroups:1}
+       --enable-supergroups \
+%endif
+
+make %{_smp_mflags} only_libafs_tree
 
 %if %{build_userspace}
-# Build the user-space AFS stuff
 make %{_smp_mflags} all_nolibafs
 %endif
 
 %if %{build_modules}
 make %{_smp_mflags} libafs
 %endif
-
 
 ##############################################################################
 ###
