@@ -657,11 +657,11 @@ rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/kas
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/klog
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/klog.krb
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/kpwvalid
-rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/tokens.krb
 rm -f $RPM_BUILD_ROOT%{_sbindir}/kpwvalid
 %endif
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/pts
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/tokens
+rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/tokens.krb
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/udebug
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/vos
 
@@ -680,7 +680,6 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/libkopenafs.so*
 %endif
 rm -f $RPM_BUILD_ROOT%{_sbindir}/afsd.fuse
 %if !%{kauth_support}
-rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/tokens.krb
 rm -f $RPM_BUILD_ROOT%{_bindir}/tokens.krb
 rm -f $RPM_BUILD_ROOT%{_bindir}/pagsh.krb
 %endif
