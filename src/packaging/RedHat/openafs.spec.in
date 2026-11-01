@@ -190,6 +190,7 @@ BuildRequires: systemd
 BuildRequires: perl-devel, swig
 %endif
 BuildRequires: perl(ExtUtils::Embed)
+BuildRequires: perl-core
 %if %{krb5support}
 BuildRequires: krb5-devel
 %endif
@@ -394,7 +395,6 @@ shared libraries.
 Summary: OpenAFS user and administrator documentation
 Requires: openafs = %{version}-%{release}
 Group: Networking/Filesystems
-BuildRequires: perl-core
 
 %description docs
 The AFS distributed filesystem.  AFS is a distributed filesystem
