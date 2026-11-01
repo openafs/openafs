@@ -562,6 +562,10 @@ built for the Linux kernel %{kernel_version}.
 # Unpack the OpenAFS source tree.
 %setup -q -n openafs-%{afsvers}
 
+# Add the change log and release notes to source tree.
+cp -p %{SOURCE10} .
+cp -p %{SOURCE11} .
+
 ##############################################################################
 #
 # building
@@ -750,8 +754,6 @@ install -m 644 %{SOURCE35} $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsver
 mkdir -p $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
 tar cf - -C doc html pdf | \
     tar xf - -C $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
-install -m 644 %{SOURCE10} $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
-install -m 644 %{SOURCE11} $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
 
 %endif
 
@@ -981,6 +983,8 @@ fi
 %files
 %config(noreplace) /etc/sysconfig/openafs
 %doc LICENSE
+%doc ChangeLog
+%doc RELNOTES-%{afsvers}
 %{_bindir}/afsmonitor
 %{_bindir}/bos
 %{_bindir}/fs
@@ -1088,8 +1092,6 @@ fi
 %files docs
 %docdir %{_docdir}/openafs-%{afsvers}
 %dir %{_docdir}/openafs-%{afsvers}
-%{_docdir}/openafs-%{afsvers}/ChangeLog
-%{_docdir}/openafs-%{afsvers}/RELNOTES-%{afsvers}
 %{_docdir}/openafs-%{afsvers}/pdf
 
 %files client
