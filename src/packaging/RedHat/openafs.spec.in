@@ -395,6 +395,9 @@ shared libraries.
 Summary: OpenAFS user and administrator documentation
 Requires: openafs = %{version}-%{release}
 Group: Networking/Filesystems
+%if %{build_userspace}
+BuildRequires: libxslt, docbook-style-xsl, docbook-dtds
+%endif
 
 %description docs
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -619,6 +622,9 @@ make %{_smp_mflags} only_libafs_tree
 
 %if %{build_userspace}
 make %{_smp_mflags} all_nolibafs
+make %{_smp_mflags} -C doc/xml/UserGuide index.html
+make %{_smp_mflags} -C doc/xml/AdminGuide index.html
+make %{_smp_mflags} -C doc/xml/QuickStartUnix index.html
 %endif
 
 %if %{build_modules}
@@ -751,9 +757,15 @@ install -m 644 %{SOURCE35} $RPM_BUILD_ROOT%{_prefix}/src/openafs-kernel-%{afsver
 #-----------------------------------------------------------------------------
 # Install documentation.
 #-----------------------------------------------------------------------------
-mkdir -p $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
-tar cf - -C doc html pdf | \
-    tar xf - -C $RPM_BUILD_ROOT/$RPM_DOC_DIR/openafs-%{afsvers}
+mkdir -p $RPM_BUILD_ROOT%{_docdir}/%{name}/html
+cp -p doc/xml/home.gif doc/xml/next.gif doc/xml/prev.gif doc/xml/up.gif \
+    $RPM_BUILD_ROOT%{_docdir}/%{name}/html
+for guide in UserGuide AdminGuide QuickStartUnix; do
+    mkdir -p $RPM_BUILD_ROOT%{_docdir}/%{name}/html/$guide
+    cp -p doc/xml/$guide/*.html doc/xml/$guide/*.png \
+        $RPM_BUILD_ROOT%{_docdir}/%{name}/html/$guide
+done
+cp -pr doc/pdf $RPM_BUILD_ROOT%{_docdir}/%{name}/pdf
 
 %endif
 
@@ -1090,9 +1102,8 @@ fi
 %endif
 
 %files docs
-%docdir %{_docdir}/openafs-%{afsvers}
-%dir %{_docdir}/openafs-%{afsvers}
-%{_docdir}/openafs-%{afsvers}/pdf
+%{_docdir}/%{name}/html
+%{_docdir}/%{name}/pdf
 
 %files client
 %dir %{_prefix}/vice
