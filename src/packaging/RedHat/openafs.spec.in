@@ -686,9 +686,6 @@ rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/tokens.krb
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/udebug
 rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/vos
 
-# Relocate afsd to legacy path to match init scripts.
-mv $RPM_BUILD_ROOT%{_sbindir}/afsd $RPM_BUILD_ROOT%{_prefix}/vice/etc/afsd
-
 # Relocate admin utilities to a modern path.
 %if %{kauth_support}
 mv $RPM_BUILD_ROOT%{_prefix}/afs/bin/kadb_check $RPM_BUILD_ROOT%{_sbindir}/kadb_check
@@ -747,6 +744,9 @@ install -p -m 644 %{SOURCE39} $RPM_BUILD_ROOT%{_prefix}/vice/etc/ThisCell
 touch $RPM_BUILD_ROOT%{_prefix}/vice/etc/CellServDB.local
 install -p -m 644 %{SOURCE20} $RPM_BUILD_ROOT%{_prefix}/vice/etc/CellServDB.dist
 install -p -m 644 %{SOURCE30} $RPM_BUILD_ROOT%{_prefix}/vice/etc/cacheinfo
+
+# Compatibility symlink for the legacy afsd path.
+ln -s ../../sbin/afsd $RPM_BUILD_ROOT%{_prefix}/vice/etc/afsd
 
 #-----------------------------------------------------------------------------
 # Install DKMS source.
@@ -1136,6 +1136,7 @@ fi
 %{_bindir}/afsio
 %{_bindir}/cmdebug
 %{_bindir}/up
+%{_sbindir}/afsd
 %{_prefix}/vice/etc/afsd
 %{_prefix}/vice/etc/C/afszcm.cat
 %{_libdir}/libuafs.a

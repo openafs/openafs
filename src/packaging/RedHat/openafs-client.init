@@ -36,7 +36,7 @@ start() {
 		echo
 		return $RETVAL
 	fi
-	/usr/vice/etc/afsd $AFSD_ARGS
+	/usr/sbin/afsd $AFSD_ARGS
 	RETVAL=$?
 	echo
 	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/openafs-client

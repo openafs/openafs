@@ -34,7 +34,7 @@ case $1 in
 	    /sbin/rmmod --verbose openafs
 	fi
 	/sbin/modprobe --verbose openafs
-	exec /usr/vice/etc/afsd $AFSD_ARGS
+	exec /usr/sbin/afsd $AFSD_ARGS
 	;;
 
     ExecStop)
@@ -69,7 +69,7 @@ case $1 in
 	;;
 
     ExecStopPost)
-	/usr/vice/etc/afsd -shutdown || true
+	/usr/sbin/afsd -shutdown || true
 	/sbin/rmmod --verbose openafs || true
 	if lsmod | grep -wq ^openafs ; then
 	    echo "Cannot unload the OpenAFS client kernel module."
