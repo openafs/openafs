@@ -1025,30 +1025,10 @@ fi
 %{_bindir}/sys
 %{_bindir}/tokens
 %{_bindir}/translate_et
-%{_bindir}/xstat_cm_test
-%{_bindir}/xstat_fs_test
 %{_bindir}/udebug
 %{_bindir}/unlog
-%{_sbindir}/backup
-%{_sbindir}/butc
-%{_sbindir}/fms
-%{_sbindir}/fstrace
-%{_sbindir}/read_tape
-%{_sbindir}/rxdebug
-%{_sbindir}/rxstat_clear_peer
-%{_sbindir}/rxstat_clear_process
-%{_sbindir}/rxstat_disable_peer
-%{_sbindir}/rxstat_disable_process
-%{_sbindir}/rxstat_enable_peer
-%{_sbindir}/rxstat_enable_process
-%{_sbindir}/rxstat_get_peer
-%{_sbindir}/rxstat_get_process
-%{_sbindir}/rxstat_get_version
-%{_sbindir}/rxstat_query_peer
-%{_sbindir}/rxstat_query_process
-%{_sbindir}/uss
-%{_sbindir}/vos
-%{_sbindir}/vsys
+%{_bindir}/xstat_cm_test
+%{_bindir}/xstat_fs_test
 %{_libdir}/libafshcrypto.so.*
 %{_libdir}/librokenafs.so.*
 %{_mandir}/man1/afs.1*
@@ -1089,9 +1069,28 @@ fi
 %{_mandir}/man8/uss.8*
 %{_mandir}/man8/uss_*.8*
 %{_mandir}/man8/vsys.8*
+%{_sbindir}/backup
+%{_sbindir}/butc
+%{_sbindir}/fms
+%{_sbindir}/fstrace
+%{_sbindir}/read_tape
+%{_sbindir}/rxdebug
+%{_sbindir}/rxstat_clear_peer
+%{_sbindir}/rxstat_clear_process
+%{_sbindir}/rxstat_disable_peer
+%{_sbindir}/rxstat_disable_process
+%{_sbindir}/rxstat_enable_peer
+%{_sbindir}/rxstat_enable_process
+%{_sbindir}/rxstat_get_peer
+%{_sbindir}/rxstat_get_process
+%{_sbindir}/rxstat_get_version
+%{_sbindir}/rxstat_query_peer
+%{_sbindir}/rxstat_query_process
+%{_sbindir}/uss
+%{_sbindir}/vos
+%{_sbindir}/vsys
 # Exclude obsolete or unused files.
 %exclude %{_bindir}/livesys
-%exclude %{_sbindir}/rmtsysd
 %exclude %{_mandir}/man1/dlog.1*
 %exclude %{_mandir}/man1/livesys.1*
 %exclude %{_mandir}/man1/symlink.1*
@@ -1101,14 +1100,15 @@ fi
 %exclude %{_mandir}/man8/aklog_dynamic_auth.8*
 %exclude %{_mandir}/man8/rmtsysd.8*
 %exclude %{_mandir}/man8/xfs_size_check.8*
+%exclude %{_sbindir}/rmtsysd
 %if ! %{build_authlibs}
 %exclude %{_libdir}/libafsauthent.so*
 %exclude %{_libdir}/libafsrpc.so*
 %exclude %{_libdir}/libkopenafs.so*
 %endif
 %if ! %{kauth_support}
-%exclude %{_bindir}/tokens.krb
 %exclude %{_bindir}/pagsh.krb
+%exclude %{_bindir}/tokens.krb
 %exclude %{_mandir}/man5/AuthLog.5*
 %exclude %{_mandir}/man5/AuthLog.dir.5*
 %endif
@@ -1136,34 +1136,34 @@ fi
 %{_bindir}/afsio
 %{_bindir}/cmdebug
 %{_bindir}/up
-%{_sbindir}/afsd
-%{_prefix}/vice/etc/afsd
-%{_prefix}/vice/etc/C/afszcm.cat
 %{_libdir}/libuafs.a
 %{_libdir}/libuafs_pic.a
+%{_prefix}/vice/etc/C/afszcm.cat
+%{_prefix}/vice/etc/afsd
+%{_sbindir}/afsd
 %if !%{have_systemd}
 %{initdir}/openafs-client
 %else
-%{_unitdir}/openafs-client.service
 %{_libexecdir}/%{name}/openafs-client-systemd-helper.sh
+%{_unitdir}/openafs-client.service
 %endif
 %{_mandir}/man1/cmdebug.1*
 %{_mandir}/man1/up.1*
+%{_mandir}/man5/CellAlias.5*
 %{_mandir}/man5/afs.5*
 %{_mandir}/man5/afs_cache.5*
 %{_mandir}/man5/afs_volume_header.5*
 %{_mandir}/man5/afszcm.cat.5*
 %{_mandir}/man5/cacheinfo.5*
 %{_mandir}/man8/afsd.8*
-%{_mandir}/man5/CellAlias.5*
 
 %files server
 %dir %{_prefix}/afs
 %dir %{_prefix}/afs/bin
 %dir %{_prefix}/afs/etc
 %dir %{_prefix}/afs/logs
-%{_prefix}/afs/bin/bosserver
 %{_prefix}/afs/bin/bos_util
+%{_prefix}/afs/bin/bosserver
 %{_prefix}/afs/bin/buserver
 %{_prefix}/afs/bin/dafileserver
 %{_prefix}/afs/bin/dafssync-debug
@@ -1205,7 +1205,6 @@ fi
 %{_mandir}/man5/PtLog.5*
 %{_mandir}/man5/SALVAGE.fs.5*
 %{_mandir}/man5/SalvageLog.5*
-%{_mandir}/man5/sysid.5*
 %{_mandir}/man5/UserList.5*
 %{_mandir}/man5/VLLog.5*
 %{_mandir}/man5/VolserLog.5*
@@ -1215,21 +1214,22 @@ fi
 %{_mandir}/man5/krb.excl.5*
 %{_mandir}/man5/prdb.DB0.5*
 %{_mandir}/man5/salvage.lock.5*
+%{_mandir}/man5/sysid.5*
 %{_mandir}/man5/tapeconfig.5*
 %{_mandir}/man5/vldb.DB0.5*
 %{_mandir}/man8/bosserver.8*
 %{_mandir}/man8/buserver.8*
-%{_mandir}/man8/fileserver.8*
 %{_mandir}/man8/dafileserver.8*
 %{_mandir}/man8/dafssync-debug.8*
 %{_mandir}/man8/dafssync-debug_*.8*
 %{_mandir}/man8/dasalvager.8*
 %{_mandir}/man8/davolserver.8*
+%{_mandir}/man8/fileserver.8*
 %{_mandir}/man8/fssync-debug.8*
 %{_mandir}/man8/fssync-debug_*.8*
 %{_mandir}/man8/prdb_check.8*
-%{_mandir}/man8/ptserver.8*
 %{_mandir}/man8/pt_util.8*
+%{_mandir}/man8/ptserver.8*
 %{_mandir}/man8/salvager.8*
 %{_mandir}/man8/salvageserver.8*
 %{_mandir}/man8/state_analyzer.8*
@@ -1253,9 +1253,9 @@ fi
 %files authlibs-devel
 %{_includedir}/kopenafs.h
 %{_libdir}/libafsauthent.a
+%{_libdir}/libafsauthent_pic.a
 %{_libdir}/libafscp.a
 %{_libdir}/libafsrpc.a
-%{_libdir}/libafsauthent_pic.a
 %{_libdir}/libafsrpc_pic.a
 %{_libdir}/libkopenafs.a
 %if %{build_authlibs}
@@ -1265,16 +1265,16 @@ fi
 %endif
 
 %files devel
+%dir %{_includedir}/opr
 %{_bindir}/afs_compile_et
 %{_bindir}/rxgen
 %{_includedir}/afs
 %{_includedir}/lwp.h
+%{_includedir}/opr/lock.h
+%{_includedir}/opr/queue.h
 %{_includedir}/rx
 %{_includedir}/ubik.h
 %{_includedir}/ubik_int.h
-%dir %{_includedir}/opr
-%{_includedir}/opr/lock.h
-%{_includedir}/opr/queue.h
 %{_libdir}/afs
 %{_libdir}/libafshcrypto.a
 %{_libdir}/libafshcrypto.so
@@ -1287,8 +1287,8 @@ fi
 %{_libdir}/librxkad.a
 %{_libdir}/librxstat.a
 %{_libdir}/libubik.a
-%{_mandir}/man1/rxgen.1*
 %{_mandir}/man1/afs_compile_et.1*
+%{_mandir}/man1/rxgen.1*
 %if %{have_swig}
 %dir %{_libdir}/perl
 %dir %{_libdir}/perl/AFS
@@ -1332,59 +1332,59 @@ fi
 
 %if %{kauth_support}
 %files kauth-client
-%{_sbindir}/kas
+%{_bindir}/kapasswd
 %{_bindir}/klog
 %{_bindir}/klog.krb
-%{pamdir}/pam_afs.krb.so.1
-%{pamdir}/pam_afs.krb.so
-%{pamdir}/pam_afs.so.1
-%{pamdir}/pam_afs.so
-%{_bindir}/kapasswd
 %{_bindir}/kpwvalid
 %{_bindir}/pagsh.krb
 %{_bindir}/tokens.krb
+%{_mandir}/man1/kapasswd.1*
+%{_mandir}/man1/klog.1*
+%{_mandir}/man1/klog.krb.1*
+%{_mandir}/man1/pagsh.krb.1*
+%{_mandir}/man1/tokens.krb.1*
+%{_mandir}/man8/kas.8*
+%{_mandir}/man8/kas_*.8*
+%{_mandir}/man8/kpwvalid.8*
+%{_sbindir}/kas
+%{pamdir}/pam_afs.krb.so
+%{pamdir}/pam_afs.krb.so.1
+%{pamdir}/pam_afs.so
+%{pamdir}/pam_afs.so.1
 %ghost %{afswsdir}/bin/kapasswd
 %ghost %{afswsdir}/bin/klog
 %ghost %{afswsdir}/bin/klog.krb
 %ghost %{afswsdir}/bin/pagsh.krb
 %ghost %{afswsdir}/bin/tokens.krb
 %ghost %{afswsdir}/etc/kas
-%{_mandir}/man1/kapasswd.1*
-%{_mandir}/man1/klog.1*
-%{_mandir}/man1/klog.krb.1*
-%{_mandir}/man1/pagsh.krb.1*
-%{_mandir}/man1/tokens.krb.1*
-%{_mandir}/man8/kpwvalid.8*
-%{_mandir}/man8/kas.8*
-%{_mandir}/man8/kas_*.8*
 %exclude %{_bindir}/knfs
 %exclude %{_mandir}/man1/knfs.1*
 
 %files kauth-server
-%{_prefix}/afs/bin/kaserver
-%{_prefix}/afs/bin/ka-forwarder
-%{_sbindir}/kadb_check
 %{_mandir}/man5/AuthLog.5*
 %{_mandir}/man5/AuthLog.dir.5*
 %{_mandir}/man5/kaserver.DB0.5*
 %{_mandir}/man5/kaserverauxdb.5*
-%{_mandir}/man8/kadb_check.8*
 %{_mandir}/man8/ka-forwarder.8*
+%{_mandir}/man8/kadb_check.8*
 %{_mandir}/man8/kaserver.8*
-%exclude %{_prefix}/afs/bin/kdb
+%{_prefix}/afs/bin/ka-forwarder
+%{_prefix}/afs/bin/kaserver
+%{_sbindir}/kadb_check
 %exclude %{_mandir}/man8/kdb.8*
+%exclude %{_prefix}/afs/bin/kdb
 %endif
 
 %if %{krb5support}
 %files krb5
 %{_bindir}/aklog
 %{_bindir}/klog.krb5
-%{_sbindir}/akeyconvert
-%{_sbindir}/asetkey
 %{_mandir}/man1/aklog.1*
 %{_mandir}/man1/klog.krb5.1*
 %{_mandir}/man8/akeyconvert.8*
 %{_mandir}/man8/asetkey.8*
+%{_sbindir}/akeyconvert
+%{_sbindir}/asetkey
 %endif
 %endif
 
