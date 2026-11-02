@@ -1068,6 +1068,7 @@ fi
 %{_mandir}/man8/read_tape.8*
 %{_mandir}/man8/uss.8*
 %{_mandir}/man8/uss_*.8*
+%{_mandir}/man8/vsys.8*
 # Exclude obsolete or unused files.
 %exclude %{_bindir}/livesys
 %exclude %{_sbindir}/rmtsysd
@@ -1133,7 +1134,6 @@ fi
 %{_mandir}/man5/afszcm.cat.5*
 %{_mandir}/man5/cacheinfo.5*
 %{_mandir}/man8/afsd.8*
-%{_mandir}/man8/vsys.8*
 %{_mandir}/man5/CellAlias.5*
 
 %files server
