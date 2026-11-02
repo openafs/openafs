@@ -10,11 +10,11 @@ the default when one is needed.  Existing non-C files are not consistent in
 their use of tabs; when changing one, follow the style already used in that
 file.
 
+## C Style
+
 The rest of this file concerns the style used for "C and C-like" code
 (`.c`, `.h`, `.cpp`, `.m`, `.xg`, `.et`, `.y` and `.l` files), since that is
 most of the code in the tree.
-
-## C Style
 
 If you have GNU indent 2.2.9 or later you can format new files for this style
 with the following options:
@@ -75,6 +75,35 @@ Do not copy the marker into code.  Statement examples are shown as they appear
 inside a function body, at one level of indentation.  Complete function
 examples start in column 1.
 
+### Formatting
+
+* Put the opening brace of `if`, `else`, `for`, `while`, `do`, `switch`, and
+  `struct` on the same line as the keyword.  Put the opening brace of a
+  function body on its own line in column 1.
+* Put `else` on the same line as the preceding `}` (`} else {`), and the
+  `while` of a `do` loop on the same line as its `}` (`} while (x);`).
+* Put a space after keywords such as `if`, `for`, `while`, and `switch`, but
+  not between a function name and its `(`, and not after a cast:
+  `foo(x)`, `(char *)buf`.
+* Do not put spaces just inside parentheses: `foo(a, b)`, not `foo( a, b )`.
+* Separate the type and the variable name in a declaration with one space
+  (`int count;`, `struct foo *foop;`).  Several variables may be declared on
+  one line.
+* Put a blank line after the closing brace of each function.  Other blank
+  lines, such as one after the variable declarations, are optional; follow
+  the surrounding code.
+* When a line must be broken, break it before a `&&` or `||` operator, and
+  align continuation lines with the first character after the opening
+  parenthesis.
+
+For example:
+
+        if (code == 0 && (avc->f.states & CStatd) != 0
+    >-------&& avc->f.m.Length > 0) {
+    >-------code = afs_DoSomething(avc, areq,
+    >------->------->-------       flags);
+        }
+
 ## C Standard
 
 All cross-platform code adheres to C89, plus a few extensions. (Or, you can
@@ -115,7 +144,7 @@ code frequently uses other features, for example.
   # if defined(bar)
   #  include <headera.h>
   # endif
-  #elif define(xyzzy)
+  #elif defined(xyzzy)
   # include <headerb.h>
   #else
   # include <headerc.h>
@@ -153,7 +182,10 @@ probably ok as well.
 
 ## Functions
 
-The declaration of the routines should be done in ANSI style. For example:
+The declaration of the routines should be done in ANSI style.  Put the return
+type of a function definition on its own line, above the function name.
+
+For example:
 
     rettype
     routine(argtype arg)

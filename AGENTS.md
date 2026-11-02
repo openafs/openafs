@@ -144,11 +144,10 @@ Also read, when relevant:
 
 ## Code style
 
-Follow doc/process/code-style-guide.md. The GNU indent options listed in
-that guide describe the general style only. Do not run indent or any other
-automatic formatter on OpenAFS code; it does not preserve the preprocessor
-indentation and other parts of the style, and its output needs fixing by hand.
-Where the indent options differ from the prose in code-style-guide.md or the
+Follow doc/process/code-style-guide.md. Do not run formatting tools on OpenAFS
+code; they cannot fully match the code style, and may break existing formatting.
+Any formatting tool options should be used as a general guide only. Where
+formatting tool options differ from the prose in code-style-guide.md or the
 rules below, the prose and the rules below take precedence.
 
 - The examples in doc/process/code-style-guide.md show each tab character as
@@ -207,7 +206,7 @@ while (do_something()) {
   `git -c core.whitespace=indent-with-non-tab diff --check`, adding `--cached`
   for staged changes, or `show --check` in place of `diff --check` after
   committing. For other files, a warning from this check does not mean the
-  indentation is wrong; keep the file's existing indentation. See the Tabs
+  indentation is wrong; keep the file's existing indentation. See the Indentation
   section of doc/process/code-style-guide.md.
 
 ## Style in existing code
