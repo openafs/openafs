@@ -1251,6 +1251,7 @@ fi
 %{_includedir}/rx
 %{_includedir}/ubik.h
 %{_includedir}/ubik_int.h
+%dir %{_includedir}/opr
 %{_includedir}/opr/lock.h
 %{_includedir}/opr/queue.h
 %{_libdir}/afs
@@ -1268,6 +1269,8 @@ fi
 %{_mandir}/man1/rxgen.1*
 %{_mandir}/man1/afs_compile_et.1*
 %if %{have_swig}
+%dir %{_libdir}/perl
+%dir %{_libdir}/perl/AFS
 %{_libdir}/perl/AFS/ukernel.pm
 %{_libdir}/perl/ukernel.so
 %{_mandir}/man3/AFS::ukernel.3*
@@ -1279,10 +1282,7 @@ fi
 %endif
 
 %files kernel-source
-%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.IBM
-%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.Sun
-%{_prefix}/src/openafs-kernel-%{afsvers}/README
-%{_prefix}/src/openafs-kernel-%{afsvers}/src
+%{_prefix}/src/openafs-kernel-%{afsvers}
 
 %files compat
 %ghost %{afswsdir}/bin/afsmonitor
