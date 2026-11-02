@@ -704,7 +704,7 @@ mv $RPM_BUILD_ROOT%{_mandir}/man1/kpasswd.1 $RPM_BUILD_ROOT%{_mandir}/man1/kapas
 #-----------------------------------------------------------------------------
 mkdir -p $RPM_BUILD_ROOT%{_libexecdir}/%{name}
 mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig
-install -m 755 %{SOURCE38} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/openafs
+install -m 644 %{SOURCE38} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/openafs
 %if !%{have_systemd}
 mkdir -p $RPM_BUILD_ROOT%{initdir}
 install -m 755 %{SOURCE31} $RPM_BUILD_ROOT%{initdir}/openafs-client
