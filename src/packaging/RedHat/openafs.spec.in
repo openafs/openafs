@@ -162,6 +162,14 @@ unsupported_fedora_release: %{fedora}
 %global _find_debuginfo_opts %{?_find_debuginfo_opts} -p '.*openafs\.ko.*' -o kmod-debuginfo.list
 %endif
 
+# Distributions which supports %license in %files.
+%if 0%{?rhel} >= 7 || 0%{?fedora} >= 19 || 0%{?amzn} >= 2
+%global have_license_directive 1
+%else
+%global have_license_directive 0
+%endif
+
+
 %define dkms_version %{pkgvers}-%{pkgrel}%{?dist}
 
 # Define the location of your init.d directory
@@ -998,7 +1006,12 @@ fi
 
 %files
 %config(noreplace) %{_sysconfdir}/sysconfig/openafs
+%if %{have_license_directive}
+%license LICENSE
+%exclude %{_docdir}/%{name}/LICENSE
+%else
 %doc LICENSE
+%endif
 %doc ChangeLog
 %doc RELNOTES-%{afsvers}
 %dir %{_libexecdir}/%{name}
