@@ -167,8 +167,14 @@ unsupported_fedora_release: %{fedora}
 # Define the location of your init.d directory
 %define initdir %{_sysconfdir}/rc.d/init.d
 
+%if %{kauth_support}
 # Define the location of the PAM security module directory
-%define pamdir /%{_lib}/security
+%if %{have_usr_merged}
+%define pamdir %{_libdir}/security
+%else
+%define pamdir %{_lib}/security
+%endif
+%endif
 
 Summary: OpenAFS distributed filesystem
 Name: openafs
@@ -554,7 +560,9 @@ built for the Linux kernel %{kernel_version}.
 : @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 : @@@
 : @@@ kernel version:     %{kernel_version}
+%if %{kauth_support}
 : @@@ PAM modules dir:    %{pamdir}
+%endif
 : @@@ build userspace:    %{build_userspace}
 : @@@ build modules:      %{build_modules}
 : @@@ arch:               %{_arch}
