@@ -10,14 +10,14 @@ DESCRIPTION
 Bump the version string numbers embedded in the source code to make a new
 OpenAFS release.
 
-This script handles for following types of releases:
+This script handles the following types of releases:
 
   * final releases:   X.Y.Z      example: 1.8.17
-  * pre-release:      X.Y.ZpreN  example: 1.8.17pre1
-  * point release:    X.Y.Z.N    example: 1.8.16.1
+  * pre-releases:     X.Y.ZpreN  example: 1.8.17pre1
+  * point releases:   X.Y.Z.N    example: 1.8.16.1
 
 These version numbers are converted to version strings that are
-compatible for Apple macOS and Mircosoft Windows packaging.
+compatible with Apple macOS and Microsoft Windows packaging.
 
 For macOS, the following conversions are done:
 
