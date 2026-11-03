@@ -518,7 +518,7 @@ krb4 lookalike services.
 %endif
 
 %package -n kmod-%{name}
-Summary:          %{name} kernel module
+Summary:          OpenAFS kernel module
 %if !%{have_kernel_modules_pkg}
 Provides:         kernel-modules = %{?kepoch:%{kepoch}:}%{kernel_version}
 %endif
@@ -535,17 +535,17 @@ BuildRequires:    elfutils-devel
 %endif
 
 %description -n kmod-%{name}
-This package provides the %{name} kernel modules built for the Linux
+This package provides the OpenAFS kernel module built for the Linux
 kernel %{kernel_version}.
 
 %if !%{have_auto_debuginfo}
 %package -n kmod-%{name}-debuginfo
-Summary:          Debug information for %{name} kernel modules
+Summary:          Debug information for the OpenAFS kernel module
 Release:          %{pkgrel}.%(echo %{kverrel} | tr - _)
 AutoReqProv:      no
 
 %description   -n kmod-%{name}-debuginfo
-This package provides debug information for the %{name} kernel modules
+This package provides debug information for the OpenAFS kernel module
 built for the Linux kernel %{kernel_version}.
 %endif
 
