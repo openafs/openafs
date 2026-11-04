@@ -291,8 +291,9 @@ Source40: openafs-dkms.conf
 
 %description
 %{openafs_description}
-This package provides common files shared across all the various
-OpenAFS packages but are not necessarily tied to a client or server.
+This package provides the commands, libraries, and configuration files
+shared by the OpenAFS client and server packages, including the fs,
+pts, tokens, vos, and bos commands.
 
 ##############################################################################
 #
