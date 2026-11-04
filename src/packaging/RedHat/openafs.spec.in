@@ -1295,29 +1295,29 @@ fi
 %{_prefix}/src/openafs-kernel-%{afsvers}
 
 %files compat
-%ghost %{afswsdir}/bin/afsmonitor
-%ghost %{afswsdir}/bin/bos
-%ghost %{afswsdir}/bin/fs
-%ghost %{afswsdir}/bin/pagsh
-%ghost %{afswsdir}/bin/pts
-%ghost %{afswsdir}/bin/restorevol
-%ghost %{afswsdir}/bin/scout
-%ghost %{afswsdir}/bin/sys
-%ghost %{afswsdir}/bin/tokens
-%ghost %{afswsdir}/bin/translate_et
-%ghost %{afswsdir}/bin/udebug
-%ghost %{afswsdir}/bin/unlog
-%ghost %{afswsdir}/bin/xstat_cm_test
-%ghost %{afswsdir}/bin/xstat_fs_test
-%ghost %{afswsdir}/etc/backup
-%ghost %{afswsdir}/etc/butc
-%ghost %{afswsdir}/etc/fms
-%ghost %{afswsdir}/etc/fstrace
-%ghost %{afswsdir}/etc/read_tape
-%ghost %{afswsdir}/etc/rxdebug
-%ghost %{afswsdir}/etc/uss
-%ghost %{afswsdir}/etc/vos
-%ghost %{afswsdir}/etc/vsys
+%ghost %attr(755,root,root) %{afswsdir}/bin/afsmonitor
+%ghost %attr(755,root,root) %{afswsdir}/bin/bos
+%ghost %attr(755,root,root) %{afswsdir}/bin/fs
+%ghost %attr(755,root,root) %{afswsdir}/bin/pagsh
+%ghost %attr(755,root,root) %{afswsdir}/bin/pts
+%ghost %attr(755,root,root) %{afswsdir}/bin/restorevol
+%ghost %attr(755,root,root) %{afswsdir}/bin/scout
+%ghost %attr(755,root,root) %{afswsdir}/bin/sys
+%ghost %attr(755,root,root) %{afswsdir}/bin/tokens
+%ghost %attr(755,root,root) %{afswsdir}/bin/translate_et
+%ghost %attr(755,root,root) %{afswsdir}/bin/udebug
+%ghost %attr(755,root,root) %{afswsdir}/bin/unlog
+%ghost %attr(755,root,root) %{afswsdir}/bin/xstat_cm_test
+%ghost %attr(755,root,root) %{afswsdir}/bin/xstat_fs_test
+%ghost %attr(755,root,root) %{afswsdir}/etc/backup
+%ghost %attr(755,root,root) %{afswsdir}/etc/butc
+%ghost %attr(755,root,root) %{afswsdir}/etc/fms
+%ghost %attr(755,root,root) %{afswsdir}/etc/fstrace
+%ghost %attr(755,root,root) %{afswsdir}/etc/read_tape
+%ghost %attr(755,root,root) %{afswsdir}/etc/rxdebug
+%ghost %attr(755,root,root) %{afswsdir}/etc/uss
+%ghost %attr(755,root,root) %{afswsdir}/etc/vos
+%ghost %attr(755,root,root) %{afswsdir}/etc/vsys
 
 %if %{kauth_support}
 %files kauth-client
@@ -1340,12 +1340,12 @@ fi
 %{pamdir}/pam_afs.krb.so.1
 %{pamdir}/pam_afs.so
 %{pamdir}/pam_afs.so.1
-%ghost %{afswsdir}/bin/kapasswd
-%ghost %{afswsdir}/bin/klog
-%ghost %{afswsdir}/bin/klog.krb
-%ghost %{afswsdir}/bin/pagsh.krb
-%ghost %{afswsdir}/bin/tokens.krb
-%ghost %{afswsdir}/etc/kas
+%ghost %attr(755,root,root) %{afswsdir}/bin/kapasswd
+%ghost %attr(755,root,root) %{afswsdir}/bin/klog
+%ghost %attr(755,root,root) %{afswsdir}/bin/klog.krb
+%ghost %attr(755,root,root) %{afswsdir}/bin/pagsh.krb
+%ghost %attr(755,root,root) %{afswsdir}/bin/tokens.krb
+%ghost %attr(755,root,root) %{afswsdir}/etc/kas
 %exclude %{_bindir}/knfs
 %exclude %{_mandir}/man1/knfs.1*
 
