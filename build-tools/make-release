@@ -301,8 +301,8 @@ my $name = "openafs-$version";
 
 # Grab the code into a temporary directory
 my $tempDir = File::Temp::tempdir(CLEANUP => 1);
-run(["git", "-C", $toplevel, "archive", "--format=tar", "--prefix=$name/", $commit],
-    stdout => "$tempDir/$name.tar");
+run(["git", "archive", "--format=tar", "--prefix=$name/", $commit],
+    chdir => $toplevel, stdout => "$tempDir/$name.tar");
 run(["tar", "-C", $tempDir, "-xf", "$tempDir/$name.tar"]);
 unlink("$tempDir/$name.tar");
 
