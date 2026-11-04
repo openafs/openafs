@@ -362,10 +362,9 @@ Summary: OpenAFS authentication shared libraries
 
 %description authlibs
 %{openafs_description}
-This package provides a shared version of libafsrpc and libafsauthent.
-None of the programs included with OpenAFS currently use these shared
-libraries; however, third-party software that wishes to perform AFS
-authentication may link against them.
+This package provides the libafsauthent, libafsrpc, and libkopenafs
+shared libraries, for third-party software that performs AFS
+authentication or makes AFS RPC calls.
 %endif
 
 %package authlibs-devel
@@ -377,9 +376,10 @@ Requires: %{name}-devel = %{version}-%{release}
 
 %description authlibs-devel
 %{openafs_description}
-This package includes the static versions of libafsrpc and
-libafsauthent, and symlinks required for building against the dynamic
-libraries.
+This package provides the static libraries, the development symlinks
+for the libafsauthent, libafsrpc, and libkopenafs shared libraries,
+and the kopenafs.h header, needed to build programs that use the
+OpenAFS authentication libraries.
 
 %package devel
 Summary: OpenAFS Development Libraries and Headers
@@ -387,9 +387,12 @@ Requires: %{name} = %{version}-%{release}
 
 %description devel
 %{openafs_description}
-This package provides static development libraries and headers needed
-to compile OpenAFS applications.  Note: OpenAFS currently does not provide
-shared libraries.
+This package provides the headers, static libraries, and tools such as
+rxgen and afs_compile_et, needed to build programs that use the OpenAFS
+libraries. It also provides the development files for the libafshcrypto
+and librokenafs shared libraries. The development files for the
+libafsauthent, libafsrpc, and libkopenafs shared libraries are in the
+openafs-authlibs-devel package.
 
 %package docs
 Summary: OpenAFS user and administrator documentation
