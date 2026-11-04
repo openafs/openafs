@@ -23,33 +23,35 @@
 %define source_date_epoch_from_changelog 0
 %{!?source_date_epoch: %global source_date_epoch %(date +%%s)}
 
-%{!?build_dkmspkg: %define build_dkmspkg 1}
-
-#
-# Determine presence of rpmbuild command line --define arguments and set
-# defaults if not present.
-#
-%define build_userspace_on_cmdline %{?build_userspace:1}%{!?build_userspace:0}
-%define build_modules_on_cmdline %{?build_modules:1}%{!?build_modules:0}
-
-%if !%{build_userspace_on_cmdline}
-%define build_userspace 1
-%endif
-%if !%{build_modules_on_cmdline}
-%define build_modules 1
+%if 0%{!?build_dkmspkg:1}
+%global build_dkmspkg 1
 %endif
 
-# Specify '--with kauth' if you want to build packages containing the legacy
-# kaserver and related programs.
-%define kauth_support %{?_with_kauth:1}%{!?_with_kauth:0}
+%if 0%{!?build_userspace:1}
+%global build_userspace 1
+%endif
 
-# Specify '--without authlibs' if you do not want to build the openafs-authlibs
-# package.
-%define build_authlibs %{?_without_authlibs:0}%{!?_without_authlibs:1}
+%if 0%{!?build_modules:1}
+%global build_modules 1
+%endif
 
-# Specify '--without krb5' if you do not want to build the openafs-krb5 package
-# to distribute aklog, asetkey, and akeyconvert.
-%define krb5support %{?_without_krb5:0}%{!?_without_krb5:1}
+%if 0%{?_with_kauth:1}
+%global kauth_support 1
+%else
+%global kauth_support 0
+%endif
+
+%if 0%{?_without_authlibs:1}
+%global build_authlibs 0
+%else
+%global build_authlibs 1
+%endif
+
+%if 0%{?_without_krb5:1}
+%global krb5support 0
+%else
+%global krb5support 1
+%endif
 
 #
 # Definitions
