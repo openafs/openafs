@@ -999,10 +999,10 @@ fi
 %config(noreplace) %{_sysconfdir}/sysconfig/openafs
 %if %{have_license_directive}
 %license LICENSE
-%exclude %{_docdir}/%{name}/LICENSE
 %else
 %doc LICENSE
 %endif
+%exclude %{_docdir}/%{name}/LICENSE
 %doc ChangeLog
 %doc RELNOTES-%{afsvers}
 %dir %{_libexecdir}/%{name}
