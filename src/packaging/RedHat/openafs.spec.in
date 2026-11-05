@@ -208,6 +208,8 @@ unsupported_fedora_release: %{fedora}
 # Kernel module
 #
 
+%if %{build_modules}
+
 %if 0%{!?kernel_version:1}
 %if 0%{?kernvers:1}
 # kernvers is the deprecated name for kernel_version.
@@ -235,6 +237,8 @@ unsupported_fedora_release: %{fedora}
 %global depmod /usr/sbin/depmod
 %else
 %global depmod /sbin/depmod
+%endif
+
 %endif
 
 #
@@ -579,7 +583,9 @@ built for the Linux kernel %{kernel_version}.
 
 : @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 : @@@
+%if %{build_modules}
 : @@@ kernel version:     %{kernel_version}
+%endif
 %if %{kauth_support}
 : @@@ PAM modules dir:    %{pamdir}
 %endif
