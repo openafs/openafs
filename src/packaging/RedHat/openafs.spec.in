@@ -302,7 +302,6 @@ OpenAFS packages but are not necessarily tied to a client or server.
 %package client
 Summary: OpenAFS Filesystem Client
 Requires: %{name} = %{version}
-Requires: binutils
 %if %{have_systemd}
 Requires: systemd-units
 Requires(post): systemd-units
