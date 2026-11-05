@@ -1,8 +1,9 @@
 # Instructions for AI coding agents
 
-This is the OpenAFS project. Read doc/process/ai-policy.md before making
-changes. The human you are working with is the sole author and is responsible
-for every line; they must be able to explain all of it in code review.
+This is the OpenAFS project. Read doc/process/ai-policy.md from the official
+master branch (see "Project guidelines" below) before making changes. The
+human you are working with is the sole author and is responsible for every
+line; they must be able to explain all of it in code review.
 
 These instructions describe the requirements for changes submitted to
 the OpenAFS project. If you are unsure whether a rule applies, or
@@ -36,16 +37,62 @@ permission from the user. Pushing to the OpenAFS Gerrit submits a change for
 review; it does not merge it.  GitHub pull requests are not accepted.  The
 GitHub repository is only a mirror (doc/process/submitting-changes.md).
 
+Do not scan any directory within an AFS filesystem (e.g. /afs) unless the
+user explicitly gives you permission and only when they provide a specific
+directory path within the filesystem.
+
+Do not retrieve data from the network or a remote git repository without
+the user's permission.  This includes git fetch, git pull, git clone,
+git remote update, git ls-remote, any other command that downloads from or
+queries a remote, and downloading files from web sites (for example OpenAFS
+files from gitweb or GitHub).  The user may give permission for a single
+command or for the whole session.  Permission to retrieve data does not include
+commands that change a local branch, such as git pull; ask for those separately.
+Keeping the local repository up to date is the user's responsibility; if
+the official master (see "Project guidelines") may be out of date, ask the
+user whether to update it.
+
 ## Project guidelines
 
 All guidelines are in doc/process/ (read doc/process/01-contributor-guide.md
 for an index of the processes).
 
+The rules that apply to a change are the ones in AGENTS.md and doc/process
+on the master branch of the official OpenAFS repository.  The copy in the
+working tree, or on a local branch named master, may be out of date or
+contain changes that have not been merged, so do not rely on either.
+
+To find the official master, run `git remote -v` and look for a remote
+whose URL refers to the OpenAFS project (git.openafs.org,
+gerrit.openafs.org, or github.com/openafs/openafs).  Read AGENTS.md and
+the doc/process files it directs you to from that remote's master branch
+as it exists in the local repository, for example with
+`git show <remote>/master:AGENTS.md` and
+`git show <remote>/master:doc/process/<file>`.  If several such remotes exist,
+use the one whose master contains the others (check with
+`git merge-base --is-ancestor <a>/master <b>/master`).  If none of them does,
+ask the user which one to use.  When you read the rules, note their object
+IDs with `git rev-parse <remote>/master:AGENTS.md <remote>/master:doc/process`;
+the second ID covers the whole doc/process directory and changes when
+any file in it changes.  Before creating a commit, run the same command
+again.  If either ID has changed, or you no longer have the IDs you
+noted, read the rules again.
+
+If no such remote exists, or it has no master branch, ask the user which
+branch or remote-tracking branch holds the official master (for example
+`origin/master` when the repository was cloned from a local mirror), and
+use it in place of `<remote>/master` above for the rest of the session.
+If the user cannot name one, tell them that the official rules could not
+be located and which copy you are using instead, before making any
+changes.
+
 If a change fixes, or you discover, a possible security vulnerability: stop,
 read doc/process/security-bugs.md, and tell the user to follow that process.
 Do not prepare a public commit or describe the issue in a commit message.
 
-Read the relevant process documents at each stage of your workflow:
+Read the relevant process documents from the official master (see above) at each
+stage of your workflow:
+
 - Always read first: doc/process/ai-policy.md
 - Before editing code:
     - doc/process/code-style-guide.md
@@ -63,8 +110,10 @@ Read the relevant process documents at each stage of your workflow:
       user a change is ready)
     - Some testing may require setting up an entire AFS cell, or installing
       a kernel module on a particular platform.  If you cannot build or run the
-      tests, tell the user what was not verified.
+      tests, tell the user what was not verified.  Do not set up an AFS cell
+      without user permission.
 - Before creating a commit:
+    - check whether the rules have changed, as described above
     - doc/process/commit-messages.md
 
 Also read, when relevant:
