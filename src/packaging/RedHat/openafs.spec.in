@@ -63,6 +63,10 @@
 #       which contain the legacy kaserver and related programs.
 #
 
+#-----------------------------------------------------------------------------
+# Macro definitions
+#-----------------------------------------------------------------------------
+
 #
 # Package version
 #
@@ -266,14 +270,12 @@ unsupported_fedora_release: %{fedora}
 # rpm build settings
 #
 
-#
 # Disable setting the source_date_epoch from the top entry of the changelog and
 # instead use the current system time by default.
 #
 # Note: Downstream packagers which use this reference spec are encouraged
 #       to set source_date_epoch_from_changelog to 1 and update the changelog
 #       on each release to set the source_date_epoch.
-#
 %global source_date_epoch_from_changelog 0
 
 %if 0%{!?source_date_epoch:1}
@@ -287,6 +289,9 @@ unsupported_fedora_release: %{fedora}
 %global _find_debuginfo_opts %{?_find_debuginfo_opts} -p '.*openafs\.ko.*' -o kmod-debuginfo.list
 %endif
 
+#-----------------------------------------------------------------------------
+# Packages
+#-----------------------------------------------------------------------------
 %global openafs_description %{expand:OpenAFS is an open source implementation of the AFS distributed
 filesystem, which allows cross-platform sharing of files among multiple
 computers. Facilities are provided for access control, authentication,
@@ -348,11 +353,9 @@ This package provides the commands, libraries, and configuration files
 shared by the OpenAFS client and server packages, including the fs,
 pts, tokens, vos, and bos commands.
 
-##############################################################################
 #
-# build the userspace side of things if so requested
+# Userspace packages
 #
-##############################################################################
 %if %{build_userspace}
 
 %package client
@@ -522,11 +525,9 @@ server key files.
 
 %endif
 
-##############################################################################
 #
-# build the kernel modules if so requested
+# Kernel module packages
 #
-##############################################################################
 %if %{build_modules}
 
 # Internal: kernel_version without the architecture suffix for the package
@@ -573,12 +574,9 @@ built for the Linux kernel %{kernel_version}.
 
 %endif
 
-##############################################################################
-#
-# PREP
-#
-##############################################################################
-
+#-----------------------------------------------------------------------------
+# Prep
+#-----------------------------------------------------------------------------
 %prep
 
 : @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -602,11 +600,9 @@ built for the Linux kernel %{kernel_version}.
 cp -p %{SOURCE10} .
 cp -p %{SOURCE11} .
 
-##############################################################################
-#
-# building
-#
-##############################################################################
+#-----------------------------------------------------------------------------
+# Build
+#-----------------------------------------------------------------------------
 %build
 
 export SOURCE_DATE_EPOCH=%{source_date_epoch}
@@ -656,25 +652,18 @@ make %{_smp_mflags} -C doc/xml/QuickStartUnix index.html
 make %{_smp_mflags} libafs
 %endif
 
-##############################################################################
-###
-### install
-###
-##############################################################################
+#-----------------------------------------------------------------------------
+# Install
+#-----------------------------------------------------------------------------
 %install
 
 export SOURCE_DATE_EPOCH=%{source_date_epoch}
 
-##############################################################################
-###
-### Install userspace
-###
-##############################################################################
 %if %{build_userspace}
 
-#-----------------------------------------------------------------------------
+#
 # Install userspace files
-#-----------------------------------------------------------------------------
+#
 make %{_smp_mflags} install_nolibafs DESTDIR="%{buildroot}"
 
 # Shared libraries are conventionally installed executable on Red Hat
@@ -724,9 +713,9 @@ mv %{buildroot}%{_bindir}/kpasswd %{buildroot}%{_bindir}/kapasswd
 mv %{buildroot}%{_mandir}/man1/kpasswd.1 %{buildroot}%{_mandir}/man1/kapasswd.1
 %endif
 
-#-----------------------------------------------------------------------------
+#
 # Install client and server initscripts/systemd files
-#-----------------------------------------------------------------------------
+#
 mkdir -p %{buildroot}%{_libexecdir}/%{name}
 mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
 install -m 644 %{SOURCE38} %{buildroot}%{_sysconfdir}/sysconfig/openafs
@@ -741,15 +730,15 @@ install -m 644 %{SOURCE37} %{buildroot}%{_unitdir}/openafs-server.service
 install -m 755 %{SOURCE33} %{buildroot}%{_libexecdir}/%{name}/openafs-client-systemd-helper.sh
 %endif
 
-#-----------------------------------------------------------------------------
-# Install server directories.
-#-----------------------------------------------------------------------------
+#
+# Install server directories
+#
 mkdir -p %{buildroot}%{_prefix}/afs/etc
 mkdir -p %{buildroot}%{_prefix}/afs/logs
 
-#-----------------------------------------------------------------------------
-# Install client directories and config files.
-#-----------------------------------------------------------------------------
+#
+# Install client directories and config files
+#
 mkdir -p %{buildroot}%{_prefix}/vice/etc
 mkdir -p %{buildroot}%{_prefix}/vice/cache
 chmod 700 %{buildroot}%{_prefix}/vice/cache
@@ -761,17 +750,17 @@ install -p -m 644 %{SOURCE30} %{buildroot}%{_prefix}/vice/etc/cacheinfo
 # Compatibility symlink for the legacy afsd path.
 ln -s ../../sbin/afsd %{buildroot}%{_prefix}/vice/etc/afsd
 
-#-----------------------------------------------------------------------------
-# Install DKMS source.
-#-----------------------------------------------------------------------------
+#
+# Install DKMS source
+#
 install -d -m 755 %{buildroot}%{_prefix}/src
 cp -a libafs_tree %{buildroot}%{_prefix}/src/%{name}-%{dkms_version}
 sed -e 's/@DKMS_VERSION@/%{dkms_version}/g' %{SOURCE40} \
     > %{buildroot}%{_prefix}/src/%{name}-%{dkms_version}/dkms.conf
 
-#-----------------------------------------------------------------------------
-# Install the kernel module source tree.
-#-----------------------------------------------------------------------------
+#
+# Install the kernel module source tree
+#
 mkdir -p %{buildroot}%{_prefix}/src/openafs-kernel-%{openafs_version}/src
 tar cf - -C libafs_tree . | \
     tar xf - -C %{buildroot}%{_prefix}/src/openafs-kernel-%{openafs_version}/src
@@ -779,9 +768,9 @@ install -m 644 LICENSE %{buildroot}%{_prefix}/src/openafs-kernel-%{openafs_versi
 install -m 644 %{SOURCE34} %{buildroot}%{_prefix}/src/openafs-kernel-%{openafs_version}/LICENSE.Sun
 install -m 644 %{SOURCE35} %{buildroot}%{_prefix}/src/openafs-kernel-%{openafs_version}/README
 
-#-----------------------------------------------------------------------------
-# Install documentation.
-#-----------------------------------------------------------------------------
+#
+# Install documentation
+#
 mkdir -p %{buildroot}%{_docdir}/%{name}/html
 cp -p doc/xml/home.gif doc/xml/next.gif doc/xml/prev.gif doc/xml/up.gif \
     %{buildroot}%{_docdir}/%{name}/html
@@ -794,11 +783,9 @@ cp -pr doc/pdf %{buildroot}%{_docdir}/%{name}/pdf
 
 %endif
 
-##############################################################################
-###
-### Install modules
-###
-##############################################################################
+#
+# Install the kernel module
+#
 %if %{build_modules}
 
 mkdir -p %{buildroot}%{kernel_modules}/extra/openafs
@@ -808,19 +795,17 @@ install -m 755 \
 
 %endif
 
-##############################################################################
-# Run tests
-##############################################################################
+#-----------------------------------------------------------------------------
+# Check
+#-----------------------------------------------------------------------------
 %check
 %if %{build_userspace}
 make -C tests check
 %endif
 
-##############################################################################
-###
-### scripts
-###
-##############################################################################
+#-----------------------------------------------------------------------------
+# Scriptlets
+#-----------------------------------------------------------------------------
 %if %{build_userspace}
 
 # package openafs
@@ -1010,11 +995,9 @@ fi
 %{depmod} -aF /boot/System.map-%{kernel_version} %{kernel_version} &> /dev/null || :
 %endif
 
-##############################################################################
-###
-### file lists
-###
-##############################################################################
+#-----------------------------------------------------------------------------
+# Files
+#-----------------------------------------------------------------------------
 %if %{build_userspace}
 
 %files
@@ -1413,11 +1396,9 @@ fi
 
 %endif
 
-##############################################################################
-###
-### openafs.spec change log
-###
-##############################################################################
+#-----------------------------------------------------------------------------
+# Changelog
+#-----------------------------------------------------------------------------
 %changelog
 * Mon Apr 27 2026  Michael Meffie <mmeffie@sinenomine.net>
 - Added Amazon Linux support
