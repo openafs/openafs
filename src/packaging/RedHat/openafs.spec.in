@@ -742,7 +742,7 @@ ln -s ../../sbin/afsd $RPM_BUILD_ROOT%{_prefix}/vice/etc/afsd
 #-----------------------------------------------------------------------------
 install -d -m 755 $RPM_BUILD_ROOT%{_prefix}/src
 cp -a libafs_tree $RPM_BUILD_ROOT%{_prefix}/src/%{name}-%{dkms_version}
-sed -e 's/@PACKAGE_VERSION@/%{dkms_version}/g' %{SOURCE40} \
+sed -e 's/@DKMS_VERSION@/%{dkms_version}/g' %{SOURCE40} \
     > $RPM_BUILD_ROOT%{_prefix}/src/%{name}-%{dkms_version}/dkms.conf
 
 #-----------------------------------------------------------------------------
