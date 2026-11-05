@@ -311,11 +311,11 @@ common_parms(struct cmd_syndesc *as)
     cmd_AddParmAtOffset(as, OPT_cell, "-cell", CMD_SINGLE, CMD_OPTIONAL,
 			"cellname");
     cmd_AddParmAtOffset(as, OPT_verbose, "-verbose", CMD_FLAG, CMD_OPTIONAL,
-			NULL);
+			"verbose operation");
     cmd_AddParmAtOffset(as, OPT_clear, "-clear", CMD_FLAG, CMD_OPTIONAL,
-			NULL);
+			"do not encrypt network traffic");
     cmd_AddParmAtOffset(as, OPT_crypt, "-crypt", CMD_FLAG, CMD_OPTIONAL,
-			NULL);
+			"encrypt network traffic (default)");
     cmd_AddParmAtOffset(as, OPT_realm, "-realm", CMD_SINGLE, CMD_OPTIONAL,
 			"REALMNAME");
     cmd_AddParmAtOffset(as, OPT_as_user, "-as-user", CMD_SINGLE, CMD_OPTIONAL,
