@@ -5,7 +5,22 @@
 # distributions.
 #
 # The userspace packages and a kernel module for the running kernel are built
-# by default. The following rpmbuild options change what is built:
+# by default. The following rpmbuild options set the package version and
+# change what is built:
+#
+# --define "openafs_version <version>"
+#       The OpenAFS version, as given by build-tools/git-version. This is
+#       the version in the source tarball and kernel module source names.
+#       The default is UNKNOWN. makesrpm.pl sets this in the spec file it
+#       generates.
+#
+# --define "package_version <version>"
+#       The RPM package version. The default is openafs_version.
+#       makesrpm.pl sets this in the spec file it generates.
+#
+# --define "package_release <release>"
+#       The RPM package release. The default is 1. makesrpm.pl sets this
+#       in the spec file it generates.
 #
 # --define "kernel_version <version>"
 #       The kernel version to build the kernel module against. The default
@@ -48,11 +63,17 @@
 #       which contain the legacy kaserver and related programs.
 #
 
-%define afsvers @PACKAGE_VERSION@
-%define pkgvers @LINUX_PKGVER@
-# for beta/rc releases make pkgrel 0.<tag>
-# for real releases make pkgrel 1 (or more for extra releases)
-%define pkgrel @LINUX_PKGREL@
+%if 0%{!?openafs_version:1}
+%global openafs_version UNKNOWN
+%endif
+
+%if 0%{!?package_version:1}
+%global package_version %{openafs_version}
+%endif
+
+%if 0%{!?package_release:1}
+%global package_release 1
+%endif
 
 # Disable using lto (link time optimization)
 %global _lto_cflags %{nil}
@@ -220,7 +241,7 @@ unsupported_fedora_release: %{fedora}
 %endif
 
 
-%define dkms_version %{pkgvers}-%{pkgrel}%{?dist}
+%define dkms_version %{package_version}-%{package_release}%{?dist}
 
 # Define the location of your init.d directory
 %define initdir %{_sysconfdir}/rc.d/init.d
@@ -242,8 +263,8 @@ backup, and administrative management.
 
 Summary: OpenAFS distributed filesystem
 Name: openafs
-Version: %{pkgvers}
-Release: %{pkgrel}%{?dist}
+Version: %{package_version}
+Release: %{package_release}%{?dist}
 License: IBM Public License
 URL: https://www.openafs.org
 BuildRequires: pam-devel
@@ -273,9 +294,9 @@ BuildRequires: perl(Test::More)
 
 ExclusiveArch: %{ix86} x86_64 ppc64 ppc64le s390x aarch64
 
-Source0: https://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-src.tar.bz2
-Source10: https://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
-Source11: https://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
+Source0: https://www.openafs.org/dl/openafs/%{openafs_version}/openafs-%{openafs_version}-src.tar.bz2
+Source10: https://www.openafs.org/dl/openafs/%{openafs_version}/RELNOTES-%{openafs_version}
+Source11: https://www.openafs.org/dl/openafs/%{openafs_version}/ChangeLog
 Source20: https://www.central.org/dl/cellservdb/CellServDB.2025-08-16
 Source30: openafs-cacheinfo
 Source31: openafs-client.init
@@ -496,7 +517,7 @@ Requires:         kernel-%{_target_cpu} = %{?kepoch:%{kepoch}:}%{kverrel}
 Requires:         %{name}-kmod-common >= %{version}
 Requires(post):   %{depmod}
 Requires(postun): %{depmod}
-Release:          %{pkgrel}.%(echo %{kverrel} | tr - _)
+Release:          %{package_release}.%(echo %{kverrel} | tr - _)
 BuildRequires:    kernel-devel-%{_target_cpu} = %{?kepoch:%{kepoch}:}%{kverrel}
 %if %{have_orc_unwinder}
 BuildRequires:    elfutils-devel
@@ -510,7 +531,7 @@ kernel %{kernel_version}.
 %if !%{have_auto_debuginfo}
 %package -n kmod-%{name}-debuginfo
 Summary:          Debug information for the OpenAFS kernel module
-Release:          %{pkgrel}.%(echo %{kverrel} | tr - _)
+Release:          %{package_release}.%(echo %{kverrel} | tr - _)
 AutoReqProv:      no
 
 %description   -n kmod-%{name}-debuginfo
@@ -541,7 +562,7 @@ built for the Linux kernel %{kernel_version}.
 : @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 # Unpack the OpenAFS source tree.
-%setup -q -n openafs-%{afsvers}
+%setup -q -n openafs-%{openafs_version}
 
 # Add the change log and release notes to source tree.
 cp -p %{SOURCE10} .
@@ -717,12 +738,12 @@ sed -e 's/@DKMS_VERSION@/%{dkms_version}/g' %{SOURCE40} \
 #-----------------------------------------------------------------------------
 # Install the kernel module source tree.
 #-----------------------------------------------------------------------------
-mkdir -p %{buildroot}%{_prefix}/src/openafs-kernel-%{afsvers}/src
+mkdir -p %{buildroot}%{_prefix}/src/openafs-kernel-%{openafs_version}/src
 tar cf - -C libafs_tree . | \
-    tar xf - -C %{buildroot}%{_prefix}/src/openafs-kernel-%{afsvers}/src
-install -m 644 LICENSE %{buildroot}%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.IBM
-install -m 644 %{SOURCE34} %{buildroot}%{_prefix}/src/openafs-kernel-%{afsvers}/LICENSE.Sun
-install -m 644 %{SOURCE35} %{buildroot}%{_prefix}/src/openafs-kernel-%{afsvers}/README
+    tar xf - -C %{buildroot}%{_prefix}/src/openafs-kernel-%{openafs_version}/src
+install -m 644 LICENSE %{buildroot}%{_prefix}/src/openafs-kernel-%{openafs_version}/LICENSE.IBM
+install -m 644 %{SOURCE34} %{buildroot}%{_prefix}/src/openafs-kernel-%{openafs_version}/LICENSE.Sun
+install -m 644 %{SOURCE35} %{buildroot}%{_prefix}/src/openafs-kernel-%{openafs_version}/README
 
 #-----------------------------------------------------------------------------
 # Install documentation.
@@ -971,7 +992,7 @@ fi
 %endif
 %exclude %{_docdir}/%{name}/LICENSE
 %doc ChangeLog
-%doc RELNOTES-%{afsvers}
+%doc RELNOTES-%{openafs_version}
 %dir %{_libexecdir}/%{name}
 %{_bindir}/afsmonitor
 %{_bindir}/bos
@@ -1261,7 +1282,7 @@ fi
 %endif
 
 %files kernel-source
-%{_prefix}/src/openafs-kernel-%{afsvers}
+%{_prefix}/src/openafs-kernel-%{openafs_version}
 
 %files compat
 %ghost %attr(755,root,root) %{afswsdir}/bin/afsmonitor

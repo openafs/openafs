@@ -188,7 +188,10 @@ if ($changelog) {
 
 # Create the specfile. Use sed for this, cos its easier
 system("cat $spec_template | ".
-       "sed -e 's/\@PACKAGE_VERSION\@/$afsversion/g' ".
+       "sed -e 's/^%global openafs_version.*/%global openafs_version $afsversion/' ".
+       "    -e 's/^%global package_version.*/%global package_version $linuxver/' ".
+       "    -e 's/^%global package_release.*/%global package_release $linuxrel/' ".
+       "    -e 's/\@PACKAGE_VERSION\@/$afsversion/g' ".
        "    -e 's/\@LINUX_PKGVER\@/$linuxver/g' ".
        "    -e 's/\@LINUX_PKGREL\@/$linuxrel/g' ".
        "    -e 's/\%define afsvers.*/%define afsvers $afsversion/g' ".
