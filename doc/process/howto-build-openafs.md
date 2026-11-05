@@ -66,10 +66,11 @@ sudo dnf config-manager --set-enabled crb
 Install the build dependencies:
 
 ```sh
-sudo dnf install autoconf automake bison elfutils-devel flex fuse-devel \
-    gcc glibc-devel kernel-devel-matched krb5-devel libtool make \
-    ncurses-devel openssl-devel pam-devel perl-core perl-devel \
-    perl-ExtUtils-Embed swig
+sudo dnf install autoconf automake bison docbook-dtds docbook-style-xsl \
+                 doxygen elfutils-devel flex fuse-devel gcc glibc-devel \
+                 kernel-devel-matched krb5-devel libtool libxslt make \
+                 ncurses-devel openssl-devel pam-devel perl-ExtUtils-Embed \
+                 perl-core perl-devel swig
 ```
 
 ### Fedora
@@ -84,9 +85,11 @@ installing the `kernel-devel` package.
 Install the build dependencies:
 
 ```sh
-sudo dnf install @c-development elfutils-libelf-devel fuse-devel kernel-devel-matched \
-                 krb5-devel ncurses-devel perl-devel perl-ExtUtils-Embed \
-                 perl-FindBin perl-podlators perl-Sys-Hostname perl-Test-Simple swig
+sudo dnf install @c-development docbook-dtds docbook-style-xsl doxygen \
+                 elfutils-libelf-devel fuse-devel kernel-devel-matched \
+                 krb5-devel libxslt ncurses-devel perl-ExtUtils-Embed \
+                 perl-FindBin perl-Sys-Hostname perl-Test-Simple perl-devel \
+                 perl-podlators swig
 ```
 
 
