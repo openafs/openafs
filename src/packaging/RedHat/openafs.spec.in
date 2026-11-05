@@ -63,6 +63,10 @@
 #       which contain the legacy kaserver and related programs.
 #
 
+#
+# Package version
+#
+
 %if 0%{!?openafs_version:1}
 %global openafs_version UNKNOWN
 %endif
@@ -75,29 +79,11 @@
 %global package_release 1
 %endif
 
-# Disable using lto (link time optimization)
-%global _lto_cflags %{nil}
-
-# Define the location to the legacy workstation directory.
-%global afswsdir /usr/afsws
+%global dkms_version %{package_version}-%{package_release}%{?dist}
 
 #
-# Disable setting the source_date_epoch from the top entry of the changelog and
-# instead use the current system time by default.
+# Build options
 #
-# Note: Downstream packagers which use this reference spec are encouraged
-#       to set source_date_epoch_from_changelog to 1 and update the changelog
-#       on each release to set the source_date_epoch.
-#
-%global source_date_epoch_from_changelog 0
-
-%if 0%{!?source_date_epoch:1}
-%global source_date_epoch %(date +%%s)
-%endif
-
-%if 0%{!?build_dkmspkg:1}
-%global build_dkmspkg 1
-%endif
 
 %if 0%{!?build_userspace:1}
 %global build_userspace 1
@@ -107,10 +93,8 @@
 %global build_modules 1
 %endif
 
-%if 0%{?_with_kauth:1}
-%global kauth_support 1
-%else
-%global kauth_support 0
+%if 0%{!?build_dkmspkg:1}
+%global build_dkmspkg 1
 %endif
 
 %if 0%{?_without_authlibs:1}
@@ -124,6 +108,16 @@
 %else
 %global krb5support 1
 %endif
+
+%if 0%{?_with_kauth:1}
+%global kauth_support 1
+%else
+%global kauth_support 0
+%endif
+
+#
+# Supported distributions
+#
 
 # Minimum supported RHEL release.
 %if 0%{?rhel}
@@ -140,6 +134,10 @@ unsupported_rhel_release: %{rhel}
 unsupported_fedora_release: %{fedora}
 %endif
 %endif
+
+#
+# Distribution features
+#
 
 # Distributions with a merged /usr (/bin, /sbin, and /lib are symlinks.)
 %if 0%{?rhel} >= 7 || 0%{?fedora} || 0%{?amzn} >= 2
@@ -199,11 +197,16 @@ unsupported_fedora_release: %{fedora}
 %global have_swig 0
 %endif
 
-%if %{have_usr_merged}
-%global depmod /usr/sbin/depmod
+# Distributions which supports %license in %files.
+%if 0%{?rhel} >= 7 || 0%{?fedora} >= 19 || 0%{?amzn} >= 2
+%global have_license_directive 1
 %else
-%global depmod /sbin/depmod
+%global have_license_directive 0
 %endif
+
+#
+# Kernel module
+#
 
 %if 0%{!?kernel_version:1}
 %if 0%{?kernvers:1}
@@ -228,18 +231,18 @@ unsupported_fedora_release: %{fedora}
 %endif
 %endif
 
-%if !%{have_auto_debuginfo}
-%global _find_debuginfo_opts %{?_find_debuginfo_opts} -p '.*openafs\.ko.*' -o kmod-debuginfo.list
-%endif
-
-# Distributions which supports %license in %files.
-%if 0%{?rhel} >= 7 || 0%{?fedora} >= 19 || 0%{?amzn} >= 2
-%global have_license_directive 1
+%if %{have_usr_merged}
+%global depmod /usr/sbin/depmod
 %else
-%global have_license_directive 0
+%global depmod /sbin/depmod
 %endif
 
-%global dkms_version %{package_version}-%{package_release}%{?dist}
+#
+# Installation paths
+#
+
+# Define the location to the legacy workstation directory.
+%global afswsdir /usr/afsws
 
 %if !%{have_systemd}
 # Define the location of your init.d directory
@@ -253,6 +256,31 @@ unsupported_fedora_release: %{fedora}
 %else
 %global pamdir %{_lib}/security
 %endif
+%endif
+
+#
+# rpm build settings
+#
+
+#
+# Disable setting the source_date_epoch from the top entry of the changelog and
+# instead use the current system time by default.
+#
+# Note: Downstream packagers which use this reference spec are encouraged
+#       to set source_date_epoch_from_changelog to 1 and update the changelog
+#       on each release to set the source_date_epoch.
+#
+%global source_date_epoch_from_changelog 0
+
+%if 0%{!?source_date_epoch:1}
+%global source_date_epoch %(date +%%s)
+%endif
+
+# Disable using lto (link time optimization)
+%global _lto_cflags %{nil}
+
+%if !%{have_auto_debuginfo}
+%global _find_debuginfo_opts %{?_find_debuginfo_opts} -p '.*openafs\.ko.*' -o kmod-debuginfo.list
 %endif
 
 %global openafs_description %{expand:OpenAFS is an open source implementation of the AFS distributed
