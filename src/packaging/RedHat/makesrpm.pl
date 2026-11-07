@@ -20,12 +20,14 @@ my $help = 0;
 my $man = 0;
 my $dir = ".";
 my $cellservdb_url;
+my $spec = "openafs.spec";
 
 GetOptions(
     "help|?" => \$help,
     "man" => \$man,
     "dir=s" => \$dir,
     "cellservdb-url=s" => \$cellservdb_url,
+    "spec=s" => \$spec,
 ) or pod2usage(-exitval => 1, -verbose => 1);
 pod2usage(-exitval => 0, -verbose => 1) if $help;
 pod2usage(-exitval => 0, -verbose => 2, -noperldoc => 1) if $man;
@@ -72,6 +74,10 @@ if (-e "$packaging/openafs.spec.in") {
 foreach my $source (glob "$packaging/openafs*") {
     File::Copy::move($source, "$packaging/SOURCES/")
         or die "Unable to move $source: $!\n";
+}
+my $spec_template = "$packaging/SPECS/$spec";
+if (! -f $spec_template) {
+    die "Unable to find spec file $spec\n";
 }
 
 # Work out which version we're dealing with from git-version script
@@ -148,7 +154,6 @@ while (defined($file = $pkgdirh->read)) {
 }
 undef $dirh;
 
-my $spec_template = "$packaging/SPECS/openafs.spec";
 my $cellservdb_substitute = "";
 if ($cellservdb_url) {
     # Set the CellServDB source URL in the generated the spec file.
@@ -200,6 +205,7 @@ if ($changelog) {
 }
 
 # Create the specfile. Use sed for this, cos its easier
+print "Copying $spec into place\n";
 system("cat $spec_template | ".
        "sed -e 's/^%global openafs_version.*/%global openafs_version $afsversion/' ".
        "    -e 's/^%global package_version.*/%global package_version $linuxver/' ".
@@ -270,8 +276,13 @@ Place the generated SRPM file in I<path> instead of the current directory.
 The URL of the CellServDB file to be downloaded when B<cellservdb> is not
 specified and a file with the same name is not included in the packaging
 files, and the URL to be set in the C<Source20> source directive in the
-generated F<openafs.spec> RPM spec file.  When not specified, I<URL> is is read
-from the F<openafs.spec> file extracted from the source archive.
+generated RPM spec file.  When not specified, I<URL> is is read from the spec
+file extracted from the source archive.
+
+=item B<--spec> I<name>
+
+The name of the spec file in the F<SPECS> packaging directory to build the
+SRPM from.  The default is F<openafs.spec>.
 
 =back
 
