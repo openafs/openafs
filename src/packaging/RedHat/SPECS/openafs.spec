@@ -32,8 +32,7 @@
 #
 # --define "kernel_modules <path>"
 #       The kernel module installation path for kernel_version. The default
-#       is /usr/lib/modules/<kernel_version> on distributions with a merged
-#       /usr, otherwise /lib/modules/<kernel_version>.
+#       is /usr/lib/modules/<kernel_version>.
 #
 # --define "build_userspace 0"
 #       Do not build the userspace packages.
@@ -125,7 +124,7 @@
 
 # Minimum supported RHEL release.
 %if 0%{?rhel}
-%if 0%{?rhel} < 6
+%if 0%{?rhel} < 7
 # Stop the build with an invalid tag.
 unsupported_rhel_release: %{rhel}
 %endif
@@ -139,16 +138,17 @@ unsupported_fedora_release: %{fedora}
 %endif
 %endif
 
+# Minimum supported Amazon Linux release.
+%if 0%{?amzn}
+%if 0%{?amzn} < 2
+# Stop the build with an invalid tag.
+unsupported_amzn_release: %{amzn}
+%endif
+%endif
+
 #
 # Distribution features
 #
-
-# Distributions with a merged /usr (/bin, /sbin, and /lib are symlinks.)
-%if 0%{?rhel} >= 7 || 0%{?fedora} || 0%{?amzn} >= 2
-%global have_usr_merged 1
-%else
-%global have_usr_merged 0
-%endif
 
 # Distributions where rpm generates the debuginfo subpackages automatically.
 %if 0%{?rhel} >= 8 || 0%{?fedora} >= 28 || 0%{?amzn} >= 2023
@@ -180,25 +180,11 @@ unsupported_fedora_release: %{fedora}
 %global have_ldconfig_trigger 0
 %endif
 
-# Distributions which use systemd instead of SysV init scripts.
-%if 0%{?rhel} >= 7 || 0%{?fedora} || 0%{?amzn} >= 2
-%global have_systemd 1
-%else
-%global have_systemd 0
-%endif
-
 # Distributions which provide the systemd rpm macros in a separate package.
 %if 0%{?rhel} >= 8 || 0%{?fedora} >= 30 || 0%{?amzn} >= 2023
 %global have_systemd_rpm_macros_pkg 1
 %else
 %global have_systemd_rpm_macros_pkg 0
-%endif
-
-# Distributions which provide swig, to build the perl ukernel bindings.
-%if 0%{?rhel} >= 6 || 0%{?fedora} || 0%{?amzn} >= 1
-%global have_swig 1
-%else
-%global have_swig 0
 %endif
 
 # Distributions which supports %license in %files.
@@ -230,17 +216,7 @@ unsupported_fedora_release: %{fedora}
 
 # The kernel modules installation path.
 %if 0%{!?kernel_modules:1}
-%if %{have_usr_merged}
 %global kernel_modules %{_prefix}/lib/modules/%{kernel_version}
-%else
-%global kernel_modules /lib/modules/%{kernel_version}
-%endif
-%endif
-
-%if %{have_usr_merged}
-%global depmod /usr/sbin/depmod
-%else
-%global depmod /sbin/depmod
 %endif
 
 %endif
@@ -252,18 +228,9 @@ unsupported_fedora_release: %{fedora}
 # Define the location to the legacy workstation directory.
 %global afswsdir /usr/afsws
 
-%if !%{have_systemd}
-# Define the location of your init.d directory
-%global initdir %{_sysconfdir}/rc.d/init.d
-%endif
-
 %if %{kauth_support}
 # Define the location of the PAM security module directory
-%if %{have_usr_merged}
 %global pamdir %{_libdir}/security
-%else
-%global pamdir /%{_lib}/security
-%endif
 %endif
 
 #
@@ -309,17 +276,13 @@ BuildRequires: ncurses-devel
 BuildRequires: make
 BuildRequires: flex
 BuildRequires: bison
-%if %{have_systemd}
 %if %{have_systemd_rpm_macros_pkg}
 BuildRequires: systemd-rpm-macros
 %else
 BuildRequires: systemd
 %endif
-%endif
-%if %{have_swig}
 BuildRequires: perl-devel
 BuildRequires: swig
-%endif
 BuildRequires: perl(ExtUtils::Embed)
 BuildRequires: perl-core
 %if %{krb5support}
@@ -336,12 +299,10 @@ Source10: https://www.openafs.org/dl/openafs/%{openafs_version}/RELNOTES-%{opena
 Source11: https://www.openafs.org/dl/openafs/%{openafs_version}/ChangeLog
 Source20: https://www.central.org/dl/cellservdb/CellServDB.2025-08-16
 Source30: openafs-cacheinfo
-Source31: openafs-client.init
 Source32: openafs-client.service
 Source33: openafs-client-systemd-helper.sh
 Source34: openafs-LICENSE.Sun
 Source35: openafs-README
-Source36: openafs-server.init
 Source37: openafs-server.service
 Source38: openafs.sysconfig
 Source39: openafs-ThisCell
@@ -361,12 +322,10 @@ pts, tokens, vos, and bos commands.
 %package client
 Summary: OpenAFS Filesystem Client
 Requires: %{name} = %{version}
-%if %{have_systemd}
 Requires: systemd-units
 Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
-%endif
 %if 0%{?rhel} == 7
 Requires(post): systemd-sysv
 %endif
@@ -381,12 +340,10 @@ AFS.
 %package server
 Summary: OpenAFS Filesystem Server
 Requires: %{name} = %{version}
-%if %{have_systemd}
 Requires: systemd-units
 Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
-%endif
 %if 0%{?rhel} == 7
 Requires(post): systemd-sysv
 %endif
@@ -547,8 +504,8 @@ Provides:         %{name}-kmod = %{version}-%{release}
 Provides:         openafs-kernel = %{version}
 Requires:         kernel-%{_target_cpu} = %{?kepoch:%{kepoch}:}%{kverrel}
 Requires:         %{name}-kmod-common >= %{version}
-Requires(post):   %{depmod}
-Requires(postun): %{depmod}
+Requires(post):   /usr/sbin/depmod
+Requires(postun): /usr/sbin/depmod
 Release:          %{package_release}.%(echo %{kverrel} | tr - _)
 BuildRequires:    kernel-devel-%{_target_cpu} = %{?kepoch:%{kepoch}:}%{kverrel}
 %if %{have_orc_unwinder}
@@ -626,11 +583,7 @@ export CFLAGS="$RPM_OPT_FLAGS"
 %if %{krb5support}
        --with-krb5 \
 %endif
-%if %{have_swig}
        --with-swig \
-%else
-       --without-swig \
-%endif
 %if %{kauth_support}
        --enable-kauth \
 %endif
@@ -713,21 +666,15 @@ mv %{buildroot}%{_mandir}/man1/kpasswd.1 %{buildroot}%{_mandir}/man1/kapasswd.1
 %endif
 
 #
-# Install client and server initscripts/systemd files
+# Install client and server systemd files
 #
 mkdir -p %{buildroot}%{_libexecdir}/%{name}
 mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
 install -m 644 %{SOURCE38} %{buildroot}%{_sysconfdir}/sysconfig/openafs
-%if !%{have_systemd}
-mkdir -p %{buildroot}%{initdir}
-install -m 755 %{SOURCE31} %{buildroot}%{initdir}/openafs-client
-install -m 755 %{SOURCE36} %{buildroot}%{initdir}/openafs-server
-%else
 mkdir -p %{buildroot}%{_unitdir}
 install -m 644 %{SOURCE32} %{buildroot}%{_unitdir}/openafs-client.service
 install -m 644 %{SOURCE37} %{buildroot}%{_unitdir}/openafs-server.service
 install -m 755 %{SOURCE33} %{buildroot}%{_libexecdir}/%{name}/openafs-client-systemd-helper.sh
-%endif
 
 #
 # Install server directories
@@ -817,9 +764,6 @@ fi
 
 # package openafs-client
 %post client
-%if !%{have_systemd}
-chkconfig --add openafs-client
-%endif
 if [ ! -d /afs ]; then
     mkdir /afs
     chown root:root /afs
@@ -835,24 +779,13 @@ cat %{_prefix}/vice/etc/CellServDB.local %{_prefix}/vice/etc/CellServDB.dist \
     > %{_prefix}/vice/etc/CellServDB
 chmod 644 %{_prefix}/vice/etc/CellServDB
 
-%if %{have_systemd}
 %systemd_post openafs-client.service
-%endif
 
 %preun client
-%if !%{have_systemd}
-if [ $1 = 0 ] ; then
-    %{initdir}/openafs-client stop
-    chkconfig --del openafs-client
-fi
-%else
 %systemd_preun openafs-client.service
-%endif
 
-%if %{have_systemd}
 %postun client
 %systemd_postun openafs-client.service
-%endif
 
 %if 0%{?rhel} == 7
 %triggerun -- openafs-client < 1.6.0-1
@@ -867,30 +800,13 @@ fi
 
 # package openafs-server
 %post server
-%if !%{have_systemd}
-#on an upgrade, don't enable if we were disabled
-if [ $1 = 1 ] ; then
-    chkconfig --add openafs-server
-fi
-%{initdir}/openafs-server condrestart
-%else
 %systemd_post openafs-server.service
-%endif
 
 %preun server
-%if !%{have_systemd}
-if [ $1 = 0 ] ; then
-    %{initdir}/openafs-server stop
-    chkconfig --del openafs-server
-fi
-%else
 %systemd_preun openafs-server.service
-%endif
 
-%if %{have_systemd}
 %postun server
 %systemd_postun openafs-server.service
-%endif
 
 %if 0%{?rhel} == 7
 %triggerun -- openafs-server < 1.6.0-1
@@ -988,10 +904,10 @@ fi
 # package kmod-openafs
 %if %{build_modules}
 %post -n kmod-%{name}
-%{depmod} -aeF /boot/System.map-%{kernel_version} %{kernel_version} > /dev/null || :
+/usr/sbin/depmod -aeF /boot/System.map-%{kernel_version} %{kernel_version} > /dev/null || :
 
 %postun -n kmod-%{name}
-%{depmod} -aF /boot/System.map-%{kernel_version} %{kernel_version} &> /dev/null || :
+/usr/sbin/depmod -aF /boot/System.map-%{kernel_version} %{kernel_version} &> /dev/null || :
 %endif
 
 #-----------------------------------------------------------------------------
@@ -1111,9 +1027,6 @@ fi
 %exclude %{_mandir}/man8/akeyconvert.8*
 %exclude %{_mandir}/man8/asetkey.8*
 %endif
-%if ! %{have_swig}
-%exclude %{_mandir}/man3/AFS::ukernel.3*
-%endif
 
 %files docs
 %{_docdir}/%{name}/html
@@ -1136,12 +1049,8 @@ fi
 %{_prefix}/vice/etc/C/afszcm.cat
 %{_prefix}/vice/etc/afsd
 %{_sbindir}/afsd
-%if !%{have_systemd}
-%{initdir}/openafs-client
-%else
 %{_libexecdir}/%{name}/openafs-client-systemd-helper.sh
 %{_unitdir}/openafs-client.service
-%endif
 %{_mandir}/man1/cmdebug.1*
 %{_mandir}/man1/up.1*
 %{_mandir}/man5/CellAlias.5*
@@ -1182,11 +1091,7 @@ fi
 %{_sbindir}/vldb_check
 %{_sbindir}/vldb_convert
 %{_sbindir}/voldump
-%if !%{have_systemd}
-%{initdir}/openafs-server
-%else
 %{_unitdir}/openafs-server.service
-%endif
 %{_mandir}/man5/BackupLog.5*
 %{_mandir}/man5/BosConfig.5*
 %{_mandir}/man5/BosLog.5*
@@ -1284,13 +1189,11 @@ fi
 %{_libdir}/libubik.a
 %{_mandir}/man1/afs_compile_et.1*
 %{_mandir}/man1/rxgen.1*
-%if %{have_swig}
 %dir %{_libdir}/perl
 %dir %{_libdir}/perl/AFS
 %{_libdir}/perl/AFS/ukernel.pm
 %{_libdir}/perl/ukernel.so
 %{_mandir}/man3/AFS::ukernel.3*
-%endif
 
 %if %{build_dkmspkg}
 %files -n dkms-%{name}
@@ -1301,29 +1204,29 @@ fi
 %{_prefix}/src/openafs-kernel-%{openafs_version}
 
 %files compat
-%ghost %attr(755,root,root) %{afswsdir}/bin/afsmonitor
-%ghost %attr(755,root,root) %{afswsdir}/bin/bos
-%ghost %attr(755,root,root) %{afswsdir}/bin/fs
-%ghost %attr(755,root,root) %{afswsdir}/bin/pagsh
-%ghost %attr(755,root,root) %{afswsdir}/bin/pts
-%ghost %attr(755,root,root) %{afswsdir}/bin/restorevol
-%ghost %attr(755,root,root) %{afswsdir}/bin/scout
-%ghost %attr(755,root,root) %{afswsdir}/bin/sys
-%ghost %attr(755,root,root) %{afswsdir}/bin/tokens
-%ghost %attr(755,root,root) %{afswsdir}/bin/translate_et
-%ghost %attr(755,root,root) %{afswsdir}/bin/udebug
-%ghost %attr(755,root,root) %{afswsdir}/bin/unlog
-%ghost %attr(755,root,root) %{afswsdir}/bin/xstat_cm_test
-%ghost %attr(755,root,root) %{afswsdir}/bin/xstat_fs_test
-%ghost %attr(755,root,root) %{afswsdir}/etc/backup
-%ghost %attr(755,root,root) %{afswsdir}/etc/butc
-%ghost %attr(755,root,root) %{afswsdir}/etc/fms
-%ghost %attr(755,root,root) %{afswsdir}/etc/fstrace
-%ghost %attr(755,root,root) %{afswsdir}/etc/read_tape
-%ghost %attr(755,root,root) %{afswsdir}/etc/rxdebug
-%ghost %attr(755,root,root) %{afswsdir}/etc/uss
-%ghost %attr(755,root,root) %{afswsdir}/etc/vos
-%ghost %attr(755,root,root) %{afswsdir}/etc/vsys
+%ghost %{afswsdir}/bin/afsmonitor
+%ghost %{afswsdir}/bin/bos
+%ghost %{afswsdir}/bin/fs
+%ghost %{afswsdir}/bin/pagsh
+%ghost %{afswsdir}/bin/pts
+%ghost %{afswsdir}/bin/restorevol
+%ghost %{afswsdir}/bin/scout
+%ghost %{afswsdir}/bin/sys
+%ghost %{afswsdir}/bin/tokens
+%ghost %{afswsdir}/bin/translate_et
+%ghost %{afswsdir}/bin/udebug
+%ghost %{afswsdir}/bin/unlog
+%ghost %{afswsdir}/bin/xstat_cm_test
+%ghost %{afswsdir}/bin/xstat_fs_test
+%ghost %{afswsdir}/etc/backup
+%ghost %{afswsdir}/etc/butc
+%ghost %{afswsdir}/etc/fms
+%ghost %{afswsdir}/etc/fstrace
+%ghost %{afswsdir}/etc/read_tape
+%ghost %{afswsdir}/etc/rxdebug
+%ghost %{afswsdir}/etc/uss
+%ghost %{afswsdir}/etc/vos
+%ghost %{afswsdir}/etc/vsys
 
 %if %{kauth_support}
 %files kauth-client
@@ -1346,12 +1249,12 @@ fi
 %{pamdir}/pam_afs.krb.so.1
 %{pamdir}/pam_afs.so
 %{pamdir}/pam_afs.so.1
-%ghost %attr(755,root,root) %{afswsdir}/bin/kapasswd
-%ghost %attr(755,root,root) %{afswsdir}/bin/klog
-%ghost %attr(755,root,root) %{afswsdir}/bin/klog.krb
-%ghost %attr(755,root,root) %{afswsdir}/bin/pagsh.krb
-%ghost %attr(755,root,root) %{afswsdir}/bin/tokens.krb
-%ghost %attr(755,root,root) %{afswsdir}/etc/kas
+%ghost %{afswsdir}/bin/kapasswd
+%ghost %{afswsdir}/bin/klog
+%ghost %{afswsdir}/bin/klog.krb
+%ghost %{afswsdir}/bin/pagsh.krb
+%ghost %{afswsdir}/bin/tokens.krb
+%ghost %{afswsdir}/etc/kas
 %exclude %{_bindir}/knfs
 %exclude %{_mandir}/man1/knfs.1*
 
@@ -1399,6 +1302,10 @@ fi
 # Changelog
 #-----------------------------------------------------------------------------
 %changelog
+* Sun Nov 08 2026  Michael Meffie <mmeffie@sinenomine.net>
+- Raised the minimum releases to RHEL 7 and Amazon Linux 2; RHEL 6 is
+  now built with openafs.el6.spec.
+
 * Sat Nov 07 2026  Michael Meffie <mmeffie@sinenomine.net>
 - Many updates since 2007 for newer RHEL, Fedora and Amazon Linux
   releases; see the OpenAFS git history for details. Earlier packaging
