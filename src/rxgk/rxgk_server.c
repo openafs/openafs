@@ -163,6 +163,10 @@ rxgk_ServerPreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
     aconn = rx_ConnectionOf(acall);
     sc = rx_GetSecurityData(aconn);
 
+    if (sc == NULL) {
+        return rxgk_misc_error();
+    }
+
     code = check_expired(sc);
     if (code != 0) {
 	return code;
@@ -544,6 +548,10 @@ rxgk_CheckResponse(struct rx_securityClass *aobj,
 
     sp = aobj->privateData;
     sc = rx_GetSecurityData(aconn);
+
+    if (sc == NULL) {
+        return rxgk_misc_error();
+    }
 
     /*
      * This assumes that the entire response is in a contiguous data block in

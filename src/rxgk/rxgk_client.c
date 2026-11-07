@@ -136,6 +136,9 @@ rxgk_ClientPreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
     aconn = rx_ConnectionOf(acall);
     cc = rx_GetSecurityData(aconn);
     cp = aobj->privateData;
+    if (cc == NULL) {
+        return rxgk_misc_error();
+    }
 
     len = rx_GetDataSize(apacket);
     lkvno = cc->key_number;
@@ -317,6 +320,10 @@ rxgk_GetResponse(struct rx_securityClass *aobj, struct rx_connection *aconn,
 
     cp = aobj->privateData;
     cc = rx_GetSecurityData(aconn);
+    if (cc == NULL) {
+        ret = rxgk_misc_error();
+        goto done;
+    }
 
     /*
      * Decode the challenge to get the nonce.
@@ -400,6 +407,9 @@ rxgk_ClientCheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
     aconn = rx_ConnectionOf(acall);
     cc = rx_GetSecurityData(aconn);
     cp = aobj->privateData;
+    if (cc == NULL) {
+        return rxgk_misc_error();
+    }
 
     len = rx_GetDataSize(apacket);
     cc->stats.precv++;
