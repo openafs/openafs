@@ -168,13 +168,14 @@ if ($cellservdb_url) {
     }
 }
 
+my $cellservdb_filename = File::Basename::fileparse($cellservdb_url);
+my $cellservdb_dest = "$tmpdir/rpmdir/SOURCES/$cellservdb_filename";
 if ($cellservdb) {
-    my $filename = File::Basename::fileparse($cellservdb_url);
-    my $dest = "$tmpdir/rpmdir/SOURCES/$filename";
-    print "Copying $cellservdb to $dest\n";
-    File::Copy::copy($cellservdb, "$dest")
-        or die "Unable to copy $cellservdb to $dest: $!\n";
-} else {
+    print "Copying $cellservdb to $cellservdb_dest\n";
+    File::Copy::copy($cellservdb, "$cellservdb_dest")
+        or die "Unable to copy $cellservdb to $cellservdb_dest: $!\n";
+} elsif (! -f $cellservdb_dest) {
+    # Download the CellServDB file when it is not in the packaging files.
     print "Downloading $cellservdb_url\n";
     system("cd $tmpdir/rpmdir/SOURCES && wget $cellservdb_url") == 0
         or die "Unable to download $cellservdb_url: $!\n";
@@ -245,7 +246,8 @@ makesrpm.pl [options] <src.tar.bz2> <doc.tar.bz2> [<relnotes> [<changelog> [<cel
 
 Build the SRPM for OpenAFS from source distibution files. Generate empty RELNOTES
 and ChangeLog files if not provided. Download the CellServDB file from
-grand.central.org if one is not provided.
+grand.central.org if one is not provided and is not included in the
+packaging files.
 
 =head1 OPTIONS
 
@@ -266,7 +268,8 @@ Place the generated SRPM file in I<path> instead of the current directory.
 =item B<--cellservdb-url> I<URL>
 
 The URL of the CellServDB file to be downloaded when B<cellservdb> is not
-specified, and the URL to be set in the C<Source20> source directive in the
+specified and a file with the same name is not included in the packaging
+files, and the URL to be set in the C<Source20> source directive in the
 generated F<openafs.spec> RPM spec file.  When not specified, I<URL> is is read
 from the F<openafs.spec> file extracted from the source archive.
 

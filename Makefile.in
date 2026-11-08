@@ -792,8 +792,7 @@ srpm:
 	  "$(abs_top_builddir)/packages/$${VERSION}/openafs-$${VERSION}-src.tar.bz2" \
 	  "" \
 	  "$(RPM_RELNOTES)" \
-	  "$(RPM_CHANGELOG)" \
-	  "$(CELLSERVDB)"
+	  "$(RPM_CHANGELOG)"
 
 rpm: srpm
 	VERSION=`$(abs_top_srcdir)/build-tools/git-version $(abs_top_srcdir)` && \
