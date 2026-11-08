@@ -513,7 +513,6 @@ cells using Kerberos v5.
 %package krb5
 Summary: OpenAFS programs for Kerberos 5 authentication
 Requires: %{name} = %{version}
-BuildRequires: krb5-devel
 
 %description krb5
 %{openafs_description}
