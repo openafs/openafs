@@ -124,7 +124,7 @@
 
 # Minimum supported RHEL release.
 %if 0%{?rhel}
-%if 0%{?rhel} < 7
+%if 0%{?rhel} < 8
 # Stop the build with an invalid tag.
 unsupported_rhel_release: %{rhel}
 %endif
@@ -132,7 +132,7 @@ unsupported_rhel_release: %{rhel}
 
 # Minimum supported Fedora release.
 %if 0%{?fedora}
-%if 0%{?fedora} < 18
+%if 0%{?fedora} < 30
 # Stop the build with an invalid tag.
 unsupported_fedora_release: %{fedora}
 %endif
@@ -140,58 +140,10 @@ unsupported_fedora_release: %{fedora}
 
 # Minimum supported Amazon Linux release.
 %if 0%{?amzn}
-%if 0%{?amzn} < 2
+%if 0%{?amzn} < 2023
 # Stop the build with an invalid tag.
 unsupported_amzn_release: %{amzn}
 %endif
-%endif
-
-#
-# Distribution features
-#
-
-# Distributions where rpm generates the debuginfo subpackages automatically.
-%if 0%{?rhel} >= 8 || 0%{?fedora} >= 28 || 0%{?amzn} >= 2023
-%global have_auto_debuginfo 1
-%else
-%global have_auto_debuginfo 0
-%endif
-
-# Distributions that provide a kernel-modules package.
-%if 0%{?rhel} >= 8 || 0%{?fedora} >= 27 || 0%{?amzn} >= 2023
-%global have_kernel_modules_pkg 1
-%else
-%global have_kernel_modules_pkg 0
-%endif
-
-# Distributions with kernels built with the ORC unwinder (CONFIG_UNWINDER_ORC),
-# which requires libelf to build kernel modules.
-%if 0%{?rhel} >= 8 || 0%{?fedora} >= 28 || 0%{?amzn} >= 2023
-%global have_orc_unwinder 1
-%else
-%global have_orc_unwinder 0
-%endif
-
-# Distributions where glibc runs ldconfig automatically via an rpm file
-# trigger when libraries are installed in the standard library directories.
-%if 0%{?rhel} >= 8 || 0%{?fedora} >= 28 || 0%{?amzn} >= 2023
-%global have_ldconfig_trigger 1
-%else
-%global have_ldconfig_trigger 0
-%endif
-
-# Distributions which provide the systemd rpm macros in a separate package.
-%if 0%{?rhel} >= 8 || 0%{?fedora} >= 30 || 0%{?amzn} >= 2023
-%global have_systemd_rpm_macros_pkg 1
-%else
-%global have_systemd_rpm_macros_pkg 0
-%endif
-
-# Distributions which supports %license in %files.
-%if 0%{?rhel} >= 7 || 0%{?fedora} >= 19 || 0%{?amzn} >= 2
-%global have_license_directive 1
-%else
-%global have_license_directive 0
 %endif
 
 #
@@ -252,10 +204,6 @@ unsupported_amzn_release: %{amzn}
 # Disable using lto (link time optimization)
 %global _lto_cflags %{nil}
 
-%if !%{have_auto_debuginfo}
-%global _find_debuginfo_opts %{?_find_debuginfo_opts} -p '.*openafs\.ko.*' -o kmod-debuginfo.list
-%endif
-
 #-----------------------------------------------------------------------------
 # Packages
 #-----------------------------------------------------------------------------
@@ -276,11 +224,7 @@ BuildRequires: ncurses-devel
 BuildRequires: make
 BuildRequires: flex
 BuildRequires: bison
-%if %{have_systemd_rpm_macros_pkg}
 BuildRequires: systemd-rpm-macros
-%else
-BuildRequires: systemd
-%endif
 BuildRequires: perl-devel
 BuildRequires: swig
 BuildRequires: perl(ExtUtils::Embed)
@@ -326,9 +270,6 @@ Requires: systemd-units
 Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
-%if 0%{?rhel} == 7
-Requires(post): systemd-sysv
-%endif
 Requires: %{name}-kmod >= %{version}
 Provides: %{name}-kmod-common = %{version}
 
@@ -344,9 +285,6 @@ Requires: systemd-units
 Requires(post): systemd-units
 Requires(preun): systemd-units
 Requires(postun): systemd-units
-%if 0%{?rhel} == 7
-Requires(post): systemd-sysv
-%endif
 
 %description server
 %{openafs_description}
@@ -497,9 +435,6 @@ server key files.
 
 %package -n kmod-%{name}
 Summary:          OpenAFS kernel module
-%if !%{have_kernel_modules_pkg}
-Provides:         kernel-modules = %{?kepoch:%{kepoch}:}%{kernel_version}
-%endif
 Provides:         %{name}-kmod = %{version}-%{release}
 Provides:         openafs-kernel = %{version}
 Requires:         kernel-%{_target_cpu} = %{?kepoch:%{kepoch}:}%{kverrel}
@@ -508,25 +443,12 @@ Requires(post):   /usr/sbin/depmod
 Requires(postun): /usr/sbin/depmod
 Release:          %{package_release}.%(echo %{kverrel} | tr - _)
 BuildRequires:    kernel-devel-%{_target_cpu} = %{?kepoch:%{kepoch}:}%{kverrel}
-%if %{have_orc_unwinder}
 BuildRequires:    elfutils-devel
-%endif
 
 %description -n kmod-%{name}
 %{openafs_description}
 This package provides the OpenAFS kernel module built for the Linux
 kernel %{kernel_version}.
-
-%if !%{have_auto_debuginfo}
-%package -n kmod-%{name}-debuginfo
-Summary:          Debug information for the OpenAFS kernel module
-Release:          %{package_release}.%(echo %{kverrel} | tr - _)
-AutoReqProv:      no
-
-%description   -n kmod-%{name}-debuginfo
-This package provides debug information for the OpenAFS kernel module
-built for the Linux kernel %{kernel_version}.
-%endif
 
 %endif
 
@@ -787,17 +709,6 @@ chmod 644 %{_prefix}/vice/etc/CellServDB
 %postun client
 %systemd_postun openafs-client.service
 
-%if 0%{?rhel} == 7
-%triggerun -- openafs-client < 1.6.0-1
-# Save the current service runlevel info
-# User must manually run systemd-sysv-convert --apply openafs-client
-# to migrate them to systemd targets
-/usr/bin/systemd-sysv-convert --save openafs-client >/dev/null 2>&1 ||:
-
-# Run this because the SysV package being removed won't do it
-/sbin/chkconfig --del openafs-client >/dev/null 2>&1 || :
-%endif
-
 # package openafs-server
 %post server
 %systemd_post openafs-server.service
@@ -808,17 +719,6 @@ chmod 644 %{_prefix}/vice/etc/CellServDB
 %postun server
 %systemd_postun openafs-server.service
 
-%if 0%{?rhel} == 7
-%triggerun -- openafs-server < 1.6.0-1
-# Save the current service runlevel info
-# User must manually run systemd-sysv-convert --apply openafs-server
-# to migrate them to systemd targets
-/usr/bin/systemd-sysv-convert --save openafs-server >/dev/null 2>&1 ||:
-
-# Run this because the SysV package being removed won't do it
-/sbin/chkconfig --del openafs-server >/dev/null 2>&1 || :
-%endif
-
 # package dkms-openafs
 %if %{build_dkmspkg}
 %post -n dkms-%{name}
@@ -828,17 +728,6 @@ dkms install -m %{name} -v %{dkms_version} --rpm_safe_upgrade
 
 %preun -n dkms-%{name}
 dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
-%endif
-
-# package openafs-authlibs
-%if %{build_authlibs}
-%if !%{have_ldconfig_trigger}
-%post authlibs
-/sbin/ldconfig
-
-%postun authlibs
-/sbin/ldconfig
-%endif
 %endif
 
 # package openafs-compat
@@ -917,11 +806,7 @@ fi
 
 %files
 %config(noreplace) %{_sysconfdir}/sysconfig/openafs
-%if %{have_license_directive}
 %license LICENSE
-%else
-%doc LICENSE
-%endif
 %exclude %{_docdir}/%{name}/LICENSE
 %doc ChangeLog
 %doc RELNOTES-%{openafs_version}
@@ -1292,16 +1177,16 @@ fi
 %defattr(644,root,root,755)
 %{kernel_modules}/extra/%{name}/
 
-%if !%{have_auto_debuginfo}
-%files -n kmod-%{name}-debuginfo -f kmod-debuginfo.list
-%endif
-
 %endif
 
 #-----------------------------------------------------------------------------
 # Changelog
 #-----------------------------------------------------------------------------
 %changelog
+* Sun Nov 08 2026  Michael Meffie <mmeffie@sinenomine.net>
+- Raised the minimum releases to RHEL 8, Fedora 30 and Amazon Linux
+  2023; RHEL 7 is now built with openafs.el7.spec.
+
 * Sun Nov 08 2026  Michael Meffie <mmeffie@sinenomine.net>
 - Raised the minimum releases to RHEL 7 and Amazon Linux 2; RHEL 6 is
   now built with openafs.el6.spec.
