@@ -262,7 +262,7 @@ unsupported_fedora_release: %{fedora}
 %if %{have_usr_merged}
 %global pamdir %{_libdir}/security
 %else
-%global pamdir %{_lib}/security
+%global pamdir /%{_lib}/security
 %endif
 %endif
 
