@@ -74,15 +74,15 @@
 # Package version
 #
 
-%if 0%{!?openafs_version:1}
+%if %{undefined openafs_version}
 %global openafs_version UNKNOWN
 %endif
 
-%if 0%{!?package_version:1}
+%if %{undefined package_version}
 %global package_version %{openafs_version}
 %endif
 
-%if 0%{!?package_release:1}
+%if %{undefined package_release}
 %global package_release 1
 %endif
 
@@ -108,7 +108,7 @@
 #
 
 # Minimum supported RHEL release.
-%if 0%{?rhel}
+%if %{defined rhel}
 %if 0%{?rhel} < 8
 # Stop the build with an invalid tag.
 unsupported_rhel_release: %{rhel}
@@ -116,7 +116,7 @@ unsupported_rhel_release: %{rhel}
 %endif
 
 # Minimum supported Fedora release.
-%if 0%{?fedora}
+%if %{defined fedora}
 %if 0%{?fedora} < 30
 # Stop the build with an invalid tag.
 unsupported_fedora_release: %{fedora}
@@ -124,7 +124,7 @@ unsupported_fedora_release: %{fedora}
 %endif
 
 # Minimum supported Amazon Linux release.
-%if 0%{?amzn}
+%if %{defined amzn}
 %if 0%{?amzn} < 2023
 # Stop the build with an invalid tag.
 unsupported_amzn_release: %{amzn}
@@ -137,8 +137,8 @@ unsupported_amzn_release: %{amzn}
 
 %if %{with kmod}
 
-%if 0%{!?kernel_version:1}
-%if 0%{?kernvers:1}
+%if %{undefined kernel_version}
+%if %{defined kernvers}
 # kernvers is the deprecated name for kernel_version.
 %global kernel_version %{kernvers}
 %else
@@ -147,12 +147,12 @@ unsupported_amzn_release: %{amzn}
 %endif
 
 # The path to the kernel headers for the target kernel version.
-%if 0%{!?kernel_headers:1}
+%if %{undefined kernel_headers}
 %global kernel_headers %{_usrsrc}/kernels/%{kernel_version}
 %endif
 
 # The kernel modules installation path.
-%if 0%{!?kernel_modules:1}
+%if %{undefined kernel_modules}
 %global kernel_modules %{_prefix}/lib/modules/%{kernel_version}
 %endif
 
@@ -182,7 +182,7 @@ unsupported_amzn_release: %{amzn}
 #       on each release to set the source_date_epoch.
 %global source_date_epoch_from_changelog 0
 
-%if 0%{!?source_date_epoch:1}
+%if %{undefined source_date_epoch}
 %global source_date_epoch %(date +%%s)
 %endif
 
