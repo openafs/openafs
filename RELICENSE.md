@@ -129,6 +129,7 @@ Consent/Disapproval List
 - [Y] Andrei Keis <Andrei.Keis@morganstanley.com> (Morgan Stanley)
 - [Y] Andrew Deason <adeason@dson.org>
 - [Y] Andrew Deason <adeason@sinenomine.net> (SNA)
+- [Y] Arne Wiebalck <Arne.Wiebalck@cern.ch> (CERN)
 - [?] Arno Schuring <aelschuring@hotmail.com>
 - [Y] Benjamin Kaduk <kaduk@mit.edu>
 - [Y] Brandon S Allbery <ballbery@sinenomine.net> (SNA)
@@ -145,6 +146,7 @@ Consent/Disapproval List
 - [Y] Cheyenne Wills <cwills@sinenomine.net> (SNA)
 - [Y] Damien Diederen <ddiederen@sinenomine.net> (SNA)
 - [?] Dan Hyde <drh@umich.edu>
+- [Y] Dan van der Ster <daniel.vanderster@cern.ch> (CERN)
 - [Y] Daria Phoebe Brashear <shadow@andrew.cmu.edu>
 - [Y] Daria Phoebe Brashear <shadow@dementia.org>
 - [Y] Daria Phoebe Brashear <shadow@dementix.org>
@@ -161,6 +163,7 @@ Consent/Disapproval List
 - [?] Hartmut Reuter <reuter@rzg.mpg.de>
 - [Y] Indira Sawant <indira.sawant@ibm.com> (IBM)
 - [Y] James Peterson <jimpeter@us.ibm.com> (IBM)
+- [Y] Jaroslaw Polok <Jaroslaw.Polok@cern.ch> (CERN)
 - [Y] Jason Rogers <jrogers@sinenomine.net> (SNA)
 - [Y] Jeff Riegel <riegel@almaden.ibm.com> (IBM)
 - [?] Jeffrey Altman <jaltman@grand.central.org>
@@ -197,7 +200,8 @@ Consent/Disapproval List
 - [Y] Paul Smeddle <paul.smeddle@morganstanley.com> (Morgan Stanley)
 - [Y] Perry Ruiter <pruiter@sinenomine.net> (SNA)
 - [?] Rainer Schöpf <rainer.schoepf@proteosys.com>
-- [?] Rainer Toebbicke <rtb@pclella.cern.ch>
+- [Y] Rainer Toebbicke <Rainer.Toebbicke@cern.ch> (CERN)
+- [Y] Rainer Toebbicke <rtb@pclella.cern.ch> (CERN)
 - [?] Rolf Sattler <rolf@multi-os-net.de>
 - [?] Russ Allbery <rra@stanford.edu> (Stanford)
 - [Y] Satish Kumar <ksatish@in.ibm.com> (IBM)
@@ -225,6 +229,7 @@ list above indicates (in parentheses) if a contributor provided code for a
 legal entity here.
 
 - [?] Apple Inc.
+- [Y] European Organization for Nuclear Research (CERN)
 - [Y] International Business Machines Corporation (IBM)
 - [?] Leland Stanford Junior University (Stanford)
 - [Y] Morgan Stanley
