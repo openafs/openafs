@@ -206,15 +206,15 @@ For OpenAFS client components, macOS is a Tier 1 platform for macOS versions
 that are supported by Apple. This generally consists of the most recent version
 of macOS and the two previous versions. This currently includes:
 
+- macOS 27 (Golden Gate)
 - macOS 26 (Tahoe)
 - macOS 15 (Sequoia)
-- macOS 14 (Sonoma)
 
 macOS is a Tier 2 platform for:
 
+- macOS 14 (Sonoma)
 - macOS 13 (Ventura)
 - macOS 12 (Monterey)
-- macOS 11 (Big Sur)
 
 macOS is a Tier 3 platform for all other versions Mac OS X 10.3 (Panther) and
 newer.
