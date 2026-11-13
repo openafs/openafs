@@ -216,8 +216,35 @@ macOS is a Tier 2 platform for:
 - macOS 13 (Ventura)
 - macOS 12 (Monterey)
 
-macOS is a Tier 3 platform for all other versions Mac OS X 10.3 (Panther) and
-newer.
+macOS is a Tier 3 platform for the following versions, which support the amd64
+hardware architecture (aka x86\_64):
+
+- macOS 11 (Big Sur)
+
+macOS is a Tier 3 platform for the following versions, which use a kernelspace
+networking Rx stack:
+
+- macOS 10.15 (Catalina)
+- macOS 10.14 (Mojave)
+- macOS 10.13 (High Sierra)
+- macOS 10.12 (Sierra)
+- OS X 10.11 (El Capitan)
+- OS X 10.10 (Yosemite)
+
+macOS is a Tier 3 platform for the following versions, which lack "pkgbuild"
+and "productbuild":
+
+- OS X 10.9 (Mavericks)
+- OS X 10.8 (Mountain Lion)
+- Mac OS X 10.7 (Lion)
+- Mac OS X 10.6 (Snow Leopard)
+
+macOS is a Tier 3 platform for the following versions, which support the
+PowerPC (ppc) hardware architecture:
+
+- Mac OS X 10.5 (Leopard)
+- Mac OS X 10.4 (Tiger)
+- Mac OS X 10.3 (Panther)
 
 For OpenAFS server components, macOS is a Tier 3 platform for all of the above
 versions.
