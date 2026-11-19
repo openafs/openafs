@@ -44,15 +44,11 @@
 # --without kmod
 #       Do not build the kernel module package.
 #
-# --without dkms
-#       Do not build the dkms-openafs package.
-#
 # --with supergroups
 #       Enable support for supergroups.
 #
-# The deprecated --define "build_userspace 0", --define "build_modules 0",
-# and --define "build_dkmspkg 0" options are still accepted, and are
-# converted to the --without options above.
+# The deprecated --define "build_userspace 0" and --define "build_modules 0"
+# options are still accepted, and are converted to the --without options above.
 #
 
 #-----------------------------------------------------------------------------
@@ -86,7 +82,6 @@
 
 %bcond_without userspace
 %bcond_without kmod
-%bcond_without dkms
 %bcond_with supergroups
 
 #
@@ -256,7 +251,6 @@ Requires(postun): systemd-units
 This package provides basic server support to host files in an AFS
 cell.
 
-%if %{with dkms}
 %package -n dkms-%{name}
 Summary:        DKMS-ready kernel source for OpenAFS distributed filesystem
 Provides:       openafs-kernel = %{version}
@@ -271,7 +265,6 @@ Requires:       %{name}-kmod-common = %{version}
 %{openafs_description}
 This package provides the source code to allow DKMS to build an
 OpenAFS kernel module.
-%endif
 
 %package authlibs
 Summary: OpenAFS authentication shared libraries
@@ -400,7 +393,6 @@ kernel %{kernel_version}.
 %endif
 : @@@ build userspace:    %{?with_userspace:yes}%{!?with_userspace:no}
 : @@@ build kmod:         %{?with_kmod:yes}%{!?with_kmod:no}
-: @@@ build dkms:         %{?with_dkms:yes}%{!?with_dkms:no}
 : @@@ arch:               %{_arch}
 : @@@
 : @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -624,7 +616,6 @@ chmod 644 %{_prefix}/vice/etc/CellServDB
 %systemd_postun openafs-server.service
 
 # package dkms-openafs
-%if %{with dkms}
 %post -n dkms-%{name}
 dkms add -m %{name} -v %{dkms_version} --rpm_safe_upgrade
 dkms build -m %{name} -v %{dkms_version} --rpm_safe_upgrade
@@ -632,7 +623,6 @@ dkms install -m %{name} -v %{dkms_version} --rpm_safe_upgrade
 
 %preun -n dkms-%{name}
 dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
-%endif
 
 # package openafs-compat
 %post compat
@@ -948,10 +938,8 @@ fi
 %{_libdir}/perl/ukernel.so
 %{_mandir}/man3/AFS::ukernel.3*
 
-%if %{with dkms}
 %files -n dkms-%{name}
 %{_prefix}/src/%{name}-%{dkms_version}
-%endif
 
 %files kernel-source
 %{_prefix}/src/openafs-kernel-%{openafs_version}

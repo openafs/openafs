@@ -26,15 +26,3 @@
 %global _without_kmod --without-kmod
 %endif
 %endif
-
-#
-# Convert --define "build_dkmspkg 1/0" to --with/--without dkms.
-#
-%if %{defined build_dkmspkg} && ! %{defined _with_dkms} && ! %{defined _without_dkms}
-%{warn:--define build_dkmspkg is deprecated; use --with dkms or --without dkms}
-%if %{build_dkmspkg}
-%global _with_dkms --with-dkms
-%else
-%global _without_dkms --without-dkms
-%endif
-%endif
