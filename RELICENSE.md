@@ -199,7 +199,7 @@ Consent/Disapproval List
 - [Y] Omkar Sathe <somkar@in.ibm.com> (IBM)
 - [Y] Paul Smeddle <paul.smeddle@morganstanley.com> (Morgan Stanley)
 - [Y] Perry Ruiter <pruiter@sinenomine.net> (SNA)
-- [?] Rainer Schöpf <rainer.schoepf@proteosys.com>
+- [Y] Rainer Schöpf <rainer.schoepf@proteosys.com>
 - [Y] Rainer Toebbicke <Rainer.Toebbicke@cern.ch> (CERN)
 - [Y] Rainer Toebbicke <rtb@pclella.cern.ch> (CERN)
 - [?] Rolf Sattler <rolf@multi-os-net.de>
